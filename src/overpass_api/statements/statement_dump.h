@@ -34,31 +34,31 @@ class Statement_Dump
     {
       Factory() : bbox_limitation(0) {}
       
-      Statement_Dump* create_statement(string element, int line_number,
-				       const map< string, string >& attributes);
+      Statement_Dump* create_statement(std::string element, int line_number,
+				       const std::map< std::string, std::string >& attributes);
       
       int bbox_limitation;
     };
     
-    Statement_Dump(string name, const map< string, string >& attributes_)
+    Statement_Dump(std::string name, const std::map< std::string, std::string >& attributes_)
         : name_(name), attributes(attributes_) {}
     ~Statement_Dump();
     
-    void add_statement(Statement_Dump* statement, string text);
-    string dump_xml() const;
-    string dump_pretty_map_ql() const;
-    string dump_compact_map_ql() const;
-    string dump_bbox_map_ql() const;
+    void add_statement(Statement_Dump* statement, std::string text);
+    std::string dump_xml() const;
+    std::string dump_pretty_map_ql() const;
+    std::string dump_compact_map_ql() const;
+    std::string dump_bbox_map_ql() const;
     
     const std::string& name() const { return name_; }
     std::string attribute(const std::string& key) const;
     
-    void add_final_text(string text) {}
+    void add_final_text(std::string text) {}
 
   private:
-    string name_;
-    map< string, string > attributes;
-    vector< Statement_Dump* > substatements;
+    std::string name_;
+    std::map< std::string, std::string > attributes;
+    std::vector< Statement_Dump* > substatements;
 };
 
 #endif

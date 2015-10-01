@@ -1,0 +1,17 @@
+** Test the behaviour for the gap filling strategy - part 5
+Compressed Read test
+Index footprint: 111001110011111111111011111111
+Reading all blocks ...
+Predicted size 124, real size 103 bytes, first block size 32 bytes, first index 20, second block size 33 bytes, second index 21
+Predicted size 60, real size 41 bytes, first block size 37 bytes, first index 25
+Predicted size 60, real size 42 bytes, first block size 38 bytes, first index 26
+Predicted size 188, real size 142 bytes, first block size 45 bytes, first index 33, second block size 46 bytes, second index 34
+Predicted size 124, real size 105 bytes, first block size 50 bytes, first index 38, second block size 51 bytes, second index 39
+Predicted size 60, real size 57 bytes, first block size 53 bytes, first index 41
+Predicted size 124, real size 73 bytes, first block size 69 bytes, first index 57
+Predicted size 188, real size 149 bytes, first block size 72 bytes, first index 60, second block size 73 bytes, second index 61
+Predicted size 188, real size 153 bytes, first block size 74 bytes, first index 62, second block size 75 bytes, second index 63
+Predicted size 252, real size 238 bytes, first block size 77 bytes, first index 65, second block size 78 bytes, second index 66
+Predicted size 188, real size 165 bytes, first block size 80 bytes, first index 68, second block size 81 bytes, second index 69
+... all blocks read.
+This block of read tests is complete.

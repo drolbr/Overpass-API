@@ -32,33 +32,33 @@ struct Web_Output : public Error_Output
   
   ~Web_Output() { write_footer(); }
   
-  virtual void add_encoding_error(const string& error);
-  virtual void add_parse_error(const string& error, int line_number);
-  virtual void add_static_error(const string& error, int line_number);
+  virtual void add_encoding_error(const std::string& error);
+  virtual void add_parse_error(const std::string& error, int line_number);
+  virtual void add_static_error(const std::string& error, int line_number);
   
-  virtual void add_encoding_remark(const string& error);
-  virtual void add_parse_remark(const string& error, int line_number);
-  virtual void add_static_remark(const string& error, int line_number);
+  virtual void add_encoding_remark(const std::string& error);
+  virtual void add_parse_remark(const std::string& error, int line_number);
+  virtual void add_static_remark(const std::string& error, int line_number);
   
-  virtual void runtime_error(const string& error);
-  virtual void runtime_remark(const string& error);
+  virtual void runtime_error(const std::string& error);
+  virtual void runtime_remark(const std::string& error);
   
   virtual void display_statement_progress
-      (uint timer, const string& name, int progress, int line_number,
-       const vector< pair< uint, uint > >& stack) {}
+      (uint timer, const std::string& name, int progress, int line_number,
+       const std::vector< std::pair< uint, uint > >& stack) {}
        
   virtual bool display_encoding_errors() { return encoding_errors; }
   virtual bool display_parse_errors() { return parse_errors; }
   virtual bool display_static_errors() { return static_errors; }
   
-  virtual void add_padding(const string& padding_) { padding = padding_; }
+  virtual void add_padding(const std::string& padding_) { padding = padding_; }
   
   void enforce_header(uint write_mime);
   void write_html_header
-      (const string& timestamp = "", const string& area_timestamp = "", uint write_mime = 200,
+      (const std::string& timestamp = "", const std::string& area_timestamp = "", uint write_mime = 200,
        bool write_js_init = false, bool write_remarks = true);
   void write_payload_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
+      (const std::string& timestamp = "", const std::string& area_timestamp = "", bool write_mime = true);
   void write_footer();
   
   void set_output_handler(Output_Handler* output_handler_) { output_handler = output_handler_; }
@@ -66,7 +66,7 @@ struct Web_Output : public Error_Output
 public:
   typedef enum { http_get, http_post, http_head, http_options } Http_Methods;
   Http_Methods http_method;
-  string allow_headers;
+  std::string allow_headers;
   bool has_origin;
   
 private:
@@ -75,13 +75,13 @@ private:
   bool parse_errors;
   bool static_errors;
   uint log_level;
-  string padding;
-  string messages;
+  std::string padding;
+  std::string messages;
   
   Output_Handler* output_handler;
   
-  void display_remark(const string& text);
-  void display_error(const string& text, uint write_mime);
+  void display_remark(const std::string& text);
+  void display_error(const std::string& text, uint write_mime);
 };
 
 #endif

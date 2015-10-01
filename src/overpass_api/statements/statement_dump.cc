@@ -26,23 +26,23 @@
 
 Statement_Dump::~Statement_Dump()
 {
-  for (vector< Statement_Dump* >::iterator it = substatements.begin();
+  for (std::vector< Statement_Dump* >::iterator it = substatements.begin();
       it != substatements.end(); ++it)
     delete *it;
 }
 
-void Statement_Dump::add_statement(Statement_Dump* statement, string text)
+void Statement_Dump::add_statement(Statement_Dump* statement, std::string text)
 {
   substatements.push_back(statement);
 }
 
-string indent(const string& subresult)
+std::string indent(const std::string& subresult)
 {
-  string result;
+  std::string result;
 
-  string::size_type pos = 0;
-  string::size_type next = subresult.find('\n', pos);
-  while (next != string::npos)
+  std::string::size_type pos = 0;
+  std::string::size_type next = subresult.find('\n', pos);
+  while (next != std::string::npos)
   {
     result += "  " + subresult.substr(pos, next-pos) + '\n';
     pos = next + 1;
@@ -54,59 +54,59 @@ string indent(const string& subresult)
   return result;
 }
 
-string Statement_Dump::dump_xml() const
+std::string Statement_Dump::dump_xml() const
 {
-  string result;
+  std::string result;
   
   if (substatements.empty())
   {
-    result = string("<") + name_;
-    for (map< string, string >::const_iterator it = attributes.begin();
+    result = std::string("<") + name_;
+    for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
-      result += string(" ") + it->first + "=\"" + escape_xml(it->second) + "\"";
+      result += std::string(" ") + it->first + "=\"" + escape_xml(it->second) + "\"";
     result += "/>\n";
   }
   else
   {
-    result = string("<") + name_;
-    for (map< string, string >::const_iterator it = attributes.begin();
+    result = std::string("<") + name_;
+    for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
-      result += string(" ") + it->first + "=\"" + escape_xml(it->second) + "\"";
+      result += std::string(" ") + it->first + "=\"" + escape_xml(it->second) + "\"";
     result += ">\n";
 
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
       result += indent((*it)->dump_xml());
-/*      string subresult = (*it)->dump_xml();
-      string::size_type pos = 0;
-      string::size_type next = subresult.find('\n', pos);
-      while (next != string::npos)
+/*      std::string subresult = (*it)->dump_xml();
+      std::string::size_type pos = 0;
+      std::string::size_type next = subresult.find('\n', pos);
+      while (next != std::string::npos)
       {
-	result += string("  ") + subresult.substr(pos, next-pos) + '\n';
+	result += std::string("  ") + subresult.substr(pos, next-pos) + '\n';
 	pos = next + 1;
 	next = subresult.find('\n', pos);
       }*/
     }
     
-    result += string("</") + name_ + ">\n";
+    result += std::string("</") + name_ + ">\n";
   }
 
   return result;
 }
 
-string dump_print_map_ql(const map< string, string >& attributes, bool pretty = false)
+std::string dump_print_map_ql(const std::map< std::string, std::string >& attributes, bool pretty = false)
 {
-  string result;
+  std::string result;
   
-  for (map< string, string >::const_iterator it = attributes.begin();
+  for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
       it != attributes.end(); ++it)
   {
     if (it->first == "from" && it->second != "_")
       result += "." + it->second + " ";
   }
   result += "out";
-  for (map< string, string >::const_iterator it = attributes.begin();
+  for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
       it != attributes.end(); ++it)
   {
     if (it->first == "mode")
@@ -125,7 +125,7 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
 	result += " quirks";
     }
   }
-  for (map< string, string >::const_iterator it = attributes.begin();
+  for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
       it != attributes.end(); ++it)
   {
     if (it->first == "geometry")
@@ -155,7 +155,7 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
         result += " bb";
     }
   }
-  for (map< string, string >::const_iterator it = attributes.begin();
+  for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
       it != attributes.end(); ++it)
   {
     if (it->first == "order" && it->second != "id")
@@ -164,7 +164,7 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
 	result += " qt";
     }
   }
-  for (map< string, string >::const_iterator it = attributes.begin();
+  for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
       it != attributes.end(); ++it)
   {
     if (it->first == "limit" && it->second != "")
@@ -174,12 +174,12 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
   return result;
 }
 
-string escape_quotation_marks(const string& input)
+std::string escape_quotation_marks(const std::string& input)
 {
-  string result = input;
+  std::string result = input;
   
-  string::size_type pos = result.find('\\');
-  while (pos != string::npos)
+  std::string::size_type pos = result.find('\\');
+  while (pos != std::string::npos)
   {
     result = result.substr(0, pos) + "\\\\" + (pos < result.size()-1 ? input.substr(pos+1) : "");
     if (pos < result.size()-2)
@@ -189,7 +189,7 @@ string escape_quotation_marks(const string& input)
   }
   
   pos = result.find('\"');
-  while (pos != string::npos)
+  while (pos != std::string::npos)
   {
     result = result.substr(0, pos) + "\\\"" + (pos < result.size()-1 ? input.substr(pos+1) : "");
     if (pos < result.size()-2)
@@ -201,9 +201,9 @@ string escape_quotation_marks(const string& input)
   return result;
 }
 
-string dump_subquery_map_ql(const string& name, const map< string, string >& attributes)
+std::string dump_subquery_map_ql(const std::string& name, const std::map< std::string, std::string >& attributes)
 {
-  string result;
+  std::string result;
 
   if (name == "bbox-query")
   {
@@ -239,7 +239,7 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
     result += "(";
     if (attributes.find("type") != attributes.end())
     {
-      string type = attributes.find("type")->second;
+      std::string type = attributes.find("type")->second;
       if (type == "way-node")
 	result += "w";
       else if (type == "relation-node" || type == "relation-way" || type == "relation-relation")
@@ -320,12 +320,12 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
   return result;
 }
 
-string Statement_Dump::dump_compact_map_ql() const
+std::string Statement_Dump::dump_compact_map_ql() const
 {
-  string result;
+  std::string result;
   if (name_ == "osm-script")
   {
-    for (map< string, string >::const_iterator it = attributes.begin();
+    for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
     {
       if (it->first == "timeout")
@@ -359,7 +359,7 @@ string Statement_Dump::dump_compact_map_ql() const
 
     if (!attributes.empty())
       result += ";";
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_compact_map_ql();
   }
@@ -367,7 +367,7 @@ string Statement_Dump::dump_compact_map_ql() const
   {
     result += "(";
     
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return result + ");";
     
@@ -383,7 +383,7 @@ string Statement_Dump::dump_compact_map_ql() const
   {
     result += "(";
 
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return ");";
 
@@ -418,7 +418,7 @@ string Statement_Dump::dump_compact_map_ql() const
     
     result += "(";
     
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return result + ");";
     
@@ -432,7 +432,7 @@ string Statement_Dump::dump_compact_map_ql() const
     if (attributes.find("type") != attributes.end())
       result += attributes.find("type")->second;
 
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
       if ((*it)->name_ == "item")
@@ -444,7 +444,7 @@ string Statement_Dump::dump_compact_map_ql() const
       }
     }
 
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
       if ((*it)->name_ != "item")
@@ -480,7 +480,7 @@ string Statement_Dump::dump_compact_map_ql() const
   {
     if (attributes.find("type") != attributes.end())
     {
-      string rel_type = attributes.find("type")->second;
+      std::string rel_type = attributes.find("type")->second;
       if (rel_type == "way-node" || rel_type == "relation-node")
 	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
@@ -516,13 +516,13 @@ string Statement_Dump::dump_compact_map_ql() const
   return result;
 }
 
-string Statement_Dump::dump_bbox_map_ql() const
+std::string Statement_Dump::dump_bbox_map_ql() const
 {
-  string result;
+  std::string result;
   bool auto_timeout = true;
   if (name_ == "osm-script")
   {
-    for (map< string, string >::const_iterator it = attributes.begin();
+    for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
     {
       if (it->first == "timeout")
@@ -560,7 +560,7 @@ string Statement_Dump::dump_bbox_map_ql() const
     if (auto_timeout)
       result += "[timeout:1]";
     result += ";";
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_bbox_map_ql();
   }
@@ -568,7 +568,7 @@ string Statement_Dump::dump_bbox_map_ql() const
   {
     result += "(";
     
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return result + ");";
     
@@ -584,7 +584,7 @@ string Statement_Dump::dump_bbox_map_ql() const
   {
     result += "(";
 
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return ");";
 
@@ -619,7 +619,7 @@ string Statement_Dump::dump_bbox_map_ql() const
     
     result += "(";
     
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return result + ");";
     
@@ -633,7 +633,7 @@ string Statement_Dump::dump_bbox_map_ql() const
     if (attributes.find("type") != attributes.end())
       result += attributes.find("type")->second;
 
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
       if ((*it)->name_ == "item")
@@ -645,7 +645,7 @@ string Statement_Dump::dump_bbox_map_ql() const
       }
     }
 
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
       if ((*it)->name_ != "item")
@@ -686,7 +686,7 @@ string Statement_Dump::dump_bbox_map_ql() const
   {
     if (attributes.find("type") != attributes.end())
     {
-      string rel_type = attributes.find("type")->second;
+      std::string rel_type = attributes.find("type")->second;
       if (rel_type == "way-node" || rel_type == "relation-node")
 	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
@@ -722,12 +722,12 @@ string Statement_Dump::dump_bbox_map_ql() const
   return result;
 }
 
-string Statement_Dump::dump_pretty_map_ql() const
+std::string Statement_Dump::dump_pretty_map_ql() const
 {
-  string result;
+  std::string result;
   if (name_ == "osm-script")
   {
-    for (map< string, string >::const_iterator it = attributes.begin();
+    for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
     {
       if (it->first == "timeout")
@@ -761,7 +761,7 @@ string Statement_Dump::dump_pretty_map_ql() const
 
     if (result != "")
       result += ";\n";
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_pretty_map_ql() + "\n";
   }
@@ -769,7 +769,7 @@ string Statement_Dump::dump_pretty_map_ql() const
   {
     result += "(";
     
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return result + ");";
     
@@ -785,7 +785,7 @@ string Statement_Dump::dump_pretty_map_ql() const
   {
     result += "(";
 
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return ");";
 
@@ -820,7 +820,7 @@ string Statement_Dump::dump_pretty_map_ql() const
     
     result += "(";
     
-    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
     if (it == substatements.end())
       return result + ");";
     
@@ -835,7 +835,7 @@ string Statement_Dump::dump_pretty_map_ql() const
       result += attributes.find("type")->second;
 
     uint proper_substatement_count = 0;
-    for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
       if ((*it)->name_ == "item")
@@ -851,7 +851,7 @@ string Statement_Dump::dump_pretty_map_ql() const
 
     if (proper_substatement_count > 1)
     {
-      for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+      for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
           it != substatements.end(); ++it)
       {
 	if ((*it)->name_ != "item")
@@ -860,7 +860,7 @@ string Statement_Dump::dump_pretty_map_ql() const
     }
     else
     {
-      for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
+      for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
           it != substatements.end(); ++it)
       {
 	if ((*it)->name_ != "item")
@@ -901,7 +901,7 @@ string Statement_Dump::dump_pretty_map_ql() const
   {
     if (attributes.find("type") != attributes.end())
     {
-      string rel_type = attributes.find("type")->second;
+      std::string rel_type = attributes.find("type")->second;
       if (rel_type == "way-node" || rel_type == "relation-node")
 	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
@@ -939,7 +939,7 @@ string Statement_Dump::dump_pretty_map_ql() const
 
 
 Statement_Dump* Statement_Dump::Factory::create_statement
-    (string element, int line_number, const map< string, string >& attributes)
+    (std::string element, int line_number, const std::map< std::string, std::string >& attributes)
 {
   return new Statement_Dump(element, attributes);
 }

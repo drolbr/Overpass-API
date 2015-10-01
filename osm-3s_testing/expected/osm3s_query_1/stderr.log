@@ -2,4 +2,4 @@ encoding remark: Please enter your query and terminate it with CTRL+D.
 encoding remark: Your input starts with a tag but not the root tag. Thus, a line with the
 datatype declaration and a line with the root tag 'osm-script' is
 added. This shifts line numbering by -2 line(s).
-runtime error: open64: 2 No such file or directory /osm3s_v0.7.50_osm_base Dispatcher_Client::1
+runtime error: open64: 2 No such file or directory /osm3s_v0.7.52_osm_base Dispatcher_Client::1

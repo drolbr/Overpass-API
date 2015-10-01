@@ -1101,7 +1101,7 @@ void Query_Statement::progress_1(vector< Id_Type >& ids, std::vector< Index >& r
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_ids< Skeleton, Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late);
     
-    if (!key_nvalues.empty() || !key_nregexes.empty())
+    if (!key_nvalues.empty() || (!check_keys_late && !key_nregexes.empty()))
     {
       std::vector< std::pair< Id_Type, Uint31_Index > > non_ids
           = collect_non_ids< Id_Type >(file_prop, attic_file_prop, rman, timestamp);

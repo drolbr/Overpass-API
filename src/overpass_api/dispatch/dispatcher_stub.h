@@ -20,7 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__DISPATCH__DISPATCHER_STUB_H
 
 #include "../statements/statement.h"
-#include "../../template_db/dispatcher.h"
+#include "../../template_db/dispatcher_client.h"
 
 #include <errno.h>
 #include <fcntl.h>

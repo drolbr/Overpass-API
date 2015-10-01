@@ -48,11 +48,8 @@ class Osm_Updater
     Nonsynced_Transaction* transaction;
     Dispatcher_Client* dispatcher_client;
     Node_Updater* node_updater_;
-    Update_Node_Logger* update_node_logger_;
     Way_Updater* way_updater_;
-    Update_Way_Logger* update_way_logger_;
     Relation_Updater* relation_updater_;
-    Update_Relation_Logger* update_relation_logger_;
     string db_dir_;
     meta_modes meta;
 

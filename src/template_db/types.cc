@@ -25,3 +25,12 @@ int& global_read_counter()
   static int counter = 0;
   return counter;
 }
+
+
+void millisleep(uint32 milliseconds)
+{
+  struct timeval timeout_;
+  timeout_.tv_sec = milliseconds/1000;
+  timeout_.tv_usec = milliseconds*1000;
+  select(FD_SETSIZE, NULL, NULL, NULL, &timeout_);
+}

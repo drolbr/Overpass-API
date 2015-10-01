@@ -1380,6 +1380,71 @@ std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
 }
 
 
+struct Plain_Print_Target : public Print_Target
+{
+    Plain_Print_Target(uint32 mode_, Transaction& transaction, Output_Handler* output_)
+        : Print_Target(mode_, transaction), output(output_) {}
+    virtual ~Plain_Print_Target() {}
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void);
+                            
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0, const Action& action = KEEP);
+
+    // helper functions for attic diffs
+    void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+                            const vector< pair< string, string > >* tags,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+                            const map< uint32, string >* users, const Action& action,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta,
+			    Show_New_Elem show_new_elem,
+			    uint32 new_ll_upper, const Node_Skeleton& new_skel,
+                            const vector< pair< string, string > >* new_tags);
+//     void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+//                             const vector< pair< string, string > >* tags = 0,
+//                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+//                             const std::vector< Quad_Coord >* geometry = 0,
+//                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+//                             const map< uint32, string >* users = 0, const Action& action = KEEP,
+// 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
+// 			    Show_New_Elem show_new_elem = visible_void);
+//     void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+//                             const vector< pair< string, string > >* tags = 0,
+//                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+//                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+//                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
+//                             const map< uint32, string >* users = 0, const Action& action = KEEP,
+// 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
+// 			    Show_New_Elem show_new_elem = visible_void);
+    
+private:
+    Output_Handler* output;
+};
+
+
 class Collection_Print_Target : public Print_Target
 {
   public:
@@ -1417,7 +1482,7 @@ class Collection_Print_Target : public Print_Target
     
     virtual void print_item_count(const Output_Item_Count& item_count);
 
-    void set_target(Print_Target* target, bool order_by_id);
+    void set_target(Plain_Print_Target* target, bool order_by_id);
     
     void clear_nodes
         (Resource_Manager& rman, const map< uint32, string >* users = 0, bool add_deletion_information = false);
@@ -1504,7 +1569,7 @@ class Collection_Print_Target : public Print_Target
       }
     };
   
-    Print_Target* final_target;
+    Plain_Print_Target* final_target;
     std::vector< Node_Entry > nodes;
     std::vector< Way_Entry > ways;
     std::vector< Relation_Entry > relations;
@@ -1515,7 +1580,7 @@ class Collection_Print_Target : public Print_Target
 };
 
     
-void Collection_Print_Target::set_target(Print_Target* target, bool order_by_id_)
+void Collection_Print_Target::set_target(Plain_Print_Target* target, bool order_by_id_)
 { 
   final_target = target;
   std::sort(nodes.begin(), nodes.end());
@@ -2277,43 +2342,25 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Area_Skeleton& s
 void Collection_Print_Target::print_item_count(const Output_Item_Count & item_count) {}
 
 
-struct Plain_Print_Target : public Print_Target
+void Plain_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& skel,
+                            const vector< pair< string, string > >* tags,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+                            const map< uint32, string >* users, const Action& action,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta,
+			    Show_New_Elem show_new_elem)
 {
-    Plain_Print_Target(uint32 mode_, Transaction& transaction, Output_Handler* output_)
-        : Print_Target(mode_, transaction), output(output_) {}
-    virtual ~Plain_Print_Target() {}
-    
-    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
-                            const vector< pair< string, string > >* tags = 0,
-                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0, const Action& action = KEEP,
-			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
-			    Show_New_Elem show_new_elem = visible_void);
-    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
-                            const vector< pair< string, string > >* tags = 0,
-                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
-                            const std::vector< Quad_Coord >* geometry = 0,
-                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0, const Action& action = KEEP,
-			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
-			    Show_New_Elem show_new_elem = visible_void);
-    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
-                            const vector< pair< string, string > >* tags = 0,
-                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
-                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
-                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0, const Action& action = KEEP,
-			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
-			    Show_New_Elem show_new_elem = visible_void);
-                            
-    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
-                            const vector< pair< string, string > >* tags = 0,
-                            const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
-                            const map< uint32, string >* users = 0, const Action& action = KEEP);
-    
-private:
-    Output_Handler* output;
-};
+  if (output)
+  {
+    Point_Geometry geom(::lat(ll_upper, skel.ll_lower), ::lon(ll_upper, skel.ll_lower));
+    output->print_item(skel, geom,
+      mode & Print_Target::PRINT_TAGS ? tags : 0,
+      mode & Print_Target::PRINT_META ? meta : 0,
+      mode & Print_Target::PRINT_META ? users : 0,
+      Output_Mode(mode),
+      Output_Handler::keep,
+      0, 0, 0);
+  }
+}
 
 
 void Plain_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& skel,
@@ -2321,7 +2368,9 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
                             const map< uint32, string >* users, const Action& action,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta,
-			    Show_New_Elem show_new_elem)
+			    Show_New_Elem show_new_elem,
+			    uint32 new_ll_upper, const Node_Skeleton& new_skel,
+                            const vector< pair< string, string > >* new_tags)
 {
   if (output)
   {
@@ -2523,7 +2572,7 @@ void Print_Statement::execute(Resource_Manager& rman)
   
   if (collection_mode == collect_rhs)
   {
-    collection_print_target->set_target(target, order == order_by_id);
+    collection_print_target->set_target(dynamic_cast< Plain_Print_Target* >(target), order == order_by_id);
     target = collection_print_target;
     mode = Print_Target::PRINT_IDS
         | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS

@@ -21,6 +21,7 @@
 
 #include <cstring>
 #include <iomanip>
+#include <limits>
 #include <map>
 #include <set>
 #include <sstream>
@@ -495,6 +496,9 @@ struct Timestamp
   
   std::string str() const
   {
+    if (timestamp == std::numeric_limits< unsigned long long >::max())
+      return "NOW";
+    
     std::ostringstream out;
     out<<std::setw(4)<<std::setfill('0')<<year()<<"-"
         <<std::setw(2)<<std::setfill('0')<<month()<<"-"

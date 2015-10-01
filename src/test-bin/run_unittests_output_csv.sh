@@ -161,4 +161,11 @@ while [[ $II -lt 31 ]]; do
 
 $BASEDIR/bin/dispatcher --terminate
 
-#rm -fR input/update_database/*
+rm -fR input/update_database/*
+
+II=1
+while [[ $II -lt 31 ]]; do
+{
+  rm -fR input/output_csv_$II/
+  II=$(($II + 1))
+}; done

@@ -58,7 +58,13 @@ public:
   virtual double east() const = 0;
   
   virtual bool has_line_geometry() const = 0;
-  virtual const std::vector< Point_Double >* get_line_geometry() const = 0;
+  virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
+  
+  virtual bool has_multiline_geometry() const = 0;
+  virtual const std::vector< Point_Double >* get_multiline_geometry() const { return 0; }
+  
+  virtual bool has_components() const = 0;
+  virtual const std::vector< Opaque_Geometry* >* get_components() const { return 0; }
 };
 
 
@@ -78,7 +84,8 @@ public:
   virtual double east() const { return 0; }
   
   virtual bool has_line_geometry() const { return false; }
-  virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
+  virtual bool has_multiline_geometry() const { return false; }
+  virtual bool has_components() const { return false; }
 };
 
 
@@ -98,7 +105,8 @@ public:
   virtual double east() const { return pt.lon; }
   
   virtual bool has_line_geometry() const { return false; }
-  virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
+  virtual bool has_multiline_geometry() const { return false; }
+  virtual bool has_components() const { return false; }
   
 private:
   Point_Double pt;
@@ -121,7 +129,8 @@ public:
   virtual double east() const { return bbox.east; }
   
   virtual bool has_line_geometry() const { return false; }
-  virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
+  virtual bool has_multiline_geometry() const { return false; }
+  virtual bool has_components() const { return false; }
   
 private:
   Bbox_Double bbox;
@@ -147,9 +156,50 @@ public:
   virtual bool has_line_geometry() const { return true; }
   virtual const std::vector< Point_Double >* get_line_geometry() const { return &points; }
   
+  virtual bool has_multiline_geometry() const { return false; }
+  virtual bool has_components() const { return false; }
+  
 private:
   std::vector< Point_Double > points;
   mutable Bbox_Double* bounds;
+};
+
+
+class Compound_Geometry : public Opaque_Geometry
+{
+public:
+  Compound_Geometry() : bounds(0) {}
+  virtual ~Compound_Geometry()
+  {
+    delete bounds;
+    for (std::vector< Opaque_Geometry* >::iterator it = components.begin(); it != components.end(); ++it)
+      delete *it;
+  }
+  
+  virtual bool has_center() const { return true; }
+  virtual double center_lat() const;
+  virtual double center_lon() const;
+  
+  virtual bool has_bbox() const { return true; }
+  virtual double south() const;
+  virtual double north() const;
+  virtual double west() const;
+  virtual double east() const;
+  
+  virtual bool has_line_geometry() const { return false; }
+  
+  virtual bool has_multiline_geometry() const { return true; }
+  virtual const std::vector< Point_Double >* get_multiline_geometry() const;
+
+  virtual bool has_components() const { return true; }
+  virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }
+  
+  void add_component(Opaque_Geometry* component) { components.push_back(component); }
+  
+private:
+  std::vector< Opaque_Geometry* > components;
+  mutable Bbox_Double* bounds;
+  mutable std::vector< std::vector< Point_Double > >* linestrings;
 };
 
 

@@ -138,8 +138,10 @@
   <node id="132314" lat="10.2010000" lon="3.0204000" version="1" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
   <node id="132323" lat="10.2020000" lon="3.0203000" version="1" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo"/>
   <node id="132324" lat="10.2020000" lon="3.0204000" version="1" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
-  <node id="132511" lat="10.2010001" lon="3.0501001" version="3" timestamp="2013-07-01T09:03:26Z" changeset="496" uid="42" user="foo"/>
-  <node id="132522" lat="10.2020001" lon="3.0502001" version="3" timestamp="2013-07-01T09:03:26Z" changeset="496" uid="42" user="foo"/>
+  <node id="132511" lat="10.2010001" lon="3.0501001" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="132522" lat="10.2020001" lon="3.0502001" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="132611" lat="10.2010001" lon="3.0601001" version="3" timestamp="2013-07-01T09:03:26Z" changeset="496" uid="42" user="foo"/>
+  <node id="132622" lat="10.2020001" lon="3.0602001" version="3" timestamp="2013-07-01T09:03:26Z" changeset="496" uid="42" user="foo"/>
   <node id="132711" lat="10.2010000" lon="3.0701000" version="3" timestamp="2013-07-01T09:03:17Z" changeset="496" uid="42" user="foo"/>
   <node id="132722" lat="10.2020000" lon="3.0702000" version="3" timestamp="2013-07-01T09:03:17Z" changeset="496" uid="42" user="foo"/>
   <node id="133210" lat="10.3010001" lon="3.0200001" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo"/>
@@ -484,13 +486,13 @@
     <nd ref="132223"/>
     <nd ref="132224"/>
   </way>
-  <way id="13231" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="13231" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <nd ref="132311"/>
     <nd ref="132312"/>
     <nd ref="132313"/>
     <nd ref="132314"/>
   </way>
-  <way id="13232" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="13232" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <nd ref="132321"/>
     <nd ref="132322"/>
     <nd ref="132323"/>
@@ -511,6 +513,14 @@
   <way id="13252" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
     <nd ref="132521"/>
     <nd ref="132522"/>
+  </way>
+  <way id="13261" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="132611"/>
+    <nd ref="132612"/>
+  </way>
+  <way id="13262" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <nd ref="132621"/>
+    <nd ref="132622"/>
   </way>
   <way id="13271" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <nd ref="132711"/>
@@ -563,13 +573,13 @@
     <nd ref="142223"/>
     <nd ref="142224"/>
   </way>
-  <way id="14231" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="14231" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <nd ref="142311"/>
     <nd ref="142312"/>
     <nd ref="142313"/>
     <nd ref="142314"/>
   </way>
-  <way id="14232" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="14232" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <nd ref="142321"/>
     <nd ref="142322"/>
     <nd ref="142323"/>
@@ -623,13 +633,13 @@
     <nd ref="143222"/>
     <nd ref="143223"/>
   </way>
-  <way id="14331" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="14331" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <nd ref="143311"/>
     <nd ref="143312"/>
     <nd ref="143313"/>
     <nd ref="143314"/>
   </way>
-  <way id="14332" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="14332" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
     <nd ref="143321"/>
     <nd ref="143322"/>
     <nd ref="143323"/>
@@ -744,6 +754,12 @@
     <member type="way" ref="13252" role=""/>
     <tag k="foo" v="bar_1325"/>
     <tag k="foo_1325" v="bar"/>
+  </relation>
+  <relation id="1326" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="13261" role=""/>
+    <member type="way" ref="13262" role=""/>
+    <tag k="foo" v="bar_1326"/>
+    <tag k="foo_1326" v="bar"/>
   </relation>
   <relation id="1327" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13271" role=""/>

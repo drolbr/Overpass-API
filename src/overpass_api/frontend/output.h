@@ -26,7 +26,8 @@
 #include "../../template_db/types.h"
 #include "../core/datatypes.h"
 
-string escape_cstr(const string& s);
+
+std::string escape_cstr(const std::string& s);
 
 Osm_Backend_Callback* get_verbatim_callback();
 Osm_Backend_Callback* get_quiet_callback();

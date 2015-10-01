@@ -19,6 +19,7 @@
 #include "../core/settings.h"
 #include "../frontend/user_interface.h"
 #include "../../template_db/dispatcher.h"
+#include "../../template_db/dispatcher_client.h"
 
 #include <cstring>
 #include <iostream>

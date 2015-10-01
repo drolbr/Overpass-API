@@ -27,14 +27,14 @@
 
 struct Basic_Settings
 {
-  string DATA_SUFFIX;
-  string INDEX_SUFFIX;
-  string ID_SUFFIX;
-  string SHADOW_SUFFIX;
+  std::string DATA_SUFFIX;
+  std::string INDEX_SUFFIX;
+  std::string ID_SUFFIX;
+  std::string SHADOW_SUFFIX;
   
-  string base_directory;
-  string logfile_name;
-  string shared_name_base;
+  std::string base_directory;
+  std::string logfile_name;
+  std::string shared_name_base;
   
   Basic_Settings();
 };
@@ -56,7 +56,7 @@ struct Osm_Base_Settings
   File_Properties* RELATION_TAGS_GLOBAL;
   File_Properties* RELATION_KEYS;
   
-  string shared_name;
+  std::string shared_name;
   uint max_num_processes;
   uint purge_timeout;
   uint64 total_available_space;
@@ -73,7 +73,7 @@ struct Area_Settings
   File_Properties* AREA_TAGS_LOCAL;
   File_Properties* AREA_TAGS_GLOBAL;
   
-  string shared_name;
+  std::string shared_name;
   uint max_num_processes;
   uint purge_timeout;
   uint64 total_available_space;
@@ -135,12 +135,12 @@ void show_mem_status();
 class Logger
 {
   public:
-    Logger(const string& db_dir);
-    void annotated_log(const string& message);
-    void raw_log(const string& message);
+    Logger(const std::string& db_dir);
+    void annotated_log(const std::string& message);
+    void raw_log(const std::string& message);
     
   private:
-    string logfile_full_name;
+    std::string logfile_full_name;
 };
 
 
