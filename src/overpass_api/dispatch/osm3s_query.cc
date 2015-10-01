@@ -126,7 +126,8 @@ int main(int argc, char *argv[])
       area_level = determine_area_level(error_output, area_level);
       Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --",
 				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024);
-      copy_file(db_dir + "/replicate_id", clone_db_dir + "/replicate_id");
+      copy_file(dispatcher.resource_manager().get_transaction()->get_db_dir() + "/replicate_id",
+		clone_db_dir + "/replicate_id");
       
       clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
       return 0;
