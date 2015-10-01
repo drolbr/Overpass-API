@@ -302,7 +302,9 @@ void Web_Output::write_payload_header
 
 void Web_Output::write_footer()
 {
-  if (header_written != final && output_handler)
+  if (header_written == html)
+    std::cout<<"\n</body>\n</html>\n";
+  else if (header_written != final && output_handler)
     output_handler->write_footer();
   
   header_written = final;
