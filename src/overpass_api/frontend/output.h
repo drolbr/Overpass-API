@@ -27,8 +27,6 @@
 #include "../core/datatypes.h"
 
 
-std::string escape_cstr(const std::string& s);
-
 Osm_Backend_Callback* get_verbatim_callback();
 Osm_Backend_Callback* get_quiet_callback();
 
