@@ -1,5 +1,6 @@
 
 #include "../../expat/escape_json.h"
+#include "../frontend/basic_formats.h"
 #include "output_json.h"
 
 
@@ -60,7 +61,13 @@ template< typename Id_Type >
 void print_meta_json(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 		    const std::map< uint32, std::string >& users)
 {
-  //TODO
+  std::cout<<",\n  \"timestamp\": \""<<iso_string(meta.timestamp)<<"\""
+        ",\n  \"version\": "<<meta.version<<
+	",\n  \"changeset\": "<<meta.changeset;
+  std::map< uint32, std::string >::const_iterator it = users.find(meta.user_id);
+  if (it != users.end())
+    std::cout<<",\n  \"user\": \""<<escape_cstr(it->second)<<"\"";
+  std::cout<<",\n  \"uid\": "<<meta.user_id;
 }
 
 

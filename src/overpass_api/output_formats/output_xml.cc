@@ -1,5 +1,6 @@
 
 #include "../../expat/escape_xml.h"
+#include "../frontend/basic_formats.h"
 #include "output_xml.h"
 
 
@@ -45,28 +46,7 @@ template< typename Id_Type >
 void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 		    const std::map< uint32, std::string >& users)
 {
-  uint32 year = Timestamp::year(meta.timestamp);
-  uint32 month = Timestamp::month(meta.timestamp);
-  uint32 day = Timestamp::day(meta.timestamp);
-  uint32 hour = Timestamp::hour(meta.timestamp);
-  uint32 minute = Timestamp::minute(meta.timestamp);
-  uint32 second = Timestamp::second(meta.timestamp);
-  std::string timestamp("    -  -  T  :  :  Z");
-  timestamp[0] = (year / 1000) % 10 + '0';
-  timestamp[1] = (year / 100) % 10 + '0';
-  timestamp[2] = (year / 10) % 10 + '0';
-  timestamp[3] = year % 10 + '0';
-  timestamp[5] = (month / 10) % 10 + '0';
-  timestamp[6] = month % 10 + '0';
-  timestamp[8] = (day / 10) % 10 + '0';
-  timestamp[9] = day % 10 + '0';
-  timestamp[11] = (hour / 10) % 10 + '0';
-  timestamp[12] = hour % 10 + '0';
-  timestamp[14] = (minute / 10) % 10 + '0';
-  timestamp[15] = minute % 10 + '0';
-  timestamp[17] = (second / 10) % 10 + '0';
-  timestamp[18] = second % 10 + '0';
-  std::cout<<" version=\""<<meta.version<<"\" timestamp=\""<<timestamp
+  std::cout<<" version=\""<<meta.version<<"\" timestamp=\""<<iso_string(meta.timestamp)
       <<"\" changeset=\""<<meta.changeset<<"\" uid=\""<<meta.user_id<<"\"";
   std::map< uint32, std::string >::const_iterator it = users.find(meta.user_id);
   if (it != users.end())
