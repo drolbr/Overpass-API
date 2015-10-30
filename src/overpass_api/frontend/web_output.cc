@@ -132,19 +132,8 @@ void Web_Output::write_html_header
     return;    
   header_written = html;
   
-  if (write_mime > 0)
+  if (write_mime)
   {
-    if (write_mime != 200)
-    {
-      if (write_mime == 504)
-        std::cout<<"Status: "<<write_mime<<" Gateway Timeout\n";
-      else if (write_mime == 400)
-        std::cout<<"Status: "<<write_mime<<" Bad Request\n";
-      else if (write_mime == 429)
-        std::cout<<"Status: "<<write_mime<<" Too Many Requests\n";
-      else
-        std::cout<<"Status: "<<write_mime<<"\n";
-    }
     if (allow_headers != "")
       std::cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
@@ -153,38 +142,18 @@ void Web_Output::write_html_header
     if (http_method == http_options)
       std::cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
-    std::cout<<"Content-type: text/html; charset=utf-8\n\n";
     if (http_method == http_options || http_method == http_head)
-      return;
-  }
-  std::cout<<
-  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-  "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n"
-  "    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
-  "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
-  "<head>\n"
-  "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-  "  <title>OSM3S Response</title>\n"
-  "</head>\n";
-  std::cout<<(write_js_init ? "<body onload=\"init()\">\n\n" : "<body>\n\n");
-  if (write_remarks)
-  {
-    std::cout<<
-    "<p>The data included in this document is from www.openstreetmap.org. "
-    "The data is made available under ODbL.</p>\n";
-    if (timestamp != "")
     {
-      std::cout<<"<p>Data included until: "<<timestamp;
-      if (area_timestamp != "")
-        std::cout<<"<br/>Areas based on data until: "<<area_timestamp;
-      std::cout<<"</p>\n";
+      std::cout<<"Content-type: text/html; charset=utf-8\n";
+      return;
     }
   }
+  ::write_html_header(timestamp, area_timestamp, write_mime, write_js_init, write_remarks);
 }
 
 
 void Web_Output::write_payload_header
-    (const std::string& timestamp, const std::string& area_timestamp, bool write_mime)
+    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp, bool write_mime)
 {
   if (header_written != not_yet)
     return;    
@@ -200,15 +169,14 @@ void Web_Output::write_payload_header
     if (http_method == http_options)
       std::cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
-    if (output_handler)
-      output_handler->write_http_headers();
-    std::cout<<'\n';
+    if (!output_handler || output_handler->write_http_headers())
+      std::cout<<'\n';
     if (http_method == http_options || http_method == http_head)
       return;
   }
   
   if (output_handler)
-    output_handler->write_payload_header(timestamp, area_timestamp);
+    output_handler->write_payload_header(db_dir, timestamp, area_timestamp);
 }
 
 

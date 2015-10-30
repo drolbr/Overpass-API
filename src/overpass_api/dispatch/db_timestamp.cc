@@ -25,8 +25,9 @@ class Output_Timestamp : public Output_Handler
 public:
   Output_Timestamp() {}
   
-  virtual void write_http_headers();
-  virtual void write_payload_header(const string& timestamp, const string& area_timestamp);
+  virtual bool write_http_headers();
+  virtual void write_payload_header(const std::string& db_dir,
+				    const std::string& timestamp, const std::string& area_timestamp);
   virtual void write_footer() {}
   virtual void display_remark(const std::string& text) {}
   virtual void display_error(const std::string& text) {}
@@ -61,7 +62,7 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
       const std::map< uint32, std::string >* roles,
-      const map< uint32, string >* users,
+      const map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action = keep,
       const Relation_Skeleton* new_skel = 0,
@@ -76,14 +77,15 @@ public:
 };
 
 
-void Output_Timestamp::write_http_headers()
+bool Output_Timestamp::write_http_headers()
 {
   std::cout<<"Content-type: text/plain\n";
+  return true;
 }
 
 
 void Output_Timestamp::write_payload_header
-    (const std::string& timestamp, const std::string& area_timestamp)
+    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
 {
   std::cout<<timestamp<<"\n";
 }
@@ -98,14 +100,14 @@ int main(int argc, char *argv[])
   
   try
   {
-    if (error_output.http_method == error_output.http_options
-        || error_output.http_method == error_output.http_head)
-      error_output.write_payload_header("");
+    if (error_output.http_method == http_options
+        || error_output.http_method == http_head)
+      error_output.write_payload_header("", "", "", true);
     else
     {
       // open read transaction and log this.
       Dispatcher_Stub dispatcher("", &error_output, "-- db-timestamp --", only_data, 0, 5, 256, global_settings);
-      error_output.write_payload_header(dispatcher.get_timestamp());
+      error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(), "", true);
     }
   }
   catch(File_Error e)
@@ -114,16 +116,16 @@ int main(int argc, char *argv[])
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
-      if (error_output.http_method == error_output.http_get
-          || error_output.http_method == error_output.http_post)
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Probably the server is overcrowded.\n";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
-      if (error_output.http_method == error_output.http_get
-          || error_output.http_method == error_output.http_post)
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Another request from your IP is still running.\n";
     }

@@ -23,8 +23,9 @@ class Output_XML : public Output_Handler
 public:
   Output_XML() {}
 
-  virtual void write_http_headers();
-  virtual void write_payload_header(const std::string& timestamp, const std::string& area_timestamp);
+  virtual bool write_http_headers();
+  virtual void write_payload_header(const std::string& db_dir,
+				    const std::string& timestamp, const std::string& area_timestamp);
   virtual void write_footer();
   virtual void display_remark(const std::string& text);
   virtual void display_error(const std::string& text);

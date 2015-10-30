@@ -4,14 +4,15 @@
 #include "output_xml.h"
 
 
-void Output_XML::write_http_headers()
+bool Output_XML::write_http_headers()
 {
   std::cout<<"Content-type: application/osm3s+xml\n";
+  return true;
 }
 
 
 void Output_XML::write_payload_header
-    (const std::string& timestamp, const std::string& area_timestamp)
+    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
 {
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\" generator=\"Overpass API\">\n"

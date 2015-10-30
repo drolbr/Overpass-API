@@ -21,7 +21,8 @@
 
 
 #include "../core/datatypes.h"
-#include "../frontend/output_handler.h"
+#include "basic_formats.h"
+#include "output_handler.h"
 
 
 struct Web_Output : public Error_Output
@@ -58,13 +59,13 @@ struct Web_Output : public Error_Output
       (const std::string& timestamp = "", const std::string& area_timestamp = "", uint write_mime = 200,
        bool write_js_init = false, bool write_remarks = true);
   void write_payload_header
-      (const std::string& timestamp = "", const std::string& area_timestamp = "", bool write_mime = true);
+      (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp,
+       bool write_mime);
   void write_footer();
   
   void set_output_handler(Output_Handler* output_handler_) { output_handler = output_handler_; }
   
 public:
-  typedef enum { http_get, http_post, http_head, http_options } Http_Methods;
   Http_Methods http_method;
   std::string allow_headers;
   bool has_origin;
@@ -83,5 +84,6 @@ private:
   void display_remark(const std::string& text);
   void display_error(const std::string& text, uint write_mime);
 };
+
 
 #endif

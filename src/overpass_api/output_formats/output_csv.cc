@@ -2,14 +2,15 @@
 #include "output_csv.h"
 
 
-void Output_CSV::write_http_headers()
+bool Output_CSV::write_http_headers()
 {
   std::cout<<"Content-type: text/csv\n";
+  return true;
 }
 
 
 void Output_CSV::write_payload_header
-    (const std::string& timestamp, const std::string& area_timestamp)
+    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
 {
   // Intentionally empty
 }

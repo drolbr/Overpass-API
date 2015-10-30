@@ -83,9 +83,9 @@ int main(int argc, char *argv[])
       max_allowed_space = temp.get_max_allowed_space();
     }
 
-    if (error_output.http_method == error_output.http_options
-        || error_output.http_method == error_output.http_head)
-      error_output.write_payload_header("", "");
+    if (error_output.http_method == http_options
+        || error_output.http_method == http_head)
+      error_output.write_payload_header("", "", "", true);
     else
     {
       // open read transaction and log this.
@@ -96,8 +96,8 @@ int main(int argc, char *argv[])
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
     
-      error_output.write_payload_header(dispatcher.get_timestamp(),
- 	  area_level > 0 ? dispatcher.get_area_timestamp() : "");
+      error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(),
+ 	  area_level > 0 ? dispatcher.get_area_timestamp() : "", true);
       
       for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	   it != get_statement_stack()->end(); ++it)
@@ -151,16 +151,16 @@ int main(int argc, char *argv[])
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
-      if (error_output.http_method == error_output.http_get
-          || error_output.http_method == error_output.http_post)
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Probably the server is overcrowded.\n";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
-      if (error_output.http_method == error_output.http_get
-          || error_output.http_method == error_output.http_post)
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Another request from your IP is still running.\n";
     }

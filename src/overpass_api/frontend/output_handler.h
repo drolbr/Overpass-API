@@ -34,8 +34,11 @@ class Output_Handler
 public:
   enum Feature_Action { keep, modify, push_away, pull_in, erase, create };
   
-  virtual void write_http_headers() = 0;
-  virtual void write_payload_header(const std::string& timestamp, const std::string& area_timestamp) = 0;
+  // shall return true if it really has written a content declaration
+  virtual bool write_http_headers() = 0;
+  
+  virtual void write_payload_header(const std::string& db_dir,
+				    const std::string& timestamp, const std::string& area_timestamp) = 0;
   virtual void write_footer() = 0;
   virtual void display_remark(const std::string& text) = 0;
   virtual void display_error(const std::string& text) = 0;

@@ -61,7 +61,7 @@ public:
   virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
   
   virtual bool has_multiline_geometry() const = 0;
-  virtual const std::vector< Point_Double >* get_multiline_geometry() const { return 0; }
+  //virtual const std::vector< std::vector< Point_Double > >* get_multiline_geometry() const { return 0; }
   
   virtual bool has_components() const = 0;
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return 0; }
@@ -189,12 +189,12 @@ public:
   virtual bool has_line_geometry() const { return false; }
   
   virtual bool has_multiline_geometry() const { return true; }
-  virtual const std::vector< Point_Double >* get_multiline_geometry() const;
+  //virtual const std::vector< std::vector< Point_Double > >* get_multiline_geometry() const;
 
   virtual bool has_components() const { return true; }
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }
   
-  void add_component(Opaque_Geometry* component) { components.push_back(component); }
+  void add_component(Opaque_Geometry* component);
   
 private:
   std::vector< Opaque_Geometry* > components;

@@ -38,7 +38,9 @@
 #include <string>
 #include <vector>
 
+
 struct Exit_Error {};
+
 
 class Dispatcher_Stub : public Watchdog_Callback
 {
@@ -46,7 +48,7 @@ class Dispatcher_Stub : public Watchdog_Callback
     // Opens the connection to the database, sets db_dir accordingly
     // and registers the process. error_output_ must remain valid over the
     // entire lifetime of this object.
-    Dispatcher_Stub(string db_dir_, Error_Output* error_output_, string xml_raw,
+    Dispatcher_Stub(std::string db_dir_, Error_Output* error_output_, std::string xml_raw,
 		    meta_modes meta_, int area_level,
 		    uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings_);
     
@@ -55,12 +57,13 @@ class Dispatcher_Stub : public Watchdog_Callback
 
     ~Dispatcher_Stub();
     
-    string get_timestamp() { return timestamp; }
-    string get_area_timestamp() { return area_timestamp; }
+    std::string get_db_dir() { return (db_dir == "" ? dispatcher_client->get_db_dir() : db_dir); }
+    std::string get_timestamp() { return timestamp; }
+    std::string get_area_timestamp() { return area_timestamp; }
     Resource_Manager& resource_manager() { return *rman; }
     
   private:
-    string db_dir, timestamp, area_timestamp;
+    std::string db_dir, timestamp, area_timestamp;
     
     Error_Output* error_output;
     Dispatcher_Client* dispatcher_client;

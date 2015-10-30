@@ -4,14 +4,15 @@
 #include "output_json.h"
 
 
-void Output_JSON::write_http_headers()
+bool Output_JSON::write_http_headers()
 {
   std::cout<<"Content-type: application/json\n";
+  return true;
 }
 
 
 void Output_JSON::write_payload_header
-    (const std::string& timestamp, const std::string& area_timestamp)
+    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
 {
   if (padding != "")
     std::cout<<padding<<"(";

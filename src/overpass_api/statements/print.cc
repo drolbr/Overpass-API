@@ -2467,7 +2467,23 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleton& sk
   if (output)
   {
     if (geometry)
-      ; //TODO
+    {
+      Compound_Geometry geom;
+      for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry->begin();
+	   it != geometry->end(); ++it)
+      {
+        //TODO
+	geom.add_component(new Null_Geometry());
+      }
+      output->print_item(skel, geom,
+        mode & Print_Target::PRINT_TAGS ? tags : 0,
+        mode & Print_Target::PRINT_META ? meta : 0,
+	&roles,
+        mode & Print_Target::PRINT_META ? users : 0,
+	Output_Mode(mode),
+        Output_Handler::keep, //TODO ab hier
+        0, 0, 0);
+    }
     else if (bounds) 
     {
       if (bounds->second)

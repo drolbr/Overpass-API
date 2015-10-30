@@ -24,118 +24,52 @@ using namespace std;
 
 double way_1_south(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 50.99685124;
-  else if (pattern_size > 80)
-    return 51.0034048;
-  else if (pattern_size > 40)
-    return 51.0165120;
-  else
-    return 51.02961924;
+  return 51. + 1.5/pattern_size;
 }
 
 double way_1_north(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 51.00340474;
-  else if (pattern_size > 258)
-    return 51.0099583;
-  else if (pattern_size > 80)
-    return 51.0296191;
-  else if (pattern_size > 40)
-    return 51.0427263;
-  else
-    return 51.05583354;
+  return 51. + 1.5/pattern_size;
 }
 
 double way_1_west(unsigned int pattern_size)
 {
-  if (pattern_size > 40)
-    return 6.9992448;
-  else
-    return 7.0123520;
+  return 7. + .5/pattern_size;
 }
 
 double way_1_east(unsigned int pattern_size)
 {
-  if (pattern_size > 258)
-    return 7.0057983;
-  else if (pattern_size > 40)
-    return 7.0254591;
-  else
-    return 7.0385663;
+  return 7. + 1.5/pattern_size;
 }
 
 unsigned int way_1_zoom(unsigned int pattern_size)
 {
-  if (pattern_size > 258)
-    return 14;
-  else
-    return 13;
+  return 13;
 }
 
 double way_2_south(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 50.99685124;
-  else if (pattern_size > 80)
-    return 51.0034048;
-  else if (pattern_size > 60)
-    return 51.0165120;
-  else if (pattern_size > 40)
-    return 50.9771904;
-  else
-    return 51.0296192;
+  return 51. + 1.5/pattern_size;
 }
 
 double way_2_north(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 51.00340474;
-  else if (pattern_size > 80)
-    return 51.0296191;
-  else if (pattern_size > 60)
-    return 51.0427263;
-  else if (pattern_size > 40)
-    return 51.0820479;
-  else
-    return 51.1344767;
+  return 51. + 1.5/pattern_size;
 }
 
 double way_2_west(unsigned int pattern_size)
 {
-  if (pattern_size > 120)
-    return 6.9992448;
-  else if (pattern_size > 60)
-    return 7.0123520;
-  else if (pattern_size > 40)
-    return 6.9730304;
-  else
-    return 7.0254592;
+  return 7. + 1.5/pattern_size;
 }
 
 double way_2_east(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 7.0057983;
-  else if (pattern_size > 120)
-    return 7.0254591;
-  else if (pattern_size > 60)
-    return 7.0385663;
-  else if (pattern_size > 40)
-    return 7.0778879;
-  else
-    return 7.1303167;
+  return 7. + 2.5/pattern_size;
 }
 
 unsigned int way_2_zoom(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 14;
-  else if (pattern_size > 60)
-    return 13;
-  else
-    return 11;
+  return 13;
 }
 
 double relation_1_south(unsigned int pattern_size)

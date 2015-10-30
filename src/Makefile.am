@@ -103,9 +103,10 @@ overpass_api/statements/user.cc \
 overpass_api/frontend/print_target.cc expat/escape_json.cc expat/escape_xml.cc
 
 output_formats_cc = \
-overpass_api/output_formats/output_xml.cc overpass_api/output_formats/output_xml_factory.cc \
-overpass_api/output_formats/output_json.cc overpass_api/output_formats/output_json_factory.cc \
 overpass_api/output_formats/output_csv.cc overpass_api/output_formats/output_csv_factory.cc \
+overpass_api/output_formats/output_custom.cc overpass_api/output_formats/output_custom_factory.cc \
+overpass_api/output_formats/output_json.cc overpass_api/output_formats/output_json_factory.cc \
+overpass_api/output_formats/output_xml.cc overpass_api/output_formats/output_xml_factory.cc \
 overpass_api/output_formats/output_popup_factory.cc
 
 libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
@@ -141,7 +142,7 @@ bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
 cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/output_handler.cc overpass_api/dispatch/web_query.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc template_db/zlib_wrapper.cc
 cgi_bin_interpreter_LDADD = libcore.la libdata.la -lz
-cgi_bin_timestamp_SOURCES = overpass_api/dispatch/db_timestamp.cc overpass_api/core/geometry.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc
+cgi_bin_timestamp_SOURCES = overpass_api/frontend/basic_formats.cc overpass_api/dispatch/db_timestamp.cc overpass_api/core/geometry.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc
 cgi_bin_timestamp_LDADD = libdispatcher.la libsettings.la libweboutput.la -lz
 
 
