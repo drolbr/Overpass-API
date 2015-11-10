@@ -351,8 +351,6 @@ uint32 probe_client_token()
   if (ip_addr == "")
     return 0;
   
-  cout<<ip_addr<<'\n';
-  
   if (ip_addr.find(".") != string::npos)
     return parse_ipv4_address(ip_addr);
   
@@ -366,6 +364,5 @@ uint32 probe_client_token()
   // We only consider the upper 64 bit of an IPv6 address.
   // For the sake of simplicity we xor these bits to get a 32 bit token.
   // This shall be reviewed once we know how IPv6 addresses really are distributed.
-  std::cout<<ipv6_address[0]<<' '<<ipv6_address[1]<<' '<<ipv6_address[2]<<' '<<ipv6_address[3]<<'\n';
   return ((ipv6_address[0] ^ ipv6_address[2])<<16 | (ipv6_address[1] ^ ipv6_address[3]));
 }
