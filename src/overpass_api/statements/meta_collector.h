@@ -27,6 +27,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "statement.h"
+#include "user_data_cache.h"
 
 
 template< typename Index, typename Id_Type >
@@ -35,18 +36,19 @@ struct Meta_Collector
   public:
     template< typename Object >
     Meta_Collector(const map< Index, vector< Object > >& items,
-        Transaction& transaction, const File_Properties* meta_file_prop = 0,
+        Resource_Manager& rman, const File_Properties* meta_file_prop = 0,
 	bool user_data = true);
     
     Meta_Collector(const set< pair< Index, Index > >& used_ranges,
-        Transaction& transaction, const File_Properties* meta_file_prop = 0);
+        Resource_Manager& rman, const File_Properties* meta_file_prop = 0);
     
     void reset();
     const OSM_Element_Metadata_Skeleton< Id_Type >* get
         (const Index& index, Id_Type ref);    
     const OSM_Element_Metadata_Skeleton< Id_Type >* get
         (const Index& index, Id_Type ref, uint64 timestamp);    
-    const map< uint32, string >& users() const { return users_; }
+    const map< uint32, string >& users() const { return (user_data_cache != 0 ?
+         user_data_cache->users() : empty_users_); }
     
     ~Meta_Collector()
     {
@@ -67,22 +69,12 @@ struct Meta_Collector
         ::Range_Iterator* range_it;
     Index* current_index;
     set< OSM_Element_Metadata_Skeleton< Id_Type > > current_objects;
-    map< uint32, string > users_;
+    User_Data_Cache* user_data_cache;
+    map< uint32, string > empty_users_;
     
     void update_current_objects(const Index&);
 };
 
-
-struct User_Data_Cache
-{
-  public:
-    User_Data_Cache(Transaction& transaction);
-    
-    const map< uint32, string >& users() const { return users_; }
-    
-  private:
-    map< uint32, string > users_;
-};
 
 
 /** Implementation --------------------------------------------------------- */
@@ -102,25 +94,25 @@ template< typename Index, typename Id_Type >
 template< typename Object >
 Meta_Collector< Index, Id_Type >::Meta_Collector
     (const map< Index, vector< Object > >& items,
-     Transaction& transaction, const File_Properties* meta_file_prop, bool user_data)
-  : meta_db(0), db_it(0), range_it(0), current_index(0)
+        Resource_Manager& rman, const File_Properties* meta_file_prop, bool user_data)
+  : meta_db(0), db_it(0), range_it(0), current_index(0), user_data_cache(0)
 {
   if (!meta_file_prop)
     return;
   
   generate_index_query(used_indices, items);
   meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-      (transaction.data_index(meta_file_prop));
+      ((rman.get_transaction())->data_index(meta_file_prop));
 	  
   reset();
   
   if (user_data)
   {
-    Block_Backend< Uint32_Index, User_Data > user_db
-        (transaction.data_index(meta_settings().USER_DATA));
-    for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
-        !(it == user_db.flat_end()); ++it)
-      users_[it.object().id] = it.object().name;
+    if (!rman.has_user_data_cache()) {
+      User_Data_Cache * udc = new User_Data_Cache(*rman.get_transaction());
+      rman.set_user_data_cache(*udc);
+    }
+    user_data_cache = rman.get_user_data_cache();
   }
 }
 
@@ -128,14 +120,14 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
 template< typename Index, typename Id_Type >
 Meta_Collector< Index, Id_Type >::Meta_Collector
     (const set< pair< Index, Index > >& used_ranges_,
-     Transaction& transaction, const File_Properties* meta_file_prop)
-  : used_ranges(used_ranges_), meta_db(0), db_it(0), range_it(0), current_index(0)
+        Resource_Manager& rman, const File_Properties* meta_file_prop)
+  : used_ranges(used_ranges_), meta_db(0), db_it(0), range_it(0), current_index(0), user_data_cache(0)
 {
   if (!meta_file_prop)
     return;
   
   meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-      (transaction.data_index(meta_file_prop));
+      ((rman.get_transaction())->data_index(meta_file_prop));
       
   reset();
 }
@@ -259,16 +251,5 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
   else
     return 0;
 }
-
-
-inline User_Data_Cache::User_Data_Cache(Transaction& transaction)
-{
-  Block_Backend< Uint32_Index, User_Data > user_db
-      (transaction.data_index(meta_settings().USER_DATA));
-  for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
-      !(it == user_db.flat_end()); ++it)
-    users_[it.object().id] = it.object().name;
-}
-
 
 #endif

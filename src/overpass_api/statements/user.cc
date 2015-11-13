@@ -58,7 +58,7 @@ void user_filter_map
     return;
   
   Meta_Collector< TIndex, typename TObject::Id_Type > meta_collector
-      (modify, *rman.get_transaction(), file_properties, false);
+      (modify, rman, file_properties, false);
       
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
@@ -87,9 +87,9 @@ void user_filter_map_attic
     return;
   
   Meta_Collector< TIndex, typename TObject::Id_Type > current_meta_collector
-      (modify, *rman.get_transaction(), current_file_properties, false);
+      (modify, rman, current_file_properties, false);
   Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
-      (modify, *rman.get_transaction(), attic_file_properties, false);
+      (modify, rman, attic_file_properties, false);
       
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
