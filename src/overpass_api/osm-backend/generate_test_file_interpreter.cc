@@ -74,54 +74,27 @@ unsigned int way_2_zoom(unsigned int pattern_size)
 
 double relation_1_south(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 50.99685124;
-  else if (pattern_size > 120)
-    return 50.99029756;
-  else if (pattern_size > 40)
-    return 51.0034048;
-  else
-    return 50.9771904;
+  return 51. + .5 / pattern_size;
 }
 
 double relation_1_north(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 51.00340474;
-  else if (pattern_size > 120)
-    return 51.01651186;
-  else if (pattern_size > 40)
-    return 51.0296191;
-  else
-    return 51.0820479;
+  return 51. + 1.5 / pattern_size;
 }
 
 double relation_1_west(unsigned int pattern_size)
 {
-  if (pattern_size > 40)
-    return 6.9992448;
-  else
-    return 6.9730304;
+  return 7. + .5 / pattern_size;
 }
 
 double relation_1_east(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 7.0057983;
-  else if (pattern_size > 40)
-    return 7.0254591;
-  else
-    return 7.0778879;
+  return 7. + 1.5 / pattern_size;
 }
 
 unsigned int relation_1_zoom(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 14;
-  else if (pattern_size > 40)
-    return 13;
-  else
-    return 11;
+  return 13;
 }
 
 double way_meta_south(unsigned int pattern_size)

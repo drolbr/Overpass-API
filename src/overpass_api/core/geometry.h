@@ -176,11 +176,11 @@ public:
       delete *it;
   }
   
-  virtual bool has_center() const { return true; }
+  virtual bool has_center() const;
   virtual double center_lat() const;
   virtual double center_lon() const;
   
-  virtual bool has_bbox() const { return true; }
+  virtual bool has_bbox() const;
   virtual double south() const;
   virtual double north() const;
   virtual double west() const;

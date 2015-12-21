@@ -2472,8 +2472,19 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleton& sk
       for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry->begin();
 	   it != geometry->end(); ++it)
       {
-        //TODO
-	geom.add_component(new Null_Geometry());
+        if (it->empty())
+	  geom.add_component(new Null_Geometry());
+	else if (it->size() == 1)
+	  geom.add_component(new Point_Geometry(
+	      ::lat(it->front().ll_upper, it->front().ll_lower),
+	      ::lon(it->front().ll_upper, it->front().ll_lower)));
+	else
+	{
+          std::vector< Point_Double > coords;
+          for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
+	    coords.push_back(Point_Double(::lat(it2->ll_upper, it2->ll_lower), ::lon(it2->ll_upper, it2->ll_lower)));
+	  geom.add_component(new Linestring_Geometry(coords));
+	}
       }
       output->print_item(skel, geom,
         mode & Print_Target::PRINT_TAGS ? tags : 0,

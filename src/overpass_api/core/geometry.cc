@@ -127,12 +127,15 @@ Bbox_Double* calc_bounds(const std::vector< Opaque_Geometry* >& components)
   
   for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
   {
-    south = std::min(south, (*it)->south());
-    north = std::max(north, (*it)->north());
-    west = std::min(west, (*it)->west());
-    east = std::max(east, (*it)->east());
+    if ((*it)->has_bbox())
+    {
+      south = std::min(south, (*it)->south());
+      north = std::max(north, (*it)->north());
+      west = std::min(west, (*it)->west());
+      east = std::max(east, (*it)->east());
     
-    wrapped |= ((*it)->west() < (*it)->east());
+      wrapped |= ((*it)->west() < (*it)->east());
+    }
   }
   
   if (north == -100.0)
@@ -169,6 +172,15 @@ Bbox_Double* calc_bounds(const std::vector< Opaque_Geometry* >& components)
 }
 
 
+bool Compound_Geometry::has_center() const
+{
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->valid();
+}
+
+
 double Compound_Geometry::center_lat() const
 {
   if (!bounds)
@@ -202,6 +214,15 @@ double Compound_Geometry::north() const
     bounds = calc_bounds(components);
   
   return bounds->north;
+}
+
+
+bool Compound_Geometry::has_bbox() const
+{
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->valid();
 }
 
 
