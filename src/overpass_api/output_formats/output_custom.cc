@@ -639,10 +639,20 @@ void Output_Custom::print_item(const Way_Skeleton& skel,
   }
   ++count;
   
-  output += process_template(way_template, skel.id.val(), "way",
-			     geometry.south(), geometry.west(), geometry.north(), geometry.east(),
-			     detect_zoom(geometry),
-			     tags, mode.mode & Output_Mode::NDS ? &skel.nds : 0, 0, 0);
+  if (geometry.has_bbox())
+  {
+    output += process_template(way_template, skel.id.val(), "way",
+			      geometry.south(), geometry.west(), geometry.north(), geometry.east(),
+			      detect_zoom(geometry),
+			      tags, mode.mode & Output_Mode::NDS ? &skel.nds : 0, 0, 0);
+  }
+  else
+  {
+    output += process_template(way_template, skel.id.val(), "way",
+			      200.0, 200.0, 200.0, 200.0,
+			      detect_zoom(geometry),
+			      tags, mode.mode & Output_Mode::NDS ? &skel.nds : 0, 0, 0);
+  }
 }
 
 

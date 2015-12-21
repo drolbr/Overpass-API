@@ -44,7 +44,11 @@ double way_1_east(unsigned int pattern_size)
 
 unsigned int way_1_zoom(unsigned int pattern_size)
 {
-  return 13;
+  if (pattern_size < 80)
+    return 13;
+  else if (pattern_size < 120)
+    return 14;
+  return 15;
 }
 
 double way_2_south(unsigned int pattern_size)
@@ -69,7 +73,11 @@ double way_2_east(unsigned int pattern_size)
 
 unsigned int way_2_zoom(unsigned int pattern_size)
 {
-  return 13;
+  if (pattern_size < 80)
+    return 13;
+  else if (pattern_size < 120)
+    return 14;
+  return 15;
 }
 
 double relation_1_south(unsigned int pattern_size)
@@ -94,7 +102,11 @@ double relation_1_east(unsigned int pattern_size)
 
 unsigned int relation_1_zoom(unsigned int pattern_size)
 {
-  return 13;
+  if (pattern_size < 80)
+    return 13;
+  else if (pattern_size < 120)
+    return 14;
+  return 15;
 }
 
 double way_meta_south(unsigned int pattern_size)
@@ -681,8 +693,7 @@ int main(int argc, char* args[])
         "</div>\n";
       if (string(args[2]) == "interpreter_27" || string(args[2]) == "interpreter_28"
 	   || string(args[2]) == "interpreter_31" || string(args[2]) == "interpreter_33"
-	   || string(args[2]) == "interpreter_34" || string(args[2]) == "interpreter_36"
-	   || string(args[2]) == "interpreter_37")
+	   || string(args[2]) == "interpreter_34")
       {
 	cout<<
 	"\n"
@@ -713,8 +724,30 @@ int main(int argc, char* args[])
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
 	"\n"
-        "<p>Way <strong>1</strong>,<br/>\n"
+        "<p>Way <strong>1</strong>, no geographic reference<br/>\n"
         "<br/>\n"
+        "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
+        "</div>\n";
+      if (string(args[2]) == "interpreter_36")
+	cout<<
+	"\n"
+	"<div style=\"min-height:300px;\">\n"
+	"\n"
+	"\n"
+        "<p>Way <strong>1</strong>, no geographic reference<br/>\n"
+	" members: "<<pattern_size+1<<", "<<pattern_size+2<<"<br/>\n"
+        "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
+        "</div>\n";
+      if (string(args[2]) == "interpreter_37")
+	cout<<
+	"\n"
+	"<div style=\"min-height:300px;\">\n"
+	"\n"
+	"\n"
+        "<p>Way <strong>1</strong>, no geographic reference<br/>\n"
+        "way_key = way_few<br/>\n"
+        "way_key_2/4 = way_value_1<br/>\n"
+	" members: "<<pattern_size+1<<", "<<pattern_size+2<<"<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
       if (string(args[2]) == "interpreter_28")
@@ -739,8 +772,7 @@ int main(int argc, char* args[])
         "</div>\n";
       if (string(args[2]) == "interpreter_29" || string(args[2]) == "interpreter_30"
 	   || string(args[2]) == "interpreter_32" || string(args[2]) == "interpreter_33"
-	   || string(args[2]) == "interpreter_34" || string(args[2]) == "interpreter_36"
-	   || string(args[2]) == "interpreter_37")
+	   || string(args[2]) == "interpreter_34")
       {
 	cout<<
 	"\n"
@@ -771,8 +803,30 @@ int main(int argc, char* args[])
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
 	"\n"
-        "<p>Relation <strong>1</strong>,<br/>\n"
+        "<p>Relation <strong>1</strong>, no geographic reference<br/>\n"
         "<br/>\n"
+        "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
+        "</div>\n";
+      if (string(args[2]) == "interpreter_36")
+	cout<<
+	"\n"
+	"<div style=\"min-height:300px;\">\n"
+	"\n"
+	"\n"
+        "<p>Relation <strong>1</strong>, no geographic reference<br/>\n"
+	" members: node <strong>1</strong> &quot;one&quot;, node <strong>"<<pattern_size+2<<"</strong> &quot;two&quot;<br/>\n"
+        "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
+        "</div>\n";
+      if (string(args[2]) == "interpreter_37")
+	cout<<
+	"\n"
+	"<div style=\"min-height:300px;\">\n"
+	"\n"
+	"\n"
+        "<p>Relation <strong>1</strong>, no geographic reference<br/>\n"
+        "relation_key = relation_few<br/>\n"
+        "relation_key_2/4 = relation_value_1<br/>\n"
+	" members: node <strong>1</strong> &quot;one&quot;, node <strong>"<<pattern_size+2<<"</strong> &quot;two&quot;<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
       if (string(args[2]) == "interpreter_30")
