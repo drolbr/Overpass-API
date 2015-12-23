@@ -10,7 +10,8 @@ class Output_CSV_Generator : public Output_Handler_Parser
 public:
   Output_CSV_Generator() : Output_Handler_Parser("csv") {}
   
-  Output_Handler* new_output_handler(Tokenizer_Wrapper* token, Error_Output* error_output);  
+  Output_Handler* new_output_handler(const std::map< std::string, std::string >& input_params,
+      Tokenizer_Wrapper* token, Error_Output* error_output);  
   
   static Output_CSV_Generator singleton;
 };
@@ -19,7 +20,8 @@ public:
 Output_CSV_Generator Output_CSV_Generator::singleton;
 
 
-Output_Handler* Output_CSV_Generator::new_output_handler(Tokenizer_Wrapper* token, Error_Output* error_output)
+Output_Handler* Output_CSV_Generator::new_output_handler(const std::map< std::string, std::string >& input_params,
+							 Tokenizer_Wrapper* token, Error_Output* error_output)
 {
   if (token)
   {

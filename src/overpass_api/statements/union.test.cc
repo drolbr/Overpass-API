@@ -46,7 +46,7 @@ int main(int argc, char* args[])
   string test_to_execute = args[1];
   uint64 global_node_offset = atoll(args[3]);
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

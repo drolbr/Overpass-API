@@ -50,17 +50,16 @@ int main(int argc, char *argv[])
   
   try
   {
-    string url = "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}";
-    string template_name = "default.wiki";
-    bool redirect = true;
-    string xml_raw(get_xml_cgi(&error_output, 16*1024*1024, url, redirect, template_name,
+    global_settings.set_input_params(
+	get_xml_cgi(&error_output, 16*1024*1024,
 	error_output.http_method, error_output.allow_headers, error_output.has_origin));
     
     if (error_output.display_encoding_errors())
       return 0;
     
     Statement::Factory stmt_factory(global_settings);
-    if (!parse_and_validate(stmt_factory, global_settings, xml_raw, &error_output, parser_execute))
+    if (!parse_and_validate(stmt_factory, global_settings, global_settings.get_input_params().find("data")->second,
+        &error_output, parser_execute))
       return 0;
     
     error_output.set_output_handler(global_settings.get_output_handler());
@@ -90,7 +89,7 @@ int main(int argc, char *argv[])
     {
       // open read transaction and log this.
       int area_level = determine_area_level(&error_output, 0);
-      Dispatcher_Stub dispatcher("", &error_output, xml_raw,
+      Dispatcher_Stub dispatcher("", &error_output, global_settings.get_input_params().find("data")->second,
 			         get_uses_meta_data(), area_level,
 				 max_allowed_time, max_allowed_space, global_settings);
       if (osm_script && osm_script->get_desired_timestamp())
@@ -104,35 +103,7 @@ int main(int argc, char *argv[])
         (*it)->execute(dispatcher.resource_manager());
 
     //TODO
-//       if (osm_script && osm_script->get_type() == "custom")
-//       {
-//         uint32 count = osm_script->get_written_elements_count();
-//         if (count == 0 && redirect)
-//         {
-//           error_output.write_html_header
-//               (dispatcher.get_timestamp(),
-// 	       area_level > 0 ? dispatcher.get_area_timestamp() : "");
-// 	  cout<<"<p>No results found.</p>\n";
-// 	  error_output.write_footer();
-//         }
-//         else if (count == 1 && redirect)
-//         {
-// 	  cout<<"Status: 302 Moved\n";
-// 	  cout<<"Location: "
-// 	      <<osm_script->adapt_url(url)
-// 	      <<"\n\n";
-//         }
-//         else
-//         {
-//           error_output.write_html_header
-//               (dispatcher.get_timestamp(),
-// 	       area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
-// 	       osm_script->template_contains_js());
-// 	  osm_script->write_output();
-// 	  error_output.write_footer();
-//         }
-//       }
-//       else if (osm_script && osm_script->get_type() == "popup")
+//       if (osm_script && osm_script->get_type() == "popup")
 //       {
 //         error_output.write_html_header
 //             (dispatcher.get_timestamp(),

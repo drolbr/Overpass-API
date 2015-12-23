@@ -58,7 +58,7 @@ int main(int argc, char* args[])
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   
   uint32 node_id_upper_limit = 5*pattern_size*pattern_size;
   uint32 way_id_upper_limit = 5*pattern_size*pattern_size;

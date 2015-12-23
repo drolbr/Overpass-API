@@ -33,7 +33,7 @@ void perform_around_print(uint pattern_size, string radius, uint64 global_node_o
 			  Transaction& transaction)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   try
   {
     Resource_Manager rman(transaction, &global_settings);
@@ -68,7 +68,7 @@ void perform_coord_print(uint pattern_size, string radius, uint64 global_node_of
                           Transaction& transaction)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   try
   {
     Resource_Manager rman(transaction, &global_settings);
@@ -111,7 +111,7 @@ int main(int argc, char* args[])
 
   Nonsynced_Transaction transaction(false, false, args[3], "");
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

@@ -76,7 +76,7 @@ Osm_Script_Statement::Osm_Script_Statement
   if (!format_parser)
     add_static_error("Unknown output format: " + attributes["output"]);
   else
-    global_settings.set_output_handler(format_parser->new_output_handler(0, 0));
+    global_settings.set_output_handler(format_parser, 0, 0);
   
   
   if (attributes["bbox"] != "")

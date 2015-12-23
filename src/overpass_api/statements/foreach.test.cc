@@ -29,7 +29,7 @@
 Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 id)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   ostringstream buf("");
   buf<<id;
   string id_ = buf.str();
@@ -54,7 +54,7 @@ Resource_Manager& fill_loop_set
   uint way_id_offset = (2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2);
   
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   Resource_Manager partial_rman(transaction, &global_settings);
   perform_id_query(partial_rman, "node", 1 + global_node_offset);
   if (!partial_rman.sets()["_"].nodes.empty())
@@ -99,7 +99,7 @@ int main(int argc, char* args[])
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

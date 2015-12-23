@@ -52,8 +52,6 @@ struct Web_Output : public Error_Output
   virtual bool display_parse_errors() { return parse_errors; }
   virtual bool display_static_errors() { return static_errors; }
   
-  virtual void add_padding(const std::string& padding_) { padding = padding_; }
-  
   void enforce_header(uint write_mime);
   void write_html_header
       (const std::string& timestamp = "", const std::string& area_timestamp = "", uint write_mime = 200,
@@ -76,7 +74,6 @@ private:
   bool parse_errors;
   bool static_errors;
   uint log_level;
-  std::string padding;
   std::string messages;
   
   Output_Handler* output_handler;

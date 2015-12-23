@@ -37,7 +37,7 @@ void perform_polygon_print(string bounds, Transaction& transaction)
     // Select a polygon from the testset that contains one quarter
     // of only one polygon.
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       const char* attributes[] = { "bounds", bounds.c_str(), 0 };
@@ -65,7 +65,7 @@ void perform_query_polygon_print(string bounds, string type, Transaction& transa
     // Select a polygon from the testset that contains one quarter
     // of only one polygon.
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       const char* attributes[] = { "type", type.c_str(), 0 };

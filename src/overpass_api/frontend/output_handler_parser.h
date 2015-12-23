@@ -22,7 +22,8 @@ public:
   
   // The class to parse the arguments (from ql notation) if any
   // Return null if and only if a fatal error has happened
-  virtual Output_Handler* new_output_handler(Tokenizer_Wrapper* token, Error_Output* error_output) = 0;
+  virtual Output_Handler* new_output_handler(const std::map< std::string, std::string >& input_params,
+					     Tokenizer_Wrapper* token, Error_Output* error_output) = 0;
 
   static Output_Handler_Parser* get_format_parser(const std::string& format_name);
   

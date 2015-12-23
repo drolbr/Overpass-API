@@ -53,7 +53,7 @@ class SProxy
     TStatement& stmt()
     {
       Parsed_Query global_settings;
-      global_settings.set_output_handler(new Output_XML());
+      global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
       if (!stmt_)
         stmt_ = new TStatement(0, attributes, global_settings);
       
@@ -76,7 +76,7 @@ void perform_query(string type, string key, string value, string db_dir)
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
@@ -123,7 +123,7 @@ void perform_query
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
@@ -197,7 +197,7 @@ void perform_query
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
@@ -261,7 +261,7 @@ void perform_regex_query
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
@@ -306,7 +306,7 @@ void perform_key_regex_query
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
@@ -398,7 +398,7 @@ void perform_query_with_around
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       ostringstream buf;
@@ -521,7 +521,7 @@ void perform_query_with_around
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       string lat, lon;
@@ -583,7 +583,7 @@ void perform_query_with_bbox
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
@@ -636,7 +636,7 @@ void perform_multi_query_with_bbox
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
@@ -711,7 +711,7 @@ void perform_query_with_recurse
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Id_Query_Statement > stmt1;
@@ -822,7 +822,7 @@ void perform_query_with_role_recurse
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Id_Query_Statement > stmt1;
@@ -872,7 +872,7 @@ void perform_query_with_id_query
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Parsed_Query global_settings;
-    global_settings.set_output_handler(new Output_XML());
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;

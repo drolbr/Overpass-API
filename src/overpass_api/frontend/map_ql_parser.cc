@@ -415,7 +415,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
 	error_output->add_parse_error("Unknown output format: " + result.back(), token.line_col().first);
     }
     else
-      parsed_query.set_output_handler(format_parser->new_output_handler(&token, error_output));
+      parsed_query.set_output_handler(format_parser, &token, error_output);
     
     clear_until_after(token, error_output, "]", true);      
   }

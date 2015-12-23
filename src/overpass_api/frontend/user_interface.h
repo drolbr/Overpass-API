@@ -19,22 +19,20 @@
 #ifndef DE__OSM3S___OVERPASS_API__FRONTEND__USER_INTERFACE_H
 #define DE__OSM3S___OVERPASS_API__FRONTEND__USER_INTERFACE_H
 
-#include <iostream>
 #include <string>
 
 #include "../core/datatypes.h"
 #include "web_output.h"
 
-using namespace std;
 
-string get_xml_cgi(Error_Output* error_output, uint32 max_input_size,
-		   string& url, bool& redirect, string& template_name,
-		   Http_Methods& http_method, string& allow_header, bool& has_origin);
+std::map< std::string, std::string > get_xml_cgi(
+    Error_Output* error_output, uint32 max_input_size,
+    Http_Methods& http_method, std::string& allow_header, bool& has_origin);
 
-string get_xml_console(Error_Output* error_output, uint32 max_input_size = 1048576);
+std::string get_xml_console(Error_Output* error_output, uint32 max_input_size = 1048576);
 
 uint32 probe_client_token();
 
-string probe_client_identifier();
+std::string probe_client_identifier();
 
 #endif

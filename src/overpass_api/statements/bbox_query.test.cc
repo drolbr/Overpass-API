@@ -30,7 +30,7 @@ void perform_bbox_print(string south, string north, string west, string east,
 			Transaction& transaction)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   try
   {
     // Select a bbox from the testset that contains one quarter

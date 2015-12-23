@@ -13,7 +13,7 @@
 class Output_JSON : public Output_Handler
 {
 public:
-  Output_JSON() : first_elem(true) {}
+  Output_JSON(const std::string& padding_) : padding(padding_), first_elem(true) {}
 
   virtual bool write_http_headers();
   virtual void write_payload_header(const std::string& db_dir,

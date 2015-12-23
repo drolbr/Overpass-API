@@ -13,7 +13,8 @@
 class Output_Custom : public Output_Handler
 {
 public:
-  Output_Custom() : redirect(true), template_name("default.wiki"), template_contains_js(false), count(0) {}
+  Output_Custom(bool redirect_, const std::string& template_name_, const std::string& url_)
+      : redirect(redirect_), template_name(template_name_), url(url_), template_contains_js(false), count(0) {}
 
   virtual bool write_http_headers();
   virtual void write_payload_header(const std::string& db_dir,
@@ -70,6 +71,7 @@ private:
   
   bool redirect;
   std::string template_name;
+  std::string url;
   std::string db_dir;
   std::string timestamp;
   std::string area_timestamp;

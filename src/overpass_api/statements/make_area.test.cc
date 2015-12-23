@@ -102,7 +102,7 @@ int main(int argc, char* args[])
   Nonsynced_Transaction transaction(false, false, db_dir, "");
   Nonsynced_Transaction area_transaction(true, false, db_dir, "");
   Parsed_Query global_settings;
-  global_settings.set_output_handler(new Output_XML());
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   Resource_Manager rman(transaction, global_settings, 0, area_transaction, 0, new Area_Updater(area_transaction));
   
   if (test_to_execute == "create")

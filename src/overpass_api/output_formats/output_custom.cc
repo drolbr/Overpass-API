@@ -51,30 +51,6 @@ std::string process_template(const std::string& raw_template, unsigned int count
 }
 
 
-void Output_Custom::write_footer()
-{
-  if (count == 0 && redirect)
-  {
-    ::write_html_header(timestamp, area_timestamp, 200, false, true);
-    std::cout<<"<p>No results found.</p>\n";
-    std::cout<<"\n</body>\n</html>\n";
-  }
-  else if (count == 1 && redirect)
-  {
-    std::cout<<"Status: 302 Moved\n";
-    //std::cout<<"Location: "<<osm_script->adapt_url(url)<<"\n\n";
-  }
-  else
-  {
-    ::write_html_header(timestamp, area_timestamp, 200, template_contains_js, true);
-    std::cout<<process_template(header, count);
-    std::cout<<'\n';
-    std::cout<<output;
-    std::cout<<"\n</body>\n</html>\n";
-  }
-}
-
-
 void Output_Custom::display_remark(const std::string& text)
 {
   //TODO
@@ -538,6 +514,31 @@ std::string process_template(const std::string& raw_template, unsigned long long
   result<<raw_template.substr(old_pos);
   
   return result.str();
+}
+
+
+void Output_Custom::write_footer()
+{
+  if (count == 0 && redirect)
+  {
+    ::write_html_header(timestamp, area_timestamp, 200, false, true);
+    std::cout<<"<p>No results found.</p>\n";
+    std::cout<<"\n</body>\n</html>\n";
+  }
+  else if (count == 1 && redirect)
+  {
+    std::cout<<"Status: 302 Moved\n";
+    std::cout<<"Location: "
+        <<process_template(url, first_id, first_type, 100.0, 200.0, 0, 17, 0, 0, 0, 0, 0)<<"\n\n";
+  }
+  else
+  {
+    ::write_html_header(timestamp, area_timestamp, 200, template_contains_js, true);
+    std::cout<<process_template(header, count);
+    std::cout<<'\n';
+    std::cout<<output;
+    std::cout<<"\n</body>\n</html>\n";
+  }
 }
 
 
