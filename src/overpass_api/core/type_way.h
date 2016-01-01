@@ -14,6 +14,15 @@
 *
 * You should have received a copy of the GNU Affero General Public License
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Modified varint en-/decoding helper functions ZigZagDecode64,
+* ZigZagEncode64, VarintSize64, ReadVarint64Fallback,
+* WriteVarint64ToArrayInline part of:
+*
+* Protocol Buffers - Google's data interchange format
+* Copyright 2008 Google Inc.  All rights reserved.
+* https://developers.google.com/protocol-buffers/
+*
 */
 
 #ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_WAY_H
@@ -30,6 +39,159 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <assert.h>
+
+
+inline int64 ZigZagDecode64(const uint64 n) {
+  return (n >> 1) ^ -static_cast<int64>(n & 1);
+}
+
+inline uint64 ZigZagEncode64(const signed long long n) {
+  // Note:  the right-shift must be arithmetic
+  return (static_cast<uint64>(n) << 1) ^ (n >> 63);
+}
+
+inline int VarintSize64(const signed long long value) {
+  if (value < (1ull << 35)) {
+    if (value < (1ull << 7)) {
+      return 1;
+    } else if (value < (1ull << 14)) {
+      return 2;
+    } else if (value < (1ull << 21)) {
+      return 3;
+    } else if (value < (1ull << 28)) {
+      return 4;
+    } else {
+      return 5;
+    }
+  } else {
+    if (value < (1ull << 42)) {
+      return 6;
+    } else if (value < (1ull << 49)) {
+      return 7;
+    } else if (value < (1ull << 56)) {
+      return 8;
+    } else if (value < (1ull << 63)) {
+      return 9;
+    } else {
+      return 10;
+    }
+  }
+}
+
+inline std::pair<uint64, bool> ReadVarint64Fallback(uint8** buffer_) {
+
+    uint8* ptr = *buffer_;
+    uint32 b;
+
+    // Splitting into 32-bit pieces gives better performance on 32-bit
+    // processors.
+    uint32 part0 = 0, part1 = 0, part2 = 0;
+
+    b = *(ptr++); part0  = b      ; if (!(b & 0x80)) goto done;
+    part0 -= 0x80;
+    b = *(ptr++); part0 += b <<  7; if (!(b & 0x80)) goto done;
+    part0 -= 0x80 << 7;
+    b = *(ptr++); part0 += b << 14; if (!(b & 0x80)) goto done;
+    part0 -= 0x80 << 14;
+    b = *(ptr++); part0 += b << 21; if (!(b & 0x80)) goto done;
+    part0 -= 0x80 << 21;
+    b = *(ptr++); part1  = b      ; if (!(b & 0x80)) goto done;
+    part1 -= 0x80;
+    b = *(ptr++); part1 += b <<  7; if (!(b & 0x80)) goto done;
+    part1 -= 0x80 << 7;
+    b = *(ptr++); part1 += b << 14; if (!(b & 0x80)) goto done;
+    part1 -= 0x80 << 14;
+    b = *(ptr++); part1 += b << 21; if (!(b & 0x80)) goto done;
+    part1 -= 0x80 << 21;
+    b = *(ptr++); part2  = b      ; if (!(b & 0x80)) goto done;
+    part2 -= 0x80;
+    b = *(ptr++); part2 += b <<  7; if (!(b & 0x80)) goto done;
+    // "part2 -= 0x80 << 7" is irrelevant because (0x80 << 7) << 56 is 0.
+
+    // We have overrun the maximum size of a varint (10 bytes).  The data
+    // must be corrupt.
+    return std::make_pair(0, false);
+
+   done:
+    *buffer_ = ptr;
+    return std::make_pair((static_cast<uint64>(part0)) |
+                              (static_cast<uint64>(part1) << 28) |
+                              (static_cast<uint64>(part2) << 56),
+                          true);
+}
+
+inline uint8* WriteVarint64ToArrayInline(
+    uint64 value, uint8* target) {
+  // Splitting into 32-bit pieces gives better performance on 32-bit
+  // processors.
+  uint32 part0 = static_cast<uint32>(value      );
+  uint32 part1 = static_cast<uint32>(value >> 28);
+  uint32 part2 = static_cast<uint32>(value >> 56);
+
+  int size;
+
+  // Here we can't really optimize for small numbers, since the value is
+  // split into three parts.  Checking for numbers < 128, for instance,
+  // would require three comparisons, since you'd have to make sure part1
+  // and part2 are zero.  However, if the caller is using 64-bit integers,
+  // it is likely that they expect the numbers to often be very large, so
+  // we probably don't want to optimize for small numbers anyway.  Thus,
+  // we end up with a hardcoded binary search tree...
+  if (part2 == 0) {
+    if (part1 == 0) {
+      if (part0 < (1 << 14)) {
+        if (part0 < (1 << 7)) {
+          size = 1; goto size1;
+        } else {
+          size = 2; goto size2;
+        }
+      } else {
+        if (part0 < (1 << 21)) {
+          size = 3; goto size3;
+        } else {
+          size = 4; goto size4;
+        }
+      }
+    } else {
+      if (part1 < (1 << 14)) {
+        if (part1 < (1 << 7)) {
+          size = 5; goto size5;
+        } else {
+          size = 6; goto size6;
+        }
+      } else {
+        if (part1 < (1 << 21)) {
+          size = 7; goto size7;
+        } else {
+          size = 8; goto size8;
+        }
+      }
+    }
+  } else {
+    if (part2 < (1 << 7)) {
+      size = 9; goto size9;
+    } else {
+      size = 10; goto size10;
+    }
+  }
+
+  assert (1 == 0);    // cannot get here
+
+  size10: target[9] = static_cast<uint8>((part2 >>  7) | 0x80);
+  size9 : target[8] = static_cast<uint8>((part2      ) | 0x80);
+  size8 : target[7] = static_cast<uint8>((part1 >> 21) | 0x80);
+  size7 : target[6] = static_cast<uint8>((part1 >> 14) | 0x80);
+  size6 : target[5] = static_cast<uint8>((part1 >>  7) | 0x80);
+  size5 : target[4] = static_cast<uint8>((part1      ) | 0x80);
+  size4 : target[3] = static_cast<uint8>((part0 >> 21) | 0x80);
+  size3 : target[2] = static_cast<uint8>((part0 >> 14) | 0x80);
+  size2 : target[1] = static_cast<uint8>((part0 >>  7) | 0x80);
+  size1 : target[0] = static_cast<uint8>((part0      ) | 0x80);
+
+  target[size-1] &= 0x7F;
+  return target + size;
+}
 
 
 struct Way
@@ -99,12 +261,12 @@ struct Way_Skeleton
   Way_Skeleton(void* data) : id(*(uint32*)data)
   {
     nds.reserve(*((uint16*)data + 2));
-    for (int i(0); i < *((uint16*)data + 2); ++i)
-      nds.push_back(*(uint64*)((uint16*)data + 4 + 4*i));
-    uint16* start_ptr = (uint16*)data + 4 + 4*nds.size();
+    uint16* start_ptr = (uint16*) decompress_nds(nds, *((uint16*)data + 2), ((uint8*)data + 10));
+
     geometry.reserve(*((uint16*)data + 3));
     for (int i(0); i < *((uint16*)data + 3); ++i)
       geometry.push_back(Quad_Coord(*(uint32*)(start_ptr + 4*i), *(uint32*)(start_ptr + 4*i + 2)));
+
   }
   
   Way_Skeleton(const Way& way)
@@ -115,12 +277,15 @@ struct Way_Skeleton
   
   uint32 size_of() const
   {
-    return 8 + 8*nds.size() + 8*geometry.size();
+    uint32 compress_size = calculate_nds_compressed_size(nds);
+    return 8 + 2 + compress_size + 8*geometry.size();
   }
   
   static uint32 size_of(void* data)
   {
-    return (8 + 8 * *((uint16*)data + 2) + 8 * *((uint16*)data + 3));
+    return (8 + 2 +
+            8 * *((uint16*)data + 3) +      // geometry size elements, 8 byte per element
+            *((uint16*)data + 4));          // nds_compressed_size (in bytes)
   }
   
   void to_data(void* data) const
@@ -128,9 +293,11 @@ struct Way_Skeleton
     *(uint32*)data = id.val();
     *((uint16*)data + 2) = nds.size();
     *((uint16*)data + 3) = geometry.size();
-    for (uint i(0); i < nds.size(); ++i)
-      *(uint64*)((uint16*)data + 4 + 4*i) = nds[i].val();
-    uint16* start_ptr = (uint16*)data + 4 + 4*nds.size();
+
+    uint16* start_ptr = (uint16*) compress_nds(nds, (uint8*)data + 10);
+    uint16 nds_compressed_size = (uint16) ((uint8*)start_ptr - ((uint8*)data + 10));
+    *((uint16*)data + 4) = nds_compressed_size;
+
     for (uint i(0); i < geometry.size(); ++i)
     {
       *(uint32*)(start_ptr + 4*i) = geometry[i].ll_upper;
@@ -138,6 +305,60 @@ struct Way_Skeleton
     }
   }
   
+  uint8* compress_nds(const std::vector< Node::Id_Type >& nds_, uint8* buffer_) const
+  {
+    uint8* current = buffer_;
+    Node::Id_Type prev = (uint64) 0;
+
+    for (std::vector< Node_Skeleton::Id_Type>::const_iterator it = nds_.begin();
+         it != nds_.end(); ++it)
+    {
+      signed long long delta = (signed long long) it->val() - (signed long long) prev.val();
+      uint64 zigzag = ZigZagEncode64(delta);
+      current = WriteVarint64ToArrayInline(zigzag, current);
+      prev = it->val();
+    }
+
+    if ((current - buffer_) & 1)    // add padding byte
+      *current++ = 0;
+
+    return current;
+  }
+
+  uint8* decompress_nds(std::vector< Node::Id_Type >& nds_, const uint16 nodes_count, uint8* buffer_)
+  {
+    uint8* current = buffer_;
+    Node::Id_Type nodeid = (uint64) 0;
+
+    for (int i=0; i<nodes_count;i++)
+    {
+      std::pair<uint64, bool> res = ReadVarint64Fallback(&current);
+      assert(res.second == true);
+      signed long long delta = ZigZagDecode64(res.first);
+      nodeid += delta;
+      nds_.push_back(nodeid);
+    }
+    if ((current - buffer_) & 1)    // add padding byte
+      current++;
+    return current;
+  }
+
+  uint32 calculate_nds_compressed_size(const std::vector< Node::Id_Type >& nds_) const
+  {
+    Node::Id_Type prev = (uint64) 0;
+    uint32 compressed_size = 0;
+
+    for (std::vector< Node_Skeleton::Id_Type>::const_iterator it = nds_.begin();
+        it != nds_.end(); ++it)
+    {
+      signed long long diff = (signed long long) it->val() - (signed long long) prev.val();
+      compressed_size += VarintSize64(ZigZagEncode64(diff));
+      prev = it->val();
+    }
+    compressed_size += compressed_size & 1;
+    return compressed_size;
+  }
+
   bool operator<(const Way_Skeleton& a) const
   {
     return this->id < a.id;
