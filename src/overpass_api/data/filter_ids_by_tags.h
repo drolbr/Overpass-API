@@ -198,10 +198,13 @@ public:
     if (std::binary_search(old_ids_->begin(), old_ids_->end(), id))
     {
       std::pair< uint64, uint64 >& timestamp_ref = timestamps[id];
-      timestamp_ref.second = timestamp;
+      if (timestamp_ref.second == 0 || timestamp <= timestamp_ref.second)
+      {
+        timestamp_ref.second = timestamp;
       
-      if (value_relevant)
-	timestamp_ref.first = timestamp;
+        if (value_relevant)
+	  timestamp_ref.first = timestamp;
+      }
     }
   }
   
