@@ -72,11 +72,14 @@ Osm_Script_Statement::Osm_Script_Statement
   max_allowed_space = max_space;
 
   
-  Output_Handler_Parser* format_parser = Output_Handler_Parser::get_format_parser(attributes["output"]);	
-  if (!format_parser)
-    add_static_error("Unknown output format: " + attributes["output"]);
-  else
-    global_settings.set_output_handler(format_parser, 0, 0);
+  if (!global_settings.get_output_handler())
+  {
+    Output_Handler_Parser* format_parser = Output_Handler_Parser::get_format_parser(attributes["output"]);	
+    if (!format_parser)
+      add_static_error("Unknown output format: " + attributes["output"]);
+    else
+      global_settings.set_output_handler(format_parser, 0, 0);
+  }
   
   
   if (attributes["bbox"] != "")

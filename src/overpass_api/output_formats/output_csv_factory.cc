@@ -59,7 +59,6 @@ Output_Handler* Output_CSV_Generator::new_output_handler(const std::map< std::st
       }
       clear_until_after(*token, error_output, ")");
     }
-    clear_until_after(*token, error_output, "]");
 
     csv_settings.with_headerline = (csv_headerline == "false" ? false : true);
     csv_settings.separator = csv_separator;
