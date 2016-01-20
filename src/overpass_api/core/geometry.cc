@@ -30,10 +30,13 @@ Bbox_Double* calc_bounds(const std::vector< Point_Double >& points)
   
   for (std::vector< Point_Double >::const_iterator it = points.begin(); it != points.end(); ++it)
   {
-    south = std::min(south, it->lat);
-    west = std::min(west, it->lon);
-    north = std::max(north, it->lat);
-    east = std::max(west, it->lon);
+    if (it->lat < 100.)
+    {
+      south = std::min(south, it->lat);
+      west = std::min(west, it->lon);
+      north = std::max(north, it->lat);
+      east = std::max(west, it->lon);
+    }
   }
   
   if (north == -100.0)
@@ -46,10 +49,13 @@ Bbox_Double* calc_bounds(const std::vector< Point_Double >& points)
     
     for (std::vector< Point_Double >::const_iterator it = points.begin(); it != points.end(); ++it)
     {
-      if (it->lon > 0)
-	wrapped_west = std::min(wrapped_west, it->lon);
-      else
-	wrapped_east = std::max(wrapped_east, it->lon);
+      if (it->lat < 100.)
+      {
+        if (it->lon > 0)
+	  wrapped_west = std::min(wrapped_west, it->lon);
+        else
+	  wrapped_east = std::max(wrapped_east, it->lon);
+      }
     }
     
     if (wrapped_west - wrapped_east > 180.0)
@@ -115,6 +121,87 @@ double Linestring_Geometry::east() const
   
   return bounds->east;
 }
+
+
+double Partial_Linestring_Geometry::center_lat() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(points);
+  
+  return bounds->center_lat();
+}
+
+
+double Partial_Linestring_Geometry::center_lon() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(points);
+  
+  return bounds->center_lon();
+}
+
+
+double Partial_Linestring_Geometry::south() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(points);
+  
+  return bounds->south;
+}
+
+
+double Partial_Linestring_Geometry::north() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(points);
+  
+  return bounds->north;
+}
+
+
+double Partial_Linestring_Geometry::west() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(points);
+  
+  return bounds->west;
+}
+
+
+double Partial_Linestring_Geometry::east() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(points);
+  
+  return bounds->east;
+}
+
+  
+void Partial_Linestring_Geometry::add_point(const Point_Double& point)
+{
+  delete bounds;
+  has_coords |= (point.lat < 100.);
+  points.push_back(point);
+}
+
 
 
 Bbox_Double* calc_bounds(const std::vector< Opaque_Geometry* >& components)

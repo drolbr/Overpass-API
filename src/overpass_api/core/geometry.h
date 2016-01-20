@@ -65,6 +65,16 @@ public:
   
   virtual bool has_components() const = 0;
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return 0; }
+  
+  virtual bool has_faithful_way_geometry() const = 0;
+  virtual bool way_pos_is_valid(unsigned int pos) const = 0;
+  virtual double way_pos_lat(unsigned int pos) const = 0;
+  virtual double way_pos_lon(unsigned int pos) const = 0;
+  
+  virtual bool has_faithful_relation_geometry() const = 0;
+  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const = 0;
+  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const = 0;
+  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const = 0;
 };
 
 
@@ -86,6 +96,16 @@ public:
   virtual bool has_line_geometry() const { return false; }
   virtual bool has_multiline_geometry() const { return false; }
   virtual bool has_components() const { return false; }
+  
+  virtual bool has_faithful_way_geometry() const { return false; }
+  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
+  virtual double way_pos_lat(unsigned int pos) const { return 0; }
+  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  
+  virtual bool has_faithful_relation_geometry() const { return false; }
+  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
+  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
 };
 
 
@@ -107,6 +127,16 @@ public:
   virtual bool has_line_geometry() const { return false; }
   virtual bool has_multiline_geometry() const { return false; }
   virtual bool has_components() const { return false; }
+  
+  virtual bool has_faithful_way_geometry() const { return false; }
+  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
+  virtual double way_pos_lat(unsigned int pos) const { return 0; }
+  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  
+  virtual bool has_faithful_relation_geometry() const { return false; }
+  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
+  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
   
 private:
   Point_Double pt;
@@ -131,6 +161,16 @@ public:
   virtual bool has_line_geometry() const { return false; }
   virtual bool has_multiline_geometry() const { return false; }
   virtual bool has_components() const { return false; }
+  
+  virtual bool has_faithful_way_geometry() const { return false; }
+  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
+  virtual double way_pos_lat(unsigned int pos) const { return 0; }
+  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  
+  virtual bool has_faithful_relation_geometry() const { return false; }
+  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
+  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
   
 private:
   Bbox_Double bbox;
@@ -159,9 +199,60 @@ public:
   virtual bool has_multiline_geometry() const { return false; }
   virtual bool has_components() const { return false; }
   
+  virtual bool has_faithful_way_geometry() const { return true; }
+  virtual bool way_pos_is_valid(unsigned int pos) const { return pos < points.size(); }
+  virtual double way_pos_lat(unsigned int pos) const { return points[pos].lat; }
+  virtual double way_pos_lon(unsigned int pos) const { return points[pos].lon; }
+  
+  virtual bool has_faithful_relation_geometry() const { return false; }
+  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
+  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  
 private:
   std::vector< Point_Double > points;
   mutable Bbox_Double* bounds;
+};
+
+
+class Partial_Linestring_Geometry : public Opaque_Geometry
+{
+public:
+  Partial_Linestring_Geometry() : bounds(0), has_coords(false) {}
+  virtual ~Partial_Linestring_Geometry() { delete bounds; }
+  
+  virtual bool has_center() const { return has_coords; }
+  virtual double center_lat() const;
+  virtual double center_lon() const;
+  
+  virtual bool has_bbox() const { return has_coords; }
+  virtual double south() const;
+  virtual double north() const;
+  virtual double west() const;
+  virtual double east() const;
+  
+  virtual bool has_line_geometry() const { return false; }
+  virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
+  
+  virtual bool has_multiline_geometry() const { return has_coords; }
+  virtual bool has_components() const { return false; }
+  
+  virtual bool has_faithful_way_geometry() const { return true; }
+  virtual bool way_pos_is_valid(unsigned int pos) const { return pos < points.size() && points[pos].lat < 100.; }
+  virtual double way_pos_lat(unsigned int pos) const { return points[pos].lat; }
+  virtual double way_pos_lon(unsigned int pos) const { return points[pos].lon; }
+  
+  void add_point(const Point_Double& point);
+  
+  virtual bool has_faithful_relation_geometry() const { return false; }
+  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
+  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  
+private:
+  std::vector< Point_Double > points;
+  mutable Bbox_Double* bounds;
+  bool has_coords;
 };
 
 
@@ -195,6 +286,16 @@ public:
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }
   
   void add_component(Opaque_Geometry* component);
+  
+  virtual bool has_faithful_way_geometry() const { return false; }
+  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
+  virtual double way_pos_lat(unsigned int pos) const { return 0; }
+  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  
+  virtual bool has_faithful_relation_geometry() const { return false; }
+  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
+  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
   
 private:
   std::vector< Opaque_Geometry* > components;

@@ -2399,17 +2399,41 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& skel,
   {
     if (geometry)
     {
-      std::vector< Point_Double > coords;
+      bool is_complete = true;
       for (std::vector< Quad_Coord >::const_iterator it = geometry->begin(); it != geometry->end(); ++it)
-	coords.push_back(Point_Double(::lat(it->ll_upper, it->ll_lower), ::lon(it->ll_upper, it->ll_lower)));
-      Linestring_Geometry geom(coords);
-      output->print_item(skel, geom,
-        mode & Print_Target::PRINT_TAGS ? tags : 0,
-        mode & Print_Target::PRINT_META ? meta : 0,
-        mode & Print_Target::PRINT_META ? users : 0,
-	Output_Mode(mode),
-        Output_Handler::keep, //TODO ab hier
-        0, 0, 0);
+	is_complete &= (it->ll_upper != 0 || it->ll_lower != 0);
+      if (is_complete)
+      {
+        std::vector< Point_Double > coords;
+        for (std::vector< Quad_Coord >::const_iterator it = geometry->begin(); it != geometry->end(); ++it)
+	  coords.push_back(Point_Double(::lat(it->ll_upper, it->ll_lower), ::lon(it->ll_upper, it->ll_lower)));
+        Linestring_Geometry geom(coords);
+        output->print_item(skel, geom,
+          mode & Print_Target::PRINT_TAGS ? tags : 0,
+          mode & Print_Target::PRINT_META ? meta : 0,
+          mode & Print_Target::PRINT_META ? users : 0,
+	  Output_Mode(mode),
+          Output_Handler::keep, //TODO ab hier
+          0, 0, 0);
+      }
+      else
+      {
+	Partial_Linestring_Geometry geom;
+        for (std::vector< Quad_Coord >::const_iterator it = geometry->begin(); it != geometry->end(); ++it)
+	{
+	  if (it->ll_upper != 0 || it->ll_lower != 0)
+	    geom.add_point(Point_Double(::lat(it->ll_upper, it->ll_lower), ::lon(it->ll_upper, it->ll_lower)));
+	  else
+	    geom.add_point(Point_Double(100., 200.));
+	}
+        output->print_item(skel, geom,
+          mode & Print_Target::PRINT_TAGS ? tags : 0,
+          mode & Print_Target::PRINT_META ? meta : 0,
+          mode & Print_Target::PRINT_META ? users : 0,
+	  Output_Mode(mode),
+          Output_Handler::keep, //TODO ab hier
+          0, 0, 0);
+      }
     }
     else if (bounds) 
     {

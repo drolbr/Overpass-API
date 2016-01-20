@@ -161,15 +161,12 @@ void print_members(const Way_Skeleton& skel, const Opaque_Geometry& geometry,
       std::cout<<">\n";
       inner_tags_printed = true;
     }
-    const std::vector< Point_Double >* line_nodes = 0;
-    if (geometry.has_line_geometry())
-      line_nodes = geometry.get_line_geometry();
     for (uint i = 0; i < skel.nds.size(); ++i)
     {
       std::cout<<"    <nd ref=\""<<skel.nds[i].val()<<"\"";
-      if (line_nodes)
-        std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<(*line_nodes)[i].lat
-            <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<(*line_nodes)[i].lon<<'\"';
+      if (geometry.has_faithful_way_geometry() && geometry.way_pos_is_valid(i))
+        std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<geometry.way_pos_lat(i)
+            <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<geometry.way_pos_lon(i)<<'\"';
       std::cout<<"/>\n";
     }
   }
