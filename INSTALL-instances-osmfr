@@ -41,13 +41,6 @@ autoconf
 ./configure --prefix=/data/project/api.openstreetmap.fr/web/exec
 make install
 
-#Facultatif, installer tout ou partie de la doc plus outils de test :
-cd ~
-#Juste le logiciel de test par un formulaire manuel :
-cp html/query_form.html web/
-#la total donc la doc (pas testé)
-cp html/* web/
-
 Configuration du lancement automatique et des updates
 =====================================================
 #script init à copier :
