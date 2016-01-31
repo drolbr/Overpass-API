@@ -35,7 +35,7 @@ Bbox_Double* calc_bounds(const std::vector< Point_Double >& points)
       south = std::min(south, it->lat);
       west = std::min(west, it->lon);
       north = std::max(north, it->lat);
-      east = std::max(west, it->lon);
+      east = std::max(east, it->lon);
     }
   }
   
@@ -123,7 +123,7 @@ double Linestring_Geometry::east() const
 }
 
 
-double Partial_Linestring_Geometry::center_lat() const
+double Partial_Way_Geometry::center_lat() const
 {
   if (!has_coords)
     return 0;
@@ -135,7 +135,7 @@ double Partial_Linestring_Geometry::center_lat() const
 }
 
 
-double Partial_Linestring_Geometry::center_lon() const
+double Partial_Way_Geometry::center_lon() const
 {
   if (!has_coords)
     return 0;
@@ -147,7 +147,7 @@ double Partial_Linestring_Geometry::center_lon() const
 }
 
 
-double Partial_Linestring_Geometry::south() const
+double Partial_Way_Geometry::south() const
 {
   if (!has_coords)
     return 0;
@@ -159,7 +159,7 @@ double Partial_Linestring_Geometry::south() const
 }
 
 
-double Partial_Linestring_Geometry::north() const
+double Partial_Way_Geometry::north() const
 {
   if (!has_coords)
     return 0;
@@ -171,7 +171,7 @@ double Partial_Linestring_Geometry::north() const
 }
 
 
-double Partial_Linestring_Geometry::west() const
+double Partial_Way_Geometry::west() const
 {
   if (!has_coords)
     return 0;
@@ -183,7 +183,7 @@ double Partial_Linestring_Geometry::west() const
 }
 
 
-double Partial_Linestring_Geometry::east() const
+double Partial_Way_Geometry::east() const
 {
   if (!has_coords)
     return 0;
@@ -195,13 +195,12 @@ double Partial_Linestring_Geometry::east() const
 }
 
   
-void Partial_Linestring_Geometry::add_point(const Point_Double& point)
+void Partial_Way_Geometry::add_point(const Point_Double& point)
 {
   delete bounds;
   has_coords |= (point.lat < 100.);
   points.push_back(point);
 }
-
 
 
 Bbox_Double* calc_bounds(const std::vector< Opaque_Geometry* >& components)
@@ -221,7 +220,7 @@ Bbox_Double* calc_bounds(const std::vector< Opaque_Geometry* >& components)
       west = std::min(west, (*it)->west());
       east = std::max(east, (*it)->east());
     
-      wrapped |= ((*it)->west() < (*it)->east());
+      wrapped |= ((*it)->east() < (*it)->west());
     }
   }
   
@@ -286,6 +285,15 @@ double Compound_Geometry::center_lon() const
 }
 
 
+bool Compound_Geometry::has_bbox() const
+{
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->valid();
+}
+
+
 double Compound_Geometry::south() const
 {
   if (!bounds)
@@ -301,15 +309,6 @@ double Compound_Geometry::north() const
     bounds = calc_bounds(components);
   
   return bounds->north;
-}
-
-
-bool Compound_Geometry::has_bbox() const
-{
-  if (!bounds)
-    bounds = calc_bounds(components);
-  
-  return bounds->valid();
 }
 
 
@@ -331,9 +330,261 @@ double Compound_Geometry::east() const
 }
 
 
+bool Compound_Geometry::relation_pos_is_valid(unsigned int member_pos) const
+{
+  return (member_pos < components.size() && components[member_pos]
+      && components[member_pos]->has_center());
+}
+
+
+double Compound_Geometry::relation_pos_lat(unsigned int member_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->center_lat();
+  return 0;
+}
+
+
+double Compound_Geometry::relation_pos_lon(unsigned int member_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->center_lon();
+  return 0;
+}
+
+
+unsigned int Compound_Geometry::relation_way_size(unsigned int member_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->way_size();
+  return 0;
+}
+
+
+bool Compound_Geometry::relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const
+{
+  return (member_pos < components.size() && components[member_pos]
+      && components[member_pos]->way_pos_is_valid(nd_pos));
+}
+
+
+double Compound_Geometry::relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->way_pos_lat(nd_pos);
+  return 0;
+}
+
+
+double Compound_Geometry::relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->way_pos_lon(nd_pos);
+  return 0;
+}
+
+
 void Compound_Geometry::add_component(Opaque_Geometry* component)
 { 
   delete bounds;
   bounds = 0;
   components.push_back(component);
+}
+
+
+bool Partial_Relation_Geometry::has_center() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->valid();
+}
+
+
+double Partial_Relation_Geometry::center_lat() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->center_lat();
+}
+
+
+double Partial_Relation_Geometry::center_lon() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->center_lon();
+}
+
+
+bool Partial_Relation_Geometry::has_bbox() const
+{
+  if (!has_coords)
+    return false;
+    
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->valid();
+}
+
+
+double Partial_Relation_Geometry::south() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->south;
+}
+
+
+double Partial_Relation_Geometry::north() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->north;
+}
+
+
+double Partial_Relation_Geometry::west() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->west;
+}
+
+
+double Partial_Relation_Geometry::east() const
+{
+  if (!has_coords)
+    return 0;
+    
+  if (!bounds)
+    bounds = calc_bounds(components);
+  
+  return bounds->east;
+}
+
+
+bool Partial_Relation_Geometry::relation_pos_is_valid(unsigned int member_pos) const
+{
+  return (member_pos < components.size() && components[member_pos]
+      && components[member_pos]->has_center());
+}
+
+
+double Partial_Relation_Geometry::relation_pos_lat(unsigned int member_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->center_lat();
+  return 0;
+}
+
+
+double Partial_Relation_Geometry::relation_pos_lon(unsigned int member_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->center_lon();
+  return 0;
+}
+
+
+unsigned int Partial_Relation_Geometry::relation_way_size(unsigned int member_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->way_size();
+  return 0;
+}
+
+
+bool Partial_Relation_Geometry::relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const
+{
+  return (member_pos < components.size() && components[member_pos]
+      && components[member_pos]->way_pos_is_valid(nd_pos));
+}
+
+
+double Partial_Relation_Geometry::relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->way_pos_lat(nd_pos);
+  return 0;
+}
+
+
+double Partial_Relation_Geometry::relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const
+{
+  if (member_pos < components.size() && components[member_pos])
+    return components[member_pos]->way_pos_lon(nd_pos);
+  return 0;
+}
+
+
+void Partial_Relation_Geometry::add_placeholder()
+{ 
+  components.push_back(new Null_Geometry());
+}
+
+
+void Partial_Relation_Geometry::add_point(const Point_Double& point)
+{ 
+  delete bounds;
+  bounds = 0;
+  if (point.lat < 100.)
+  {
+    has_coords = true;
+    components.push_back(new Point_Geometry(point.lat, point.lon));
+  }
+  else
+    components.push_back(new Null_Geometry());
+}
+
+
+void Partial_Relation_Geometry::start_way()
+{ 
+  components.push_back(new Partial_Way_Geometry());
+}
+
+
+void Partial_Relation_Geometry::add_way_point(const Point_Double& point)
+{ 
+  delete bounds;
+  bounds = 0;
+  
+  Partial_Way_Geometry* geom = dynamic_cast< Partial_Way_Geometry* >(components.back());
+  if (geom)
+  {
+    has_coords = true;
+    geom->add_point(point);
+  }
+}
+
+
+void Partial_Relation_Geometry::add_way_placeholder()
+{ 
+  Partial_Way_Geometry* geom = dynamic_cast< Partial_Way_Geometry* >(components.back());
+  if (geom)
+    geom->add_point(Point_Double(100., 200.));
 }

@@ -1219,33 +1219,19 @@
     <member type="relation" ref="1171" role="once_changed"/>
     <tag k="purpose" v="meta"/>
   </relation>
-  <relation id="11421" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="11422" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="11721" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="11722" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16413" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16713" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16723" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18411" version="3" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18413" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18423" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18711" version="3" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18713" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18723" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="11421" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="11422" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="11721" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="11722" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16413" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16713" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16723" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18411" version="3" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18413" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18423" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18711" version="3" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18713" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18723" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
 
 </osm>

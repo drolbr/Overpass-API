@@ -184,52 +184,49 @@ void print_members(const Relation_Skeleton& skel, const Opaque_Geometry& geometr
       std::cout<<">\n";
       inner_tags_printed = true;
     }
-//     const std::vector< Opaque_Geometry* >* member_geom = 0;
-//     if (geometry.has_member_geometry())
-//       member_geom = geometry.get_member_geometry();
     for (uint i = 0; i < skel.members.size(); ++i)
     {
       std::map< uint32, std::string >::const_iterator it = roles.find(skel.members[i].role);
       std::cout<<"    <member type=\""<<member_type_name(skel.members[i].type)
 	  <<"\" ref=\""<<skel.members[i].ref.val()
 	  <<"\" role=\""<<escape_xml(it != roles.end() ? it->second : "???")<<"\"";
-//             
-//         if (geometry && skel.members[i].type == Relation_Entry::NODE
-//             && !((*geometry)[i][0] == Quad_Coord(0u, 0u)))
-//           cout<<" lat=\""<<fixed<<setprecision(7)
-//               <<::lat((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)
-//               <<"\" lon=\""<<fixed<<setprecision(7)
-//               <<::lon((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)<<'\"';
-//               
-//         if (geometry && skel.members[i].type == Relation_Entry::WAY && !(*geometry)[i].empty())
-//         {
-//           cout<<">\n";
-//           for (std::vector< Quad_Coord >::const_iterator it = (*geometry)[i].begin();
-//                it != (*geometry)[i].end(); ++it)
-//           {
-//             cout<<"      <nd";
-//             if (!(*it == Quad_Coord(0u, 0u)))
-//               cout<<" lat=\""<<fixed<<setprecision(7)
-//                   <<::lat(it->ll_upper, it->ll_lower)
-//                   <<"\" lon=\""<<fixed<<setprecision(7)
-//                   <<::lon(it->ll_upper, it->ll_lower)<<"\"";
-//             cout<<"/>\n";
-//           }
-//           cout<<"    </member>\n";
-//         }
-//         else
-//           cout<<"/>\n";
-// //         if (geometry)
-// //         {
-// //           for (uint j = 0; j < (*geometry)[i].size(); ++j)
-// //             std::cout<<fixed<<setprecision(7)<<::lat((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<", "
-// //                 <<fixed<<setprecision(7)<<::lon((*geometry)[i][j].ll_upper, (*geometry)[i][j].ll_lower)<<'\n';
-// //         }
+            
+      if (skel.members[i].type == Relation_Entry::NODE)
+      {
+	if (geometry.has_faithful_relation_geometry() && geometry.relation_pos_is_valid(i))
+          std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<geometry.relation_pos_lat(i)
+              <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<geometry.relation_pos_lon(i)<<'\"';
+        std::cout<<"/>\n";
+      }
+      else if (skel.members[i].type == Relation_Entry::WAY)
+      {
+	if (!geometry.has_faithful_relation_geometry())
+	  std::cout<<"/>\n";
+	else
+	{
+	  bool has_some_geometry = false;
+	  for (uint j = 0; j < geometry.relation_way_size(i); ++j)
+	    has_some_geometry |= geometry.relation_pos_is_valid(i, j);
 	  
-//       if (line_nodes)
-//         std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<(*line_nodes)[i].lat
-//             <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<(*line_nodes)[i].lon<<'\"';
-      std::cout<<"/>\n";
+	  if (!has_some_geometry)
+	    std::cout<<"/>\n";
+	  else
+	  {
+            std::cout<<">\n";
+	    for (uint j = 0; j < geometry.relation_way_size(i); ++j)
+	    {
+	      if (geometry.relation_pos_is_valid(i, j))
+                  std::cout<<"      <nd lat=\""<<std::fixed<<std::setprecision(7)<<geometry.relation_pos_lat(i, j)
+                      <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<geometry.relation_pos_lon(i, j)<<"\"/>\n";
+              else
+                  std::cout<<"      <nd/>\n";
+	    }
+            std::cout<<"    </member>\n";
+	  }
+	}
+      }
+      else
+        std::cout<<"/>\n";              
     }
   }
 }
