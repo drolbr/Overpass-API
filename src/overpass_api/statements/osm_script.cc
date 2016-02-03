@@ -22,11 +22,9 @@
 
 #include "../core/settings.h"
 #include "../frontend/output_handler_parser.h"
-#include "../frontend/print_target.h"
 #include "bbox_query.h"
 #include "osm_script.h"
 #include "print.h"
-// #include "area_query.h"
 
 
 Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_maker("osm-script");

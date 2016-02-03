@@ -100,7 +100,7 @@ overpass_api/statements/query.cc \
 overpass_api/statements/recurse.cc \
 overpass_api/statements/union.cc \
 overpass_api/statements/user.cc \
-overpass_api/frontend/print_target.cc expat/escape_json.cc expat/escape_xml.cc
+expat/escape_json.cc expat/escape_xml.cc
 
 output_formats_cc = \
 overpass_api/output_formats/output_csv.cc overpass_api/output_formats/output_csv_factory.cc \

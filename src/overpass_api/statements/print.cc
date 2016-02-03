@@ -19,7 +19,6 @@
 #include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
-#include "../frontend/print_target.h"
 #include "meta_collector.h"
 #include "print.h"
 
@@ -39,11 +38,126 @@ const unsigned int RELATION_FLUSH_SIZE = 512*1024;
 const unsigned int AREA_FLUSH_SIZE = 64*1024;
 
 
+class Print_Target
+{
+  public:
+    typedef enum { visible_void, visible_false, visible_true } Show_New_Elem;
+    
+    Print_Target(uint32 mode_, Transaction& transaction);
+    virtual ~Print_Target() {}
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void) = 0;
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
+			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void) = 0;
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
+			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
+			    Show_New_Elem show_new_elem = visible_void) = 0;
+                            
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
+
+    //TODO virtual void print_item_count(const Output_Item_Count& item_count) = 0;
+
+    //TODO: remove. Replaced by Output_Mode
+    static const unsigned int PRINT_IDS = 1;
+    static const unsigned int PRINT_COORDS = 2;
+    static const unsigned int PRINT_NDS = 4;
+    static const unsigned int PRINT_MEMBERS = 8;
+    static const unsigned int PRINT_TAGS = 0x10;
+    static const unsigned int PRINT_VERSION = 0x20;
+    static const unsigned int PRINT_META = 0x40;
+    static const unsigned int PRINT_GEOMETRY = 0x80;
+    static const unsigned int PRINT_BOUNDS = 0x100;
+    static const unsigned int PRINT_CENTER = 0x200;
+    static const unsigned int PRINT_COUNT = 0x400;
+
+  protected:
+    uint32 mode;
+    map< uint32, string > roles;
+};
+
+
 Print_Target::Print_Target(uint32 mode_, Transaction& transaction) : mode(mode_)
 {
   // prepare check update_members - load roles
   roles = relation_member_roles(transaction);
 }
+
+
+class Relation_Geometry_Store
+{
+public:
+  Relation_Geometry_Store
+      (const map< Uint31_Index, vector< Relation_Skeleton > >& relations,
+      const Statement& query, Resource_Manager& rman,
+      double south_, double north_, double west_, double east_);
+  Relation_Geometry_Store
+      (const map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
+      const Statement& query, Resource_Manager& rman,
+      double south_, double north_, double west_, double east_);
+      
+  ~Relation_Geometry_Store();
+  
+  // return the empty vector if the relation is not found
+  std::vector< std::vector< Quad_Coord > > get_geometry(const Relation_Skeleton& relation) const;
+  
+private:
+  std::vector< Node > nodes;
+  std::vector< Way_Skeleton > ways;
+  Way_Geometry_Store* way_geometry_store;
+  
+  uint32 south;
+  uint32 north;
+  int32 west;
+  int32 east;
+  
+  bool matches_bbox(uint32 ll_upper, uint32 ll_lower) const;
+};
+
+
+class Way_Bbox_Geometry_Store : public Way_Geometry_Store
+{
+public:
+  Way_Bbox_Geometry_Store(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+                     const Statement& query, Resource_Manager& rman,
+                     double south_, double north_, double west_, double east_);
+  Way_Bbox_Geometry_Store(const map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+                     const Statement& query, Resource_Manager& rman,
+                     double south_, double north_, double west_, double east_);
+  
+  // return the empty vector if the way is not found
+  vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
+  
+private:
+  uint32 south;
+  uint32 north;
+  int32 west;
+  int32 east;
+  
+  bool matches_bbox(uint32 ll_upper, uint32 ll_lower) const;
+};
 
 
 Generic_Statement_Maker< Print_Statement > Print_Statement::statement_maker("print");
