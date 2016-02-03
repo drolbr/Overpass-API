@@ -23,9 +23,9 @@
 #include <string>
 #include <vector>
 #include "../data/collect_members.h"
+#include "../frontend/output_handler.h"
 #include "statement.h"
 
-using namespace std;
 
 struct Output_Item_Count
 {
@@ -36,10 +36,10 @@ struct Output_Item_Count
   uint32 total;
 };
 
+
 class Print_Target
 {
   public:
-    typedef enum { KEEP, MODIFY_OLD, MODIFY_NEW, CREATE, DELETE } Action;
     typedef enum { visible_void, visible_false, visible_true } Show_New_Elem;
     
     Print_Target(uint32 mode_, Transaction& transaction);
@@ -48,7 +48,8 @@ class Print_Target
     virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
 			    Show_New_Elem show_new_elem = visible_void) = 0;
     virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
@@ -56,7 +57,8 @@ class Print_Target
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
 			    Show_New_Elem show_new_elem = visible_void) = 0;
     virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
@@ -64,14 +66,16 @@ class Print_Target
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0, const Action& action = KEEP,
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
 			    Show_New_Elem show_new_elem = visible_void) = 0;
                             
     virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
 			    const vector< pair< string, string > >* tags = 0,
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0, const Action& action = KEEP) = 0;
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
 
     //TODO virtual void print_item_count(const Output_Item_Count& item_count) = 0;
 

@@ -31,6 +31,7 @@ public:
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action = keep,
+      const Node_Skeleton* new_skel = 0,
       const Opaque_Geometry* new_geometry = 0,
       const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0);
