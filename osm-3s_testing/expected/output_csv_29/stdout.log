@@ -10,6 +10,6 @@ way	2	10.0125000	1.0500000						yes
 way	7	10.0125000	1.1750000							bar	
 way	14	10.0125000	1.3500000						yes	bar	
 relation	1	10.0125000	1.0250000								
-relation	2	10.0125000	90.5062500						yes		
-relation	42	10.0125000	91.0062500						yes	bar	
+relation	2	10.0125000	1.0375000						yes		
+relation	42	10.0125000	2.0375000						yes	bar	
 relation	161	10.0125000	5.0250000							bar	
