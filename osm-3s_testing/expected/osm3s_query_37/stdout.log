@@ -1,5 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <osm version="0.6" generator="Overpass API">
-<note>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
 <meta osm_base="mock-up-init"/>
 
+  <node id="1" lat="51.0125000" lon="7.0125000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="2" lat="51.0125000" lon="7.0375000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="3" lat="51.0125000" lon="7.0625000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="4" lat="51.0125000" lon="7.0875000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="41" lat="51.0375000" lon="7.0125000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="42" lat="51.0375000" lon="7.0375000">
+    <tag k="node_key" v="node_few"/>
+    <tag k="node_key_7" v="node_value_0"/>
+  </node>
+  <node id="43" lat="51.0375000" lon="7.0625000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="44" lat="51.0375000" lon="7.0875000">
+    <tag k="node_key" v="node_few"/>
+    <tag k="node_key_11" v="node_value_5"/>
+  </node>
+  <node id="81" lat="51.0625000" lon="7.0125000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="82" lat="51.0625000" lon="7.0375000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="83" lat="51.0625000" lon="7.0625000">
+    <tag k="node_key" v="node_few"/>
+  </node>
+  <node id="84" lat="51.0625000" lon="7.0875000">
+    <tag k="node_key" v="node_few"/>
+    <tag k="node_key_7" v="node_value_0"/>
+  </node>
+  <node id="121" lat="51.0875000" lon="7.0125000">
+    <tag k="node_key_11" v="node_value_12"/>
+  </node>
+  <node id="122" lat="51.0875000" lon="7.0375000"/>
+  <node id="123" lat="51.0875000" lon="7.0625000"/>
+  <node id="124" lat="51.0875000" lon="7.0875000"/>
+
+</osm>

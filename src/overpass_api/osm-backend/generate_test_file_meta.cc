@@ -88,25 +88,32 @@ bool Print_Control::print_allowed(uint id, int variant) const
 
 
 void create_node(uint id, double lat, double lon,
-		 const Print_Control& print_control, bool after_altered = false)
+		 const Print_Control& print_control, bool after_altered = false, bool more_tags = false)
 {
   cout<<"  <node id=\""<<id<<"\""
         " lat=\""<<fixed<<setprecision(7)<<lat<<"\""
         " lon=\""<<fixed<<setprecision(7)<<lon<<"\"";
   print_control.meta_data(id, after_altered ? 4 : 1);
+  
+  std::string tags;
   if (id % 7 == 0)
-    cout<<">\n"
-          "    <tag k=\"foo\" v=\"bar\"/>\n"
-	  "  </node>\n";
-  else
+    tags += "    <tag k=\"foo\" v=\"bar\"/>\n";
+  if (more_tags && id % 2 == 0)
+    tags += "    <tag k=\"even\" v=\"yes\"/>\n";
+  if (more_tags && id % 100 == 0)
+    tags += "    <tag k=\"@id\" v=\"some_value\"/>\n";
+  
+  if (tags == "")
     cout<<"/>\n";
+  else
+    cout<<">\n"<<tags<<"  </node>\n";
 }
 
 
 void fill_bbox_with_nodes
     (double south, double north, double west, double east,
      uint begin_id, uint end_id, const Print_Control& print_control,
-     bool after_altered = false)
+     bool after_altered = false, bool more_tags = false)
 {
   int sqrt_ = sqrt(end_id - begin_id);
   for (int i = 0; i < sqrt_; ++i)
@@ -117,14 +124,14 @@ void fill_bbox_with_nodes
 	create_node(begin_id + i*sqrt_ + j,
 		    (north - south)/sqrt_*(0.5 + i) + south,
 		    (east - west)/sqrt_*(0.5 + j) + west,
-		    print_control, after_altered);
+		    print_control, after_altered, more_tags);
     }
   }
 }
 
 void create_way
   (uint id, uint start_node_ref, uint end_node_ref, uint stepping,
-   const Print_Control& print_control, bool after_altered = false)
+   const Print_Control& print_control, bool after_altered = false, bool more_tags = false)
 {
   if (!print_control.print_allowed(id, after_altered ? 5 : 2))
     return;
@@ -144,12 +151,16 @@ void create_way
   }
   if (id % 7 == 0)
     cout<<"    <tag k=\"foo\" v=\"bar\"/>\n";
+  if (more_tags && id % 2 == 0)
+    cout<<"    <tag k=\"even\" v=\"yes\"/>\n";
+  if (more_tags && id % 100 == 0)
+    cout<<"    <tag k=\"@id\" v=\"some_value\"/>\n";
   cout<<"  </way>\n";
 }
 
 void create_relation
     (uint id, const vector< uint >& refs, const vector< uint >& types,
-     const Print_Control& print_control, bool after_altered = false)
+     const Print_Control& print_control, bool after_altered = false, bool more_tags = false)
 {
   if (!print_control.print_allowed(id, after_altered ? 6 : 3))
     return;
@@ -168,62 +179,66 @@ void create_relation
   }
   if (id % 7 == 0)
     cout<<"    <tag k=\"foo\" v=\"bar\"/>\n";
+  if (more_tags && id % 2 == 0)
+    cout<<"    <tag k=\"even\" v=\"yes\"/>\n";
+  if (more_tags && id % 100 == 0)
+    cout<<"    <tag k=\"@id\" v=\"some_value\"/>\n";
   cout<<"  </relation>\n";
 }
 
 void create_node_test_pattern
     (double south, double north, double west, double east, uint id, uint size,
-     const Print_Control& print_control, bool after_altered = false)
+     const Print_Control& print_control, bool after_altered = false, bool more_tags = false)
 {
   fill_bbox_with_nodes
       (south, north, west, east,
-       id*size*size + 1, (id+1)*size*size + 1, print_control, after_altered);
+       id*size*size + 1, (id+1)*size*size + 1, print_control, after_altered, more_tags);
 }
 
 void create_way_test_pattern(uint id, uint size,
 			     const Print_Control& print_control,
-			     bool pos_altered = false, bool after_altered = false)
+			     bool pos_altered = false, bool after_altered = false, bool more_tags = false)
 {
   if (pos_altered)
   {
     for (uint i = 0; i < size*size-1; ++i)
       create_way(id*size*size + i+1, id*size*size + (i%size)+1, id*size*size + (i%size)+2, 1,
-		 print_control, after_altered);
+		 print_control, after_altered, more_tags);
   }
   else
   {
     for (uint i = id*size*size + 1; i < (id+1)*size*size; ++i)
-      create_way(i, i, i+1, 1, print_control, after_altered);
+      create_way(i, i, i+1, 1, print_control, after_altered, more_tags);
   }
 }
 
 void create_relation_test_pattern(uint id, uint size,
 				  const Print_Control& print_control,
-				  bool pos_altered = false, bool after_altered = false)
+				  bool pos_altered = false, bool after_altered = false, bool more_tags = false)
 {
   if (pos_altered)
   {
     create_relation(id*size + 1,
 		    V< uint >((id+1)*size*size - 1)((id+1)*size*size - 2),
-		    V< uint >(0)(0), print_control, after_altered);
+		    V< uint >(0)(0), print_control, after_altered, more_tags);
     create_relation(id*size + 2,
 		    V< uint >((id+1)*size*size - 1)((id+1)*size*size - 2),
-		    V< uint >(1)(1), print_control, after_altered);
+		    V< uint >(1)(1), print_control, after_altered, more_tags);
     create_relation(id*size + 3,
 		    V< uint >((id+1)*size*size - 1)((id+1)*size*size - 2),
-		    V< uint >(0)(1), print_control, after_altered);
+		    V< uint >(0)(1), print_control, after_altered, more_tags);
   }
   else
   {
     create_relation(id*size + 1,
 		    V< uint >(id*size*size + 1)(id*size*size + 2),
-		    V< uint >(0)(0), print_control, after_altered);
+		    V< uint >(0)(0), print_control, after_altered, more_tags);
     create_relation(id*size + 2,
 		    V< uint >(id*size*size + 1)(id*size*size + 2),
-		    V< uint >(1)(1), print_control, after_altered);
+		    V< uint >(1)(1), print_control, after_altered, more_tags);
     create_relation(id*size + 3,
 		    V< uint >(id*size*size + 1)(id*size*size + 2),
-		    V< uint >(0)(1), print_control, after_altered);
+		    V< uint >(0)(1), print_control, after_altered, more_tags);
   }
 }
 
@@ -233,6 +248,7 @@ int main(int argc, char* args[])
   uint uid = 0;
   string timestamp;
   bool tags_allowed_only = false;
+  bool more_tags = false;
   if (argc > 1)
     pattern_size = atoi(args[1]);
   enum { before, diff, after, augmented } pattern = before;
@@ -244,6 +260,8 @@ int main(int argc, char* args[])
       pattern = after;
     else if (string(args[2]) == "augmented")
       pattern = augmented;
+    else if (string(args[2]) == "more_tags")
+      more_tags = true;
   }
   if (argc > 3)
   {
@@ -269,24 +287,25 @@ int main(int argc, char* args[])
 
   if (pattern == before)
   {
-    create_node_test_pattern(10.0, 11.0, 1.0, 2.0, 0, pattern_size, print_control);
-    create_node_test_pattern(10.0, 11.0, 2.0, 3.0, 1, pattern_size, print_control);
-    create_node_test_pattern(10.0, 11.0, 3.0, 4.0, 2, pattern_size, print_control);
-    create_node_test_pattern(10.0, 11.0, 4.0, 5.0, 3, pattern_size, print_control);
-    create_node_test_pattern(10.0, 11.0, 5.0, 6.0, 4, pattern_size, print_control);
-    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 5, pattern_size, print_control);
-    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 6, pattern_size, print_control);
-    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 7, pattern_size, print_control);
-    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 8, pattern_size, print_control);
+    create_node_test_pattern(10.0, 11.0, 1.0, 2.0, 0, pattern_size, print_control, false, more_tags);
+    create_node_test_pattern(10.0, 11.0, 2.0, 3.0, 1, pattern_size, print_control, false, more_tags);
+    create_node_test_pattern(10.0, 11.0, 3.0, 4.0, 2, pattern_size, print_control, false, more_tags);
+    create_node_test_pattern(10.0, 11.0, 4.0, 5.0, 3, pattern_size, print_control, false, more_tags);
+    create_node_test_pattern(10.0, 11.0, 5.0, 6.0, 4, pattern_size, print_control, false, more_tags);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 5, pattern_size, print_control, false, more_tags);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 6, pattern_size, print_control, false, more_tags);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 7, pattern_size, print_control, false, more_tags);
+    create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 8, pattern_size, print_control, false, more_tags);
     
     for (uint i = 0; i < 6; ++i)
-      create_way_test_pattern(i, pattern_size, print_control);
+      create_way_test_pattern(i, pattern_size, print_control, false, false, more_tags);
     
     create_way(pattern_size*pattern_size*6,
-	       1, pattern_size*pattern_size*2 + 1, pattern_size*pattern_size*2, print_control);
+	       1, pattern_size*pattern_size*2 + 1, pattern_size*pattern_size*2, print_control,
+	       false, more_tags);
     
     for (uint i = 0; i < 6; ++i)
-      create_relation_test_pattern(i, pattern_size, print_control);
+      create_relation_test_pattern(i, pattern_size, print_control, false, false, more_tags);
   }
   else if (pattern == diff)
   {

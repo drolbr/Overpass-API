@@ -19,12 +19,13 @@
 #ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__AREA_QUERY_H
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__AREA_QUERY_H
 
+#include "../data/collect_members.h"
+#include "statement.h"
+
 #include <map>
 #include <string>
 #include <vector>
-#include "statement.h"
 
-using namespace std;
 
 class Area_Query_Statement : public Output_Statement
 {
@@ -56,13 +57,16 @@ class Area_Query_Statement : public Output_Statement
        map< Uint32_Index, vector< Node_Skeleton > >& nodes,
        Resource_Manager& rman);
        
+    template< typename Node_Skeleton >
     void collect_nodes
       (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
        const set< Uint31_Index >& req, bool add_border,
        Resource_Manager& rman);
        
+    template< typename Way_Skeleton >
     void collect_ways
-      (map< Uint31_Index, vector< Way_Skeleton > >& ways,
+      (const Way_Geometry_Store& way_geometries,
+       map< Uint31_Index, vector< Way_Skeleton > >& ways,
        const set< Uint31_Index >& req, bool add_border,
        const Statement& query, Resource_Manager& rman);
 

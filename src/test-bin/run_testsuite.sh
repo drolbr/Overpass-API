@@ -47,6 +47,8 @@ $BASEDIR/test-bin/run_testsuite_diff_updater.sh $DATA_SIZE $2
 
 $BASEDIR/test-bin/run_testsuite_interpreter.sh $DATA_SIZE $2
 
+$BASEDIR/test-bin/run_unittests_output_csv.sh $DATA_SIZE $2
+
 $BASEDIR/test-bin/run_unittests_areas.sh $DATA_SIZE $2
 
 if [[ $DATA_SIZE -gt 800 ]]; then
@@ -55,5 +57,7 @@ if [[ $DATA_SIZE -gt 800 ]]; then
 }; fi
 
 $BASEDIR/test-bin/run_unittests_meta.sh $DATA_SIZE $2
+
+$BASEDIR/test-bin/run_unittests_attic.sh $DATA_SIZE $2
 
 $BASEDIR/test-bin/run_testsuite_translate_xapi.sh $DATA_SIZE $2

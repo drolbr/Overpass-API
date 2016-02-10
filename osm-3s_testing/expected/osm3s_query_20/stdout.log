@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <osm version="0.6" generator="Overpass API">
-<note>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
 <meta osm_base="mock-up-init"/>
 
+  <node id="1155" lat="51.7125000" lon="7.8625000">
+    <tag k="node_key_11" v="node_value_106"/>
+    <tag k="node_key_15" v="node_value_15"/>
+    <tag k="node_key_5" v="node_value_5"/>
+    <tag k="node_key_7" v="node_value_0"/>
+  </node>
+  <node id="2310" lat="29.3750000" lon="73.5000000">
+    <tag k="node_key_11" v="node_value_211"/>
+    <tag k="node_key_15" v="node_value_15"/>
+    <tag k="node_key_5" v="node_value_5"/>
+    <tag k="node_key_7" v="node_value_0"/>
+    <tag k="node_unique" v="node_2310"/>
+  </node>
+  <node id="3465" lat="47.9325000" lon="0.0450000">
+    <tag k="node_key_11" v="node_value_316"/>
+    <tag k="node_key_15" v="node_value_15"/>
+    <tag k="node_key_5" v="node_value_5"/>
+    <tag k="node_key_7" v="node_value_0"/>
+  </node>
+  <node id="4620" lat="48.0775000" lon="-0.0050000">
+    <tag k="node_key_11" v="node_value_421"/>
+    <tag k="node_key_15" v="node_value_15"/>
+    <tag k="node_key_5" v="node_value_5"/>
+    <tag k="node_key_7" v="node_value_0"/>
+  </node>
+  <node id="5775" lat="42.2500000" lon="-98.2500000">
+    <tag k="node_key_11" v="node_value_526"/>
+    <tag k="node_key_15" v="node_value_15"/>
+    <tag k="node_key_5" v="node_value_5"/>
+    <tag k="node_key_7" v="node_value_0"/>
+  </node>
+
+</osm>

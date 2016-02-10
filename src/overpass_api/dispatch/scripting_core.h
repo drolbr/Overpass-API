@@ -51,7 +51,7 @@ bool parse_and_validate
     
 vector< Statement* >* get_statement_stack();
 
-bool get_uses_meta_data();
+meta_modes get_uses_meta_data();
 
 int determine_area_level(Error_Output* error_output, int area_level);
 

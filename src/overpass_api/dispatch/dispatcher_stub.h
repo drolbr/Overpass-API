@@ -20,7 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__DISPATCH__DISPATCHER_STUB_H
 
 #include "../statements/statement.h"
-#include "../../template_db/dispatcher.h"
+#include "../../template_db/dispatcher_client.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -47,7 +47,7 @@ class Dispatcher_Stub : public Watchdog_Callback
     // and registers the process. error_output_ must remain valid over the
     // entire lifetime of this object.
     Dispatcher_Stub(string db_dir_, Error_Output* error_output_, string xml_raw,
-		    bool uses_meta, int area_level,
+		    meta_modes meta_, int area_level,
 		    uint32 max_allowed_time, uint64 max_allowed_space);
     
     // Called once per minute from the resource manager
@@ -68,7 +68,7 @@ class Dispatcher_Stub : public Watchdog_Callback
     Nonsynced_Transaction* transaction;
     Nonsynced_Transaction* area_transaction;
     Resource_Manager* rman;
-    bool meta;
+    meta_modes meta;
 };
 
 

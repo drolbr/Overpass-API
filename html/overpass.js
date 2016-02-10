@@ -126,12 +126,13 @@
 	      this.strategy = strategy;
 	  },
 	
-	  read: function(doc) {
-	      var feat_list = OpenLayers.Format.OSM.prototype.read.apply(this, [doc]);
-	      
+	  read: function(doc)
+          {
               if (typeof doc == "string") {
-		  doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
-	      }
+                  doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
+              }
+              
+	      var feat_list = OpenLayers.Format.OSM.prototype.read.apply(this, [doc]);
 	      
 	      if (this.strategy)
 	      {
@@ -150,6 +151,215 @@
 
           CLASS_NAME: "OSMTimeoutFormat"
       });
+
+//-----------------------------------------------------------------------------
+      
+var OSMDiffFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
+      
+    extent: {},
+    
+    setStatus: function(status) {},
+                                     
+    pushTextualResult: function(feature) {},
+       
+    initialize: function(options)
+    {
+        if (options && options.extent)
+            this.extent = options.extent;
+        if (options && options.setStatus)
+            this.setStatus = options.setStatus;
+        if (options && options.pushTextualResult)
+            this.pushTextualResult = options.pushTextualResult;
+    },
+        
+    read: function(doc)
+    {
+        this.setStatus("Processing data");
+
+        if (typeof doc == "string")
+            doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
+  
+        var feat_list = [];
+  
+        var relations = this.getRelations(doc);
+        for (var relation_id in relations)
+            feat_list.push(relations[relation_id]);
+  
+        var ways = this.getWays(doc);
+        for (var way_id in ways)
+            feat_list.push(ways[way_id]);
+  
+        var nodes = this.getNodes(doc);
+        for (var node_id in nodes)
+            feat_list.push(nodes[node_id]);
+  
+        this.setStatus("Ready");
+        return feat_list;
+    },
+
+    isInExtent: function(node)
+    {
+        if (!this.extent)
+          return true;
+        else if (node.getAttribute("lon") && node.getAttribute("lat"))
+        {
+            var geom = new OpenLayers.Geometry.Point(
+                node.getAttribute("lon"), node.getAttribute("lat"));
+            return (geom.x <= this.extent.right && geom.x >= this.extent.left &&
+                geom.y <= this.extent.top && geom.y >= this.extent.bottom);
+        }
+        else
+          return false;
+    },
+    
+    stateOf: function(element)
+    {
+        var state = {};
+        if (element.parentNode.nodeName == "old")
+            state = { state: "old" };
+        else
+            state = { state: "new" };
+        
+        return state;
+    },
+    
+    pointGeomFromNode: function(node)
+    {
+        var geom = new OpenLayers.Geometry.Point(
+            node.getAttribute("lon"), node.getAttribute("lat"));
+        if (this.internalProjection && this.externalProjection)
+            geom.transform(this.externalProjection, this.internalProjection);
+        return geom;
+    },
+    
+    pointListFromWay: function(node_list)
+    {
+        var lower = 0;
+        while (lower < node_list.length && !this.isInExtent(node_list[lower]))
+            ++lower;
+        if (lower > 0 && node_list[lower-1].getAttribute("lat") && node_list[lower-1].getAttribute("lon"))
+            --lower;
+            
+        var upper = node_list.length;
+        while (upper > 0 && !this.isInExtent(node_list[upper-1]))
+            --upper;
+        if (upper < node_list.length
+                && node_list[upper].getAttribute("lat") && node_list[upper].getAttribute("lon"))
+            ++upper;
+        
+        if (upper < lower)
+            return new Array();
+        
+        var point_list = new Array(upper - lower);
+        var pos = 0;
+        for (var j = lower; j < upper; ++j)
+        {
+            if (node_list[j].getAttribute("lat") && node_list[j].getAttribute("lon"))
+                point_list[pos++] = this.pointGeomFromNode(node_list[j]);
+        }
+        point_list = point_list.slice(0, pos);
+            
+        return point_list;
+    },
+          
+    getNodes: function(doc)
+    {
+        var node_list = doc.getElementsByTagName("node");
+        var nodes = {};
+        for (var i = 0; i < node_list.length; ++i)
+        {
+            var node = node_list[i];
+            var id = node.getAttribute("id");
+
+            var state = this.stateOf(node);                
+            var feat = new OpenLayers.Feature.Vector(this.pointGeomFromNode(node), state);
+            feat.tags = this.getTags(node);
+            feat.osm_id = parseInt(id);
+            feat.osm_version = parseInt(node.getAttribute("version"));
+            feat.type = "node";
+            feat.fid = "node." + feat.osm_id;
+            feat.geometry.osm_id = feat.osm_id;
+
+            if (this.isInExtent(node))
+            {
+                nodes[id + "." + state.state] = feat;
+                this.pushTextualResult(feat);
+            }
+        }
+        return nodes;
+    },
+          
+    getWays: function(doc) {
+        var way_list = doc.getElementsByTagName("way");
+        var ways = {};
+        for (var i = 0; i < way_list.length; ++i)
+        {
+            var way = way_list[i];
+            var id = way.getAttribute("id");
+            
+            var state = this.stateOf(way);
+            var way_nodes = this.pointListFromWay(way.getElementsByTagName("nd"));
+            var feat = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.LineString(way_nodes), state);
+            feat.tags = this.getTags(way);
+            feat.osm_id = parseInt(id);
+            feat.osm_version = parseInt(way.getAttribute("version"));
+            feat.type = "way";
+            feat.fid = "way." + feat.osm_id;
+
+            if (way_nodes.length >= 2)
+            {
+                ways[id + "." + state.state] = feat;
+                this.pushTextualResult(feat);
+            }
+        }
+        return ways;
+    },
+
+    getRelations: function(doc) {
+        var relation_list = doc.getElementsByTagName("relation");
+        var return_relations = {};
+        for (var i = 0; i < relation_list.length; ++i)
+        {
+            var relation = relation_list[i];
+            var id = relation.getAttribute("id");
+            
+            var member_list = relation.getElementsByTagName("member");
+            var geom = new OpenLayers.Geometry.Collection();
+            for (var j = 0; j < member_list.length; ++j)
+            {
+                if (member_list[j].getAttribute("type") == "node" && this.isInExtent(member_list[j]))
+                    geom.addComponent(this.pointGeomFromNode(member_list[j]));
+                else if (member_list[j].getAttribute("type") == "way")
+                {
+                    var way_nodes = this.pointListFromWay(member_list[j].getElementsByTagName("nd"));
+                    if (way_nodes.length >= 2)
+                        geom.addComponent(new OpenLayers.Geometry.LineString(way_nodes));
+                }
+            }
+            
+            var state = this.stateOf(relation);
+            var feat = new OpenLayers.Feature.Vector(geom, state);
+            feat.tags = this.getTags(relation);
+            feat.osm_id = parseInt(id);
+            feat.osm_version = parseInt(relation.getAttribute("version"));
+            feat.type = "relation";
+            feat.fid = "relation." + feat.osm_id;
+
+            if (geom.components.length > 0)
+            {
+                return_relations[id + "." + state.state] = feat;
+                this.pushTextualResult(feat);
+            }
+        }
+        return return_relations;
+    },
+
+    strategy: null,
+
+    CLASS_NAME: "OSMDiffFormat"
+});
+
+//-----------------------------------------------------------------------------
 
       function make_large_layer(data_url, color, zoom) {
 

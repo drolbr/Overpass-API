@@ -1,0 +1,15 @@
+Content-type: text/csv
+
+even,@id,foo,odd,even
+,1,,,
+yes,2,,,yes
+,7,bar,,
+yes,14,bar,,yes
+,1,,,
+yes,2,,,yes
+,7,bar,,
+yes,14,bar,,yes
+,1,,,
+yes,2,,,yes
+yes,42,bar,,yes
+,161,bar,,

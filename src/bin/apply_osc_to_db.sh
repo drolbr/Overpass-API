@@ -17,9 +17,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-if [[ -z $4  ]]; then
+if [[ -z $3  ]]; then
 {
-  echo "Usage: $0 replicate_dir start_id --meta=(yes|no) --augmented_diffs=(yes|no)"
+  echo "Usage: $0 replicate_dir start_id --meta=(attic|yes|no)"
   exit 0
 }; fi
 
@@ -34,34 +34,19 @@ REPLICATE_DIR="$1"
 START=$2
 META=
 
-if [[ $3 == "--meta=yes" || $3 == "--meta" ]]; then
-{
+if [[ $3 == "--meta=attic" ]]; then
+  META="--keep-attic"
+elif [[ $3 == "--meta=yes" || $3 == "--meta" ]]; then
   META="--meta"
-}
 elif [[ $3 == "--meta=no" ]]; then
-{
   META=
-}
 else
 {
   echo "You must specify --meta=yes or --meta=no"
   exit 0
 }; fi
 
-if [[ $4 == "--augmented_diffs=yes" || $4 == "--augmented_diffs" ]]; then
-{
-  PRODUCE_DIFF="yes"
-}
-elif [[ $4 == "--augmented_diffs=no" ]]; then
-{
-  PRODUCE_DIFF=
-}
-else
-{
-  echo "You must specify --augmented_diffs=yes or --augmented_diffs=no"
-  exit 0
-}; fi
-
+PRODUCE_DIFF=
 
 get_replicate_filename()
 {
@@ -82,7 +67,7 @@ collect_minute_diffs()
 
   get_replicate_filename $TARGET
 
-  while [[ ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 60)) -ge $(($TARGET)) ) ]];
+  while [[ ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 1440)) -ge $(($TARGET)) ) && ( `du -m $TEMP_DIR | awk '{ print $1; }'` -le 512 ) ]];
   do
   {
     printf -v TARGET_FILE %09u $TARGET
@@ -100,13 +85,13 @@ apply_minute_diffs_augmented()
   get_replicate_filename $DIFF_COUNT
   mkdir -p $DB_DIR/augmented_diffs/$REPLICATE_TRUNK_DIR
   mkdir -p $DB_DIR/augmented_diffs/id_sorted/$REPLICATE_TRUNK_DIR
-  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff --flush-size=0 >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
   {
     sleep 60
-    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --produce-diff --flush-size=0 >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
     EXITCODE=$?
   };
   done
@@ -122,13 +107,13 @@ apply_minute_diffs_augmented()
 
 apply_minute_diffs()
 {
-  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
   EXITCODE=$?
   while [[ $EXITCODE -ne 0 ]];
   do
   {
     sleep 60
-    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
     EXITCODE=$?
   };
   done

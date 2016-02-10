@@ -205,7 +205,7 @@ $BASEDIR/bin/dispatcher --osm-base --meta --db-dir=input/update_database/ &
 sleep 1
 
 II=45
-while [[ $II -lt 47 ]]; do
+while [[ $II -lt 48 ]]; do
 {
   mkdir -p input/interpreter_$II/
   II=$(($II + 1))

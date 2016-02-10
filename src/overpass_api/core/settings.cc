@@ -32,22 +32,25 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+
 template < typename TVal >
 struct OSM_File_Properties : public File_Properties
 {
-  OSM_File_Properties(string file_base_name_, uint32 block_size_,
+  OSM_File_Properties(const string& file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
     : file_base_name(file_base_name_), block_size(block_size_),
       map_block_size(map_block_size_ > 0 ? map_block_size_*TVal::max_size_of() : 0) {}
   
-  string get_file_name_trunk() const { return file_base_name; }
+  const string& get_file_name_trunk() const { return file_base_name; }
   
-  string get_index_suffix() const { return basic_settings().INDEX_SUFFIX; }
-  string get_data_suffix() const { return basic_settings().DATA_SUFFIX; }
-  string get_id_suffix() const { return basic_settings().ID_SUFFIX; }  
-  string get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
+  const string& get_index_suffix() const { return basic_settings().INDEX_SUFFIX; }
+  const string& get_data_suffix() const { return basic_settings().DATA_SUFFIX; }
+  const string& get_id_suffix() const { return basic_settings().ID_SUFFIX; }  
+  const string& get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
   
-  uint32 get_block_size() const { return block_size; }
+  uint32 get_block_size() const { return block_size/4; }
+  uint32 get_max_size() const { return 4; }
+  uint32 get_compression_method() const { return File_Blocks_Index< TVal >::ZLIB_COMPRESSION; }
   uint32 get_map_block_size() const { return map_block_size; }
   
   vector< bool > get_data_footprint(const string& db_dir) const
@@ -67,7 +70,7 @@ struct OSM_File_Properties : public File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, string db_dir, string file_name_extension)
+      (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
       const
   {
     return new File_Blocks_Index< TVal >
@@ -78,6 +81,7 @@ struct OSM_File_Properties : public File_Properties
   uint32 block_size;
   uint32 map_block_size;
 };
+
 
 //-----------------------------------------------------------------------------
 
@@ -90,7 +94,7 @@ Basic_Settings::Basic_Settings()
 
   base_directory("./"),
   logfile_name("transactions.log"),
-  shared_name_base("/osm3s_v0.7.4")
+  shared_name_base("/osm3s_v0.7.52")
 {}
 
 Basic_Settings& basic_settings()
@@ -107,13 +111,17 @@ Osm_Base_Settings::Osm_Base_Settings()
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("node_tags_local", 512*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("node_tags_global", 2*1024*1024, 0)),
+      ("node_tags_global", 512*1024, 0)),
+  NODE_KEYS(new OSM_File_Properties< Uint32_Index >
+      ("node_keys", 512*1024, 0)),
       
   WAYS(new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 64*1024)),
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("way_tags_local", 512*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("way_tags_global", 2*1024*1024, 0)),
+      ("way_tags_global", 512*1024, 0)),
+  WAY_KEYS(new OSM_File_Properties< Uint32_Index >
+      ("way_keys", 512*1024, 0)),
       
   RELATIONS(new OSM_File_Properties< Uint31_Index >("relations", 1024*1024, 64*1024)),
   RELATION_ROLES(new OSM_File_Properties< Uint32_Index >
@@ -121,7 +129,9 @@ Osm_Base_Settings::Osm_Base_Settings()
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("relation_tags_local", 512*1024, 0)),
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("relation_tags_global", 2*1024*1024, 0)),
+      ("relation_tags_global", 512*1024, 0)),
+  RELATION_KEYS(new OSM_File_Properties< Uint32_Index >
+      ("relation_keys", 512*1024, 0)),
       
   shared_name(basic_settings().shared_name_base + "_osm_base"),
   max_num_processes(20),
@@ -185,6 +195,56 @@ const Meta_Settings& meta_settings()
 
 //-----------------------------------------------------------------------------
 
+Attic_Settings::Attic_Settings()
+:
+  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 512*1024, 64*1024)),
+  NODES_UNDELETED(new OSM_File_Properties< Uint31_Index >("nodes_attic_undeleted", 512*1024, 64*1024)),
+  NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type >
+      ("node_attic_indexes", 512*1024, 0)),
+  NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+      ("node_tags_local_attic", 512*1024, 0)),
+  NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+      ("node_tags_global_attic", 2*1024*1024, 0)),
+  NODES_META(new OSM_File_Properties< Uint31_Index >
+      ("nodes_meta_attic", 512*1024, 0)),
+  NODE_CHANGELOG(new OSM_File_Properties< Timestamp >
+      ("node_changelog", 512*1024, 0)),
+      
+  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 64*1024)),
+  WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index >("ways_attic_undeleted", 512*1024, 64*1024)),
+  WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >
+      ("way_attic_indexes", 512*1024, 0)),
+  WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+      ("way_tags_local_attic", 512*1024, 0)),
+  WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+      ("way_tags_global_attic", 2*1024*1024, 0)),
+  WAYS_META(new OSM_File_Properties< Uint31_Index >
+      ("ways_meta_attic", 512*1024, 0)),
+  WAY_CHANGELOG(new OSM_File_Properties< Timestamp >
+      ("way_changelog", 512*1024, 0)),
+      
+  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 1024*1024, 64*1024)),
+  RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index >("relations_attic_undeleted", 512*1024, 64*1024)),
+  RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type >
+      ("relation_attic_indexes", 512*1024, 0)),
+  RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
+      ("relation_tags_local_attic", 512*1024, 0)),
+  RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+      ("relation_tags_global_attic", 2*1024*1024, 0)),
+  RELATIONS_META(new OSM_File_Properties< Uint31_Index >
+      ("relations_meta_attic", 512*1024, 0)),
+  RELATION_CHANGELOG(new OSM_File_Properties< Timestamp >
+      ("relation_changelog", 512*1024, 0))
+{}
+
+const Attic_Settings& attic_settings()
+{
+  static Attic_Settings obj;
+  return obj;
+}
+
+//-----------------------------------------------------------------------------
+
 void show_mem_status()
 {
   ostringstream proc_file_name_("");
@@ -224,7 +284,7 @@ void Logger::raw_log(const string& message)
   out<<message<<'\n';
 }
 
-string get_logfile_name()
+const string& get_logfile_name()
 {
   return basic_settings().logfile_name;
 }

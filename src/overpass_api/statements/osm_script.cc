@@ -36,6 +36,7 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation_)
     : Statement(line_number_), bbox_limitation(bbox_limitation_), bbox_statement(0),
+       desired_timestamp(NOW), comparison_timestamp(0), add_deletion_information(false),
        max_allowed_time(0), max_allowed_space(0),
        type("xml"), output_handle(0), factory(0),
        template_name("default.wiki"), template_contains_js_(false)
@@ -46,6 +47,9 @@ Osm_Script_Statement::Osm_Script_Statement
   attributes["timeout"] = "180";
   attributes["element-limit"] = "536870912";
   attributes["output"] = "xml";
+  attributes["date"] = "";
+  attributes["from"] = "";
+  attributes["augmented"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -69,14 +73,14 @@ Osm_Script_Statement::Osm_Script_Statement
   }
   max_allowed_space = max_space;
 
-  if (attributes["output"] == "xml" || attributes["output"] == "json" || attributes["output"] == "custom"
-      || attributes["output"] == "popup")
+  if (attributes["output"] == "xml" || attributes["output"] == "json" || attributes["output"] == "csv" 
+      || attributes["output"] == "custom" || attributes["output"] == "popup")
     type = attributes["output"];
   else
   {
     ostringstream temp;
     temp<<"For the attribute \"output\" of the element \"osm-script\""
-        <<" the only allowed values are \"xml\", \"json\", \"custom\", or \"popup\".";
+        <<" the only allowed values are \"xml\", \"json\", \"csv\", \"custom\", or \"popup\".";
     add_static_error(temp.str());
   }
   
@@ -138,7 +142,7 @@ Osm_Script_Statement::Osm_Script_Statement
     if (west < -180.0 || west > 180.0 || east < -180.0 || east > 180.0)
     {
       ostringstream temp;
-      temp<<"Longitudes in bounding boxes must be between -1800.0 and 180.0.";
+      temp<<"Longitudes in bounding boxes must be between -180.0 and 180.0.";
       add_static_error(temp.str());
     }
     
@@ -149,13 +153,78 @@ Osm_Script_Statement::Osm_Script_Statement
       bbox_limitation = bbox_statement->get_query_constraint();
     }
   }
+  
+  if (attributes["date"] != "")
+  {
+    string timestamp = attributes["date"];
+  
+    desired_timestamp = 0;
+    desired_timestamp |= (atoll(timestamp.c_str())<<26); //year
+    desired_timestamp |= (atoi(timestamp.c_str()+5)<<22); //month
+    desired_timestamp |= (atoi(timestamp.c_str()+8)<<17); //day
+    desired_timestamp |= (atoi(timestamp.c_str()+11)<<12); //hour
+    desired_timestamp |= (atoi(timestamp.c_str()+14)<<6); //minute
+    desired_timestamp |= atoi(timestamp.c_str()+17); //second
+  
+    if (desired_timestamp == 0)
+    {
+      ostringstream temp;
+      temp<<"The attribute \"date\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
+      add_static_error(temp.str());
+    }
+  }
+  
+  if (attributes["from"] != "")
+  {
+    string timestamp = attributes["from"];
+  
+    comparison_timestamp = 0;
+    comparison_timestamp |= (atoll(timestamp.c_str())<<26); //year
+    comparison_timestamp |= (atoi(timestamp.c_str()+5)<<22); //month
+    comparison_timestamp |= (atoi(timestamp.c_str()+8)<<17); //day
+    comparison_timestamp |= (atoi(timestamp.c_str()+11)<<12); //hour
+    comparison_timestamp |= (atoi(timestamp.c_str()+14)<<6); //minute
+    comparison_timestamp |= atoi(timestamp.c_str()+17); //second
+  
+    if (comparison_timestamp == 0)
+    {
+      ostringstream temp;
+      temp<<"The attribute \"from\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
+      add_static_error(temp.str());
+    }
+  }
+  
+  if (attributes["augmented"] != "")
+  {    
+    if (attributes["augmented"] == "deletions" && attributes["from"] != "")      
+      add_deletion_information = true;
+
+    if (attributes["augmented"] != "deletions")
+    {
+      ostringstream temp;
+      temp<<"The only allowed values for \"augmented\" are an empty value or \"deletions\".";
+      add_static_error(temp.str());
+    }    
+    if (attributes["from"] == "")
+    {
+      ostringstream temp;
+      temp<<"The attribute \"augmented\" can only be set if the attribute \"from\" is set.";
+      add_static_error(temp.str());
+    }      
+  }
 }
 
 void Osm_Script_Statement::add_statement(Statement* statement, string text)
 {
   assure_no_text(text, this->get_name());
   
-  substatements.push_back(statement);
+  if (statement)
+  {
+    if (statement->get_name() != "newer")
+      substatements.push_back(statement);
+    else
+      add_static_error("\"newer\" can appear only inside \"query\" statements.");
+  }
 }
 
 
@@ -271,6 +340,8 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   {
     if (!output_handle)
       output_handle = new Output_Handle(type);
+    if (type == "csv")
+      output_handle->set_csv_settings(csv_settings);
     if (type == "custom")
       template_contains_js_ =
           set_output_templates(*output_handle, header, template_name, *rman.get_transaction());
@@ -287,6 +358,38 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
     if (bbox_statement)
       output_handle->print_bounds(bbox_statement->get_south(), bbox_statement->get_west(),
                                   bbox_statement->get_north(), bbox_statement->get_east());
+
+    output_handle->print_elements_header();
+  }
+  
+  if (comparison_timestamp > 0)
+  {
+    for (vector< Statement* >::iterator it = factory->created_statements.begin();
+        it != factory->created_statements.end(); ++it)
+    {
+      Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
+      if (print)
+        print->set_collect_lhs();
+    }
+    
+    rman.set_diff_from_timestamp(comparison_timestamp);
+    rman.set_diff_to_timestamp(desired_timestamp);
+    rman.set_desired_timestamp(comparison_timestamp);
+    
+    for (vector< Statement* >::iterator it(substatements.begin());
+        it != substatements.end(); ++it)
+      (*it)->execute(rman);
+    
+    for (vector< Statement* >::iterator it = factory->created_statements.begin();
+        it != factory->created_statements.end(); ++it)
+    {
+      Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
+      if (print)
+        print->set_collect_rhs(add_deletion_information);
+    }
+    
+    rman.sets().clear();
+    rman.set_desired_timestamp(desired_timestamp);
   }
   
   for (vector< Statement* >::iterator it(substatements.begin());

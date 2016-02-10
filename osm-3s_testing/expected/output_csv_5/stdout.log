@@ -1,0 +1,15 @@
+Content-type: text/csv
+
+even	foo	odd
+		
+yes		
+	bar	
+yes	bar	
+		
+yes		
+	bar	
+yes	bar	
+		
+yes		
+yes	bar	
+	bar	

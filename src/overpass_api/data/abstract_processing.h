@@ -21,8 +21,9 @@
 
 #include "../core/datatypes.h"
 #include "../statements/statement.h"
+#include "collect_items.h"
+#include "filenames.h"
 
-using namespace std;
 
 //-----------------------------------------------------------------------------
 
@@ -188,100 +189,92 @@ private:
   const vector< Node::Id_Type >& ids;
 };
 
+
 //-----------------------------------------------------------------------------
 
-template < class TIndex, class TObject, class TContainer, class TPredicate >
-void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
-		   File_Properties& file_properties,
-		   const TContainer& req, const TPredicate& predicate,
-		   map< TIndex, vector< TObject > >& result)
+
+template < typename Attic_Skeleton >
+struct Attic_Comparator
 {
-  uint32 count = 0;
-  Block_Backend< TIndex, TObject, typename TContainer::const_iterator > db
-      (rman.get_transaction()->data_index(&file_properties));
-  for (typename Block_Backend< TIndex, TObject, typename TContainer
-      ::const_iterator >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+public:
+  bool operator()(const Attic_Skeleton& lhs, const Attic_Skeleton& rhs)
   {
-    if (++count >= 64*1024)
+    if (lhs.id < rhs.id)
+      return true;
+    if (rhs.id < lhs.id)
+      return false;
+    return (lhs.timestamp < rhs.timestamp);
+  }
+};
+
+
+template < class TIndex, class TObject >
+void keep_only_least_younger_than
+    (map< TIndex, vector< Attic< TObject > > >& attic_result,
+     map< TIndex, vector< TObject > >& result,
+     uint64 timestamp)
+{
+  std::map< typename TObject::Id_Type, uint64 > timestamp_per_id;
+  
+  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::iterator
+      it = attic_result.begin(); it != attic_result.end(); ++it)
+  {
+    std::sort(it->second.begin(), it->second.end(), Attic_Comparator< Attic< TObject > >());
+    typename std::vector< Attic< TObject > >::iterator it_from = it->second.begin();
+    typename std::vector< Attic< TObject > >::iterator it_to = it->second.begin();
+    while (it_from != it->second.end())
     {
-      count = 0;
-      if (stmt)
-        rman.health_check(*stmt);
+      if (it_from->timestamp <= timestamp)
+        ++it_from;
+      else
+      {
+        *it_to = *it_from;
+        if (timestamp_per_id[it_to->id] == 0 || timestamp_per_id[it_to->id] > it_to->timestamp)
+          timestamp_per_id[it_to->id] = it_to->timestamp;
+        ++it_from;
+        while (it_from != it->second.end() && it_from->id == it_to->id)
+          ++it_from;
+        ++it_to;
+      }
     }
-    if (predicate.match(it.object()))
-      result[it.index()].push_back(it.object());
+    it->second.erase(it_to, it->second.end());
+  }
+  
+  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::iterator
+      it = attic_result.begin(); it != attic_result.end(); ++it)
+  {
+    typename std::vector< Attic< TObject > >::iterator it_from = it->second.begin();
+    typename std::vector< Attic< TObject > >::iterator it_to = it->second.begin();
+    while (it_from != it->second.end())
+    {
+      if (timestamp_per_id[it_from->id] == it_from->timestamp)
+      {
+        *it_to = *it_from;
+        ++it_to;
+      }
+      ++it_from;
+    }
+    it->second.erase(it_to, it->second.end());
+  }
+  
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator
+      it = result.begin(); it != result.end(); ++it)
+  {
+    typename std::vector< TObject >::iterator it_from = it->second.begin();
+    typename std::vector< TObject >::iterator it_to = it->second.begin();
+    while (it_from != it->second.end())
+    {
+      if (timestamp_per_id.find(it_from->id) == timestamp_per_id.end())
+      {
+        *it_to = *it_from;
+        ++it_to;
+      }
+      ++it_from;
+    }
+    it->second.erase(it_to, it->second.end());
   }
 }
 
-
-template < class TIndex, class TObject, class TContainer, class TPredicate >
-void collect_items_discrete(Transaction& transaction,
-                   File_Properties& file_properties,
-                   const TContainer& req, const TPredicate& predicate,
-                   map< TIndex, vector< TObject > >& result)
-{
-  uint32 count = 0;
-  Block_Backend< TIndex, TObject, typename TContainer::const_iterator > db
-      (transaction.data_index(&file_properties));
-  for (typename Block_Backend< TIndex, TObject, typename TContainer
-      ::const_iterator >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
-  {
-    if (++count >= 64*1024)
-    {
-      count = 0;
-    }
-    if (predicate.match(it.object()))
-      result[it.index()].push_back(it.object());
-  }
-}
-
-
-template < class TIndex, class TObject, class TContainer, class TPredicate >
-void collect_items_range(const Statement* stmt, Resource_Manager& rman,
-		   File_Properties& file_properties,
-		   const TContainer& req, const TPredicate& predicate,
-		   map< TIndex, vector< TObject > >& result)
-{
-  uint32 count = 0;
-  Block_Backend< TIndex, TObject, typename TContainer::const_iterator > db
-      (rman.get_transaction()->data_index(&file_properties));
-  for (typename Block_Backend< TIndex, TObject, typename TContainer
-      ::const_iterator >::Range_Iterator
-      it(db.range_begin(req.begin(), req.end()));
-	   !(it == db.range_end()); ++it)
-  {
-    if (++count >= 64*1024 && stmt)
-    {
-      count = 0;
-      rman.health_check(*stmt);
-    }
-    if (predicate.match(it.object()))
-      result[it.index()].push_back(it.object());
-  }
-}
-
-template < class TIndex, class TObject, class TPredicate >
-void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
-		   File_Properties& file_properties, const TPredicate& predicate,
-		   map< TIndex, vector< TObject > >& result)
-{
-  uint32 count = 0;
-  Block_Backend< TIndex, TObject > db
-      (rman.get_transaction()->data_index(&file_properties));
-  for (typename Block_Backend< TIndex, TObject >::Flat_Iterator
-      it(db.flat_begin()); !(it == db.flat_end()); ++it)
-  {
-    if (++count >= 64*1024)
-    {
-      count = 0;
-      rman.health_check(stmt);
-    }
-    if (predicate.match(it.object()))
-      result[it.index()].push_back(it.object());
-  }
-}
 
 //-----------------------------------------------------------------------------
 
@@ -353,5 +346,59 @@ void indexed_set_difference(map< TIndex, vector< TObject > >& result,
                    back_inserter(result[it->first]));
   }
 }
+
+//-----------------------------------------------------------------------------
+
+/* Returns for the given set of ids the set of corresponding indexes.
+ * For ids where the timestamp is zero, only the current index is returned.
+ * For ids where the timestamp is nonzero, all attic indexes are also returned.
+ * The function requires that the ids are sorted ascending by id.
+ */
+template< typename Index, typename Skeleton >
+std::pair< std::vector< Index >, std::vector< Index > > get_indexes
+    (const std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >& ids,
+     Resource_Manager& rman)
+{
+  std::pair< std::vector< Index >, std::vector< Index > > result;
+  
+  Random_File< Index > current(rman.get_transaction()->random_index
+      (current_skeleton_file_properties< Skeleton >()));
+  for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
+      it = ids.begin(); it != ids.end(); ++it)
+    result.first.push_back(current.get(it->first.val()));
+  
+  std::sort(result.first.begin(), result.first.end());
+  result.first.erase(std::unique(result.first.begin(), result.first.end()), result.first.end());
+  
+  if (rman.get_desired_timestamp() != NOW)
+  {
+    Random_File< Index > attic_random(rman.get_transaction()->random_index
+        (attic_skeleton_file_properties< Skeleton >()));
+    std::set< typename Skeleton::Id_Type > idx_list_ids;
+    for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
+        it = ids.begin(); it != ids.end(); ++it)
+    {
+      if (it->second == 0 || attic_random.get(it->first.val()).val() == 0)
+        ;
+      else if (attic_random.get(it->first.val()) == 0xff)
+        idx_list_ids.insert(it->first.val());
+      else
+        result.second.push_back(attic_random.get(it->first.val()));
+    }
+  
+    Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
+        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
+    for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
+        it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
+        !(it == idx_list_db.discrete_end()); ++it)
+      result.second.push_back(it.object());
+  
+    std::sort(result.second.begin(), result.second.end());
+    result.second.erase(std::unique(result.second.begin(), result.second.end()), result.second.end());
+  }
+  
+  return result;
+}
+
 
 #endif

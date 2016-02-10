@@ -1,0 +1,15 @@
+Content-type: text/csv
+
+@type	@id	@lat	@lon	@version	@timestamp	@changeset	@user	@uid	even	foo	odd
+node	1										
+node	2								yes		
+node	7									bar	
+node	14								yes	bar	
+way	1										
+way	2								yes		
+way	7									bar	
+way	14								yes	bar	
+relation	1										
+relation	2								yes		
+relation	42								yes	bar	
+relation	161									bar	

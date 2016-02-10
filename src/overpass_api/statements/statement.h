@@ -33,7 +33,7 @@ using namespace std;
 class Query_Constraint
 {
   public:
-    virtual bool delivers_data() = 0;
+    virtual bool delivers_data(Resource_Manager& rman) = 0;
     
     virtual bool collect_nodes(Resource_Manager& rman, Set& into,
 			 const vector< Uint64 >& ids, bool invert_ids) { return false; }
@@ -47,21 +47,34 @@ class Query_Constraint
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
       { return false; }
       
+    virtual bool get_node_ids
+        (Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
+      { return false; }
+    virtual bool get_way_ids
+        (Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids)
+      { return false; }
+    virtual bool get_relation_ids
+        (Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids)
+      { return false; }
+      
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-			  const vector< Node::Id_Type >& ids, bool invert_ids)
+			  const vector< Node::Id_Type >& ids,
+                          bool invert_ids, uint64 timestamp)
       { return false; }
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-			  int type, const vector< Uint32_Index >& ids, bool invert_ids)
+			  int type,
+                          const vector< Uint32_Index >& ids,
+                          bool invert_ids, uint64 timestamp)
       { return false; }
     
     // Cheap filter. No health_check in between needed and should be called first.
-    virtual void filter(Resource_Manager& rman, Set& into) {}
+    virtual void filter(Resource_Manager& rman, Set& into, uint64 timestamp) {}
 
     // Expensive filter. Health_check may be needed in between. These are called last
     // to minimize the number of elements that need to be processed.
-    virtual void filter(const Statement& query, Resource_Manager& rman, Set& into) {}
+    virtual void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp) {}
     
     virtual ~Query_Constraint() {}
 };

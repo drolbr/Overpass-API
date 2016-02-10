@@ -131,45 +131,22 @@ void process_meta_data
   
   Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > > user_db
       (&file_blocks_index);
-  user_db.update(db_to_delete, db_to_insert);
+  user_db.update(db_to_delete, db_to_insert);  
 }
 
 
-template< class Update_Logger, class Id_Type >
-void process_meta_data
-  (File_Blocks_Index_Base& file_blocks_index,
-   vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
-   const vector< pair< Id_Type, bool > >& ids_to_modify,
-   const map< uint32, vector< Id_Type > >& to_delete,
-   Update_Logger* update_logger)
+template< typename Index, typename Object >
+void copy_idxs_by_id
+    (const std::map< Index, std::set< Object > >& new_data, map< uint32, vector< uint32 > >& idxs_by_user_id)
 {
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_delete;
-  map< Uint31_Index, set< OSM_Element_Metadata_Skeleton< Id_Type > > > db_to_insert;
-
-  process_meta_data(file_blocks_index, meta_to_insert, ids_to_modify,
-		    to_delete, db_to_delete, db_to_insert);
-  
-  Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Id_Type > > user_db
-      (&file_blocks_index);
-  if (update_logger)
-    user_db.update(db_to_delete, db_to_insert, *update_logger);
-  else
-    user_db.update(db_to_delete, db_to_insert);  
-}
-
-
-template< typename Id_Type >
-void create_idxs_by_id
-    (const vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >& meta_to_insert,
-     map< uint32, vector< uint32 > >& idxs_by_user_id)
-{
-  for (typename vector< pair< OSM_Element_Metadata_Skeleton< Id_Type >, uint32 > >::const_iterator
-      it = meta_to_insert.begin(); it != meta_to_insert.end(); ++it)
+  for (typename std::map< Index, std::set< Object > >::const_iterator it = new_data.begin();
+       it != new_data.end(); ++it)
   {
-    uint32 compressed_idx = (it->second & 0xffffff00);
-    if ((it->second & 0x80000000) && ((it->second & 0x3) == 0))
-      compressed_idx = it->second;
-    idxs_by_user_id[it->first.user_id].push_back(compressed_idx);
+    uint32 compressed_idx = (it->first.val() & 0xffffff00);
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+      compressed_idx = it->first.val();
+    for (typename std::set< Object >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      idxs_by_user_id[it2->user_id].push_back(compressed_idx);
   }
 }
 

@@ -22,12 +22,10 @@
 #include <iostream>
 #include <string>
 
+#include "../../expat/escape_xml.h"
 #include "../../template_db/types.h"
 #include "../core/datatypes.h"
 
-using namespace std;
-
-string escape_xml(const string& s);
 string escape_cstr(const string& s);
 
 Osm_Backend_Callback* get_verbatim_callback();

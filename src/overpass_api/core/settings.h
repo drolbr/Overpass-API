@@ -19,40 +19,44 @@
 #ifndef DE__OSM3S___OVERPASS_API__CORE__SETTINGS_H
 #define DE__OSM3S___OVERPASS_API__CORE__SETTINGS_H
 
+#include <limits>
 #include <string>
 
 #include "../../template_db/types.h"
 
-using namespace std;
 
 struct Basic_Settings
 {
-  string DATA_SUFFIX;
-  string INDEX_SUFFIX;
-  string ID_SUFFIX;
-  string SHADOW_SUFFIX;
+  std::string DATA_SUFFIX;
+  std::string INDEX_SUFFIX;
+  std::string ID_SUFFIX;
+  std::string SHADOW_SUFFIX;
   
-  string base_directory;
-  string logfile_name;
-  string shared_name_base;
+  std::string base_directory;
+  std::string logfile_name;
+  std::string shared_name_base;
   
   Basic_Settings();
 };
+
 
 struct Osm_Base_Settings
 {
   File_Properties* NODES;
   File_Properties* NODE_TAGS_LOCAL;
   File_Properties* NODE_TAGS_GLOBAL;
+  File_Properties* NODE_KEYS;
   File_Properties* WAYS;
   File_Properties* WAY_TAGS_LOCAL;
   File_Properties* WAY_TAGS_GLOBAL;
+  File_Properties* WAY_KEYS;
   File_Properties* RELATIONS;
   File_Properties* RELATION_ROLES;
   File_Properties* RELATION_TAGS_LOCAL;
   File_Properties* RELATION_TAGS_GLOBAL;
+  File_Properties* RELATION_KEYS;
   
-  string shared_name;
+  std::string shared_name;
   uint max_num_processes;
   uint purge_timeout;
   uint64 total_available_space;
@@ -61,6 +65,7 @@ struct Osm_Base_Settings
   Osm_Base_Settings();
 };
 
+
 struct Area_Settings
 {
   File_Properties* AREA_BLOCKS;
@@ -68,7 +73,7 @@ struct Area_Settings
   File_Properties* AREA_TAGS_LOCAL;
   File_Properties* AREA_TAGS_GLOBAL;
   
-  string shared_name;
+  std::string shared_name;
   uint max_num_processes;
   uint purge_timeout;
   uint64 total_available_space;
@@ -76,6 +81,7 @@ struct Area_Settings
   
   Area_Settings();
 };
+
 
 struct Meta_Settings
 {
@@ -88,22 +94,56 @@ struct Meta_Settings
   Meta_Settings();
 };
 
+
+struct Attic_Settings
+{
+  File_Properties* NODES;
+  File_Properties* NODES_UNDELETED;
+  File_Properties* NODE_IDX_LIST;
+  File_Properties* NODE_TAGS_LOCAL;
+  File_Properties* NODE_TAGS_GLOBAL;
+  File_Properties* NODES_META;
+  File_Properties* NODE_CHANGELOG;
+  File_Properties* WAYS;
+  File_Properties* WAYS_UNDELETED;
+  File_Properties* WAY_IDX_LIST;
+  File_Properties* WAY_TAGS_LOCAL;
+  File_Properties* WAY_TAGS_GLOBAL;
+  File_Properties* WAYS_META;
+  File_Properties* WAY_CHANGELOG;
+  File_Properties* RELATIONS;
+  File_Properties* RELATIONS_UNDELETED;
+  File_Properties* RELATION_IDX_LIST;
+  File_Properties* RELATION_TAGS_LOCAL;
+  File_Properties* RELATION_TAGS_GLOBAL;
+  File_Properties* RELATIONS_META;
+  File_Properties* RELATION_CHANGELOG;
+  
+  Attic_Settings();
+};
+
+
 Basic_Settings& basic_settings();
 const Osm_Base_Settings& osm_base_settings();
 const Area_Settings& area_settings();
 const Meta_Settings& meta_settings();
+const Attic_Settings& attic_settings();
 
 void show_mem_status();
+
 
 class Logger
 {
   public:
-    Logger(const string& db_dir);
-    void annotated_log(const string& message);
-    void raw_log(const string& message);
+    Logger(const std::string& db_dir);
+    void annotated_log(const std::string& message);
+    void raw_log(const std::string& message);
     
   private:
-    string logfile_full_name;
+    std::string logfile_full_name;
 };
+
+
+const uint64 NOW = std::numeric_limits< unsigned long long >::max();
 
 #endif

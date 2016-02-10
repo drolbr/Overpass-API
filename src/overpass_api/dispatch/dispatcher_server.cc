@@ -19,6 +19,7 @@
 #include "../core/settings.h"
 #include "../frontend/user_interface.h"
 #include "../../template_db/dispatcher.h"
+#include "../../template_db/dispatcher_client.h"
 
 #include <cstring>
 #include <iostream>
@@ -39,6 +40,7 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
   virtual void prolongate(pid_t pid);
   virtual void idle_counter(uint32 idle_count);
   virtual void read_finished(pid_t pid);
+  virtual void read_aborted(pid_t pid);
   virtual void purge(pid_t pid);
   
   private:
@@ -106,6 +108,13 @@ void Default_Dispatcher_Logger::read_finished(pid_t pid)
   logger->annotated_log(out.str());
 }
 
+void Default_Dispatcher_Logger::read_aborted(pid_t pid)
+{
+  ostringstream out;
+  out<<"read_aborted of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
 void Default_Dispatcher_Logger::purge(pid_t pid)
 {
   ostringstream out;
@@ -117,7 +126,8 @@ int main(int argc, char* argv[])
 {
   // read command line arguments
   string db_dir;
-  bool osm_base(false), areas(false), meta(false), terminate(false), status(false), show_dir(false);
+  bool osm_base(false), areas(false), meta(false), attic(false),
+      terminate(false), status(false), show_dir(false);
   uint32 purge_id = 0;
   bool query_token = false;
   uint64 max_allowed_space = 0;
@@ -139,6 +149,8 @@ int main(int argc, char* argv[])
       areas = true;
     else if (!(strncmp(argv[argpos], "--meta", 6)))
       meta = true;
+    else if (!(strncmp(argv[argpos], "--attic", 7)))
+      attic = true;
     else if (!(strncmp(argv[argpos], "--terminate", 11)))
       terminate = true;  
     else if (!(strncmp(argv[argpos], "--status", 8)))
@@ -162,6 +174,7 @@ int main(int argc, char* argv[])
       "  --osm-base: Start or talk to the dispatcher for the osm data.\n"
       "  --areas: Start or talk to the dispatcher for the areas data.\n"
       "  --meta: When starting the osm data dispatcher, also care for meta data.\n"
+      "  --attic: When starting the osm data dispatcher, also care for meta and attic data.\n"
       "  --db-dir=$DB_DIR: The directory where the database resides.\n"
       "  --terminate: Stop the adressed dispatcher.\n"
       "  --status: Let the adressed dispatcher dump its status into\n"
@@ -176,6 +189,12 @@ int main(int argc, char* argv[])
       return 0;
     }
     ++argpos;
+  }
+  
+  if (osm_base && areas)
+  {
+    cout<<"\"--areas\" and \"--osm-base\" need separate instances.\n";
+    return 0;
   }
   
   if (terminate)
@@ -274,13 +293,16 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(osm_base_settings().NODES);
     files_to_manage.push_back(osm_base_settings().NODE_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().NODE_TAGS_GLOBAL);
+    files_to_manage.push_back(osm_base_settings().NODE_KEYS);
     files_to_manage.push_back(osm_base_settings().WAYS);
     files_to_manage.push_back(osm_base_settings().WAY_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().WAY_TAGS_GLOBAL);
+    files_to_manage.push_back(osm_base_settings().WAY_KEYS);
     files_to_manage.push_back(osm_base_settings().RELATIONS);
     files_to_manage.push_back(osm_base_settings().RELATION_ROLES);
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_GLOBAL);
+    files_to_manage.push_back(osm_base_settings().RELATION_KEYS);
   }
   if (areas)
   {
@@ -289,7 +311,7 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(area_settings().AREA_TAGS_LOCAL);
     files_to_manage.push_back(area_settings().AREA_TAGS_GLOBAL);
   }
-  if (meta)
+  if (meta || attic)
   {
     files_to_manage.push_back(meta_settings().NODES_META);
     files_to_manage.push_back(meta_settings().WAYS_META);
@@ -297,10 +319,34 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(meta_settings().USER_DATA);
     files_to_manage.push_back(meta_settings().USER_INDICES);
   }
+  if (attic)
+  {
+    files_to_manage.push_back(attic_settings().NODES);
+    files_to_manage.push_back(attic_settings().NODES_UNDELETED);
+    files_to_manage.push_back(attic_settings().NODE_IDX_LIST);
+    files_to_manage.push_back(attic_settings().NODE_TAGS_LOCAL);
+    files_to_manage.push_back(attic_settings().NODE_TAGS_GLOBAL);
+    files_to_manage.push_back(attic_settings().NODES_META);
+    files_to_manage.push_back(attic_settings().NODE_CHANGELOG);
+    files_to_manage.push_back(attic_settings().WAYS);
+    files_to_manage.push_back(attic_settings().WAYS_UNDELETED);
+    files_to_manage.push_back(attic_settings().WAY_IDX_LIST);
+    files_to_manage.push_back(attic_settings().WAY_TAGS_LOCAL);
+    files_to_manage.push_back(attic_settings().WAY_TAGS_GLOBAL);
+    files_to_manage.push_back(attic_settings().WAYS_META);
+    files_to_manage.push_back(attic_settings().WAY_CHANGELOG);
+    files_to_manage.push_back(attic_settings().RELATIONS);
+    files_to_manage.push_back(attic_settings().RELATIONS_UNDELETED);
+    files_to_manage.push_back(attic_settings().RELATION_IDX_LIST);
+    files_to_manage.push_back(attic_settings().RELATION_TAGS_LOCAL);
+    files_to_manage.push_back(attic_settings().RELATION_TAGS_GLOBAL);
+    files_to_manage.push_back(attic_settings().RELATIONS_META);
+    files_to_manage.push_back(attic_settings().RELATION_CHANGELOG);
+  }
   
   if (!osm_base && !areas && !terminate)
   {
-    cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas | --meta) --db-dir=Directory)\n";
+    cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas | --osm-base (--meta | --attic)) --db-dir=Directory)\n";
     return 0;
   }
 

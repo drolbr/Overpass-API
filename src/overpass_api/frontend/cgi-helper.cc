@@ -105,10 +105,9 @@ string replace_cgi(const string& raw)
   return result;
 }
 
-string decode_cgi_to_plain(const string& raw, int& error,
+string decode_cgi_to_plain(const string& raw,
 			   string& jsonp, string& url, bool& redirect, string& template_name)
 {
-  error = 0;
   string result;
   string::size_type pos = raw.find("data=");
   

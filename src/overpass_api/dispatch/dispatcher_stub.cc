@@ -64,11 +64,11 @@ string de_escape(string input)
 
 
 Dispatcher_Stub::Dispatcher_Stub
-    (string db_dir_, Error_Output* error_output_, string xml_raw, bool uses_meta, int area_level,
+    (string db_dir_, Error_Output* error_output_, string xml_raw, meta_modes meta_, int area_level,
      uint32 max_allowed_time, uint64 max_allowed_space)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
-      transaction(0), area_transaction(0), rman(0), meta(uses_meta)
+      transaction(0), area_transaction(0), rman(0), meta(meta_)
 {
   if (db_dir == "")
   {
@@ -98,23 +98,51 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction->random_index(osm_base_settings().NODES);
     transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL);
     transaction->data_index(osm_base_settings().NODE_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().NODE_KEYS);
     transaction->data_index(osm_base_settings().WAYS);
     transaction->random_index(osm_base_settings().WAYS);
     transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL);
     transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().WAY_KEYS);
     transaction->data_index(osm_base_settings().RELATIONS);
     transaction->random_index(osm_base_settings().RELATIONS);
     transaction->data_index(osm_base_settings().RELATION_ROLES);
     transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL);
     transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL);
+    transaction->data_index(osm_base_settings().RELATION_KEYS);
     
-    if (meta)
+    if (meta == keep_meta || meta == keep_attic)
     {
       transaction->data_index(meta_settings().NODES_META);
       transaction->data_index(meta_settings().WAYS_META);
       transaction->data_index(meta_settings().RELATIONS_META);
       transaction->data_index(meta_settings().USER_DATA);
       transaction->data_index(meta_settings().USER_INDICES);
+    }
+    
+    if (meta == keep_attic)
+    {
+      transaction->data_index(attic_settings().NODES);
+      transaction->data_index(attic_settings().NODES_UNDELETED);
+      transaction->data_index(attic_settings().NODE_IDX_LIST);
+      transaction->data_index(attic_settings().NODE_TAGS_LOCAL);
+      transaction->data_index(attic_settings().NODE_TAGS_GLOBAL);
+      transaction->data_index(attic_settings().NODES_META);
+      transaction->data_index(attic_settings().NODE_CHANGELOG);
+      transaction->data_index(attic_settings().WAYS);
+      transaction->data_index(attic_settings().WAYS_UNDELETED);
+      transaction->data_index(attic_settings().WAY_IDX_LIST);
+      transaction->data_index(attic_settings().WAY_TAGS_LOCAL);
+      transaction->data_index(attic_settings().WAY_TAGS_GLOBAL);
+      transaction->data_index(attic_settings().WAYS_META);
+      transaction->data_index(attic_settings().WAY_CHANGELOG);
+      transaction->data_index(attic_settings().RELATIONS);
+      transaction->data_index(attic_settings().RELATIONS_UNDELETED);
+      transaction->data_index(attic_settings().RELATION_IDX_LIST);
+      transaction->data_index(attic_settings().RELATION_TAGS_LOCAL);
+      transaction->data_index(attic_settings().RELATION_TAGS_GLOBAL);
+      transaction->data_index(attic_settings().RELATIONS_META);
+      transaction->data_index(attic_settings().RELATION_CHANGELOG);
     }
     
     {
@@ -229,7 +257,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	  *area_transaction, this, area_level == 2 ? new Area_Updater(*area_transaction) : 0);
     }
     else
-      rman = new Resource_Manager(*transaction, this);
+      rman = new Resource_Manager(*transaction, this, error_output);
     
     {
       ifstream version((db_dir + "osm_base_version").c_str());
@@ -274,7 +302,9 @@ Dispatcher_Stub::~Dispatcher_Stub()
     Logger logger(dispatcher_client->get_db_dir());
     try
     {
-      logger.annotated_log("read_finished() start");
+      ostringstream out;
+      out<<"read_finished() start "<<global_read_counter();
+      logger.annotated_log(out.str());
       dispatcher_client->read_finished();
       logger.annotated_log("read_finished() end");
     }
