@@ -1,0 +1,15 @@
+Content-type: text/csv
+
+@type	@id	@lat	@lon	@version	@timestamp	@changeset	@user	@uid	even	foo	odd
+node	1	10.0125000	1.0125000								
+node	2	10.0125000	1.0375000								
+node	7	10.0125000	1.1625000								
+node	14	10.0125000	1.3375000								
+way	1										
+way	2										
+way	7										
+way	14										
+relation	1										
+relation	2										
+relation	42										
+relation	161										

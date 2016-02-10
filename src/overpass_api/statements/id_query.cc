@@ -21,6 +21,9 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../data/abstract_processing.h"
+#include "../data/collect_members.h"
+#include "../data/filenames.h"
 #include "id_query.h"
 
 using namespace std;
@@ -114,6 +117,7 @@ void filter_elems(Uint64 lower, Uint64 upper,
   }
 }
 
+
 //-----------------------------------------------------------------------------
 
 class Id_Query_Constraint : public Query_Constraint
@@ -121,90 +125,128 @@ class Id_Query_Constraint : public Query_Constraint
   public:
     Id_Query_Constraint(Id_Query_Statement& stmt_) : stmt(&stmt_) {}
     
-    bool delivers_data() { return true; }
+    bool delivers_data(Resource_Manager& rman) { return true; }
     
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-		  const vector< Node_Skeleton::Id_Type >& ids, bool invert_ids);
-    bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-		  int type, const vector< Uint32_Index >& ids, bool invert_ids);
-    void filter(Resource_Manager& rman, Set& into);
+    bool get_ranges
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+	
+    bool get_node_ids
+        (Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids);
+    bool get_way_ids
+        (Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids);
+    bool get_relation_ids
+        (Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids);
+	
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Id_Query_Constraint() {}
     
   private:
     Id_Query_Statement* stmt;
 };
 
-bool Id_Query_Constraint::get_data
-    (const Statement& query, Resource_Manager& rman, Set& into,
-     const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< Node_Skeleton::Id_Type >& ids, bool invert_ids)
+
+bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
 {
+  ids.clear();
   if (stmt->get_type() == Statement::NODE)
   {
-    if (ids.empty())
-      collect_elems(rman, *osm_base_settings().NODES, stmt->get_lower(), stmt->get_upper(),
-		    into.nodes);
-    else
-      collect_elems(rman, *osm_base_settings().NODES, stmt->get_lower(), stmt->get_upper(),
-		    ids, invert_ids, into.nodes);
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
   }
-		    
   return true;
 }
 
-bool Id_Query_Constraint::get_data
-    (const Statement& query, Resource_Manager& rman, Set& into,
-     const set< pair< Uint31_Index, Uint31_Index > >& ranges,
-     int type, const vector< Uint32_Index >& ids, bool invert_ids)
+
+bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids)
 {
+  ids.clear();
   if (stmt->get_type() == Statement::WAY)
   {
-    if (ids.empty())
-      collect_elems(rman, *osm_base_settings().WAYS, stmt->get_lower(), stmt->get_upper(),
-		    into.ways);
-    else
-      collect_elems(rman, *osm_base_settings().WAYS, stmt->get_lower(), stmt->get_upper(),
-		    ids, invert_ids, into.ways);
-    return true;
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
   }
-  else if (stmt->get_type() == Statement::RELATION)
-  {
-    if (ids.empty())
-      collect_elems(rman, *osm_base_settings().RELATIONS, stmt->get_lower(), stmt->get_upper(),
-		    into.relations);
-    else
-      collect_elems(rman, *osm_base_settings().RELATIONS, stmt->get_lower(), stmt->get_upper(),
-		    ids, invert_ids, into.relations);
-    return true;
-  }
-  else if (stmt->get_type() == Statement::AREA)
-  {
-    if (ids.empty())
-      collect_elems_flat(rman, stmt->get_lower().val(), stmt->get_upper().val(), ids, true, into.areas);
-    else
-      collect_elems_flat(rman, stmt->get_lower().val(), stmt->get_upper().val(), ids, invert_ids, into.areas);
-    return true;
-  }
-
-  return false;
+  return true;
 }
 
-void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
+
+bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids)
+{
+  ids.clear();
+  if (stmt->get_type() == Statement::RELATION)
+  {
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
+  }
+  return true;
+}
+
+
+bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+{
+  std::vector< Node_Skeleton::Id_Type > ids;
+  for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+    ids.push_back(i);
+  std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
+  
+  ranges.clear();
+  for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+    ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
+  
+  return true;
+}
+
+
+bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  std::vector< Uint31_Index > req;
+  if (stmt->get_type() == Statement::WAY)
+  {
+    std::vector< Way_Skeleton::Id_Type > ids;
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
+    get_indexes_< Uint31_Index, Way_Skeleton >(ids, rman).swap(req);
+  }
+  else
+  {
+    std::vector< Relation_Skeleton::Id_Type > ids;
+    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
+      ids.push_back(i);
+    get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman).swap(req);
+  }
+  
+  ranges.clear();
+  for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+    ranges.insert(std::make_pair(*it, inc(*it)));
+  
+  return true;
+}
+
+
+void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   if (stmt->get_type() == Statement::NODE)
+  {
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.nodes);
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_nodes);
+  }
   else
     into.nodes.clear();
 
   if (stmt->get_type() == Statement::WAY)
+  {
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.ways);
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_ways);
+  }
   else
     into.ways.clear();
   
   if (stmt->get_type() == Statement::RELATION)
+  {
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.relations);
+    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_relations);
+  }
   else
     into.relations.clear();
   
@@ -274,16 +316,91 @@ Id_Query_Statement::Id_Query_Statement
 }
 
 
+// Nach "data" verschieben ---------------------------
+
+
+template< typename Id_Type >
+struct Id_Pair_First_Comparator
+{
+  bool operator()(const std::pair< Id_Type, uint64 >& lhs,
+                  const std::pair< Id_Type, uint64 >& rhs) const
+  {
+    return (lhs.first < rhs.first);
+  }
+};
+
+
+template< typename Id_Type >
+struct Id_Pair_Full_Comparator
+{
+  bool operator()(const std::pair< Id_Type, uint64 >& lhs,
+                  const std::pair< Id_Type, uint64 >& rhs) const
+  {
+    if (lhs.first < rhs.first)
+      return true;
+    if (rhs.first < lhs.first)
+      return false;    
+    return (lhs.second < rhs.second);
+  }
+};
+
+
+template< typename Index, typename Skeleton >
+struct Attic_Skeleton_By_Id
+{
+  Attic_Skeleton_By_Id(const typename Skeleton::Id_Type& id_, uint64 timestamp_)
+      : id(id_), timestamp(timestamp_), index(0u), meta_confirmed(false),
+        elem(Skeleton(), 0xffffffffffffffffull) {}
+  
+  typename Skeleton::Id_Type id;
+  uint64 timestamp;
+  Index index;
+  bool meta_confirmed;
+  Attic< Skeleton > elem;
+  
+  bool operator<(const Attic_Skeleton_By_Id& rhs) const
+  {
+    if (id < rhs.id)
+      return true;
+    if (rhs.id < id)
+      return false;
+    return (rhs.timestamp < timestamp);
+  }
+};
+
+
+template< typename Index, typename Skeleton >
+void get_elements(uint64 lower, uint64 upper, Statement* stmt, Resource_Manager& rman,
+    std::map< Index, std::vector< Skeleton > >& current_result,
+    std::map< Index, std::vector< Attic< Skeleton > > >& attic_result)
+{
+  std::vector< typename Skeleton::Id_Type > ids;
+  for (uint64 i = lower; i < upper; ++i)
+    ids.push_back(i);
+  std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
+        
+  if (rman.get_desired_timestamp() == NOW)
+    collect_items_discrete(stmt, rman, *current_skeleton_file_properties< Skeleton >(), req,
+        Id_Predicate< Skeleton >(ids), current_result);
+  else
+  {
+    collect_items_discrete_by_timestamp(stmt, rman, req,
+        Id_Predicate< Skeleton >(ids), current_result, attic_result);
+    filter_attic_elements(rman, rman.get_desired_timestamp(), current_result, attic_result);
+  }
+}
+
+
 void Id_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-
+  
   if (type == NODE)
-    collect_elems(rman, *osm_base_settings().NODES, lower, upper, into.nodes);
+    get_elements(lower.val(), upper.val(), this, rman, into.nodes, into.attic_nodes);
   else if (type == WAY)
-    collect_elems(rman, *osm_base_settings().WAYS, lower, upper, into.ways);
+    get_elements(lower.val(), upper.val(), this, rman, into.ways, into.attic_ways);
   else if (type == RELATION)
-    collect_elems(rman, *osm_base_settings().RELATIONS, lower, upper, into.relations);
+    get_elements(lower.val(), upper.val(), this, rman, into.relations, into.attic_relations);
   else if (type == AREA)
     collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, into.areas);
 

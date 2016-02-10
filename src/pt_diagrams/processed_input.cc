@@ -732,6 +732,8 @@ void start(const char *el, const char **attr)
       relation.from = escape_xml(value);
     if ((key == "color") && (parse_status == IN_RELATION))
       relation.color = escape_xml(value);
+    if ((key == "colour") && (parse_status == IN_RELATION))
+      relation.color = escape_xml(value);
     if ((key == "direction") && (value == "both"))
       relation.direction = Relation::BOTH;
     if ((key == "highway") && (value == "bus_stop"))

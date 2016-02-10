@@ -90,9 +90,15 @@ void Difference_Statement::execute(Resource_Manager& rman)
     rman.pop_reference();
     
     Set& summand = rman.sets()[(*it)->get_result_name()];
+    
     indexed_set_difference(base_set.nodes, summand.nodes);
     indexed_set_difference(base_set.ways, summand.ways);
     indexed_set_difference(base_set.relations, summand.relations);
+    
+    indexed_set_difference(base_set.attic_nodes, summand.attic_nodes);
+    indexed_set_difference(base_set.attic_ways, summand.attic_ways);
+    indexed_set_difference(base_set.attic_relations, summand.attic_relations);
+    
     indexed_set_difference(base_set.areas, summand.areas);    
   }
 

@@ -3,11 +3,15 @@
 
 <union>
   <query type="relation">
-    <has-kv k="admin_level"/>
+    <has-kv k="type" v="multipolygon"/>
     <has-kv k="name"/>
   </query>
   <query type="relation">
-    <has-kv k="type" v="multipolygon"/>
+    <has-kv k="type" v="boundary"/>
+    <has-kv k="name"/>
+  </query>
+  <query type="relation">
+    <has-kv k="admin_level"/>
     <has-kv k="name"/>
   </query>
   <query type="relation">
@@ -254,3 +258,5 @@
 </foreach>
 
 </osm-script>
+
+    

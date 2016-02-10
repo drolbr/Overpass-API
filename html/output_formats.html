@@ -55,7 +55,7 @@
 
 <h2><a name="json">OSM JSON</a></h2>
 
-<p>Unfortunately, there are several slightly different syntaxes for OSM data in JSON. For that reason, we describe the syntax used by Overpass API en detail here. On the lowest level, it is <a href="http://www.json.org/">well-formed JSON</a>. In particular, the following characters are escaped:</p>
+<p>Unfortunately, there are several slightly different syntaxes for OSM data in JSON. For that reason, we will describe the syntax used by Overpass API in detail here. At the lowest level, it is <a href="http://www.json.org/">well-formed JSON</a>. In particular, the following characters are escaped:</p>
 <table>
 <tr><th>Character</th><th>Escaped as literally</th></tr>
 <tr><td><em>&quot;</em> (quotation mark)</td><td>\&quot;</td></tr>
@@ -66,12 +66,14 @@
 </table>
 <p>Any other character with ASCII value between 0 and 31 is replaced for safety reasons by a question mark. In principle, this can't happen, because these characters are disallowed in the main database. Characters are encoded as UTF-8.</p>
 
+<p>Please note that some Firefox versions do present JSON as if it were ISO-8859-1. This means that non-ASCII characters are presented as random nonsense. You can force Firefox to a conforming presentation by setting it to &quot;Unicode&quot; encoding.</p>
+
 <p>To get a response in format JSON, start the request with a <em>[out:json]</em> directive, for example:</p>
 <pre>
 <a href="api/interpreter?data=[out:json];out;">/api/interpreter?data=<strong>[out:json];</strong>out;</a>
 </pre>
 
-<p>A response (<a href="api/interpreter?data=[out:json];out;">an example</a>) from Overpass API has always the following header and footer:</p>
+<p>A response (<a href="api/interpreter?data=[out:json];out;">an example</a>) from Overpass API always has the following header and footer:</p>
 <pre>
 {
   &quot;version&quot;: 0.6,

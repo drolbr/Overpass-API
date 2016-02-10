@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 Statement_Dump::~Statement_Dump()
 {
@@ -61,7 +60,7 @@ string Statement_Dump::dump_xml() const
   
   if (substatements.empty())
   {
-    result = string("<") + name;
+    result = string("<") + name_;
     for (map< string, string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
       result += string(" ") + it->first + "=\"" + escape_xml(it->second) + "\"";
@@ -69,7 +68,7 @@ string Statement_Dump::dump_xml() const
   }
   else
   {
-    result = string("<") + name;
+    result = string("<") + name_;
     for (map< string, string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
       result += string(" ") + it->first + "=\"" + escape_xml(it->second) + "\"";
@@ -90,7 +89,7 @@ string Statement_Dump::dump_xml() const
       }*/
     }
     
-    result += string("</") + name + ">\n";
+    result += string("</") + name_ + ">\n";
   }
 
   return result;
@@ -118,10 +117,42 @@ string dump_print_map_ql(const map< string, string >& attributes, bool pretty = 
 	result += " skel";
       else if (it->second == "body")
 	result += " body";
+      else if (it->second == "tags")
+        result += " tags";
       else if (it->second == "meta")
 	result += " meta";
       else if (it->second == "quirks")
 	result += " quirks";
+    }
+  }
+  for (map< string, string >::const_iterator it = attributes.begin();
+      it != attributes.end(); ++it)
+  {
+    if (it->first == "geometry")
+    {
+      if (it->second == "full")
+      {
+	result += " geom";
+        if (attributes.find("s") != attributes.end() && attributes.find("s")->second != "" &&
+            attributes.find("w") != attributes.end() && attributes.find("w")->second != "" &&
+            attributes.find("n") != attributes.end() && attributes.find("n")->second != "" && 
+            attributes.find("e") != attributes.end() && attributes.find("e")->second != "")
+        {
+          result += "(";
+          result += attributes.find("s")->second;
+          result += ",";
+          result += attributes.find("w")->second;
+          result += ",";
+          result += attributes.find("n")->second;
+          result += ",";
+          result += attributes.find("e")->second;
+          result += ")";
+        }
+      }
+      else if (it->second == "center")
+        result += " center";
+      else if (it->second == "bounds")
+        result += " bb";
     }
   }
   for (map< string, string >::const_iterator it = attributes.begin();
@@ -150,15 +181,21 @@ string escape_quotation_marks(const string& input)
   string::size_type pos = result.find('\\');
   while (pos != string::npos)
   {
-    result = result.substr(0, pos) + "\\\\" + input.substr(pos+1);
-    pos = result.find('\\', pos + 2);
+    result = result.substr(0, pos) + "\\\\" + (pos < result.size()-1 ? input.substr(pos+1) : "");
+    if (pos < result.size()-2)
+      pos = result.find('\\', pos + 2);
+    else
+      break;
   }
   
   pos = result.find('\"');
   while (pos != string::npos)
   {
-    result = result.substr(0, pos) + "\\\"" + input.substr(pos+1);
-    pos = result.find('\"', pos + 2);
+    result = result.substr(0, pos) + "\\\"" + (pos < result.size()-1 ? input.substr(pos+1) : "");
+    if (pos < result.size()-2)
+      pos = result.find('\\', pos + 2);
+    else
+      break;
   }
   
   return result;
@@ -259,6 +296,15 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
     if (attributes.find("than") != attributes.end() && attributes.find("than")->second != "")
       result += "(newer:\"" + escape_quotation_marks(attributes.find("than")->second) + "\")";
   }
+  else if (name == "changed")
+  {
+    result += "(changed:";
+    if (attributes.find("since") != attributes.end() && attributes.find("since")->second != "")
+      result += "\"" + escape_quotation_marks(attributes.find("since")->second) + "\"";
+    if (attributes.find("until") != attributes.end() && attributes.find("until")->second != "")
+      result += ",\"" + escape_quotation_marks(attributes.find("until")->second) + "\"";
+    result += ")";
+  }
   else if (name == "area-query")
   {
     result += "(area";
@@ -277,7 +323,7 @@ string dump_subquery_map_ql(const string& name, const map< string, string >& att
 string Statement_Dump::dump_compact_map_ql() const
 {
   string result;
-  if (name == "osm-script")
+  if (name_ == "osm-script")
   {
     for (map< string, string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
@@ -288,14 +334,36 @@ string Statement_Dump::dump_compact_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]";
+
     if (!attributes.empty())
       result += ";";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_compact_map_ql();
   }
-  else if (name == "union")
+  else if (name_ == "union")
   {
     result += "(";
     
@@ -311,16 +379,37 @@ string Statement_Dump::dump_compact_map_ql() const
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "item")
+  else if (name_ == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += (*it)->dump_compact_map_ql();
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += " - ";
+    result += (*it)->dump_compact_map_ql();
+    result += ")";
+
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name_ == "item")
   {
     if (attributes.find("set") != attributes.end())
       result += "." + attributes.find("set")->second;
     else
       result += "._";
   }
-  else if (name == "foreach")
+  else if (name_ == "foreach")
   {
-    result += name;
+    result += name_;
     
     if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
       result += "." + attributes.find("from")->second;
@@ -338,7 +427,7 @@ string Statement_Dump::dump_compact_map_ql() const
       result += (*it)->dump_compact_map_ql();
     result += ")";
   }
-  else if (name == "query")
+  else if (name_ == "query")
   {
     if (attributes.find("type") != attributes.end())
       result += attributes.find("type")->second;
@@ -346,7 +435,7 @@ string Statement_Dump::dump_compact_map_ql() const
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
-      if ((*it)->name == "item")
+      if ((*it)->name_ == "item")
       {
 	if ((*it)->attributes.find("set") != (*it)->attributes.end())
 	  result += "." + (*it)->attributes.find("set")->second;
@@ -358,47 +447,47 @@ string Statement_Dump::dump_compact_map_ql() const
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
-      if ((*it)->name != "item")
-        result += dump_subquery_map_ql((*it)->name, (*it)->attributes);
+      if ((*it)->name_ != "item")
+        result += dump_subquery_map_ql((*it)->name_, (*it)->attributes);
     }
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "print")
+  else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
-  else if (name == "bbox-query" || name == "around" || name == "id_query")
+  else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";
-    result += dump_subquery_map_ql(name, attributes);
+    result += dump_subquery_map_ql(name_, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "id-query" || name == "user" || name == "newer")
+  else if (name_ == "id-query" || name_ == "user" || name_ == "newer")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
     else
       result += attributes.find("type")->second;
     
-    result += dump_subquery_map_ql(name, attributes);
+    result += dump_subquery_map_ql(name_, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "recurse")
+  else if (name_ == "recurse")
   {
     if (attributes.find("type") != attributes.end())
     {
       string rel_type = attributes.find("type")->second;
       if (rel_type == "way-node" || rel_type == "relation-node")
-	result += "node" + dump_subquery_map_ql(name, attributes);
+	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
-	result += "way" + dump_subquery_map_ql(name, attributes);
+	result += "way" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
 	  || rel_type == "node-relation" || rel_type == "way-relation")
-	result += "rel" + dump_subquery_map_ql(name, attributes);
+	result += "rel" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "down")
 	result += ">";
       else if (rel_type == "down-rel")
@@ -412,17 +501,17 @@ string Statement_Dump::dump_compact_map_ql() const
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "area-query")
+  else if (name_ == "area-query")
   {
-    result += "node" + dump_subquery_map_ql(name, attributes);
+    result += "node" + dump_subquery_map_ql(name_, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
   else
-    result += "(" + name + ":)";
+    result += "(" + name_ + ":)";
   
-  if (name != "osm-script")
+  if (name_ != "osm-script")
     result += ";";
   return result;
 }
@@ -431,7 +520,7 @@ string Statement_Dump::dump_bbox_map_ql() const
 {
   string result;
   bool auto_timeout = true;
-  if (name == "osm-script")
+  if (name_ == "osm-script")
   {
     for (map< string, string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
@@ -445,7 +534,29 @@ string Statement_Dump::dump_bbox_map_ql() const
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]";
+
     if (auto_timeout)
       result += "[timeout:1]";
     result += ";";
@@ -453,7 +564,7 @@ string Statement_Dump::dump_bbox_map_ql() const
         it != substatements.end(); ++it)
       result += (*it)->dump_bbox_map_ql();
   }
-  else if (name == "union")
+  else if (name_ == "union")
   {
     result += "(";
     
@@ -469,16 +580,37 @@ string Statement_Dump::dump_bbox_map_ql() const
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "item")
+  else if (name_ == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += (*it)->dump_bbox_map_ql();
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += " - ";
+    result += (*it)->dump_bbox_map_ql();
+    result += ")";
+
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name_ == "item")
   {
     if (attributes.find("set") != attributes.end())
       result += "." + attributes.find("set")->second;
     else
       result += "._";
   }
-  else if (name == "foreach")
+  else if (name_ == "foreach")
   {
-    result += name;
+    result += name_;
     
     if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
       result += "." + attributes.find("from")->second;
@@ -496,7 +628,7 @@ string Statement_Dump::dump_bbox_map_ql() const
       result += (*it)->dump_bbox_map_ql();
     result += ")";
   }
-  else if (name == "query")
+  else if (name_ == "query")
   {
     if (attributes.find("type") != attributes.end())
       result += attributes.find("type")->second;
@@ -504,7 +636,7 @@ string Statement_Dump::dump_bbox_map_ql() const
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
-      if ((*it)->name == "item")
+      if ((*it)->name_ == "item")
       {
 	if ((*it)->attributes.find("set") != (*it)->attributes.end())
 	  result += "." + (*it)->attributes.find("set")->second;
@@ -516,8 +648,8 @@ string Statement_Dump::dump_bbox_map_ql() const
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
-      if ((*it)->name != "item")
-        result += dump_subquery_map_ql((*it)->name, (*it)->attributes);
+      if ((*it)->name_ != "item")
+        result += dump_subquery_map_ql((*it)->name_, (*it)->attributes);
     }
     
     if (attributes.find("type")->second =="node"
@@ -528,40 +660,40 @@ string Statement_Dump::dump_bbox_map_ql() const
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "print")
+  else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
-  else if (name == "bbox-query" || name == "around" || name == "id_query")
+  else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";
-    result += dump_subquery_map_ql(name, attributes);
+    result += dump_subquery_map_ql(name_, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "id-query" || name == "user" || name == "newer")
+  else if (name_ == "id-query" || name_ == "user" || name_ == "newer")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
     else
       result += attributes.find("type")->second;
     
-    result += dump_subquery_map_ql(name, attributes);
+    result += dump_subquery_map_ql(name_, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "recurse")
+  else if (name_ == "recurse")
   {
     if (attributes.find("type") != attributes.end())
     {
       string rel_type = attributes.find("type")->second;
       if (rel_type == "way-node" || rel_type == "relation-node")
-	result += "node" + dump_subquery_map_ql(name, attributes);
+	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
-	result += "way" + dump_subquery_map_ql(name, attributes);
+	result += "way" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
 	  || rel_type == "node-relation" || rel_type == "way-relation")
-	result += "rel" + dump_subquery_map_ql(name, attributes);
+	result += "rel" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "down")
 	result += ">";
       else if (rel_type == "down-rel")
@@ -575,17 +707,17 @@ string Statement_Dump::dump_bbox_map_ql() const
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "area-query")
+  else if (name_ == "area-query")
   {
-    result += "node" + dump_subquery_map_ql(name, attributes) + "(bbox)";
+    result += "node" + dump_subquery_map_ql(name_, attributes) + "(bbox)";
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
   else
-    result += "(" + name + ":)";
+    result += "(" + name_ + ":)";
   
-  if (name != "osm-script")
+  if (name_ != "osm-script")
     result += ";";
   return result;
 }
@@ -593,7 +725,7 @@ string Statement_Dump::dump_bbox_map_ql() const
 string Statement_Dump::dump_pretty_map_ql() const
 {
   string result;
-  if (name == "osm-script")
+  if (name_ == "osm-script")
   {
     for (map< string, string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
@@ -604,14 +736,36 @@ string Statement_Dump::dump_pretty_map_ql() const
 	result += "[maxsize:" + it->second + "]\n";
       else if (it->first == "output")
 	result += "[out:" + it->second + "]\n";
+      else if (it->first == "bbox")
+	result += "[bbox:" + it->second + "]\n";
     }
+
+    if (attributes.find("augmented") != attributes.end() && 
+        attributes.find("augmented")->second == "deletions" &&
+        attributes.find("from") != attributes.end())
+    {
+      result += "[adiff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]\n";
+    }
+    else if (attributes.find("from") != attributes.end())
+    {
+      result += "[diff:\"" + attributes.find("from")->second;
+      if (attributes.find("date") != attributes.end())
+        result += "\",\"" + attributes.find("date")->second;
+      result += "\"]\n";
+    }
+    else if (attributes.find("date") != attributes.end())
+      result += "[date:\"" + attributes.find("date")->second + "\"]\n";
+
     if (result != "")
       result += ";\n";
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_pretty_map_ql() + "\n";
   }
-  else if (name == "union")
+  else if (name_ == "union")
   {
     result += "(";
     
@@ -627,16 +781,37 @@ string Statement_Dump::dump_pretty_map_ql() const
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "item")
+  else if (name_ == "difference")
+  {
+    result += "(";
+
+    vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it == substatements.end())
+      return ");";
+
+    result += indent((*it)->dump_pretty_map_ql());
+    it++;
+
+    if (it == substatements.end())
+      return ");";
+
+    result += "\n " + indent("-");
+    result += "\n " + indent((*it)->dump_pretty_map_ql());
+    result += "\n)";
+
+    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
+      result += "->." + attributes.find("into")->second;
+  }
+  else if (name_ == "item")
   {
     if (attributes.find("set") != attributes.end())
       result += "." + attributes.find("set")->second;
     else
       result += "._";
   }
-  else if (name == "foreach")
+  else if (name_ == "foreach")
   {
-    result += name;
+    result += name_;
     
     if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
       result += "." + attributes.find("from")->second;
@@ -654,7 +829,7 @@ string Statement_Dump::dump_pretty_map_ql() const
       result += "\n" + indent((*it)->dump_pretty_map_ql());
     result += "\n)";
   }
-  else if (name == "query")
+  else if (name_ == "query")
   {
     if (attributes.find("type") != attributes.end())
       result += attributes.find("type")->second;
@@ -663,7 +838,7 @@ string Statement_Dump::dump_pretty_map_ql() const
     for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
     {
-      if ((*it)->name == "item")
+      if ((*it)->name_ == "item")
       {
 	if ((*it)->attributes.find("set") != (*it)->attributes.end())
 	  result += "." + (*it)->attributes.find("set")->second;
@@ -679,8 +854,8 @@ string Statement_Dump::dump_pretty_map_ql() const
       for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
           it != substatements.end(); ++it)
       {
-	if ((*it)->name != "item")
-	  result += "\n  " + dump_subquery_map_ql((*it)->name, (*it)->attributes);
+	if ((*it)->name_ != "item")
+	  result += "\n  " + dump_subquery_map_ql((*it)->name_, (*it)->attributes);
       }
     }
     else
@@ -688,8 +863,8 @@ string Statement_Dump::dump_pretty_map_ql() const
       for (vector< Statement_Dump* >::const_iterator it = substatements.begin();
           it != substatements.end(); ++it)
       {
-	if ((*it)->name != "item")
-	  result += dump_subquery_map_ql((*it)->name, (*it)->attributes);
+	if ((*it)->name_ != "item")
+	  result += dump_subquery_map_ql((*it)->name_, (*it)->attributes);
       }
     }
     
@@ -700,40 +875,40 @@ string Statement_Dump::dump_pretty_map_ql() const
       result += "->." + attributes.find("into")->second;
     }
   }
-  else if (name == "print")
+  else if (name_ == "print")
     return dump_print_map_ql(attributes, true) + ";";
-  else if (name == "bbox-query" || name == "around" || name == "id_query")
+  else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";
-    result += dump_subquery_map_ql(name, attributes);
+    result += dump_subquery_map_ql(name_, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "id-query" || name == "user" || name == "newer")
+  else if (name_ == "id-query" || name_ == "user" || name_ == "newer")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
     else
       result += attributes.find("type")->second;
     
-    result += dump_subquery_map_ql(name, attributes);
+    result += dump_subquery_map_ql(name_, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "recurse")
+  else if (name_ == "recurse")
   {
     if (attributes.find("type") != attributes.end())
     {
       string rel_type = attributes.find("type")->second;
       if (rel_type == "way-node" || rel_type == "relation-node")
-	result += "node" + dump_subquery_map_ql(name, attributes);
+	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
-	result += "way" + dump_subquery_map_ql(name, attributes);
+	result += "way" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
 	  || rel_type == "node-relation" || rel_type == "way-relation")
-	result += "rel" + dump_subquery_map_ql(name, attributes);
+	result += "rel" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "down")
 	result += ">";
       else if (rel_type == "down-rel")
@@ -747,23 +922,34 @@ string Statement_Dump::dump_pretty_map_ql() const
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name == "area-query")
+  else if (name_ == "area-query")
   {
-    result += "node" + dump_subquery_map_ql(name, attributes);
+    result += "node" + dump_subquery_map_ql(name_, attributes);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
   else
-    result += "(" + name + ":)";
+    result += "(" + name_ + ":)";
   
-  if (name != "osm-script")
+  if (name_ != "osm-script")
     result += ";";
   return result;
 }
+
 
 Statement_Dump* Statement_Dump::Factory::create_statement
     (string element, int line_number, const map< string, string >& attributes)
 {
   return new Statement_Dump(element, attributes);
+}
+
+
+std::string Statement_Dump::attribute(const std::string& key) const
+{
+  std::map< std::string, std::string >::const_iterator it = attributes.find(key);
+  if (it == attributes.end())
+    return "";
+  else
+    return it->second;
 }

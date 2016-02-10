@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+
+  <node id="1001" lat="59.01" lon="10.01" version="9" timestamp="2013-07-01T17:00:00Z" changeset="496" uid="8128" user="Joe"/>
+  <node id="1002" lat="59.01" lon="10.02" version="9" timestamp="2013-07-01T17:00:00Z" changeset="496" uid="8128" user="Joe"/>
+  
+  <node id="1001" lat="60.01" lon="10.01" version="10" timestamp="2013-07-01T18:00:00Z" changeset="496" uid="8128" user="Joe"/>
+  <node id="1002" lat="60.01" lon="10.02" version="10" timestamp="2013-07-01T18:00:00Z" changeset="496" uid="8128" user="Joe"/>
+  
+  <way id="1" version="4" timestamp="2013-07-01T18:00:00Z" changeset="496" uid="8128" user="Joe">
+    <nd ref="1001"/>
+    <nd ref="1002"/>
+    <tag k="foo" v="bar_1"/>
+  </way>
+  
+  <relation id="1" version="4" timestamp="2013-07-01T18:00:00Z" changeset="496" uid="8128" user="Joe">
+    <member type="node" ref="1001" role=""/>
+    <member type="node" ref="1002" role=""/>
+    <tag k="foo" v="bar_1"/>
+  </relation>
+
+</osm>

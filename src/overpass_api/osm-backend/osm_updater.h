@@ -36,9 +36,9 @@ class Osm_Updater
 {
   public:
     Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version,
-		bool meta, bool produce_augmented_diffs);
+		meta_modes meta, bool produce_augmented_diffs, unsigned int flush_limit);
     Osm_Updater(Osm_Backend_Callback* callback_, string db_dir, const string& data_version,
-		bool meta, bool produce_augmented_diffs);
+		meta_modes meta, bool produce_augmented_diffs, unsigned int flush_limit);
     ~Osm_Updater();
 
     void finish_updater();
@@ -48,13 +48,10 @@ class Osm_Updater
     Nonsynced_Transaction* transaction;
     Dispatcher_Client* dispatcher_client;
     Node_Updater* node_updater_;
-    Update_Node_Logger* update_node_logger_;
     Way_Updater* way_updater_;
-    Update_Way_Logger* update_way_logger_;
     Relation_Updater* relation_updater_;
-    Update_Relation_Logger* update_relation_logger_;
     string db_dir_;
-    bool meta;
+    meta_modes meta;
 
     void flush();
 };

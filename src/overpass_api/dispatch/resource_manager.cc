@@ -35,6 +35,17 @@ uint count_set(const Set& set_)
   for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
       it(set_.relations.begin()); it != set_.relations.end(); ++it)
     size += it->second.size();
+  
+  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator
+      it(set_.attic_nodes.begin()); it != set_.attic_nodes.end(); ++it)
+    size += it->second.size();
+  for (map< Uint31_Index, vector< Attic< Way_Skeleton > > >::const_iterator
+      it(set_.attic_ways.begin()); it != set_.attic_ways.end(); ++it)
+    size += it->second.size();
+  for (map< Uint31_Index, vector< Attic< Relation_Skeleton > > >::const_iterator
+      it(set_.attic_relations.begin()); it != set_.attic_relations.end(); ++it)
+    size += it->second.size();
+
   for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
       it(set_.areas.begin()); it != set_.areas.end(); ++it)
     size += it->second.size();
@@ -43,23 +54,81 @@ uint count_set(const Set& set_)
 }
 
 
-uint64 eval_set(const Set& set_)
+uint64 eval_map(const std::map< Uint32_Index, vector< Node_Skeleton > >& nodes)
 {
   uint64 size(0);
   for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
-      it(set_.nodes.begin()); it != set_.nodes.end(); ++it)
+      it(nodes.begin()); it != nodes.end(); ++it)
     size += it->second.size()*8 + 64;
-  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
-      it(set_.ways.begin()); it != set_.ways.end(); ++it)
-    size += it->second.size()*128 + 64;
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
-      it(set_.relations.begin()); it != set_.relations.end(); ++it)
-    size += it->second.size()*192 + 64;
-  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
-      it(set_.areas.begin()); it != set_.areas.end(); ++it)
-    size += it->second.size()*128 + 64;
-  
   return size;
+}
+
+
+uint64 eval_map(const std::map< Uint31_Index, vector< Way_Skeleton > >& ways)
+{
+  uint64 size(0);
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+      it(ways.begin()); it != ways.end(); ++it)
+    size += it->second.size()*128 + 64;
+  return size;
+}
+
+
+uint64 eval_map(const std::map< Uint31_Index, vector< Relation_Skeleton > >& relations)
+{
+  uint64 size(0);
+  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+      it(relations.begin()); it != relations.end(); ++it)
+    size += it->second.size()*192 + 64;
+  return size;
+}
+
+
+uint64 eval_map(const std::map< Uint32_Index, vector< Attic< Node_Skeleton > > >& nodes)
+{
+  uint64 size(0);
+  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator
+      it(nodes.begin()); it != nodes.end(); ++it)
+    size += it->second.size()*16 + 64;
+  return size;
+}
+
+
+uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways)
+{
+  uint64 size(0);
+  for (map< Uint31_Index, vector< Attic< Way_Skeleton > > >::const_iterator
+      it(ways.begin()); it != ways.end(); ++it)
+    size += it->second.size()*136 + 64;
+  return size;
+}
+
+
+uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations)
+{
+  uint64 size(0);
+  for (map< Uint31_Index, vector< Attic< Relation_Skeleton > > >::const_iterator
+      it(relations.begin()); it != relations.end(); ++it)
+    size += it->second.size()*200 + 64;
+  return size;
+}
+
+
+uint64 eval_map(const std::map< Uint31_Index, vector< Area_Skeleton > >& areas)
+{
+  uint64 size(0);
+  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
+      it(areas.begin()); it != areas.end(); ++it)
+    size += it->second.size()*128 + 64;
+  return size;
+}
+
+
+uint64 eval_set(const Set& set_)
+{
+  return eval_map(set_.nodes) + eval_map(set_.ways) + eval_map(set_.relations)
+      + eval_map(set_.attic_nodes) + eval_map(set_.attic_ways)
+      + eval_map(set_.attic_relations) + eval_map(set_.areas);
 }
 
 
@@ -82,6 +151,16 @@ void Resource_Manager::pop_reference()
 void Resource_Manager::count_loop()
 {
   ++stack_progress.back().first;
+}
+
+
+void Resource_Manager::log_and_display_error(std::string message)
+{
+  if (error_output)
+    error_output->runtime_error(message);
+  
+  Logger logger(transaction->get_db_dir());
+  logger.annotated_log(message);  
 }
 
 

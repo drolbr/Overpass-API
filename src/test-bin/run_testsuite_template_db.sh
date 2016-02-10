@@ -54,7 +54,15 @@ evaluate_test()
       FAILED=YES
     }; else
     {
-      RES=`diff -q "../../expected/$DIRNAME/$FILE" "$FILE"`
+      pwd >"__temp"
+      if [[ "$FILE" == "test-shadow.lock" || ! -s "$FILE" ]]; then
+        echo "no" >>"__temp"
+      else
+        echo "yes" >>"__temp"
+      fi
+      cat "__temp" "../../expected/$DIRNAME/$FILE" | awk -f "../../expected/set_variables.awk" >"expected_$FILE"
+      RES=`diff -q "expected_$FILE" "$FILE"`
+      rm "__temp" #"expected_$FILE"
       if [[ -n $RES ]]; then
       {
         echo $RES
@@ -112,7 +120,7 @@ perform_serial_test()
   }; else
   {
     echo `date +%T` "Test $EXEC $I succeeded."
-    rm -R *
+#     rm -R *
   }; fi
   popd >/dev/null
 };
@@ -161,7 +169,7 @@ dispatcher_two_clients()
 
 # Test template_db
 date +%T
-perform_test_loop file_blocks 12
+perform_test_loop file_blocks 25
 date +%T
 perform_test_loop block_backend 13
 date +%T
@@ -175,3 +183,6 @@ dispatcher_client_server 23
 dispatcher_client_server 24
 dispatcher_two_clients 25
 dispatcher_two_clients 26
+
+# don't use that test because we cannot control the assigned pids
+#dispatcher_two_clients 27

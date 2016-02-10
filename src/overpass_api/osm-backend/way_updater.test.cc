@@ -108,7 +108,7 @@ void start(const char *el, const char **attr)
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false, 0);
+      node_updater->update(callback, false);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_WAYS;
@@ -135,7 +135,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, true, 0);
+      node_updater->update(callback, true);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -150,7 +150,9 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update(callback, true, 0);
+      way_updater->update(callback, true,
+                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                          node_updater->get_new_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -186,9 +188,9 @@ int main(int argc, char* args[])
     ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
     ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
-      Node_Updater node_updater_("./", false);
+      Node_Updater node_updater_("./", only_data);
       node_updater = &node_updater_;
-      Way_Updater way_updater_("./", false);
+      Way_Updater way_updater_("./", only_data);
       way_updater = &way_updater_;
       
       member_source_out = new ofstream((db_dir + "member_source.csv").c_str());
@@ -204,12 +206,14 @@ int main(int argc, char* args[])
       if (state == IN_NODES)
       {
 	callback->nodes_finished();
-	node_updater->update(callback, false, 0);
+	node_updater->update(callback, false);
       }
       else if (state == IN_WAYS)
       {
 	callback->ways_finished();
-	way_updater->update(callback, false, 0);
+	way_updater->update(callback, false,
+                            node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+                            node_updater->get_new_attic_skeletons());
       }
       
       delete member_source_out;
@@ -241,12 +245,12 @@ int main(int argc, char* args[])
     }
     
     // check update_way_tags_local - compare both files for the result
-    Block_Backend< Tag_Index_Global, Uint32_Index > ways_global_db
+    Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > ways_global_db
 	(transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
 	 it(ways_global_db.flat_begin()); !(it == ways_global_db.flat_end()); ++it)
     {
-      tags_global_out<<it.object().val()<<'\t'
+      tags_global_out<<it.object().id.val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
   }

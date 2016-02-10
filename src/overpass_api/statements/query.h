@@ -57,26 +57,32 @@ class Query_Statement : public Output_Statement
     vector< string > keys;    
     vector< pair< string, string > > key_values;    
     vector< pair< string, Regular_Expression* > > key_regexes;    
+    vector< pair< Regular_Expression*, Regular_Expression* > > regkey_regexes;    
     vector< pair< string, string > > key_nvalues;    
     vector< pair< string, Regular_Expression* > > key_nregexes;    
+    vector< pair< Regular_Expression*, Regular_Expression* > > regkey_nregexes;    
     vector< Query_Constraint* > constraints;
     
     static bool area_query_exists_;
     
+    template< typename Skeleton, typename Id_Type >
+    std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids
+        (const File_Properties& file_prop, const File_Properties& attic_file_prop,
+         Resource_Manager& rman, uint64 timestamp, bool check_keys_late);
+        
     template< class Id_Type >
     vector< Id_Type > collect_ids
-        (const File_Properties& file_prop, Resource_Manager& rman, bool check_keys_late);
-	
+        (const File_Properties& file_prop,
+         Resource_Manager& rman, bool check_keys_late);
+        	
+    template< class Id_Type >
+    std::vector< std::pair< Id_Type, Uint31_Index > > collect_non_ids
+        (const File_Properties& file_prop, const File_Properties& attic_file_prop,
+         Resource_Manager& rman, uint64 timestamp);
+                
     template< class Id_Type >
     vector< Id_Type > collect_non_ids
         (const File_Properties& file_prop, Resource_Manager& rman);
-	 
-    template < typename TIndex, typename TObject >
-    void get_elements_by_id_from_db
-        (map< TIndex, vector< TObject > >& elements,
-	 const vector< typename TObject::Id_Type >& ids, bool invert_ids,
-	 const set< pair< TIndex, TIndex > >& range_req,
-         Resource_Manager& rman, File_Properties& file_prop);
 
     void get_elements_by_id_from_db
         (map< Uint31_Index, vector< Area_Skeleton > >& elements,
@@ -85,19 +91,30 @@ class Query_Statement : public Output_Statement
 
     template< class TIndex, class TObject >
     void filter_by_tags
-        (map< TIndex, vector< TObject > >& items,
-         const File_Properties& file_prop, Resource_Manager& rman,
-	 Transaction& transaction);
+        (std::map< TIndex, std::vector< TObject > >& items,
+         std::map< TIndex, std::vector< Attic< TObject > > >* attic_items,
+         uint64 timestamp,
+         const File_Properties& file_prop, const File_Properties* attic_file_prop,
+         Resource_Manager& rman, Transaction& transaction);
 
-    template < typename TIndex, typename Id_Type >
-    set< pair< TIndex, TIndex > > get_ranges_by_id_from_db
-        (const vector< Id_Type >& ids,
-         Resource_Manager& rman, File_Properties& file_prop);
+    template< class TIndex, class TObject >
+    void filter_by_tags
+        (std::map< TIndex, std::vector< TObject > >& items,
+         const File_Properties& file_prop,
+         Resource_Manager& rman, Transaction& transaction);
+
+    template< typename Skeleton, typename Id_Type, typename Index >
+    void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
+                    bool& invert_ids, uint64 timestamp,
+                    Answer_State& answer_state, bool check_keys_late,
+                    const File_Properties& file_prop, const File_Properties& attic_file_prop,
+                    Resource_Manager& rman);
 
     template< class Id_Type >
-    void progress_1(vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state,
-				 bool check_keys_late, File_Properties& file_prop, Resource_Manager& rman);
+    void progress_1(vector< Id_Type >& ids, bool& invert_ids,
+                    Answer_State& answer_state, bool check_keys_late,
+                    const File_Properties& file_prop,
+                    Resource_Manager& rman);
 
     template< class Id_Type >
     void collect_nodes(vector< Id_Type >& ids,
@@ -124,6 +141,7 @@ class Has_Kv_Statement : public Statement
     static Generic_Statement_Maker< Has_Kv_Statement > statement_maker;
     
     string get_key() const { return key; }
+    Regular_Expression* get_key_regex() { return key_regex; }
     string get_value() const { return value; }
     Regular_Expression* get_regex() { return regex; }
     bool get_straight() const { return straight; }
@@ -131,6 +149,7 @@ class Has_Kv_Statement : public Statement
   private:
     string key, value;
     Regular_Expression* regex;
+    Regular_Expression* key_regex;
     bool straight;
 };
 

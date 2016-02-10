@@ -35,15 +35,15 @@ using namespace std;
 class Bbox_Constraint : public Query_Constraint
 {
   public:
-    bool delivers_data();
+    bool delivers_data(Resource_Manager& rman);
     
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_) {}
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into);
+    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Bbox_Constraint() {}
     
   private:
@@ -51,7 +51,7 @@ class Bbox_Constraint : public Query_Constraint
 };
 
 
-bool Bbox_Constraint::delivers_data()
+bool Bbox_Constraint::delivers_data(Resource_Manager& rman)
 {
   if (!bbox)
     return false;
@@ -77,7 +77,7 @@ bool Bbox_Constraint::get_ranges
 }
 
 
-void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
+void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
   // process nodes
   uint32 south_ = ilat_(bbox->get_south());
@@ -101,32 +101,34 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
     }
     it->second.swap(local_into);
   }  
+  
+  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
+      it != into.attic_nodes.end(); ++it)
+  {
+    vector< Attic< Node_Skeleton > > local_into;
+    for (vector< Attic< Node_Skeleton > >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      uint32 lat(::ilat(it->first.val(), iit->ll_lower));
+      int32 lon(::ilon(it->first.val(), iit->ll_lower));
+      if ((lat >= south_) && (lat <= north_) &&
+          (((lon >= west_) && (lon <= east_))
+            || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
+        local_into.push_back(*iit);
+    }
+    it->second.swap(local_into);
+  }
 
   
   const set< pair< Uint31_Index, Uint31_Index > >& ranges = bbox->get_ranges_31();
   
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
+  filter_ways_by_ranges(into.attic_ways, ranges);
   
   // pre-filter relations
-  {
-    set< pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
-    map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-    for (; it != into.relations.end() && ranges_it != ranges.end(); )
-    {
-      if (!(it->first < ranges_it->second))
-	++ranges_it;
-      else if (!(it->first < ranges_it->first))
-	++it;
-      else
-      {
-	it->second.clear();
-	++it;
-      }
-    }
-    for (; it != into.relations.end(); ++it)
-      it->second.clear();
-  }
+  filter_relations_by_ranges(into.relations, ranges);
+  filter_relations_by_ranges(into.attic_relations, ranges);
   
   //TODO: filter areas
 }
@@ -156,25 +158,82 @@ bool matches_bbox(const Bbox_Query_Statement& bbox, const vector< Quad_Coord >& 
 }
 
 
-void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
+template< typename Way_Skeleton >
+void filter_ways_expensive(const Bbox_Query_Statement& bbox,
+                           const Way_Geometry_Store& way_geometries,
+                           map< Uint31_Index, vector< Way_Skeleton > >& ways)
 {
+  for (typename map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
+      it != ways.end(); ++it)
   {
-    //Process ways
-    Way_Geometry_Store way_geometries(into.ways, query, rman);
-  
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = into.ways.begin();
-        it != into.ways.end(); ++it)
+    vector< Way_Skeleton > local_into;
+    for (typename vector< Way_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
     {
-      vector< Way_Skeleton > local_into;
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-        if (matches_bbox(*bbox, way_geometries.get_geometry(*iit)))
-	  local_into.push_back(*iit);
-      }
-      it->second.swap(local_into);
+      if (matches_bbox(bbox, way_geometries.get_geometry(*iit)))
+        local_into.push_back(*iit);
     }
+    it->second.swap(local_into);
   }
+}
+
+
+template< typename Relation_Skeleton >
+void filter_relations_expensive(const Bbox_Query_Statement& bbox,
+                           const vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id,
+                           const vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id,
+                           const Way_Geometry_Store& way_geometries,
+                           map< Uint31_Index, vector< Relation_Skeleton > >& relations)
+{
+  for (typename map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = relations.begin();
+      it != relations.end(); ++it)
+  {
+    vector< Relation_Skeleton > local_into;
+    for (typename vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
+        iit != it->second.end(); ++iit)
+    {
+      for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
+          nit != iit->members.end(); ++nit)
+      {
+        if (nit->type == Relation_Entry::NODE)
+        {
+          const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
+              binary_search_for_pair_id(node_members_by_id, nit->ref);
+          if (!second_nd)
+            continue;
+          double lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
+          double lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
+          
+          if (bbox.matches_bbox(lat, lon))
+          {
+            local_into.push_back(*iit);
+            break;
+          }
+        }
+        else if (nit->type == Relation_Entry::WAY)
+        {
+          const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
+              binary_search_for_pair_id(way_members_by_id, nit->ref32());
+          if (!second_nd)
+            continue;
+          if (matches_bbox(bbox, way_geometries.get_geometry(*second_nd->second)))
+          {
+            local_into.push_back(*iit);
+            break;
+          }
+        }
+      }
+    }
+    it->second.swap(local_into);
+  }
+}
+
+
+void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+{
+  //Process ways
+  filter_ways_expensive(*bbox, Way_Geometry_Store(into.ways, query, rman), into.ways);
+  
   {
     //Process relations
     
@@ -183,87 +242,46 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     
     map< Uint32_Index, vector< Node_Skeleton > > node_members
         = relation_node_members(&query, rman, into.relations, &node_ranges);
-    //collect_nodes(query, rman, into.relations.begin(), into.relations.end(), node_members,
-    //		  node_ranges);
-  
-    // Order node ids by id.
-    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = node_members.begin();
-        it != node_members.end(); ++it)
-    {
-      for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        node_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Node_Id order_by_node_id;
-    sort(node_members_by_id.begin(), node_members_by_id.end(), order_by_node_id);
+    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+        = order_by_id(node_members, Order_By_Node_Id());
     
     // Retrieve all ways referred by the relations.
     const set< pair< Uint31_Index, Uint31_Index > >& way_ranges = bbox->get_ranges_31();
     
     map< Uint31_Index, vector< Way_Skeleton > > way_members_
         = relation_way_members(&query, rman, into.relations, &way_ranges);
-/*    collect_ways(query, rman, into.relations.begin(), into.relations.end(), way_members_,
-		 way_ranges);*/
+    vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
+        = order_by_id(way_members_, Order_By_Way_Id());
     
-    // Order way ids by id.
-    vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id;
-    for (map< Uint31_Index, vector< Way_Skeleton > >::iterator it = way_members_.begin();
-        it != way_members_.end(); ++it)
-    {
-      for (vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-        way_members_by_id.push_back(make_pair(it->first, &*iit));
-    }
-    Order_By_Way_Id order_by_way_id;
-    sort(way_members_by_id.begin(), way_members_by_id.end(), order_by_way_id);
+    filter_relations_expensive(*bbox, node_members_by_id, way_members_by_id,
+        Way_Geometry_Store(way_members_, query, rman), into.relations);
+  }  
+  
+  if (timestamp != NOW)
+  {
+    //Process attic ways
+    filter_ways_expensive(*bbox, Way_Geometry_Store(into.attic_ways, timestamp, query, rman), into.attic_ways);
     
-    Way_Geometry_Store way_geometries(way_members_, query, rman);
+    //Process attic relations
     
-    for (map< Uint31_Index, vector< Relation_Skeleton > >::iterator it = into.relations.begin();
-        it != into.relations.end(); ++it)
-    {
-      vector< Relation_Skeleton > local_into;
-      for (vector< Relation_Skeleton >::const_iterator iit = it->second.begin();
-          iit != it->second.end(); ++iit)
-      {
-	for (vector< Relation_Entry >::const_iterator nit = iit->members.begin();
-	    nit != iit->members.end(); ++nit)
-        {
-	  if (nit->type == Relation_Entry::NODE)
-	  {
-	    const pair< Uint32_Index, const Node_Skeleton* >* second_nd =
-	        binary_search_for_pair_id(node_members_by_id, nit->ref);
-	    if (!second_nd)
-	      continue;
-	    double lat(::lat(second_nd->first.val(), second_nd->second->ll_lower));
-	    double lon(::lon(second_nd->first.val(), second_nd->second->ll_lower));
-	  
-	    if ((lat >= bbox->get_south()) && (lat <= bbox->get_north()) &&
-	        (((lon >= bbox->get_west()) && (lon <= bbox->get_east())) ||
-	        ((bbox->get_east() < bbox->get_west()) && ((lon >= bbox->get_west()) ||
-	        (lon <= bbox->get_east())))))
-	    {
-	      local_into.push_back(*iit);
-	      break;
-	    }
-	  }
-	  else if (nit->type == Relation_Entry::WAY)
-	  {
-	    const pair< Uint31_Index, const Way_Skeleton* >* second_nd =
-	        binary_search_for_pair_id(way_members_by_id, nit->ref32());
-	    if (!second_nd)
-	      continue;
-            if (matches_bbox(*bbox, way_geometries.get_geometry(*second_nd->second)))
-	    {
-	      local_into.push_back(*iit);
-	      break;
-	    }
-	  }
-        }
-      }
-      it->second.swap(local_into);
-    }
+    // Retrieve all nodes referred by the relations.
+    const set< pair< Uint32_Index, Uint32_Index > >& node_ranges = bbox->get_ranges_32();
+    
+    map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+        = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
+    vector< pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+        = order_attic_by_id(node_members, Order_By_Node_Id());
+    
+    // Retrieve all ways referred by the relations.
+    const set< pair< Uint31_Index, Uint31_Index > >& way_ranges = bbox->get_ranges_31();
+    
+    map< Uint31_Index, vector< Attic< Way_Skeleton > > > way_members_
+        = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
+    vector< pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
+        = order_attic_by_id(way_members_, Order_By_Way_Id());
+    
+    filter_relations_expensive(*bbox, node_members_by_id, way_members_by_id,
+        Way_Geometry_Store(way_members_, timestamp, query, rman), into.attic_relations);
   }  
   
   //TODO: filter areas
@@ -341,16 +359,7 @@ Bbox_Query_Statement::~Bbox_Query_Statement()
 const set< pair< Uint32_Index, Uint32_Index > >& Bbox_Query_Statement::get_ranges_32()
 {
   if (ranges_32.empty())
-  {
-    vector< pair< uint32, uint32 > > uint_ranges = ::calc_ranges(south, north, west, east);
-    for (vector< pair< uint32, uint32 > >::const_iterator
-        it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
-    {
-      pair< Uint32_Index, Uint32_Index > range
-        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-      ranges_32.insert(range);
-    }
-  }
+    ::get_ranges_32(south, north, west, east).swap(ranges_32);
   return ranges_32;
 }
 
@@ -366,42 +375,21 @@ const set< pair< Uint31_Index, Uint31_Index > >& Bbox_Query_Statement::get_range
 void Bbox_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
+  
+  Bbox_Constraint constraint(*this);
+  set< pair< Uint32_Index, Uint32_Index > > ranges;
+  constraint.get_ranges(rman, ranges);
+  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+      (into.nodes, into.attic_nodes,
+       vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+       *osm_base_settings().NODES, *attic_settings().NODES);  
+  constraint.filter(rman, into, rman.get_desired_timestamp());
+  filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
-  const set< pair< Uint32_Index, Uint32_Index > >& req = get_ranges_32();
-  rman.health_check(*this);
-  
-  uint nodes_count = 0;
-  
-  uint32 south_ = ilat_(south);
-  uint32 north_ = ilat_(north);
-  int32 west_ = ilon_(west);
-  int32 east_ = ilon_(east);
-  
-  Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-    (rman.get_transaction()->data_index(osm_base_settings().NODES));
-  for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
-    it(nodes_db.range_begin
-      (Default_Range_Iterator< Uint32_Index >(req.begin()),
-       Default_Range_Iterator< Uint32_Index >(req.end())));
-    !(it == nodes_db.range_end()); ++it)
-  {
-    if (++nodes_count >= 64*1024)
-    {
-      nodes_count = 0;
-      rman.health_check(*this);
-    }
-    
-    uint32 lat(::ilat(it.index().val(), it.object().ll_lower));
-    int32 lon(::ilon(it.index().val(), it.object().ll_lower));
-    if ((lat >= south_) && (lat <= north_) &&
-        (((lon >= west_) && (lon <= east_))
-	  || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
-      into.nodes[it.index()].push_back(it.object());
-  }
-  
   transfer_output(rman, into);
   rman.health_check(*this);
 }
+
 
 Query_Constraint* Bbox_Query_Statement::get_query_constraint()
 {

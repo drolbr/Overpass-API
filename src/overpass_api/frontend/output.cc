@@ -23,26 +23,6 @@
 
 using namespace std;
 
-string escape_xml(const string& s)
-{
-  string result;
-  for (uint i(0); i < s.length(); ++i)
-  {
-    if (s[i] == '&')
-      result += "&amp;";
-    else if (s[i] == '\"')
-      result += "&quot;";
-    else if (s[i] == '<')
-      result += "&lt;";
-    else if (s[i] == '>')
-      result += "&gt;";
-    else if ((uint8)s[i] < 32)
-      result += '?';
-    else
-      result += s[i];
-  }
-  return result;
-}
 
 string escape_cstr(const string& s)
 {
@@ -67,6 +47,7 @@ string escape_cstr(const string& s)
   }
   return result;
 }
+
 
 class Verbose_Osm_Backend_Callback : public Osm_Backend_Callback
 {
@@ -94,10 +75,12 @@ class Verbose_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void parser_succeeded() { cerr<<"Update complete.\n"; }
 };
 
+
 Osm_Backend_Callback* get_verbatim_callback()
 {
   return new Verbose_Osm_Backend_Callback;
 }
+
 
 class Quiet_Osm_Backend_Callback : public Osm_Backend_Callback
 {
@@ -125,10 +108,12 @@ class Quiet_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void parser_succeeded() {}
 };
 
+
 Osm_Backend_Callback* get_quiet_callback()
 {
   return new Quiet_Osm_Backend_Callback;
 }
+
 
 void report_file_error(const File_Error& e)
 {

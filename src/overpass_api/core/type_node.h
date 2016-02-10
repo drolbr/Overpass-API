@@ -44,6 +44,16 @@ struct Node
   Node(Id_Type id_, uint32 ll_upper_, uint32 ll_lower__)
       : id(id_), index(ll_upper_), ll_lower_(ll_lower__)
   {}  
+  
+  bool operator<(const Node& a) const
+  {
+    return this->id.val() < a.id.val();
+  }
+  
+  bool operator==(const Node& a) const
+  {
+    return this->id.val() == a.id.val();
+  }
 };
 
 
@@ -76,6 +86,7 @@ struct Node_Equal_Id {
 struct Node_Skeleton
 {
   typedef Node::Id_Type Id_Type;
+  typedef Node_Skeleton Delta;
 
   Node::Id_Type id;
   uint32 ll_lower;
@@ -87,6 +98,9 @@ struct Node_Skeleton
   
   Node_Skeleton(const Node& node)
   : id(node.id), ll_lower(node.ll_lower_) {}
+  
+  Node_Skeleton(Node::Id_Type id_)
+  : id(id_), ll_lower(0) {}
   
   Node_Skeleton(Node::Id_Type id_, uint32 ll_lower_)
   : id(id_), ll_lower(ll_lower_) {}

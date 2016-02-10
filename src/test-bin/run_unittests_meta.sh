@@ -244,6 +244,8 @@ if [[ -n $RES || -s run/meta_1/diff_stderr.log ]]; then
   rm -R run/meta_1
 }; fi
 
+exit 0
+
 
 # Test the augmented diffs
 

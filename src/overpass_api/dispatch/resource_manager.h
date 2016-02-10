@@ -42,7 +42,8 @@ public:
         area_transaction(0), area_updater_(0),
         watchdog(watchdog_),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0) {}
+	max_allowed_time(0), max_allowed_space(0),
+	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
   
   Resource_Manager(Transaction& transaction_, Error_Output* error_output_,
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
@@ -51,7 +52,8 @@ public:
         area_transaction(&area_transaction_),
         area_updater_(area_updater__),
 	watchdog(watchdog_), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0) {}
+	max_allowed_time(0), max_allowed_space(0),
+	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
 	
   ~Resource_Manager()
   {
@@ -74,6 +76,8 @@ public:
   void pop_reference();
   void count_loop();
 
+  void log_and_display_error(std::string message);
+
   void health_check(const Statement& stmt, uint32 extra_time = 0, uint64 extra_space = 0);
   
   void set_limits(uint32 max_allowed_time_, uint64 max_allowed_space_)
@@ -84,6 +88,14 @@ public:
   
   Transaction* get_transaction() { return transaction; }
   Transaction* get_area_transaction() { return area_transaction; }
+  
+  uint64 get_desired_timestamp() const { return desired_timestamp; }
+  uint64 get_diff_from_timestamp() const { return diff_from_timestamp; }
+  uint64 get_diff_to_timestamp() const { return diff_to_timestamp; }
+  
+  void set_desired_timestamp(uint64 timestamp) { desired_timestamp = timestamp; }
+  void set_diff_from_timestamp(uint64 timestamp) { diff_from_timestamp = timestamp; }
+  void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
   
 private:
   map< string, Set > sets_;
@@ -100,7 +112,23 @@ private:
   uint32 last_report_time;
   uint32 max_allowed_time;
   uint64 max_allowed_space;
+  
+  uint64 desired_timestamp;
+  uint64 diff_from_timestamp;
+  uint64 diff_to_timestamp;
 };
+
+
+uint64 eval_map(const std::map< Uint32_Index, vector< Node_Skeleton > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, vector< Way_Skeleton > >& ways);
+uint64 eval_map(const std::map< Uint31_Index, vector< Relation_Skeleton > >& relations);
+
+uint64 eval_map(const std::map< Uint32_Index, vector< Attic< Node_Skeleton > > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways);
+uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations);
+
+uint64 eval_map(const std::map< Uint31_Index, vector< Area_Skeleton > >& areas);
+
 
 struct Resource_Error
 {

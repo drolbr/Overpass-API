@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     else
     {
       // open read transaction and log this.
-      Dispatcher_Stub dispatcher("", &error_output, "-- db-timestamp --", false, 0, 5, 256);
+      Dispatcher_Stub dispatcher("", &error_output, "-- db-timestamp --", only_data, 0, 5, 256);
       error_output.write_text_header(dispatcher.get_timestamp());
     }
   }

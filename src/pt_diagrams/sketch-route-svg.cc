@@ -261,7 +261,7 @@ string correspondence_item_template()
 
 string correspondence_below_template()
 {
-  return "<a xlink:href=\"/api/sketch-line?ref=$ref;&network=$network;&style=wuppertal\"><text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
+  return "<a xlink:href=\"/api/sketch-line?ref=$ref;&amp;network=$network;&amp;correspondences=300\"><text x=\"0\" y=\"0\" transform=\"translate($hpos;,$vpos;)\""
   " font-family=\"Liberation Sans, sans-serif\" font-size=\"$stop_fontsize;px\""
   " text-anchor=\"middle\" fill=\"$color;\">$ref;</text></a>\n"
   "\n";

@@ -20,8 +20,12 @@
 #define DE__OSM3S___OVERPASS_API__CORE__DATATYPES_H
 
 #include <cstring>
+#include <iomanip>
+#include <limits>
 #include <map>
 #include <set>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "basic_types.h"
@@ -162,7 +166,34 @@ struct Set
   map< Uint32_Index, vector< Node_Skeleton > > nodes;
   map< Uint31_Index, vector< Way_Skeleton > > ways;
   map< Uint31_Index, vector< Relation_Skeleton > > relations;
+  
+  map< Uint32_Index, vector< Attic< Node_Skeleton > > > attic_nodes;
+  map< Uint31_Index, vector< Attic< Way_Skeleton > > > attic_ways;
+  map< Uint31_Index, vector< Attic< Relation_Skeleton > > > attic_relations;
+  
   map< Uint31_Index, vector< Area_Skeleton > > areas;
+  
+  void swap(Set& rhs)
+  {
+    nodes.swap(rhs.nodes);
+    ways.swap(rhs.ways);
+    relations.swap(rhs.relations);
+    attic_nodes.swap(rhs.attic_nodes);
+    attic_ways.swap(rhs.attic_ways);
+    attic_relations.swap(rhs.attic_relations);
+    areas.swap(rhs.areas);
+  }
+  
+  void clear()
+  {
+    nodes.clear();
+    ways.clear();
+    relations.clear();
+    attic_nodes.clear();
+    attic_ways.clear();
+    attic_relations.clear();
+    areas.clear();
+  }
 };
 
 
@@ -289,9 +320,11 @@ struct OSM_Element_Metadata
 };
 
 
-template< class Id_Type >
+template< typename Id_Type_ >
 struct OSM_Element_Metadata_Skeleton
 {
+  typedef Id_Type_ Id_Type;
+  
   Id_Type ref;
   uint32 version;
   uint64 timestamp;
@@ -302,6 +335,15 @@ struct OSM_Element_Metadata_Skeleton
   
   OSM_Element_Metadata_Skeleton(Id_Type ref_)
     : ref(ref_), version(0), timestamp(0), changeset(0), user_id(0) {}
+  
+  OSM_Element_Metadata_Skeleton(Id_Type ref_, const OSM_Element_Metadata& meta)
+    : ref(ref_),
+      version(meta.version), timestamp(meta.timestamp),
+      changeset(meta.changeset), user_id(meta.user_id) {}
+  
+  OSM_Element_Metadata_Skeleton(Id_Type ref_, uint64 timestamp_)
+    : ref(ref_), version(0), timestamp(timestamp_),
+      changeset(0), user_id(0) {}
   
   OSM_Element_Metadata_Skeleton(void* data)
     : ref(*(Id_Type*)data)
@@ -333,7 +375,11 @@ struct OSM_Element_Metadata_Skeleton
   
   bool operator<(const OSM_Element_Metadata_Skeleton& a) const
   {
-    return (ref < a.ref);
+    if (ref < a.ref)
+      return true;
+    else if (a.ref < ref)
+      return false;
+    return (timestamp < a.timestamp);
   }
   
   bool operator==(const OSM_Element_Metadata_Skeleton& a) const
@@ -362,6 +408,152 @@ const pair< TIndex, const TObject* >* binary_search_for_pair_id
   }
   return 0;
 }
+
+
+template< typename Id_Type >
+struct Change_Entry
+{
+  Change_Entry(const Id_Type& elem_id_, const Uint31_Index& old_idx_, const Uint31_Index& new_idx_)
+      : old_idx(old_idx_), new_idx(new_idx_), elem_id(elem_id_) {}
+
+  Uint31_Index old_idx;
+  Uint31_Index new_idx;
+  Id_Type elem_id;
+  
+  Change_Entry(void* data)
+    : old_idx((uint8*)data), new_idx((uint8*)data + 4), elem_id(Id_Type((uint8*)data + 8)) {}
+  
+  uint32 size_of() const
+  {
+    return elem_id.size_of() + 8;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return Id_Type::size_of((uint8*)data + 8) + 8;
+  }
+  
+  void to_data(void* data) const
+  {
+    old_idx.to_data((uint8*)data);
+    new_idx.to_data((uint8*)data + 4);
+    elem_id.to_data((uint8*)data + 8);
+  }
+  
+  bool operator<(const Change_Entry& rhs) const
+  {
+    if (old_idx < rhs.old_idx)
+      return true;
+    if (rhs.old_idx < old_idx)
+      return true;
+    if (new_idx < rhs.new_idx)
+      return true;
+    if (rhs.new_idx < new_idx)
+      return true;
+    return (elem_id < rhs.elem_id);
+  }
+  
+  bool operator==(const Change_Entry& rhs) const
+  {
+    return (old_idx == rhs.old_idx && new_idx == rhs.new_idx && elem_id == rhs.elem_id);
+  }
+};
+
+
+struct Timestamp
+{
+  Timestamp(uint64 timestamp_) : timestamp(timestamp_) {}
+  
+  uint64 timestamp;
+  
+  Timestamp(void* data)
+    : timestamp((*(uint64*)(uint8*)data) & 0xffffffffffull) {}
+  
+  Timestamp(int year, int month, int day, int hour, int minute, int second)
+    : timestamp(0)
+  {
+    timestamp |= (uint64(year & 0x3fff)<<26); //year
+    timestamp |= ((month & 0xf)<<22); //month
+    timestamp |= ((day & 0x1f)<<17); //day
+    timestamp |= ((hour & 0x1f)<<12); //hour
+    timestamp |= ((minute & 0x3f)<<6); //minute
+    timestamp |= (second & 0x3f); //second
+  }
+  
+  static int year(uint64 timestamp) { return ((timestamp>>26) & 0x3fff); }
+  static int month(uint64 timestamp) { return ((timestamp>>22) & 0xf); }
+  static int day(uint64 timestamp) { return ((timestamp>>17) & 0x1f); }
+  static int hour(uint64 timestamp) { return ((timestamp>>12) & 0x1f); }
+  static int minute(uint64 timestamp) { return ((timestamp>>6) & 0x3f); }
+  static int second(uint64 timestamp) { return (timestamp & 0x3f); }
+  
+  int year() const { return year(timestamp); }
+  int month() const { return month(timestamp); }
+  int day() const { return day(timestamp); }
+  int hour() const { return hour(timestamp); }
+  int minute() const { return minute(timestamp); }
+  int second() const { return second(timestamp); }
+  
+  std::string str() const
+  {
+    if (timestamp == std::numeric_limits< unsigned long long >::max())
+      return "NOW";
+    
+    std::ostringstream out;
+    out<<std::setw(4)<<std::setfill('0')<<year()<<"-"
+        <<std::setw(2)<<std::setfill('0')<<month()<<"-"
+	<<std::setw(2)<<std::setfill('0')<<day()<<"T"
+	<<std::setw(2)<<std::setfill('0')<<hour()<<":"
+	<<std::setw(2)<<std::setfill('0')<<minute()<<":"
+	<<std::setw(2)<<std::setfill('0')<<second()<<"Z";
+    return out.str();
+  }
+  
+  uint32 size_of() const
+  {
+    return 5;
+  }
+  
+  static uint32 size_of(void* data)
+  {
+    return 5;
+  }
+  
+  void to_data(void* data) const
+  {
+    void* pos = (uint8*)data;
+    *(uint32*)(pos) = (timestamp & 0xffffffffull);
+    *(uint8*)((uint8*)pos+4) = ((timestamp & 0xff00000000ull)>>32);
+  }
+  
+  bool operator<(const Timestamp& rhs) const
+  {
+    return (timestamp < rhs.timestamp);
+  }
+  
+  bool operator==(const Timestamp& rhs) const
+  {
+    return (timestamp == rhs.timestamp);
+  }
+  
+  static uint32 max_size_of()
+  {
+    throw Unsupported_Error("static uint32 Timestamp::max_size_of()");
+    return 0;
+  }
+};
+
+
+typedef enum { only_data, keep_meta, keep_attic } meta_modes;
+
+
+template< typename Object >
+std::string name_of_type() { return "[undefined]"; }
+
+template< > inline std::string name_of_type< Node_Skeleton >() { return "Node"; }
+template< > inline std::string name_of_type< Way_Skeleton >() { return "Way"; }
+template< > inline std::string name_of_type< Relation_Skeleton >() { return "Relation"; }
+template< > inline std::string name_of_type< Area_Skeleton >() { return "Area"; }
 
 
 #endif

@@ -96,7 +96,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, true, 0);
+      node_updater->update(callback, true);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -109,18 +109,18 @@ void end(const char *el)
 void cleanup_files(const File_Properties& file_properties, string db_dir,
 		   bool cleanup_map)
 {
-  remove((db_dir + file_properties.get_file_name_trunk() +
-          file_properties.get_data_suffix() +
-	  file_properties.get_index_suffix()).c_str());
-  remove((db_dir + file_properties.get_file_name_trunk() +
-          file_properties.get_data_suffix()).c_str());
-  if (cleanup_map)
-  {
-    remove((db_dir + file_properties.get_file_name_trunk() +
-        file_properties.get_id_suffix()).c_str());
-    remove((db_dir + file_properties.get_file_name_trunk() +
-	file_properties.get_id_suffix() + file_properties.get_index_suffix()).c_str());
-  }
+//   remove((db_dir + file_properties.get_file_name_trunk() +
+//           file_properties.get_data_suffix() +
+// 	  file_properties.get_index_suffix()).c_str());
+//   remove((db_dir + file_properties.get_file_name_trunk() +
+//           file_properties.get_data_suffix()).c_str());
+//   if (cleanup_map)
+//   {
+//     remove((db_dir + file_properties.get_file_name_trunk() +
+//         file_properties.get_id_suffix()).c_str());
+//     remove((db_dir + file_properties.get_file_name_trunk() +
+// 	file_properties.get_id_suffix() + file_properties.get_index_suffix()).c_str());
+//   }
 }
 
 int main(int argc, char* args[])
@@ -133,7 +133,7 @@ int main(int argc, char* args[])
     ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
     ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
-      Node_Updater node_updater_("./", false);
+      Node_Updater node_updater_("./", only_data);
       node_updater = &node_updater_;
       
       coord_source_out = new ofstream((db_dir + "coord_source.csv").c_str());
@@ -151,7 +151,7 @@ int main(int argc, char* args[])
       parse(stdin, start, end);
       
       callback->nodes_finished();
-      node_updater->update(callback, false, 0);
+      node_updater->update(callback, false);
       
       delete coord_source_out;
       delete tags_source_out;
@@ -197,12 +197,12 @@ int main(int argc, char* args[])
     }
     
     // check update_node_tags_global - compare both files for the result
-    Block_Backend< Tag_Index_Global, Uint32_Index > nodes_global_db
+    Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > nodes_global_db
 	(transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-    for (Block_Backend< Tag_Index_Global, Uint32_Index >::Flat_Iterator
+    for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
 	 it(nodes_global_db.flat_begin()); !(it == nodes_global_db.flat_end()); ++it)
     {
-      tags_global_out<<it.object().val()<<'\t'
+      tags_global_out<<it.object().id.val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
   }

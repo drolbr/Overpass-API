@@ -37,9 +37,10 @@ int main(int argc, char* argv[])
   // read command line arguments
   string db_dir, data_version;
   bool transactional = true;
-  bool meta = false;
+  meta_modes meta = only_data;
   bool produce_augmented_diffs = false;
   bool abort = false;
+  unsigned int flush_limit = 16*1024*1024;
   
   int argpos(1);
   while (argpos < argc)
@@ -54,9 +55,17 @@ int main(int argc, char* argv[])
     else if (!(strncmp(argv[argpos], "--version=", 10)))
       data_version = ((string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
-      meta = true;
+      meta = keep_meta;
+    else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
+      meta = keep_attic;
     else if (!(strncmp(argv[argpos], "--produce-diff", 14)))
       produce_augmented_diffs = true;
+    else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
+    {
+      flush_limit = atoll(string(argv[argpos]).substr(13).c_str()) *1024*1024;
+      if (flush_limit == 0)
+        flush_limit = std::numeric_limits< unsigned int >::max();
+    }
     else
     {
       cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
@@ -70,19 +79,24 @@ int main(int argc, char* argv[])
     abort = true;
   }
   if (abort)
+  {
+    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--produce-diff]\n";
     return 0;
+  }
   
   try
   {
     if (transactional)
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, produce_augmented_diffs);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta,
+                              produce_augmented_diffs, flush_limit);
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, produce_augmented_diffs);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta,
+                              produce_augmented_diffs, flush_limit);
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }

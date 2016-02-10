@@ -139,7 +139,8 @@ void Web_Output::write_html_header
     if (allow_headers != "")
       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
+      cout<<"Access-Control-Allow-Origin: *\n"
+            "Access-Control-Max-Age: 600\n";
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
@@ -184,7 +185,8 @@ void Web_Output::write_xml_header
     if (allow_headers != "")
       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
+      cout<<"Access-Control-Allow-Origin: *\n"
+            "Access-Control-Max-Age: 600\n";
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
@@ -215,7 +217,8 @@ void Web_Output::write_json_header
     if (allow_headers != "")
       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
+      cout<<"Access-Control-Allow-Origin: *\n"
+            "Access-Control-Max-Age: 600\n";
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
@@ -236,8 +239,8 @@ void Web_Output::write_json_header
     cout<<"    \"timestamp_areas_base\": \""<<area_timestamp<<"\",\n";
   cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
 	" The data is made available under ODbL.\"\n"
-        "  },\n"
-        "  \"elements\": [\n\n";
+        "  },\n";
+//  cout<< "  \"elements\": [\n\n";
 }
 
 
@@ -253,7 +256,8 @@ void Web_Output::write_text_header
     if (allow_headers != "")
       cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
     if (has_origin)
-      cout<<"Access-Control-Allow-Origin: *\n";
+      cout<<"Access-Control-Allow-Origin: *\n"
+            "Access-Control-Max-Age: 600\n";
     if (http_method == http_options)
       cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
             "Content-Length: 0\n";
@@ -263,6 +267,28 @@ void Web_Output::write_text_header
   }
 
   cout<<timestamp<<"\n";
+}
+
+void Web_Output::write_csv_header
+    (const string& timestamp, const string& area_timestamp, bool write_mime)
+{
+  if (header_written != not_yet)
+    return;
+  header_written = csv;
+  
+  if (write_mime)
+  {
+    if (allow_headers != "")
+      cout<<"Access-Control-Allow-Headers: "<<allow_headers<<'\n';
+    if (has_origin)
+      cout<<"Access-Control-Allow-Origin: *\n";
+    if (http_method == http_options)
+      cout<<"Access-Control-Allow-Methods: GET, POST, OPTIONS\n"
+            "Content-Length: 0\n";
+    cout<<"Content-type: text/csv\n\n";
+    if (http_method == http_options || http_method == http_head)
+      return;
+  }
 }
 
 

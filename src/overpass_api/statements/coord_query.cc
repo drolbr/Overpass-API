@@ -183,6 +183,16 @@ int Coord_Query_Statement::check_area_block
   return state;
 }
 
+
+void register_coord(double lat, double lon,
+    set< Uint31_Index >& req, map< Uint31_Index, vector< pair< double, double > > >& coord_per_req)
+{
+  Uint31_Index idx = Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00);
+  req.insert(idx);
+  coord_per_req[idx].push_back(std::make_pair(lat, lon));
+}
+
+
 void Coord_Query_Statement::execute(Resource_Manager& rman)
 { 
   if (rman.area_updater())
@@ -191,32 +201,34 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   set< Uint31_Index > req;
   map< Uint31_Index, vector< pair< double, double > > > coord_per_req;
   
-  map< pair< double, double >, map< Area::Id_Type, int > > areas_inside;
-  set< Area::Id_Type > areas_found;
-  
   if (lat != 100.0)
-  {
-    Uint31_Index idx = Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00);
-    req.insert(idx);
-    coord_per_req[idx].push_back(make_pair(lat, lon));
-  }
+    register_coord(lat, lon, req, coord_per_req);
   else
   {
-    const map< Uint32_Index, vector< Node_Skeleton > >& nodes = rman.sets()[input].nodes;
+    const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes = rman.sets()[input].nodes;
     for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = nodes.begin();
 	 it != nodes.end(); ++it)
     {
       for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      {
-	double lat = ::lat(it->first.val(), it2->ll_lower);
-	double lon = ::lon(it->first.val(), it2->ll_lower);
-        Uint31_Index idx = Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00);
-        req.insert(idx);
-        coord_per_req[idx].push_back(make_pair(lat, lon));
-      }
+	register_coord(::lat(it->first.val(), it2->ll_lower), ::lon(it->first.val(), it2->ll_lower),
+	    req, coord_per_req);
+    }
+    
+    const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes
+        = rman.sets()[input].attic_nodes;
+    for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator it = attic_nodes.begin();
+	 it != attic_nodes.end(); ++it)
+    {
+      for (std::vector< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
+	  it2 != it->second.end(); ++it2)
+	register_coord(::lat(it->first.val(), it2->ll_lower), ::lon(it->first.val(), it2->ll_lower),
+	    req, coord_per_req);
     }
   }
 
+  std::map< std::pair< double, double >, std::map< Area::Id_Type, int > > areas_inside;
+  std::set< Area::Id_Type > areas_found;
+  
   map< Uint31_Index, vector< pair< double, double > > >::const_iterator coord_block_it = coord_per_req.begin();
   Uint31_Index last_idx = req.empty() ? Uint31_Index(0u) : *req.begin();
   

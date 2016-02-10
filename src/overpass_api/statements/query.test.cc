@@ -287,6 +287,41 @@ void perform_regex_query
 }
 
 
+void perform_key_regex_query
+    (string type, string key, string value,
+     string key2, string regval2, bool straight2,
+     string key3, string regval3, bool straight3, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Resource_Manager rman(transaction);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      if (key != "")
+        stmt1.stmt().add_statement(&stmt2("k", key)("v", value).stmt(), "");
+      SProxy< Has_Kv_Statement > stmt3;
+      if (key2 != "")
+	stmt1.stmt().add_statement
+	    (&stmt3("regk", key2)("regv", regval2)("modv", straight2 ? "" : "not").stmt(), "");
+      SProxy< Has_Kv_Statement > stmt4;
+      if (key3 != "")
+	stmt1.stmt().add_statement
+	    (&stmt4("regk", key3)("regv", regval3)("modv", straight3 ? "" : "not").stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
 template< class T >
 string to_string(T d)
 {
@@ -575,7 +610,7 @@ void perform_query_with_bbox
 
 
 void perform_multi_query_with_bbox
-    (string type, string key1, string value1, string key2, string value2,
+    (string type, string key1, string value1, string key2, string value2, string key3, string value3,
      int regex, bool straight2,
      double south, double north, double west, double east, string db_dir)
 {
@@ -586,23 +621,52 @@ void perform_multi_query_with_bbox
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
+      
       SProxy< Has_Kv_Statement > stmt2;
-      if (value1 == "")
-        stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      if (regex & 0x10)
+	stmt2("regk", key1);
       else
+	stmt2("k", key1);
+            
+      if (value1 != "")
       {
         if (regex & 0x1)
-          stmt1.stmt().add_statement(&stmt2("k", key2)("regv", value1).stmt(), "");
+          stmt2("regv", value1);
         else
-          stmt1.stmt().add_statement(&stmt2("k", key2)("v", value1).stmt(), "");
+          stmt2("v", value1);
       }
+      stmt1.stmt().add_statement(&stmt2.stmt(), "");
+      
       SProxy< Has_Kv_Statement > stmt4;
-      if (regex & 0x2)
-        stmt1.stmt().add_statement(&stmt4("k", key2)("regv", value2)
-	    ("modv", straight2 ? "" : "not").stmt(), "");
-      else
-        stmt1.stmt().add_statement(&stmt4("k", key2)("v", value2)
-	    ("modv", straight2 ? "" : "not").stmt(), "");
+      if (key2 != "")
+      {
+	if (regex & 0x20)
+	  stmt4("regk", key2);
+	else
+	  stmt4("k", key2);
+      
+	if (regex & 0x2)
+	  stmt4("regv", value2);
+	else
+	  stmt4("v", value2);
+	stmt1.stmt().add_statement(&stmt4("modv", straight2 ? "" : "not").stmt(), "");
+      }
+	
+      SProxy< Has_Kv_Statement > stmt5;
+      if (key3 != "")
+      {
+	if (regex & 0x40)
+	  stmt5("regk", key3);
+	else
+	  stmt5("k", key3);
+      
+	if (regex & 0x4)
+	  stmt5("regv", value3);
+	else
+	  stmt5("v", value3);
+	stmt1.stmt().add_statement(&stmt5("modv", straight2 ? "" : "not").stmt(), "");
+      }
+	
       SProxy< Bbox_Query_Statement > stmt3;
       stmt1.stmt().add_statement(&stmt3("n", to_string(north))("s", to_string(south))
           ("e", to_string(east))("w", to_string(west)).stmt(), "");
@@ -1320,31 +1384,31 @@ int main(int argc, char* args[])
     
   // Test combination of keys-only with several other elements
   if ((test_to_execute == "") || (test_to_execute == "118"))
-    perform_multi_query_with_bbox("node", "node_key_5", "", "node_key_7", "", 0, true,
+    perform_multi_query_with_bbox("node", "node_key_5", "", "node_key_7", "", "", "", 0, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "119"))
-    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "", 0, true,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "", "", "", 0, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "120"))
-    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_5", "", 0, true,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_5", "", "", "", 0, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "121"))
-    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_5", ".", 2, true,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_5", ".", "", "", 2, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "122"))
-    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "node_value_0", 0, false,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "node_value_0", "", "", 0, false,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "123"))
-    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "node_value_0", 2, false,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "node_value_0", "", "", 2, false,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "124"))
-    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_11", "node_value", 2, false,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_11", "node_value", "", "", 2, false,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "125"))
-    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "value_0", 2, true,
+    perform_multi_query_with_bbox("node", "node_key_7", "", "node_key_7", "value_0", "", "", 2, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "126"))
-    perform_multi_query_with_bbox("node", "node_key_7", "node_....._0", "node_key_7", "value_", 3, true,
+    perform_multi_query_with_bbox("node", "node_key_7", "node_....._0", "node_key_7", "value_", "", "", 3, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
     
   if ((test_to_execute == "") || (test_to_execute == "127"))
@@ -1393,6 +1457,62 @@ int main(int argc, char* args[])
     // Test an around collecting relations from nodes based on way membership
     perform_query_with_role_recurse("relation-backwards", "one", "", "",
                                     pattern_size, global_node_offset, args[3]);
+    
+  if ((test_to_execute == "") || (test_to_execute == "139"))
+    // Test a single regex on keys
+    perform_key_regex_query("node", "", "",
+	"^node_key_11$", "^node_value_..$", true,
+	"", "", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "140"))
+    // Test two regexes on keys
+    perform_key_regex_query("node", "", "",
+	"^node_key_11$", "^node_value_..$", true,
+	"^node_key_5", "^node", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "141"))
+    // Test a single regex on keys with a key-value
+    perform_key_regex_query("way", "way_key_2/4", "way_value_0",
+	"^way_key_11$", "^way_value_..$", true,
+	"", "", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "142"))
+    // Test two regexes on keys with a key-value
+    perform_key_regex_query("way", "way_key_2/4", "way_value_0",
+	"^way_key_11$", "^way_value_..$", true,
+	"^way_key_5", "^way", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "143"))
+    // Test a single regex on keys with a key only
+    perform_key_regex_query("way", "way_key_2/4", "",
+	"^way_key_11$", "^way_value_..$", true,
+	"", "", true, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "144"))
+    // Test two regexes on keys with a key only
+    perform_key_regex_query("way", "way_key_2/4", "",
+	"^way_key_11$", "^way_value_..$", true,
+	"^way_key_5", "^way", true, args[3]);
+    
+  if ((test_to_execute == "") || (test_to_execute == "145"))
+    // Test a single regex on keys with bounding box
+    perform_multi_query_with_bbox("node", "^node_key_11$", "^node_value_..$",
+	"", "", "", "", 0x33, true, 51, 51.5, 7, 8, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "146"))
+    // Test two regexes on keys with bounding box
+    perform_multi_query_with_bbox("node", "^node_key_11$", "^node_value_..$",
+	"^node_key_5", "^node", "", "", 0x33, true, 51, 51.5, 7, 8, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "147"))
+    // Test a single regex on keys with bounding box
+    perform_multi_query_with_bbox("way", "way_key_2/4", "way_value_0",
+	"^way_key_11$", "^way_value_..$", "", "", 0x22, true, 51, 51.5, 7, 8, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "148"))
+    // Test a single regex on keys with bounding box
+    perform_multi_query_with_bbox("way", "way_key_2/4", "way_value_0",
+	"^way_key_11$", "^way_value_..$", "^way_key_5", "^way", 0x66, true, 51, 51.5, 7, 8, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "149"))
+    // Test a single regex on keys with bounding box
+    perform_multi_query_with_bbox("way", "way_key_2/4", "",
+	"^way_key_11$", "^way_value_..$", "", "", 0x22, true, 51, 51.5, 7, 8, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "150"))
+    // Test a single regex on keys with bounding box
+    perform_multi_query_with_bbox("way", "way_key_2/4", "",
+	"^way_key_11$", "^way_value_..$", "^way_key_5", "^way", 0x66, true, 51, 51.5, 7, 8, args[3]);
   
   cout<<"</osm>\n";
   return 0;

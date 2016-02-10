@@ -138,7 +138,7 @@ rm -f input/update_database/transactions.log
 $BASEDIR/bin/osm3s_query --rules <input/rule_processor/rules.osm &
 sleep 1
 $BASEDIR/bin/update_database --version=mock-up-diff <input/rule_processor/deletions.osm
-sleep 30
+sleep 10
 mkdir -p run/rule_processor/
 rm -f run/rule_processor/*
 $BASEDIR/bin/osm3s_query <input/rule_processor/check_area_query.osm >run/rule_processor/check_area_query.log

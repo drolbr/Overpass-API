@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <osm version="0.6" generator="Overpass API">
-<note>The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history </note>
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
 <meta osm_base="mock-up-init"/>
 
+  <way id="2310">
+    <nd ref="3810"/>
+    <nd ref="3850"/>
+    <tag k="way_key_11" v="way_value_211"/>
+    <tag k="way_key_15" v="way_value_15"/>
+    <tag k="way_key_2/4" v="way_value_0"/>
+    <tag k="way_key_5" v="way_value_5"/>
+    <tag k="way_key_7" v="way_value_0"/>
+    <tag k="way_unique" v="way_2310"/>
+  </way>
+
+</osm>

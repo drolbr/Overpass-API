@@ -168,6 +168,8 @@ int main(int argc, char *argv[])
     area_level = determine_area_level(error_output, area_level);
     Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw,
 			       get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space);
+    if (osm_script && osm_script->get_desired_timestamp())
+      dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
  
     Web_Output web_output(log_level);
     if (!osm_script || osm_script->get_type() == "xml")
@@ -181,9 +183,18 @@ int main(int argc, char *argv[])
     else
       ;
     
+//   double timecounter = 0;
+//   timeval tv;
+//   gettimeofday(&tv, 0);
+//   timecounter -= tv.tv_sec + double(tv.tv_usec)/1000000;
+  
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
+    
+//   gettimeofday(&tv, 0);
+//   timecounter += tv.tv_sec + double(tv.tv_usec)/1000000;
+//   std::cerr<<timecounter<<'\n';
     
     if (osm_script && osm_script->get_type() == "custom")
     {
