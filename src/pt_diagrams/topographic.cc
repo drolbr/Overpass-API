@@ -714,7 +714,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 	  //cerr<<it3->first<<'\n';
 	  last_segment = Placed_Segment(it3->second, last_it3->second);
 	  last_segment_is_forward = (last_segment.from == last_it3->second);
-	  for (; stop_it != stops_per_way[it->second].end() && stop_it->segment_idx < count;
+	  for (; stop_it != stops_per_way[it->second].end() && stop_it->segment_idx < (int)count;
 	      ++stop_it)
 	  {
 	    stops_per_segment[last_segment].push_back(
@@ -722,7 +722,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 			     stop_it->color, stop_it->name));
 	    //cerr<<"A "<<last_segment.from.lon<<' '<<last_segment.to.lon<<'\n';
 	  }
-	  for (; stop_it != stops_per_way[it->second].end() && stop_it->segment_idx == count
+	  for (; stop_it != stops_per_way[it->second].end() && stop_it->segment_idx == (int)count
 	      && stop_it->pos < last_it3->first; ++stop_it)
 	  {
 	    stops_per_segment[last_segment].push_back(
@@ -730,7 +730,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 			     stop_it->color, stop_it->name));
 	    //cerr<<"D "<<last_segment.from.lon<<' '<<last_segment.to.lon<<'\n';
 	  }
-	  for (; stop_it != stops_per_way[it->second].end() && stop_it->segment_idx == count
+	  for (; stop_it != stops_per_way[it->second].end() && stop_it->segment_idx == (int)count
 	      && stop_it->pos < it3->first; ++stop_it)
 	  {
 	    stops_per_segment[last_segment].push_back(
