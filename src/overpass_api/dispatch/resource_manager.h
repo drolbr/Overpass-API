@@ -22,8 +22,8 @@
 #include <ctime>
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
+#include "../data/user_data_cache.h"
 #include "../osm-backend/area_updater.h"
-#include "../statements/user_data_cache.h"
 
 using namespace std;
 

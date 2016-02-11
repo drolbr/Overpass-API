@@ -20,7 +20,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/collect_members.h"
-#include "meta_collector.h"
+#include "../data/meta_collector.h"
 #include "user.h"
 
 #include <algorithm>

@@ -16,16 +16,17 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS_USER_DATA_CACHE_H
-#define DE__OSM3S___OVERPASS_API__STATEMENTS_USER_DATA_CACHE_H
+#ifndef DE__OSM3S___OVERPASS_API__DATA__USER_DATA_CACHE_H
+#define DE__OSM3S___OVERPASS_API__DATA__USER_DATA_CACHE_H
 
 
 #include <map>
-#include <set>
+#include <string>
 #include <vector>
 
 #include "../../template_db/block_backend.h"
-#include "../../template_db/random_file.h"
+#include "../../template_db/transaction.h"
+#include "../core/datatypes.h"
 #include "../core/settings.h"
 
 struct User_Data_Cache

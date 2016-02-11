@@ -26,7 +26,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
-#include "statement.h"
+#include "../dispatch/resource_manager.h"
 #include "user_data_cache.h"
 
 

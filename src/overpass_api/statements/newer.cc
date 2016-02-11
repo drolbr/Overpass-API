@@ -19,7 +19,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
-#include "meta_collector.h"
+#include "../data/meta_collector.h"
 #include "newer.h"
 
 #include <algorithm>

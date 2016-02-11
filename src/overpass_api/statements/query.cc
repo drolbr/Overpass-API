@@ -24,8 +24,8 @@
 #include "../data/filenames.h"
 #include "../data/filter_by_tags.h"
 #include "../data/filter_ids_by_tags.h"
+#include "../data/meta_collector.h"
 #include "../data/regular_expression.h"
-#include "meta_collector.h"
 #include "area_query.h"
 #include "query.h"
 

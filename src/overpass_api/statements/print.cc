@@ -19,8 +19,8 @@
 #include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/meta_collector.h"
 #include "../frontend/print_target.h"
-#include "meta_collector.h"
 #include "print.h"
 
 #include <algorithm>
