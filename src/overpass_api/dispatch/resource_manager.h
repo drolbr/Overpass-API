@@ -40,8 +40,8 @@ public:
   Resource_Manager(Transaction& transaction_, Watchdog_Callback* watchdog_ = 0,
 		   Error_Output* error_output_ = 0)
       : transaction(&transaction_), error_output(error_output_),
-        area_transaction(0), area_updater_(0), user_data_cache_(0),
-        watchdog(watchdog_),
+        area_transaction(0), area_updater_(0),
+        watchdog(watchdog_), user_data_cache_(0),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
 	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
@@ -52,8 +52,8 @@ public:
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(&area_transaction_),
         area_updater_(area_updater__),
-        user_data_cache_(0),
-	watchdog(watchdog_), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
+	watchdog(watchdog_), user_data_cache_(0),
+	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
 	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
 	
@@ -104,8 +104,7 @@ public:
   void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
   
   void set_user_data_cache(User_Data_Cache & user_data_cache) { user_data_cache_ = &user_data_cache; }
-  User_Data_Cache* get_user_data_cache() { return user_data_cache_; }
-  bool has_user_data_cache() { return user_data_cache_ != 0; }
+  User_Data_Cache* user_data_cache() { return user_data_cache_; }
 
 private:
   map< string, Set > sets_;

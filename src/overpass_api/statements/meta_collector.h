@@ -108,11 +108,12 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
   
   if (user_data)
   {
-    if (!rman.has_user_data_cache()) {
-      User_Data_Cache * udc = new User_Data_Cache(*rman.get_transaction());
+    if (!rman.user_data_cache())
+    {
+      User_Data_Cache* udc = new User_Data_Cache(*rman.get_transaction());
       rman.set_user_data_cache(*udc);
     }
-    user_data_cache = rman.get_user_data_cache();
+    user_data_cache = rman.user_data_cache();
   }
 }
 
