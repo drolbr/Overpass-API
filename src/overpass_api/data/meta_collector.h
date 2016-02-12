@@ -27,7 +27,6 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../dispatch/resource_manager.h"
-#include "user_data_cache.h"
 
 
 template< typename Index, typename Id_Type >
@@ -47,8 +46,6 @@ struct Meta_Collector
         (const Index& index, Id_Type ref);    
     const OSM_Element_Metadata_Skeleton< Id_Type >* get
         (const Index& index, Id_Type ref, uint64 timestamp);    
-    const map< uint32, string >& users() const { return (user_data_cache != 0 ?
-         user_data_cache->users() : empty_users_); }
     
     ~Meta_Collector()
     {
@@ -69,7 +66,6 @@ struct Meta_Collector
         ::Range_Iterator* range_it;
     Index* current_index;
     set< OSM_Element_Metadata_Skeleton< Id_Type > > current_objects;
-    User_Data_Cache* user_data_cache;
     map< uint32, string > empty_users_;
     
     void update_current_objects(const Index&);
@@ -95,7 +91,7 @@ template< typename Object >
 Meta_Collector< Index, Id_Type >::Meta_Collector
     (const map< Index, vector< Object > >& items,
         Resource_Manager& rman, const File_Properties* meta_file_prop, bool user_data)
-  : meta_db(0), db_it(0), range_it(0), current_index(0), user_data_cache(0)
+  : meta_db(0), db_it(0), range_it(0), current_index(0)
 {
   if (!meta_file_prop)
     return;
@@ -105,16 +101,6 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
       ((rman.get_transaction())->data_index(meta_file_prop));
 	  
   reset();
-  
-  if (user_data)
-  {
-    if (!rman.user_data_cache())
-    {
-      User_Data_Cache* udc = new User_Data_Cache(*rman.get_transaction());
-      rman.set_user_data_cache(*udc);
-    }
-    user_data_cache = rman.user_data_cache();
-  }
 }
 
 
@@ -122,7 +108,7 @@ template< typename Index, typename Id_Type >
 Meta_Collector< Index, Id_Type >::Meta_Collector
     (const set< pair< Index, Index > >& used_ranges_,
         Resource_Manager& rman, const File_Properties* meta_file_prop)
-  : used_ranges(used_ranges_), meta_db(0), db_it(0), range_it(0), current_index(0), user_data_cache(0)
+  : used_ranges(used_ranges_), meta_db(0), db_it(0), range_it(0), current_index(0)
 {
   if (!meta_file_prop)
     return;

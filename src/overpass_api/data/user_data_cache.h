@@ -31,22 +31,30 @@
 
 struct User_Data_Cache
 {
-  public:
-    User_Data_Cache(Transaction& transaction);
+  User_Data_Cache() : loaded(false) {}
+  const std::map< uint32, std::string >& users(Transaction& transaction);
 
-    const std::map< uint32, std::string >& users() const { return users_; }
-
-  private:
-    std::map< uint32, std::string > users_;
+private:
+  std::map< uint32, std::string > users_;
+  bool loaded;
 };
 
-inline User_Data_Cache::User_Data_Cache(Transaction& transaction)
+
+inline const std::map< uint32, std::string >& User_Data_Cache::users(
+    Transaction& transaction)
 {
-  Block_Backend< Uint32_Index, User_Data > user_db
-      (transaction.data_index(meta_settings().USER_DATA));
-  for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
-      !(it == user_db.flat_end()); ++it)
-    users_[it.object().id] = it.object().name;
+  if (!loaded)
+  {
+    Block_Backend< Uint32_Index, User_Data > user_db
+        (transaction.data_index(meta_settings().USER_DATA));
+    for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
+        !(it == user_db.flat_end()); ++it)
+      users_[it.object().id] = it.object().name;
+    
+    loaded = true;
+  }
+  
+  return users_;
 }
 
 

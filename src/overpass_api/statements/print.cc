@@ -628,7 +628,8 @@ void Print_Statement::tags_quadtile
 	if (++element_count > limit)
 	  return;
 	print_item(target, item_it->first.val(), *it2, &(tags_by_id[it2->id]),
-		   meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
+		   meta_printer.get(item_it->first, it2->id),
+		   meta_file_prop ? &(rman.users()) : 0);
       }
       ++item_it;
     }
@@ -710,7 +711,7 @@ void Print_Statement::tags_quadtile_attic
           meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
         print_item(target, item_it->first.val(), *it2,
                           &(tags_by_id[Attic< typename Object::Id_Type >(it2->id, it2->timestamp)]),
-                   meta, &(current_meta_printer.users()));
+                   meta, &(rman.users()));
       }
       ++item_it;
     }
@@ -937,10 +938,12 @@ void Print_Statement::tags_by_id
               (items_by_id[i.val()].first->id));
       if (++element_count > limit)
 	return;
-      print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
-		 &(tags_by_id[items_by_id[i.val()].first->id.val()]),
-		 (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id) ?
-		     &*meta_it : 0, &(meta_printer.users()));
+      if (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id)
+	print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+	    &(tags_by_id[items_by_id[i.val()].first->id.val()]), &*meta_it, &(rman.users()));
+      else
+	print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+	    &(tags_by_id[items_by_id[i.val()].first->id.val()]), 0, 0);
     }
   }
 }
@@ -1095,7 +1098,7 @@ void Print_Statement::tags_by_id_attic
         print_item(target, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
 		 &(current_tags_by_id[items_by_id[i.val()].obj->id.val()]),
 		 (meta_it != only_current_metadata.end() && meta_it->ref == items_by_id[i.val()].obj->id) ?
-		     &*meta_it : 0, &(only_current_meta_printer.users()));
+		     &*meta_it : 0, &(rman.users()));
       }
       else
       {
@@ -1106,7 +1109,7 @@ void Print_Statement::tags_by_id_attic
 		   Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
                  &(attic_tags_by_id[Attic< typename Object::Id_Type >
                      (items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp)]),
-                 meta_it != attic_metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
+                 meta_it != attic_metadata.end() ? &*meta_it : 0, &rman.users());
       }
     }
   }
@@ -2340,9 +2343,6 @@ void Print_Statement::execute(Resource_Manager& rman)
 
   if (mode & Print_Target::PRINT_TAGS)
   {
-    User_Data_Cache* user_data_cache =
-        (collection_mode == collect_rhs ? new User_Data_Cache(*rman.get_transaction()) : 0);
-  
     if (order == order_by_id)
     {
       if (rman.get_desired_timestamp() == NOW)
@@ -2360,7 +2360,7 @@ void Print_Statement::execute(Resource_Manager& rman)
                    element_count);
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_nodes(rman, &rman.users(), add_deletion_information);
       
       if (rman.get_desired_timestamp() == NOW)
         tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
@@ -2377,7 +2377,7 @@ void Print_Statement::execute(Resource_Manager& rman)
                    element_count);
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_ways(rman, &rman.users(), add_deletion_information);
       
       if (rman.get_desired_timestamp() == NOW)
         tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
@@ -2394,7 +2394,7 @@ void Print_Statement::execute(Resource_Manager& rman)
                    element_count);
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_relations(rman, &rman.users(), add_deletion_information);
       
       if (rman.get_area_transaction())
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
@@ -2418,7 +2418,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_nodes(rman, &rman.users(), add_deletion_information);
       
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -2435,7 +2435,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_ways(rman, &rman.users(), add_deletion_information);
       
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -2452,7 +2452,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_relations(rman, &rman.users(), add_deletion_information);
       
       if (rman.get_area_transaction())
       {
@@ -2460,8 +2460,6 @@ void Print_Statement::execute(Resource_Manager& rman)
 		      *target, rman, *rman.get_area_transaction(), 0, element_count);
       }
     }
-    
-    delete user_data_cache;
   }
   else if (mode & Print_Target::PRINT_COUNT)
   {

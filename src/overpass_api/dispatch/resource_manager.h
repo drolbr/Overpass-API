@@ -41,7 +41,7 @@ public:
 		   Error_Output* error_output_ = 0)
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(0), area_updater_(0),
-        watchdog(watchdog_), user_data_cache_(0),
+        watchdog(watchdog_),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
 	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
@@ -52,7 +52,7 @@ public:
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(&area_transaction_),
         area_updater_(area_updater__),
-	watchdog(watchdog_), user_data_cache_(0),
+	watchdog(watchdog_),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
 	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
@@ -62,10 +62,6 @@ public:
     if (area_updater_)
       delete area_updater_;
     area_updater_ = 0;
-
-    if (user_data_cache_)
-      delete user_data_cache_;
-    user_data_cache_ = 0;
   }
   
   map< string, Set >& sets()
@@ -103,8 +99,7 @@ public:
   void set_diff_from_timestamp(uint64 timestamp) { diff_from_timestamp = timestamp; }
   void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
   
-  void set_user_data_cache(User_Data_Cache & user_data_cache) { user_data_cache_ = &user_data_cache; }
-  User_Data_Cache* user_data_cache() { return user_data_cache_; }
+  const std::map< uint32, std::string >& users() { return user_data_cache.users(*transaction); }
 
 private:
   map< string, Set > sets_;
@@ -116,7 +111,7 @@ private:
   Transaction* area_transaction;
   Area_Usage_Listener* area_updater_;
   Watchdog_Callback* watchdog;
-  User_Data_Cache* user_data_cache_;
+  User_Data_Cache user_data_cache;
   int start_time;
   uint32 last_ping_time;
   uint32 last_report_time;
