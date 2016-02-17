@@ -590,7 +590,7 @@ void Print_Statement::tags_quadtile
   formulate_range_query(range_set, coarse_indices);
   
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, rman, meta_file_prop);
+  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(), meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
@@ -656,9 +656,9 @@ void Print_Statement::tags_quadtile_attic
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, rman, current_meta_file_prop);
+      (items, *rman.get_transaction(), current_meta_file_prop);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, rman, attic_meta_file_prop);
+      (items, *rman.get_transaction(), attic_meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
@@ -894,7 +894,7 @@ void Print_Statement::tags_by_id
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
   
   // formulate meta query if meta data shall be printed
-  Meta_Collector< TIndex, typename TObject::Id_Type > meta_printer(items, rman, meta_file_prop);
+  Meta_Collector< TIndex, typename TObject::Id_Type > meta_printer(items, *rman.get_transaction(), meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
@@ -1020,12 +1020,12 @@ void Print_Statement::tags_by_id_attic
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
-      (current_items, rman, current_meta_file_prop);
+      (current_items, *rman.get_transaction(), current_meta_file_prop);
   
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (attic_items, rman, current_meta_file_prop);
+      (attic_items, *rman.get_transaction(), current_meta_file_prop);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (attic_items, rman, attic_meta_file_prop);
+      (attic_items, *rman.get_transaction(), attic_meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db

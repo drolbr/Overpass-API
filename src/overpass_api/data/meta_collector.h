@@ -26,7 +26,6 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
-#include "../dispatch/resource_manager.h"
 
 
 template< typename Index, typename Id_Type >
@@ -35,11 +34,11 @@ struct Meta_Collector
   public:
     template< typename Object >
     Meta_Collector(const map< Index, vector< Object > >& items,
-        Resource_Manager& rman, const File_Properties* meta_file_prop = 0,
+        Transaction& transaction, const File_Properties* meta_file_prop = 0,
 	bool user_data = true);
     
     Meta_Collector(const set< pair< Index, Index > >& used_ranges,
-        Resource_Manager& rman, const File_Properties* meta_file_prop = 0);
+        Transaction& transaction, const File_Properties* meta_file_prop = 0);
     
     void reset();
     const OSM_Element_Metadata_Skeleton< Id_Type >* get
@@ -90,7 +89,7 @@ template< typename Index, typename Id_Type >
 template< typename Object >
 Meta_Collector< Index, Id_Type >::Meta_Collector
     (const map< Index, vector< Object > >& items,
-        Resource_Manager& rman, const File_Properties* meta_file_prop, bool user_data)
+        Transaction& transaction, const File_Properties* meta_file_prop, bool user_data)
   : meta_db(0), db_it(0), range_it(0), current_index(0)
 {
   if (!meta_file_prop)
@@ -98,7 +97,7 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
   
   generate_index_query(used_indices, items);
   meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-      ((rman.get_transaction())->data_index(meta_file_prop));
+      (transaction.data_index(meta_file_prop));
 	  
   reset();
 }
@@ -107,14 +106,14 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
 template< typename Index, typename Id_Type >
 Meta_Collector< Index, Id_Type >::Meta_Collector
     (const set< pair< Index, Index > >& used_ranges_,
-        Resource_Manager& rman, const File_Properties* meta_file_prop)
+        Transaction& transaction, const File_Properties* meta_file_prop)
   : used_ranges(used_ranges_), meta_db(0), db_it(0), range_it(0), current_index(0)
 {
   if (!meta_file_prop)
     return;
   
   meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-      ((rman.get_transaction())->data_index(meta_file_prop));
+      (transaction.data_index(meta_file_prop));
       
   reset();
 }
