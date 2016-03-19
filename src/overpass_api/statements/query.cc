@@ -772,8 +772,6 @@ void Query_Statement::filter_by_tags
         rman.health_check(*this);
       }
     
-      sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
-      
       filter_ids_by_tags(key_union, regkey_regexes, items_db, tag_it,
                          it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
 
@@ -811,8 +809,6 @@ void Query_Statement::filter_by_tags
         rman.health_check(*this);
       }
     
-      sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
-
       filter_ids_by_tags(key_union, regkey_regexes, timestamp, items_db, tag_it, attic_items_db, attic_tag_it,
                          it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
     
@@ -1004,8 +1000,6 @@ void Query_Statement::filter_by_tags
         rman.health_check(*this);
       }
     
-      sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
-
       filter_ids_by_tags_old(ids_by_coarse, key_union, regkey_regexes, items_db, tag_it, it->val());
     
       while ((item_it != items.end()) &&

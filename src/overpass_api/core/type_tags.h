@@ -154,9 +154,14 @@ void generate_ids_by_coarse
     it(items.begin()); it != items.end(); ++it)
   {
     coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
+    std::vector< typename TObject::Id_Type >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
+    
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      ids_by_coarse[it->first.val() & 0x7fffff00].push_back(it2->id);
+      ids_by_coarse_.push_back(it2->id);
+    
+    std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
+    ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
   }
 }
 
@@ -171,10 +176,15 @@ void generate_ids_by_coarse
     it(items.begin()); it != items.end(); ++it)
   {
     coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
+    std::vector< Attic< typename TObject::Id_Type > >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
+    
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      ids_by_coarse[it->first.val() & 0x7fffff00].push_back
+      ids_by_coarse_.push_back
           (Attic< typename TObject::Id_Type >(it2->id, it2->timestamp));
+    
+    std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
+    ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
   }
 }
 
