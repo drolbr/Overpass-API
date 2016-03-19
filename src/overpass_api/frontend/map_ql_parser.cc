@@ -1114,6 +1114,19 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
       if (key_regex)
 	++token;
       
+      if (*token == "!")    // [!key] as shortcut for [key !~ ".*"]
+      {
+        ++token;
+        string key = get_text_token(token, error_output, "Key");
+        clear_until_after(token, error_output, "]");
+        Statement_Text clause("has-kv_regex", token.line_col());
+        clause.attributes.push_back(key);
+        clause.attributes.push_back(".*");
+        clause.attributes.push_back("!");
+        clauses.push_back(clause);
+        continue;
+      }
+
       string key = get_text_token(token, error_output, "Key");
       clear_until_after(token, error_output, "!", "~", "=", "!=", "]", false);
       

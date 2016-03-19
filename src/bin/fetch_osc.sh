@@ -19,7 +19,7 @@
 
 if [[ -z $1  ]]; then
 {
-  echo Usage: $0 Replicate_id Source_dir Local_dir
+  echo Usage: $0 Replicate_id Source_dir Local_dir [Sleep]
   exit 0
 };
 fi
@@ -27,6 +27,7 @@ fi
 REPLICATE_ID=$1
 SOURCE_DIR=$2
 LOCAL_DIR=$3
+SLEEP_BETWEEN_DLS=${4:-15}  # How long to sleep between download attempts (sec). Default: 15
 
 if [[ ! -d $LOCAL_DIR ]];
   then {
@@ -53,7 +54,7 @@ retry_fetch_file()
     }; fi
   }; fi
   until [[ -s "$2" ]]; do {
-    sleep 15
+    sleep $SLEEP_BETWEEN_DLS
     fetch_file "$1" "$2"
     if [[ "$3" == "gzip" ]]; then {
       gunzip -t <"$2"
