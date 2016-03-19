@@ -17,6 +17,7 @@
 */
 
 #include <algorithm>
+#include <iterator>
 #include <sstream>
 
 #include "../../template_db/block_backend.h"
@@ -63,6 +64,9 @@ bool Polygon_Constraint::delivers_data(Resource_Manager& rman)
 bool Polygon_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
 {
+  if (polygon->polygons_from_inputset())
+    polygon->convert_inputset(rman);
+
   ranges = polygon->calc_ranges();
   return true;
 }
@@ -71,9 +75,13 @@ bool Polygon_Constraint::get_ranges
 bool Polygon_Constraint::get_ranges
     (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
 {
+  if (polygon->polygons_from_inputset())
+    polygon->convert_inputset(rman);
+
   set< pair< Uint32_Index, Uint32_Index > > node_ranges = polygon->calc_ranges();
   ranges = calc_parents(node_ranges);
   return true;
+
 }
 
 
@@ -223,7 +231,6 @@ void add_segment_blocks(vector< Aligned_Segment >& segments)
   }
 }
 
-
 Generic_Statement_Maker< Polygon_Query_Statement > Polygon_Query_Statement::statement_maker("polygon-query");
 
 
@@ -233,24 +240,90 @@ Polygon_Query_Statement::Polygon_Query_Statement
 {
   map< string, string > attributes;
   
+  attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["bounds"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   set_output(attributes["into"]);
-  
+
+  input = attributes["from"];
+  has_bounds = (attributes["bounds"] != "");
+
+  if (attributes["bounds"] != "")
+    convert_bounds(attributes["bounds"]);
+
+}
+
+
+Polygon_Query_Statement::~Polygon_Query_Statement()
+{
+  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    delete *it;
+}
+
+void Polygon_Query_Statement::convert_bounds(string bounds)
+{
   //convert bounds
-  istringstream in(attributes["bounds"]);
+  istringstream in(bounds);
+  vector<double> v = vector<double>(istream_iterator<double>(in), istream_iterator<double>());
+  if (v.size() % 2)
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
+        <<" an even number of float values must be provided.";
+    add_static_error(temp.str());
+    return;
+  }
+  else if (v.size() / 2 < 3)
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
+        <<" at least 3 lat/lon float value pairs must be provided.";
+    add_static_error(temp.str());
+    return;
+  }
+  else
+  {
+    for(vector<double>::iterator it = v.begin(); it != v.end(); ++it) {
+      double lat = *it;
+      double lon = *++it;
+
+      if ((lat < -90.0) || (lat > 90.0))
+      {
+        ostringstream temp;
+        temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
+            <<" the only allowed values for latitude are floats between -90.0 and 90.0.";
+        add_static_error(temp.str());
+        return;
+      }
+
+      if ((lon < -180.0) || (lon > 180.0))
+      {
+        ostringstream temp;
+        temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
+            <<" the only allowed values for longitude are floats between -180.0 and 180.0.";
+        add_static_error(temp.str());
+        return;
+      }
+    }
+  }
+  vector<double>::iterator it = v.begin();
   double first_lat, first_lon;
-  if (in.good())
-    in>>first_lat>>first_lon;
+
+  first_lat = *it++;
+  first_lon = *it++;
+
   double last_lat = first_lat;
   double last_lon = first_lon;
-  while (in.good())
+
+  while (it != v.end())
   {
     double lat, lon;
-    in>>lat>>lon;
+    lat = *it++;
+    lon = *it++;
     
     Area::calc_aligned_segments(segments, last_lat, last_lon, lat, lon);
     
@@ -261,14 +334,6 @@ Polygon_Query_Statement::Polygon_Query_Statement
   sort(segments.begin(), segments.end());
 
   add_segment_blocks(segments);
-}
-
-
-Polygon_Query_Statement::~Polygon_Query_Statement()
-{
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    delete *it;
 }
 
 
@@ -482,6 +547,112 @@ void Polygon_Query_Statement::collect_ways
   result.swap(ways);
 }
 
+// taken over from make_area.cc
+Node::Id_Type Polygon_Query_Statement::check_node_parity(const Set& pivot)
+{
+  set< Node::Id_Type > node_parity_control;
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+    it(pivot.ways.begin()); it != pivot.ways.end(); ++it)
+  {
+    for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+    it2 != it->second.end(); ++it2)
+    {
+      if (it2->nds.size() < 2)
+    continue;
+      pair< set< Node::Id_Type >::iterator, bool > npp(node_parity_control.insert
+          (it2->nds.front()));
+      if (!npp.second)
+    node_parity_control.erase(npp.first);
+      npp = node_parity_control.insert
+          (it2->nds.back());
+      if (!npp.second)
+    node_parity_control.erase(npp.first);
+    }
+  }
+  if (node_parity_control.size() > 0)
+    return *(node_parity_control.begin());
+  return Node::Id_Type(0ull);
+}
+
+void Polygon_Query_Statement::convert_inputset(Resource_Manager& rman)
+{
+  map< string, Set >::const_iterator mit = rman.sets().find(get_input());
+  if (mit == rman.sets().end())
+    return;
+
+  segments.clear();
+
+  // check node parity
+  Node::Id_Type odd_id(check_node_parity(mit->second));
+  if (!(odd_id == Node::Id_Type(0ull)))
+  {
+    ostringstream temp;
+    temp<<"make-area: Node "<<odd_id.val()
+            <<" is contained in an odd number of ways.\n";
+    runtime_remark(temp.str());
+  }
+  /*
+  // create area blocks
+  map< Uint31_Index, vector< Area_Block > > area_blocks;
+  pair< Node::Id_Type, Way::Id_Type > odd_pair
+    (create_area_blocks(area_blocks, pivot_id, mit->second));
+  if (!(odd_pair.first == Node::Id_Type(0ull)))
+  {
+    ostringstream temp;
+    temp<<"make-area: Node "<<odd_pair.first.val()
+        <<" referred by way "<<odd_pair.second.val()
+        <<" is not contained in set \""<<input<<"\".\n";
+    runtime_remark(temp.str());
+  }
+   */
+
+  vector< Node > nodes;
+  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+      it(mit->second.nodes.begin()); it != mit->second.nodes.end(); ++it)
+  {
+    for (vector< Node_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      nodes.push_back(Node(it2->id.val(), it->first.val(), it2->ll_lower));
+  }
+
+  sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
+
+  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+      it(mit->second.ways.begin()); it != mit->second.ways.end(); ++it)
+  {
+    for (vector< Way_Skeleton >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+    {
+      vector< Quad_Coord > coord = make_geometry(*it2, nodes);
+      vector< Quad_Coord >::const_iterator it4(coord.begin());
+
+      if (it4 == coord.end())
+        continue;
+
+      double last_lat = ::lat(it4->ll_upper, it4->ll_lower);
+      double last_lon = ::lon(it4->ll_upper, it4->ll_lower);
+
+      it4++;
+
+      while (it4 != coord.end())
+      {
+        double lat, lon;
+
+        lat = ::lat(it4->ll_upper, it4->ll_lower);;
+        lon = ::lon(it4->ll_upper, it4->ll_lower);
+
+        Area::calc_aligned_segments(segments, last_lat, last_lon, lat, lon);
+
+        last_lat = lat;
+        last_lon = lon;
+
+        it4++;
+      }
+   }
+  }
+  sort(segments.begin(), segments.end());
+  add_segment_blocks(segments);
+}
 
 void Polygon_Query_Statement::execute(Resource_Manager& rman)
 {

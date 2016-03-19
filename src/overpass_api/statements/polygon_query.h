@@ -53,8 +53,19 @@ class Polygon_Query_Statement : public Output_Statement
        const Way_Geometry_Store& way_geometries,
        bool add_border, const Statement& query, Resource_Manager& rman);
 
+    string get_input() const { return input; }
+
+    bool polygons_from_inputset() const { return (!has_bounds); }
+
+    void convert_bounds(string bounds);
+    void convert_inputset(Resource_Manager& rman);
+
   private:
+    static Node::Id_Type check_node_parity(const Set& pivot);
+
+    string input;
     unsigned int type;
+    bool has_bounds;
     vector< Aligned_Segment > segments;
     vector< Query_Constraint* > constraints;
 };
