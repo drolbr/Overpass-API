@@ -17,6 +17,7 @@
 */
 
 #include <algorithm>
+#include <iterator>
 #include <sstream>
 
 #include "../../template_db/block_backend.h"
@@ -223,7 +224,6 @@ void add_segment_blocks(vector< Aligned_Segment >& segments)
   }
 }
 
-
 Generic_Statement_Maker< Polygon_Query_Statement > Polygon_Query_Statement::statement_maker("polygon-query");
 
 
@@ -242,15 +242,62 @@ Polygon_Query_Statement::Polygon_Query_Statement
   
   //convert bounds
   istringstream in(attributes["bounds"]);
+  vector<double> v = vector<double>(istream_iterator<double>(in), istream_iterator<double>());
+  if (v.size() % 2)
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
+        <<" an even number of float values must be provided.";
+    add_static_error(temp.str());
+    return;
+  }
+  else if (v.size() / 2 < 3)
+  {
+    ostringstream temp;
+    temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
+        <<" at least 3 lat/lon float value pairs must be provided.";
+    add_static_error(temp.str());
+    return;
+  }
+  else
+  {
+    for(vector<double>::iterator it = v.begin(); it != v.end(); ++it) {
+      double lat = *it;
+      double lon = *++it;
+
+      if ((lat < -90.0) || (lat > 90.0))
+      {
+        ostringstream temp;
+        temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
+            <<" the only allowed values for latitude are floats between -90.0 and 90.0.";
+        add_static_error(temp.str());
+        return;
+      }
+
+      if ((lon < -180.0) || (lon > 180.0))
+      {
+        ostringstream temp;
+        temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
+            <<" the only allowed values for longitude are floats between -180.0 and 180.0.";
+        add_static_error(temp.str());
+        return;
+      }
+    }
+  }
+  vector<double>::iterator it = v.begin();
   double first_lat, first_lon;
-  if (in.good())
-    in>>first_lat>>first_lon;
+
+  first_lat = *it++;
+  first_lon = *it++;
+
   double last_lat = first_lat;
   double last_lon = first_lon;
-  while (in.good())
+
+  while (it != v.end())
   {
     double lat, lon;
-    in>>lat>>lon;
+    lat = *it++;
+    lon = *it++;
     
     Area::calc_aligned_segments(segments, last_lat, last_lon, lat, lon);
     
