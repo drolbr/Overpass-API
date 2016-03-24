@@ -242,72 +242,35 @@ Polygon_Query_Statement::Polygon_Query_Statement
   
   //convert bounds
   istringstream in(attributes["bounds"]);
-  vector<double> v = vector<double>(istream_iterator<double>(in), istream_iterator<double>());
-  if (v.size() % 2)
+  vector<double> tokens = vector<double>(istream_iterator<double>(in), istream_iterator<double>());
+  
+  if (tokens.size() % 2)
+    add_static_error("For the attribute \"bounds\" of the element \"polygon-query\""
+        " an even number of float values must be provided.");
+  if (tokens.size() / 2 < 3)
+    add_static_error("For the attribute \"bounds\" of the element \"polygon-query\""
+        " at least 3 lat/lon float value pairs must be provided.");
+  
+  for (vector<double>::size_type i = 0; i < tokens.size(); i += 2)
   {
-    ostringstream temp;
-    temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
-        <<" an even number of float values must be provided.";
-    add_static_error(temp.str());
-    return;
-  }
-  else if (v.size() / 2 < 3)
-  {
-    ostringstream temp;
-    temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
-        <<" at least 3 lat/lon float value pairs must be provided.";
-    add_static_error(temp.str());
-    return;
-  }
-  else
-  {
-    for(vector<double>::iterator it = v.begin(); it != v.end(); ++it) {
-      double lat = *it;
-      double lon = *++it;
-
-      if ((lat < -90.0) || (lat > 90.0))
-      {
-        ostringstream temp;
-        temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
-            <<" the only allowed values for latitude are floats between -90.0 and 90.0.";
-        add_static_error(temp.str());
-        return;
-      }
-
-      if ((lon < -180.0) || (lon > 180.0))
-      {
-        ostringstream temp;
-        temp<<"For the attribute \"bounds\" of the element \"polygon-query\""
-            <<" the only allowed values for longitude are floats between -180.0 and 180.0.";
-        add_static_error(temp.str());
-        return;
-      }
-    }
-  }
-  vector<double>::iterator it = v.begin();
-  double first_lat, first_lon;
-
-  first_lat = *it++;
-  first_lon = *it++;
-
-  double last_lat = first_lat;
-  double last_lon = first_lon;
-
-  while (it != v.end())
-  {
-    double lat, lon;
-    lat = *it++;
-    lon = *it++;
+    if ((tokens[i] < -90.0) || (tokens[i] > 90.0))
+      add_static_error("For the attribute \"bounds\" of the element \"polygon-query\""
+          " the only allowed values for latitude are floats between -90.0 and 90.0.");
     
-    Area::calc_aligned_segments(segments, last_lat, last_lon, lat, lon);
-    
-    last_lat = lat;
-    last_lon = lon;
+    if (i+1 < tokens.size() && ((tokens[i+1] < -180.0) || (tokens[i+1] > 180.0)))
+      add_static_error("For the attribute \"bounds\" of the element \"polygon-query\""
+          " the only allowed values for longitude are floats between -180.0 and 180.0.");
   }
-  Area::calc_aligned_segments(segments, last_lat, last_lon, first_lat, first_lon);
-  sort(segments.begin(), segments.end());
-
-  add_segment_blocks(segments);
+  
+  if (tokens.size() % 2 == 0 && tokens.size() / 2)
+  {
+    for (vector<double>::size_type i = 2; i < tokens.size(); i += 2)
+      Area::calc_aligned_segments(segments, tokens[i-2], tokens[i-1], tokens[i], tokens[i+1]);
+    Area::calc_aligned_segments(segments, tokens[tokens.size()-2], tokens[tokens.size()-1], tokens[0], tokens[1]);
+    
+    sort(segments.begin(), segments.end());
+    add_segment_blocks(segments);    
+  }  
 }
 
 
