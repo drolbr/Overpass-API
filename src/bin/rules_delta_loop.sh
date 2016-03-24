@@ -35,6 +35,12 @@ fi
 
 pushd "$EXEC_DIR"
 
+
+if [[ ! -a $DB_DIR/area_version ]]; then
+  echo "init" >>$DB_DIR/area_version
+fi
+
+
 while [[ true ]]; do
 {
   echo "`date '+%F %T'`: update started" >>$DB_DIR/rules_loop.log

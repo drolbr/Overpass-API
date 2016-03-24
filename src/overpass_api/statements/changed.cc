@@ -166,6 +166,7 @@ bool Changed_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relati
 
 void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
+  if (!stmt->trivial())
   {
     std::vector< Node_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint32_Index, Node_Skeleton >
@@ -174,6 +175,8 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     filter_elems(ids, into.nodes);
     filter_elems(ids, into.attic_nodes);
   }
+  
+  if (!stmt->trivial())
   {
     std::vector< Way_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint31_Index, Way_Skeleton >
@@ -182,6 +185,8 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     filter_elems(ids, into.ways);
     filter_elems(ids, into.attic_ways);
   }
+  
+  if (!stmt->trivial())
   {
     std::vector< Relation_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint31_Index, Relation_Skeleton >
@@ -198,7 +203,7 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
 
 Changed_Statement::Changed_Statement
     (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
-    : Output_Statement(line_number_), since(NOW), until(NOW)
+    : Output_Statement(line_number_), since(NOW), until(NOW), behave_trivial(false)
 {
   map< string, string > attributes;
   
@@ -210,7 +215,10 @@ Changed_Statement::Changed_Statement
   
   set_output(attributes["into"]);
   
-  if ((attributes["since"] == "auto") ^ (attributes["until"] == "auto"))
+  if (attributes["since"] == "init")
+    behave_trivial = true;
+  
+  if (!behave_trivial && ((attributes["since"] == "auto") ^ (attributes["until"] == "auto")))
   {
     ostringstream temp;
     temp<<"The attributes \"since\" and \"until\" must be set either both or none.";
@@ -228,7 +236,7 @@ Changed_Statement::Changed_Statement
         atoi(timestamp.c_str()+17) //second
         ).timestamp;
 	
-  if (timestamp != "auto" && (since == 0 || since == NOW))
+  if (!behave_trivial && timestamp != "auto" && (since == 0 || since == NOW))
   {
     ostringstream temp;
     temp<<"The attribute \"since\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
@@ -246,7 +254,7 @@ Changed_Statement::Changed_Statement
         atoi(timestamp.c_str()+17) //second
         ).timestamp;
 	
-  if (timestamp != "auto" && (until == 0 || until == NOW))
+  if (!behave_trivial && timestamp != "auto" && (until == 0 || until == NOW))
   {
     ostringstream temp;
     temp<<"The attribute \"until\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";

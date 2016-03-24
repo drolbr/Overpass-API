@@ -41,10 +41,12 @@ class Changed_Statement : public Output_Statement
     uint64 get_until(Resource_Manager& rman) const;
     
     static bool area_query_exists() { return area_query_exists_; }
+    bool trivial() const { return behave_trivial; }
     
   private:
     uint64 since, until;
     vector< Query_Constraint* > constraints;
+    bool behave_trivial;
     
     static bool area_query_exists_;
 };
