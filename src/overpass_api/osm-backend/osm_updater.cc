@@ -531,6 +531,8 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
     version<<data_version_<<'\n';
   }
 
+  std::cout<<"Using directory "<<dispatcher_client->get_db_dir()<<'\n';
+  
   node_updater_ = new Node_Updater(*transaction, meta);
   way_updater_ = new Way_Updater(*transaction, meta);
   relation_updater_ = new Relation_Updater(*transaction, meta);
@@ -557,6 +559,8 @@ Osm_Updater::Osm_Updater
     ofstream version((db_dir + "osm_base_version").c_str());
     version<<data_version_<<'\n';
   }
+  
+  std::cout<<"Using directory "<<db_dir<<'\n';
   
   node_updater_ = new Node_Updater(db_dir, meta);
   way_updater_ = new Way_Updater(db_dir, meta);

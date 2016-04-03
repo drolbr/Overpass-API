@@ -473,6 +473,24 @@ Node_Updater::Node_Updater(string db_dir_, meta_modes meta_)
 }
 
 
+struct Dump_Skeletons
+{
+  std::ostream& out(std::ostream& out, const Uint31_Index& key, const Node_Skeleton& value) const
+  {
+    return out<<"Storing node "<<value.id.val();
+  }
+};
+
+
+struct Dump_Local_Tags
+{
+  std::ostream& out(std::ostream& out, const Tag_Index_Local& key, const Node::Id_Type& value) const
+  {
+    return out<<"Storing tag of node "<<value.val()<<'\t'<<key.key<<'\t'<<key.value;
+  }
+};
+
+
 void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
 {
   if (!external_transaction)
@@ -483,6 +501,10 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   remove_time_inconsistent_versions(new_data);
   std::vector< Node_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
   
+  for (std::vector< Node_Skeleton::Id_Type >::const_iterator it = ids_to_update_.begin();
+      it != ids_to_update_.end(); ++it)
+    std::cout<<"Found node "<<it->val()<<" in diff.\n";
+  
   // Collect all data of existing id indexes
   std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
       = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().NODES);
@@ -491,6 +513,10 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   std::map< Uint31_Index, std::set< Node_Skeleton > > existing_skeletons
       = get_existing_skeletons< Node_Skeleton >
       (existing_map_positions, *transaction, *osm_base_settings().NODES);
+      
+  uint64 existing_count = count(existing_skeletons);
+  std::cout<<"Touching "<<existing_count<<" existing nodes, creating "
+      <<(ids_to_update_.size() - existing_count)<<" nodes. ";
 
   // Collect all data of existing meta elements
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
@@ -536,6 +562,9 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
   callback->prepare_delete_tags_finished();
   
   store_new_keys(new_data, keys, *transaction);
+
+  dump(new_skeletons, Dump_Skeletons());
+  dump(new_local_tags, Dump_Local_Tags());
   
   // Update id indexes
   update_map_positions(new_map_positions, *transaction, *osm_base_settings().NODES);

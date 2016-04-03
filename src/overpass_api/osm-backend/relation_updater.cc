@@ -1056,6 +1056,24 @@ std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > co
 }
   
 
+struct Dump_Skeletons
+{
+  std::ostream& out(std::ostream& out, const Uint31_Index& key, const Relation_Skeleton& value) const
+  {
+    return out<<"Storing relation "<<value.id.val();
+  }
+};
+
+
+struct Dump_Local_Tags
+{
+  std::ostream& out(std::ostream& out, const Tag_Index_Local& key, const Relation::Id_Type& value) const
+  {
+    return out<<"Storing tag of relation "<<value.val()<<'\t'<<key.key<<'\t'<<key.value;
+  }
+};
+
+
 void Relation_Updater::update(Osm_Backend_Callback* callback,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
@@ -1072,6 +1090,10 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   remove_time_inconsistent_versions(new_data);
   std::vector< Relation_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
   
+  for (std::vector< Relation_Skeleton::Id_Type >::const_iterator it = ids_to_update_.begin();
+      it != ids_to_update_.end(); ++it)
+    std::cout<<"Found relation "<<it->val()<<" in diff.\n";
+  
   // Collect all data of existing id indexes
   std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
       = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().RELATIONS);
@@ -1081,6 +1103,10 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
       = get_existing_skeletons< Relation_Skeleton >
       (existing_map_positions, *transaction, *osm_base_settings().RELATIONS);
   
+  uint64 existing_count = count(existing_skeletons);
+  std::cout<<"Touching "<<existing_count<<" existing relations, creating "
+      <<(ids_to_update_.size() - existing_count)<<" relations. ";
+
   // Collect also all data of existing and implicitly changed skeletons
   std::map< Uint31_Index, std::set< Relation_Skeleton > > implicitly_moved_skeletons
       = get_implicitly_moved_skeletons
@@ -1169,6 +1195,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   callback->prepare_delete_tags_finished();
   
   store_new_keys(new_data, keys, *transaction);
+  
+  dump(new_skeletons, Dump_Skeletons());
+  dump(new_local_tags, Dump_Local_Tags());
   
   // Update id indexes
   update_map_positions(new_positions, *transaction, *osm_base_settings().RELATIONS);

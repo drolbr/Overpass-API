@@ -788,6 +788,24 @@ std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute
 }
   
 
+struct Dump_Skeletons
+{
+  std::ostream& out(std::ostream& out, const Uint31_Index& key, const Way_Skeleton& value) const
+  {
+    return out<<"Storing way "<<value.id.val();
+  }
+};
+
+
+struct Dump_Local_Tags
+{
+  std::ostream& out(std::ostream& out, const Tag_Index_Local& key, const Way::Id_Type& value) const
+  {
+    return out<<"Storing tag of way "<<value.val()<<'\t'<<key.key<<'\t'<<key.value;
+  }
+};
+
+
 void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
@@ -801,6 +819,10 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   remove_time_inconsistent_versions(new_data);
   std::vector< Way_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
   
+  for (std::vector< Way_Skeleton::Id_Type >::const_iterator it = ids_to_update_.begin();
+      it != ids_to_update_.end(); ++it)
+    std::cout<<"Found way "<<it->val()<<" in diff.\n";
+  
   // Collect all data of existing id indexes
   std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
       = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().WAYS);
@@ -810,6 +832,10 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       = get_existing_skeletons< Way_Skeleton >
       (existing_map_positions, *transaction, *osm_base_settings().WAYS);
   
+  uint64 existing_count = count(existing_skeletons);
+  std::cout<<"Touching "<<existing_count<<" existing ways, creating "
+      <<(ids_to_update_.size() - existing_count)<<" ways. ";
+
   // Collect also all data of existing and implicitly changed skeletons
   std::map< Uint31_Index, std::set< Way_Skeleton > > implicitly_moved_skeletons
       = get_implicitly_moved_skeletons
@@ -893,6 +919,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   callback->prepare_delete_tags_finished();
   
   store_new_keys(new_data, keys, *transaction);
+  
+  dump(new_skeletons, Dump_Skeletons());
+  dump(new_local_tags, Dump_Local_Tags());
   
   // Update id indexes
   update_map_positions(new_positions, *transaction, *osm_base_settings().WAYS);

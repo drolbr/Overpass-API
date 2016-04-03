@@ -1188,4 +1188,26 @@ std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Wa
         const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id);
 
 
+template< typename Container >
+uint64 count(const Container& set)
+{
+  uint64 result = 0;
+  for (typename Container::const_iterator it = set.begin(); it != set.end(); ++it)
+    result += it->second.size();
+  
+  return result;
+}
+
+
+template< typename Key, typename Value, typename Out_Object >
+void dump(const std::map< Key, std::set< Value > >& data, const Out_Object& out_object)
+{
+  for (typename std::map< Key, std::set< Value > >::const_iterator it = data.begin(); it != data.end(); ++it)
+  {
+    for (typename std::set< Value >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      out_object.out(std::cout, it->first, *it2)<<'\n';
+  }
+}
+
+
 #endif
