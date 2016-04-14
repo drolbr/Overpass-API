@@ -195,6 +195,10 @@ int main(int argc, char *argv[])
           <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
     error_output.runtime_error(temp.str());
   }
+  catch(std::exception& e)
+  {
+    error_output.runtime_error(std::string("Query failed with the exception: ") + e.what());    
+  }
   catch(Exit_Error e) {}
 
   return 0;

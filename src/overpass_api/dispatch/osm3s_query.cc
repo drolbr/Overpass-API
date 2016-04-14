@@ -269,4 +269,9 @@ int main(int argc, char *argv[])
   {
     return 3;
   }
+  catch(std::exception& e)
+  {
+    error_output->runtime_error(std::string("Query failed with the exception: ") + e.what());    
+    return 4;
+  }
 }
