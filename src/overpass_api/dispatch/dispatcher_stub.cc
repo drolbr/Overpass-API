@@ -94,7 +94,8 @@ Dispatcher_Stub::Dispatcher_Stub
       dispatcher_client(0), area_dispatcher_client(0),
       transaction(0), area_transaction(0), rman(0), meta(meta_)
 {
-  set_limits(2*max_allowed_time + 15, 2*max_allowed_space + 128*1024*1024);
+  if (max_allowed_time > 0)
+    set_limits(2*max_allowed_time + 15, 2*max_allowed_space + 128*1024*1024);
   
   if (db_dir == "")
   {
