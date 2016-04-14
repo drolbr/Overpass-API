@@ -18,6 +18,7 @@
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
 mkdir -p "/tmp/translate_xapi/"
+chmod 777 "/tmp/translate_xapi/"
 
 while [[ true ]]; do
 {

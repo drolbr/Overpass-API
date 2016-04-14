@@ -21,7 +21,7 @@
 # $2 - local destination
 fetch_file()
 {
-  wget -nv -O "$2" "$1"
+  wget -q -O "$2" "$1"
 };
 
 EXEC_DIR="`dirname $0`/"
