@@ -19,6 +19,7 @@
 #include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/way_geometry_store.h"
 #include "meta_collector.h"
 #include "print.h"
 
@@ -128,29 +129,6 @@ private:
   std::vector< Way_Skeleton > ways;
   Way_Geometry_Store* way_geometry_store;
   
-  uint32 south;
-  uint32 north;
-  int32 west;
-  int32 east;
-  
-  bool matches_bbox(uint32 ll_upper, uint32 ll_lower) const;
-};
-
-
-class Way_Bbox_Geometry_Store : public Way_Geometry_Store
-{
-public:
-  Way_Bbox_Geometry_Store(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
-                     const Statement& query, Resource_Manager& rman,
-                     double south_, double north_, double west_, double east_);
-  Way_Bbox_Geometry_Store(const map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
-                     const Statement& query, Resource_Manager& rman,
-                     double south_, double north_, double west_, double east_);
-  
-  // return the empty vector if the way is not found
-  vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
-  
-private:
   uint32 south;
   uint32 north;
   int32 west;
@@ -1229,69 +1207,6 @@ void Print_Statement::tags_by_id_attic
 }
 
 
-Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
-    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-    const Statement& query, Resource_Manager& rman,
-    double south_, double north_, double west_, double east_)
-  : Way_Geometry_Store(ways, query, rman),
-    south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
-{}
-
-
-Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
-    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
-    const Statement& query, Resource_Manager& rman,
-    double south_, double north_, double west_, double east_)
-  : Way_Geometry_Store(ways, timestamp, query, rman),
-    south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
-{}
-
-
-bool Way_Bbox_Geometry_Store::matches_bbox(uint32 ll_upper, uint32 ll_lower) const
-{
-  if (north < south)
-    return true;
-  uint32 lat(::ilat(ll_upper, ll_lower));
-  int32 lon(::ilon(ll_upper, ll_lower));
-  return (lat >= south && lat <= north &&
-     ((lon >= west && lon <= east)
-            || (east < west && (lon >= west || lon <= east))));
-}
-
-
-std::vector< Quad_Coord > Way_Bbox_Geometry_Store::get_geometry(const Way_Skeleton& way) const
-{
-  std::vector< Quad_Coord > result = Way_Geometry_Store::get_geometry(way);
-  
-  if (result.empty())
-    ;
-  else if (result.size() == 1)
-  {
-    if (!matches_bbox(result.begin()->ll_upper, result.begin()->ll_lower))
-      *result.begin() = Quad_Coord(0u, 0u);
-  }
-  else
-  {
-    bool this_matches = matches_bbox(result[0].ll_upper, result[0].ll_lower);
-    bool next_matches = matches_bbox(result[1].ll_upper, result[1].ll_lower);
-    if (!this_matches && !next_matches)
-      result[0] = Quad_Coord(0u, 0u);
-    for (uint i = 1; i < result.size() - 1; ++i)
-    {
-      bool last_matches = this_matches;
-      this_matches = next_matches;
-      next_matches = matches_bbox(result[i+1].ll_upper, result[i+1].ll_lower);
-      if (!last_matches && !this_matches && !next_matches)
-        result[i] = Quad_Coord(0u, 0u);
-    }
-    if (!this_matches && !next_matches)
-      result[result.size()-1] = Quad_Coord(0u, 0u);
-  }
-        
-  return result;
-}
-  
-  
 Relation_Geometry_Store::~Relation_Geometry_Store()
 {
   delete way_geometry_store;

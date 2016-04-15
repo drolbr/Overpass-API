@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__AREA_QUERY_H
 
 #include "../data/collect_members.h"
+#include "../data/way_geometry_store.h"
 #include "statement.h"
 
 #include <map>

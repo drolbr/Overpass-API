@@ -111,7 +111,7 @@ overpass_api/output_formats/output_popup_factory.cc
 
 libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
-libdata_la_SOURCES = overpass_api/data/collect_members.cc
+libdata_la_SOURCES = overpass_api/data/collect_members.cc overpass_api/data/way_geometry_store.cc
 libdata_la_LIBADD =
 libdispatcher_la_SOURCES = template_db/dispatcher_client.cc overpass_api/dispatch/resource_manager.cc overpass_api/osm-backend/area_updater.cc
 libdispatcher_la_LIBADD = -lrt

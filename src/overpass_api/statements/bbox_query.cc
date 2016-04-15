@@ -24,6 +24,7 @@
 #include "../core/settings.h"
 #include "../data/collect_members.h"
 #include "../data/geometry.h"
+#include "../data/way_geometry_store.h"
 #include "bbox_query.h"
 #include "recurse.h"
 

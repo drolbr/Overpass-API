@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include "../data/collect_members.h"
+#include "../data/way_geometry_store.h"
 #include "statement.h"
 
 using namespace std;
