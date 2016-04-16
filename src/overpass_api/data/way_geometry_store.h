@@ -55,7 +55,7 @@ public:
                      double south_, double north_, double west_, double east_);
   
   // return the empty vector if the way is not found
-  vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
+  std::vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
   
 private:
   uint32 south;
