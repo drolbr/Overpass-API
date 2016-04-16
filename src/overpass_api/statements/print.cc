@@ -19,6 +19,7 @@
 #include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/tag_store.h"
 #include "../data/way_geometry_store.h"
 #include "meta_collector.h"
 #include "print.h"
@@ -500,152 +501,6 @@ void collect_tags
 }
 
 
-template< class Id_Type >
-void collect_attic_tags
-  (std::map< Id_Type, std::vector< std::pair< std::string, std::string > > >& tags_by_id,
-   const Block_Backend< Tag_Index_Local, Id_Type >& current_items_db,
-   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& current_tag_it,
-   const Block_Backend< Tag_Index_Local, Attic< Id_Type > >& attic_items_db,
-   typename Block_Backend< Tag_Index_Local, Attic< Id_Type > >::Range_Iterator& attic_tag_it,
-   std::map< uint32, std::vector< Attic< Id_Type > > >& ids_by_coarse,
-   uint32 coarse_index,
-   Id_Type lower_id_bound, Id_Type upper_id_bound)
-{
-  std::vector< Attic< Id_Type > > id_vec = ids_by_coarse[coarse_index];
-  std::sort(id_vec.begin(), id_vec.end());
-
-  if (!(upper_id_bound == Id_Type()))
-  {
-    typename std::vector< Attic< Id_Type > >::iterator it_id
-        = std::lower_bound(id_vec.begin(), id_vec.end(),
-                           Attic< Id_Type >(upper_id_bound, 0ull));
-    id_vec.erase(it_id, id_vec.end());
-  }
-  if (!(lower_id_bound == Id_Type()))
-  {
-    typename std::vector< Attic< Id_Type > >::iterator it_id
-        = std::lower_bound(id_vec.begin(), id_vec.end(),
-                           Attic< Id_Type >(lower_id_bound, 0ull));
-    id_vec.erase(id_vec.begin(), it_id);
-  }
-  
-  std::map< Attic< Id_Type >, std::vector< std::pair< std::string, std::string > > > found_tags;
-  
-  // Collect all id-matched tag information from the current tags
-  while ((!(current_tag_it == current_items_db.range_end())) &&
-      (((current_tag_it.index().index) & 0x7fffff00) == coarse_index))
-  {
-    typename std::vector< Attic< Id_Type > >::const_iterator it_id
-        = std::lower_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >(current_tag_it.object(), 0ull));
-    typename std::vector< Attic< Id_Type > >::const_iterator it_id_end
-        = std::upper_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >
-            (current_tag_it.object(), 0xffffffffffffffffull));
-    if (it_id != it_id_end)
-      found_tags[Attic< Id_Type >(current_tag_it.object(), 0xffffffffffffffffull)].push_back
-          (std::make_pair(current_tag_it.index().key, current_tag_it.index().value));
-    ++current_tag_it;
-  }
-  
-  // Collect all id-matched tag information that is younger than the respective timestamp from the attic tags
-  while ((!(attic_tag_it == attic_items_db.range_end())) &&
-      (((attic_tag_it.index().index) & 0x7fffff00) == coarse_index))
-  {
-    typename std::vector< Attic< Id_Type > >::const_iterator it_id
-        = std::lower_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >(attic_tag_it.object(), 0ull));
-    typename std::vector< Attic< Id_Type > >::const_iterator it_id_end
-        = std::upper_bound(id_vec.begin(), id_vec.end(), attic_tag_it.object());
-    if (it_id != it_id_end)
-      found_tags[attic_tag_it.object()].push_back
-          (std::make_pair(attic_tag_it.index().key, attic_tag_it.index().value));
-    ++attic_tag_it;
-  }
-  
-  // Actually take for each object and key of the multiple versions only the oldest valid version
-  for (typename std::map< Attic< Id_Type >, std::vector< std::pair< std::string, std::string > > >
-          ::const_iterator
-      it = found_tags.begin(); it != found_tags.end(); ++it)
-  {
-    typename std::vector< Attic< Id_Type > >::const_iterator it_id
-        = std::lower_bound(id_vec.begin(), id_vec.end(), Attic< Id_Type >(it->first, 0ull));
-    typename std::vector< Attic< Id_Type > >::const_iterator it_id_end
-        = std::upper_bound(id_vec.begin(), id_vec.end(), it->first);
-    while (it_id != it_id_end)
-    {
-      std::vector< std::pair< std::string, std::string > >& obj_vec = tags_by_id[*it_id];
-      std::vector< std::pair< std::string, std::string > >::const_iterator last_added_it = it->second.end();
-      for (std::vector< std::pair< std::string, std::string > >::const_iterator
-          it_source = it->second.begin(); it_source != it->second.end(); ++it_source)
-      {
-        if (last_added_it != it->second.end())
-        {
-          if (last_added_it->first == it_source->first)
-          {
-            obj_vec.push_back(*it_source);
-            continue;
-          }
-          else
-            last_added_it = it->second.end();
-        }
-        
-        std::vector< std::pair< std::string, std::string > >::const_iterator it_obj = obj_vec.begin();
-        for (; it_obj != obj_vec.end(); ++it_obj)
-        {
-          if (it_obj->first == it_source->first)
-            break;
-        }
-        if (it_obj == obj_vec.end())
-        {
-          obj_vec.push_back(*it_source);
-          last_added_it = it_source;
-        }
-      }
-      ++it_id;
-    }
-  }
-  
-  // Remove empty tags. They are placeholders for tags added later than each timestamp in question.
-  for (typename std::map< Id_Type, std::vector< std::pair< std::string, std::string > > >
-          ::iterator
-      it_obj = tags_by_id.begin(); it_obj != tags_by_id.end(); ++it_obj)
-  {
-    for (typename std::vector< std::pair< std::string, std::string > >::size_type
-        i = 0; i < it_obj->second.size(); )
-    {
-      if (it_obj->second[i].second == void_tag_value())
-      {
-        it_obj->second[i] = it_obj->second.back();
-        it_obj->second.pop_back();
-      }
-      else
-        ++i;
-    }
-  }
-}
-
-
-template< class Id_Type >
-void collect_tags_framed
-  (std::map< Id_Type, std::vector< std::pair< std::string, std::string > > >& tags_by_id,
-   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
-   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
-   std::map< uint32, std::vector< Id_Type > >& ids_by_coarse,
-   uint32 coarse_index,
-   Id_Type lower_id_bound, Id_Type upper_id_bound)
-{
-  while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
-  {
-    if (!(tag_it.object() < lower_id_bound) &&
-      (tag_it.object() < upper_id_bound) &&
-      (binary_search(ids_by_coarse[coarse_index].begin(),
-	ids_by_coarse[coarse_index].end(), tag_it.object())))
-      tags_by_id[tag_it.object()].push_back
-          (std::make_pair(tag_it.index().key, tag_it.index().value));
-    ++tag_it;
-  }
-}
-
-
 template< class TIndex, class TObject >
 void quadtile
     (const std::map< TIndex, std::vector< TObject > >& items, Print_Target& target,
@@ -822,32 +677,6 @@ struct Skeleton_Comparator_By_Id {
   }
 };
 
-template< class TIndex, class TObject >
-void by_id
-  (const std::map< TIndex, std::vector< TObject > >& items, Print_Target& target,
-   Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
-{
-  // order relevant elements by id
-  std::vector< std::pair< const TObject*, uint32 > > items_by_id;
-  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
-    it(items.begin()); it != items.end(); ++it)
-  {
-    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      items_by_id.push_back(std::make_pair(&(*it2), it->first.val()));
-  }
-  sort(items_by_id.begin(), items_by_id.end(),
-       Skeleton_Comparator_By_Id< TObject >());
-  
-  // iterate over the result
-  for (uint32 i(0); i < items_by_id.size(); ++i)
-  {
-    if (++element_count > limit)
-      return;
-    stmt.print_item(target, items_by_id[i].second, *(items_by_id[i].first));
-  }
-}
-
 
 template< typename Index, typename Object >
 struct Maybe_Attic_Ref
@@ -864,30 +693,77 @@ public:
 };
 
 
-template< class TIndex, class TObject >
+template< class Index, class Object >
+std::vector< std::pair< const Object*, uint32 > > collect_items_by_id(
+    const std::map< Index, std::vector< Object > >& items)
+{
+  std::vector< std::pair< const Object*, uint32 > > items_by_id;
+  
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
+    it(items.begin()); it != items.end(); ++it)
+  {
+    for (typename std::vector< Object >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(std::make_pair(&(*it2), it->first.val()));
+  }
+  sort(items_by_id.begin(), items_by_id.end(),
+       Skeleton_Comparator_By_Id< Object >());
+  
+  return items_by_id;
+}
+
+
+template< class Index, class Object >
+std::vector< Maybe_Attic_Ref< Index, Object > > collect_items_by_id(
+    const std::map< Index, std::vector< Object > >& items,
+    const std::map< Index, std::vector< Attic< Object > > >& attic_items)
+{
+  std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id;
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
+      it(items.begin()); it != items.end(); ++it)
+  {
+    for (typename std::vector< Object >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(Maybe_Attic_Ref< Index, Object >(it->first, &(*it2), NOW));
+  }
+  for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
+      it(attic_items.begin()); it != attic_items.end(); ++it)
+  {
+    for (typename std::vector< Attic< Object > >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      items_by_id.push_back(Maybe_Attic_Ref< Index, Object >(it->first, &(*it2), it2->timestamp));
+  }
+  sort(items_by_id.begin(), items_by_id.end());
+  
+  return items_by_id;
+}
+
+
+template< class Index, class Object >
 void by_id
-  (const std::map< TIndex, std::vector< TObject > >& items,
-   const std::map< TIndex, std::vector< Attic< TObject > > >& attic_items,
+  (const std::map< Index, std::vector< Object > >& items, Print_Target& target,
+   Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
+{
+  std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
+  
+  // iterate over the result
+  for (uint32 i(0); i < items_by_id.size(); ++i)
+  {
+    if (++element_count > limit)
+      return;
+    stmt.print_item(target, items_by_id[i].second, *(items_by_id[i].first));
+  }
+}
+
+
+template< class Index, class Object >
+void by_id
+  (const std::map< Index, std::vector< Object > >& items,
+   const std::map< Index, std::vector< Attic< Object > > >& attic_items,
    Print_Target& target,
    Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
 {
-  // order relevant elements by id
-  std::vector< Maybe_Attic_Ref< TIndex, TObject > > items_by_id;
-  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
-      it(items.begin()); it != items.end(); ++it)
-  {
-    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      items_by_id.push_back(Maybe_Attic_Ref< TIndex, TObject >(it->first, &(*it2), NOW));
-  }
-  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator
-      it(attic_items.begin()); it != attic_items.end(); ++it)
-  {
-    for (typename std::vector< Attic< TObject > >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      items_by_id.push_back(Maybe_Attic_Ref< TIndex, TObject >(it->first, &(*it2), it2->timestamp));
-  }
-  sort(items_by_id.begin(), items_by_id.end());
+  std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(items, attic_items);
   
   // iterate over the result
   for (uint32 i(0); i < items_by_id.size(); ++i)
@@ -898,26 +774,26 @@ void by_id
       stmt.print_item(target, items_by_id[i].idx.val(), *items_by_id[i].obj);
     else
       stmt.print_item(target, items_by_id[i].idx.val(),
-		      Attic< TObject >(*items_by_id[i].obj, items_by_id[i].timestamp));
+		      Attic< Object >(*items_by_id[i].obj, items_by_id[i].timestamp));
   }
 }
 
 
-template< class TIndex, class TObject >
-void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >& metadata,
-		      const std::map< TIndex, std::vector< TObject > >& items,
-		      typename TObject::Id_Type lower_id_bound, typename TObject::Id_Type upper_id_bound,
-		      Meta_Collector< TIndex, typename TObject::Id_Type >& meta_printer)
+template< class Index, class Object >
+void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >& metadata,
+		      const std::map< Index, std::vector< Object > >& items,
+		      typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound,
+		      Meta_Collector< Index, typename Object::Id_Type >& meta_printer)
 {
-  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
       it(items.begin()); it != items.end(); ++it)
   {
-    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
+    for (typename std::vector< Object >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
     {
       if (!(it2->id < lower_id_bound) && (it2->id < upper_id_bound))
       {
-	const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta
+	const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
 	    = meta_printer.get(it->first, it2->id);
 	if (meta)
 	  metadata.insert(*meta);
@@ -927,22 +803,22 @@ void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_T
 }
 
 
-template< class TIndex, class TObject >
-void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_Type > >& metadata,
-                      const std::map< TIndex, std::vector< Attic< TObject > > >& items,
-                      typename TObject::Id_Type lower_id_bound, typename TObject::Id_Type upper_id_bound,
-                      Meta_Collector< TIndex, typename TObject::Id_Type >& current_meta_printer,
-                      Meta_Collector< TIndex, typename TObject::Id_Type >& attic_meta_printer)
+template< class Index, class Object >
+void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >& metadata,
+                      const std::map< Index, std::vector< Attic< Object > > >& items,
+                      typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound,
+                      Meta_Collector< Index, typename Object::Id_Type >& current_meta_printer,
+                      Meta_Collector< Index, typename Object::Id_Type >& attic_meta_printer)
 {
-  for (typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator
+  for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       it(items.begin()); it != items.end(); ++it)
   {
-    for (typename std::vector< Attic< TObject > >::const_iterator it2(it->second.begin());
+    for (typename std::vector< Attic< Object > >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
     {
       if (!(it2->id < lower_id_bound) && (it2->id < upper_id_bound))
       {
-        const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta
+        const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
             = current_meta_printer.get(it->first, it2->id, it2->timestamp);
         if (!meta || !(meta->timestamp < it2->timestamp))
           meta = attic_meta_printer.get(it->first, it2->id, it2->timestamp);
@@ -954,105 +830,21 @@ void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename TObject::Id_T
 }
 
 
-template< typename Index, typename Object >
-class Tag_Store
+template< typename Id_Type >
+typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
+    find_matching_metadata
+    (const set< OSM_Element_Metadata_Skeleton< Id_Type > >& metadata,
+     Id_Type ref, uint64 timestamp)
 {
-public:
-  Tag_Store(const std::map< Index, std::vector< Object > >& elems,
-		     Transaction& transaction,
-		     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound);
-  Tag_Store(const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-		     Transaction& transaction,
-		     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound);
-  
-  const std::vector< std::pair< std::string, std::string > >* get_tags(const Object& elem) const;
-  
-private:
-  std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > > tags_by_id;
-};
-
-
-template< typename Index, typename Object >
-Tag_Store< Index, Object >::Tag_Store(const std::map< Index, std::vector< Object > >& elems,
-		     Transaction& transaction,
-		     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound)
-{
-  //generate set of relevant coarse indices
-  set< Index > coarse_indices;
-  std::map< uint32, std::vector< typename Object::Id_Type > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, elems);
-  
-  //formulate range query
-  set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
-  
-  for (typename set< Index >::const_iterator
-      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
-  
-  Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
-      (transaction.data_index(current_local_tags_file_properties< Object >()));
-      
-  typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
-      tag_it(items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-  for (typename set< Index >::const_iterator
-      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
-    collect_tags_framed< typename Object::Id_Type >(tags_by_id, items_db, tag_it, ids_by_coarse, it->val(),
-		  lower_id_bound, upper_id_bound);
-}
-
-
-template< typename Index, typename Object >
-Tag_Store< Index, Object >::Tag_Store(const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-		    Transaction& transaction,
-		    typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound)
-{
-  //generate set of relevant coarse indices
-  std::set< Index > attic_coarse_indices;
-  std::map< uint32, std::vector< Attic< typename Object::Id_Type > > > attic_ids_by_coarse;
-  generate_ids_by_coarse(attic_coarse_indices, attic_ids_by_coarse, attic_items);
-  
-  //formulate range query
-  set< std::pair< Tag_Index_Local, Tag_Index_Local > > attic_range_set;
-  formulate_range_query(attic_range_set, attic_coarse_indices);
-  
-  for (typename set< Index >::const_iterator
-      it(attic_coarse_indices.begin()); it != attic_coarse_indices.end(); ++it)
-    sort(attic_ids_by_coarse[it->val()].begin(), attic_ids_by_coarse[it->val()].end());
-  
-  Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
-      (transaction.data_index(current_local_tags_file_properties< Object >()));
-  Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > > attic_tags_db
-      (transaction.data_index(attic_local_tags_file_properties< Object >()));
-      
-  typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
-      current_tag_it(current_tags_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(attic_range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(attic_range_set.end())));
-  typename Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > >::Range_Iterator
-      attic_tag_it(attic_tags_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(attic_range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(attic_range_set.end())));
-  for (typename set< Index >::const_iterator
-      it(attic_coarse_indices.begin()); it != attic_coarse_indices.end(); ++it)
-    collect_attic_tags(tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
-               attic_ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);
-}
-
-
-template< typename Index, typename Object >
-const std::vector< std::pair< std::string, std::string > >*
-    Tag_Store< Index, Object >::get_tags(const Object& elem) const
-{
-  typename std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > >::const_iterator
-      it = tags_by_id.find(elem.id);
-      
-  if (it != tags_by_id.end())
-    return &it->second;
+  typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
+      = metadata.lower_bound(OSM_Element_Metadata_Skeleton< Id_Type >(ref, timestamp));
+  if (it == metadata.begin())
+    return metadata.end();
+  --it;
+  if (it->ref == ref)
+    return it;
   else
-    return 0;
+    return metadata.end();
 }
 
 
@@ -1063,17 +855,7 @@ void Print_Statement::tags_by_id
    Resource_Manager& rman, Transaction& transaction,
    const File_Properties* meta_file_prop, uint32& element_count)
 {
-  // order relevant elements by id
-  std::vector< std::pair< const Object*, uint32 > > items_by_id;
-  for (typename std::map< Index, std::vector< Object > >::const_iterator
-    it(items.begin()); it != items.end(); ++it)
-  {
-    for (typename std::vector< Object >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      items_by_id.push_back(std::make_pair(&(*it2), it->first.val()));
-  }
-  sort(items_by_id.begin(), items_by_id.end(),
-       Skeleton_Comparator_By_Id< Object >());
+  std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction, meta_file_prop);
@@ -1119,24 +901,6 @@ void Print_Statement::tags_by_id
 }
 
 
-template< typename Id_Type >
-typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
-    find_matching_metadata
-    (const set< OSM_Element_Metadata_Skeleton< Id_Type > >& metadata,
-     Id_Type ref, uint64 timestamp)
-{
-  typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
-      = metadata.lower_bound(OSM_Element_Metadata_Skeleton< Id_Type >(ref, timestamp));
-  if (it == metadata.begin())
-    return metadata.end();
-  --it;
-  if (it->ref == ref)
-    return it;
-  else
-    return metadata.end();
-}
-
-
 template< class Index, class Object >
 void Print_Statement::tags_by_id_attic
   (const std::map< Index, std::vector< Object > >& current_items,
@@ -1146,23 +910,7 @@ void Print_Statement::tags_by_id_attic
    const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
    uint32& element_count)
 {
-  // order relevant elements by id
-  std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id;
-  for (typename std::map< Index, std::vector< Object > >::const_iterator
-      it(current_items.begin()); it != current_items.end(); ++it)
-  {
-    for (typename std::vector< Object >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      items_by_id.push_back(Maybe_Attic_Ref< Index, Object >(it->first, &(*it2), NOW));
-  }
-  for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
-      it(attic_items.begin()); it != attic_items.end(); ++it)
-  {
-    for (typename std::vector< Attic< Object > >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      items_by_id.push_back(Maybe_Attic_Ref< Index, Object >(it->first, &(*it2), it2->timestamp));
-  }
-  sort(items_by_id.begin(), items_by_id.end());
+  std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(current_items, attic_items);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
