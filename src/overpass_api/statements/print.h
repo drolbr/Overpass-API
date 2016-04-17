@@ -108,6 +108,8 @@ class Print_Statement : public Statement
     double west;
     double east;
 
+    void execute_comparison(Resource_Manager& rman);
+    
     template< class Index, class Object >
     void tags_quadtile
       (const map< Index, vector< Object > >& items,
