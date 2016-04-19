@@ -30,8 +30,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -43,7 +45,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 int main(int argc, char *argv[])
 {  
@@ -268,6 +269,14 @@ int main(int argc, char *argv[])
   catch(Exit_Error e)
   {
     return 3;
+  }
+  catch(std::bad_alloc& e)
+  {
+    rlimit limit;
+    getrlimit(RLIMIT_AS, &limit);
+    ostringstream temp;
+    temp<<"Query run out of memory using about "<<limit.rlim_cur/(1024*1024)<<" MB of RAM.";
+    error_output->runtime_error(temp.str());
   }
   catch(std::exception& e)
   {
