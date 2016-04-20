@@ -112,32 +112,26 @@ class Print_Statement : public Statement
     void tags_quadtile
       (const map< Index, vector< Object > >& items,
        const File_Properties& file_prop, Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* meta_file_prop, uint32& element_count);
+       Resource_Manager& rman, Transaction& transaction, uint32& element_count);
     
     template< class Index, class Object >
     void tags_quadtile_attic
       (const map< Index, vector< Attic< Object > > >& items,
        Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
-       uint32& element_count);
+       Resource_Manager& rman, Transaction& transaction, uint32& element_count);
     
     template< class TIndex, class TObject >
     void tags_by_id
       (const map< TIndex, vector< TObject > >& items,
        uint32 FLUSH_SIZE, Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* meta_file_prop, uint32& element_count);
+       Resource_Manager& rman, Transaction& transaction, uint32& element_count);
     
     template< class Index, class Object >
     void tags_by_id_attic
       (const map< Index, vector< Object > >& current_items,
        const map< Index, vector< Attic< Object > > >& attic_items,
        uint32 FLUSH_SIZE, Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction,
-       const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
-       uint32& element_count);
+       Resource_Manager& rman, Transaction& transaction, uint32& element_count);
 };
 
 #endif

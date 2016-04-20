@@ -501,8 +501,7 @@ template< class Index, class Object >
 void Print_Statement::tags_quadtile
     (const std::map< Index, std::vector< Object > >& items,
      const File_Properties& file_prop, Print_Target& target,
-     Resource_Manager& rman, Transaction& transaction,
-     const File_Properties* meta_file_prop, uint32& element_count)
+     Resource_Manager& rman, Transaction& transaction, uint32& element_count)
 {
   //generate set of relevant coarse indices
   set< Index > coarse_indices;
@@ -514,7 +513,8 @@ void Print_Statement::tags_quadtile
   formulate_range_query(range_set, coarse_indices);
   
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction, meta_file_prop);
+  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
+      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
@@ -564,9 +564,7 @@ template< class Index, class Object >
 void Print_Statement::tags_quadtile_attic
     (const std::map< Index, std::vector< Attic< Object > > >& items,
      Print_Target& target,
-     Resource_Manager& rman, Transaction& transaction,
-     const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
-     uint32& element_count)
+     Resource_Manager& rman, Transaction& transaction, uint32& element_count)
 {
   //generate set of relevant coarse indices
   set< Index > coarse_indices;
@@ -579,9 +577,11 @@ void Print_Statement::tags_quadtile_attic
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, transaction, current_meta_file_prop);
+      (items, transaction, 
+      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, transaction, attic_meta_file_prop);
+      (items, transaction, 
+      (mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
@@ -826,13 +826,13 @@ template< class Index, class Object >
 void Print_Statement::tags_by_id
   (const std::map< Index, std::vector< Object > >& items,
    uint32 FLUSH_SIZE, Print_Target& target,
-   Resource_Manager& rman, Transaction& transaction,
-   const File_Properties* meta_file_prop, uint32& element_count)
+   Resource_Manager& rman, Transaction& transaction, uint32& element_count)
 {
   std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
   
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction, meta_file_prop);
+  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
+      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   
   // iterate over the result
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
@@ -880,20 +880,21 @@ void Print_Statement::tags_by_id_attic
   (const std::map< Index, std::vector< Object > >& current_items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
    uint32 FLUSH_SIZE, Print_Target& target,
-   Resource_Manager& rman, Transaction& transaction,
-   const File_Properties* current_meta_file_prop, const File_Properties* attic_meta_file_prop,
-   uint32& element_count)
+   Resource_Manager& rman, Transaction& transaction, uint32& element_count)
 {
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(current_items, attic_items);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
-      (current_items, transaction, current_meta_file_prop);
+      (current_items, transaction, 
+      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (attic_items, transaction, current_meta_file_prop);
+      (attic_items, transaction, 
+      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (attic_items, transaction, attic_meta_file_prop);
+      (attic_items, transaction, 
+      (mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
       
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
@@ -1649,88 +1650,58 @@ void Print_Statement::execute(Resource_Manager& rman)
     {
       if (rman.get_desired_timestamp() == NOW)
         tags_by_id(mit->second.nodes, NODE_FLUSH_SIZE, output_target, rman,
-		  *rman.get_transaction(),
-		  (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
-		  element_count);
+		  *rman.get_transaction(), element_count);
       else
         tags_by_id_attic(mit->second.nodes, mit->second.attic_nodes,
                    NODE_FLUSH_SIZE, output_target, rman,
-                   *rman.get_transaction(),
-                   (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
-                   (mode & Print_Target::PRINT_META) ? attic_settings().NODES_META : 0,
-                   element_count);
+                   *rman.get_transaction(), element_count);
       
       if (rman.get_desired_timestamp() == NOW)
         tags_by_id(mit->second.ways, WAY_FLUSH_SIZE, output_target, rman,
-		  *rman.get_transaction(),
-		  (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
-		  element_count);
+		  *rman.get_transaction(), element_count);
       else
         tags_by_id_attic(mit->second.ways, mit->second.attic_ways,
                    WAY_FLUSH_SIZE, output_target, rman,
-                   *rman.get_transaction(),
-                   (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
-                   (mode & Print_Target::PRINT_META) ? attic_settings().WAYS_META : 0,
-                   element_count);
+                   *rman.get_transaction(), element_count);
       
       if (rman.get_desired_timestamp() == NOW)
         tags_by_id(mit->second.relations, RELATION_FLUSH_SIZE, output_target, rman,
-		  *rman.get_transaction(),
-		  (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
-		  element_count);
+		  *rman.get_transaction(), element_count);
       else
         tags_by_id_attic(mit->second.relations, mit->second.attic_relations,
                    RELATION_FLUSH_SIZE, output_target, rman,
-                   *rman.get_transaction(),
-                   (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
-                   (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
-                   element_count);
+                   *rman.get_transaction(), element_count);
       
       if (rman.get_area_transaction())
 	tags_by_id(mit->second.areas, AREA_FLUSH_SIZE, output_target, rman,
-		   *rman.get_area_transaction(), 0, element_count);
+		   *rman.get_area_transaction(), element_count);
     }
     else
     {
       tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		    output_target, rman, *rman.get_transaction(),
-		    (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
-                    element_count);
+		    output_target, rman, *rman.get_transaction(), element_count);
       
       if (rman.get_desired_timestamp() != NOW)
         tags_quadtile_attic(mit->second.attic_nodes,
-                      output_target, rman, *rman.get_transaction(),
-                      (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
-                      (mode & Print_Target::PRINT_META) ? attic_settings().NODES_META : 0,
-                      element_count);
+                      output_target, rman, *rman.get_transaction(), element_count);
       
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		    output_target, rman, *rman.get_transaction(),
-		    (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
-                    element_count);
+		    output_target, rman, *rman.get_transaction(), element_count);
       
       if (rman.get_desired_timestamp() != NOW)
         tags_quadtile_attic(mit->second.attic_ways,
-                      output_target, rman, *rman.get_transaction(),
-                      (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
-                      (mode & Print_Target::PRINT_META) ? attic_settings().WAYS_META : 0,
-                      element_count);
+                      output_target, rman, *rman.get_transaction(), element_count);
       
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		    output_target, rman, *rman.get_transaction(),
-		    (mode & Print_Target::PRINT_META) ?
-		        meta_settings().RELATIONS_META : 0, element_count);
+		    output_target, rman, *rman.get_transaction(), element_count);
       
       if (rman.get_desired_timestamp() != NOW)
         tags_quadtile_attic(mit->second.attic_relations,
-                      output_target, rman, *rman.get_transaction(),
-                      (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
-                      (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
-                      element_count);
+                      output_target, rman, *rman.get_transaction(), element_count);
       
       if (rman.get_area_transaction())
         tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		      output_target, rman, *rman.get_area_transaction(), 0, element_count);
+		      output_target, rman, *rman.get_area_transaction(), element_count);
     }
   }
   else if (mode & Print_Target::PRINT_COUNT)
@@ -2487,46 +2458,31 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
         (collection_mode == collect_rhs ? new User_Data_Cache(*rman.get_transaction()) : 0);
   
     tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		    *target, rman, *rman.get_transaction(),
-		    (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
-                    element_count);
+		    *target, rman, *rman.get_transaction(), element_count);
       
     if (rman.get_desired_timestamp() != NOW)
       tags_quadtile_attic(mit->second.attic_nodes,
-                      *target, rman, *rman.get_transaction(),
-                      (mode & Print_Target::PRINT_META) ? meta_settings().NODES_META : 0,
-                      (mode & Print_Target::PRINT_META) ? attic_settings().NODES_META : 0,
-                      element_count);
+                      *target, rman, *rman.get_transaction(), element_count);
       
     if (collection_mode == collect_rhs)
       collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
       
     tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		    *target, rman, *rman.get_transaction(),
-		    (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
-                    element_count);
+		    *target, rman, *rman.get_transaction(), element_count);
       
     if (rman.get_desired_timestamp() != NOW)
       tags_quadtile_attic(mit->second.attic_ways,
-                      *target, rman, *rman.get_transaction(),
-                      (mode & Print_Target::PRINT_META) ? meta_settings().WAYS_META : 0,
-                      (mode & Print_Target::PRINT_META) ? attic_settings().WAYS_META : 0,
-                      element_count);
+                      *target, rman, *rman.get_transaction(), element_count);
       
     if (collection_mode == collect_rhs)
       collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
       
     tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		    *target, rman, *rman.get_transaction(),
-		    (mode & Print_Target::PRINT_META) ?
-		        meta_settings().RELATIONS_META : 0, element_count);
+		    *target, rman, *rman.get_transaction(), element_count);
       
     if (rman.get_desired_timestamp() != NOW)
       tags_quadtile_attic(mit->second.attic_relations,
-                      *target, rman, *rman.get_transaction(),
-                      (mode & Print_Target::PRINT_META) ? meta_settings().RELATIONS_META : 0,
-                      (mode & Print_Target::PRINT_META) ? attic_settings().RELATIONS_META : 0,
-                      element_count);
+                      *target, rman, *rman.get_transaction(), element_count);
       
     if (collection_mode == collect_rhs)
       collection_print_target->clear_relations(rman, &user_data_cache->users(), add_deletion_information);
