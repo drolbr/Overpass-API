@@ -1579,6 +1579,25 @@ std::string to_string(T t)
 }
 
 
+std::vector< std::pair< std::string, std::string > > make_count_tags(const Set& set, bool include_areas)
+{    
+  unsigned int num_nodes = count(set.nodes) + count(set.attic_nodes);
+  unsigned int num_ways = count(set.ways) + count(set.attic_ways);
+  unsigned int num_relations = count(set.relations) + count(set.attic_relations);
+  unsigned int num_areas = include_areas ? count(set.areas) : 0;   
+    
+  std::vector< std::pair< std::string, std::string > > count_tags;
+  count_tags.push_back(std::make_pair("nodes", to_string(num_nodes)));
+  count_tags.push_back(std::make_pair("ways", to_string(num_ways)));
+  count_tags.push_back(std::make_pair("relations", to_string(num_relations)));    
+  if (include_areas)
+    count_tags.push_back(std::make_pair("areas", to_string(num_areas)));
+  count_tags.push_back(std::make_pair("total", to_string(num_nodes + num_ways + num_relations + num_areas)));
+    
+  return count_tags;
+}
+
+
 void Print_Statement::execute(Resource_Manager& rman)
 {
   if (collection_mode != dont_collect)
@@ -1716,22 +1735,8 @@ void Print_Statement::execute(Resource_Manager& rman)
   }
   else if (mode & Print_Target::PRINT_COUNT)
   {
-    std::vector< std::pair< std::string, std::string > > count_tags;
-    
-    unsigned int num_nodes = count(mit->second.nodes) + count(mit->second.attic_nodes);
-    unsigned int num_ways = count(mit->second.ways) + count(mit->second.attic_ways);
-    unsigned int num_relations = count(mit->second.relations) + count(mit->second.attic_relations);
-    unsigned int num_areas = rman.get_area_transaction() ? count(mit->second.areas) : 0;
-    
-    unsigned int total = num_nodes + num_ways + num_relations;
-    
-    count_tags.push_back(std::make_pair("nodes", to_string(num_nodes)));
-    count_tags.push_back(std::make_pair("ways", to_string(num_ways)));
-    count_tags.push_back(std::make_pair("relations", to_string(num_relations)));    
-    if (rman.get_area_transaction())
-      count_tags.push_back(std::make_pair("areas", to_string(num_areas)));
-    count_tags.push_back(std::make_pair("total", to_string(total)));
-    
+    std::vector< std::pair< std::string, std::string > > count_tags
+        = make_count_tags(mit->second, rman.get_area_transaction());
     Derived_Skeleton derived("count", Uint64(0ull));
     rman.get_global_settings().get_output_handler()->print_item(
         derived, Null_Geometry(), &count_tags, Output_Mode(mode));
