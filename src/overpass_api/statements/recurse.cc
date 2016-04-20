@@ -28,6 +28,7 @@
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
+#include "../data/utils.h"
 #include "recurse.h"
 
 using namespace std;
@@ -1044,27 +1045,16 @@ void collect_relations(const Statement& query, Resource_Manager& rman,
 }
 
 
-template< typename Skeleton >
-uint count_relations(const map< Uint31_Index, vector< Skeleton > >& relations)
-{
-  uint result = 0;
-  for (typename map< Uint31_Index, vector< Skeleton > >::const_iterator it = relations.begin();
-      it != relations.end(); ++it)
-    result += it->second.size();
-  return result;
-}
-
-
 void relations_loop(const Statement& query, Resource_Manager& rman,
 		    map< Uint31_Index, vector< Relation_Skeleton > > source,
 		    map< Uint31_Index, vector< Relation_Skeleton > >& result)
 {
-  uint old_rel_count = count_relations(source);
+  uint old_rel_count = count(source);
   while (true)
   {
     result = relation_relation_members(query, rman, source);
     indexed_set_union(result, source);
-    uint new_rel_count = count_relations(result);
+    uint new_rel_count = count(result);
     if (new_rel_count == old_rel_count)
       return;
     old_rel_count = new_rel_count;
@@ -1080,7 +1070,7 @@ void relations_loop(const Statement& query, Resource_Manager& rman,
                     map< Uint31_Index, vector< Relation_Skeleton > >& result,
                     map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_result)
 {
-  uint old_rel_count = count_relations(source) + count_relations(attic_source);
+  uint old_rel_count = count(source) + count(attic_source);
   while (true)
   {
     std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
@@ -1089,7 +1079,7 @@ void relations_loop(const Statement& query, Resource_Manager& rman,
     indexed_set_union(result_pair.first, source);
     indexed_set_union(result_pair.second, attic_source);
     keep_matching_skeletons(result_pair.first, result_pair.second, timestamp);
-    uint new_rel_count = count_relations(result_pair.first) + count_relations(result_pair.second);
+    uint new_rel_count = count(result_pair.first) + count(result_pair.second);
     if (new_rel_count == old_rel_count)
     {
       result.swap(result_pair.first);
@@ -1107,13 +1097,13 @@ void relations_up_loop(const Statement& query, Resource_Manager& rman,
 		    map< Uint31_Index, vector< Relation_Skeleton > > source,
 		    map< Uint31_Index, vector< Relation_Skeleton > >& result)
 {
-  uint old_rel_count = count_relations(source);
+  uint old_rel_count = count(source);
   while (true)
   {
     result.clear();
     collect_relations(query, rman, source, result);
     indexed_set_union(result, source);
-    uint new_rel_count = count_relations(result);
+    uint new_rel_count = count(result);
     if (new_rel_count == old_rel_count)
       return;
     old_rel_count = new_rel_count;
@@ -1129,7 +1119,7 @@ void relations_up_loop(const Statement& query, Resource_Manager& rman,
                     map< Uint31_Index, vector< Relation_Skeleton > >& result,
                     map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& attic_result)
 {
-  uint old_rel_count = count_relations(source) + count_relations(attic_source);
+  uint old_rel_count = count(source) + count(attic_source);
   while (true)
   {
     result.clear();
@@ -1138,7 +1128,7 @@ void relations_up_loop(const Statement& query, Resource_Manager& rman,
     indexed_set_union(result, source);
     indexed_set_union(attic_result, attic_source);
     keep_matching_skeletons(result, attic_result, timestamp);
-    uint new_rel_count = count_relations(result) + count_relations(attic_result);
+    uint new_rel_count = count(result) + count(attic_result);
     if (new_rel_count == old_rel_count)
       return;
     old_rel_count = new_rel_count;

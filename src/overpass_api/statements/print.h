@@ -84,8 +84,6 @@ class Print_Statement : public Statement
                     const vector< pair< string, string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
                     const map< uint32, string >* users = 0);
-
-    void print_item_count(Print_Target& target, const Output_Item_Count & item_count);
     
     void set_collect_lhs();
     void set_collect_rhs(bool add_deletion_information);
@@ -108,7 +106,7 @@ class Print_Statement : public Statement
     double west;
     double east;
 
-    void execute_comparison(Resource_Manager& rman);
+    virtual void execute_comparison(Resource_Manager& rman);
     
     template< class Index, class Object >
     void tags_quadtile

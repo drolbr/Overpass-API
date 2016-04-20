@@ -268,5 +268,12 @@ void Output_JSON::print_item(const Derived_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode)
 {
-  //TODO
+  handle_first_elem(first_elem);  
+  std::cout<<"{\n"
+        "  \"type\": \""<<skel.type_name<<"\"";
+  if (mode.mode & Output_Mode::ID)
+    std::cout<<",\n  \"id\": "<<skel.id.val();
+  
+  print_tags(tags);  
+  std::cout<<"\n}";
 }

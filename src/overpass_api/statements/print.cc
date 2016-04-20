@@ -20,6 +20,7 @@
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
 #include "../data/tag_store.h"
+#include "../data/utils.h"
 #include "../data/way_geometry_store.h"
 #include "meta_collector.h"
 #include "print.h"
@@ -79,8 +80,6 @@ class Print_Target
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0,
 			    const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
-
-    //TODO virtual void print_item_count(const Output_Item_Count& item_count) = 0;
 
     //TODO: remove. Replaced by Output_Mode
     static const unsigned int PRINT_IDS = 1;
@@ -453,31 +452,6 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Ar
                     const std::map< uint32, std::string >* users)
 {
   target.print_item(ll_upper, skel, tags, meta, users);
-}
-
-
-void Print_Statement::print_item_count(Print_Target& target, const Output_Item_Count & item_count)
-{
-  //TODO target.print_item_count(item_count);
-}
-
-
-template< class TIndex, class TObject >
-uint32 count_items
-    (const std::map< TIndex, std::vector< TObject > >& items, Print_Target& target,
-     Transaction& transaction, Print_Statement& stmt)
-{
-  uint32 item_count = 0;
-  typename std::map<TIndex, std::vector<TObject> >::const_iterator item_it(items.begin());
-
-  while (item_it != items.end())
-  {
-    for (typename std::vector<TObject>::const_iterator it2(item_it->second.begin());
-        it2 != item_it->second.end(); ++it2)
-      item_count++;
-    ++item_it;
-  }
-  return item_count;
 }
 
 
@@ -1596,6 +1570,15 @@ struct Optional
 };
 
 
+template < typename T >
+std::string to_string(T t)
+{
+  std::ostringstream out;
+  out<<t;
+  return out.str();
+}
+
+
 void Print_Statement::execute(Resource_Manager& rman)
 {
   if (collection_mode != dont_collect)
@@ -1733,18 +1716,25 @@ void Print_Statement::execute(Resource_Manager& rman)
   }
   else if (mode & Print_Target::PRINT_COUNT)
   {
-    Output_Item_Count item_count;
-
-    item_count.nodes = count_items(mit->second.nodes, output_target, *rman.get_transaction(), *this);
-    item_count.nodes += count_items(mit->second.attic_nodes, output_target, *rman.get_transaction(), *this);
-    item_count.ways = count_items(mit->second.ways, output_target, *rman.get_transaction(), *this);
-    item_count.ways += count_items(mit->second.attic_ways, output_target, *rman.get_transaction(), *this);
-    item_count.relations = count_items(mit->second.relations, output_target, *rman.get_transaction(), *this);
-    item_count.relations += count_items(mit->second.attic_relations, output_target, *rman.get_transaction(), *this);
-    item_count.areas = rman.get_area_transaction() ?
-                            count_items(mit->second.areas, output_target, *rman.get_area_transaction(), *this) : 0;
-    item_count.total = item_count.nodes + item_count.ways + item_count.relations + item_count.areas;
-    print_item_count(output_target, item_count);
+    std::vector< std::pair< std::string, std::string > > count_tags;
+    
+    unsigned int num_nodes = count(mit->second.nodes) + count(mit->second.attic_nodes);
+    unsigned int num_ways = count(mit->second.ways) + count(mit->second.attic_ways);
+    unsigned int num_relations = count(mit->second.relations) + count(mit->second.attic_relations);
+    unsigned int num_areas = rman.get_area_transaction() ? count(mit->second.areas) : 0;
+    
+    unsigned int total = num_nodes + num_ways + num_relations;
+    
+    count_tags.push_back(std::make_pair("nodes", to_string(num_nodes)));
+    count_tags.push_back(std::make_pair("ways", to_string(num_ways)));
+    count_tags.push_back(std::make_pair("relations", to_string(num_relations)));    
+    if (rman.get_area_transaction())
+      count_tags.push_back(std::make_pair("areas", to_string(num_areas)));
+    count_tags.push_back(std::make_pair("total", to_string(total)));
+    
+    Derived_Skeleton derived("count", Uint64(0ull));
+    rman.get_global_settings().get_output_handler()->print_item(
+        derived, Null_Geometry(), &count_tags, Output_Mode(mode));
   }
   else
   {
@@ -1817,8 +1807,6 @@ class Collection_Print_Target : public Print_Target
                             const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
 			    const Output_Handler::Feature_Action& action = Output_Handler::keep);
-    
-    virtual void print_item_count(const Output_Item_Count& item_count);
 
     void set_target(Plain_Print_Target* target);
     
@@ -2429,9 +2417,6 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Area_Skeleton& s
                             const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
                             const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action) {}
                             
-
-void Collection_Print_Target::print_item_count(const Output_Item_Count & item_count) {}
-
 
 void Print_Statement::execute_comparison(Resource_Manager& rman)
 {
