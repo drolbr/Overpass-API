@@ -52,10 +52,13 @@ class Polygon_Query_Statement : public Output_Statement
       (map< Uint31_Index, vector< Way_Skeleton > >& ways,
        const Way_Geometry_Store& way_geometries,
        bool add_border, const Statement& query, Resource_Manager& rman);
+      
+    bool covers_large_area() const { return covers_large_area_; }
 
   private:
     unsigned int type;
     vector< Aligned_Segment > segments;
+    bool covers_large_area_;
     vector< Query_Constraint* > constraints;
 };
 
