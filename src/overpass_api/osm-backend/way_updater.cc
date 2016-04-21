@@ -17,6 +17,7 @@
  */
 
 #include <algorithm>
+#include <future>
 #include <map>
 #include <set>
 #include <vector>
@@ -894,26 +895,57 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   
   store_new_keys(new_data, keys, *transaction);
   
-  // Update id indexes
-  update_map_positions(new_positions, *transaction, *osm_base_settings().WAYS);
-  callback->update_ids_finished();
-  
-  // Update skeletons
-  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().WAYS);
-  callback->update_coords_finished();
-  
+  std::vector<std::future<void>> futures;
+
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+    // Update id indexes
+    update_map_positions(new_positions, *transaction, *osm_base_settings().WAYS);
+    callback->update_ids_finished();
+      }));
+
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+
+    // Update skeletons
+    update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().WAYS);
+    callback->update_coords_finished();
+      }));
+
   // Update meta
   if (meta)
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+
     update_elements(attic_meta, new_meta, *transaction, *meta_settings().WAYS_META);
+      }));
+
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+    // Update local tags
+    update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().WAY_TAGS_LOCAL);
+    callback->tags_local_finished();
+      }));
+
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+    // Update global tags
+    update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
+    callback->tags_global_finished();
+      }));
   
-  // Update local tags
-  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().WAY_TAGS_LOCAL);
-  callback->tags_local_finished();
-  
-  // Update global tags
-  update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
-  callback->tags_global_finished();
-  
+  for (auto &e : futures)
+  {
+    e.get();
+  }
+
+  futures.clear();
+
   map< uint32, vector< uint32 > > idxs_by_id;
     
   if (meta == keep_attic)
@@ -979,36 +1011,78 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     // Prepare user indices
     copy_idxs_by_id(new_attic_meta, idxs_by_id);
     
-    // Update id indexes
-    update_map_positions(new_attic_map_positions, *transaction, *attic_settings().WAYS);
-  
-    // Update id index lists
-    update_elements(existing_idx_lists, new_attic_idx_lists,
-                    *transaction, *attic_settings().WAY_IDX_LIST);
-  
-    // Add attic elements
-    update_elements(attic_skeletons_to_delete, new_attic_skeletons,
-                    *transaction, *attic_settings().WAYS);
-  
-    // Add attic elements
-    update_elements(std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >(),
-                    new_undeleted, *transaction, *attic_settings().WAYS_UNDELETED);
-  
-    // Add attic meta
-    update_elements
-        (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >(),
-         new_attic_meta, *transaction, *attic_settings().WAYS_META);
-  
-    // Update tags
-    update_elements(std::map< Tag_Index_Local, std::set< Attic < Way_Skeleton::Id_Type > > >(),
-                    new_attic_local_tags, *transaction, *attic_settings().WAY_TAGS_LOCAL);
-    update_elements(std::map< Tag_Index_Global,
-                        std::set< Attic < Tag_Object_Global< Way_Skeleton::Id_Type > > > >(),
-                    new_attic_global_tags, *transaction, *attic_settings().WAY_TAGS_GLOBAL);
-    
-    // Write changelog
-    update_elements(std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > >(), changelog,
-                    *transaction, *attic_settings().WAY_CHANGELOG);
+    std::vector<std::future<void>> futures;
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Update id indexes
+            update_map_positions(new_attic_map_positions, *transaction, *attic_settings().WAYS);
+          }));
+
+    futures.push_back(std::async(std::launch::async, [&] ()
+    {
+      // Update id index lists
+        update_elements(existing_idx_lists, new_attic_idx_lists,
+            *transaction, *attic_settings().WAY_IDX_LIST);
+      }));
+
+    futures.push_back(std::async(std::launch::async, [&] ()
+    {
+      // Add attic elements
+        update_elements(attic_skeletons_to_delete, new_attic_skeletons,
+            *transaction, *attic_settings().WAYS);
+
+      }));
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Add attic elements
+            update_elements(std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >(),
+                new_undeleted, *transaction, *attic_settings().WAYS_UNDELETED);
+          }));
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Add attic meta
+            update_elements
+            (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >(),
+                new_attic_meta, *transaction, *attic_settings().WAYS_META);
+          }));
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Update tags
+            update_elements(std::map< Tag_Index_Local, std::set< Attic < Way_Skeleton::Id_Type > > >(),
+                new_attic_local_tags, *transaction, *attic_settings().WAY_TAGS_LOCAL);
+          }));
+
+    futures.push_back(
+        std::async(std::launch::async,
+            [&] ()
+            {
+              update_elements(std::map< Tag_Index_Global,
+                  std::set< Attic < Tag_Object_Global< Way_Skeleton::Id_Type > > > >(),
+                  new_attic_global_tags, *transaction, *attic_settings().WAY_TAGS_GLOBAL);
+            }));
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Write changelog
+            update_elements(std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > >(), changelog,
+                *transaction, *attic_settings().WAY_CHANGELOG);
+          }));
+
+    for (auto &e : futures)
+    {
+      e.get();
+    }
+
+    futures.clear();
   }
       
   if (meta != only_data)
@@ -1113,15 +1187,43 @@ void Way_Updater::merge_files(const vector< string >& froms, string into)
 {
   Transaction_Collection from_transactions(false, false, db_dir, froms);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
-  ::merge_files< Uint31_Index, Way_Skeleton >
-      (from_transactions, into_transaction, *osm_base_settings().WAYS);
-  ::merge_files< Tag_Index_Local, Way::Id_Type >
-      (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
-  ::merge_files< Tag_Index_Global, Tag_Object_Global< Way::Id_Type > >
-      (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
-  if (meta)
+
+  std::vector<std::future<void>> futures;
+
+  futures.push_back(std::async(std::launch::async, [&] ()
   {
-    ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >
-        (from_transactions, into_transaction, *meta_settings().WAYS_META);
+    ::merge_files< Uint31_Index, Way_Skeleton >
+    (from_transactions, into_transaction, *osm_base_settings().WAYS);
+  }));
+
+  futures.push_back(
+      std::async(std::launch::async,
+          [&] ()
+          {
+            ::merge_files< Tag_Index_Local, Way::Id_Type >
+            (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
+          }));
+
+  futures.push_back(
+      std::async(std::launch::async,
+          [&] ()
+          {
+            ::merge_files< Tag_Index_Global, Tag_Object_Global< Way::Id_Type > >
+            (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
+          }));
+
+  if (meta)
+    futures.push_back(
+        std::async(std::launch::async,
+            [&] ()
+            {
+              ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >
+              (from_transactions, into_transaction, *meta_settings().WAYS_META);
+            }));
+
+  for (auto &e : futures)
+  {
+    e.get();
   }
+
 }

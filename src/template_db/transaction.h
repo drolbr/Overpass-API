@@ -22,7 +22,9 @@
 #include "random_file.h"
 
 #include <map>
+#include <mutex>
 #include <vector>
+
 
 
 class Transaction
@@ -56,6 +58,7 @@ class Nonsynced_Transaction : public Transaction
       random_files;
     bool writeable, use_shadow;
     std::string file_name_extension, db_dir;
+    std::mutex transaction_mutex;
 };
 
 
@@ -74,6 +77,9 @@ inline Nonsynced_Transaction::~Nonsynced_Transaction()
 
 inline void Nonsynced_Transaction::flush()
 {
+
+  std::lock_guard<std::mutex> guard(transaction_mutex);
+
   for (std::map< const File_Properties*, File_Blocks_Index_Base* >::iterator
       it = data_files.begin(); it != data_files.end(); ++it)
     delete it->second;
@@ -88,6 +94,8 @@ inline void Nonsynced_Transaction::flush()
 inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
     (const File_Properties* fp)
 { 
+  std::lock_guard<std::mutex> guard(transaction_mutex);
+
   std::map< const File_Properties*, File_Blocks_Index_Base* >::iterator
       it = data_files.find(fp);
   if (it != data_files.end())
@@ -103,6 +111,8 @@ inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
 
 inline Random_File_Index* Nonsynced_Transaction::random_index(const File_Properties* fp)
 { 
+  std::lock_guard<std::mutex> guard(transaction_mutex);
+
   std::map< const File_Properties*, Random_File_Index* >::iterator
       it = random_files.find(fp);
   if (it != random_files.end())

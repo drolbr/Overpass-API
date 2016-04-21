@@ -17,6 +17,7 @@
  */
 
 #include <algorithm>
+#include <future>
 #include <iostream>
 #include <map>
 #include <set>
@@ -1170,28 +1171,65 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   
   store_new_keys(new_data, keys, *transaction);
   
-  // Update id indexes
-  update_map_positions(new_positions, *transaction, *osm_base_settings().RELATIONS);
-  callback->update_ids_finished();
-  
-  // Update skeletons
-  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().RELATIONS);
-  callback->update_coords_finished();
-  
+  std::vector<std::future<void>> futures;
+
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+        // Update id indexes
+          update_map_positions(new_positions, *transaction, *osm_base_settings().RELATIONS);
+          callback->update_ids_finished();
+
+        }));
+
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+        // Update skeletons
+          update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().RELATIONS);
+          callback->update_coords_finished();
+
+        }));
+
   // Update meta
   if (meta)
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().RELATIONS_META);
-  
-  // Update local tags
-  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().RELATION_TAGS_LOCAL);
-  callback->tags_local_finished();
-  
-  // Update global tags
-  update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().RELATION_TAGS_GLOBAL);
-  callback->tags_global_finished();
-  
-  flush_roles();
-  callback->flush_roles_finished();
+    futures.push_back(
+        std::async(std::launch::async,
+            [&] ()
+            {
+              update_elements(attic_meta, new_meta, *transaction, *meta_settings().RELATIONS_META);
+
+            }));
+
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+        // Update local tags
+          update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().RELATION_TAGS_LOCAL);
+          callback->tags_local_finished();
+        }));
+
+  futures.push_back(
+      std::async(std::launch::async, [&] ()
+      {
+        // Update global tags
+          update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().RELATION_TAGS_GLOBAL);
+          callback->tags_global_finished();
+        }));
+
+  futures.push_back(std::async(std::launch::async, [&] ()
+  {
+    flush_roles();
+    callback->flush_roles_finished();
+  }));
+
+  for (auto &e : futures)
+  {
+    e.get();
+  }
+
+  futures.clear();
+
   
   map< uint32, vector< uint32 > > idxs_by_id;
   
@@ -1260,38 +1298,87 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     // Prepare user indices
     copy_idxs_by_id(new_attic_meta, idxs_by_id);
     
-    // Update id indexes
-    update_map_positions(new_attic_map_positions, *transaction, *attic_settings().RELATIONS);
-  
-    // Update id index lists
-    update_elements(existing_idx_lists, new_attic_idx_lists,
-                    *transaction, *attic_settings().RELATION_IDX_LIST);
-  
-    // Add attic elements
-    update_elements(attic_skeletons_to_delete, new_attic_skeletons,
-                    *transaction, *attic_settings().RELATIONS);
-  
-    // Add attic elements
-    update_elements(std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >(),
-                    new_undeleted, *transaction, *attic_settings().RELATIONS_UNDELETED);
-  
-    // Add attic meta
-    update_elements
-        (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > >(),
-         new_attic_meta, *transaction, *attic_settings().RELATIONS_META);
-  
-    // Update tags
-    update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
-                    new_attic_local_tags, *transaction, *attic_settings().RELATION_TAGS_LOCAL);
-    update_elements(std::map< Tag_Index_Global,
-                        std::set< Attic < Tag_Object_Global< Relation_Skeleton::Id_Type > > > >(),
-                    new_attic_global_tags, *transaction, *attic_settings().RELATION_TAGS_GLOBAL);
-    
-    // Write changelog
-    update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,
-                    *transaction, *attic_settings().RELATION_CHANGELOG);
-    
-    flush_roles();
+    std::vector<std::future<void>> futures;
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Update id indexes
+            update_map_positions(new_attic_map_positions, *transaction, *attic_settings().RELATIONS);
+          }));
+
+    futures.push_back(std::async(std::launch::async, [&] ()
+    {
+      // Update id index lists
+        update_elements(existing_idx_lists, new_attic_idx_lists,
+            *transaction, *attic_settings().RELATION_IDX_LIST);
+
+      }));
+
+    futures.push_back(std::async(std::launch::async, [&] ()
+    {
+      // Add attic elements
+        update_elements(attic_skeletons_to_delete, new_attic_skeletons,
+            *transaction, *attic_settings().RELATIONS);
+
+      }));
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Add attic elements
+            update_elements(std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >(),
+                new_undeleted, *transaction, *attic_settings().RELATIONS_UNDELETED);
+
+          }));
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Add attic meta
+            update_elements
+            (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > >(),
+                new_attic_meta, *transaction, *attic_settings().RELATIONS_META);
+
+          }));
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Update tags
+            update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
+                new_attic_local_tags, *transaction, *attic_settings().RELATION_TAGS_LOCAL);
+          }));
+
+    futures.push_back(
+        std::async(std::launch::async,
+            [&] ()
+            {
+              update_elements(std::map< Tag_Index_Global,
+                  std::set< Attic < Tag_Object_Global< Relation_Skeleton::Id_Type > > > >(),
+                  new_attic_global_tags, *transaction, *attic_settings().RELATION_TAGS_GLOBAL);
+            }));
+
+    futures.push_back(
+        std::async(std::launch::async, [&] ()
+        {
+          // Write changelog
+            update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,
+                *transaction, *attic_settings().RELATION_CHANGELOG);
+          }));
+
+    futures.push_back(std::async(std::launch::async, [&] ()
+    {
+      flush_roles();
+    }));
+
+    for (auto &e : futures)
+    {
+      e.get();
+    }
+
+    futures.clear();
+
   }
 
   if (meta != only_data)
