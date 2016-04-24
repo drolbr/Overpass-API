@@ -156,7 +156,7 @@ void filter_id_list(
     if (!filtered && check_keys_late && new_ids.size() > 1024*1024)
     {
       new_ids.clear();
-      break;
+      return;
     }
   }
   
