@@ -27,6 +27,44 @@
 #include <vector>
 
 
+template< typename Index, typename Object >
+class Tag_Store
+{
+public:
+  Tag_Store(Transaction& transaction);
+  Tag_Store(const std::map< Index, std::vector< Attic< Object > > >& attic_items,
+		     Transaction& transaction,
+		     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound);
+  
+  void prefetch_all(const std::map< Index, std::vector< Object > >& elems);
+  void prefetch_chunk(const std::map< Index, std::vector< Object > >& elems,
+      typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound);
+  
+  const std::vector< std::pair< std::string, std::string > >* get_tags(const Object& elem) const;
+  
+private:
+  std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > > tags_by_id;
+  Transaction* transaction;
+};
+
+
+template< >
+class Tag_Store< Uint31_Index, Derived_Structure >
+{
+public:
+  Tag_Store() {}
+  
+  void prefetch_all(const std::map< Uint31_Index, std::vector< Derived_Structure > >& elems) {}
+  void prefetch_chunk(const std::map< Uint31_Index, std::vector< Derived_Structure > >& elems,
+      Derived_Structure::Id_Type lower_id_bound, Derived_Structure::Id_Type upper_id_bound) {}
+  
+  const std::vector< std::pair< std::string, std::string > >* get_tags(const Derived_Structure& elem) const
+  {
+    return &elem.tags;
+  }
+};
+
+
 template< class Id_Type >
 void collect_attic_tags
   (std::map< Id_Type, std::vector< std::pair< std::string, std::string > > >& tags_by_id,
@@ -151,6 +189,26 @@ void collect_attic_tags
 
 
 template< class Id_Type >
+void collect_tags
+  (std::map< Id_Type, std::vector< std::pair< std::string, std::string > > >& tags_by_id,
+   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
+   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
+   std::map< uint32, std::vector< Id_Type > >& ids_by_coarse,
+   uint32 coarse_index)
+{
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
+  {
+    if ((binary_search(ids_by_coarse[coarse_index].begin(),
+	ids_by_coarse[coarse_index].end(), tag_it.object())))
+      tags_by_id[tag_it.object()].push_back
+          (std::make_pair(tag_it.index().key, tag_it.index().value));
+    ++tag_it;
+  }
+}
+
+
+template< class Id_Type >
 void collect_tags_framed
   (std::map< Id_Type, std::vector< std::pair< std::string, std::string > > >& tags_by_id,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
@@ -174,50 +232,68 @@ void collect_tags_framed
 
 
 template< typename Index, typename Object >
-class Tag_Store
-{
-public:
-  Tag_Store(const std::map< Index, std::vector< Object > >& elems,
-		     Transaction& transaction,
-		     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound);
-  Tag_Store(const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-		     Transaction& transaction,
-		     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound);
-  
-  const std::vector< std::pair< std::string, std::string > >* get_tags(const Object& elem) const;
-  
-private:
-  std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > > tags_by_id;
-};
+Tag_Store< Index, Object >::Tag_Store(Transaction& transaction_) : transaction(&transaction_) {}
 
 
 template< typename Index, typename Object >
-Tag_Store< Index, Object >::Tag_Store(const std::map< Index, std::vector< Object > >& elems,
-		     Transaction& transaction,
-		     typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound)
+void Tag_Store< Index, Object >::prefetch_all(const std::map< Index, std::vector< Object > >& elems)
 {
-  //generate set of relevant coarse indices
-  set< Index > coarse_indices;
+  tags_by_id.clear();
+  
+  //generate std::set of relevant coarse indices
+  std::set< Index > coarse_indices;
   std::map< uint32, std::vector< typename Object::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(coarse_indices, ids_by_coarse, elems);
   
   //formulate range query
-  set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
   formulate_range_query(range_set, coarse_indices);
   
-  for (typename set< Index >::const_iterator
+  for (typename std::set< Index >::const_iterator
       it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
   
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
-      (transaction.data_index(current_local_tags_file_properties< Object >()));
+      (transaction->data_index(current_local_tags_file_properties< Object >()));
       
   typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
       tag_it(items_db.range_begin
       (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
        Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-  for (typename set< Index >::const_iterator
+  for (typename std::set< Index >::const_iterator
+      it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+    collect_tags< typename Object::Id_Type >(tags_by_id, items_db, tag_it, ids_by_coarse, it->val());
+}
+
+
+template< typename Index, typename Object >
+void Tag_Store< Index, Object >::prefetch_chunk(const std::map< Index, std::vector< Object > >& elems,
+    typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound)
+{
+  tags_by_id.clear();
+  
+  //generate std::set of relevant coarse indices
+  std::set< Index > coarse_indices;
+  std::map< uint32, std::vector< typename Object::Id_Type > > ids_by_coarse;
+  generate_ids_by_coarse(coarse_indices, ids_by_coarse, elems);
+  
+  //formulate range query
+  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  formulate_range_query(range_set, coarse_indices);
+  
+  for (typename std::set< Index >::const_iterator
       it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+  
+  Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
+      (transaction->data_index(current_local_tags_file_properties< Object >()));
+      
+  typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
+      tag_it(items_db.range_begin
+      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+  for (typename std::set< Index >::const_iterator
+      it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
     collect_tags_framed< typename Object::Id_Type >(tags_by_id, items_db, tag_it, ids_by_coarse, it->val(),
 		  lower_id_bound, upper_id_bound);
 }
@@ -228,16 +304,16 @@ Tag_Store< Index, Object >::Tag_Store(const std::map< Index, std::vector< Attic<
 		    Transaction& transaction,
 		    typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound)
 {
-  //generate set of relevant coarse indices
+  //generate std::set of relevant coarse indices
   std::set< Index > attic_coarse_indices;
   std::map< uint32, std::vector< Attic< typename Object::Id_Type > > > attic_ids_by_coarse;
   generate_ids_by_coarse(attic_coarse_indices, attic_ids_by_coarse, attic_items);
   
   //formulate range query
-  set< std::pair< Tag_Index_Local, Tag_Index_Local > > attic_range_set;
+  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > attic_range_set;
   formulate_range_query(attic_range_set, attic_coarse_indices);
   
-  for (typename set< Index >::const_iterator
+  for (typename std::set< Index >::const_iterator
       it(attic_coarse_indices.begin()); it != attic_coarse_indices.end(); ++it)
     sort(attic_ids_by_coarse[it->val()].begin(), attic_ids_by_coarse[it->val()].end());
   
@@ -254,7 +330,7 @@ Tag_Store< Index, Object >::Tag_Store(const std::map< Index, std::vector< Attic<
       attic_tag_it(attic_tags_db.range_begin
       (Default_Range_Iterator< Tag_Index_Local >(attic_range_set.begin()),
        Default_Range_Iterator< Tag_Index_Local >(attic_range_set.end())));
-  for (typename set< Index >::const_iterator
+  for (typename std::set< Index >::const_iterator
       it(attic_coarse_indices.begin()); it != attic_coarse_indices.end(); ++it)
     collect_attic_tags(tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
                attic_ids_by_coarse, it->val(), lower_id_bound, upper_id_bound);

@@ -60,30 +60,35 @@ class Print_Statement : public Statement
     void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
                     const vector< pair< string, string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
+                    const map< uint32, string >* users = 0) const;
     
     void print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
                     const vector< pair< string, string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
+                    const map< uint32, string >* users = 0) const;
     void print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
                     const vector< pair< string, string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
+                    const map< uint32, string >* users = 0) const;
     
     void print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
                     const vector< pair< string, string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
+                    const map< uint32, string >* users = 0) const;
     void print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
                     const vector< pair< string, string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
+                    const map< uint32, string >* users = 0) const;
     
     void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
                     const vector< pair< string, string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0);
+                    const map< uint32, string >* users = 0) const;
+    
+    void print_item(Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0) const;
     
     void set_collect_lhs();
     void set_collect_rhs(bool add_deletion_information);
@@ -120,18 +125,13 @@ class Print_Statement : public Statement
        Print_Target& target,
        Resource_Manager& rman, Transaction& transaction, uint32& element_count);
     
-    template< class TIndex, class TObject >
-    void tags_by_id
-      (const map< TIndex, vector< TObject > >& items,
-       uint32 FLUSH_SIZE, Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction, uint32& element_count);
-    
+public:
     template< class Index, class Object >
     void tags_by_id_attic
       (const map< Index, vector< Object > >& current_items,
        const map< Index, vector< Attic< Object > > >& attic_items,
        uint32 FLUSH_SIZE, Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction, uint32& element_count);
+       Resource_Manager& rman, Transaction& transaction, uint32& element_count) const;
 };
 
 #endif

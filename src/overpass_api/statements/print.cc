@@ -80,6 +80,12 @@ class Print_Target
 			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
 			    const map< uint32, string >* users = 0,
 			    const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
+                            
+    virtual void print_item(uint32 ll_upper, const Derived_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
 
     //TODO: remove. Replaced by Output_Mode
     static const unsigned int PRINT_IDS = 1;
@@ -274,7 +280,7 @@ Print_Statement::Print_Statement
 void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users)
+                    const std::map< uint32, std::string >* users) const
 {
   target.print_item(ll_upper, skel, tags, meta, users);
 }
@@ -373,7 +379,7 @@ const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_
 void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users)
+                    const std::map< uint32, std::string >* users) const
 {
   if (way_geometry_store)
   {
@@ -392,7 +398,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Wa
 void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users)
+                    const std::map< uint32, std::string >* users) const
 {
   if (attic_way_geometry_store)
   {
@@ -411,7 +417,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const At
 void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users)
+                    const std::map< uint32, std::string >* users) const
 {
   if (relation_geometry_store)
   {
@@ -430,7 +436,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Re
 void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users)
+                    const std::map< uint32, std::string >* users) const
 {
   if (attic_relation_geometry_store)
   {
@@ -449,29 +455,18 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const At
 void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users)
+                    const std::map< uint32, std::string >* users) const
 {
   target.print_item(ll_upper, skel, tags, meta, users);
 }
 
 
-template< class Id_Type >
-void collect_tags
-  (std::map< Id_Type, std::vector< std::pair< std::string, std::string > > >& tags_by_id,
-   const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
-   typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
-   std::map< uint32, std::vector< Id_Type > >& ids_by_coarse,
-   uint32 coarse_index)
+void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users) const
 {
-  while ((!(tag_it == items_db.range_end())) &&
-      (((tag_it.index().index) & 0x7fffff00) == coarse_index))
-  {
-    if (binary_search(ids_by_coarse[coarse_index].begin(),
-        ids_by_coarse[coarse_index].end(), tag_it.object()))
-      tags_by_id[tag_it.object()].push_back
-          (std::make_pair(tag_it.index().key, tag_it.index().value));
-    ++tag_it;
-  }
+  target.print_item(ll_upper, skel, tags, meta, users);
 }
 
 
@@ -647,7 +642,7 @@ struct Skeleton_Comparator_By_Id {
   bool operator() (const std::pair< const TComp*, uint32 >& a, 
 		   const std::pair< const TComp*, uint32 >& b)
   {
-    return (*a.first < *b.first);
+    return (a.first->id < b.first->id);
   }
 };
 
@@ -823,16 +818,13 @@ typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
 
 
 template< class Index, class Object >
-void Print_Statement::tags_by_id
-  (const std::map< Index, std::vector< Object > >& items,
+void tags_by_id
+  (const Print_Statement& stmt, const std::map< Index, std::vector< Object > >& items,
    uint32 FLUSH_SIZE, Print_Target& target,
-   Resource_Manager& rman, Transaction& transaction, uint32& element_count)
+   Resource_Manager& rman, Meta_Collector< Index, typename Object::Id_Type >* meta_printer,
+   Tag_Store< Index, Object >& tag_store, uint32 limit, uint32& element_count)
 {
   std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
-  
-  // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
-      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   
   // iterate over the result
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
@@ -850,12 +842,15 @@ void Print_Statement::tags_by_id
       ++upper_id_bound;
     }
     
-    Tag_Store< Index, Object > tag_store(items, transaction, lower_id_bound, upper_id_bound);
+    tag_store.prefetch_chunk(items, lower_id_bound, upper_id_bound);
     
-    // collect metadata if required
     set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > metadata;
-    collect_metadata(metadata, items, lower_id_bound, upper_id_bound, meta_printer);
-    meta_printer.reset();
+    if (meta_printer)
+    {
+      // collect metadata if required
+      collect_metadata(metadata, items, lower_id_bound, upper_id_bound, *meta_printer);
+      meta_printer->reset();
+    }
 
     // print the result
     for (typename Object::Id_Type i(id_pos);
@@ -866,13 +861,49 @@ void Print_Statement::tags_by_id
       typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
           = metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
               (items_by_id[i.val()].first->id));
-      print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+      stmt.print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
 		 tag_store.get_tags(*items_by_id[i.val()].first),
 		 (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id) ?
-		     &*meta_it : 0, &(meta_printer.users()));
+		     &*meta_it : 0, &(meta_printer->users()));
     }
   }
 }
+
+
+template< class Index, class Object >
+void tags_by_id
+  (const Print_Statement& stmt, const std::map< Index, std::vector< Object > >& items,
+   const std::map< Index, std::vector< Attic< Object > > >& attic_items,
+   unsigned int mode, uint32 FLUSH_SIZE, Print_Target& target, Resource_Manager& rman,
+   uint32 limit, uint32& element_count)
+{
+  if (mode & Print_Target::PRINT_META)
+  {
+    if (rman.get_desired_timestamp() == NOW)
+    {
+      Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+      Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
+          current_meta_file_properties< Object >());
+      tags_by_id(stmt, items, FLUSH_SIZE, target, rman, &meta_printer, tag_store, limit, element_count);
+    }
+    else
+      stmt.tags_by_id_attic(items, attic_items, FLUSH_SIZE, target, rman, *rman.get_transaction(),
+			    element_count);      
+  }
+  else
+  {
+    if (rman.get_desired_timestamp() == NOW)
+    {
+      Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+      tags_by_id(stmt, items, FLUSH_SIZE, target, rman,
+	  (Meta_Collector< Index, typename Object::Id_Type >*)0, tag_store, limit, element_count);
+    }
+    else
+      stmt.tags_by_id_attic(items, attic_items, FLUSH_SIZE, target, rman, *rman.get_transaction(),
+			    element_count);      
+  }
+}
+
 
 
 template< class Index, class Object >
@@ -880,9 +911,11 @@ void Print_Statement::tags_by_id_attic
   (const std::map< Index, std::vector< Object > >& current_items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
    uint32 FLUSH_SIZE, Print_Target& target,
-   Resource_Manager& rman, Transaction& transaction, uint32& element_count)
+   Resource_Manager& rman, Transaction& transaction, uint32& element_count) const
 {
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(current_items, attic_items);
+  
+  Tag_Store< Index, Object > current_tag_store(transaction);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
@@ -911,8 +944,8 @@ void Print_Statement::tags_by_id_attic
       ++upper_id_bound;
     }
     
-    Tag_Store< Index, Object > current_tag_store(current_items, transaction, lower_id_bound, upper_id_bound);
     Tag_Store< Index, Object > attic_tag_store(attic_items, transaction, lower_id_bound, upper_id_bound);
+    current_tag_store.prefetch_chunk(current_items, lower_id_bound, upper_id_bound);
     
     // collect metadata if required
     set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > only_current_metadata;
@@ -1195,6 +1228,12 @@ struct Plain_Print_Target : public Print_Target
                             const std::vector< std::pair< std::string, std::string > >* tags = 0,
                             const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep);
+                            
+    virtual void print_item(uint32 ll_upper, const Derived_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0,
 			    const Output_Handler::Feature_Action& action = Output_Handler::keep);
 
     // helper functions for attic diffs
@@ -1559,6 +1598,21 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Area_Skeleton& skel,
 	Output_Mode(mode));
   }
 }
+
+
+void Plain_Print_Target::print_item(uint32 ll_upper, const Derived_Skeleton& skel,
+                            const std::vector< std::pair< std::string, std::string > >* tags,
+                            const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta,
+                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action)
+{
+  if (output)
+  {
+    Null_Geometry geom;
+    output->print_item(skel, geom,
+        mode & Print_Target::PRINT_TAGS ? tags : 0,
+	Output_Mode(mode));
+  }
+}
                             
                             
 template < typename T >
@@ -1648,33 +1702,20 @@ void Print_Statement::execute(Resource_Manager& rman)
   {
     if (order == order_by_id)
     {
-      if (rman.get_desired_timestamp() == NOW)
-        tags_by_id(mit->second.nodes, NODE_FLUSH_SIZE, output_target, rman,
-		  *rman.get_transaction(), element_count);
-      else
-        tags_by_id_attic(mit->second.nodes, mit->second.attic_nodes,
-                   NODE_FLUSH_SIZE, output_target, rman,
-                   *rman.get_transaction(), element_count);
-      
-      if (rman.get_desired_timestamp() == NOW)
-        tags_by_id(mit->second.ways, WAY_FLUSH_SIZE, output_target, rman,
-		  *rman.get_transaction(), element_count);
-      else
-        tags_by_id_attic(mit->second.ways, mit->second.attic_ways,
-                   WAY_FLUSH_SIZE, output_target, rman,
-                   *rman.get_transaction(), element_count);
-      
-      if (rman.get_desired_timestamp() == NOW)
-        tags_by_id(mit->second.relations, RELATION_FLUSH_SIZE, output_target, rman,
-		  *rman.get_transaction(), element_count);
-      else
-        tags_by_id_attic(mit->second.relations, mit->second.attic_relations,
-                   RELATION_FLUSH_SIZE, output_target, rman,
-                   *rman.get_transaction(), element_count);
+      tags_by_id(*this, mit->second.nodes, mit->second.attic_nodes, mode, NODE_FLUSH_SIZE,
+		 output_target, rman, limit, element_count);
+      tags_by_id(*this, mit->second.ways, mit->second.attic_ways, mode, WAY_FLUSH_SIZE,
+		 output_target, rman, limit, element_count);
+      tags_by_id(*this, mit->second.relations, mit->second.attic_relations, mode, RELATION_FLUSH_SIZE,
+		 output_target, rman, limit, element_count);
       
       if (rman.get_area_transaction())
-	tags_by_id(mit->second.areas, AREA_FLUSH_SIZE, output_target, rman,
-		   *rman.get_area_transaction(), element_count);
+      {
+	Tag_Store< Uint31_Index, Area_Skeleton > tag_store(*rman.get_transaction());
+	tags_by_id(*this, mit->second.areas, AREA_FLUSH_SIZE, output_target, rman,
+		   (Meta_Collector< Uint31_Index, Area_Skeleton::Id_Type >*)0,
+		   tag_store, limit, element_count);
+      }
     }
     else
     {
@@ -1706,11 +1747,14 @@ void Print_Statement::execute(Resource_Manager& rman)
   }
   else if (mode & Print_Target::PRINT_COUNT)
   {
-    std::vector< std::pair< std::string, std::string > > count_tags
-        = make_count_tags(mit->second, rman.get_area_transaction());
-    Derived_Skeleton derived("count", Uint64(0ull));
-    rman.get_global_settings().get_output_handler()->print_item(
-        derived, Null_Geometry(), &count_tags, Output_Mode(mode));
+    Set count_set;
+    count_set.deriveds[Uint31_Index(0u)].push_back(
+        Derived_Structure("count", Uint64(0ull), make_count_tags(mit->second, rman.get_area_transaction())));
+    
+    Tag_Store< Uint31_Index, Derived_Structure > tag_store;
+    tags_by_id(*this, count_set.deriveds, 1024, output_target, rman,
+	(Meta_Collector< Uint31_Index, Derived_Structure::Id_Type >*)0,
+	tag_store, limit, element_count);
   }
   else
   {
@@ -1782,6 +1826,12 @@ class Collection_Print_Target : public Print_Target
                             const std::vector< std::pair< std::string, std::string > >* tags = 0,
                             const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
+			    const Output_Handler::Feature_Action& action = Output_Handler::keep);
+                            
+    virtual void print_item(uint32 ll_upper, const Derived_Skeleton& skel,
+			    const vector< pair< string, string > >* tags = 0,
+			    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
+			    const map< uint32, string >* users = 0,
 			    const Output_Handler::Feature_Action& action = Output_Handler::keep);
 
     void set_target(Plain_Print_Target* target);
@@ -2391,6 +2441,12 @@ void Collection_Print_Target::clear_relations
 void Collection_Print_Target::print_item(uint32 ll_upper, const Area_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta,
+                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action) {}
+
+
+void Collection_Print_Target::print_item(uint32 ll_upper, const Derived_Skeleton& skel,
+                            const std::vector< std::pair< std::string, std::string > >* tags,
+                            const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta,
                             const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action) {}
                             
 
