@@ -27,23 +27,7 @@
 #include "statement.h"
 
 
-struct Output_Item_Count
-{
-  uint32 nodes;
-  uint32 ways;
-  uint32 relations;
-  uint32 areas;
-  uint32 total;
-};
-
-
-class Print_Target;
 class Collection_Print_Target;
-
-class Relation_Geometry_Store;
-class Way_Bbox_Geometry_Store;
-
-class Output_Handle;
 
 
 class Print_Statement : public Statement
@@ -56,39 +40,6 @@ class Print_Statement : public Statement
     virtual ~Print_Statement();
 
     static Generic_Statement_Maker< Print_Statement > statement_maker;
-      
-    void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    
-    void print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    
-    void print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    void print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    
-    void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    
-    void print_item(Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
     
     void set_collect_lhs();
     void set_collect_rhs(bool add_deletion_information);
@@ -98,10 +49,6 @@ class Print_Statement : public Statement
     unsigned int mode;
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
-    Way_Bbox_Geometry_Store* way_geometry_store;
-    Way_Bbox_Geometry_Store* attic_way_geometry_store;
-    Relation_Geometry_Store* relation_geometry_store;
-    Relation_Geometry_Store* attic_relation_geometry_store;
     Collection_Print_Target* collection_print_target;
     enum { dont_collect, collect_lhs, collect_rhs } collection_mode;
     bool add_deletion_information;
@@ -112,26 +59,7 @@ class Print_Statement : public Statement
     double east;
 
     virtual void execute_comparison(Resource_Manager& rman);
-    
-    template< class Index, class Object >
-    void tags_quadtile
-      (const map< Index, vector< Object > >& items,
-       const File_Properties& file_prop, Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction, uint32& element_count);
-    
-    template< class Index, class Object >
-    void tags_quadtile_attic
-      (const map< Index, vector< Attic< Object > > >& items,
-       Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction, uint32& element_count);
-    
-public:
-    template< class Index, class Object >
-    void tags_by_id_attic
-      (const map< Index, vector< Object > >& current_items,
-       const map< Index, vector< Attic< Object > > >& attic_items,
-       uint32 FLUSH_SIZE, Print_Target& target,
-       Resource_Manager& rman, Transaction& transaction, uint32& element_count) const;
 };
+
 
 #endif

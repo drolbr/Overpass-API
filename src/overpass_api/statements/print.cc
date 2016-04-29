@@ -151,8 +151,7 @@ Print_Statement::Print_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(numeric_limits< unsigned int >::max()),
-      way_geometry_store(0), attic_way_geometry_store(0), relation_geometry_store(0), attic_relation_geometry_store(0), collection_print_target(0),
-      collection_mode(dont_collect), add_deletion_information(false),
+      collection_print_target(0), collection_mode(dont_collect), add_deletion_information(false),
       south(1.0), north(0.0), west(0.0), east(0.0)
 {
   std::map< std::string, std::string > attributes;
@@ -277,7 +276,92 @@ Print_Statement::Print_Statement
 }
 
 
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
+struct Extra_Data
+{
+  Extra_Data(
+      Resource_Manager& rman, const Print_Statement& stmt, const Set& to_print, unsigned int mode_,
+      double south, double north, double west, double east);
+  ~Extra_Data();
+    
+  unsigned int mode;
+  Way_Bbox_Geometry_Store* way_geometry_store;
+  Way_Bbox_Geometry_Store* attic_way_geometry_store;
+  Relation_Geometry_Store* relation_geometry_store;
+  Relation_Geometry_Store* attic_relation_geometry_store;    
+      
+  void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0) const;
+    
+  void print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0) const;
+  void print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0) const;
+    
+  void print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0) const;
+  void print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0) const;
+    
+  void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0) const;
+    
+  void print_item(Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
+                    const vector< pair< string, string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
+                    const map< uint32, string >* users = 0) const;
+};
+
+
+Extra_Data::Extra_Data(
+    Resource_Manager& rman, const Print_Statement& stmt, const Set& to_print, unsigned int mode_,
+    double south, double north, double west, double east)
+    : mode(mode_), way_geometry_store(0), attic_way_geometry_store(0),
+    relation_geometry_store(0), attic_relation_geometry_store(0)
+{
+  if (mode & (Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS | Print_Target::PRINT_CENTER))
+  {
+    way_geometry_store = new Way_Bbox_Geometry_Store(to_print.ways, stmt, rman, south, north, west, east);
+    if (rman.get_desired_timestamp() < NOW)
+    {
+      attic_way_geometry_store = new Way_Bbox_Geometry_Store(
+          to_print.attic_ways, rman.get_desired_timestamp(), stmt, rman,
+          south, north, west, east);
+    }
+        
+    relation_geometry_store = new Relation_Geometry_Store(
+        to_print.relations, stmt, rman, south, north, west, east);
+    if (rman.get_desired_timestamp() < NOW)
+    {
+      attic_relation_geometry_store = new Relation_Geometry_Store(
+          to_print.attic_relations, rman.get_desired_timestamp(), stmt, rman,
+          south, north, west, east);
+    }
+  }
+}
+
+
+Extra_Data::~Extra_Data()
+{
+  delete way_geometry_store;
+  delete attic_way_geometry_store;
+  delete relation_geometry_store;
+  delete attic_relation_geometry_store;
+}
+
+
+void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users) const
@@ -376,7 +460,7 @@ const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_
 }
 
 
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
+void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users) const
@@ -395,7 +479,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Wa
 }
 
 
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users) const
@@ -414,7 +498,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const At
 }
 
 
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
+void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users) const
@@ -433,7 +517,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Re
 }
 
 
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users) const
@@ -452,7 +536,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const At
 }
 
 
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
+void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users) const
@@ -461,7 +545,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Ar
 }
 
 
-void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
+void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users) const
@@ -473,7 +557,7 @@ void Print_Statement::print_item(Print_Target& target, uint32 ll_upper, const De
 template< class TIndex, class TObject >
 void quadtile
     (const std::map< TIndex, std::vector< TObject > >& items, Print_Target& target,
-     Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
+     Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   typename std::map< TIndex, std::vector< TObject > >::const_iterator
       item_it(items.begin());
@@ -485,7 +569,7 @@ void quadtile
     {
       if (++element_count > limit)
 	return;
-      stmt.print_item(target, item_it->first.val(), *it2);
+      extra_data.print_item(target, item_it->first.val(), *it2);
     }
     ++item_it;
   }
@@ -493,146 +577,68 @@ void quadtile
 
 
 template< class Index, class Object >
-void Print_Statement::tags_quadtile
-    (const std::map< Index, std::vector< Object > >& items,
+void tags_quadtile
+    (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
      const File_Properties& file_prop, Print_Target& target,
-     Resource_Manager& rman, Transaction& transaction, uint32& element_count)
+     Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
-  //generate set of relevant coarse indices
-  set< Index > coarse_indices;
-  std::map< uint32, std::vector< typename Object::Id_Type > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
-  
-  //formulate range query
-  set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
+  Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+  tag_store.prefetch_all(items);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
-      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
-  
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
-      (transaction.data_index(&file_prop));
-  typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
-    tag_it(items_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
-      
-  //uint coarse_count = 0;
-  for (typename set< Index >::const_iterator
-      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+  // print the result
+  while (item_it != items.end())
   {
-    // Disable health_check: This ensures that a result will be always printed completely
-//     if (++coarse_count >= 1024)
-//     {
-//       coarse_count = 0;
-//       rman.health_check(*this);
-//     }
-    
-    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
-    
-    std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > > tags_by_id;
-    collect_tags(tags_by_id, items_db, tag_it, ids_by_coarse, it->val());
-    
-    // print the result
-    while ((item_it != items.end()) &&
-        ((item_it->first.val() & 0x7fffff00) == it->val()))
+    for (typename std::vector< Object >::const_iterator it2(item_it->second.begin());
+        it2 != item_it->second.end(); ++it2)
     {
-      for (typename std::vector< Object >::const_iterator it2(item_it->second.begin());
-          it2 != item_it->second.end(); ++it2)
-      {
-	if (++element_count > limit)
-	  return;
-	print_item(target, item_it->first.val(), *it2, &(tags_by_id[it2->id]),
-		   meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
-      }
-      ++item_it;
+      if (++element_count > limit)
+        return;
+      extra_data.print_item(target, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+          meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
     }
+    ++item_it;
   }
 }
 
 
 template< class Index, class Object >
-void Print_Statement::tags_quadtile_attic
-    (const std::map< Index, std::vector< Attic< Object > > >& items,
+void tags_quadtile_attic
+    (Extra_Data& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
      Print_Target& target,
-     Resource_Manager& rman, Transaction& transaction, uint32& element_count)
+     Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
-  //generate set of relevant coarse indices
-  set< Index > coarse_indices;
-  std::map< uint32, std::vector< Attic< typename Object::Id_Type > > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
-  
-  //formulate range query
-  set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
-  
+  Tag_Store< Index, Object > tag_store(items, transaction, typename Object::Id_Type(), typename Object::Id_Type());
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
       (items, transaction, 
-      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
       (items, transaction, 
-      (mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
   
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
-      (transaction.data_index(current_local_tags_file_properties< Object >()));
-  typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator
-    current_tag_it(current_tags_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-      
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > > attic_tags_db
-      (transaction.data_index(attic_local_tags_file_properties< Object >()));
-  typename Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > >::Range_Iterator
-    attic_tag_it(attic_tags_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-    
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
-      
-  //uint coarse_count = 0;
-  for (typename set< Index >::const_iterator
-      it(coarse_indices.begin()); it != coarse_indices.end(); ++it)
+  while (item_it != items.end())
   {
-    // Disable health_check: This ensures that a result will be always printed completely
-//     if (++coarse_count >= 1024)
-//     {
-//       coarse_count = 0;
-//       rman.health_check(*this);
-//     }
-    
-    sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
-    
-    std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > > tags_by_id;
-    collect_attic_tags(tags_by_id, current_tags_db, current_tag_it, attic_tags_db, attic_tag_it,
-                 ids_by_coarse, it->val(), typename Object::Id_Type(), typename Object::Id_Type());
-    
-    // print the result
-    while ((item_it != items.end()) &&
-        ((item_it->first.val() & 0x7fffff00) == it->val()))
+    for (typename std::vector< Attic< Object > >::const_iterator it2(item_it->second.begin());
+        it2 != item_it->second.end(); ++it2)
     {
-      for (typename std::vector< Attic< Object > >::const_iterator it2(item_it->second.begin());
-          it2 != item_it->second.end(); ++it2)
-      {
-        if (++element_count > limit)
-          return;
-        const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
-            = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-        if (!meta)
-          meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-        print_item(target, item_it->first.val(), *it2,
-                          &(tags_by_id[it2->id]),
-                   meta, &(current_meta_printer.users()));
-      }
-      ++item_it;
+      if (++element_count > limit)
+        return;
+      const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
+          = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
+      if (!meta)
+        meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
+      extra_data.print_item(target, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+                 meta, &(current_meta_printer.users()));
     }
+    ++item_it;
   }
 }
 
@@ -711,7 +717,7 @@ std::vector< Maybe_Attic_Ref< Index, Object > > collect_items_by_id(
 template< class Index, class Object >
 void by_id
   (const std::map< Index, std::vector< Object > >& items, Print_Target& target,
-   Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
+   Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   std::vector< std::pair< const Object*, uint32 > > items_by_id = collect_items_by_id(items);
   
@@ -720,7 +726,7 @@ void by_id
   {
     if (++element_count > limit)
       return;
-    stmt.print_item(target, items_by_id[i].second, *(items_by_id[i].first));
+    extra_data.print_item(target, items_by_id[i].second, *(items_by_id[i].first));
   }
 }
 
@@ -730,7 +736,7 @@ void by_id
   (const std::map< Index, std::vector< Object > >& items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
    Print_Target& target,
-   Transaction& transaction, Print_Statement& stmt, uint32 limit, uint32& element_count)
+   Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(items, attic_items);
   
@@ -740,9 +746,9 @@ void by_id
     if (++element_count > limit)
       return;
     if (items_by_id[i].timestamp == NOW)
-      stmt.print_item(target, items_by_id[i].idx.val(), *items_by_id[i].obj);
+      extra_data.print_item(target, items_by_id[i].idx.val(), *items_by_id[i].obj);
     else
-      stmt.print_item(target, items_by_id[i].idx.val(),
+      extra_data.print_item(target, items_by_id[i].idx.val(),
 		      Attic< Object >(*items_by_id[i].obj, items_by_id[i].timestamp));
   }
 }
@@ -819,7 +825,7 @@ typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::const_iterator
 
 template< class Index, class Object >
 void tags_by_id
-  (const Print_Statement& stmt, const std::map< Index, std::vector< Object > >& items,
+  (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
    uint32 FLUSH_SIZE, Print_Target& target,
    Resource_Manager& rman, Meta_Collector< Index, typename Object::Id_Type >* meta_printer,
    Tag_Store< Index, Object >& tag_store, uint32 limit, uint32& element_count)
@@ -861,7 +867,7 @@ void tags_by_id
       typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
           = metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
               (items_by_id[i.val()].first->id));
-      stmt.print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+      extra_data.print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
 		 tag_store.get_tags(*items_by_id[i.val()].first),
 		 (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id) ?
 		     &*meta_it : 0, &(meta_printer->users()));
@@ -872,7 +878,7 @@ void tags_by_id
 
 template< class Index, class Object >
 void tags_by_id
-  (const Print_Statement& stmt, const std::map< Index, std::vector< Object > >& items,
+  (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
    unsigned int mode, uint32 FLUSH_SIZE, Print_Target& target, Resource_Manager& rman,
    uint32 limit, uint32& element_count)
@@ -884,34 +890,34 @@ void tags_by_id
       Tag_Store< Index, Object > tag_store(*rman.get_transaction());
       Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
           current_meta_file_properties< Object >());
-      tags_by_id(stmt, items, FLUSH_SIZE, target, rman, &meta_printer, tag_store, limit, element_count);
+      tags_by_id(extra_data, items, FLUSH_SIZE, target, rman, &meta_printer, tag_store, limit, element_count);
     }
     else
-      stmt.tags_by_id_attic(items, attic_items, FLUSH_SIZE, target, rman, *rman.get_transaction(),
-			    element_count);      
+      tags_by_id_attic(items, attic_items, extra_data, FLUSH_SIZE, target, rman, *rman.get_transaction(),
+			    limit, element_count);      
   }
   else
   {
     if (rman.get_desired_timestamp() == NOW)
     {
       Tag_Store< Index, Object > tag_store(*rman.get_transaction());
-      tags_by_id(stmt, items, FLUSH_SIZE, target, rman,
+      tags_by_id(extra_data, items, FLUSH_SIZE, target, rman,
 	  (Meta_Collector< Index, typename Object::Id_Type >*)0, tag_store, limit, element_count);
     }
     else
-      stmt.tags_by_id_attic(items, attic_items, FLUSH_SIZE, target, rman, *rman.get_transaction(),
-			    element_count);      
+      tags_by_id_attic(items, attic_items, extra_data, FLUSH_SIZE, target, rman, *rman.get_transaction(),
+			    limit, element_count);      
   }
 }
 
 
 
 template< class Index, class Object >
-void Print_Statement::tags_by_id_attic
+void tags_by_id_attic
   (const std::map< Index, std::vector< Object > >& current_items,
    const std::map< Index, std::vector< Attic< Object > > >& attic_items,
-   uint32 FLUSH_SIZE, Print_Target& target,
-   Resource_Manager& rman, Transaction& transaction, uint32& element_count) const
+   Extra_Data& extra_data, uint32 FLUSH_SIZE, Print_Target& target,
+   Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(current_items, attic_items);
   
@@ -920,14 +926,14 @@ void Print_Statement::tags_by_id_attic
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
       (current_items, transaction, 
-      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
       (attic_items, transaction, 
-      (mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
       (attic_items, transaction, 
-      (mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
       
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
@@ -970,7 +976,7 @@ void Print_Statement::tags_by_id_attic
         typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
             = only_current_metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
                 (items_by_id[i.val()].obj->id));
-        print_item(target, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
+        extra_data.print_item(target, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
 		 current_tag_store.get_tags(*items_by_id[i.val()].obj),
 		 (meta_it != only_current_metadata.end() && meta_it->ref == items_by_id[i.val()].obj->id) ?
 		     &*meta_it : 0, &(only_current_meta_printer.users()));
@@ -980,7 +986,7 @@ void Print_Statement::tags_by_id_attic
         typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
             = find_matching_metadata(attic_metadata,
                   items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp);
-        print_item(target, items_by_id[i.val()].idx.val(),
+        extra_data.print_item(target, items_by_id[i.val()].idx.val(),
 		   Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
 		 attic_tag_store.get_tags(*items_by_id[i.val()].obj),
                  meta_it != attic_metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
@@ -1669,80 +1675,56 @@ void Print_Statement::execute(Resource_Manager& rman)
   if (mit == rman.sets().end())
     return;
     
+  Extra_Data extra_data(rman, *this, mit->second, mode, south, north, west, east);
+  
   Plain_Print_Target output_target(mode, add_deletion_information,
 			       *rman.get_transaction(), rman.get_global_settings().get_output_handler());
   
-  if (mode & (Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS | Print_Target::PRINT_CENTER))
-  {
-    delete way_geometry_store;
-    way_geometry_store = new Way_Bbox_Geometry_Store(mit->second.ways, *this, rman,
-        south, north, west, east);
-    if (rman.get_desired_timestamp() < NOW)
-    {
-      delete attic_way_geometry_store;
-      attic_way_geometry_store = new Way_Bbox_Geometry_Store
-          (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman,
-          south, north, west, east);
-    }
-        
-    delete relation_geometry_store;
-    relation_geometry_store = new Relation_Geometry_Store(
-        mit->second.relations, *this, rman,
-        south, north, west, east);
-    if (rman.get_desired_timestamp() < NOW)
-    {
-      delete attic_relation_geometry_store;
-      attic_relation_geometry_store = new Relation_Geometry_Store(
-          mit->second.attic_relations, rman.get_desired_timestamp(), *this, rman,
-          south, north, west, east);
-    }
-  }
-
   if (mode & Print_Target::PRINT_TAGS)
   {
     if (order == order_by_id)
     {
-      tags_by_id(*this, mit->second.nodes, mit->second.attic_nodes, mode, NODE_FLUSH_SIZE,
+      tags_by_id(extra_data, mit->second.nodes, mit->second.attic_nodes, mode, NODE_FLUSH_SIZE,
 		 output_target, rman, limit, element_count);
-      tags_by_id(*this, mit->second.ways, mit->second.attic_ways, mode, WAY_FLUSH_SIZE,
+      tags_by_id(extra_data, mit->second.ways, mit->second.attic_ways, mode, WAY_FLUSH_SIZE,
 		 output_target, rman, limit, element_count);
-      tags_by_id(*this, mit->second.relations, mit->second.attic_relations, mode, RELATION_FLUSH_SIZE,
+      tags_by_id(extra_data, mit->second.relations, mit->second.attic_relations, mode, RELATION_FLUSH_SIZE,
 		 output_target, rman, limit, element_count);
       
       if (rman.get_area_transaction())
       {
 	Tag_Store< Uint31_Index, Area_Skeleton > tag_store(*rman.get_transaction());
-	tags_by_id(*this, mit->second.areas, AREA_FLUSH_SIZE, output_target, rman,
+	tags_by_id(extra_data, mit->second.areas, AREA_FLUSH_SIZE, output_target, rman,
 		   (Meta_Collector< Uint31_Index, Area_Skeleton::Id_Type >*)0,
 		   tag_store, limit, element_count);
       }
     }
     else
     {
-      tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		    output_target, rman, *rman.get_transaction(), element_count);
+      tags_quadtile(extra_data, mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
+		    output_target, rman, *rman.get_transaction(), limit, element_count);
       
       if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic(mit->second.attic_nodes,
-                      output_target, rman, *rman.get_transaction(), element_count);
+        tags_quadtile_attic(extra_data, mit->second.attic_nodes,
+                      output_target, rman, *rman.get_transaction(), limit, element_count);
       
-      tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		    output_target, rman, *rman.get_transaction(), element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic(mit->second.attic_ways,
-                      output_target, rman, *rman.get_transaction(), element_count);
-      
-      tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		    output_target, rman, *rman.get_transaction(), element_count);
+      tags_quadtile(extra_data, mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
+		    output_target, rman, *rman.get_transaction(), limit, element_count);
       
       if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic(mit->second.attic_relations,
-                      output_target, rman, *rman.get_transaction(), element_count);
+        tags_quadtile_attic(extra_data, mit->second.attic_ways,
+                      output_target, rman, *rman.get_transaction(), limit, element_count);
+      
+      tags_quadtile(extra_data, mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
+		    output_target, rman, *rman.get_transaction(), limit, element_count);
+      
+      if (rman.get_desired_timestamp() != NOW)
+        tags_quadtile_attic(extra_data, mit->second.attic_relations,
+                      output_target, rman, *rman.get_transaction(), limit, element_count);
       
       if (rman.get_area_transaction())
-        tags_quadtile(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
-		      output_target, rman, *rman.get_area_transaction(), element_count);
+        tags_quadtile(extra_data, mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
+		      output_target, rman, *rman.get_area_transaction(), limit, element_count);
     }
   }
   else if (mode & Print_Target::PRINT_COUNT)
@@ -1752,7 +1734,7 @@ void Print_Statement::execute(Resource_Manager& rman)
         Derived_Structure("count", Uint64(0ull), make_count_tags(mit->second, rman.get_area_transaction())));
     
     Tag_Store< Uint31_Index, Derived_Structure > tag_store;
-    tags_by_id(*this, count_set.deriveds, 1024, output_target, rman,
+    tags_by_id(extra_data, count_set.deriveds, 1024, output_target, rman,
 	(Meta_Collector< Uint31_Index, Derived_Structure::Id_Type >*)0,
 	tag_store, limit, element_count);
   }
@@ -1761,27 +1743,27 @@ void Print_Statement::execute(Resource_Manager& rman)
     if (order == order_by_id)
     {
       by_id(mit->second.nodes, mit->second.attic_nodes,
-	    output_target, *rman.get_transaction(), *this, limit, element_count);
+	    output_target, *rman.get_transaction(), extra_data, limit, element_count);
       by_id(mit->second.ways, mit->second.attic_ways,
-	    output_target, *rman.get_transaction(), *this, limit, element_count);
+	    output_target, *rman.get_transaction(), extra_data, limit, element_count);
       by_id(mit->second.relations, mit->second.attic_relations,
-	    output_target, *rman.get_transaction(), *this, limit, element_count);      
+	    output_target, *rman.get_transaction(), extra_data, limit, element_count);      
       if (rman.get_area_transaction())
-	by_id(mit->second.areas, output_target, *rman.get_area_transaction(), *this, limit, element_count);
+	by_id(mit->second.areas, output_target, *rman.get_area_transaction(), extra_data, limit, element_count);
     }
     else
     {
-      quadtile(mit->second.nodes, output_target, *rman.get_transaction(), *this, limit, element_count);
-      quadtile(mit->second.attic_nodes, output_target, *rman.get_transaction(), *this, limit, element_count);
+      quadtile(mit->second.nodes, output_target, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile(mit->second.attic_nodes, output_target, *rman.get_transaction(), extra_data, limit, element_count);
       
-      quadtile(mit->second.ways, output_target, *rman.get_transaction(), *this, limit, element_count);
-      quadtile(mit->second.attic_ways, output_target, *rman.get_transaction(), *this, limit, element_count);
+      quadtile(mit->second.ways, output_target, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile(mit->second.attic_ways, output_target, *rman.get_transaction(), extra_data, limit, element_count);
       
-      quadtile(mit->second.relations, output_target, *rman.get_transaction(), *this, limit, element_count);
-      quadtile(mit->second.attic_relations, output_target, *rman.get_transaction(), *this, limit, element_count);
+      quadtile(mit->second.relations, output_target, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile(mit->second.attic_relations, output_target, *rman.get_transaction(), extra_data, limit, element_count);
       
       if (rman.get_area_transaction())
-	quadtile(mit->second.areas, output_target, *rman.get_area_transaction(), *this, limit, element_count);
+	quadtile(mit->second.areas, output_target, *rman.get_area_transaction(), extra_data, limit, element_count);
     }
   }
   
@@ -2481,64 +2463,40 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
         | Print_Target::PRINT_TAGS | Print_Target::PRINT_VERSION | Print_Target::PRINT_META
         | Print_Target::PRINT_GEOMETRY;
   }
-
-  if (mode & (Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS | Print_Target::PRINT_CENTER))
-  {
-    delete way_geometry_store;
-    way_geometry_store = new Way_Bbox_Geometry_Store(mit->second.ways, *this, rman,
-        south, north, west, east);
-    if (rman.get_desired_timestamp() < NOW)
-    {
-      delete attic_way_geometry_store;
-      attic_way_geometry_store = new Way_Bbox_Geometry_Store
-          (mit->second.attic_ways, rman.get_desired_timestamp(), *this, rman,
-          south, north, west, east);
-    }
-        
-    delete relation_geometry_store;
-    relation_geometry_store = new Relation_Geometry_Store(
-        mit->second.relations, *this, rman,
-        south, north, west, east);
-    if (rman.get_desired_timestamp() < NOW)
-    {
-      delete attic_relation_geometry_store;
-      attic_relation_geometry_store = new Relation_Geometry_Store(
-          mit->second.attic_relations, rman.get_desired_timestamp(), *this, rman,
-          south, north, west, east);
-    }
-  }
+  
+  Extra_Data extra_data(rman, *this, mit->second, mode, south, north, west, east);
 
   if (mode & Print_Target::PRINT_TAGS)
   {
     User_Data_Cache* user_data_cache =
         (collection_mode == collect_rhs ? new User_Data_Cache(*rman.get_transaction()) : 0);
   
-    tags_quadtile(mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
-		    *target, rman, *rman.get_transaction(), element_count);
+    tags_quadtile(extra_data, mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
+		    *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(mit->second.attic_nodes,
-                      *target, rman, *rman.get_transaction(), element_count);
+      tags_quadtile_attic(extra_data, mit->second.attic_nodes,
+                      *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (collection_mode == collect_rhs)
       collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
       
-    tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
-		    *target, rman, *rman.get_transaction(), element_count);
+    tags_quadtile(extra_data, mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
+		    *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(mit->second.attic_ways,
-                      *target, rman, *rman.get_transaction(), element_count);
+      tags_quadtile_attic(extra_data, mit->second.attic_ways,
+                      *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (collection_mode == collect_rhs)
       collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
       
-    tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
-		    *target, rman, *rman.get_transaction(), element_count);
+    tags_quadtile(extra_data, mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
+		    *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(mit->second.attic_relations,
-                      *target, rman, *rman.get_transaction(), element_count);
+      tags_quadtile_attic(extra_data, mit->second.attic_relations,
+                      *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (collection_mode == collect_rhs)
       collection_print_target->clear_relations(rman, &user_data_cache->users(), add_deletion_information);
@@ -2547,18 +2505,18 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
   }
   else
   {
-    quadtile(mit->second.nodes, *target, *rman.get_transaction(), *this, limit, element_count);
-    quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), *this, limit, element_count);
+    quadtile(mit->second.nodes, *target, *rman.get_transaction(), extra_data, limit, element_count);
+    quadtile(mit->second.attic_nodes, *target, *rman.get_transaction(), extra_data, limit, element_count);
     if (collection_mode == collect_rhs)
       collection_print_target->clear_nodes(rman, 0, add_deletion_information);
       
-    quadtile(mit->second.ways, *target, *rman.get_transaction(), *this, limit, element_count);
-    quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), *this, limit, element_count);
+    quadtile(mit->second.ways, *target, *rman.get_transaction(), extra_data, limit, element_count);
+    quadtile(mit->second.attic_ways, *target, *rman.get_transaction(), extra_data, limit, element_count);
     if (collection_mode == collect_rhs)
       collection_print_target->clear_ways(rman, 0, add_deletion_information);
       
-    quadtile(mit->second.relations, *target, *rman.get_transaction(), *this, limit, element_count);
-    quadtile(mit->second.attic_relations, *target, *rman.get_transaction(), *this, limit, element_count);
+    quadtile(mit->second.relations, *target, *rman.get_transaction(), extra_data, limit, element_count);
+    quadtile(mit->second.attic_relations, *target, *rman.get_transaction(), extra_data, limit, element_count);
     if (collection_mode == collect_rhs)
       collection_print_target->clear_relations(rman, 0, add_deletion_information);
   }
@@ -2572,10 +2530,6 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
 
 Print_Statement::~Print_Statement()
 {
-  delete way_geometry_store;
-  delete attic_way_geometry_store;
-  delete relation_geometry_store;
-  delete attic_relation_geometry_store;
   delete collection_print_target;
 }
 
