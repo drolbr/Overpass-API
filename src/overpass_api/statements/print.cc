@@ -288,39 +288,6 @@ struct Extra_Data
   Way_Bbox_Geometry_Store* attic_way_geometry_store;
   Relation_Geometry_Store* relation_geometry_store;
   Relation_Geometry_Store* attic_relation_geometry_store;    
-      
-  void print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    
-  void print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-  void print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    
-  void print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-  void print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    
-  void print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
-    
-  void print_item(Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
-                    const vector< pair< string, string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
-                    const map< uint32, string >* users = 0) const;
 };
 
 
@@ -361,10 +328,10 @@ Extra_Data::~Extra_Data()
 }
 
 
-void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users) const
+void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
+                    const std::map< uint32, std::string >* users = 0)
 {
   target.print_item(ll_upper, skel, tags, meta, users);
 }
@@ -460,18 +427,18 @@ const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_
 }
 
 
-void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users) const
+void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const std::map< uint32, std::string >* users = 0)
 {
-  if (way_geometry_store)
+  if (extra_data.way_geometry_store)
   {
-    std::vector< Quad_Coord > geometry = way_geometry_store->get_geometry(skel);
+    std::vector< Quad_Coord > geometry = extra_data.way_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
-        geometry.empty() ? 0 : bound_variant(double_coords, mode),
-        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+        geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+        ((extra_data.mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
         meta, users);
   }
   else
@@ -479,18 +446,18 @@ void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Way_Ske
 }
 
 
-void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users) const
+void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
+                    const std::map< uint32, std::string >* users = 0)
 {
-  if (attic_way_geometry_store)
+  if (extra_data.attic_way_geometry_store)
   {
-    std::vector< Quad_Coord > geometry = attic_way_geometry_store->get_geometry(skel);
+    std::vector< Quad_Coord > geometry = extra_data.attic_way_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
-        geometry.empty() ? 0 : bound_variant(double_coords, mode),
-        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+        geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+        ((extra_data.mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
         meta, users);
   }
   else
@@ -498,18 +465,18 @@ void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Attic< 
 }
 
 
-void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users) const
+void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const std::map< uint32, std::string >* users = 0)
 {
-  if (relation_geometry_store)
+  if (extra_data.relation_geometry_store)
   {
-    std::vector< std::vector< Quad_Coord > > geometry = relation_geometry_store->get_geometry(skel);
+    std::vector< std::vector< Quad_Coord > > geometry = extra_data.relation_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
-        geometry.empty() ? 0 : bound_variant(double_coords, mode),
-        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+        ((extra_data.mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
         meta, users);
   }
   else
@@ -517,18 +484,18 @@ void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Relatio
 }
 
 
-void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users) const
+void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
+                    const std::map< uint32, std::string >* users = 0)
 {
-  if (attic_relation_geometry_store)
+  if (extra_data.attic_relation_geometry_store)
   {
-    std::vector< std::vector< Quad_Coord > > geometry = attic_relation_geometry_store->get_geometry(skel);
+    std::vector< std::vector< Quad_Coord > > geometry = extra_data.attic_relation_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
-        geometry.empty() ? 0 : bound_variant(double_coords, mode),
-        ((mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+        ((extra_data.mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
         meta, users);
   }
   else
@@ -536,19 +503,19 @@ void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Attic< 
 }
 
 
-void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users) const
+void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, const Area_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0,
+                    const std::map< uint32, std::string >* users = 0)
 {
   target.print_item(ll_upper, skel, tags, meta, users);
 }
 
 
-void Extra_Data::print_item(Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags,
-                    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta,
-                    const std::map< uint32, std::string >* users) const
+void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, const Derived_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
+                    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
+                    const std::map< uint32, std::string >* users = 0)
 {
   target.print_item(ll_upper, skel, tags, meta, users);
 }
@@ -569,7 +536,7 @@ void quadtile
     {
       if (++element_count > limit)
 	return;
-      extra_data.print_item(target, item_it->first.val(), *it2);
+      print_item(extra_data, target, item_it->first.val(), *it2);
     }
     ++item_it;
   }
@@ -579,7 +546,7 @@ void quadtile
 template< class Index, class Object >
 void tags_quadtile
     (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
-     const File_Properties& file_prop, Print_Target& target,
+     Print_Target& target,
      Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   Tag_Store< Index, Object > tag_store(*rman.get_transaction());
@@ -599,7 +566,7 @@ void tags_quadtile
     {
       if (++element_count > limit)
         return;
-      extra_data.print_item(target, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+      print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get_tags(*it2),
           meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
     }
     ++item_it;
@@ -635,7 +602,7 @@ void tags_quadtile_attic
           = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
       if (!meta)
         meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-      extra_data.print_item(target, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+      print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get_tags(*it2),
                  meta, &(current_meta_printer.users()));
     }
     ++item_it;
@@ -726,7 +693,7 @@ void by_id
   {
     if (++element_count > limit)
       return;
-    extra_data.print_item(target, items_by_id[i].second, *(items_by_id[i].first));
+    print_item(extra_data, target, items_by_id[i].second, *(items_by_id[i].first));
   }
 }
 
@@ -746,9 +713,9 @@ void by_id
     if (++element_count > limit)
       return;
     if (items_by_id[i].timestamp == NOW)
-      extra_data.print_item(target, items_by_id[i].idx.val(), *items_by_id[i].obj);
+      print_item(extra_data, target, items_by_id[i].idx.val(), *items_by_id[i].obj);
     else
-      extra_data.print_item(target, items_by_id[i].idx.val(),
+      print_item(extra_data, target, items_by_id[i].idx.val(),
 		      Attic< Object >(*items_by_id[i].obj, items_by_id[i].timestamp));
   }
 }
@@ -867,7 +834,7 @@ void tags_by_id
       typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
           = metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
               (items_by_id[i.val()].first->id));
-      extra_data.print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+      print_item(extra_data, target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
 		 tag_store.get_tags(*items_by_id[i.val()].first),
 		 (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id) ?
 		     &*meta_it : 0, &(meta_printer->users()));
@@ -976,7 +943,7 @@ void tags_by_id_attic
         typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
             = only_current_metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
                 (items_by_id[i.val()].obj->id));
-        extra_data.print_item(target, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
+        print_item(extra_data, target, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
 		 current_tag_store.get_tags(*items_by_id[i.val()].obj),
 		 (meta_it != only_current_metadata.end() && meta_it->ref == items_by_id[i.val()].obj->id) ?
 		     &*meta_it : 0, &(only_current_meta_printer.users()));
@@ -986,7 +953,7 @@ void tags_by_id_attic
         typename set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >::const_iterator meta_it
             = find_matching_metadata(attic_metadata,
                   items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp);
-        extra_data.print_item(target, items_by_id[i.val()].idx.val(),
+        print_item(extra_data, target, items_by_id[i.val()].idx.val(),
 		   Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
 		 attic_tag_store.get_tags(*items_by_id[i.val()].obj),
                  meta_it != attic_metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
@@ -1701,21 +1668,21 @@ void Print_Statement::execute(Resource_Manager& rman)
     }
     else
     {
-      tags_quadtile(extra_data, mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
+      tags_quadtile(extra_data, mit->second.nodes,
 		    output_target, rman, *rman.get_transaction(), limit, element_count);
       
       if (rman.get_desired_timestamp() != NOW)
         tags_quadtile_attic(extra_data, mit->second.attic_nodes,
                       output_target, rman, *rman.get_transaction(), limit, element_count);
       
-      tags_quadtile(extra_data, mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
+      tags_quadtile(extra_data, mit->second.ways,
 		    output_target, rman, *rman.get_transaction(), limit, element_count);
       
       if (rman.get_desired_timestamp() != NOW)
         tags_quadtile_attic(extra_data, mit->second.attic_ways,
                       output_target, rman, *rman.get_transaction(), limit, element_count);
       
-      tags_quadtile(extra_data, mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
+      tags_quadtile(extra_data, mit->second.relations,
 		    output_target, rman, *rman.get_transaction(), limit, element_count);
       
       if (rman.get_desired_timestamp() != NOW)
@@ -1723,7 +1690,7 @@ void Print_Statement::execute(Resource_Manager& rman)
                       output_target, rman, *rman.get_transaction(), limit, element_count);
       
       if (rman.get_area_transaction())
-        tags_quadtile(extra_data, mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
+        tags_quadtile(extra_data, mit->second.areas,
 		      output_target, rman, *rman.get_area_transaction(), limit, element_count);
     }
   }
@@ -2471,7 +2438,7 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
     User_Data_Cache* user_data_cache =
         (collection_mode == collect_rhs ? new User_Data_Cache(*rman.get_transaction()) : 0);
   
-    tags_quadtile(extra_data, mit->second.nodes, *osm_base_settings().NODE_TAGS_LOCAL,
+    tags_quadtile(extra_data, mit->second.nodes,
 		    *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (rman.get_desired_timestamp() != NOW)
@@ -2481,7 +2448,7 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
     if (collection_mode == collect_rhs)
       collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
       
-    tags_quadtile(extra_data, mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
+    tags_quadtile(extra_data, mit->second.ways,
 		    *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (rman.get_desired_timestamp() != NOW)
@@ -2491,7 +2458,7 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
     if (collection_mode == collect_rhs)
       collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
       
-    tags_quadtile(extra_data, mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
+    tags_quadtile(extra_data, mit->second.relations,
 		    *target, rman, *rman.get_transaction(), limit, element_count);
       
     if (rman.get_desired_timestamp() != NOW)
