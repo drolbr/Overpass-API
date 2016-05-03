@@ -8,7 +8,7 @@
 
 struct Output_Mode
 {
-  explicit Output_Mode(unsigned int mode_) : mode(mode_) {}
+  Output_Mode(unsigned int mode_) : mode(mode_) {}
   
   static const unsigned int ID = 0x1;
   static const unsigned int COORDS = 0x2;
@@ -22,6 +22,7 @@ struct Output_Mode
   static const unsigned int CENTER = 0x200;
   static const unsigned int COUNT = 0x400;
   
+  operator unsigned int() const { return mode; }
   unsigned int mode;
 };
 

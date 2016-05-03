@@ -41,78 +41,6 @@ const unsigned int RELATION_FLUSH_SIZE = 512*1024;
 const unsigned int AREA_FLUSH_SIZE = 64*1024;
 
 
-class Print_Target
-{
-  public:
-    typedef enum { visible_void, visible_false, visible_true } Show_New_Elem;
-    
-    Print_Target(uint32 mode_, Transaction& transaction);
-    virtual ~Print_Target() {}
-    
-    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0,
-			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
-			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
-			    Show_New_Elem show_new_elem = visible_void) = 0;
-    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
-                            const std::vector< Quad_Coord >* geometry = 0,
-			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0,
-			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
-			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
-			    Show_New_Elem show_new_elem = visible_void) = 0;
-    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
-                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
-			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0,
-			    const Output_Handler::Feature_Action& action = Output_Handler::keep,
-			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
-			    Show_New_Elem show_new_elem = visible_void) = 0;
-                            
-    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0,
-			    const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
-                            
-    virtual void print_item(uint32 ll_upper, const Derived_Skeleton& skel,
-			    const vector< pair< string, string > >* tags = 0,
-			    const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
-			    const map< uint32, string >* users = 0,
-			    const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
-
-    //TODO: remove. Replaced by Output_Mode
-    static const unsigned int PRINT_IDS = 1;
-    static const unsigned int PRINT_COORDS = 2;
-    static const unsigned int PRINT_NDS = 4;
-    static const unsigned int PRINT_MEMBERS = 8;
-    static const unsigned int PRINT_TAGS = 0x10;
-    static const unsigned int PRINT_VERSION = 0x20;
-    static const unsigned int PRINT_META = 0x40;
-    static const unsigned int PRINT_GEOMETRY = 0x80;
-    static const unsigned int PRINT_BOUNDS = 0x100;
-    static const unsigned int PRINT_CENTER = 0x200;
-    static const unsigned int PRINT_COUNT = 0x400;
-
-  protected:
-    uint32 mode;
-    map< uint32, string > roles;
-};
-
-
-Print_Target::Print_Target(uint32 mode_, Transaction& transaction) : mode(mode_)
-{
-  // prepare check update_members - load roles
-  roles = relation_member_roles(transaction);
-}
-
-
 Generic_Statement_Maker< Print_Statement > Print_Statement::statement_maker("print");
 
 
@@ -140,22 +68,22 @@ Print_Statement::Print_Statement
   input = attributes["from"];
   
   if (attributes["mode"] == "ids_only")
-    mode = Print_Target::PRINT_IDS;
+    mode = Output_Mode::ID;
   else if (attributes["mode"] == "skeleton")
-    mode = Print_Target::PRINT_IDS
-        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS;
+    mode = Output_Mode::ID
+        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS;
   else if (attributes["mode"] == "tags")
-    mode = Print_Target::PRINT_IDS | Print_Target::PRINT_TAGS;
+    mode = Output_Mode::ID | Output_Mode::TAGS;
   else if (attributes["mode"] == "body")
-    mode = Print_Target::PRINT_IDS
-        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
-	| Print_Target::PRINT_TAGS;
+    mode = Output_Mode::ID
+        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+	| Output_Mode::TAGS;
   else if (attributes["mode"] == "meta")
-    mode = Print_Target::PRINT_IDS
-        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
-	| Print_Target::PRINT_TAGS | Print_Target::PRINT_VERSION | Print_Target::PRINT_META;
+    mode = Output_Mode::ID
+        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+	| Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META;
   else if (attributes["mode"] == "count")
-    mode = Print_Target::PRINT_COUNT;
+    mode = Output_Mode::COUNT;
   else
   {
     mode = 0;
@@ -183,11 +111,11 @@ Print_Statement::Print_Statement
   if (attributes["geometry"] == "skeleton")
     ;
   else if (attributes["geometry"] == "full")
-    mode |= Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS;
+    mode = mode | Output_Mode::GEOMETRY | Output_Mode::BOUNDS;
   else if (attributes["geometry"] == "bounds")
-    mode |= Print_Target::PRINT_BOUNDS;
+    mode = mode | Output_Mode::BOUNDS;
   else if (attributes["geometry"] == "center")
-    mode |= Print_Target::PRINT_CENTER;
+    mode = mode | Output_Mode::CENTER;
   else
   {
     std::ostringstream temp;
@@ -298,7 +226,7 @@ Extra_Data::Extra_Data(
     : mode(mode_), way_geometry_store(0), attic_way_geometry_store(0),
     relation_geometry_store(0), attic_relation_geometry_store(0), roles(0)
 {
-  if (mode & (Print_Target::PRINT_GEOMETRY | Print_Target::PRINT_BOUNDS | Print_Target::PRINT_CENTER))
+  if (mode & (Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
   {
     way_geometry_store = new Way_Bbox_Geometry_Store(to_print.ways, stmt, rman, south, north, west, east);
     if (rman.get_desired_timestamp() < NOW)
@@ -356,7 +284,7 @@ const Opaque_Geometry& Geometry_Broker::make_way_geom(
   delete geom;
   geom = 0;
   
-  if (store && (mode & Print_Target::PRINT_GEOMETRY))
+  if (store && (mode & Output_Mode::GEOMETRY))
   {
     std::vector< Quad_Coord > geometry = store->get_geometry(skel);
     
@@ -384,7 +312,7 @@ const Opaque_Geometry& Geometry_Broker::make_way_geom(
       }
     }
   }
-  else if (store && ((mode & Print_Target::PRINT_BOUNDS) || (mode & Print_Target::PRINT_CENTER)))
+  else if (store && ((mode & Output_Mode::BOUNDS) || (mode & Output_Mode::CENTER)))
   {
     std::vector< Quad_Coord > geometry = store->get_geometry(skel);
     
@@ -403,7 +331,7 @@ const Opaque_Geometry& Geometry_Broker::make_way_geom(
       max_lon = std::max(max_lon, lon);
     }
     
-    if (mode & Print_Target::PRINT_BOUNDS)
+    if (mode & Output_Mode::BOUNDS)
       geom = new Bbox_Geometry(min_lat, min_lon, max_lat, max_lon);
     else
       geom = new Point_Geometry((min_lat + max_lat) / 2., (min_lon + max_lon) / 2.);
@@ -421,7 +349,7 @@ const Opaque_Geometry& Geometry_Broker::make_relation_geom(
   delete geom;
   geom = 0;
   
-  if (store && (mode & Print_Target::PRINT_GEOMETRY))
+  if (store && (mode & Output_Mode::GEOMETRY))
   {
     std::vector< std::vector< Quad_Coord > > geometry = store->get_geometry(skel);
     
@@ -492,7 +420,7 @@ const Opaque_Geometry& Geometry_Broker::make_relation_geom(
       }
     }
   }
-  else if (store && ((mode & Print_Target::PRINT_BOUNDS) || (mode & Print_Target::PRINT_CENTER)))
+  else if (store && ((mode & Output_Mode::BOUNDS) || (mode & Output_Mode::CENTER)))
   {
     std::vector< std::vector< Quad_Coord > > geometry = store->get_geometry(skel);
     
@@ -527,7 +455,7 @@ const Opaque_Geometry& Geometry_Broker::make_relation_geom(
       }
     }
     
-    if (mode & Print_Target::PRINT_BOUNDS)
+    if (mode & Output_Mode::BOUNDS)
       geom = new Bbox_Geometry(min_lat, min_lon, max_lat, max_lon);
     else
       geom = new Point_Geometry((min_lat + max_lat) / 2., (min_lon + max_lon) / 2.);
@@ -649,7 +577,7 @@ void tags_quadtile_
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
-      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
       
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
@@ -679,10 +607,10 @@ void tags_quadtile_attic_
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
       (items, transaction, 
-      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
       (items, transaction, 
-      (extra_data.mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
   
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -953,14 +881,14 @@ void tags_by_id_attic
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
       (current_items, transaction, 
-      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
   
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
       (attic_items, transaction, 
-      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
       (attic_items, transaction, 
-      (extra_data.mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
       
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
@@ -1030,7 +958,7 @@ void tags_by_id
    unsigned int mode, uint32 FLUSH_SIZE, Output_Handler& output, Resource_Manager& rman,
    uint32 limit, uint32& element_count)
 {
-  if (mode & Print_Target::PRINT_META)
+  if (mode & Output_Mode::META)
   {
     if (rman.get_desired_timestamp() == NOW)
     {
@@ -1307,7 +1235,7 @@ void Print_Statement::execute(Resource_Manager& rman)
   Extra_Data extra_data(rman, *this, mit->second, mode, south, north, west, east);  
   Output_Handler& output_handler = *rman.get_global_settings().get_output_handler();
   
-  if (mode & Print_Target::PRINT_TAGS)
+  if (mode & Output_Mode::TAGS)
   {
     if (order == order_by_id)
     {
@@ -1354,7 +1282,7 @@ void Print_Statement::execute(Resource_Manager& rman)
 		      output_handler, rman, *rman.get_area_transaction(), limit, element_count);
     }
   }
-  else if (mode & Print_Target::PRINT_COUNT)
+  else if (mode & Output_Mode::COUNT)
   {
     Set count_set;
     count_set.deriveds[Uint31_Index(0u)].push_back(
@@ -1395,6 +1323,65 @@ void Print_Statement::execute(Resource_Manager& rman)
   }
   
   rman.health_check(*this);
+}
+
+
+class Print_Target
+{
+  public:
+    typedef enum { visible_void, visible_false, visible_true } Show_New_Elem;
+    
+    Print_Target(uint32 mode_, Transaction& transaction);
+    virtual ~Print_Target() {}
+    
+    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0,
+                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0,
+                            Show_New_Elem show_new_elem = visible_void) = 0;
+    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< Quad_Coord >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0,
+                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0,
+                            Show_New_Elem show_new_elem = visible_void) = 0;
+    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
+                            const std::vector< std::vector< Quad_Coord > >* geometry = 0,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0,
+                            const Output_Handler::Feature_Action& action = Output_Handler::keep,
+                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0,
+                            Show_New_Elem show_new_elem = visible_void) = 0;
+                            
+    virtual void print_item(uint32 ll_upper, const Area_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Area::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0,
+                            const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
+                            
+    virtual void print_item(uint32 ll_upper, const Derived_Skeleton& skel,
+                            const vector< pair< string, string > >* tags = 0,
+                            const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0,
+                            const map< uint32, string >* users = 0,
+                            const Output_Handler::Feature_Action& action = Output_Handler::keep) = 0;
+
+  protected:
+    uint32 mode;
+    map< uint32, string > roles;
+};
+
+
+Print_Target::Print_Target(uint32 mode_, Transaction& transaction) : mode(mode_)
+{
+  // prepare check update_members - load roles
+  roles = relation_member_roles(transaction);
 }
 
 
@@ -1636,9 +1623,9 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   {
     Node_Skeleton new_skel(skel.id);
     output->print_item(skel, Point_Geometry(::lat(ll_upper, skel.ll_lower), ::lon(ll_upper, skel.ll_lower)),
-      mode & Print_Target::PRINT_TAGS ? tags : 0,
-      mode & Print_Target::PRINT_META ? meta : 0,
-      mode & Print_Target::PRINT_META ? users : 0,
+      mode & Output_Mode::TAGS ? tags : 0,
+      mode & Output_Mode::META ? meta : 0,
+      mode & Output_Mode::META ? users : 0,
       Output_Mode(mode),
       action == Output_Handler::erase && show_new_elem == visible_true ? Output_Handler::push_away : action,
       action == Output_Handler::erase && add_deletion_information ? &new_skel : 0, 0, 0, new_meta);
@@ -1659,9 +1646,9 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& skel,
   {
     Point_Geometry new_geom(::lat(new_ll_upper, new_skel.ll_lower), ::lon(new_ll_upper, new_skel.ll_lower));
     output->print_item(skel, Point_Geometry(::lat(ll_upper, skel.ll_lower), ::lon(ll_upper, skel.ll_lower)),
-      mode & Print_Target::PRINT_TAGS ? tags : 0,
-      mode & Print_Target::PRINT_META ? meta : 0,
-      mode & Print_Target::PRINT_META ? users : 0,
+      mode & Output_Mode::TAGS ? tags : 0,
+      mode & Output_Mode::META ? meta : 0,
+      mode & Output_Mode::META ? users : 0,
       Output_Mode(mode),
       action,
       &new_skel, &new_geom, new_tags, new_meta);
@@ -1683,9 +1670,9 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     Geometry_Broker broker;
     Way_Skeleton new_skel(skel.id);
     output->print_item(skel, broker.make_way_geom(geometry, bounds),
-        mode & Print_Target::PRINT_TAGS ? tags : 0,
-        mode & Print_Target::PRINT_META ? meta : 0,
-        mode & Print_Target::PRINT_META ? users : 0,
+        mode & Output_Mode::TAGS ? tags : 0,
+        mode & Output_Mode::META ? meta : 0,
+        mode & Output_Mode::META ? users : 0,
         Output_Mode(mode),
         action == Output_Handler::erase && show_new_elem == visible_true ? Output_Handler::push_away : action,
         action == Output_Handler::erase && add_deletion_information ? &new_skel : 0, 0, 0, new_meta);
@@ -1711,9 +1698,9 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     Geometry_Broker broker;
     Geometry_Broker new_broker;
     output->print_item(skel, broker.make_way_geom(geometry, bounds),
-        mode & Print_Target::PRINT_TAGS ? tags : 0,
-        mode & Print_Target::PRINT_META ? meta : 0,
-        mode & Print_Target::PRINT_META ? users : 0,
+        mode & Output_Mode::TAGS ? tags : 0,
+        mode & Output_Mode::META ? meta : 0,
+        mode & Output_Mode::META ? users : 0,
         Output_Mode(mode),
         action,
         &new_skel, &new_broker.make_way_geom(new_geometry, new_bounds), new_tags, new_meta);
@@ -1735,10 +1722,10 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleton& sk
     Geometry_Broker broker;
     Relation_Skeleton new_skel(skel.id);
     output->print_item(skel, broker.make_relation_geom(geometry, bounds),
-        mode & Print_Target::PRINT_TAGS ? tags : 0,
-        mode & Print_Target::PRINT_META ? meta : 0,
+        mode & Output_Mode::TAGS ? tags : 0,
+        mode & Output_Mode::META ? meta : 0,
         &roles,
-        mode & Print_Target::PRINT_META ? users : 0,
+        mode & Output_Mode::META ? users : 0,
         Output_Mode(mode),
         action == Output_Handler::erase && show_new_elem == visible_true ? Output_Handler::push_away : action,
         action == Output_Handler::erase && add_deletion_information ? &new_skel : 0, 0, 0, new_meta);
@@ -1764,10 +1751,10 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleton& sk
     Geometry_Broker broker;
     Geometry_Broker new_broker;
     output->print_item(skel, broker.make_relation_geom(geometry, bounds),
-        mode & Print_Target::PRINT_TAGS ? tags : 0,
-        mode & Print_Target::PRINT_META ? meta : 0,
+        mode & Output_Mode::TAGS ? tags : 0,
+        mode & Output_Mode::META ? meta : 0,
         &roles,
-        mode & Print_Target::PRINT_META ? users : 0,
+        mode & Output_Mode::META ? users : 0,
         Output_Mode(mode),
         action,
         &new_skel, &new_broker.make_relation_geom(new_geometry, new_bounds), new_tags, new_meta);
@@ -1785,7 +1772,7 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Area_Skeleton& skel,
     Null_Geometry geom;
     Derived_Skeleton derived("area", Uint64(skel.id.val()));
     output->print_item(derived, geom,
-        mode & Print_Target::PRINT_TAGS ? tags : 0,
+        mode & Output_Mode::TAGS ? tags : 0,
         Output_Mode(mode));
   }
 }
@@ -1800,7 +1787,7 @@ void Plain_Print_Target::print_item(uint32 ll_upper, const Derived_Skeleton& ske
   {
     Null_Geometry geom;
     output->print_item(skel, geom,
-        mode & Print_Target::PRINT_TAGS ? tags : 0,
+        mode & Output_Mode::TAGS ? tags : 0,
         Output_Mode(mode));
   }
 }
@@ -1906,9 +1893,9 @@ private:
 
 const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_coords, unsigned int mode)
 {
-  if (mode & Print_Target::PRINT_BOUNDS)
+  if (mode & Output_Mode::BOUNDS)
     return &double_coords.bounds();
-  else if (mode & Print_Target::PRINT_CENTER)
+  else if (mode & Output_Mode::CENTER)
     return &double_coords.center();
   
   return 0;
@@ -1926,7 +1913,7 @@ void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, c
     Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
-        ((extra_data.mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+        ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
         meta, users);
   }
   else
@@ -1945,7 +1932,7 @@ void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, c
     Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
-        ((extra_data.mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+        ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
         meta, users);
   }
   else
@@ -1964,7 +1951,7 @@ void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, c
     Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
-        ((extra_data.mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
         meta, users);
   }
   else
@@ -1983,7 +1970,7 @@ void print_item(Extra_Data& extra_data, Print_Target& target, uint32 ll_upper, c
     Double_Coords double_coords(geometry);
     target.print_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
-        ((extra_data.mode & Print_Target::PRINT_GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
         meta, users);
   }
   else
@@ -2042,7 +2029,7 @@ void tags_quadtile
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
-      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
       
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
@@ -2072,10 +2059,10 @@ void tags_quadtile_attic
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
       (items, transaction, 
-      (extra_data.mode & Print_Target::PRINT_META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
       (items, transaction, 
-      (extra_data.mode & Print_Target::PRINT_META) ? attic_meta_file_properties< Object >() : 0);
+      (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
   
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -2432,28 +2419,28 @@ void Collection_Print_Target::clear_nodes
     {
       if (add_deletion_information)
         final_target->print_item(it->first.idx.val(), it->first.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
-	    (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::erase,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0,
+	    (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
+	    (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::erase,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0,
 	    it->second.idx.val() == 0xfeu ? visible_true : visible_false);
       else
         final_target->print_item(it->first.idx.val(), it->first.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
-	    (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::erase);
+	    (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
+	    (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::erase);
     }
     else if (it->first.idx.val() != 0xffu)
       // The elements differ
       final_target->print_item(it->first.idx.val(), it->first.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
-	    (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::modify,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0,
+	    (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
+	    (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::modify,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0,
 	    visible_void, it->second.idx.val(), it->second.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->second.tags : 0);
+	    (mode & Output_Mode::TAGS) ? &it->second.tags : 0);
     else
       // No old element exists
       final_target->print_item(it->second.idx.val(), it->second.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->second.tags : 0,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0, users, Output_Handler::create);
+	    (mode & Output_Mode::TAGS) ? &it->second.tags : 0,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0, users, Output_Handler::create);
   }
 }
  
@@ -2559,18 +2546,18 @@ void Collection_Print_Target::clear_ways
       Double_Coords double_coords(it->first.geometry);
       if (add_deletion_information)
         final_target->print_item(it->first.idx.val(), it->first.elem,
-            (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
+            (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             bound_variant(double_coords, mode),
-            (mode & Print_Target::PRINT_GEOMETRY) ? &it->first.geometry : 0,
-            (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::erase,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0,
+            (mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
+            (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::erase,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0,
 	    it->second.idx.val() == 0xfeu ? visible_true : visible_false);
       else
         final_target->print_item(it->first.idx.val(), it->first.elem,
-            (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
+            (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             bound_variant(double_coords, mode),
-            (mode & Print_Target::PRINT_GEOMETRY) ? &it->first.geometry : 0,
-            (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::erase);
+            (mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
+            (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::erase);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -2578,25 +2565,25 @@ void Collection_Print_Target::clear_ways
       Double_Coords double_coords(it->first.geometry);
       Double_Coords double_coords_new(it->second.geometry);
       final_target->print_item(it->first.idx.val(), it->first.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
+	    (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             bound_variant(double_coords, mode),
-            (mode & Print_Target::PRINT_GEOMETRY) ? &it->first.geometry : 0,
-	    (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::modify,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0,
+            (mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
+	    (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::modify,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0,
 	    visible_void, it->second.idx.val(), it->second.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->second.tags : 0,
+	    (mode & Output_Mode::TAGS) ? &it->second.tags : 0,
             bound_variant(double_coords_new, mode),
-	    (mode & Print_Target::PRINT_GEOMETRY) ? &it->second.geometry : 0);
+	    (mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0);
     }
     else
     {
       // No old element exists
       Double_Coords double_coords(it->second.geometry);
       final_target->print_item(it->second.idx.val(), it->second.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->second.tags : 0,
+	    (mode & Output_Mode::TAGS) ? &it->second.tags : 0,
             bound_variant(double_coords, mode),
-            (mode & Print_Target::PRINT_GEOMETRY) ? &it->second.geometry : 0,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0, users, Output_Handler::create);
+            (mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0, users, Output_Handler::create);
     }
   }
 }
@@ -2704,18 +2691,18 @@ void Collection_Print_Target::clear_relations
       Double_Coords double_coords(it->first.geometry);
       if (add_deletion_information)
         final_target->print_item(it->first.idx.val(), it->first.elem,
-            (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
+            (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             bound_variant(double_coords, mode),
-            (mode & Print_Target::PRINT_GEOMETRY) ? &it->first.geometry : 0,
-            (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::erase,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0,
+            (mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
+            (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::erase,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0,
 	    it->second.idx.val() == 0xfeu ? visible_true : visible_false);
       else
         final_target->print_item(it->first.idx.val(), it->first.elem,
-            (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
+            (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             bound_variant(double_coords, mode),
-            (mode & Print_Target::PRINT_GEOMETRY) ? &it->first.geometry : 0,
-            (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::erase);
+            (mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
+            (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::erase);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -2723,25 +2710,25 @@ void Collection_Print_Target::clear_relations
       Double_Coords double_coords(it->first.geometry);
       Double_Coords double_coords_new(it->second.geometry);
       final_target->print_item(it->first.idx.val(), it->first.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->first.tags : 0,
+	    (mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             bound_variant(double_coords, mode),
-            (mode & Print_Target::PRINT_GEOMETRY) ? &it->first.geometry : 0,
-	    (mode & Print_Target::PRINT_META) ? &it->first.meta : 0, users, Output_Handler::modify,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0,
+            (mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
+	    (mode & Output_Mode::META) ? &it->first.meta : 0, users, Output_Handler::modify,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0,
 	    visible_void, it->second.idx.val(), it->second.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->second.tags : 0,
+	    (mode & Output_Mode::TAGS) ? &it->second.tags : 0,
             bound_variant(double_coords_new, mode),
-	    (mode & Print_Target::PRINT_GEOMETRY) ? &it->second.geometry : 0);
+	    (mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0);
     }
     else
     {
       // No old element exists
       Double_Coords double_coords(it->second.geometry);
       final_target->print_item(it->second.idx.val(), it->second.elem,
-	    (mode & Print_Target::PRINT_TAGS) ? &it->second.tags : 0,
+	    (mode & Output_Mode::TAGS) ? &it->second.tags : 0,
             bound_variant(double_coords, mode),
-            (mode & Print_Target::PRINT_GEOMETRY) ? &it->second.geometry : 0,
-	    (mode & Print_Target::PRINT_META) ? &it->second.meta : 0, users, Output_Handler::create);
+            (mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
+	    (mode & Output_Mode::META) ? &it->second.meta : 0, users, Output_Handler::create);
     }
   }
 }
@@ -2773,10 +2760,10 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
   {
     collection_print_target = new Collection_Print_Target(mode, *rman.get_transaction());
     target = collection_print_target;
-    mode = Print_Target::PRINT_IDS
-        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
-        | Print_Target::PRINT_TAGS | Print_Target::PRINT_VERSION | Print_Target::PRINT_META
-        | Print_Target::PRINT_GEOMETRY;
+    mode = Output_Mode::ID
+        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+        | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+        | Output_Mode::GEOMETRY;
   }
   else
   {    
@@ -2785,15 +2772,15 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
 			       *rman.get_transaction(), rman.get_global_settings().get_output_handler());
     collection_print_target->set_target(dynamic_cast< Plain_Print_Target* >(output_target.obj));
     target = collection_print_target;
-    mode = Print_Target::PRINT_IDS
-        | Print_Target::PRINT_COORDS | Print_Target::PRINT_NDS | Print_Target::PRINT_MEMBERS
-        | Print_Target::PRINT_TAGS | Print_Target::PRINT_VERSION | Print_Target::PRINT_META
-        | Print_Target::PRINT_GEOMETRY;
+    mode = Output_Mode::ID
+        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+        | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+        | Output_Mode::GEOMETRY;
   }
   
   Extra_Data extra_data(rman, *this, mit->second, mode, south, north, west, east);
 
-  if (mode & Print_Target::PRINT_TAGS)
+  if (mode & Output_Mode::TAGS)
   {
     User_Data_Cache* user_data_cache =
         (collection_mode == collect_rhs ? new User_Data_Cache(*rman.get_transaction()) : 0);

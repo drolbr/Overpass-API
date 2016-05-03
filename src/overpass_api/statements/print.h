@@ -46,7 +46,7 @@ class Print_Statement : public Statement
     
   private:
     string input;
-    unsigned int mode;
+    Output_Mode mode;
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
     Collection_Print_Target* collection_print_target;
