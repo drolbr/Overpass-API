@@ -98,7 +98,7 @@ void append_action(const Output_Handler::Feature_Action& action, bool is_new = f
 void print_tags(const std::vector< std::pair< std::string, std::string > >* tags,
 		Output_Mode mode, bool& inner_tags_printed)
 {
-  if (Output_Mode::TAGS && tags && !tags->empty())
+  if ((mode.mode & Output_Mode::TAGS) && tags && !tags->empty())
   {
     if (!inner_tags_printed)
     {
