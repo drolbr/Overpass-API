@@ -1952,7 +1952,10 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   
-  if (stmt->get_type() != RECURSE_DOWN && stmt->get_type() != RECURSE_DOWN_REL)
+  if (mit == rman.sets().end())
+    return;
+  if (stmt->get_type() != RECURSE_DOWN && stmt->get_type() != RECURSE_DOWN_REL
+      && stmt->get_type() != RECURSE_UP && stmt->get_type() != RECURSE_UP_REL)
     return;
   
   if (stmt->get_type() == RECURSE_DOWN)
