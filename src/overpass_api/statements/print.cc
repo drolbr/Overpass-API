@@ -19,11 +19,11 @@
 #include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/meta_collector.h"
 #include "../data/relation_geometry_store.h"
 #include "../data/tag_store.h"
 #include "../data/utils.h"
 #include "../data/way_geometry_store.h"
-#include "meta_collector.h"
 #include "print.h"
 
 #include <algorithm>

@@ -25,8 +25,9 @@
 
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
+#include "../../template_db/transaction.h"
+#include "../core/datatypes.h"
 #include "../core/settings.h"
-#include "statement.h"
 
 
 template< typename Index, typename Id_Type >
