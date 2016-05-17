@@ -28,46 +28,63 @@
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "filenames.h"
 
 
 template< typename Index, typename Id_Type >
 struct Meta_Collector
 {
-  public:
-    template< typename Object >
-    Meta_Collector(const map< Index, vector< Object > >& items,
-        Transaction& transaction, const File_Properties* meta_file_prop = 0);
+public:
+  template< typename Object >
+  Meta_Collector(const std::map< Index, std::vector< Object > >& items,
+      Transaction& transaction, const File_Properties* meta_file_prop = 0);
     
-    Meta_Collector(const set< pair< Index, Index > >& used_ranges,
-        Transaction& transaction, const File_Properties* meta_file_prop = 0);
+  Meta_Collector(const std::set< std::pair< Index, Index > >& used_ranges,
+      Transaction& transaction, const File_Properties* meta_file_prop = 0);
     
-    void reset();
-    const OSM_Element_Metadata_Skeleton< Id_Type >* get
-        (const Index& index, Id_Type ref);    
-    const OSM_Element_Metadata_Skeleton< Id_Type >* get
-        (const Index& index, Id_Type ref, uint64 timestamp);    
+  void reset();
+  const OSM_Element_Metadata_Skeleton< Id_Type >* get
+      (const Index& index, Id_Type ref);    
+  const OSM_Element_Metadata_Skeleton< Id_Type >* get
+      (const Index& index, Id_Type ref, uint64 timestamp);    
     
-    ~Meta_Collector()
+  ~Meta_Collector()
+  {
+    if (meta_db)
     {
-      if (meta_db)
-      {
-	delete db_it;
-	delete meta_db;
-      }
+      delete db_it;
+      delete meta_db;
     }
+  }
   
-  private:
-    set< Index > used_indices;
-    set< pair< Index, Index > > used_ranges;
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >* meta_db;
-    typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-        ::Discrete_Iterator* db_it;
-    typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
-        ::Range_Iterator* range_it;
-    Index* current_index;
-    set< OSM_Element_Metadata_Skeleton< Id_Type > > current_objects;
+private:
+  std::set< Index > used_indices;
+  std::set< std::pair< Index, Index > > used_ranges;
+  Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >* meta_db;
+  typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+      ::Discrete_Iterator* db_it;
+  typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+      ::Range_Iterator* range_it;
+  Index* current_index;
+  std::set< OSM_Element_Metadata_Skeleton< Id_Type > > current_objects;
     
-    void update_current_objects(const Index&);
+  void update_current_objects(const Index&);
+};
+
+
+template< typename Index, typename Object >
+struct Attic_Meta_Collector
+{
+public:
+  Attic_Meta_Collector(const std::map< Index, std::vector< Attic< Object > > >& items,
+                       Transaction& transaction, bool turn_on);
+    
+  const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* get
+      (const Index& index, typename Object::Id_Type ref, uint64 timestamp = NOW);    
+  
+private:
+  Meta_Collector< Index, typename Object::Id_Type > current;
+  Meta_Collector< Index, typename Object::Id_Type > attic;
 };
 
 
@@ -76,10 +93,10 @@ struct User_Data_Cache
   public:
     User_Data_Cache(Transaction& transaction);
     
-    const map< uint32, string >& users() const { return users_; }
+    const std::map< uint32, string >& users() const { return users_; }
     
   private:
-    map< uint32, string > users_;
+    std::map< uint32, string > users_;
 };
 
 
@@ -87,10 +104,10 @@ struct User_Data_Cache
 
 template< typename Index, typename Object >
 void generate_index_query
-  (set< Index >& indices,
-   const map< Index, vector< Object > >& items)
+  (std::set< Index >& indices,
+   const std::map< Index, std::vector< Object > >& items)
 {
-  for (typename map< Index, vector< Object > >::const_iterator
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
       it(items.begin()); it != items.end(); ++it)
     indices.insert(it->first);
 }
@@ -99,7 +116,7 @@ void generate_index_query
 template< typename Index, typename Id_Type >
 template< typename Object >
 Meta_Collector< Index, Id_Type >::Meta_Collector
-    (const map< Index, vector< Object > >& items,
+    (const std::map< Index, std::vector< Object > >& items,
      Transaction& transaction, const File_Properties* meta_file_prop)
   : meta_db(0), db_it(0), range_it(0), current_index(0)
 {
@@ -116,7 +133,7 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
 
 template< typename Index, typename Id_Type >
 Meta_Collector< Index, Id_Type >::Meta_Collector
-    (const set< pair< Index, Index > >& used_ranges_,
+    (const std::set< std::pair< Index, Index > >& used_ranges_,
      Transaction& transaction, const File_Properties* meta_file_prop)
   : used_ranges(used_ranges_), meta_db(0), db_it(0), range_it(0), current_index(0)
 {
@@ -219,7 +236,7 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
   if ((current_index) && (*current_index < index))
     update_current_objects(index);
   
-  typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
+  typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
       = current_objects.lower_bound(OSM_Element_Metadata_Skeleton< Id_Type >(ref));
   if (it != current_objects.end() && it->ref == ref)
     return &*it;
@@ -238,7 +255,7 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
   if ((current_index) && (*current_index < index))
     update_current_objects(index);
   
-  typename set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
+  typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
       = current_objects.lower_bound(OSM_Element_Metadata_Skeleton< Id_Type >(ref, timestamp));
   if (it == current_objects.begin())
     return 0;
@@ -247,6 +264,26 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
     return &*it;
   else
     return 0;
+}
+
+
+template< typename Index, typename Object >
+Attic_Meta_Collector< Index, Object >::Attic_Meta_Collector(
+    const std::map< Index, std::vector< Attic< Object > > >& items, Transaction& transaction, bool turn_on)
+    : current(items, transaction, turn_on ? current_meta_file_properties< Object >() : 0),
+    attic(items, transaction, turn_on ? attic_meta_file_properties< Object >() : 0)
+{}
+
+
+template< typename Index, typename Object >
+const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* Attic_Meta_Collector< Index, Object >::get(
+    const Index& index, typename Object::Id_Type ref, uint64 timestamp)
+{
+  const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
+      = attic.get(index, ref, timestamp);
+  if (meta)
+    return meta;
+  return current.get(index, ref, timestamp);
 }
 
 

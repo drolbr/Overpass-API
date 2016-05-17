@@ -583,13 +583,8 @@ void tags_quadtile_attic_
      Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
   Tag_Store< Index, Object > tag_store(items, transaction, typename Object::Id_Type(), typename Object::Id_Type());
-  // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, transaction, 
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
-  Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, transaction, 
-      (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
+
+  Attic_Meta_Collector< Index, Object > meta_printer(items, transaction, extra_data.mode & Output_Mode::META);
   
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -600,11 +595,8 @@ void tags_quadtile_attic_
     {
       if (++element_count > limit)
         return;
-      const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
-          = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-      if (!meta)
-        meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-      print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get_tags(*it2), meta);
+      print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+                 meta_printer.get(item_it->first, it2->id, it2->timestamp));
     }
     ++item_it;
   }
@@ -750,8 +742,7 @@ template< class Index, class Object >
 void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > >& metadata,
                       const std::map< Index, std::vector< Attic< Object > > >& items,
                       typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound,
-                      Meta_Collector< Index, typename Object::Id_Type >& current_meta_printer,
-                      Meta_Collector< Index, typename Object::Id_Type >& attic_meta_printer)
+                      Attic_Meta_Collector< Index, Object >& meta_printer)
 {
   for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       it(items.begin()); it != items.end(); ++it)
@@ -762,9 +753,7 @@ void collect_metadata(set< OSM_Element_Metadata_Skeleton< typename Object::Id_Ty
       if (!(it2->id < lower_id_bound) && (it2->id < upper_id_bound))
       {
         const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
-            = current_meta_printer.get(it->first, it2->id, it2->timestamp);
-        if (!meta || !(meta->timestamp < it2->timestamp))
-          meta = attic_meta_printer.get(it->first, it2->id, it2->timestamp);
+            = meta_printer.get(it->first, it2->id, it2->timestamp);
         if (meta)          
           metadata.insert(*meta);
       }
@@ -860,13 +849,6 @@ void tags_by_id_attic
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
       (current_items, transaction, 
       (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
-  
-  Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (attic_items, transaction, 
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
-  Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (attic_items, transaction, 
-      (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
       
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
@@ -891,12 +873,10 @@ void tags_by_id_attic
     collect_metadata(only_current_metadata, current_items, lower_id_bound, upper_id_bound,
 		     only_current_meta_printer);
     only_current_meta_printer.reset();
-
+  
+    Attic_Meta_Collector< Index, Object > meta_printer(attic_items, transaction, extra_data.mode & Output_Mode::META);
     set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_metadata;
-    collect_metadata(attic_metadata, attic_items, lower_id_bound, upper_id_bound,
-                     current_meta_printer, attic_meta_printer);
-    attic_meta_printer.reset();
-    current_meta_printer.reset();
+    collect_metadata(attic_metadata, attic_items, lower_id_bound, upper_id_bound, meta_printer);
 
     // print the result
     for (typename Object::Id_Type i(id_pos);
@@ -1004,97 +984,100 @@ void Print_Statement::execute(Resource_Manager& rman)
     rman.area_updater()->flush();
 
   std::map< std::string, Set >::const_iterator mit(rman.sets().find(input));
-  uint32 element_count = 0;
   if (mit == rman.sets().end())
     return;
     
-  Extra_Data extra_data(rman, *this, mit->second, mode, south, north, west, east);  
-  Output_Handler& output_handler = *rman.get_global_settings().get_output_handler();
+  const Set* output_items = &mit->second;
   
-  if (mode & Output_Mode::TAGS)
+  Set count_set;
+  if (mode & Output_Mode::COUNT)
   {
-    if (order == order_by_id)
+    count_set.deriveds[Uint31_Index(0u)].push_back(
+        Derived_Structure("count", Uint64(0ull), make_count_tags(mit->second, rman.get_area_transaction())));
+    output_items = &count_set;
+  }
+  
+  Extra_Data extra_data(rman, *this, *output_items, mode, south, north, west, east);  
+  Output_Handler& output_handler = *rman.get_global_settings().get_output_handler();
+  uint32 element_count = 0;
+  
+  if (order == order_by_id)
+  {
+    if (mode & Output_Mode::TAGS)
     {
-      tags_by_id(extra_data, mit->second.nodes, mit->second.attic_nodes, mode, NODE_FLUSH_SIZE,
+      tags_by_id(extra_data, output_items->nodes, output_items->attic_nodes, mode, NODE_FLUSH_SIZE,
 		 output_handler, rman, limit, element_count);
-      tags_by_id(extra_data, mit->second.ways, mit->second.attic_ways, mode, WAY_FLUSH_SIZE,
+      tags_by_id(extra_data, output_items->ways, output_items->attic_ways, mode, WAY_FLUSH_SIZE,
 		 output_handler, rman, limit, element_count);
-      tags_by_id(extra_data, mit->second.relations, mit->second.attic_relations, mode, RELATION_FLUSH_SIZE,
+      tags_by_id(extra_data, output_items->relations, output_items->attic_relations, mode, RELATION_FLUSH_SIZE,
 		 output_handler, rman, limit, element_count);
       
       if (rman.get_area_transaction())
       {
 	Tag_Store< Uint31_Index, Area_Skeleton > tag_store(*rman.get_transaction());
-	tags_by_id(extra_data, mit->second.areas, AREA_FLUSH_SIZE, output_handler, rman,
+	tags_by_id(extra_data, output_items->areas, AREA_FLUSH_SIZE, output_handler, rman,
 		   (Meta_Collector< Uint31_Index, Area_Skeleton::Id_Type >*)0,
 		   tag_store, limit, element_count);
       }
+      
+      Tag_Store< Uint31_Index, Derived_Structure > tag_store;
+      tags_by_id(extra_data, output_items->deriveds, std::numeric_limits< uint32 >::max(), output_handler, rman,
+          (Meta_Collector< Uint31_Index, Derived_Structure::Id_Type >*)0, tag_store, limit, element_count);
     }
     else
     {
-      tags_quadtile_(extra_data, mit->second.nodes,
-		    output_handler, rman, *rman.get_transaction(), limit, element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic_(extra_data, mit->second.attic_nodes,
-                      output_handler, rman, *rman.get_transaction(), limit, element_count);
-      
-      tags_quadtile_(extra_data, mit->second.ways,
-		    output_handler, rman, *rman.get_transaction(), limit, element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic_(extra_data, mit->second.attic_ways,
-                      output_handler, rman, *rman.get_transaction(), limit, element_count);
-      
-      tags_quadtile_(extra_data, mit->second.relations,
-		    output_handler, rman, *rman.get_transaction(), limit, element_count);
-      
-      if (rman.get_desired_timestamp() != NOW)
-        tags_quadtile_attic_(extra_data, mit->second.attic_relations,
-                      output_handler, rman, *rman.get_transaction(), limit, element_count);
-      
+      by_id(output_items->nodes, output_items->attic_nodes,
+            output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      by_id(output_items->ways, output_items->attic_ways,
+            output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      by_id(output_items->relations, output_items->attic_relations,
+            output_handler, *rman.get_transaction(), extra_data, limit, element_count);      
       if (rman.get_area_transaction())
-        tags_quadtile_(extra_data, mit->second.areas,
-		      output_handler, rman, *rman.get_area_transaction(), limit, element_count);
+        by_id(output_items->areas, output_handler, *rman.get_area_transaction(), extra_data, limit, element_count);
     }
-  }
-  else if (mode & Output_Mode::COUNT)
-  {
-    Set count_set;
-    count_set.deriveds[Uint31_Index(0u)].push_back(
-        Derived_Structure("count", Uint64(0ull), make_count_tags(mit->second, rman.get_area_transaction())));
-    
-    Tag_Store< Uint31_Index, Derived_Structure > tag_store;
-    tags_by_id(extra_data, count_set.deriveds, 1024, output_handler, rman,
-	(Meta_Collector< Uint31_Index, Derived_Structure::Id_Type >*)0,
-	tag_store, limit, element_count);
   }
   else
   {
-    if (order == order_by_id)
+    if (mode & Output_Mode::TAGS)
     {
-      by_id(mit->second.nodes, mit->second.attic_nodes,
-	    output_handler, *rman.get_transaction(), extra_data, limit, element_count);
-      by_id(mit->second.ways, mit->second.attic_ways,
-	    output_handler, *rman.get_transaction(), extra_data, limit, element_count);
-      by_id(mit->second.relations, mit->second.attic_relations,
-	    output_handler, *rman.get_transaction(), extra_data, limit, element_count);      
+      tags_quadtile_(extra_data, output_items->nodes,
+		    output_handler, rman, *rman.get_transaction(), limit, element_count);
+      
+      if (rman.get_desired_timestamp() != NOW)
+        tags_quadtile_attic_(extra_data, output_items->attic_nodes,
+                      output_handler, rman, *rman.get_transaction(), limit, element_count);
+      
+      tags_quadtile_(extra_data, output_items->ways,
+		    output_handler, rman, *rman.get_transaction(), limit, element_count);
+      
+      if (rman.get_desired_timestamp() != NOW)
+        tags_quadtile_attic_(extra_data, output_items->attic_ways,
+                      output_handler, rman, *rman.get_transaction(), limit, element_count);
+      
+      tags_quadtile_(extra_data, output_items->relations,
+		    output_handler, rman, *rman.get_transaction(), limit, element_count);
+      
+      if (rman.get_desired_timestamp() != NOW)
+        tags_quadtile_attic_(extra_data, output_items->attic_relations,
+                      output_handler, rman, *rman.get_transaction(), limit, element_count);
+      
       if (rman.get_area_transaction())
-	by_id(mit->second.areas, output_handler, *rman.get_area_transaction(), extra_data, limit, element_count);
+        tags_quadtile_(extra_data, output_items->areas,
+		      output_handler, rman, *rman.get_area_transaction(), limit, element_count);
     }
     else
     {
-      quadtile_(mit->second.nodes, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
-      quadtile_(mit->second.attic_nodes, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->nodes, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->attic_nodes, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
       
-      quadtile_(mit->second.ways, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
-      quadtile_(mit->second.attic_ways, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->ways, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->attic_ways, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
       
-      quadtile_(mit->second.relations, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
-      quadtile_(mit->second.attic_relations, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->relations, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
+      quadtile_(output_items->attic_relations, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
       
       if (rman.get_area_transaction())
-	quadtile_(mit->second.areas, output_handler, *rman.get_area_transaction(), extra_data, limit, element_count);
+        quadtile_(output_items->areas, output_handler, *rman.get_area_transaction(), extra_data, limit, element_count);
     }
   }
   

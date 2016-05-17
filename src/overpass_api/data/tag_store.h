@@ -40,7 +40,7 @@ public:
   void prefetch_chunk(const std::map< Index, std::vector< Object > >& elems,
       typename Object::Id_Type lower_id_bound, typename Object::Id_Type upper_id_bound);
   
-  const std::vector< std::pair< std::string, std::string > >* get_tags(const Object& elem) const;
+  const std::vector< std::pair< std::string, std::string > >* get_tags(const Object& elem);
   
 private:
   std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > > tags_by_id;
@@ -339,7 +339,7 @@ Tag_Store< Index, Object >::Tag_Store(const std::map< Index, std::vector< Attic<
 
 template< typename Index, typename Object >
 const std::vector< std::pair< std::string, std::string > >*
-    Tag_Store< Index, Object >::get_tags(const Object& elem) const
+    Tag_Store< Index, Object >::get_tags(const Object& elem)
 {
   typename std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > >::const_iterator
       it = tags_by_id.find(elem.id);
