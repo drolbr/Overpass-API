@@ -568,7 +568,7 @@ void tags_quadtile_
     {
       if (++element_count > limit)
         return;
-      print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+      print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
           meta_printer.get(item_it->first, it2->id));
     }
     ++item_it;
@@ -595,7 +595,7 @@ void tags_quadtile_attic_
     {
       if (++element_count > limit)
         return;
-      print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+      print_item(extra_data, output, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
                  meta_printer.get(item_it->first, it2->id, it2->timestamp));
     }
     ++item_it;
@@ -825,7 +825,7 @@ void tags_by_id
           = metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
               (items_by_id[i.val()].first->id));
       print_item(extra_data, output, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
-		 tag_store.get_tags(*items_by_id[i.val()].first),
+		 tag_store.get(Index(items_by_id[i.val()].second), *items_by_id[i.val()].first),
 		 (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id) ?
 		     &*meta_it : 0);
     }
@@ -890,7 +890,7 @@ void tags_by_id_attic
             = only_current_metadata.lower_bound(OSM_Element_Metadata_Skeleton< typename Object::Id_Type >
                 (items_by_id[i.val()].obj->id));
         print_item(extra_data, output, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
-		 current_tag_store.get_tags(*items_by_id[i.val()].obj),
+		 current_tag_store.get(items_by_id[i.val()].idx, *items_by_id[i.val()].obj),
 		 (meta_it != only_current_metadata.end() && meta_it->ref == items_by_id[i.val()].obj->id) ?
 		     &*meta_it : 0);
       }
@@ -901,7 +901,7 @@ void tags_by_id_attic
                   items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp);
         print_item(extra_data, output, items_by_id[i.val()].idx.val(),
 		   Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
-		 attic_tag_store.get_tags(*items_by_id[i.val()].obj),
+		 attic_tag_store.get(items_by_id[i.val()].idx, *items_by_id[i.val()].obj),
                  meta_it != attic_metadata.end() ? &*meta_it : 0);
       }
     }
@@ -1597,7 +1597,7 @@ void tags_quadtile
     {
       if (++element_count > limit)
         return;
-      print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+      print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
           meta_printer.get(item_it->first, it2->id), &(extra_data.users->users()));
     }
     ++item_it;
@@ -1633,7 +1633,7 @@ void tags_quadtile_attic
           = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
       if (!meta)
         meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-      print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get_tags(*it2),
+      print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
                  meta, &(extra_data.users->users()));
     }
     ++item_it;
