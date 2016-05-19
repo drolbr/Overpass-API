@@ -48,12 +48,57 @@ Make_Statement::~Make_Statement()
 }
 
 
+void Make_Statement::add_statement(Statement* statement, string text)
+{
+  Set_Tag_Statement* set_tag = dynamic_cast<Set_Tag_Statement*>(statement);
+  if (set_tag)
+    evaluators.push_back(set_tag);
+  else
+    substatement_error(get_name(), statement);
+}
+
+
 void Make_Statement::execute(Resource_Manager& rman)
 {
+  Set from;
   Set into;
+  
+  std::vector< std::pair< std::string, std::string > > tags;
+  for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+    tags.push_back(std::make_pair((*it)->get_key(), (*it)->eval(from)));
 
-  into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(type, Uint64(0ull)));
+  into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(type, Uint64(0ull), tags));
   
   transfer_output(rman, into);
   rman.health_check(*this);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Set_Tag_Statement > Set_Tag_Statement::statement_maker("set-tag");
+
+
+Set_Tag_Statement::Set_Tag_Statement
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Statement(line_number_)
+{
+  map< string, string > attributes;
+  
+  attributes["k"] = "";
+  attributes["v"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  key = attributes["k"];
+  value = attributes["v"];
+  
+  if (key == "")
+  {
+    ostringstream temp("");
+    temp<<"For the attribute \"k\" of the element \"set-tag\""
+        <<" the only allowed values are non-empty strings.";
+    add_static_error(temp.str());
+  }
 }

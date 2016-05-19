@@ -47,6 +47,38 @@ void attribute_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
       
+void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string key1, std::string value1, std::string key2 = "", std::string value2 = "")
+{
+  Resource_Manager rman(transaction, &global_settings);
+        
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Make_Statement stmt(0, attributes, global_settings);
+  
+  attributes.clear();
+  attributes["k"] = key1;
+  attributes["v"] = value1;
+  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  
+  attributes.clear();
+  attributes["k"] = key2;
+  attributes["v"] = value2;
+  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  if (key2 != "")
+    stmt.add_statement(&stmt2, "");
+  
+  stmt.execute(rman);
+  
+  {
+    const char* attributes[] = { 0 };
+    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    stmt.execute(rman);
+  }
+}
+     
+      
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -73,6 +105,10 @@ int main(int argc, char* args[])
     attribute_test(global_settings, transaction, "_", "two");
   if ((test_to_execute == "") || (test_to_execute == "3"))
     attribute_test(global_settings, transaction, "target", "into_target");
+  if ((test_to_execute == "") || (test_to_execute == "4"))
+    plain_value_test(global_settings, transaction, "with-tags", "single", "value");
+  if ((test_to_execute == "") || (test_to_execute == "5"))
+    plain_value_test(global_settings, transaction, "with-tags", "not", "in", "alphabetic", "order");
 
   std::cout<<"</osm>\n";
   return 0;

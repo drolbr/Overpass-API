@@ -178,13 +178,23 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
-				   string from, string into, string type, uint line_nr)
+    string from, string into, string type, uint line_nr)
 {
   map< string, string > attr;
   attr["from"] = from;
   attr["into"] = into;
   attr["type"] = type;
   return stmt_factory.create_statement("make", line_nr, attr);
+}
+
+template< class TStatement >
+TStatement* create_set_tag_statement(typename TStatement::Factory& stmt_factory,
+    string key, string value, uint line_nr)
+{
+  map< string, string > attr;
+  attr["k"] = key;
+  attr["v"] = value;
+  return stmt_factory.create_statement("set-tag", line_nr, attr);
 }
 
 template< class TStatement >
@@ -606,6 +616,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
                        const string& from, Tokenizer_Wrapper& token, Error_Output* error_output)
 {
   TStatement* statement = 0;
+  std::vector< std::pair< std::string, std::string > > evaluators;
   std::string type = "";
   if (*token == "make")
   {
@@ -617,20 +628,24 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
     }
     while (token.good() && *token != ";" && *token != "->")
     {
-      {
-        if (error_output)
-          error_output->add_parse_error
-              (string("Invalid parameter for make: \"") + *token + "\"", token.line_col().first);
-      }
-      ++token;
+      if (*token == ",")
+        ++token;
+      std::string key = get_text_token(token, error_output, "Tag key");
+      clear_until_after(token, error_output, "=");
+      std::string value = get_text_token(token, error_output, "Tag value");
+      clear_until_after(token, error_output, ",", ";", "->", false);
+      evaluators.push_back(std::make_pair(key, value));
     }
     string into = probe_into(token, error_output);
     
     if (statement == 0)
     {
       statement = create_make_statement< TStatement >
-          (stmt_factory, from == "" ? "_" : from, into, type,
-           token.line_col().first);
+          (stmt_factory, from == "" ? "_" : from, into, type, token.line_col().first);
+      for (std::vector< std::pair< std::string, std::string > >::const_iterator it = evaluators.begin();
+          it != evaluators.end(); ++it)
+        statement->add_statement(create_set_tag_statement< TStatement >(
+            stmt_factory, it->first, it->second, token.line_col().first), "");
     }
     else
     {

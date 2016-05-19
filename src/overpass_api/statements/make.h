@@ -27,12 +27,16 @@
 #include <vector>
 
 
+class Set_Tag_Statement;
+
+
 class Make_Statement : public Output_Statement
 {
   public:
     Make_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                      Parsed_Query& global_settings);
     virtual std::string get_name() const { return "make"; }
+    virtual void add_statement(Statement* statement, string text);
     virtual void execute(Resource_Manager& rman);
     virtual ~Make_Statement();    
     static Generic_Statement_Maker< Make_Statement > statement_maker;
@@ -42,6 +46,31 @@ class Make_Statement : public Output_Statement
   private:
     std::string input;
     std::string type;
+    std::vector< Set_Tag_Statement* > evaluators;
+};
+
+
+class Set_Tag_Statement : public Statement
+{
+  public:
+    Set_Tag_Statement(int line_number_, const map< string, string >& input_attributes,
+                     Parsed_Query& global_settings);
+    virtual string get_name() const { return "set-tag"; }
+    virtual string get_result_name() const { return ""; }
+    virtual void execute(Resource_Manager& rman) {}
+    virtual ~Set_Tag_Statement() {}
+    
+    static Generic_Statement_Maker< Set_Tag_Statement > statement_maker;
+    
+    std::string get_key() const { return key; }
+    //std::string get_expression() { return expression; }
+    std::string eval(const Set& into) const { return value; }
+    
+    //std::string set_evaluator() { return expression; }
+    
+  private:
+    std::string key;
+    std::string value;
 };
 
 

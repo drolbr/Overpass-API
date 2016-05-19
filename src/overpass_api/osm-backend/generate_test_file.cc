@@ -3555,6 +3555,17 @@ int main(int argc, char* args[])
       cout<<"  <two id=\"0\"/>\n";
     if (string(args[2]) == "make_3")
       cout<<"  <into_target id=\"0\"/>\n";
+    if (string(args[2]) == "make_4")
+      cout<<
+      "  <with-tags id=\"0\">\n"
+      "    <tag k=\"single\" v=\"value\"/>\n"
+      "  </with-tags>\n";
+    if (string(args[2]) == "make_5")
+      cout<<
+      "  <with-tags id=\"0\">\n"
+      "    <tag k=\"not\" v=\"in\"/>\n"
+      "    <tag k=\"alphabetic\" v=\"order\"/>\n"
+      "  </with-tags>\n";
     
     cout<<"</osm>\n";
   }
