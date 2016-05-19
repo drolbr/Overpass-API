@@ -3543,6 +3543,21 @@ int main(int argc, char* args[])
     
     cout<<"</osm>\n";
   }
+  else if ((argc > 2) && (string(args[2]).substr(0, 5) == "make_"))
+  {
+    cout<<
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<osm>\n";
+    
+    if (string(args[2]) == "make_1")
+      cout<<"  <one id=\"0\"/>\n";
+    if (string(args[2]) == "make_2")
+      cout<<"  <two id=\"0\"/>\n";
+    if (string(args[2]) == "make_3")
+      cout<<"  <into_target id=\"0\"/>\n";
+    
+    cout<<"</osm>\n";
+  }
   else
   {
     cout<<

@@ -177,10 +177,21 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
 }
 
 template< class TStatement >
+TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
+				   string from, string into, string type, uint line_nr)
+{
+  map< string, string > attr;
+  attr["from"] = from;
+  attr["into"] = into;
+  attr["type"] = type;
+  return stmt_factory.create_statement("make", line_nr, attr);
+}
+
+template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
-				   string from, string mode, string order, string limit, string geometry,
+                                   string from, string mode, string order, string limit, string geometry,
                                    string south, string north, string west, string east,
-				  uint line_nr)
+                                  uint line_nr)
 {
   map< string, string > attr;
   attr["from"] = from;
@@ -584,6 +595,48 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
       if (error_output)
 	error_output->add_parse_error("Garbage after output statement found.",
 				      token.line_col().first);
+    }
+  }
+  
+  return statement;
+}
+
+template< class TStatement >
+TStatement* parse_make(typename TStatement::Factory& stmt_factory,
+                       const string& from, Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  TStatement* statement = 0;
+  std::string type = "";
+  if (*token == "make")
+  {
+    ++token;
+    if (*token != ";")
+    {
+      type = *token;
+      ++token;
+    }
+    while (token.good() && *token != ";" && *token != "->")
+    {
+      {
+        if (error_output)
+          error_output->add_parse_error
+              (string("Invalid parameter for make: \"") + *token + "\"", token.line_col().first);
+      }
+      ++token;
+    }
+    string into = probe_into(token, error_output);
+    
+    if (statement == 0)
+    {
+      statement = create_make_statement< TStatement >
+          (stmt_factory, from == "" ? "_" : from, into, type,
+           token.line_col().first);
+    }
+    else
+    {
+      if (error_output)
+        error_output->add_parse_error("Garbage after make statement found.",
+                                      token.line_col().first);
     }
   }
   
@@ -1203,6 +1256,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
 
   if (token.good() && *token == "out")
     return parse_output< TStatement >(stmt_factory, from, token, error_output);
+  if (token.good() && *token == "make")
+    return parse_make< TStatement >(stmt_factory, from, token, error_output);
   if (token.good() && (*token == "<" || *token == "<<" || *token == ">" || *token == ">>"))
     return parse_full_recurse< TStatement >(stmt_factory, token, from, error_output);
   if (token.good() && *token == "is_in")

@@ -1,11 +1,11 @@
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query difference foreach make_area polygon_query print query recurse union generate_test_file_areas generate_test_file_meta generate_test_file_interpreter index_computations consistency_check
+testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query difference foreach make make_area polygon_query print query recurse union generate_test_file_areas generate_test_file_meta generate_test_file_interpreter index_computations consistency_check
 dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_testsuite_template_db.sh run_testsuite_osm_backend.sh run_unittests_statements.sh run_testsuite_osm3s_query.sh run_testsuite_map_ql.sh run_testsuite_interpreter.sh run_testsuite_translate_xapi.sh run_testsuite_diff_updater.sh run_unittests_areas.sh run_unittests_meta.sh run_unittests_attic.sh run_unittests_output_csv.sh run_and_compare.sh
 
 expat_cc = ../expat/expat_justparse_interface.cc
 settings_cc = ../overpass_api/core/settings.cc
 output_cc = ../overpass_api/frontend/output.cc
-statements_cc = ../overpass_api/statements/statement.cc ../overpass_api/statements/area_query.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/statements/around.cc ../overpass_api/statements/bbox_query.cc ../overpass_api/statements/changed.cc ../overpass_api/statements/coord_query.cc ../overpass_api/statements/difference.cc ../overpass_api/statements/foreach.cc ../overpass_api/statements/id_query.cc ../overpass_api/statements/item.cc ../overpass_api/statements/make_area.cc ../overpass_api/statements/map_to_area.cc ../overpass_api/statements/newer.cc ../overpass_api/statements/osm_script.cc ../overpass_api/statements/pivot.cc ../overpass_api/statements/polygon_query.cc ../overpass_api/statements/print.cc ../overpass_api/statements/query.cc ../overpass_api/statements/recurse.cc ../overpass_api/statements/union.cc ../overpass_api/statements/user.cc ../expat/escape_json.cc ../expat/escape_xml.cc ../overpass_api/data/collect_members.cc ../overpass_api/data/relation_geometry_store.cc ../overpass_api/data/way_geometry_store.cc ../template_db/types.cc ../overpass_api/core/geometry.cc ../overpass_api/frontend/output_handler_parser.cc ../template_db/zlib_wrapper.cc
+statements_cc = ../overpass_api/statements/statement.cc ../overpass_api/statements/area_query.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/statements/around.cc ../overpass_api/statements/bbox_query.cc ../overpass_api/statements/changed.cc ../overpass_api/statements/coord_query.cc ../overpass_api/statements/difference.cc ../overpass_api/statements/foreach.cc ../overpass_api/statements/id_query.cc ../overpass_api/statements/item.cc ../overpass_api/statements/make.cc ../overpass_api/statements/make_area.cc ../overpass_api/statements/map_to_area.cc ../overpass_api/statements/newer.cc ../overpass_api/statements/osm_script.cc ../overpass_api/statements/pivot.cc ../overpass_api/statements/polygon_query.cc ../overpass_api/statements/print.cc ../overpass_api/statements/query.cc ../overpass_api/statements/recurse.cc ../overpass_api/statements/union.cc ../overpass_api/statements/user.cc ../expat/escape_json.cc ../expat/escape_xml.cc ../overpass_api/data/collect_members.cc ../overpass_api/data/relation_geometry_store.cc ../overpass_api/data/way_geometry_store.cc ../template_db/types.cc ../overpass_api/core/geometry.cc ../overpass_api/frontend/output_handler_parser.cc ../template_db/zlib_wrapper.cc
 
 output_formats_dir = ../overpass_api/output_formats
 
@@ -58,6 +58,8 @@ foreach_SOURCES = ../overpass_api/statements/foreach.test.cc ${statements_cc} ${
 foreach_LDADD = -lz
 #id_query_SOURCES = ../overpass_api/statements/id_query.test.cc ${statements_cc} ${testenv_cc}
 #id_query_LDADD = 
+make_SOURCES = ../overpass_api/statements/make.test.cc ${statements_cc} ${testenv_cc}
+make_LDADD = -lz
 make_area_SOURCES = ../overpass_api/statements/make_area.test.cc ${statements_cc} ${testenv_cc}
 make_area_LDADD = -lz
 polygon_query_SOURCES = ../overpass_api/statements/polygon_query.test.cc ${statements_cc} ${testenv_cc}
