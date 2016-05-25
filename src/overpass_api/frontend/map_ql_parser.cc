@@ -521,22 +521,28 @@ TStatement* create_user_statement
   attr["into"] = into;
 
   if (uid.empty())
-    attr["uid"] = "0";
+    attr["uid"] = "";
 
   if (name.empty())
     attr["name"] = "";
 
-  for(it = name.begin(), i = 0 ; it != name.end(); ++it, ++i)
+  for(it = name.begin(), i = 0; it != name.end(); ++it, ++i)
   {
     std::stringstream id;
-    id << "name_" << i;
+    if (i == 0)
+      id << "name";
+    else
+      id << "name_" << i;
     attr[id.str()] = *it;
   }
 
-  for(it = uid.begin(), i = 0 ; it != uid.end(); ++it, ++i)
+  for(it = uid.begin(), i = 0; it != uid.end(); ++it, ++i)
   {
     std::stringstream id;
-    id << "uid_" << i;
+    if (i == 0)
+      id << "uid";
+    else
+      id << "uid_" << i;
     attr[id.str()] = *it;
   }
 
