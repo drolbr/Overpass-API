@@ -280,7 +280,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
   for (; !(tag_it == items_db.range_end()); ++tag_it)
   {
-    if (Uint32_Index::get_val(tag_it.object_data()) == pivot_id)
+    if (tag_it.apply_func(&Uint32_Index::get_val) == pivot_id)
       new_tags.push_back(make_pair(tag_it.index().key, tag_it.index().value));
   }
   
