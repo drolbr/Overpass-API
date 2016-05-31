@@ -89,12 +89,14 @@ void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
      
       
 void count_test(Parsed_Query& global_settings, Transaction& transaction,
-    std::string type, uint64 ref, uint64 global_node_offset)
+    std::string type, std::string from, uint64 ref, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
 
   {
     std::map< std::string, std::string > attributes;
+    if (from != "_")
+      attributes["into"] = from;
     Union_Statement union_(0, attributes, global_settings);
 
     attributes.clear();
@@ -127,6 +129,8 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
+  if (from != "_")
+    attributes["from"] = from;
   attributes["type"] = "nodes";
   Tag_Value_Count stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
@@ -137,6 +141,8 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   attributes["type"] = "ways";
+  if (from != "_")
+    attributes["from"] = from;
   Tag_Value_Count stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   
@@ -146,6 +152,8 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   stmt.add_statement(&stmt3, "");
   attributes.clear();
   attributes["type"] = "relations";
+  if (from != "_")
+    attributes["from"] = from;
   Tag_Value_Count stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   
@@ -189,9 +197,11 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "5"))
     plain_value_test(global_settings, transaction, "with-tags", "not", "in", "alphabetic", "order");
   if ((test_to_execute == "") || (test_to_execute == "6"))
-    count_test(global_settings, transaction, "count-from-default", 1, global_node_offset);
+    count_test(global_settings, transaction, "count-from-default", "_", 1, global_node_offset);
   if ((test_to_execute == "") || (test_to_execute == "7"))
-    count_test(global_settings, transaction, "count-from-default", 0, global_node_offset);
+    count_test(global_settings, transaction, "count-from-default", "_", 0, global_node_offset);
+  if ((test_to_execute == "") || (test_to_execute == "8"))
+    count_test(global_settings, transaction, "count-from-foo", "foo", 1, global_node_offset);
 
   std::cout<<"</osm>\n";
   return 0;

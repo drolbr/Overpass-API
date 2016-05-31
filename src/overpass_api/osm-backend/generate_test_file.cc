@@ -3580,6 +3580,13 @@ int main(int argc, char* args[])
       "    <tag k=\"ways\" v=\"0\"/>\n"
       "    <tag k=\"relations\" v=\"0\"/>\n"
       "  </count-from-default>\n";
+    if (string(args[2]) == "make_8")
+      cout<<
+      "  <count-from-foo id=\"0\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "  </count-from-foo>\n";
     
     cout<<"</osm>\n";
   }

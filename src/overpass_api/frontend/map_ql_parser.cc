@@ -179,10 +179,9 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
-    string from, string into, string type, uint line_nr)
+    string into, string type, uint line_nr)
 {
   map< string, string > attr;
-  attr["from"] = from;
   attr["into"] = into;
   attr["type"] = type;
   return stmt_factory.create_statement("make", line_nr, attr);
@@ -211,9 +210,10 @@ TStatement* create_tag_value_fixed(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
-    string type, uint line_nr)
+    string type, string from, uint line_nr)
 {
   map< string, string > attr;
+  attr["from"] = from;
   attr["type"] = type;
   return stmt_factory.create_statement("value-count", line_nr, attr);
 }
@@ -635,11 +635,12 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* parse_make(typename TStatement::Factory& stmt_factory,
-                       const string& from, Tokenizer_Wrapper& token, Error_Output* error_output)
+                       Tokenizer_Wrapper& token, Error_Output* error_output)
 {
   TStatement* statement = 0;
   std::vector< std::pair< std::string, TStatement* > > evaluators;
   std::string type = "";
+  std::string func_from = "";
   if (*token == "make")
   {
     ++token;
@@ -655,12 +656,20 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
       std::string key = get_text_token(token, error_output, "Tag key");
       clear_until_after(token, error_output, "=");
       std::string value = get_text_token(token, error_output, "Tag value");
+      
+      func_from = "_";
+      if (token.good() && *token == ".")
+      {
+        ++token;
+        func_from = get_text_token(token, error_output, "Input set");
+      }
+      
       if (value == "count" && token.good() && *token == "(")
       {
         ++token;
         std::string type = get_text_token(token, error_output, "Count type");
         evaluators.push_back(std::make_pair(key, create_tag_value_count< TStatement >(
-            stmt_factory, type, token.line_col().first)));
+            stmt_factory, type, func_from, token.line_col().first)));
         clear_until_after(token, error_output, ")", true);
       }
       else
@@ -672,8 +681,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
     
     if (statement == 0)
     {
-      statement = create_make_statement< TStatement >
-          (stmt_factory, from == "" ? "_" : from, into, type, token.line_col().first);
+      statement = create_make_statement< TStatement >(stmt_factory, into, type, token.line_col().first);
       for (typename std::vector< std::pair< std::string, TStatement* > >::const_iterator it = evaluators.begin();
           it != evaluators.end(); ++it)
       {
@@ -1308,7 +1316,7 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
   if (token.good() && *token == "out")
     return parse_output< TStatement >(stmt_factory, from, token, error_output);
   if (token.good() && *token == "make")
-    return parse_make< TStatement >(stmt_factory, from, token, error_output);
+    return parse_make< TStatement >(stmt_factory, token, error_output);
   if (token.good() && (*token == "<" || *token == "<<" || *token == ">" || *token == ">>"))
     return parse_full_recurse< TStatement >(stmt_factory, token, from, error_output);
   if (token.good() && *token == "is_in")

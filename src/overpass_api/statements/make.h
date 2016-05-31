@@ -54,7 +54,7 @@ struct Tag_Value : public Statement
 {
   Tag_Value(int line_number) : Statement(line_number) {}
   
-  virtual std::string eval(const Set& from) const = 0;
+  virtual std::string eval(const std::map< std::string, Set >& sets) const = 0;
 };
 
 
@@ -72,7 +72,7 @@ public:
   static Generic_Statement_Maker< Set_Tag_Statement > statement_maker;
     
   std::string get_key() const { return key; }
-  std::string eval(const Set& from) const { return tag_value ? tag_value->eval(from) : ""; }
+  std::string eval(const std::map< std::string, Set >& sets) const { return tag_value ? tag_value->eval(sets) : ""; }
     
 private:
   std::string key;
@@ -92,7 +92,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Fixed > statement_maker;
   
-  virtual std::string eval(const Set& from) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets) const;
   
 private:
   std::string value;
@@ -113,9 +113,10 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Count > statement_maker;
   
-  virtual std::string eval(const Set& from) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets) const;
   
 private:
+  std::string input;
   Objects to_count;
 };
 

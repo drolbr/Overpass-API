@@ -29,13 +29,11 @@ Make_Statement::Make_Statement
 {
   map< string, string > attributes;
   
-  attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["type"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  input = attributes["from"];
   set_output(attributes["into"]);
   
   if (attributes["type"] == "")
@@ -62,13 +60,11 @@ void Make_Statement::add_statement(Statement* statement, string text)
 
 void Make_Statement::execute(Resource_Manager& rman)
 {
-  Set from;
   Set into;
-  std::map< std::string, Set >::const_iterator mit(rman.sets().find("_"));
   
   std::vector< std::pair< std::string, std::string > > tags;
   for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-    tags.push_back(std::make_pair((*it)->get_key(), (*it)->eval(mit == rman.sets().end() ? from : mit->second)));
+    tags.push_back(std::make_pair((*it)->get_key(), (*it)->eval(rman.sets())));
 
   into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(type, Uint64(0ull), tags));
   
@@ -145,7 +141,7 @@ Tag_Value_Fixed::Tag_Value_Fixed
 }
 
 
-std::string Tag_Value_Fixed::eval(const Set& from) const
+std::string Tag_Value_Fixed::eval(const std::map< std::string, Set >& sets) const
 {
   return value;
 }
@@ -163,9 +159,12 @@ Tag_Value_Count::Tag_Value_Count
 {
   map< string, string > attributes;
   
+  attributes["from"] = "_";
   attributes["type"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  input = attributes["from"];
   
   if (attributes["type"] == "nodes")
     to_count = nodes;
@@ -185,8 +184,13 @@ Tag_Value_Count::Tag_Value_Count
 }
 
 
-std::string Tag_Value_Count::eval(const Set& from) const
+std::string Tag_Value_Count::eval(const std::map< std::string, Set >& sets) const
 {
+  std::map< std::string, Set >::const_iterator mit(sets.find(input));
+  if (mit == sets.end())
+    return "";
+  const Set& from = mit->second;
+    
   if (to_count == nodes)
     return to_string(count(from.nodes) + count(from.attic_nodes));
   else if (to_count == ways)
