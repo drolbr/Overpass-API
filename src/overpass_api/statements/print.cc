@@ -944,15 +944,6 @@ void tags_by_id
 }
 
 
-template < typename T >
-std::string to_string(T t)
-{
-  std::ostringstream out;
-  out<<t;
-  return out.str();
-}
-
-
 std::vector< std::pair< std::string, std::string > > make_count_tags(const Set& set, bool include_areas)
 {    
   unsigned int num_nodes = count(set.nodes) + count(set.attic_nodes);

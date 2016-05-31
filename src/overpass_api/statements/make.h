@@ -99,4 +99,25 @@ private:
 };
 
 
+class Tag_Value_Count : public Tag_Value
+{
+public:
+  enum Objects { nothing, nodes, ways, relations, deriveds };
+  
+  Tag_Value_Count(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-count"; }
+  virtual string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Tag_Value_Count() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Count > statement_maker;
+  
+  virtual std::string eval(const Set& from) const;
+  
+private:
+  Objects to_count;
+};
+
+
 #endif

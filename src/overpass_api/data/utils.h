@@ -19,7 +19,13 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__UTILS_H
 #define DE__OSM3S___OVERPASS_API__DATA__UTILS_H
 
+
+#include "../core/basic_types.h"
+
+
 #include <map>
+#include <sstream>
+#include <string>
 #include <vector>
 
 
@@ -32,6 +38,15 @@ unsigned int count(const std::map< Index, std::vector< Skeleton > >& elems)
     result += it->second.size();
   return result;
 }	
+
+
+template < typename T >
+std::string to_string(T t)
+{
+  std::ostringstream out;
+  out<<t;
+  return out.str();
+}
 
 
 #endif

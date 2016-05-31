@@ -16,6 +16,8 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+#include "../data/utils.h"
 #include "make.h"
 
 
@@ -62,10 +64,11 @@ void Make_Statement::execute(Resource_Manager& rman)
 {
   Set from;
   Set into;
+  std::map< std::string, Set >::const_iterator mit(rman.sets().find("_"));
   
   std::vector< std::pair< std::string, std::string > > tags;
   for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-    tags.push_back(std::make_pair((*it)->get_key(), (*it)->eval(from)));
+    tags.push_back(std::make_pair((*it)->get_key(), (*it)->eval(mit == rman.sets().end() ? from : mit->second)));
 
   into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(type, Uint64(0ull), tags));
   
@@ -145,4 +148,52 @@ Tag_Value_Fixed::Tag_Value_Fixed
 std::string Tag_Value_Fixed::eval(const Set& from) const
 {
   return value;
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Count > Tag_Value_Count::statement_maker("value-count");
+
+
+Tag_Value_Count::Tag_Value_Count
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_)
+{
+  map< string, string > attributes;
+  
+  attributes["type"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  if (attributes["type"] == "nodes")
+    to_count = nodes;
+  else if (attributes["type"] == "ways")
+    to_count = ways;
+  else if (attributes["type"] == "relations")
+    to_count = relations;
+  else if (attributes["type"] == "deriveds")
+    to_count = deriveds;
+  else
+  {
+    ostringstream temp("");
+    temp<<"For the attribute \"type\" of the element \"value-count\""
+        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", or \"deriveds\" strings.";
+    add_static_error(temp.str());
+  }
+}
+
+
+std::string Tag_Value_Count::eval(const Set& from) const
+{
+  if (to_count == nodes)
+    return to_string(count(from.nodes) + count(from.attic_nodes));
+  else if (to_count == ways)
+    return to_string(count(from.ways) + count(from.attic_ways));
+  else if (to_count == relations)
+    return to_string(count(from.relations) + count(from.attic_relations));
+  else if (to_count == deriveds)
+    return to_string(count(from.areas) + count(from.deriveds));
+  return "0";
 }

@@ -3566,6 +3566,20 @@ int main(int argc, char* args[])
       "    <tag k=\"not\" v=\"in\"/>\n"
       "    <tag k=\"alphabetic\" v=\"order\"/>\n"
       "  </with-tags>\n";
+    if (string(args[2]) == "make_6")
+      cout<<
+      "  <count-from-default id=\"0\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "  </count-from-default>\n";
+    if (string(args[2]) == "make_7")
+      cout<<
+      "  <count-from-default id=\"0\">\n"
+      "    <tag k=\"nodes\" v=\"0\"/>\n"
+      "    <tag k=\"ways\" v=\"0\"/>\n"
+      "    <tag k=\"relations\" v=\"0\"/>\n"
+      "  </count-from-default>\n";
     
     cout<<"</osm>\n";
   }

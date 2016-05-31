@@ -210,6 +210,16 @@ TStatement* create_tag_value_fixed(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
+TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
+    string type, uint line_nr)
+{
+  map< string, string > attr;
+  attr["type"] = type;
+  return stmt_factory.create_statement("value-count", line_nr, attr);
+}
+
+
+template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
                                    string from, string mode, string order, string limit, string geometry,
                                    string south, string north, string west, string east,
@@ -628,7 +638,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
                        const string& from, Tokenizer_Wrapper& token, Error_Output* error_output)
 {
   TStatement* statement = 0;
-  std::vector< std::pair< std::string, std::string > > evaluators;
+  std::vector< std::pair< std::string, TStatement* > > evaluators;
   std::string type = "";
   if (*token == "make")
   {
@@ -645,8 +655,18 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
       std::string key = get_text_token(token, error_output, "Tag key");
       clear_until_after(token, error_output, "=");
       std::string value = get_text_token(token, error_output, "Tag value");
+      if (value == "count" && token.good() && *token == "(")
+      {
+        ++token;
+        std::string type = get_text_token(token, error_output, "Count type");
+        evaluators.push_back(std::make_pair(key, create_tag_value_count< TStatement >(
+            stmt_factory, type, token.line_col().first)));
+        clear_until_after(token, error_output, ")", true);
+      }
+      else
+        evaluators.push_back(std::make_pair(key, create_tag_value_fixed< TStatement >(
+            stmt_factory, value, token.line_col().first)));
       clear_until_after(token, error_output, ",", ";", "->", false);
-      evaluators.push_back(std::make_pair(key, value));
     }
     string into = probe_into(token, error_output);
     
@@ -654,15 +674,13 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
     {
       statement = create_make_statement< TStatement >
           (stmt_factory, from == "" ? "_" : from, into, type, token.line_col().first);
-      for (std::vector< std::pair< std::string, std::string > >::const_iterator it = evaluators.begin();
+      for (typename std::vector< std::pair< std::string, TStatement* > >::const_iterator it = evaluators.begin();
           it != evaluators.end(); ++it)
       {
         TStatement* stmt_key = create_set_tag_statement< TStatement >(
             stmt_factory, it->first, token.line_col().first);
         statement->add_statement(stmt_key, "");
-        TStatement* stmt_value = create_tag_value_fixed< TStatement >(
-            stmt_factory, it->second, token.line_col().first);
-        stmt_key->add_statement(stmt_value, "");
+        stmt_key->add_statement(it->second, "");
       }
     }
     else
