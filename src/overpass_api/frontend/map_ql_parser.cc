@@ -220,6 +220,14 @@ TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
+TStatement* create_tag_value_plus(typename TStatement::Factory& stmt_factory, uint line_nr)
+{
+  map< string, string > attr;
+  return stmt_factory.create_statement("value-plus", line_nr, attr);
+}
+
+
+template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
                                    string from, string mode, string order, string limit, string geometry,
                                    string south, string north, string west, string east,
@@ -655,27 +663,59 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
         ++token;
       std::string key = get_text_token(token, error_output, "Tag key");
       clear_until_after(token, error_output, "=");
-      std::string value = get_text_token(token, error_output, "Tag value");
       
-      func_from = "_";
-      if (token.good() && *token == ".")
-      {
-        ++token;
-        func_from = get_text_token(token, error_output, "Input set");
-      }
+      std::vector< TStatement* > value_stack;
+      bool open_operand = false;
       
-      if (value == "count" && token.good() && *token == "(")
+      while (token.good() && *token != "," && *token != ";" && *token != "->")
       {
-        ++token;
-        std::string type = get_text_token(token, error_output, "Count type");
-        evaluators.push_back(std::make_pair(key, create_tag_value_count< TStatement >(
-            stmt_factory, type, func_from, token.line_col().first)));
-        clear_until_after(token, error_output, ")", true);
+        if (*token == "+")
+        {
+          if (!value_stack.empty())
+          {
+            TStatement* sum = create_tag_value_plus< TStatement >(stmt_factory, token.line_col().first);
+            sum->add_statement(value_stack.back(), "");
+            value_stack.pop_back();
+            value_stack.push_back(sum);
+            open_operand = true;
+          }
+          
+          ++token;
+          continue;
+        }
+        
+        std::string value = get_text_token(token, error_output, "Tag value");
+      
+        func_from = "_";
+        if (token.good() && *token == ".")
+        {
+          ++token;
+          func_from = get_text_token(token, error_output, "Input set");
+        }
+      
+        if (value == "count" && token.good() && *token == "(")
+        {
+          ++token;
+          std::string type = get_text_token(token, error_output, "Count type");
+          value_stack.push_back(create_tag_value_count< TStatement >(
+              stmt_factory, type, func_from, token.line_col().first));
+          clear_until_after(token, error_output, ")", true);
+        }
+        else
+          value_stack.push_back(create_tag_value_fixed< TStatement >(
+              stmt_factory, value, token.line_col().first));
+          
+        if (open_operand)
+        {
+          value_stack[value_stack.size() - 2]->add_statement(value_stack.back(), "");
+          value_stack.pop_back();
+          open_operand = false;
+        }
       }
+      if (value_stack.size() == 1)
+        evaluators.push_back(std::make_pair(key, value_stack.front()));
       else
-        evaluators.push_back(std::make_pair(key, create_tag_value_fixed< TStatement >(
-            stmt_factory, value, token.line_col().first)));
-      clear_until_after(token, error_output, ",", ";", "->", false);
+        error_output->add_parse_error("Invalid expression in value assignment", token.line_col().first);
     }
     string into = probe_into(token, error_output);
     

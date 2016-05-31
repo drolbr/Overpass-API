@@ -121,4 +121,26 @@ private:
 };
 
 
+class Tag_Value_Plus : public Tag_Value
+{
+public:
+  Tag_Value_Plus(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-plus"; }
+  virtual string get_result_name() const { return ""; }
+  virtual void add_statement(Statement* statement, string text);
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Tag_Value_Plus() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Plus > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  
+private:
+  std::string input;
+  Tag_Value* lhs;
+  Tag_Value* rhs;
+};
+
+
 #endif

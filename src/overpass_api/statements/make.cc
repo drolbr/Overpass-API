@@ -201,3 +201,55 @@ std::string Tag_Value_Count::eval(const std::map< std::string, Set >& sets) cons
     return to_string(count(from.areas) + count(from.deriveds));
   return "0";
 }
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Plus > Tag_Value_Plus::statement_maker("value-plus");
+
+
+Tag_Value_Plus::Tag_Value_Plus
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_), lhs(0), rhs(0)
+{
+  map< string, string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+void Tag_Value_Plus::add_statement(Statement* statement, string text)
+{
+  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  if (!tag_value_)
+    substatement_error(get_name(), statement);
+  else if (!lhs)
+    lhs = tag_value_;
+  else if (!rhs)
+    rhs = tag_value_;
+  else
+    add_static_error("value-plus must have exactly two tag-value substatements.");
+}
+
+
+bool try_double(const std::string& input, double& result)
+{
+  const char* input_c = input.c_str();
+  char* end_c = 0;
+  result = strtod(input_c, &end_c);
+  return input_c + input.size() == end_c;
+}
+
+
+std::string Tag_Value_Plus::eval(const std::map< std::string, Set >& sets) const
+{
+  std::string lhs_s = lhs ? lhs->eval(sets) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets) : "";
+  double lhs_d = 0;
+  double rhs_d = 0;
+  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return to_string(lhs_d + rhs_d);
+  else
+    return lhs_s + rhs_s;
+}

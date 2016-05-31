@@ -3587,6 +3587,26 @@ int main(int argc, char* args[])
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "  </count-from-foo>\n";
+    if (string(args[2]) == "make_9")
+      cout<<
+      "  <test-plus id=\"0\">\n"
+      "    <tag k=\"sum\" v=\"9\"/>\n"
+      "  </test-plus>\n";
+    if (string(args[2]) == "make_10")
+      cout<<
+      "  <test-plus id=\"0\">\n"
+      "    <tag k=\"sum\" v=\"10 \"/>\n"
+      "  </test-plus>\n";
+    if (string(args[2]) == "make_11")
+      cout<<
+      "  <test-plus id=\"0\">\n"
+      "    <tag k=\"sum\" v=\"11\"/>\n"
+      "  </test-plus>\n";
+    if (string(args[2]) == "make_12")
+      cout<<
+      "  <test-plus id=\"0\">\n"
+      "    <tag k=\"sum\" v=\" 12_\"/>\n"
+      "  </test-plus>\n";
     
     cout<<"</osm>\n";
   }
