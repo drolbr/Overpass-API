@@ -176,6 +176,7 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("foreach", line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
     string from, string into, string type, uint line_nr)
@@ -187,15 +188,26 @@ TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("make", line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_set_tag_statement(typename TStatement::Factory& stmt_factory,
-    string key, string value, uint line_nr)
+    string key, uint line_nr)
 {
   map< string, string > attr;
   attr["k"] = key;
-  attr["v"] = value;
   return stmt_factory.create_statement("set-tag", line_nr, attr);
 }
+
+
+template< class TStatement >
+TStatement* create_tag_value_fixed(typename TStatement::Factory& stmt_factory,
+    string value, uint line_nr)
+{
+  map< string, string > attr;
+  attr["v"] = value;
+  return stmt_factory.create_statement("value-fixed", line_nr, attr);
+}
+
 
 template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
@@ -644,8 +656,14 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
           (stmt_factory, from == "" ? "_" : from, into, type, token.line_col().first);
       for (std::vector< std::pair< std::string, std::string > >::const_iterator it = evaluators.begin();
           it != evaluators.end(); ++it)
-        statement->add_statement(create_set_tag_statement< TStatement >(
-            stmt_factory, it->first, it->second, token.line_col().first), "");
+      {
+        TStatement* stmt_key = create_set_tag_statement< TStatement >(
+            stmt_factory, it->first, token.line_col().first);
+        statement->add_statement(stmt_key, "");
+        TStatement* stmt_value = create_tag_value_fixed< TStatement >(
+            stmt_factory, it->second, token.line_col().first);
+        stmt_key->add_statement(stmt_value, "");
+      }
     }
     else
     {

@@ -62,7 +62,11 @@ inline Nonsynced_Transaction::Nonsynced_Transaction
     (bool writeable_, bool use_shadow_,
      const string& db_dir_, const string& file_name_extension_)
   : writeable(writeable_), use_shadow(use_shadow_),
-    file_name_extension(file_name_extension_), db_dir(db_dir_) {}
+    file_name_extension(file_name_extension_), db_dir(db_dir_)
+{
+  if (!db_dir.empty() && db_dir[db_dir.size()-1] != '/')
+    db_dir += db_dir + "/";
+}
   
 inline Nonsynced_Transaction::~Nonsynced_Transaction()
 {

@@ -58,14 +58,20 @@ void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = key1;
-  attributes["v"] = value1;
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  attributes["v"] = value1;
+  Tag_Value_Fixed stmt10(0, attributes, global_settings);
+  stmt1.add_statement(&stmt10, "");
   
   attributes.clear();
   attributes["k"] = key2;
-  attributes["v"] = value2;
   Set_Tag_Statement stmt2(0, attributes, global_settings);
+  attributes.clear();
+  attributes["v"] = value2;
+  Tag_Value_Fixed stmt20(0, attributes, global_settings);
+  stmt2.add_statement(&stmt20, "");
   if (key2 != "")
     stmt.add_statement(&stmt2, "");
   

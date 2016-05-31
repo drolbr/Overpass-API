@@ -50,7 +50,7 @@ Make_Statement::~Make_Statement()
 
 void Make_Statement::add_statement(Statement* statement, string text)
 {
-  Set_Tag_Statement* set_tag = dynamic_cast<Set_Tag_Statement*>(statement);
+  Set_Tag_Statement* set_tag = dynamic_cast< Set_Tag_Statement* >(statement);
   if (set_tag)
     evaluators.push_back(set_tag);
   else
@@ -82,17 +82,15 @@ Generic_Statement_Maker< Set_Tag_Statement > Set_Tag_Statement::statement_maker(
 
 Set_Tag_Statement::Set_Tag_Statement
     (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
-    : Statement(line_number_)
+    : Statement(line_number_), tag_value(0)
 {
   map< string, string > attributes;
   
   attributes["k"] = "";
-  attributes["v"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   key = attributes["k"];
-  value = attributes["v"];
   
   if (key == "")
   {
@@ -101,4 +99,50 @@ Set_Tag_Statement::Set_Tag_Statement
         <<" the only allowed values are non-empty strings.";
     add_static_error(temp.str());
   }
+}
+
+
+void Set_Tag_Statement::add_statement(Statement* statement, string text)
+{
+  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  if (tag_value_ && !tag_value)
+    tag_value = tag_value_;
+  else if (tag_value)
+    add_static_error("set-tag must have exactly one tag-value substatement.");
+  else
+    substatement_error(get_name(), statement);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Fixed > Tag_Value_Fixed::statement_maker("value-fixed");
+
+
+Tag_Value_Fixed::Tag_Value_Fixed
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_)
+{
+  map< string, string > attributes;
+  
+  attributes["v"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  value = attributes["v"];
+  
+  if (value == "")
+  {
+    ostringstream temp("");
+    temp<<"For the attribute \"v\" of the element \"value-fixed\""
+        <<" the only allowed values are non-empty strings.";
+    add_static_error(temp.str());
+  }
+}
+
+
+std::string Tag_Value_Fixed::eval(const Set& from) const
+{
+  return value;
 }
