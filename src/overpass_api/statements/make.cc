@@ -285,5 +285,5 @@ std::string Tag_Value_Times::eval(const std::map< std::string, Set >& sets) cons
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d * rhs_d);
   else
-    return "";
+    return "NaN";
 }

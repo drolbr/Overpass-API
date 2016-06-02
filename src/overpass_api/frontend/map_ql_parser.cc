@@ -654,38 +654,32 @@ template< class TStatement >
 TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
     Error_Output* error_output, bool expect_parenthesis)
 {
-  std::vector< TStatement* > value_stack;
-  bool open_operand = false;
+  std::vector< std::pair< int, TStatement* > > value_stack;
 
   std::string func_from = "";
   while (token.good() && *token != "," && *token != ";" && *token != "->" && *token != ")")
   {
+    if (*token == "(")
+    {
+      ++token;
+      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, true);
+      if (stmt)
+        value_stack.push_back(std::make_pair(0, stmt));
+      continue;
+    }
+    
     if (*token == "+")
     {
-      if (!value_stack.empty())
-      {
-        TStatement* sum = create_tag_value_plus< TStatement >(stmt_factory, token.line_col().first);
-        sum->add_statement(value_stack.back(), "");
-        value_stack.pop_back();
-        value_stack.push_back(sum);
-        open_operand = true;
-      }
-          
+      value_stack.push_back(std::make_pair(
+          2, create_tag_value_plus< TStatement >(stmt_factory, token.line_col().first)));
       ++token;
       continue;
     }
         
     if (*token == "*")
     {
-      if (!value_stack.empty())
-      {
-        TStatement* sum = create_tag_value_times< TStatement >(stmt_factory, token.line_col().first);
-        sum->add_statement(value_stack.back(), "");
-        value_stack.pop_back();
-        value_stack.push_back(sum);
-        open_operand = true;
-      }
-          
+      value_stack.push_back(std::make_pair(
+          1, create_tag_value_times< TStatement >(stmt_factory, token.line_col().first)));
       ++token;
       continue;
     }
@@ -703,24 +697,60 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     {
       ++token;
       std::string type = get_text_token(token, error_output, "Count type");
-      value_stack.push_back(create_tag_value_count< TStatement >(
-          stmt_factory, type, func_from, token.line_col().first));
+      value_stack.push_back(std::make_pair(0, create_tag_value_count< TStatement >(
+          stmt_factory, type, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else
-      value_stack.push_back(create_tag_value_fixed< TStatement >(
-          stmt_factory, value, token.line_col().first));
-          
-    if (open_operand)
+      value_stack.push_back(std::make_pair(0, create_tag_value_fixed< TStatement >(
+          stmt_factory, value, token.line_col().first)));
+  }
+  
+  if (expect_parenthesis)
+  {
+    if (*token == ")")
+      ++token;
+    else
+      error_output->add_parse_error("A right parenthesis is missing", token.line_col().first);
+  }
+  else
+  {
+    if (*token == ")")
     {
-      value_stack[value_stack.size() - 2]->add_statement(value_stack.back(), "");
-      value_stack.pop_back();
-      open_operand = false;
+      error_output->add_parse_error("Unmatched right parenthesis found", token.line_col().first);
+      ++token;
     }
   }
-      
+  
+  for (int i = 1; i <= 2; ++i)
+  {
+    int target_j = 0;
+    for (int j = 0; j < value_stack.size(); ++j)
+    {
+      if (value_stack[j].first == i)
+      {
+        if (target_j == 0)
+          error_output->add_parse_error("Missing left hand size operand", token.line_col().first);
+        else if (j == value_stack.size()-1)
+          error_output->add_parse_error("Missing right hand size operand", token.line_col().first);
+        else if (value_stack[target_j-1].first != 0 || value_stack[j+1].first != 0)
+          error_output->add_parse_error("Missing operand between operators", token.line_col().first);
+        {
+          value_stack[j].second->add_statement(value_stack[target_j-1].second, "");
+          value_stack[j].second->add_statement(value_stack[j+1].second, "");
+          value_stack[target_j-1].first = 0;
+          value_stack[target_j-1].second = value_stack[j].second;
+          ++j;
+        }
+      }
+      else
+        value_stack[target_j++] = value_stack[j];
+    }
+    value_stack.resize(target_j);
+  }
+  
   if (value_stack.size() == 1)
-    return value_stack.front();
+    return value_stack.front().second;
   error_output->add_parse_error("Invalid expression in value assignment", token.line_col().first);
   return 0;
 }

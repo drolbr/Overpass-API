@@ -3615,7 +3615,7 @@ int main(int argc, char* args[])
     if (string(args[2]) == "make_14")
       cout<<
       "  <test-times id=\"0\">\n"
-      "    <tag k=\"product\" v=\"\"/>\n"
+      "    <tag k=\"product\" v=\"NaN\"/>\n"
       "  </test-times>\n";
     
     cout<<"</osm>\n";
