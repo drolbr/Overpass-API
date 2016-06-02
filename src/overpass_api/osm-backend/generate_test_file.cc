@@ -3607,6 +3607,16 @@ int main(int argc, char* args[])
       "  <test-plus id=\"0\">\n"
       "    <tag k=\"sum\" v=\" 12_\"/>\n"
       "  </test-plus>\n";
+    if (string(args[2]) == "make_13")
+      cout<<
+      "  <test-times id=\"0\">\n"
+      "    <tag k=\"product\" v=\"13\"/>\n"
+      "  </test-times>\n";
+    if (string(args[2]) == "make_14")
+      cout<<
+      "  <test-times id=\"0\">\n"
+      "    <tag k=\"product\" v=\"\"/>\n"
+      "  </test-times>\n";
     
     cout<<"</osm>\n";
   }
