@@ -3617,6 +3617,26 @@ int main(int argc, char* args[])
       "  <test-times id=\"0\">\n"
       "    <tag k=\"product\" v=\"NaN\"/>\n"
       "  </test-times>\n";
+    if (string(args[2]) == "make_15")
+      cout<<
+      "  <test-minus id=\"0\">\n"
+      "    <tag k=\"difference\" v=\"-3\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_16")
+      cout<<
+      "  <test-minus id=\"0\">\n"
+      "    <tag k=\"difference\" v=\"NaN\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_17")
+      cout<<
+      "  <test-divided id=\"0\">\n"
+      "    <tag k=\"quotient\" v=\"0.88888888888889\"/>\n"
+      "  </test-divided>\n";
+    if (string(args[2]) == "make_18")
+      cout<<
+      "  <test-divided id=\"0\">\n"
+      "    <tag k=\"quotient\" v=\"NaN\"/>\n"
+      "  </test-divided>\n";
     
     cout<<"</osm>\n";
   }

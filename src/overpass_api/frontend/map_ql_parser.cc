@@ -228,10 +228,26 @@ TStatement* create_tag_value_plus(typename TStatement::Factory& stmt_factory, ui
 
 
 template< class TStatement >
+TStatement* create_tag_value_minus(typename TStatement::Factory& stmt_factory, uint line_nr)
+{
+  map< string, string > attr;
+  return stmt_factory.create_statement("value-minus", line_nr, attr);
+}
+
+
+template< class TStatement >
 TStatement* create_tag_value_times(typename TStatement::Factory& stmt_factory, uint line_nr)
 {
   map< string, string > attr;
   return stmt_factory.create_statement("value-times", line_nr, attr);
+}
+
+
+template< class TStatement >
+TStatement* create_tag_value_divided(typename TStatement::Factory& stmt_factory, uint line_nr)
+{
+  map< string, string > attr;
+  return stmt_factory.create_statement("value-divided", line_nr, attr);
 }
 
 
@@ -676,6 +692,14 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
       continue;
     }
         
+    if (*token == "-")
+    {
+      value_stack.push_back(std::make_pair(
+          2, create_tag_value_minus< TStatement >(stmt_factory, token.line_col().first)));
+      ++token;
+      continue;
+    }
+        
     if (*token == "*")
     {
       value_stack.push_back(std::make_pair(
@@ -684,7 +708,22 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
       continue;
     }
         
+    if (*token == "/")
+    {
+      value_stack.push_back(std::make_pair(
+          1, create_tag_value_divided< TStatement >(stmt_factory, token.line_col().first)));
+      ++token;
+      continue;
+    }
+        
     std::string value = get_text_token(token, error_output, "Tag value");
+        
+    if (!value.empty() && value[0] == '-' && !value_stack.empty() && value_stack.back().first == 0)
+    {
+      value_stack.push_back(std::make_pair(
+          2, create_tag_value_minus< TStatement >(stmt_factory, token.line_col().first)));
+      value = value.substr(1);
+    }
       
     func_from = "_";
     if (token.good() && *token == ".")

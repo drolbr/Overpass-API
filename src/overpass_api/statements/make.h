@@ -143,6 +143,28 @@ private:
 };
 
 
+class Tag_Value_Minus : public Tag_Value
+{
+public:
+  Tag_Value_Minus(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-minus"; }
+  virtual string get_result_name() const { return ""; }
+  virtual void add_statement(Statement* statement, string text);
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Tag_Value_Minus() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Minus > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  
+private:
+  std::string input;
+  Tag_Value* lhs;
+  Tag_Value* rhs;
+};
+
+
 class Tag_Value_Times : public Tag_Value
 {
 public:
@@ -155,6 +177,28 @@ public:
   virtual ~Tag_Value_Times() {}
   
   static Generic_Statement_Maker< Tag_Value_Times > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  
+private:
+  std::string input;
+  Tag_Value* lhs;
+  Tag_Value* rhs;
+};
+
+
+class Tag_Value_Divided : public Tag_Value
+{
+public:
+  Tag_Value_Divided(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-divided-by"; }
+  virtual string get_result_name() const { return ""; }
+  virtual void add_statement(Statement* statement, string text);
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Tag_Value_Divided() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Divided > statement_maker;
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;
   

@@ -233,6 +233,72 @@ void multiply_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
       
+void minus_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string key, std::string value1, std::string value2)
+{
+  Resource_Manager rman(transaction, &global_settings);
+        
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Make_Statement stmt(0, attributes, global_settings);
+  
+  attributes.clear();
+  attributes["k"] = key;
+  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  Tag_Value_Minus stmt10(0, attributes, global_settings);
+  attributes["v"] = value1;
+  Tag_Value_Fixed stmt101(0, attributes, global_settings);
+  stmt10.add_statement(&stmt101, "");
+  attributes["v"] = value2;
+  Tag_Value_Fixed stmt102(0, attributes, global_settings);
+  stmt10.add_statement(&stmt102, "");
+  stmt1.add_statement(&stmt10, "");  
+  
+  stmt.execute(rman);
+  
+  {
+    const char* attributes[] = { 0 };
+    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    stmt.execute(rman);
+  }
+}
+     
+      
+void divide_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string key, std::string value1, std::string value2)
+{
+  Resource_Manager rman(transaction, &global_settings);
+        
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Make_Statement stmt(0, attributes, global_settings);
+  
+  attributes.clear();
+  attributes["k"] = key;
+  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  Tag_Value_Divided stmt10(0, attributes, global_settings);
+  attributes["v"] = value1;
+  Tag_Value_Fixed stmt101(0, attributes, global_settings);
+  stmt10.add_statement(&stmt101, "");
+  attributes["v"] = value2;
+  Tag_Value_Fixed stmt102(0, attributes, global_settings);
+  stmt10.add_statement(&stmt102, "");
+  stmt1.add_statement(&stmt10, "");  
+  
+  stmt.execute(rman);
+  
+  {
+    const char* attributes[] = { 0 };
+    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    stmt.execute(rman);
+  }
+}
+     
+      
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -280,6 +346,14 @@ int main(int argc, char* args[])
     multiply_test(global_settings, transaction, "test-times", "product", "2", "6.5");
   if ((test_to_execute == "") || (test_to_execute == "14"))
     multiply_test(global_settings, transaction, "test-times", "product", "_2", "7");
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    minus_test(global_settings, transaction, "test-minus", "difference", "2", "5");
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+    minus_test(global_settings, transaction, "test-minus", "difference", "_2", "5");
+  if ((test_to_execute == "") || (test_to_execute == "17"))
+    divide_test(global_settings, transaction, "test-divided", "quotient", "8", "9");
+  if ((test_to_execute == "") || (test_to_execute == "18"))
+    divide_test(global_settings, transaction, "test-divided", "quotient", "_8", "9");
 
   std::cout<<"</osm>\n";
   return 0;

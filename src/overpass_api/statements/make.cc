@@ -249,6 +249,49 @@ std::string Tag_Value_Plus::eval(const std::map< std::string, Set >& sets) const
 //-----------------------------------------------------------------------------
 
 
+Generic_Statement_Maker< Tag_Value_Minus > Tag_Value_Minus::statement_maker("value-minus");
+
+
+Tag_Value_Minus::Tag_Value_Minus
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_), lhs(0), rhs(0)
+{
+  map< string, string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+void Tag_Value_Minus::add_statement(Statement* statement, string text)
+{
+  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  if (!tag_value_)
+    substatement_error(get_name(), statement);
+  else if (!lhs)
+    lhs = tag_value_;
+  else if (!rhs)
+    rhs = tag_value_;
+  else
+    add_static_error("value-minus must have exactly two tag-value substatements.");
+}
+
+
+std::string Tag_Value_Minus::eval(const std::map< std::string, Set >& sets) const
+{
+  std::string lhs_s = lhs ? lhs->eval(sets) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets) : "";
+  double lhs_d = 0;
+  double rhs_d = 0;
+  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return to_string(lhs_d - rhs_d);
+  else
+    return "NaN";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Generic_Statement_Maker< Tag_Value_Times > Tag_Value_Times::statement_maker("value-times");
 
 
@@ -284,6 +327,49 @@ std::string Tag_Value_Times::eval(const std::map< std::string, Set >& sets) cons
   
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d * rhs_d);
+  else
+    return "NaN";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Divided > Tag_Value_Divided::statement_maker("value-divided");
+
+
+Tag_Value_Divided::Tag_Value_Divided
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_), lhs(0), rhs(0)
+{
+  map< string, string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+void Tag_Value_Divided::add_statement(Statement* statement, string text)
+{
+  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  if (!tag_value_)
+    substatement_error(get_name(), statement);
+  else if (!lhs)
+    lhs = tag_value_;
+  else if (!rhs)
+    rhs = tag_value_;
+  else
+    add_static_error("value-divided must have exactly two tag-value substatements.");
+}
+
+
+std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets) const
+{
+  std::string lhs_s = lhs ? lhs->eval(sets) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets) : "";
+  double lhs_d = 0;
+  double rhs_d = 0;
+  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return to_string(lhs_d / rhs_d);
   else
     return "NaN";
 }
