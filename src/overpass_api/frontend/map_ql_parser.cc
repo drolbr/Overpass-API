@@ -1413,7 +1413,17 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	error_output->add_parse_error("An empty query is not allowed", token.line_col().first);
     }
     else
-      statement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
+    {
+      if (type == "")
+        statement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
+      else
+      {
+        statement = create_query_statement< TStatement >
+           (stmt_factory, type, into, query_line_col.first);
+        TStatement* substatement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
+        statement->add_statement(substatement, "");
+      }
+    }
   }
   else if (clauses.size() == 1 && from == "")
   {
