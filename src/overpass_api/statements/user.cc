@@ -52,7 +52,7 @@ class User_Constraint : public Query_Constraint
 template< typename TIndex, typename TObject >
 void user_filter_map
     (map< TIndex, vector< TObject > >& modify,
-     Resource_Manager& rman, set< Uint32_Index > user_ids, File_Properties* file_properties)
+     Resource_Manager& rman, const set< Uint32_Index >& user_ids, File_Properties* file_properties)
 {
   if (modify.empty())
     return;
@@ -80,7 +80,7 @@ void user_filter_map
 template< typename TIndex, typename TObject >
 void user_filter_map_attic
     (map< TIndex, vector< TObject > >& modify,
-     Resource_Manager& rman, set< Uint32_Index > user_ids,
+     Resource_Manager& rman, const set< Uint32_Index >& user_ids,
      File_Properties* current_file_properties, File_Properties* attic_file_properties)
 {
   if (modify.empty())
@@ -232,7 +232,7 @@ set< Uint32_Index > User_Statement::get_ids(Transaction& transaction)
 void calc_ranges
   (set< pair< Uint32_Index, Uint32_Index > >& node_req,
    set< pair< Uint31_Index, Uint31_Index > >& other_req,
-   set< Uint32_Index > user_ids, Transaction& transaction)
+   const set< Uint32_Index >& user_ids, Transaction& transaction)
 {
   
   Block_Backend< Uint32_Index, Uint31_Index > user_db
