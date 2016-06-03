@@ -46,15 +46,15 @@ class User_Statement : public Output_Statement
          Transaction& transaction);
 	 
     // Reads the user id from the database.
-    uint32 get_id(Transaction& transaction);
+    set< Uint32_Index > get_ids(Transaction& transaction);
     
     // Works only if get_id(Transaction&) has been called before.
-    uint32 get_id() const { return user_id; }
+    set< Uint32_Index > get_ids() const { return user_ids; }
     
   private:
     string input;
-    uint32 user_id;
-    string user_name;
+    set< Uint32_Index > user_ids;
+    set< string > user_names;
     string result_type;
     vector< Query_Constraint* > constraints;
 };
