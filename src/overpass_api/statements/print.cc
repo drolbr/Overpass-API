@@ -582,7 +582,8 @@ void tags_quadtile_attic_
      Output_Handler& output,
      Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
-  Tag_Store< Index, Object > tag_store(items, transaction, typename Object::Id_Type(), typename Object::Id_Type());
+  Tag_Store< Index, Object > tag_store(transaction);
+  tag_store.prefetch_all(items);
 
   Attic_Meta_Collector< Index, Object > meta_printer(items, transaction, extra_data.mode & Output_Mode::META);
   
@@ -844,6 +845,7 @@ void tags_by_id_attic
   std::vector< Maybe_Attic_Ref< Index, Object > > items_by_id = collect_items_by_id(current_items, attic_items);
   
   Tag_Store< Index, Object > current_tag_store(transaction);
+  Tag_Store< Index, Object > attic_tag_store(transaction);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
@@ -865,8 +867,8 @@ void tags_by_id_attic
       ++upper_id_bound;
     }
     
-    Tag_Store< Index, Object > attic_tag_store(attic_items, transaction, lower_id_bound, upper_id_bound);
     current_tag_store.prefetch_chunk(current_items, lower_id_bound, upper_id_bound);
+    attic_tag_store.prefetch_chunk(attic_items, lower_id_bound, upper_id_bound);
     
     // collect metadata if required
     set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > only_current_metadata;
@@ -1602,7 +1604,8 @@ void tags_quadtile_attic
      Collection_Print_Target& target,
      Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
 {
-  Tag_Store< Index, Object > tag_store(items, transaction, typename Object::Id_Type(), typename Object::Id_Type());
+  Tag_Store< Index, Object > tag_store(transaction);
+  tag_store.prefetch_all(items);
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
       (items, transaction, 

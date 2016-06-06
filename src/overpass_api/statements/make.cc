@@ -24,10 +24,10 @@
 Generic_Statement_Maker< Make_Statement > Make_Statement::statement_maker("make");
 
 Make_Statement::Make_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   
   attributes["into"] = "_";
   attributes["type"] = "";
@@ -48,7 +48,7 @@ Make_Statement::~Make_Statement()
 }
 
 
-void Make_Statement::add_statement(Statement* statement, string text)
+void Make_Statement::add_statement(Statement* statement, std::string text)
 {
   Set_Tag_Statement* set_tag = dynamic_cast< Set_Tag_Statement* >(statement);
   if (set_tag)
@@ -80,10 +80,10 @@ Generic_Statement_Maker< Set_Tag_Statement > Set_Tag_Statement::statement_maker(
 
 
 Set_Tag_Statement::Set_Tag_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_), tag_value(0)
 {
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   
   attributes["k"] = "";
   
@@ -101,7 +101,7 @@ Set_Tag_Statement::Set_Tag_Statement
 }
 
 
-void Set_Tag_Statement::add_statement(Statement* statement, string text)
+void Set_Tag_Statement::add_statement(Statement* statement, std::string text)
 {
   Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
   if (tag_value_ && !tag_value)
@@ -120,10 +120,10 @@ Generic_Statement_Maker< Tag_Value_Fixed > Tag_Value_Fixed::statement_maker("val
 
 
 Tag_Value_Fixed::Tag_Value_Fixed
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Tag_Value(line_number_)
 {
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   
   attributes["v"] = "";
   
@@ -154,10 +154,10 @@ Generic_Statement_Maker< Tag_Value_Count > Tag_Value_Count::statement_maker("val
 
 
 Tag_Value_Count::Tag_Value_Count
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Tag_Value(line_number_)
 {
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   
   attributes["from"] = "_";
   attributes["type"] = "";
@@ -210,15 +210,15 @@ Generic_Statement_Maker< Tag_Value_Plus > Tag_Value_Plus::statement_maker("value
 
 
 Tag_Value_Plus::Tag_Value_Plus
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Tag_Value(line_number_), lhs(0), rhs(0)
 {
-  map< string, string > attributes;  
+  std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-void Tag_Value_Plus::add_statement(Statement* statement, string text)
+void Tag_Value_Plus::add_statement(Statement* statement, std::string text)
 {
   Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
   if (!tag_value_)
@@ -253,15 +253,15 @@ Generic_Statement_Maker< Tag_Value_Minus > Tag_Value_Minus::statement_maker("val
 
 
 Tag_Value_Minus::Tag_Value_Minus
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Tag_Value(line_number_), lhs(0), rhs(0)
 {
-  map< string, string > attributes;  
+  std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-void Tag_Value_Minus::add_statement(Statement* statement, string text)
+void Tag_Value_Minus::add_statement(Statement* statement, std::string text)
 {
   Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
   if (!tag_value_)
@@ -296,15 +296,15 @@ Generic_Statement_Maker< Tag_Value_Times > Tag_Value_Times::statement_maker("val
 
 
 Tag_Value_Times::Tag_Value_Times
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Tag_Value(line_number_), lhs(0), rhs(0)
 {
-  map< string, string > attributes;  
+  std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-void Tag_Value_Times::add_statement(Statement* statement, string text)
+void Tag_Value_Times::add_statement(Statement* statement, std::string text)
 {
   Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
   if (!tag_value_)
@@ -339,15 +339,15 @@ Generic_Statement_Maker< Tag_Value_Divided > Tag_Value_Divided::statement_maker(
 
 
 Tag_Value_Divided::Tag_Value_Divided
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Tag_Value(line_number_), lhs(0), rhs(0)
 {
-  map< string, string > attributes;  
+  std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-void Tag_Value_Divided::add_statement(Statement* statement, string text)
+void Tag_Value_Divided::add_statement(Statement* statement, std::string text)
 {
   Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
   if (!tag_value_)

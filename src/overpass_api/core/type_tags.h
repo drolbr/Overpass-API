@@ -158,6 +158,9 @@ void generate_ids_by_coarse
         it2 != it->second.end(); ++it2)
       ids_by_coarse[it->first.val() & 0x7fffff00].push_back(it2->id);
   }
+  for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    std::sort(it->second.begin(), it->second.end());
 }
 
 
@@ -176,6 +179,9 @@ void generate_ids_by_coarse
       ids_by_coarse[it->first.val() & 0x7fffff00].push_back
           (Attic< typename TObject::Id_Type >(it2->id, it2->timestamp));
   }
+  for (typename std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >::iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    std::sort(it->second.begin(), it->second.end());
 }
 
 
