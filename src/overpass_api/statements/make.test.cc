@@ -299,6 +299,96 @@ void divide_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
       
+void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string from, uint64 ref, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+
+  {
+    std::map< std::string, std::string > attributes;
+    if (from != "_")
+      attributes["into"] = from;
+    Union_Statement union_(0, attributes, global_settings);
+
+    attributes.clear();
+    attributes["type"] = "node";
+    attributes["ref"] = to_string(ref + global_node_offset);
+    Id_Query_Statement stmt1(0, attributes, global_settings);
+    union_.add_statement(&stmt1, "");
+
+    attributes.clear();
+    attributes["type"] = "way";
+    attributes["ref"] = to_string(ref);
+    Id_Query_Statement stmt2(0, attributes, global_settings);
+    union_.add_statement(&stmt2, "");
+
+    attributes.clear();
+    attributes["type"] = "relation";
+    attributes["ref"] = to_string(ref);
+    Id_Query_Statement stmt3(0, attributes, global_settings);
+    union_.add_statement(&stmt3, "");
+    
+    union_.execute(rman);
+  }
+  
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Make_Statement stmt(0, attributes, global_settings);
+  
+  attributes.clear();
+  attributes["k"] = "node_key";
+  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  attributes["k"] = "node_key";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Union_Value stmt10(0, attributes, global_settings);
+  stmt1.add_statement(&stmt10, "");
+  
+  attributes.clear();
+  attributes["k"] = "way_key";
+  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  stmt.add_statement(&stmt2, "");
+  attributes.clear();
+  attributes["k"] = "way_key";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Union_Value stmt20(0, attributes, global_settings);
+  stmt2.add_statement(&stmt20, "");
+  
+  attributes.clear();
+  attributes["k"] = "relation_key";
+  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  stmt.add_statement(&stmt3, "");
+  attributes.clear();
+  attributes["k"] = "relation_key";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Union_Value stmt30(0, attributes, global_settings);
+  stmt3.add_statement(&stmt30, "");
+  
+  attributes.clear();
+  attributes["k"] = "unused_key";
+  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  stmt.add_statement(&stmt4, "");
+  attributes.clear();
+  attributes["k"] = "unused_key";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Union_Value stmt40(0, attributes, global_settings);
+  stmt4.add_statement(&stmt40, "");
+  
+  stmt.execute(rman);
+  
+  {
+    const char* attributes[] = { 0 };
+    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    stmt.execute(rman);
+  }
+}
+     
+      
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -354,6 +444,10 @@ int main(int argc, char* args[])
     divide_test(global_settings, transaction, "test-divided", "quotient", "8", "9");
   if ((test_to_execute == "") || (test_to_execute == "18"))
     divide_test(global_settings, transaction, "test-divided", "quotient", "_8", "9");
+  if ((test_to_execute == "") || (test_to_execute == "19"))
+    union_value_test(global_settings, transaction, "union-value", "_", 1, global_node_offset);
+  if ((test_to_execute == "") || (test_to_execute == "20"))
+    union_value_test(global_settings, transaction, "union-value", "foo", 1, global_node_offset);
 
   std::cout<<"</osm>\n";
   return 0;

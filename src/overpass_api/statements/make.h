@@ -55,6 +55,19 @@ struct Tag_Value : public Statement
   Tag_Value(int line_number) : Statement(line_number) {}
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const = 0;
+  virtual bool needs_tags(const std::string& set_name) const { return false; }
+  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) {}
+  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) {}
+  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) {}
+  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) {}
+  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) {}
+  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) {}
 };
 
 
@@ -72,6 +85,7 @@ public:
   static Generic_Statement_Maker< Set_Tag_Statement > statement_maker;
     
   std::string get_key() const { return key; }
+  Tag_Value* get_tag_value() const { return tag_value; }
   std::string eval(const std::map< std::string, Set >& sets) const { return tag_value ? tag_value->eval(sets) : ""; }
     
 private:
@@ -121,91 +135,125 @@ private:
 };
 
 
-class Tag_Value_Plus : public Tag_Value
+class Tag_Value_Pair_Operator : public Tag_Value
+{
+public:
+  Tag_Value_Pair_Operator(int line_number_);
+  virtual void add_statement(Statement* statement, string text);
+  virtual void execute(Resource_Manager& rman) {}
+  
+  virtual string get_result_name() const { return ""; }
+  
+  virtual bool needs_tags(const std::string& set_name) const
+  { return lhs && rhs && lhs->needs_tags(set_name) && rhs->needs_tags(set_name); }
+  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  
+protected:
+  Tag_Value* lhs;
+  Tag_Value* rhs;
+};
+
+
+class Tag_Value_Plus : public Tag_Value_Pair_Operator
 {
 public:
   Tag_Value_Plus(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "value-plus"; }
-  virtual string get_result_name() const { return ""; }
-  virtual void add_statement(Statement* statement, string text);
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Tag_Value_Plus() {}
   
   static Generic_Statement_Maker< Tag_Value_Plus > statement_maker;
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;
-  
-private:
-  std::string input;
-  Tag_Value* lhs;
-  Tag_Value* rhs;
 };
 
 
-class Tag_Value_Minus : public Tag_Value
+class Tag_Value_Minus : public Tag_Value_Pair_Operator
 {
 public:
   Tag_Value_Minus(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "value-minus"; }
-  virtual string get_result_name() const { return ""; }
-  virtual void add_statement(Statement* statement, string text);
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Tag_Value_Minus() {}
   
   static Generic_Statement_Maker< Tag_Value_Minus > statement_maker;
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;
-  
-private:
-  std::string input;
-  Tag_Value* lhs;
-  Tag_Value* rhs;
 };
 
 
-class Tag_Value_Times : public Tag_Value
+class Tag_Value_Times : public Tag_Value_Pair_Operator
 {
 public:
   Tag_Value_Times(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "value-times"; }
-  virtual string get_result_name() const { return ""; }
-  virtual void add_statement(Statement* statement, string text);
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Tag_Value_Times() {}
   
   static Generic_Statement_Maker< Tag_Value_Times > statement_maker;
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;
-  
-private:
-  std::string input;
-  Tag_Value* lhs;
-  Tag_Value* rhs;
 };
 
 
-class Tag_Value_Divided : public Tag_Value
+class Tag_Value_Divided : public Tag_Value_Pair_Operator
 {
 public:
   Tag_Value_Divided(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "value-divided-by"; }
-  virtual string get_result_name() const { return ""; }
-  virtual void add_statement(Statement* statement, string text);
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Tag_Value_Divided() {}
   
   static Generic_Statement_Maker< Tag_Value_Divided > statement_maker;
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;
+};
+
+
+class Tag_Value_Union_Value : public Tag_Value
+{
+public:
+  Tag_Value_Union_Value(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-union-value"; }
+  virtual string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Tag_Value_Union_Value() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Union_Value > statement_maker;
+  
+  virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
+  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets) const;
   
 private:
   std::string input;
-  Tag_Value* lhs;
-  Tag_Value* rhs;
+  std::string key;
+  std::string value;
+  bool unique;
 };
 
 

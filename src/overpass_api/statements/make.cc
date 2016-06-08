@@ -17,6 +17,7 @@
 */
 
 
+#include "../data/tag_store.h"
 #include "../data/utils.h"
 #include "make.h"
 
@@ -58,8 +59,83 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
 }
 
 
+template< typename Index, typename Object >
+void notify_tags(Transaction& transaction, const std::string& set_name,
+    const std::map< Index, std::vector< Object > >& items, std::vector< Set_Tag_Statement* >& evaluators)
+{
+  Tag_Store< Index, Object > tag_store(transaction);
+  tag_store.prefetch_all(items);
+  
+  for (typename std::map< Index, std::vector< Object > >::const_iterator it_idx = items.begin();
+      it_idx != items.end(); ++it_idx)
+  {
+    for (typename std::vector< Object >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+    {
+      for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
+          it_evals != evaluators.end(); ++it_evals)
+      {
+        if ((*it_evals)->get_tag_value()->needs_tags(set_name))
+          (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tag_store.get(it_idx->first, *it_elem));
+      }
+    }
+  } 
+}
+
+
+template< typename Index, typename Object >
+void notify_tags(Transaction& transaction, const std::string& set_name,
+    const std::map< Index, std::vector< Attic< Object > > >& items, std::vector< Set_Tag_Statement* >& evaluators)
+{
+  Tag_Store< Index, Object > tag_store(transaction);
+  tag_store.prefetch_all(items);
+  
+  for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator it_idx = items.begin();
+      it_idx != items.end(); ++it_idx)
+  {
+    for (typename std::vector< Attic< Object > >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+    {
+      for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
+          it_evals != evaluators.end(); ++it_evals)
+      {
+        if ((*it_evals)->get_tag_value()->needs_tags(set_name))
+          (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tag_store.get(it_idx->first, *it_elem));
+      }
+    }
+  } 
+}
+
+
 void Make_Statement::execute(Resource_Manager& rman)
 {
+  for (std::map< std::string, Set >::const_iterator it_set = rman.sets().begin(); it_set != rman.sets().end();
+      ++it_set)
+  {
+    bool needs_tags = false;
+    for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+        needs_tags |= (*it)->get_tag_value()->needs_tags(it_set->first);
+    if (needs_tags)
+    {
+      std::map< std::string, Set >::const_iterator mit(rman.sets().find(it_set->first));
+      notify_tags< Uint32_Index, Node_Skeleton >(
+          *rman.get_transaction(), it_set->first, mit->second.nodes, evaluators);
+      if (rman.get_desired_timestamp() != NOW)
+        notify_tags< Uint32_Index, Node_Skeleton >(
+            *rman.get_transaction(), it_set->first, mit->second.attic_nodes, evaluators);
+      notify_tags< Uint31_Index, Way_Skeleton >(
+          *rman.get_transaction(), it_set->first, mit->second.ways, evaluators);
+      if (rman.get_desired_timestamp() != NOW)
+        notify_tags< Uint31_Index, Way_Skeleton >(
+            *rman.get_transaction(), it_set->first, mit->second.attic_ways, evaluators);
+      notify_tags< Uint31_Index, Relation_Skeleton >(
+          *rman.get_transaction(), it_set->first, mit->second.relations, evaluators);
+      if (rman.get_desired_timestamp() != NOW)
+        notify_tags< Uint31_Index, Relation_Skeleton >(
+            *rman.get_transaction(), it_set->first, mit->second.attic_relations, evaluators);
+    }
+  }
+  
   Set into;
   
   std::vector< std::pair< std::string, std::string > > tags;
@@ -206,19 +282,10 @@ std::string Tag_Value_Count::eval(const std::map< std::string, Set >& sets) cons
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Plus > Tag_Value_Plus::statement_maker("value-plus");
+Tag_Value_Pair_Operator::Tag_Value_Pair_Operator(int line_number_) : Tag_Value(line_number_), lhs(0), rhs(0) {}
 
 
-Tag_Value_Plus::Tag_Value_Plus
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_), lhs(0), rhs(0)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
-
-
-void Tag_Value_Plus::add_statement(Statement* statement, std::string text)
+void Tag_Value_Pair_Operator::add_statement(Statement* statement, std::string text)
 {
   Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
   if (!tag_value_)
@@ -228,7 +295,82 @@ void Tag_Value_Plus::add_statement(Statement* statement, std::string text)
   else if (!rhs)
     rhs = tag_value_;
   else
-    add_static_error("value-plus must have exactly two tag-value substatements.");
+    add_static_error(get_name() + " must have exactly two tag-value substatements.");
+}
+
+
+void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (lhs)
+    lhs->tag_notice(set_name, elem, tags);
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (lhs)
+    lhs->tag_notice(set_name, elem, tags);
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (lhs)
+    lhs->tag_notice(set_name, elem, tags);
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (lhs)
+    lhs->tag_notice(set_name, elem, tags);
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (lhs)
+    lhs->tag_notice(set_name, elem, tags);
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (lhs)
+    lhs->tag_notice(set_name, elem, tags);
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Plus > Tag_Value_Plus::statement_maker("value-plus");
+
+
+Tag_Value_Plus::Tag_Value_Plus
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Pair_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
@@ -254,24 +396,10 @@ Generic_Statement_Maker< Tag_Value_Minus > Tag_Value_Minus::statement_maker("val
 
 Tag_Value_Minus::Tag_Value_Minus
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_), lhs(0), rhs(0)
+    : Tag_Value_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
-}
-
-
-void Tag_Value_Minus::add_statement(Statement* statement, std::string text)
-{
-  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
-  if (!tag_value_)
-    substatement_error(get_name(), statement);
-  else if (!lhs)
-    lhs = tag_value_;
-  else if (!rhs)
-    rhs = tag_value_;
-  else
-    add_static_error("value-minus must have exactly two tag-value substatements.");
 }
 
 
@@ -297,24 +425,10 @@ Generic_Statement_Maker< Tag_Value_Times > Tag_Value_Times::statement_maker("val
 
 Tag_Value_Times::Tag_Value_Times
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_), lhs(0), rhs(0)
+    : Tag_Value_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
-}
-
-
-void Tag_Value_Times::add_statement(Statement* statement, std::string text)
-{
-  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
-  if (!tag_value_)
-    substatement_error(get_name(), statement);
-  else if (!lhs)
-    lhs = tag_value_;
-  else if (!rhs)
-    rhs = tag_value_;
-  else
-    add_static_error("value-times must have exactly two tag-value substatements.");
 }
 
 
@@ -340,24 +454,10 @@ Generic_Statement_Maker< Tag_Value_Divided > Tag_Value_Divided::statement_maker(
 
 Tag_Value_Divided::Tag_Value_Divided
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_), lhs(0), rhs(0)
+    : Tag_Value_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
-}
-
-
-void Tag_Value_Divided::add_statement(Statement* statement, std::string text)
-{
-  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
-  if (!tag_value_)
-    substatement_error(get_name(), statement);
-  else if (!lhs)
-    lhs = tag_value_;
-  else if (!rhs)
-    rhs = tag_value_;
-  else
-    add_static_error("value-divided must have exactly two tag-value substatements.");
 }
 
 
@@ -373,3 +473,81 @@ std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets) co
   else
     return "NaN";
 }
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Union_Value > Tag_Value_Union_Value::statement_maker("value-union-value");
+
+
+Tag_Value_Union_Value::Tag_Value_Union_Value
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_), unique(true)
+{
+  std::map< std::string, std::string > attributes;
+  
+  attributes["from"] = "_";
+  attributes["k"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  input = attributes["from"];
+  key = attributes["k"];
+}
+
+
+std::string Tag_Value_Union_Value::eval(const std::map< std::string, Set >& sets) const
+{
+  return value;
+}
+
+
+void update_value(const std::vector< std::pair< std::string, std::string > >* tags,
+    const std::string& key, std::string& value, bool& unique)
+{
+  if (!tags)
+    return;
+  
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
+      it != tags->end(); ++it)
+  {
+    if (it->first == key)
+    {
+      if (it->second == value)
+        ;
+      else if (value == "")
+        value = it->second;
+      else
+      {
+        unique = false;
+        value = "< multiple values found >";
+      }
+    }
+  }
+}
+
+
+void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(tags, key, value, unique); }
+
+void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(tags, key, value, unique); }
+
+void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(tags, key, value, unique); }
+
+void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(tags, key, value, unique); }
+
+void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(tags, key, value, unique); }
+
+void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(tags, key, value, unique); }
