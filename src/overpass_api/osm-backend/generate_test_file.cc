@@ -3637,6 +3637,38 @@ int main(int argc, char* args[])
       "  <test-divided id=\"0\">\n"
       "    <tag k=\"quotient\" v=\"NaN\"/>\n"
       "  </test-divided>\n";
+    if (string(args[2]) == "make_19" || string(args[2]) == "make_20")
+      cout<<
+      "  <union-value id=\"0\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"unused_key\" v=\"\"/>\n"
+      "  </union-value>\n";
+    if (string(args[2]) == "make_21" || string(args[2]) == "make_22")
+      cout<<
+      "  <min-value id=\"0\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"unused_key_7\" v=\"\"/>\n"
+      "  </min-value>\n";
+    if (string(args[2]) == "make_23" || string(args[2]) == "make_24")
+      cout<<
+      "  <max-value id=\"0\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"unused_key_7\" v=\"\"/>\n"
+      "  </max-value>\n";
+    if (string(args[2]) == "make_25" || string(args[2]) == "make_26")
+      cout<<
+      "  <value-set id=\"0\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"unused_key_7\" v=\"\"/>\n"
+      "  </value-set>\n";
     
     cout<<"</osm>\n";
   }

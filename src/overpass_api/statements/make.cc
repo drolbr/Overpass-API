@@ -551,3 +551,237 @@ void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Relati
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
 { update_value(tags, key, value, unique); }
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Min_Value > Tag_Value_Min_Value::statement_maker("value-min-value");
+
+
+Tag_Value_Min_Value::Tag_Value_Min_Value
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_), value_set(false)
+{
+  std::map< std::string, std::string > attributes;
+  
+  attributes["from"] = "_";
+  attributes["k"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  input = attributes["from"];
+  key = attributes["k"];
+}
+
+
+std::string Tag_Value_Min_Value::eval(const std::map< std::string, Set >& sets) const
+{
+  return value;
+}
+
+
+void update_value_min(const std::vector< std::pair< std::string, std::string > >* tags,
+    const std::string& key, std::string& value, bool& value_set)
+{
+  if (!tags)
+    return;
+  
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
+      it != tags->end(); ++it)
+  {
+    if (it->first == key)
+    {
+      if (value_set)
+        value = std::min(value, it->second);
+      else
+      {
+        value_set = true;
+        value = it->second;
+      }
+    }
+  }
+}
+
+
+void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_min(tags, key, value, value_set); }
+
+void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_min(tags, key, value, value_set); }
+
+void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_min(tags, key, value, value_set); }
+
+void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_min(tags, key, value, value_set); }
+
+void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_min(tags, key, value, value_set); }
+
+void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_min(tags, key, value, value_set); }
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Max_Value > Tag_Value_Max_Value::statement_maker("value-max-value");
+
+
+Tag_Value_Max_Value::Tag_Value_Max_Value
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_), value_set(false)
+{
+  std::map< std::string, std::string > attributes;
+  
+  attributes["from"] = "_";
+  attributes["k"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  input = attributes["from"];
+  key = attributes["k"];
+}
+
+
+std::string Tag_Value_Max_Value::eval(const std::map< std::string, Set >& sets) const
+{
+  return value;
+}
+
+
+void update_value_max(const std::vector< std::pair< std::string, std::string > >* tags,
+    const std::string& key, std::string& value, bool& value_set)
+{
+  if (!tags)
+    return;
+  
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
+      it != tags->end(); ++it)
+  {
+    if (it->first == key)
+    {
+      if (value_set)
+        value = std::max(value, it->second);
+      else
+      {
+        value_set = true;
+        value = it->second;
+      }
+    }
+  }
+}
+
+
+void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_max(tags, key, value, value_set); }
+
+void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_max(tags, key, value, value_set); }
+
+void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_max(tags, key, value, value_set); }
+
+void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_max(tags, key, value, value_set); }
+
+void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_max(tags, key, value, value_set); }
+
+void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_max(tags, key, value, value_set); }
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Set_Value > Tag_Value_Set_Value::statement_maker("value-set-value");
+
+
+Tag_Value_Set_Value::Tag_Value_Set_Value
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  
+  attributes["from"] = "_";
+  attributes["k"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  input = attributes["from"];
+  key = attributes["k"];
+}
+
+
+std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets) const
+{
+  std::sort(values.begin(), values.end());
+  values.erase(std::unique(values.begin(), values.end()), values.end());
+  
+  std::string result;
+  
+  std::vector< std::string >::const_iterator it = values.begin();
+  if (it != values.end())
+  {
+    result = *it;
+    ++it;
+  }
+  for (; it != values.end(); ++it)
+    result += ";" + *it;
+  
+  return result;
+}
+
+
+void update_value_set(const std::vector< std::pair< std::string, std::string > >* tags,
+    const std::string& key, std::vector< std::string >& values)
+{
+  if (!tags)
+    return;
+  
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
+      it != tags->end(); ++it)
+  {
+    if (it->first == key)
+      values.push_back(it->second);
+  }
+}
+
+
+void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_set(tags, key, values); }
+
+void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_set(tags, key, values); }
+
+void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_set(tags, key, values); }
+
+void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_set(tags, key, values); }
+
+void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_set(tags, key, values); }
+
+void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_set(tags, key, values); }

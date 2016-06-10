@@ -221,12 +221,12 @@ TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_tag_value_union_value(typename TStatement::Factory& stmt_factory,
-    string key, string from, uint line_nr)
+    string type, string key, string from, uint line_nr)
 {
   map< string, string > attr;
   attr["from"] = from;
   attr["k"] = key;
-  return stmt_factory.create_statement("value-union-value", line_nr, attr);
+  return stmt_factory.create_statement(type, line_nr, attr);
 }
 
 
@@ -759,7 +759,31 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
       ++token;
       std::string key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, key, func_from, token.line_col().first)));
+          stmt_factory, "value-union-value", key, func_from, token.line_col().first)));
+      clear_until_after(token, error_output, ")", true);
+    }
+    else if (value == "min")
+    {
+      ++token;
+      std::string key = get_text_token(token, error_output, "Key to evaluate");
+      value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
+          stmt_factory, "value-min-value", key, func_from, token.line_col().first)));
+      clear_until_after(token, error_output, ")", true);
+    }
+    else if (value == "max")
+    {
+      ++token;
+      std::string key = get_text_token(token, error_output, "Key to evaluate");
+      value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
+          stmt_factory, "value-max-value", key, func_from, token.line_col().first)));
+      clear_until_after(token, error_output, ")", true);
+    }
+    else if (value == "set")
+    {
+      ++token;
+      std::string key = get_text_token(token, error_output, "Key to evaluate");
+      value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
+          stmt_factory, "value-set-value", key, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else
