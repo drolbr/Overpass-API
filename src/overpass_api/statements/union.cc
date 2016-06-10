@@ -85,6 +85,7 @@ void Union_Statement::execute(Resource_Manager& rman)
     indexed_set_union(base_set.attic_relations, summand.attic_relations);
     
     indexed_set_union(base_set.areas, summand.areas);
+    indexed_set_union(base_set.deriveds, summand.deriveds);
   }
   
   transfer_output(rman, base_set);

@@ -133,6 +133,11 @@ void Make_Statement::execute(Resource_Manager& rman)
       if (rman.get_desired_timestamp() != NOW)
         notify_tags< Uint31_Index, Relation_Skeleton >(
             *rman.get_transaction(), it_set->first, mit->second.attic_relations, evaluators);
+      if (!mit->second.areas.empty())
+        notify_tags< Uint31_Index, Area_Skeleton >(
+            *rman.get_transaction(), it_set->first, mit->second.areas, evaluators);
+      notify_tags< Uint31_Index, Derived_Structure >(
+          *rman.get_transaction(), it_set->first, mit->second.deriveds, evaluators);
     }
   }
   
@@ -142,7 +147,8 @@ void Make_Statement::execute(Resource_Manager& rman)
   for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     tags.push_back(std::make_pair((*it)->get_key(), (*it)->eval(rman.sets())));
 
-  into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(type, Uint64(0ull), tags));
+  into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(
+      type, rman.get_global_settings().dispense_derived_id(), tags));
   
   transfer_output(rman, into);
   rman.health_check(*this);
@@ -359,6 +365,26 @@ void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Atti
 }
 
 
+void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (lhs)
+    lhs->tag_notice(set_name, elem, tags);
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (lhs)
+    lhs->tag_notice(set_name, elem, tags);
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
 //-----------------------------------------------------------------------------
 
 
@@ -552,6 +578,14 @@ void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic<
       const std::vector< std::pair< std::string, std::string > >* tags)
 { update_value(tags, key, value, unique); }
 
+void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(tags, key, value, unique); }
+
+void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(tags, key, value, unique); }
+
 
 //-----------------------------------------------------------------------------
 
@@ -628,6 +662,14 @@ void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< R
       const std::vector< std::pair< std::string, std::string > >* tags)
 { update_value_min(tags, key, value, value_set); }
 
+void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_min(tags, key, value, value_set); }
+
+void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_min(tags, key, value, value_set); }
+
 
 //-----------------------------------------------------------------------------
 
@@ -701,6 +743,14 @@ void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Relation
 { update_value_max(tags, key, value, value_set); }
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_max(tags, key, value, value_set); }
+
+void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_max(tags, key, value, value_set); }
+
+void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
 { update_value_max(tags, key, value, value_set); }
 
@@ -783,5 +833,13 @@ void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Relation
 { update_value_set(tags, key, values); }
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_set(tags, key, values); }
+
+void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value_set(tags, key, values); }
+
+void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
 { update_value_set(tags, key, values); }

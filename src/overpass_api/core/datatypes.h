@@ -178,6 +178,16 @@ struct Derived_Structure : public Derived_Skeleton
       : Derived_Skeleton(type_name_, id_), tags(tags_) {}
   
   std::vector< std::pair< std::string, std::string > > tags;
+  
+  bool operator<(const Derived_Structure& a) const
+  {
+    return this->id.val() < a.id.val();
+  }
+  
+  bool operator==(const Derived_Structure& a) const
+  {
+    return this->id.val() == a.id.val();
+  }
 };
 
 

@@ -12,7 +12,7 @@
 class Parsed_Query
 {
 public:
-  Parsed_Query() : output_handler(0), global_bbox_limitation(Bbox_Double::invalid) {}
+  Parsed_Query() : output_handler(0), global_bbox_limitation(Bbox_Double::invalid), last_dispensed_id(1) {}
   ~Parsed_Query() { delete output_handler; }
   
   Output_Handler* get_output_handler() const { return output_handler; }
@@ -25,6 +25,8 @@ public:
   
   void trigger_print_bounds() const;
   const Bbox_Double& get_global_bbox_limitation() const { return global_bbox_limitation; }
+  
+  Derived_Skeleton::Id_Type dispense_derived_id() { return ++last_dispensed_id; }
 
 private:
   // The class has ownership of objects - hence no assignment or copies are allowed
@@ -34,6 +36,7 @@ private:
   Output_Handler* output_handler;
   Bbox_Double global_bbox_limitation;
   std::map< std::string, std::string > input_params;
+  Derived_Skeleton::Id_Type last_dispensed_id;
 };
 
 

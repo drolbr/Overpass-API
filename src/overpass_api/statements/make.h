@@ -68,6 +68,10 @@ struct Tag_Value : public Statement
       const std::vector< std::pair< std::string, std::string > >* tags) {}
   virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags) {}
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) {}
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) {}
 };
 
 
@@ -158,6 +162,10 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
   
 protected:
   Tag_Value* lhs;
@@ -246,6 +254,10 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;
   
@@ -281,6 +293,10 @@ public:
   virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;
@@ -318,6 +334,10 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;
   
@@ -353,6 +373,10 @@ public:
   virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
   
   virtual std::string eval(const std::map< std::string, Set >& sets) const;

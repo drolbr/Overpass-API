@@ -62,6 +62,7 @@ template< >
 class Tag_Store< Uint31_Index, Derived_Structure >
 {
 public:
+  Tag_Store(Transaction& transaction) {}
   Tag_Store() {}
   
   void prefetch_all(const std::map< Uint31_Index, std::vector< Derived_Structure > >& elems) {}

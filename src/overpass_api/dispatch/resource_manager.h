@@ -68,7 +68,7 @@ public:
     return area_updater_;
   }
   
-  const Parsed_Query& get_global_settings() const { return *global_settings; }
+  Parsed_Query& get_global_settings() const { return *global_settings; }
 
   void push_reference(const Set& set_);
   void pop_reference();
