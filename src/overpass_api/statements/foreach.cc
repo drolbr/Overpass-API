@@ -82,6 +82,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].attic_relations.clear();
       
       rman.sets()[output].areas.clear();
+      rman.sets()[output].deriveds.clear();
       
       rman.sets()[output].nodes[it->first].push_back(*it2);
       for (vector< Statement* >::iterator it(substatements.begin());
@@ -106,6 +107,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].attic_relations.clear();
       
       rman.sets()[output].areas.clear();
+      rman.sets()[output].deriveds.clear();
 
       rman.sets()[output].ways[it->first].push_back(*it2);
       for (vector< Statement* >::iterator it(substatements.begin());
@@ -130,6 +132,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].attic_relations.clear();
       
       rman.sets()[output].areas.clear();
+      rman.sets()[output].deriveds.clear();
 
       rman.sets()[output].relations[it->first].push_back(*it2);
       for (vector< Statement* >::iterator it(substatements.begin());
@@ -154,6 +157,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
       rman.sets()[output].attic_relations.clear();
             
       rman.sets()[output].areas.clear();
+      rman.sets()[output].deriveds.clear();
       
       rman.sets()[output].areas[it->first].push_back(*it2);
       for (vector< Statement* >::iterator it(substatements.begin());
