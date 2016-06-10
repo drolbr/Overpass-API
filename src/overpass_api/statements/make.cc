@@ -146,6 +146,9 @@ void Make_Statement::execute(Resource_Manager& rman)
   std::vector< std::pair< std::string, std::string > > tags;
   for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     tags.push_back(std::make_pair((*it)->get_key(), (*it)->eval(rman.sets())));
+  
+  for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+    (*it)->get_tag_value()->clear();
 
   into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(
       type, rman.get_global_settings().dispense_derived_id(), tags));
@@ -385,6 +388,15 @@ void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Deri
 }
 
 
+void Tag_Value_Pair_Operator::clear()
+{
+  if (lhs)
+    lhs->clear();
+  if (rhs)
+    rhs->clear();
+}
+
+
 //-----------------------------------------------------------------------------
 
 
@@ -587,6 +599,13 @@ void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Derive
 { update_value(tags, key, value, unique); }
 
 
+void Tag_Value_Union_Value::clear()
+{
+  unique = true;
+  value = "";
+}
+
+
 //-----------------------------------------------------------------------------
 
 
@@ -671,6 +690,13 @@ void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Derived_
 { update_value_min(tags, key, value, value_set); }
 
 
+void Tag_Value_Min_Value::clear()
+{
+  value_set = false;
+  value = "";
+}
+
+
 //-----------------------------------------------------------------------------
 
 
@@ -753,6 +779,13 @@ void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Area_Ske
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
 { update_value_max(tags, key, value, value_set); }
+
+
+void Tag_Value_Max_Value::clear()
+{
+  value_set = false;
+  value = "";
+}
 
 
 //-----------------------------------------------------------------------------
@@ -843,3 +876,9 @@ void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Area_Ske
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
 { update_value_set(tags, key, values); }
+
+
+void Tag_Value_Set_Value::clear()
+{
+  values.clear();
+}
