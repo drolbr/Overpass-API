@@ -606,7 +606,7 @@ Tag_Value_Union_Value::Tag_Value_Union_Value
   
   attributes["from"] = "_";
   attributes["k"] = "";
-  attributes["generic"] == "no";
+  attributes["generic"] = "no";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
