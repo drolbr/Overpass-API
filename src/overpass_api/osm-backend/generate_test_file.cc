@@ -3550,96 +3550,96 @@ int main(int argc, char* args[])
     "<osm>\n";
     
     if (string(args[2]) == "make_1")
-      cout<<"  <one id=\"0\"/>\n";
+      cout<<"  <one id=\"1\"/>\n";
     if (string(args[2]) == "make_2")
-      cout<<"  <two id=\"0\"/>\n";
+      cout<<"  <two id=\"1\"/>\n";
     if (string(args[2]) == "make_3")
-      cout<<"  <into_target id=\"0\"/>\n";
+      cout<<"  <into_target id=\"1\"/>\n";
     if (string(args[2]) == "make_4")
       cout<<
-      "  <with-tags id=\"0\">\n"
+      "  <with-tags id=\"1\">\n"
       "    <tag k=\"single\" v=\"value\"/>\n"
       "  </with-tags>\n";
     if (string(args[2]) == "make_5")
       cout<<
-      "  <with-tags id=\"0\">\n"
+      "  <with-tags id=\"1\">\n"
       "    <tag k=\"not\" v=\"in\"/>\n"
       "    <tag k=\"alphabetic\" v=\"order\"/>\n"
       "  </with-tags>\n";
     if (string(args[2]) == "make_6")
       cout<<
-      "  <count-from-default id=\"0\">\n"
+      "  <count-from-default id=\"1\">\n"
       "    <tag k=\"nodes\" v=\"1\"/>\n"
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "  </count-from-default>\n";
     if (string(args[2]) == "make_7")
       cout<<
-      "  <count-from-default id=\"0\">\n"
+      "  <count-from-default id=\"1\">\n"
       "    <tag k=\"nodes\" v=\"0\"/>\n"
       "    <tag k=\"ways\" v=\"0\"/>\n"
       "    <tag k=\"relations\" v=\"0\"/>\n"
       "  </count-from-default>\n";
     if (string(args[2]) == "make_8")
       cout<<
-      "  <count-from-foo id=\"0\">\n"
+      "  <count-from-foo id=\"1\">\n"
       "    <tag k=\"nodes\" v=\"1\"/>\n"
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "  </count-from-foo>\n";
     if (string(args[2]) == "make_9")
       cout<<
-      "  <test-plus id=\"0\">\n"
+      "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"9\"/>\n"
       "  </test-plus>\n";
     if (string(args[2]) == "make_10")
       cout<<
-      "  <test-plus id=\"0\">\n"
+      "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"10 \"/>\n"
       "  </test-plus>\n";
     if (string(args[2]) == "make_11")
       cout<<
-      "  <test-plus id=\"0\">\n"
+      "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"11\"/>\n"
       "  </test-plus>\n";
     if (string(args[2]) == "make_12")
       cout<<
-      "  <test-plus id=\"0\">\n"
+      "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\" 12_\"/>\n"
       "  </test-plus>\n";
     if (string(args[2]) == "make_13")
       cout<<
-      "  <test-times id=\"0\">\n"
+      "  <test-times id=\"1\">\n"
       "    <tag k=\"product\" v=\"13\"/>\n"
       "  </test-times>\n";
     if (string(args[2]) == "make_14")
       cout<<
-      "  <test-times id=\"0\">\n"
+      "  <test-times id=\"1\">\n"
       "    <tag k=\"product\" v=\"NaN\"/>\n"
       "  </test-times>\n";
     if (string(args[2]) == "make_15")
       cout<<
-      "  <test-minus id=\"0\">\n"
+      "  <test-minus id=\"1\">\n"
       "    <tag k=\"difference\" v=\"-3\"/>\n"
       "  </test-minus>\n";
     if (string(args[2]) == "make_16")
       cout<<
-      "  <test-minus id=\"0\">\n"
+      "  <test-minus id=\"1\">\n"
       "    <tag k=\"difference\" v=\"NaN\"/>\n"
       "  </test-minus>\n";
     if (string(args[2]) == "make_17")
       cout<<
-      "  <test-divided id=\"0\">\n"
+      "  <test-divided id=\"1\">\n"
       "    <tag k=\"quotient\" v=\"0.88888888888889\"/>\n"
       "  </test-divided>\n";
     if (string(args[2]) == "make_18")
       cout<<
-      "  <test-divided id=\"0\">\n"
+      "  <test-divided id=\"1\">\n"
       "    <tag k=\"quotient\" v=\"NaN\"/>\n"
       "  </test-divided>\n";
     if (string(args[2]) == "make_19" || string(args[2]) == "make_20")
       cout<<
-      "  <union-value id=\"0\">\n"
+      "  <union-value id=\"1\">\n"
       "    <tag k=\"node_key\" v=\"node_few\"/>\n"
       "    <tag k=\"way_key\" v=\"way_few\"/>\n"
       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
@@ -3647,7 +3647,7 @@ int main(int argc, char* args[])
       "  </union-value>\n";
     if (string(args[2]) == "make_21" || string(args[2]) == "make_22")
       cout<<
-      "  <min-value id=\"0\">\n"
+      "  <min-value id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
@@ -3655,7 +3655,7 @@ int main(int argc, char* args[])
       "  </min-value>\n";
     if (string(args[2]) == "make_23" || string(args[2]) == "make_24")
       cout<<
-      "  <max-value id=\"0\">\n"
+      "  <max-value id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
@@ -3663,13 +3663,95 @@ int main(int argc, char* args[])
       "  </max-value>\n";
     if (string(args[2]) == "make_25" || string(args[2]) == "make_26")
       cout<<
-      "  <value-set id=\"0\">\n"
+      "  <value-set id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </value-set>\n";
-    
+    if (string(args[2]) == "make_27")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_28")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_29")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_30")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_31")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_32")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_33")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_34")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_35")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"&lt; multiple values found &gt;\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </any-key>\n";
+
     cout<<"</osm>\n";
   }
   else

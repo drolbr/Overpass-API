@@ -190,10 +190,13 @@ TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_set_tag_statement(typename TStatement::Factory& stmt_factory,
-    string key, uint line_nr)
+    string key, bool generic, uint line_nr)
 {
   map< string, string > attr;
-  attr["k"] = key;
+  if (generic)
+    attr["from"] = key;
+  else
+    attr["k"] = key;
   return stmt_factory.create_statement("set-tag", line_nr, attr);
 }
 
@@ -221,11 +224,14 @@ TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_tag_value_union_value(typename TStatement::Factory& stmt_factory,
-    string type, string key, string from, uint line_nr)
+    string type, string key, bool generic, string from, uint line_nr)
 {
   map< string, string > attr;
   attr["from"] = from;
-  attr["k"] = key;
+  if (generic)
+    attr["generic"] = "yes";
+  else
+    attr["k"] = key;
   return stmt_factory.create_statement(type, line_nr, attr);
 }
 
@@ -679,7 +685,7 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
-    Error_Output* error_output, bool expect_parenthesis)
+    Error_Output* error_output, bool expect_parenthesis, bool expect_generic)
 {
   std::vector< std::pair< int, TStatement* > > value_stack;
 
@@ -689,7 +695,7 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     if (*token == "(")
     {
       ++token;
-      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, true);
+      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, true, expect_generic);
       if (stmt)
         value_stack.push_back(std::make_pair(0, stmt));
       continue;
@@ -757,33 +763,53 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     else if (value == "u")
     {
       ++token;
-      std::string key = get_text_token(token, error_output, "Key to evaluate");
+      std::string key;
+      bool generic = (expect_generic && token.good() && *token == "::");
+      if (generic)
+        ++token;
+      else
+        key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-union-value", key, func_from, token.line_col().first)));
+          stmt_factory, "value-union-value", key, generic, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else if (value == "min")
     {
       ++token;
-      std::string key = get_text_token(token, error_output, "Key to evaluate");
+      std::string key;
+      bool generic = (expect_generic && token.good() && *token == "::");
+      if (generic)
+        ++token;
+      else
+        key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-min-value", key, func_from, token.line_col().first)));
+          stmt_factory, "value-min-value", key, generic, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else if (value == "max")
     {
       ++token;
-      std::string key = get_text_token(token, error_output, "Key to evaluate");
+      std::string key;
+      bool generic = (expect_generic && token.good() && *token == "::");
+      if (generic)
+        ++token;
+      else
+        key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-max-value", key, func_from, token.line_col().first)));
+          stmt_factory, "value-max-value", key, generic, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else if (value == "set")
     {
       ++token;
-      std::string key = get_text_token(token, error_output, "Key to evaluate");
+      std::string key;
+      bool generic = (expect_generic && token.good() && *token == "::");
+      if (generic)
+        ++token;
+      else
+        key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-set-value", key, func_from, token.line_col().first)));
+          stmt_factory, "value-set-value", key, generic, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else
@@ -846,7 +872,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
                        Tokenizer_Wrapper& token, Error_Output* error_output)
 {
   TStatement* statement = 0;
-  std::vector< std::pair< std::string, TStatement* > > evaluators;
+  std::vector< TStatement* > evaluators;
   std::string type = "";
   if (*token == "make")
   {
@@ -860,37 +886,58 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
     {
       if (*token == ",")
         ++token;
-      std::string key = get_text_token(token, error_output, "Tag key");
-      clear_until_after(token, error_output, "=");
       
-      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, false);
+      if (token.good() && *token == "!")
+      {
+        ++token;
+        
+        std::string key = get_text_token(token, error_output, "Tag key");
+        evaluators.push_back(create_set_tag_statement< TStatement >(
+            stmt_factory, key, false, token.line_col().first));
+        
+        clear_until_after(token, error_output, ",", ";", "->", false);
+        continue;
+      }
+      
+      bool generic = (token.good() && *token == "::");
+      std::string key;
+      if (generic)
+      {
+        ++token;
+        
+        key = "_";
+        if (token.good() && *token == ".")
+        {
+          ++token;
+          key = get_text_token(token, error_output, "Input set");
+        }
+      }
+      else
+        key = get_text_token(token, error_output, "Tag key");
+      
+      clear_until_after(token, error_output, "=");
+      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, false, generic);
       if (stmt)
-        evaluators.push_back(std::make_pair(key, stmt));
+      {
+        TStatement* key_stmt = create_set_tag_statement< TStatement >(
+            stmt_factory, key, generic, token.line_col().first);
+        key_stmt->add_statement(stmt, "");
+        evaluators.push_back(key_stmt);
+      }
     }
     string into = probe_into(token, error_output);
     
-    if (statement == 0)
+    statement = create_make_statement< TStatement >(stmt_factory, into, type, token.line_col().first);
     {
-      statement = create_make_statement< TStatement >(stmt_factory, into, type, token.line_col().first);
-      for (typename std::vector< std::pair< std::string, TStatement* > >::const_iterator it = evaluators.begin();
+      for (typename std::vector< TStatement* >::const_iterator it = evaluators.begin();
           it != evaluators.end(); ++it)
-      {
-        TStatement* stmt_key = create_set_tag_statement< TStatement >(
-            stmt_factory, it->first, token.line_col().first);
-        statement->add_statement(stmt_key, "");
-        stmt_key->add_statement(it->second, "");
-      }
-    }
-    else
-    {
-      if (error_output)
-        error_output->add_parse_error("Garbage after make statement found.",
-                                      token.line_col().first);
+        statement->add_statement(*it, "");
     }
   }
   
   return statement;
 }
+
 
 string determine_recurse_type(string flag, string type, Error_Output* error_output,
 			      const pair< uint, uint >& line_col)

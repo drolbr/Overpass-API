@@ -12,7 +12,7 @@
 class Parsed_Query
 {
 public:
-  Parsed_Query() : output_handler(0), global_bbox_limitation(Bbox_Double::invalid), last_dispensed_id(1) {}
+  Parsed_Query() : output_handler(0), global_bbox_limitation(Bbox_Double::invalid), last_dispensed_id(0ull) {}
   ~Parsed_Query() { delete output_handler; }
   
   Output_Handler* get_output_handler() const { return output_handler; }

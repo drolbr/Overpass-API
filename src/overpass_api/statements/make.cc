@@ -26,7 +26,7 @@ Generic_Statement_Maker< Make_Statement > Make_Statement::statement_maker("make"
 
 Make_Statement::Make_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_)
+    : Output_Statement(line_number_), multi_evaluator(0)
 {
   std::map< std::string, std::string > attributes;
   
@@ -53,7 +53,15 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
 {
   Set_Tag_Statement* set_tag = dynamic_cast< Set_Tag_Statement* >(statement);
   if (set_tag)
+  {
     evaluators.push_back(set_tag);
+    if (set_tag->get_key())
+      ;
+    else if (!multi_evaluator)
+      multi_evaluator = set_tag;
+    else
+      add_static_error("A make statement can have at most one any-key set-tag statement.");
+  }
   else
     substatement_error(get_name(), statement);
 }
@@ -61,7 +69,8 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
 
 template< typename Index, typename Object >
 void notify_tags(Transaction& transaction, const std::string& set_name,
-    const std::map< Index, std::vector< Object > >& items, std::vector< Set_Tag_Statement* >& evaluators)
+    const std::map< Index, std::vector< Object > >& items,
+    std::vector< Set_Tag_Statement* >& evaluators, std::vector< std::string >* found_keys)
 {
   Tag_Store< Index, Object > tag_store(transaction);
   tag_store.prefetch_all(items);
@@ -72,12 +81,29 @@ void notify_tags(Transaction& transaction, const std::string& set_name,
     for (typename std::vector< Object >::const_iterator it_elem = it_idx->second.begin();
         it_elem != it_idx->second.end(); ++it_elem)
     {
+      const std::vector< std::pair< std::string, std::string > >* tags =
+          tag_store.get(it_idx->first, *it_elem);
+      if (!tags)
+        continue;
       for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
           it_evals != evaluators.end(); ++it_evals)
       {
-        if ((*it_evals)->get_tag_value()->needs_tags(set_name))
-          (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tag_store.get(it_idx->first, *it_elem));
+        if ((*it_evals)->get_tag_value() && (*it_evals)->get_tag_value()->needs_tags(set_name))
+          (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tags);
       }
+      
+      if (found_keys)
+      {
+        for (std::vector< std::pair< std::string, std::string > >::const_iterator it_keys = tags->begin();
+            it_keys != tags->end(); ++it_keys)
+          found_keys->push_back(it_keys->first);
+      }
+    }
+    
+    if (found_keys)
+    {
+      std::sort(found_keys->begin(), found_keys->end());
+      found_keys->erase(std::unique(found_keys->begin(), found_keys->end()), found_keys->end());
     }
   } 
 }
@@ -85,7 +111,8 @@ void notify_tags(Transaction& transaction, const std::string& set_name,
 
 template< typename Index, typename Object >
 void notify_tags(Transaction& transaction, const std::string& set_name,
-    const std::map< Index, std::vector< Attic< Object > > >& items, std::vector< Set_Tag_Statement* >& evaluators)
+    const std::map< Index, std::vector< Attic< Object > > >& items,
+    std::vector< Set_Tag_Statement* >& evaluators, std::vector< std::string >* found_keys)
 {
   Tag_Store< Index, Object > tag_store(transaction);
   tag_store.prefetch_all(items);
@@ -96,12 +123,29 @@ void notify_tags(Transaction& transaction, const std::string& set_name,
     for (typename std::vector< Attic< Object > >::const_iterator it_elem = it_idx->second.begin();
         it_elem != it_idx->second.end(); ++it_elem)
     {
+      const std::vector< std::pair< std::string, std::string > >* tags =
+          tag_store.get(it_idx->first, *it_elem);
+      if (!tags)
+        continue;
       for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
           it_evals != evaluators.end(); ++it_evals)
       {
-        if ((*it_evals)->get_tag_value()->needs_tags(set_name))
-          (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tag_store.get(it_idx->first, *it_elem));
+        if ((*it_evals)->get_tag_value() && (*it_evals)->get_tag_value()->needs_tags(set_name))
+          (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tags);
       }
+      
+      if (found_keys)
+      {
+        for (std::vector< std::pair< std::string, std::string > >::const_iterator it_keys = tags->begin();
+            it_keys != tags->end(); ++it_keys)
+          found_keys->push_back(it_keys->first);
+      }
+    }
+    
+    if (found_keys)
+    {
+      std::sort(found_keys->begin(), found_keys->end());
+      found_keys->erase(std::unique(found_keys->begin(), found_keys->end()), found_keys->end());
     }
   } 
 }
@@ -109,35 +153,64 @@ void notify_tags(Transaction& transaction, const std::string& set_name,
 
 void Make_Statement::execute(Resource_Manager& rman)
 {
+  std::vector< std::string > declared_keys;
+  for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+  {
+    if ((*it)->get_key())
+      declared_keys.push_back(*(*it)->get_key());
+  }
+  std::sort(declared_keys.begin(), declared_keys.end());
+  declared_keys.erase(std::unique(declared_keys.begin(), declared_keys.end()), declared_keys.end());
+
   for (std::map< std::string, Set >::const_iterator it_set = rman.sets().begin(); it_set != rman.sets().end();
       ++it_set)
   {
-    bool needs_tags = false;
+    bool needs_tags = multi_evaluator;
     for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-        needs_tags |= (*it)->get_tag_value()->needs_tags(it_set->first);
+        needs_tags |= (*it)->get_tag_value() && (*it)->get_tag_value()->needs_tags(it_set->first);
+    
     if (needs_tags)
     {
       std::map< std::string, Set >::const_iterator mit(rman.sets().find(it_set->first));
+      
+      bool multi_evaluator_ = multi_evaluator && multi_evaluator->get_input_name() == it_set->first;
+      std::vector< std::string > found_keys;
+      
       notify_tags< Uint32_Index, Node_Skeleton >(
-          *rman.get_transaction(), it_set->first, mit->second.nodes, evaluators);
+          *rman.get_transaction(), it_set->first, mit->second.nodes, evaluators,
+          multi_evaluator_ ? &found_keys : 0);
       if (rman.get_desired_timestamp() != NOW)
         notify_tags< Uint32_Index, Node_Skeleton >(
-            *rman.get_transaction(), it_set->first, mit->second.attic_nodes, evaluators);
+            *rman.get_transaction(), it_set->first, mit->second.attic_nodes, evaluators,
+            multi_evaluator_ ? &found_keys : 0);
       notify_tags< Uint31_Index, Way_Skeleton >(
-          *rman.get_transaction(), it_set->first, mit->second.ways, evaluators);
+          *rman.get_transaction(), it_set->first, mit->second.ways, evaluators,
+          multi_evaluator_ ? &found_keys : 0);
       if (rman.get_desired_timestamp() != NOW)
         notify_tags< Uint31_Index, Way_Skeleton >(
-            *rman.get_transaction(), it_set->first, mit->second.attic_ways, evaluators);
+            *rman.get_transaction(), it_set->first, mit->second.attic_ways, evaluators,
+            multi_evaluator_ ? &found_keys : 0);
       notify_tags< Uint31_Index, Relation_Skeleton >(
-          *rman.get_transaction(), it_set->first, mit->second.relations, evaluators);
+          *rman.get_transaction(), it_set->first, mit->second.relations, evaluators,
+          multi_evaluator_ ? &found_keys : 0);
       if (rman.get_desired_timestamp() != NOW)
         notify_tags< Uint31_Index, Relation_Skeleton >(
-            *rman.get_transaction(), it_set->first, mit->second.attic_relations, evaluators);
+            *rman.get_transaction(), it_set->first, mit->second.attic_relations, evaluators,
+            multi_evaluator_ ? &found_keys : 0);
       if (!mit->second.areas.empty())
         notify_tags< Uint31_Index, Area_Skeleton >(
-            *rman.get_transaction(), it_set->first, mit->second.areas, evaluators);
+            *rman.get_transaction(), it_set->first, mit->second.areas, evaluators,
+            multi_evaluator_ ? &found_keys : 0);
       notify_tags< Uint31_Index, Derived_Structure >(
-          *rman.get_transaction(), it_set->first, mit->second.deriveds, evaluators);
+          *rman.get_transaction(), it_set->first, mit->second.deriveds, evaluators,
+          multi_evaluator_ ? &found_keys : 0);
+      
+      if (multi_evaluator_)
+      {
+        found_keys.erase(std::set_difference(found_keys.begin(), found_keys.end(),
+            declared_keys.begin(), declared_keys.end(), found_keys.begin()), found_keys.end());
+        multi_evaluator->set_keys(found_keys);
+      }
     }
   }
   
@@ -145,10 +218,20 @@ void Make_Statement::execute(Resource_Manager& rman)
   
   std::vector< std::pair< std::string, std::string > > tags;
   for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-    tags.push_back(std::make_pair((*it)->get_key(), (*it)->eval(rman.sets())));
-  
-  for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+  {
+    if (!(*it)->get_tag_value())
+        continue;
+    
+    if ((*it)->get_key())
+      tags.push_back(std::make_pair(*(*it)->get_key(), (*it)->eval(rman.sets(), 0)));
+    else
+    {
+      const std::vector< std::string >& keys = *(*it)->get_keys();
+      for (std::vector< std::string >::const_iterator it_keys = keys.begin(); it_keys != keys.end(); ++it_keys)
+        tags.push_back(std::make_pair(*it_keys, (*it)->eval(rman.sets(), &*it_keys)));
+    }
     (*it)->get_tag_value()->clear();
+  }
 
   into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(
       type, rman.get_global_settings().dispense_derived_id(), tags));
@@ -171,18 +254,14 @@ Set_Tag_Statement::Set_Tag_Statement
   std::map< std::string, std::string > attributes;
   
   attributes["k"] = "";
+  attributes["from"] = "_";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  key = attributes["k"];
-  
-  if (key == "")
-  {
-    ostringstream temp("");
-    temp<<"For the attribute \"k\" of the element \"set-tag\""
-        <<" the only allowed values are non-empty strings.";
-    add_static_error(temp.str());
-  }
+  if (attributes["k"] != "")
+    keys.push_back(attributes["k"]);
+  else
+    input = attributes["from"];
 }
 
 
@@ -226,7 +305,7 @@ Tag_Value_Fixed::Tag_Value_Fixed
 }
 
 
-std::string Tag_Value_Fixed::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Fixed::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
   return value;
 }
@@ -269,7 +348,7 @@ Tag_Value_Count::Tag_Value_Count
 }
 
 
-std::string Tag_Value_Count::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Count::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
   std::map< std::string, Set >::const_iterator mit(sets.find(input));
   if (mit == sets.end())
@@ -412,10 +491,10 @@ Tag_Value_Plus::Tag_Value_Plus
 }
 
 
-std::string Tag_Value_Plus::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Plus::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets) : "";
+  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
   double lhs_d = 0;
   double rhs_d = 0;
   
@@ -441,10 +520,10 @@ Tag_Value_Minus::Tag_Value_Minus
 }
 
 
-std::string Tag_Value_Minus::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Minus::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets) : "";
+  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
   double lhs_d = 0;
   double rhs_d = 0;
   
@@ -470,10 +549,10 @@ Tag_Value_Times::Tag_Value_Times
 }
 
 
-std::string Tag_Value_Times::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Times::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets) : "";
+  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
   double lhs_d = 0;
   double rhs_d = 0;
   
@@ -499,10 +578,10 @@ Tag_Value_Divided::Tag_Value_Divided
 }
 
 
-std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets) : "";
+  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
   double lhs_d = 0;
   double rhs_d = 0;
   
@@ -527,22 +606,37 @@ Tag_Value_Union_Value::Tag_Value_Union_Value
   
   attributes["from"] = "_";
   attributes["k"] = "";
+  attributes["generic"] == "no";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   key = attributes["k"];
+  generic = (attributes["generic"] == "yes");
+  
+  if (generic)
+  {
+    if (key != "")
+      add_static_error("In statement \"value-union-value\" the attribute \"generic\" must have the value "
+          "\"no\" if the attribute \"k\" is a non-empty string.");      
+  }
+  else if (!(attributes["generic"] == "no"))
+    add_static_error("In statement \"value-union-value\" the attribute \"generic\" must have the value "
+        "\"yes\" or the value \"no\". \"no\" would be taken as default.");
 }
 
 
-std::string Tag_Value_Union_Value::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Union_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  return value;
+  if (key)
+    return value_per_key[*key];
+  else
+    return value;
 }
 
 
 void update_value(const std::vector< std::pair< std::string, std::string > >* tags,
-    const std::string& key, std::string& value, bool& unique)
+    const std::string& key, std::string& value, std::map< std::string, std::string >* value_per_key, bool& unique)
 {
   if (!tags)
     return;
@@ -562,47 +656,57 @@ void update_value(const std::vector< std::pair< std::string, std::string > >* ta
         value = "< multiple values found >";
       }
     }
+    else if (value_per_key)
+    {
+      std::map< std::string, std::string >::iterator it_tag = value_per_key->find(it->first);
+      
+      if (it_tag == value_per_key->end())
+        value_per_key->insert(*it);
+      else if (it_tag->second != it->second)
+        it_tag->second = "< multiple values found >";
+    }
   }
 }
 
 
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, unique); }
+{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, unique); }
+{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, unique); }
+{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, unique); }
+{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, unique); }
+{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, unique); }
+{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, unique); }
+{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, unique); }
+{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 
 void Tag_Value_Union_Value::clear()
 {
   unique = true;
   value = "";
+  value_per_key.clear();
 }
 
 
@@ -620,22 +724,37 @@ Tag_Value_Min_Value::Tag_Value_Min_Value
   
   attributes["from"] = "_";
   attributes["k"] = "";
+  attributes["generic"] == "no";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   key = attributes["k"];
+  generic = (attributes["generic"] == "yes");
+  
+  if (generic)
+  {
+    if (key != "")
+      add_static_error("In statement \"value-min-value\" the attribute \"generic\" must have the value "
+          "\"no\" if the attribute \"k\" is a non-empty string.");      
+  }
+  else if (!(attributes["generic"] == "no"))
+    add_static_error("In statement \"value-min-value\" the attribute \"generic\" must have the value "
+        "\"yes\" or the value \"no\". \"no\" would be taken as default.");
 }
 
 
-std::string Tag_Value_Min_Value::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Min_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  return value;
+  if (key)
+    return value_per_key[*key];
+  else
+    return value;
 }
 
 
 void update_value_min(const std::vector< std::pair< std::string, std::string > >* tags,
-    const std::string& key, std::string& value, bool& value_set)
+    const std::string& key, std::string& value, std::map< std::string, std::string >* value_per_key, bool& value_set)
 {
   if (!tags)
     return;
@@ -653,47 +772,57 @@ void update_value_min(const std::vector< std::pair< std::string, std::string > >
         value = it->second;
       }
     }
+    else if (value_per_key)
+    {
+      std::map< std::string, std::string >::iterator it_tag = value_per_key->find(it->first);
+      
+      if (it_tag != value_per_key->end())
+        it_tag->second = std::min(it_tag->second, it->second);
+      else
+        value_per_key->insert(*it);
+    }
   }
 }
 
 
 void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, value_set); }
+{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, value_set); }
+{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, value_set); }
+{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, value_set); }
+{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, value_set); }
+{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, value_set); }
+{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, value_set); }
+{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, value_set); }
+{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 
 void Tag_Value_Min_Value::clear()
 {
   value_set = false;
   value = "";
+  value_per_key.clear();
 }
 
 
@@ -711,22 +840,37 @@ Tag_Value_Max_Value::Tag_Value_Max_Value
   
   attributes["from"] = "_";
   attributes["k"] = "";
+  attributes["generic"] == "no";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   key = attributes["k"];
+  generic = (attributes["generic"] == "yes");
+  
+  if (generic)
+  {
+    if (key != "")
+      add_static_error("In statement \"value-max-value\" the attribute \"generic\" must have the value "
+          "\"no\" if the attribute \"k\" is a non-empty string.");      
+  }
+  else if (!(attributes["generic"] == "no"))
+    add_static_error("In statement \"value-max-value\" the attribute \"generic\" must have the value "
+        "\"yes\" or the value \"no\". \"no\" would be taken as default.");
 }
 
 
-std::string Tag_Value_Max_Value::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Max_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  return value;
+  if (key)
+    return value_per_key[*key];
+  else
+    return value;
 }
 
 
 void update_value_max(const std::vector< std::pair< std::string, std::string > >* tags,
-    const std::string& key, std::string& value, bool& value_set)
+    const std::string& key, std::string& value, std::map< std::string, std::string >* value_per_key, bool& value_set)
 {
   if (!tags)
     return;
@@ -744,47 +888,57 @@ void update_value_max(const std::vector< std::pair< std::string, std::string > >
         value = it->second;
       }
     }
+    else if (value_per_key)
+    {
+      std::map< std::string, std::string >::iterator it_tag = value_per_key->find(it->first);
+      
+      if (it_tag != value_per_key->end())
+        it_tag->second = std::max(it_tag->second, it->second);
+      else
+        value_per_key->insert(*it);
+    }
   }
 }
 
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, value_set); }
+{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, value_set); }
+{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, value_set); }
+{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, value_set); }
+{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, value_set); }
+{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, value_set); }
+{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, value_set); }
+{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, value_set); }
+{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 
 void Tag_Value_Max_Value::clear()
 {
   value_set = false;
   value = "";
+  value_per_key.clear();
 }
 
 
@@ -802,28 +956,52 @@ Tag_Value_Set_Value::Tag_Value_Set_Value
   
   attributes["from"] = "_";
   attributes["k"] = "";
+  attributes["generic"] = "no";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   input = attributes["from"];
   key = attributes["k"];
+  generic = (attributes["generic"] == "yes");
+  
+  if (generic)
+  {
+    if (key != "")
+      add_static_error("In statement \"value-set-value\" the attribute \"generic\" must have the value "
+          "\"no\" if the attribute \"k\" is a non-empty string.");      
+  }
+  else if (!(attributes["generic"] == "no"))
+    add_static_error("In statement \"value-set-value\" the attribute \"generic\" must have the value "
+        "\"yes\" or the value \"no\". \"no\" would be taken as default.");
 }
 
 
-std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets) const
+std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  std::sort(values.begin(), values.end());
-  values.erase(std::unique(values.begin(), values.end()), values.end());
+  std::vector< std::string >* values_ = 0;
+  
+  if (key)
+  {
+    std::map< std::string, std::vector< std::string > >::iterator it = values_per_key.find(*key);
+    if (it == values_per_key.end())
+      return "";
+    values_ = &it->second;
+  }
+  else
+    values_ = &values;
+  
+  std::sort(values_->begin(), values_->end());
+  values_->erase(std::unique(values_->begin(), values_->end()), values_->end());
   
   std::string result;
   
-  std::vector< std::string >::const_iterator it = values.begin();
-  if (it != values.end())
+  std::vector< std::string >::const_iterator it = values_->begin();
+  if (it != values_->end())
   {
     result = *it;
     ++it;
   }
-  for (; it != values.end(); ++it)
+  for (; it != values_->end(); ++it)
     result += ";" + *it;
   
   return result;
@@ -831,7 +1009,8 @@ std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets) 
 
 
 void update_value_set(const std::vector< std::pair< std::string, std::string > >* tags,
-    const std::string& key, std::vector< std::string >& values)
+    const std::string& key, std::vector< std::string >& values,
+    std::map< std::string, std::vector< std::string > >* values_per_key)
 {
   if (!tags)
     return;
@@ -841,44 +1020,47 @@ void update_value_set(const std::vector< std::pair< std::string, std::string > >
   {
     if (it->first == key)
       values.push_back(it->second);
+    else if (values_per_key)
+      (*values_per_key)[it->first].push_back(it->second);
   }
 }
 
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values); }
+{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values); }
+{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values); }
+{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values); }
+{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values); }
+{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values); }
+{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values); }
+{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values); }
+{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 
 void Tag_Value_Set_Value::clear()
 {
   values.clear();
+  values_per_key.clear();
 }

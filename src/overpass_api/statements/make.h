@@ -47,6 +47,7 @@ private:
   std::string input;
   std::string type;
   std::vector< Set_Tag_Statement* > evaluators;
+  Set_Tag_Statement* multi_evaluator;
 };
 
 
@@ -54,7 +55,7 @@ struct Tag_Value : public Statement
 {
   Tag_Value(int line_number) : Statement(line_number) {}
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const = 0;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const = 0;
   virtual bool needs_tags(const std::string& set_name) const { return false; }
   virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags) {}
@@ -89,12 +90,17 @@ public:
     
   static Generic_Statement_Maker< Set_Tag_Statement > statement_maker;
     
-  std::string get_key() const { return key; }
+  const std::string* get_key() const { return input != "" ? 0 : &keys.front(); }
+  const std::vector< std::string >* get_keys() const { return input != "" ? &keys : 0; }
+  void set_keys(const std::vector< std::string >& keys_) { keys = keys_; }
   Tag_Value* get_tag_value() const { return tag_value; }
-  std::string eval(const std::map< std::string, Set >& sets) const { return tag_value ? tag_value->eval(sets) : ""; }
+  const std::string& get_input_name() const { return input; }
+  std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const
+  { return tag_value ? tag_value->eval(sets, tag) : ""; }
     
 private:
-  std::string key;
+  std::string input;
+  std::vector< std::string > keys;
   Tag_Value* tag_value;
 };
 
@@ -111,7 +117,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Fixed > statement_maker;
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
   
 private:
   std::string value;
@@ -132,7 +138,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Count > statement_maker;
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
   
 private:
   std::string input;
@@ -185,7 +191,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Plus > statement_maker;
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
 };
 
 
@@ -199,7 +205,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Minus > statement_maker;
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
 };
 
 
@@ -213,7 +219,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Times > statement_maker;
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
 };
 
 
@@ -227,7 +233,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Divided > statement_maker;
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
 };
 
 
@@ -262,12 +268,14 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void clear();
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
   
 private:
   std::string input;
   std::string key;
+  bool generic;
   std::string value;
+  mutable std::map< std::string, std::string > value_per_key;
   bool unique;
 };
 
@@ -303,12 +311,14 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void clear();
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
   
 private:
   std::string input;
   std::string key;
+  bool generic;
   std::string value;
+  mutable std::map< std::string, std::string > value_per_key;
   bool value_set;
 };
 
@@ -344,12 +354,14 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void clear();
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
   
 private:
   std::string input;
   std::string key;
+  bool generic;
   std::string value;
+  mutable std::map< std::string, std::string > value_per_key;
   bool value_set;
 };
 
@@ -385,12 +397,14 @@ public:
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void clear();
   
-  virtual std::string eval(const std::map< std::string, Set >& sets) const;
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
   
 private:
   std::string input;
   std::string key;
+  bool generic;
   mutable std::vector< std::string > values;
+  mutable std::map< std::string, std::vector< std::string > > values_per_key;
 };
 
 
