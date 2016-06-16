@@ -783,8 +783,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
            it != global_resource_planner.get_active().end(); ++it)
         {
-          if (it->client_token == client_token
-              && processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
+          if (it->client_token != client_token)
+            continue;
+          
+          if (processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
             connection->send_data(REQUEST_READ_AND_IDX);
           else
             connection->send_data(READ_IDX_FINISHED);
