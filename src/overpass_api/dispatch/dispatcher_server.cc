@@ -295,8 +295,8 @@ int main(int argc, char* argv[])
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
       Client_Status status = client.query_my_status(probe_client_token());
       cout<<"Rate limit: "<<status.rate_limit<<'\n';
-      if (status.slot_starts.size() < status.rate_limit)
-        cout<<(status.rate_limit - status.slot_starts.size())<<" slots available now.\n";
+      if (status.slot_starts.size() + status.queries.size() < status.rate_limit)
+        cout<<(status.rate_limit - status.slot_starts.size() - status.queries.size())<<" slots available now.\n";
       for (std::vector< time_t >::const_iterator it = status.slot_starts.begin(); it != status.slot_starts.end();
           ++it)
         cout<<"Slot available after: "<<to_date(*it)<<'\n';
