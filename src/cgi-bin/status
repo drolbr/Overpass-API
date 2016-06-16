@@ -30,20 +30,4 @@ echo "Content-Type: text/plain; charset=utf-8"
 echo 'Access-Control-Allow-Origin: *'
 echo
 
-COUNTER=16
-PID=`$BIN_DIR/dispatcher --query_token`
-
-if [[ $PID == 0 ]]; then
-  echo "No query running from IP $REMOTE_ADDR"
-fi
-
-while [[ $PID -ne 0 && $COUNTER -gt 0 ]]; do
-{
-  echo "Killing query (pid $PID) from IP $REMOTE_ADDR ..."
-  kill -9 $PID
-  echo "Done!"
-  
-  COUNTER=$(($COUNTER - 1))
-  PID=`$BIN_DIR/dispatcher --query_token`
-};
-done
+$BIN_DIR/dispatcher --osm-base --my-status

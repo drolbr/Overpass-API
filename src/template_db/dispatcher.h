@@ -179,6 +179,7 @@ class Dispatcher
     static const uint32 PURGE = 4;
     static const uint32 SET_GLOBAL_LIMITS = 5;
     
+    static const uint32 QUERY_MY_STATUS = 15;
     static const uint32 REGISTER_PID = 16;
     static const uint32 SET_LIMITS = 17;
     static const uint32 PING = 18;

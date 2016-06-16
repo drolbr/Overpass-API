@@ -144,6 +144,12 @@ void Blocking_Client_Socket::clear_state()
 }
 
 
+void Blocking_Client_Socket::send_data(uint32 result)
+{
+  send(socket_descriptor, &result, sizeof(uint32), 0);
+}
+
+
 void Blocking_Client_Socket::send_result(uint32 result)
 {
   if (state == disconnected || state == waiting)

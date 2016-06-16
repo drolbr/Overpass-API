@@ -767,6 +767,46 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	
 	connection_per_pid.get(client_pid)->send_result(target_pid);
       }
+      else if (command == QUERY_MY_STATUS)
+      {
+        Blocking_Client_Socket* connection = connection_per_pid.get(client_pid);
+        if (!connection)
+          continue;
+        
+        std::vector< uint32 > arguments = connection->get_arguments(1);
+        if (arguments.size() < 1)
+          continue;
+        uint32 client_token = arguments[0];
+        
+        connection->send_data(global_resource_planner.get_rate_limit());
+    
+        for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
+           it != global_resource_planner.get_active().end(); ++it)
+        {
+          if (it->client_token == client_token
+              && processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
+            connection->send_data(REQUEST_READ_AND_IDX);
+          else
+            connection->send_data(READ_IDX_FINISHED);
+          
+          connection->send_data(it->client_pid);
+          connection->send_data(it->max_time);
+          connection->send_data(it->max_space >>32);
+          connection->send_data(it->max_space & 0xffffffff);
+          connection->send_data(it->start_time);
+        }
+        
+        connection->send_data(0);
+    
+        for (std::vector< Quota_Entry >::const_iterator it = global_resource_planner.get_afterwards().begin();
+            it != global_resource_planner.get_afterwards().end(); ++it)
+        {
+          if (it->client_token == client_token)
+            connection->send_data(it->expiration_time);
+        }
+        
+        connection->send_result(0);
+      }
       else if (command == SET_GLOBAL_LIMITS)
       {
 	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(5);

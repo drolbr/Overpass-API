@@ -24,6 +24,23 @@
 #include <vector>
 
 
+struct Running_Query
+{
+  uint32 status;
+  uint32 pid;
+  uint32 max_time;
+  uint64 max_space;
+  time_t start_time;
+};
+
+struct Client_Status
+{
+  uint32 rate_limit;
+  std::vector< Running_Query > queries;
+  std::vector< time_t > slot_starts;
+};
+
+
 class Dispatcher_Client
 {
   public:
@@ -73,7 +90,8 @@ class Dispatcher_Client
     /** Query the pid of the instance with the given token. */
     pid_t query_by_token(uint32 token);
     
-    /** Purge another instance. */
+    Client_Status query_my_status(uint32 token);
+    
     void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units, int rate_limit);
     
     /** Called regularly to tell the dispatcher that this process is still alive */

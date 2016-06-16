@@ -122,12 +122,21 @@ void Default_Dispatcher_Logger::purge(pid_t pid)
   logger->annotated_log(out.str());
 }
 
+
+std::string to_date(time_t time)
+{
+  char result[21];  
+  strftime(result, 21, "%FT%TZ", gmtime(&time));
+  return result;
+}
+
+
 int main(int argc, char* argv[])
 {
   // read command line arguments
   string db_dir;
   bool osm_base(false), areas(false), meta(false), attic(false),
-      terminate(false), status(false), show_dir(false);
+      terminate(false), status(false), my_status(false), show_dir(false);
   uint32 purge_id = 0;
   bool query_token = false;
   uint64 max_allowed_space = 0;
@@ -155,6 +164,8 @@ int main(int argc, char* argv[])
       terminate = true;  
     else if (!(strncmp(argv[argpos], "--status", 8)))
       status = true;
+    else if (!(strncmp(argv[argpos], "--my-status", 11)))
+      my_status = true;
     else if (!(strncmp(argv[argpos], "--show-dir", 10)))
       show_dir = true;
     else if (!(strncmp(argv[argpos], "--purge=", 8)))
@@ -179,6 +190,7 @@ int main(int argc, char* argv[])
       "  --terminate: Stop the adressed dispatcher.\n"
       "  --status: Let the adressed dispatcher dump its status into\n"
       "        $DB_DIR/osm_base_shadow.status or $DB_DIR/areas_shadow.status\n"
+      "  --my-status: Let the adressed dispatcher return everything known about this client token\n"
       "  --show-dir: Returns $DB_DIR\n"
       "  --purge=pid: Let the adressed dispatcher forget everything known about that pid.\n"
       "  --query_token: Returns the pid of a running query for the same client IP.\n"
@@ -265,6 +277,32 @@ int main(int argc, char* argv[])
       pid_t pid = client.query_by_token(probe_client_token());
       if (pid > 0)
         cout<<pid<<'\n';
+    }
+    catch (File_Error e)
+    {
+      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+    return 0;
+  }
+  else if (my_status)
+  {
+    try
+    {
+      uint32 client_token = probe_client_token();
+      cout<<"Connected as: "<<client_token<<'\n';
+      
+      Dispatcher_Client client
+          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+      Client_Status status = client.query_my_status(probe_client_token());
+      cout<<"Rate limit: "<<status.rate_limit<<'\n';
+      if (status.slot_starts.size() < status.rate_limit)
+        cout<<(status.rate_limit - status.slot_starts.size())<<" slots available now.\n";
+      for (std::vector< time_t >::const_iterator it = status.slot_starts.begin(); it != status.slot_starts.end();
+          ++it)
+        cout<<"Slot available after: "<<to_date(*it)<<'\n';
+      cout<<"Currently running queries (pid, space limit, time limit, start time):\n";
+      for (std::vector< Running_Query >::const_iterator it = status.queries.begin(); it != status.queries.end(); ++it)
+        cout<<it->pid<<'\t'<<it->max_space<<'\t'<<it->max_time<<'\t'<<to_date(it->start_time)<<'\n';
     }
     catch (File_Error e)
     {

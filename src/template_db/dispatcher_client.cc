@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -96,11 +97,6 @@ uint32 Dispatcher_Client::ack_arrived()
     return answer;
 
   return 0;  
-//   uint32 pid = getpid();
-//   if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-//     return 1;
-//   millisleep(50);  
-//   return (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid ? 1 : 0);
 }
 
 
@@ -276,6 +272,42 @@ pid_t Dispatcher_Client::query_by_token(uint32 token)
   send_message(token, "Dispatcher_Client::query_by_token::socket::2");
     
   return ack_arrived();
+}
+
+
+Client_Status Dispatcher_Client::query_my_status(uint32 token)
+{
+                     
+  send_message(Dispatcher::QUERY_MY_STATUS, "Dispatcher_Client::query_my_status::socket::1");
+  send_message(token, "Dispatcher_Client::query_my_status::socket::2");
+  
+  Client_Status result;
+  result.rate_limit = ack_arrived();
+  
+  while (true)
+  {
+    Running_Query query;
+    query.status = ack_arrived();
+    if (query.status == 0)
+      break;
+    query.pid = ack_arrived();
+    query.max_time = ack_arrived();
+    query.max_space = ((uint64)ack_arrived() <<32) | ack_arrived();
+    query.start_time = ack_arrived();
+    result.queries.push_back(query);
+  }
+  
+  while (true)
+  {
+    uint32 slot_start = ack_arrived();
+    if (slot_start == 0)
+      break;
+    result.slot_starts.push_back(slot_start);
+  }
+  
+  std::sort(result.slot_starts.begin(), result.slot_starts.end());
+  
+  return result;
 }
 
 
