@@ -156,7 +156,7 @@ public:
   virtual string get_result_name() const { return ""; }
   
   virtual bool needs_tags(const std::string& set_name) const
-  { return lhs && rhs && lhs->needs_tags(set_name) && rhs->needs_tags(set_name); }
+  { return (lhs && lhs->needs_tags(set_name)) || (rhs && rhs->needs_tags(set_name)); }
   virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
