@@ -46,6 +46,35 @@ AC_FUNC_STAT
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([clock_gettime floor ftruncate getcwd munmap regcomp select shm_open socket sqrt strnlen])
 
+AC_ARG_ENABLE([lz4],
+              AS_HELP_STRING([--enable-lz4],[enable lz4 compression algorithm]),,
+              [enable_lz4="no"])
+AS_IF([test x"$enable_lz4" != "xno"], [want_lz4="yes"], [want_lz4="no"])
+
+COMPRESS_LIBS="-lz"
+AC_SUBST(COMPRESS_LIBS, ["$COMPRESS_LIBS"])
+
+if test "$want_lz4" != "no"; then
+  AC_CHECK_HEADER(lz4.h, [
+    AC_CHECK_LIB(lz4, LZ4_compress, [
+      AC_DEFINE(HAVE_LZ4, 1, [Define if you have lz4 library])
+      COMPRESS_LIBS="$COMPRESS_LIBS -llz4"
+    ], [
+      if test "$want_lz4" = "yes"; then
+	    AC_ERROR([Can't build with lz4 support: liblz4 not found])
+      fi
+    ])
+  ], [
+    if test "$want_lz4" = "yes"; then
+      AC_ERROR([Can't build with lz4 support: lz4.h not found])
+    fi
+  ])
+fi
+
+AC_SUBST(COMPRESS_LIBS, ["$COMPRESS_LIBS"])
+
 AC_CONFIG_FILES([Makefile test-bin/Makefile])
 AC_OUTPUT
 AC_SYS_LARGEFILE
+
+

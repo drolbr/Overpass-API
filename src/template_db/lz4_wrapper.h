@@ -19,10 +19,16 @@
 #ifndef DE__OSM3S___TEMPLATE_DB__LZ4_WRAPPER_H
 #define DE__OSM3S___TEMPLATE_DB__LZ4_WRAPPER_H
 
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <exception>
 
+#ifdef HAVE_LZ4
 #include <lz4.h>
-
+#endif
 
 class LZ4_Deflate
 {

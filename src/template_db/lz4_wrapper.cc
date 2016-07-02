@@ -21,6 +21,7 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 
 LZ4_Deflate::LZ4_Deflate() { }
@@ -29,12 +30,14 @@ LZ4_Deflate::~LZ4_Deflate() { }
 
 int LZ4_Deflate::compress(const void* in, int in_size, void* out, int out_buffer_size)
 {
+#ifdef HAVE_LZ4
+
    int ret = LZ4_compress_limitedOutput((const char*) in, (char *) out + 4, in_size, out_buffer_size - 4);
 
    if (ret == 0)
    { // compression failed
      if (in_size > out_buffer_size - 4)
-       throw Error (-5);
+       throw std::runtime_error("LZ4: output buffer too small during compression");
 
      *(int*)out = in_size * -1;
      std::memcpy ((char *) out + 4, (const char*)in, in_size);
@@ -44,6 +47,12 @@ int LZ4_Deflate::compress(const void* in, int in_size, void* out, int out_buffer
      *(int*)out = ret;
 
    return ret + 4;
+
+#else
+
+  throw std::runtime_error("Overpass API was compiled without lz4 compression library support");
+
+#endif
 }
 
 LZ4_Inflate::LZ4_Inflate() { }
@@ -53,6 +62,8 @@ LZ4_Inflate::~LZ4_Inflate() { }
 
 int LZ4_Inflate::decompress(const void* in, int in_size, void* out, int out_buffer_size)
 {
+#ifdef HAVE_LZ4
+
   int ret;
   int in_buffer_size = *(int*)in;
 
@@ -60,20 +71,25 @@ int LZ4_Inflate::decompress(const void* in, int in_size, void* out, int out_buff
   {
     ret = LZ4_decompress_safe((const char*) in + 4, (char*) out, in_buffer_size, out_buffer_size);
     if (ret < 0)
-      throw Error (ret);
+      throw std::runtime_error("LZ4_decompress_safe failed");
   }
   else
   {
     in_buffer_size *= -1;
     if (in_buffer_size > out_buffer_size)
-      throw Error (1);
+      throw std::runtime_error ("LZ4: output buffer too small during decompression");
 
     std::memcpy ((char*) out, (const char*) in + 4, in_buffer_size);
     ret = in_buffer_size;
   }
   return ret;
-}
 
+#else
+
+  throw std::runtime_error("Overpass API was compiled without lz4 compression library support");
+
+#endif
+}
 
 const char* LZ4_Deflate::Error::what() const throw()
 {

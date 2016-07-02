@@ -125,19 +125,19 @@ osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backe
 
 
 bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_database.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
-bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la -lz -llz4
+bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
 bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_from_dir.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
-bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la -lz -llz4
+bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
 bin_osm3s_query_SOURCES = ${statements_cc} overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
-bin_osm3s_query_LDADD = libcore.la libdata.la -lz -llz4
+bin_osm3s_query_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
 bin_dispatcher_SOURCES = template_db/dispatcher.cc template_db/file_tools.cc template_db/types.cc overpass_api/dispatch/dispatcher_server.cc
 bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
 
 cgi_bin_interpreter_SOURCES = ${statements_cc} overpass_api/dispatch/web_query.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
-cgi_bin_interpreter_LDADD = libcore.la libdata.la -lz -llz4
+cgi_bin_interpreter_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
 cgi_bin_timestamp_SOURCES = overpass_api/dispatch/db_timestamp.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
-cgi_bin_timestamp_LDADD = libdispatcher.la libsettings.la libweboutput.la -lz -llz4
+cgi_bin_timestamp_LDADD = libdispatcher.la libsettings.la libweboutput.la @COMPRESS_LIBS@
 
 
 escape_xml_cc = expat/escape_xml.cc
