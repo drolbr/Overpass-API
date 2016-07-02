@@ -50,7 +50,13 @@ struct OSM_File_Properties : public File_Properties
   
   uint32 get_block_size() const { return block_size/8; }
   uint32 get_max_size() const { return 8; }
-  uint32 get_compression_method() const { return File_Blocks_Index< TVal >::LZ4_COMPRESSION; }
+  uint32 get_compression_method() const {
+#ifdef HAVE_LZ4
+    return File_Blocks_Index< TVal >::LZ4_COMPRESSION;
+#else
+    return File_Blocks_Index< TVal >::ZLIB_COMPRESSION;
+#endif
+  }
   uint32 get_map_block_size() const { return map_block_size/8; }
   uint32 get_map_max_size() const { return 8; }
   

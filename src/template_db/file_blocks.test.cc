@@ -317,7 +317,11 @@ struct Compressed_Test_File : File_Properties
   
   uint32 get_compression_method() const
   {
+#ifdef HAVE_LZ4
     return File_Blocks_Index< IntIndex >::LZ4_COMPRESSION;
+#else
+    return File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION;
+#endif
   }
   
   uint32 get_map_block_size() const
