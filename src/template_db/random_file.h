@@ -40,7 +40,7 @@ private:
   Random_File(const Random_File& f) {}
   
 public:
-  typedef uint32 size_t;
+  typedef uint64 size_t;
   
   Random_File(Random_File_Index*);
   ~Random_File();
