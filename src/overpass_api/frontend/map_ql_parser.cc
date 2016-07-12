@@ -750,8 +750,13 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     }
     
     if (!token.good() || *token != "(")
-      value_stack.push_back(std::make_pair(0, create_tag_value_fixed< TStatement >(
-          stmt_factory, value, token.line_col().first)));      
+    {
+      if (value == "")
+        ++token;
+      else
+        value_stack.push_back(std::make_pair(0, create_tag_value_fixed< TStatement >(
+            stmt_factory, value, token.line_col().first)));
+    }
     else if (value == "count")
     {
       ++token;
@@ -1635,6 +1640,7 @@ void generic_parse_and_validate_map_ql
   
   stmt_seq.push_back(base_statement);
 }
+
 
 void parse_and_validate_map_ql
     (Statement::Factory& stmt_factory, const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
