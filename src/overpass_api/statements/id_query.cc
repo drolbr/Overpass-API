@@ -40,7 +40,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 {
   set< TIndex > req;
   {
-    Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
+    Random_File< uint64, TIndex > random(rman.get_transaction()->random_index(&prop));
     for (Uint64 i = lower; i < upper; ++i)
       req.insert(random.get(i.val()));
   }    
@@ -63,7 +63,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 {
   set< TIndex > req;
   {
-    Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
+    Random_File< uint64, TIndex > random(rman.get_transaction()->random_index(&prop));
     for (typename TObject::Id_Type i = lower.val(); i.val() < upper.val(); ++i)
     {
       if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)

@@ -21,6 +21,8 @@
 
 #include "random_file_index.h"
 #include "types.h"
+#include "lz4_wrapper.h"
+#include "zlib_wrapper.h"
 
 #include <unistd.h>
 
@@ -31,75 +33,85 @@
 #include <map>
 #include <vector>
 
-using namespace std;
 
-template< class TVal >
+template< typename Key, typename Value >
 struct Random_File
 {
 private:
   Random_File(const Random_File& f) {}
   
 public:
-  typedef uint32 size_t;
-  
   Random_File(Random_File_Index*);
   ~Random_File();
   
-  TVal get(size_t pos);
-  void put(size_t pos, const TVal& index);
+  Value get(Key pos);
+  void put(Key pos, const Value& index);
   
 private:
   bool changed;
   uint32 index_size;
+  uint32 max_size;
   
   Raw_File val_file;
   Random_File_Index* index;
   Void_Pointer< uint8 > cache;
-  size_t cache_pos, block_size;
+  uint32 cache_pos;
+  uint32 block_size;
   
-  void move_cache_window(size_t pos);
+  Void_Pointer< uint8 > buffer;
+
+  void move_cache_window(uint32 pos);
+  uint32 allocate_block(uint32 data_size);
 };
+
 
 /** Implementation Random_File: ---------------------------------------------*/
 
-template< class TVal >
-Random_File< TVal >::Random_File(Random_File_Index* index_)
-  : changed(false), index_size(TVal::max_size_of()),
+
+template< typename Key, typename Value >
+Random_File< Key, Value >::Random_File(Random_File_Index* index_)
+  : changed(false), index_size(Value::max_size_of()),
+  max_size(index_->get_max_size()),
   val_file(index_->get_map_file_name(),
 	   index_->writeable() ? O_RDWR|O_CREAT : O_RDONLY,
 	   S_666, "Random_File:3"),
   index(index_),
-  cache(index_->get_block_size()), cache_pos(index->npos),
-  block_size(index_->get_block_size())
+  cache(index_->get_block_size() * index_->get_max_size()), cache_pos(index->npos),
+  block_size(index_->get_block_size()),
+  buffer(index_->get_block_size() * index_->get_max_size() * 2)  // increased buffer size for lz4
 {}
 
-template< class TVal >
-Random_File< TVal >::~Random_File()
+
+template< typename Key, typename Value >
+Random_File< Key, Value >::~Random_File()
 {
-  move_cache_window(index->npos);  
+  move_cache_window(index->npos);
   //delete index;
 }
 
-template< class TVal >
-TVal Random_File< TVal >::get(size_t pos)
+
+template< typename Key, typename Value >
+Value Random_File< Key, Value >::get(Key pos)
 {
-  move_cache_window(pos / (block_size/index_size));  
-  return TVal(cache.ptr + (pos % (block_size/index_size))*index_size);
+  move_cache_window(pos.val() / (block_size*max_size /index_size));
+  return Value(cache.ptr + (pos.val() % (block_size*max_size/index_size))*index_size);
 }
 
-template< class TVal >
-void Random_File< TVal >::put(size_t pos, const TVal& val)
+
+template< typename Key, typename Value >
+void Random_File< Key, Value >::put(Key pos, const Value& val)
 {
   if (!index->writeable())
     throw File_Error(0, index->get_map_file_name(), "Random_File:2");
   
-  move_cache_window(pos / (block_size/index_size));
-  val.to_data(cache.ptr + (pos % (block_size/index_size))*index_size);
+  move_cache_window(pos.val() / (block_size*max_size/index_size));
+  val.to_data(cache.ptr + (pos.val() % (block_size*max_size/index_size))*index_size);
   changed = true;
 }
 
-template< class TVal >
-void Random_File< TVal >::move_cache_window(size_t pos)
+
+template< typename Key, typename Value >
+void Random_File< Key, Value >::move_cache_window(uint32 pos)
 {
   // The cache already contains the needed position.
   if ((pos == cache_pos) && (cache_pos != index->npos))
@@ -107,45 +119,127 @@ void Random_File< TVal >::move_cache_window(size_t pos)
 
   if (changed)
   {
-    // Find an empty position.
-    uint32 disk_pos;
-    if (index->void_blocks.empty())
+    uint32 data_size = max_size;
+    void* target = cache.ptr;
+
+    if (index->compression_method == Random_File_Index::ZLIB_COMPRESSION)
     {
-      disk_pos = index->block_count;
-      ++(index->block_count);
+      target = buffer.ptr;
+      uint32 compressed_size = Zlib_Deflate(1)
+          .compress(cache.ptr, block_size * max_size, target, block_size * index->max_size);
+      data_size = (compressed_size - 1) / block_size + 1;
+      zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size); 
     }
-    else
+    else if (index->compression_method == Random_File_Index::LZ4_COMPRESSION)
     {
-      disk_pos = index->void_blocks.back();
-      index->void_blocks.pop_back();
+      target = buffer.ptr;
+      uint32 compressed_size = LZ4_Deflate()
+          .compress(cache.ptr, block_size * max_size, target, block_size * index->max_size * 2);
+      data_size = (compressed_size - 1) / block_size + 1;
+      zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size);
     }
+
+    uint32 disk_pos = allocate_block(data_size);
     
     // Save the found position to the index.
     if (index->blocks.size() <= cache_pos)
-      index->blocks.resize(cache_pos+1, index->npos);
-    index->blocks[cache_pos] = disk_pos;
+      index->blocks.resize(cache_pos+1, Random_File_Index_Entry(index->npos, 1));
+    Random_File_Index_Entry entry(disk_pos, data_size);
+    index->blocks[cache_pos] = entry;
     
     // Write the data at the found position.
     val_file.seek((int64)disk_pos*block_size, "Random_File:21");
-    val_file.write(cache.ptr, block_size, "Random_File:22");
+    val_file.write((uint8*)target, block_size * data_size, "Random_File:22");
   }
   changed = false;
   
   if (pos == index->npos)
     return;
   
-  if ((index->blocks.size() <= pos) || (index->blocks[pos] == index->npos))
+  if ((index->blocks.size() <= pos) || (index->blocks[pos].pos == index->npos))
   {
     // Reset the whole cache to zero.
-    for (uint32 i = 0; i < block_size; ++i)
+    for (uint32 i = 0; i < block_size * max_size; ++i)
       *(cache.ptr + i) = 0;
   }
   else
   {
-    val_file.seek((int64)(index->blocks[pos])*block_size, "Random_File:23");
-    val_file.read(cache.ptr, block_size, "Random_File:24");
+    val_file.seek((int64)(index->blocks[pos].pos)*block_size, "Random_File:23");
+    if (index->compression_method == Random_File_Index::NO_COMPRESSION)
+      val_file.read(cache.ptr, block_size * index->blocks[pos].size, "Random_File:24");
+    else if (index->compression_method == Random_File_Index::ZLIB_COMPRESSION)
+    {
+      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:24");
+      Zlib_Inflate().decompress
+          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->max_size);
+    }
+    else if (index->compression_method == Random_File_Index::LZ4_COMPRESSION)
+    {
+      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:24");
+      LZ4_Inflate().decompress
+          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->max_size);
+    }
   }
   cache_pos = pos;
 }
+
+
+// Finds an appropriate block, removes it from the list of available blocks, and returns it
+template< typename Key, typename Value >
+uint32 Random_File< Key, Value >::allocate_block(uint32 data_size)
+{
+  uint32 result = this->index->block_count;
+
+  if (this->index->void_blocks.empty())
+    this->index->block_count += data_size;
+  else
+  {
+    std::vector< std::pair< uint32, uint32 > >::iterator pos_it
+    = std::lower_bound(this->index->void_blocks.begin(), this->index->void_blocks.end(),
+        std::make_pair(data_size, uint32(0)));
+
+    if (pos_it != this->index->void_blocks.end() && pos_it->first == data_size)
+    {
+      // We have a gap of exactly the needed size.
+      result = pos_it->second;
+      this->index->void_blocks.erase(pos_it);
+    }
+    else
+    {
+      pos_it = --(this->index->void_blocks.end());
+      uint32 last_size = pos_it->first;
+      while (pos_it != this->index->void_blocks.begin() && last_size > data_size)
+      {
+        --pos_it;
+        if (last_size == pos_it->first)
+        {
+          // We have a gap size that appears twice (or more often).
+          // This is a good heuristic choice.
+          result = pos_it->second;
+          pos_it->first -= data_size;
+          pos_it->second += data_size;
+          rearrange_block(this->index->void_blocks.begin(), pos_it, *pos_it);
+          return result;
+        }
+        last_size = pos_it->first;
+      }
+
+      pos_it = --(this->index->void_blocks.end());
+      if (pos_it->first >= data_size)
+      {
+        // If no really matching block exists then we choose the largest one.
+        result = pos_it->second;
+        pos_it->first -= data_size;
+        pos_it->second += data_size;
+        rearrange_block(this->index->void_blocks.begin(), pos_it, *pos_it);
+      }
+      else
+        this->index->block_count += data_size;
+    }
+  }
+
+  return result;
+}
+
 
 #endif

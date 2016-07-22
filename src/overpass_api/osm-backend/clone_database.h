@@ -23,8 +23,6 @@
 
 #include <string>
 
-using namespace std;
-
-void clone_database(Transaction& transaction, string dest_db_dir);
+void clone_database(Transaction& transaction, std::string dest_db_dir);
 
 #endif

@@ -361,7 +361,7 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
 {
   std::pair< std::vector< Index >, std::vector< Index > > result;
   
-  Random_File< Index > current(rman.get_transaction()->random_index
+  Random_File< typename Skeleton::Id_Type, Index > current(rman.get_transaction()->random_index
       (current_skeleton_file_properties< Skeleton >()));
   for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
       it = ids.begin(); it != ids.end(); ++it)
@@ -372,7 +372,7 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
   
   if (rman.get_desired_timestamp() != NOW)
   {
-    Random_File< Index > attic_random(rman.get_transaction()->random_index
+    Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
         (attic_skeleton_file_properties< Skeleton >()));
     std::set< typename Skeleton::Id_Type > idx_list_ids;
     for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator

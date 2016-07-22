@@ -169,6 +169,8 @@ dispatcher_two_clients()
 
 # Test template_db
 date +%T
+$BASEDIR/test-bin/file_blocks info
+date +%T
 perform_test_loop file_blocks 25
 date +%T
 perform_test_loop block_backend 13

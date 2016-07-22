@@ -43,7 +43,7 @@ void clear_nodes_to_map(vector< pair< uint32, Uint32_Index > >& id_to_idx,
   
   sort(id_to_idx.begin(), id_to_idx.end());
   
-  Random_File< Uint32_Index > random
+  Random_File< Node_Skeleton::Id_Type, Uint32_Index > random
       (transaction.random_index(osm_base_settings().NODES));
 
   for (vector< pair< uint32, Uint32_Index > >::const_iterator it(id_to_idx.begin());
@@ -89,7 +89,7 @@ void clear_ways_to_map(vector< pair< uint32, Uint31_Index > >& id_to_idx,
   
   sort(id_to_idx.begin(), id_to_idx.end());
   
-  Random_File< Uint31_Index > random
+  Random_File< Way_Skeleton::Id_Type, Uint31_Index > random
       (transaction.random_index(osm_base_settings().WAYS));
 
   for (vector< pair< uint32, Uint31_Index > >::const_iterator it(id_to_idx.begin());
@@ -135,7 +135,7 @@ void clear_relations_to_map(vector< pair< uint32, Uint31_Index > >& id_to_idx,
   
   sort(id_to_idx.begin(), id_to_idx.end());
   
-  Random_File< Uint31_Index > random
+  Random_File< Relation_Skeleton::Id_Type, Uint31_Index > random
       (transaction.random_index(osm_base_settings().RELATIONS));
 
   for (vector< pair< uint32, Uint31_Index > >::const_iterator it(id_to_idx.begin());

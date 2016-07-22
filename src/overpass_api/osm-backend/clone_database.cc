@@ -80,20 +80,20 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 }
 
 
-template< class TIndex >
+template< typename Key, typename TIndex >
 void clone_map_file(const File_Properties& file_prop, Transaction& transaction, string dest_db_dir)
 {
   try
   {
     Random_File_Index& src_idx = *transaction.random_index(&file_prop);
-    Random_File< TIndex > src_file(&src_idx);
+    Random_File< Key, TIndex > src_file(&src_idx);
 
-    Random_File_Index dest_idx(file_prop, true, false, dest_db_dir);
-    Random_File< TIndex > dest_file(&dest_idx);
+    Random_File_Index dest_idx(file_prop, true, false, dest_db_dir, "");
+    Random_File< Key, TIndex > dest_file(&dest_idx);
     
     for (vector< uint32 >::size_type i = 0; i < src_idx.blocks.size(); ++i)
     {
-      if (src_idx.blocks[i] != src_idx.npos)
+      if (src_idx.blocks[i].pos != src_idx.npos)
       {
 	for (uint32 j = 0; j < src_idx.get_block_size()/TIndex::max_size_of(); ++j)
 	{
@@ -116,7 +116,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
 {
   clone_bin_file< Uint32_Index >(*osm_base_settings().NODES, *osm_base_settings().NODES,
 				 transaction, dest_db_dir);
-  clone_map_file< Uint32_Index >(*osm_base_settings().NODES, transaction, dest_db_dir);
+  clone_map_file< Node_Skeleton::Id_Type, Uint32_Index >(*osm_base_settings().NODES, transaction, dest_db_dir);
   clone_bin_file< Tag_Index_Local >(*osm_base_settings().NODE_TAGS_LOCAL, *osm_base_settings().NODE_TAGS_LOCAL,
 				    transaction, dest_db_dir);
   clone_bin_file< Tag_Index_Global >(*osm_base_settings().NODE_TAGS_GLOBAL, *osm_base_settings().NODE_TAGS_GLOBAL,
@@ -126,7 +126,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
   
   clone_bin_file< Uint31_Index >(*osm_base_settings().WAYS, *osm_base_settings().WAYS,
 				 transaction, dest_db_dir);
-  clone_map_file< Uint31_Index >(*osm_base_settings().WAYS, transaction, dest_db_dir);
+  clone_map_file< Way_Skeleton::Id_Type, Uint31_Index >(*osm_base_settings().WAYS, transaction, dest_db_dir);
   clone_bin_file< Tag_Index_Local >(*osm_base_settings().WAY_TAGS_LOCAL, *osm_base_settings().WAY_TAGS_LOCAL,
 				    transaction, dest_db_dir);
   clone_bin_file< Tag_Index_Global >(*osm_base_settings().WAY_TAGS_GLOBAL, *osm_base_settings().WAY_TAGS_GLOBAL,
@@ -136,7 +136,8 @@ void clone_database(Transaction& transaction, string dest_db_dir)
   
   clone_bin_file< Uint31_Index >(*osm_base_settings().RELATIONS, *osm_base_settings().RELATIONS,
 				 transaction, dest_db_dir);
-  clone_map_file< Uint31_Index >(*osm_base_settings().RELATIONS, transaction, dest_db_dir);
+  clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(
+      *osm_base_settings().RELATIONS, transaction, dest_db_dir);
   clone_bin_file< Uint32_Index >(*osm_base_settings().RELATION_ROLES, *osm_base_settings().RELATION_ROLES,
 				 transaction, dest_db_dir);
   clone_bin_file< Tag_Index_Local >(
@@ -161,7 +162,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
   
   clone_bin_file< Uint31_Index >(*attic_settings().NODES, *attic_settings().NODES,
 				 transaction, dest_db_dir);
-  clone_map_file< Uint31_Index >(*attic_settings().NODES, transaction, dest_db_dir);
+  clone_map_file< Node_Skeleton::Id_Type, Uint31_Index >(*attic_settings().NODES, transaction, dest_db_dir);
   clone_bin_file< Uint31_Index >(*attic_settings().NODES_UNDELETED, *attic_settings().NODES_UNDELETED,
 				 transaction, dest_db_dir);
   clone_bin_file< Node::Id_Type >(*attic_settings().NODE_IDX_LIST, *attic_settings().NODE_IDX_LIST,
@@ -177,7 +178,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
   
   clone_bin_file< Uint31_Index >(*attic_settings().WAYS, *attic_settings().WAYS,
 				 transaction, dest_db_dir);
-  clone_map_file< Uint31_Index >(*attic_settings().WAYS, transaction, dest_db_dir);
+  clone_map_file< Way_Skeleton::Id_Type, Uint31_Index >(*attic_settings().WAYS, transaction, dest_db_dir);
   clone_bin_file< Uint31_Index >(*attic_settings().WAYS_UNDELETED, *attic_settings().WAYS_UNDELETED,
 				 transaction, dest_db_dir);
   clone_bin_file< Way::Id_Type >(*attic_settings().WAY_IDX_LIST, *attic_settings().WAY_IDX_LIST,
@@ -193,7 +194,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
   
   clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS, *attic_settings().RELATIONS,
 				 transaction, dest_db_dir);
-  clone_map_file< Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir);
+  clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir);
   clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS_UNDELETED, *attic_settings().RELATIONS_UNDELETED,
 				 transaction, dest_db_dir);
   clone_bin_file< Relation::Id_Type >(*attic_settings().RELATION_IDX_LIST, *attic_settings().RELATION_IDX_LIST,
