@@ -110,7 +110,7 @@ inline Random_File_Index::Random_File_Index
     npos(std::numeric_limits< uint32 >::max()),
     count(0),
     max_size(file_prop.get_map_max_size()),
-    compression_method(file_prop.get_compression_method())
+    compression_method(file_prop.get_map_compression_method())
 {
   uint64 file_size = 0;
   try

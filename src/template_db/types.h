@@ -89,6 +89,7 @@ struct File_Properties
   virtual uint32 get_compression_method() const = 0;
   virtual uint32 get_map_block_size() const = 0;
   virtual uint32 get_map_max_size() const = 0;
+  virtual uint32 get_map_compression_method() const = 0;
   virtual std::vector< bool > get_data_footprint(const std::string& db_dir) const = 0;
   virtual std::vector< bool > get_map_footprint(const std::string& db_dir) const = 0;
   virtual uint32 id_max_size_of() const = 0;

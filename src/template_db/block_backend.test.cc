@@ -183,6 +183,11 @@ struct Test_File : File_Properties
   {
     return 0;
   }
+
+  uint32 get_map_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+  }
   
   uint32 get_map_block_size() const
   {

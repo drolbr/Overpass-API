@@ -147,6 +147,11 @@ struct Test_File : File_Properties
   {
     return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
   }
+
+  uint32 get_map_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+  }
   
   uint32 get_map_block_size() const
   {
@@ -230,6 +235,11 @@ struct Variable_Block_Test_File : File_Properties
   }
   
   uint32 get_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+  }
+
+  uint32 get_map_compression_method() const
   {
     return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
   }
@@ -322,6 +332,11 @@ struct Compressed_Test_File : File_Properties
 #else
     return File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION;
 #endif
+  }
+
+  uint32 get_map_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
   }
   
   uint32 get_map_block_size() const
@@ -664,6 +679,26 @@ int main(int argc, char* args[])
         + Test_File().get_index_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(index_fd);
+  
+  if ((test_to_execute == "") || (test_to_execute == "info"))
+  {
+    Compressed_Test_File tf;
+    
+    if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::NO_COMPRESSION)
+      std::cout<<"Using no compression for bin files.\n";
+    else if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION)
+      std::cout<<"Using zlib compression for bin files.\n";
+    else if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::LZ4_COMPRESSION)
+      std::cout<<"Using lz4 compression for bin files.\n";
+    
+    if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::NO_COMPRESSION)
+      std::cout<<"Using no compression for map files.\n";
+    else if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION)
+      std::cout<<"Using zlib compression for map files.\n";
+    else if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::LZ4_COMPRESSION)
+      std::cout<<"Using lz4 compression for map files.\n";
+  }
+  
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
     std::cout<<"** Test the behaviour for an empty file\n";
