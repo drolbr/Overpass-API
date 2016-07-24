@@ -88,7 +88,6 @@ int main(int argc, char* argv[])
   string source_dir, db_dir, data_version;
   vector< string > source_file_names;
   meta_modes meta = only_data;
-  bool produce_augmented_diffs = false;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
   
@@ -113,8 +112,6 @@ int main(int argc, char* argv[])
       meta = keep_meta;
     else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
       meta = keep_attic;
-    else if (!(strncmp(argv[argpos], "--produce-diff", 6)))
-      produce_augmented_diffs = true;
     else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
     {
       flush_limit = atoll(string(argv[argpos]).substr(13).c_str()) *1024*1024;
@@ -128,15 +125,10 @@ int main(int argc, char* argv[])
     }
     ++argpos;
   }
-  if (db_dir != "" && produce_augmented_diffs)
-  {
-    cerr<<"Augmented diffs can only be produced with running dispatcher.\n";
-    abort = true;
-  }
   if (abort)
   {
     cerr<<"Usage: "<<argv[0]<<" --osc-dir=DIR"
-          " [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--produce-diff]\n";
+          " [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush-size=FLUSH_SIZE]\n";
     return -1;
   }
   
@@ -162,8 +154,7 @@ int main(int argc, char* argv[])
   {
     if (db_dir == "")
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta,
-                              produce_augmented_diffs, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);
@@ -174,8 +165,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta,
-                              produce_augmented_diffs, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);

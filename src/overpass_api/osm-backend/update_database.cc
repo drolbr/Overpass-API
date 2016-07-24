@@ -38,7 +38,6 @@ int main(int argc, char* argv[])
   string db_dir, data_version;
   bool transactional = true;
   meta_modes meta = only_data;
-  bool produce_augmented_diffs = false;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
   
@@ -58,8 +57,6 @@ int main(int argc, char* argv[])
       meta = keep_meta;
     else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
       meta = keep_attic;
-    else if (!(strncmp(argv[argpos], "--produce-diff", 14)))
-      produce_augmented_diffs = true;
     else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
     {
       flush_limit = atoll(string(argv[argpos]).substr(13).c_str()) *1024*1024;
@@ -73,14 +70,9 @@ int main(int argc, char* argv[])
     }
     ++argpos;
   }
-  if (!transactional && produce_augmented_diffs)
-  {
-    cerr<<"Augmented diffs can only be produced with running dispatcher.\n";
-    abort = true;
-  }
   if (abort)
   {
-    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--produce-diff]\n";
+    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]\n";
     return 0;
   }
   
@@ -88,15 +80,13 @@ int main(int argc, char* argv[])
   {
     if (transactional)
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta,
-                              produce_augmented_diffs, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta,
-                              produce_augmented_diffs, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }

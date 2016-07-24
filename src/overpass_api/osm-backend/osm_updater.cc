@@ -515,7 +515,7 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version_,
-			 meta_modes meta_, bool produce_augmented_diffs, unsigned int flush_limit_)
+			 meta_modes meta_, unsigned int flush_limit_)
   : dispatcher_client(0), meta(meta_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
@@ -550,7 +550,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, string db_dir, const string& data_version_,
-     meta_modes meta_, bool produce_augmented_diffs, unsigned int flush_limit_)
+     meta_modes meta_, unsigned int flush_limit_)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
   {
