@@ -193,9 +193,6 @@ void generate_ids_by_coarse
         it2 != it->second.end(); ++it2)
       ids_by_coarse_.push_back
           (Attic< typename TObject::Id_Type >(it2->id, it2->timestamp));
-    
-    std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
-    ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
   }
 
   coarse_indices.insert(new_coarse_indices.begin(),new_coarse_indices.end());
