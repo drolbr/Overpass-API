@@ -1282,7 +1282,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	Statement_Text clause("polygon", token.line_col());
 	++token;
 	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "List of Coordinates"));
+	clause.attributes.push_back(get_text_token(token, error_output, "list of coordinates"));
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }

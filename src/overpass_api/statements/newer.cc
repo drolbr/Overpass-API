@@ -153,7 +153,7 @@ Newer_Statement::Newer_Statement
   if (than_timestamp == 0)
   {
     ostringstream temp;
-    temp<<"The attribute than must contain a timestamp exactly in the form yyyy-mm-ddThh:mm:ssZ.";
+    temp<<"The attribute \"than\" must contain a timestamp exactly in the form yyyy-mm-ddThh:mm:ssZ.";
     add_static_error(temp.str());
   }
 }
