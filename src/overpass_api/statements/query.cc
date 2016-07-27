@@ -155,6 +155,8 @@ void filter_id_list(
   }
   
   sort(new_ids.begin(), new_ids.end());
+  new_ids.erase(unique(new_ids.begin(), new_ids.end()), new_ids.end());
+
   filtered = true;  
 }
 
@@ -175,6 +177,8 @@ void filter_id_list(
   }
   
   sort(new_ids.begin(), new_ids.end());
+  new_ids.erase(unique(new_ids.begin(), new_ids.end()), new_ids.end());
+
   filtered = true;  
 }
 
@@ -195,6 +199,8 @@ void filter_id_list(
   }
   
   sort(new_ids.begin(), new_ids.end());
+  new_ids.erase(unique(new_ids.begin(), new_ids.end()), new_ids.end());
+
   filtered = true;
 }
 
