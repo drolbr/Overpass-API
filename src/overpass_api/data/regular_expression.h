@@ -38,15 +38,23 @@ struct Regular_Expression_Error
 class Regular_Expression
 {
   public:
+    enum Strategy { call_library, match_anything, match_nonempty };
+    
     Regular_Expression(const std::string& regex, bool case_sensitive)
     {
-      is_match_anything = (regex == ".*");
-      is_match_onechar = (regex == ".");
-      is_cache_available = false;
-      prev_line = "";
-      prev_result = false;
+      if (regex == ".*")
+        strategy = match_anything;
+      else if (regex == ".")
+        strategy = match_nonempty;
+      else
+        strategy = call_library;
+      
+//       cache_available = false;
+//       prev_line = "";
+//       prev_result = false;
 
-      if (!is_match_anything && !is_match_onechar) {
+      if (strategy == call_library)
+      {
         setlocale(LC_ALL, "C.UTF-8");
         int case_flag = case_sensitive ? 0 : REG_ICASE;
         int error_no = regcomp(&preg, regex.c_str(), REG_EXTENDED|REG_NOSUB|case_flag);
@@ -55,36 +63,36 @@ class Regular_Expression
       }
     }
     
-    ~Regular_Expression() {
-      if (!is_match_anything && !is_match_onechar)
+    ~Regular_Expression()
+    {
+      if (strategy == call_library)
         regfree(&preg);
     }
     
     inline bool matches(const std::string& line) const
     {
-      if (is_match_anything)
+      if (strategy == match_anything)
         return true;
-      if (is_match_onechar)
-        return (!(line.length() == 0));
-      if (is_cache_available && line == prev_line)
-        return prev_result;
+      else if (strategy == match_nonempty)
+        return !line.empty();
+//       if (is_cache_available && line == prev_line)
+//         return prev_result;
 
       bool result = (regexec(&preg, line.c_str(), 0, 0, 0) == 0);
 
-      is_cache_available = true;
-      prev_result = result;
-      prev_line = line;
+//       is_cache_available = true;
+//       prev_result = result;
+//       prev_line = line;
 
       return (result);
     }
     
   private:
     regex_t preg;
-    bool is_match_anything;
-    bool is_match_onechar;
-    mutable bool is_cache_available;
-    mutable std::string prev_line;
-    mutable bool prev_result;
+    Strategy strategy;
+//     mutable bool cache_available;
+//     mutable std::string prev_line;
+//     mutable bool prev_result;
 };
 
 #endif
