@@ -149,7 +149,8 @@ void filter_id_list(
   
   for (Iterator it = begin; !(it == end); ++it)
   {
-    if (key_regex.matches(it.index().key) && val_regex.matches(it.index().value) && (!filtered ||
+    if (key_regex.matches(it.index().key) && it.index().value != void_tag_value()
+        && val_regex.matches(it.index().value) && (!filtered ||
 	binary_search(old_ids.begin(), old_ids.end(), std::make_pair(it.object().id, Uint31_Index(0u)))))
       new_ids.push_back(std::make_pair(it.object().id, it.object().idx));
   }
@@ -171,7 +172,8 @@ void filter_id_list(
   
   for (Iterator it = begin; !(it == end); ++it)
   {
-    if (key_regex.matches(it.index().key) && val_regex.matches(it.index().value) &&
+    if (key_regex.matches(it.index().key) && it.index().value != void_tag_value()
+        && val_regex.matches(it.index().value) &&
 	(!filtered || binary_search(old_ids.begin(), old_ids.end(), it.object())))
       new_ids.push_back(it.object());
   }
@@ -482,7 +484,7 @@ vector< Id_Type > Query_Statement::collect_non_ids
          Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
         !(it2 == tags_db.range_end()); ++it2)
     {
-      if (knrit->second->matches(it2.index().value))
+      if (it2.index().value != void_tag_value() && knrit->second->matches(it2.index().value))
         new_ids.push_back(it2.object());
     }
 
@@ -592,7 +594,7 @@ void filter_ids_by_ntags
         valid = false;
         for (vector< Regular_Expression* >::const_iterator rit = key_it->second.first.begin();
             rit != key_it->second.first.end(); ++rit)
-          valid |= (*rit)->matches(tag_it.index().value);
+          valid |= (tag_it.index().value != void_tag_value() && (*rit)->matches(tag_it.index().value));
         for (vector< string >::const_iterator rit = key_it->second.second.begin();
             rit != key_it->second.second.end(); ++rit)
           valid |= (*rit == tag_it.index().value);
@@ -661,7 +663,7 @@ void filter_ids_by_ntags
           valid = false;
           for (vector< Regular_Expression* >::const_iterator rit = key_it->second.first.begin();
               rit != key_it->second.first.end(); ++rit)
-            valid |= (*rit)->matches(tag_it.index().value);
+            valid |= (tag_it.index().value != void_tag_value() && (*rit)->matches(tag_it.index().value));
           for (vector< string >::const_iterator rit = key_it->second.second.begin();
               rit != key_it->second.second.end(); ++rit)
             valid |= (*rit == tag_it.index().value);
@@ -693,7 +695,8 @@ void filter_ids_by_ntags
           {
             for (vector< Regular_Expression* >::const_iterator rit = key_it->second.first.begin();
                 rit != key_it->second.first.end(); ++rit)
-              valid |= (*rit)->matches(attic_tag_it.index().value);
+              valid |= (attic_tag_it.index().value != void_tag_value()
+                  && (*rit)->matches(attic_tag_it.index().value));
             for (vector< string >::const_iterator rit = key_it->second.second.begin();
                 rit != key_it->second.second.end(); ++rit)
               valid |= (*rit == attic_tag_it.index().value);

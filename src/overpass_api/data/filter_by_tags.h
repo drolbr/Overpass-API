@@ -213,7 +213,8 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kregv(
       Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
       !(it2 == attic_tags_db.range_end()); ++it2)
   {
-    if (it2.object().timestamp > timestamp && krit->second->matches(it2.index().value))
+    if (it2.object().timestamp > timestamp && it2.index().value != void_tag_value()
+        && krit->second->matches(it2.index().value))
     {
       std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id];
       if (ref.first == 0 || it2.object().timestamp < ref.first)
@@ -280,7 +281,8 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_regkregv(
       last_key = it2.index().key;
       matches = krit->first->matches(it2.index().key);
     }
-    if (it2.object().timestamp > timestamp && matches && krit->second->matches(it2.index().value))
+    if (it2.object().timestamp > timestamp && matches && it2.index().value != void_tag_value()
+        && krit->second->matches(it2.index().value))
     {
       std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id][last_key];
       if (ref.first == 0 || it2.object().timestamp < ref.first)

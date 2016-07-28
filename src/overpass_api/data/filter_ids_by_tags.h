@@ -79,9 +79,9 @@ void filter_ids_by_tags
     {
       if (key_relevant)
       {
-	valid = true;
+	valid = (tag_it.index().value != void_tag_value());
 	for (vector< Regular_Expression* >::const_iterator rit = key_it->second.begin();
-	    rit != key_it->second.end(); ++rit)
+	    valid && rit != key_it->second.end(); ++rit)
 	  valid &= (*rit)->matches(tag_it.index().value);
       }
       
@@ -91,7 +91,7 @@ void filter_ids_by_tags
       for (std::vector< uint64 >::const_iterator reg_it = matched_by_key_regexes.begin();
 	  reg_it != matched_by_key_regexes.end(); ++reg_it)
       {
-	if (key_regexes[*reg_it].second->matches(last_value))
+	if (last_value != void_tag_value() && key_regexes[*reg_it].second->matches(last_value))
 	  matched_by_both_regexes.push_back(*reg_it);
       }
     }
@@ -187,8 +187,9 @@ public:
   
   bool value_relevant(const std::string& value) const
   {
-    bool valid = true;
-    for (vector< Regular_Expression* >::const_iterator it = conditions_.begin(); it != conditions_.end(); ++it)
+    bool valid = (value != void_tag_value());
+    for (vector< Regular_Expression* >::const_iterator it = conditions_.begin(); valid && it != conditions_.end();
+        ++it)
       valid &= (*it)->matches(value);
     return valid;
   }
@@ -243,7 +244,7 @@ public:
   
   bool value_relevant(const std::string& value) const
   {
-    return value_->matches(value);
+    return value != void_tag_value() && value_->matches(value);
   }
   
   void eval_id(Id_Type id, uint64 timestamp, bool value_relevant)
