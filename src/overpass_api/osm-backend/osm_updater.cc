@@ -553,7 +553,7 @@ Osm_Updater::Osm_Updater
      meta_modes meta_, bool produce_augmented_diffs, unsigned int flush_limit_)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
-  if (dispatcher_socket_present(db_dir + osm_base_settings().shared_name))
+  if (file_present(db_dir + osm_base_settings().shared_name))
     throw Context_Error("File " + db_dir + osm_base_settings().shared_name + " present, "
         "which indicates a running dispatcher. Delete file if no dispatcher is running.");
     

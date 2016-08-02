@@ -114,7 +114,7 @@ class Dispatcher_Client
 };
 
 
-bool dispatcher_socket_present(const std::string& full_path);
+bool file_present(const std::string& full_path);
 
 
 struct Context_Error

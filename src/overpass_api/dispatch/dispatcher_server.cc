@@ -131,6 +131,31 @@ std::string to_date(time_t time)
 }
 
 
+bool assure_files_absent(const std::string& db_dir, const std::vector< File_Properties* >& files_to_avoid,
+    const std::string& parameter)
+{
+  bool suspicious_files_present = false;
+  
+  for (std::vector< File_Properties* >::const_iterator it = files_to_avoid.begin(); it != files_to_avoid.end(); ++it)
+  {
+    if (file_present(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()))
+    {
+      std::cerr<<"File "<<(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix())
+          <<" present. Please use parameter "<<parameter<<'\n';
+      suspicious_files_present = true;
+    }
+    if (file_present(db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()))
+    {
+      std::cerr<<"File "<<(db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix())
+          <<" present. Please use parameter "<<parameter<<'\n';
+      suspicious_files_present = true;
+    }
+  }
+  
+  return suspicious_files_present;
+}
+
+
 int main(int argc, char* argv[])
 {
   // read command line arguments
@@ -152,25 +177,25 @@ int main(int argc, char* argv[])
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
     }
-    else if (!(strncmp(argv[argpos], "--osm-base", 10)))
+    else if (std::string("--osm-base") == argv[argpos])
       osm_base = true;
-    else if (!(strncmp(argv[argpos], "--areas", 7)))
+    else if (std::string("--areas") == argv[argpos])
       areas = true;
-    else if (!(strncmp(argv[argpos], "--meta", 6)))
+    else if (std::string("--meta") == argv[argpos])
       meta = true;
-    else if (!(strncmp(argv[argpos], "--attic", 7)))
+    else if (std::string("--attic") == argv[argpos])
       attic = true;
-    else if (!(strncmp(argv[argpos], "--terminate", 11)))
+    else if (std::string("--terminate") == argv[argpos])
       terminate = true;  
-    else if (!(strncmp(argv[argpos], "--status", 8)))
+    else if (std::string("--status") == argv[argpos])
       status = true;
-    else if (!(strncmp(argv[argpos], "--my-status", 11)))
+    else if (std::string("--my-status") == argv[argpos])
       my_status = true;
-    else if (!(strncmp(argv[argpos], "--show-dir", 10)))
+    else if (std::string("--show-dir") == argv[argpos])
       show_dir = true;
     else if (!(strncmp(argv[argpos], "--purge=", 8)))
       purge_id = atoll(((string)argv[argpos]).substr(8).c_str());
-    else if (!(strncmp(argv[argpos], "--query_token", 13)))
+    else if (std::string("--query_token") == argv[argpos])
       query_token = true;
     else if (!(strncmp(argv[argpos], "--space=", 8)))
       max_allowed_space = atoll(((string)argv[argpos]).substr(8).c_str());
@@ -206,6 +231,21 @@ int main(int argc, char* argv[])
   if (osm_base && areas)
   {
     cout<<"\"--areas\" and \"--osm-base\" need separate instances.\n";
+    return 0;
+  }
+  if (meta && areas)
+  {
+    cout<<"\"--areas\" and \"--meta\" cannot be combined.\n";
+    return 0;
+  }
+  if (attic && areas)
+  {
+    cout<<"\"--areas\" and \"--attic\" cannot be combined.\n";
+    return 0;
+  }
+  if (meta && attic)
+  {
+    cout<<"\"--attic\" and \"--meta\" cannot be combined.\n";
     return 0;
   }
   
@@ -325,7 +365,10 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  vector< File_Properties* > files_to_manage;
+  std::vector< File_Properties* > files_to_manage;
+  std::vector< File_Properties* > files_to_avoid;
+  bool suspicious_files_present = false;
+  
   if (osm_base)
   {
     files_to_manage.push_back(osm_base_settings().NODES);
@@ -341,46 +384,53 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_GLOBAL);
     files_to_manage.push_back(osm_base_settings().RELATION_KEYS);
+    
+    std::vector< File_Properties* >* file_target = (meta || attic) ? &files_to_manage : &files_to_avoid;
+    
+    file_target->push_back(meta_settings().NODES_META);
+    file_target->push_back(meta_settings().WAYS_META);
+    file_target->push_back(meta_settings().RELATIONS_META);
+    file_target->push_back(meta_settings().USER_DATA);
+    file_target->push_back(meta_settings().USER_INDICES);
+
+    suspicious_files_present |= assure_files_absent(db_dir, files_to_avoid, "--meta");
+    files_to_avoid.clear();    
+    file_target = attic ? &files_to_manage : &files_to_avoid;
+    
+    file_target->push_back(attic_settings().NODES);
+    file_target->push_back(attic_settings().NODES_UNDELETED);
+    file_target->push_back(attic_settings().NODE_IDX_LIST);
+    file_target->push_back(attic_settings().NODE_TAGS_LOCAL);
+    file_target->push_back(attic_settings().NODE_TAGS_GLOBAL);
+    file_target->push_back(attic_settings().NODES_META);
+    file_target->push_back(attic_settings().NODE_CHANGELOG);
+    file_target->push_back(attic_settings().WAYS);
+    file_target->push_back(attic_settings().WAYS_UNDELETED);
+    file_target->push_back(attic_settings().WAY_IDX_LIST);
+    file_target->push_back(attic_settings().WAY_TAGS_LOCAL);
+    file_target->push_back(attic_settings().WAY_TAGS_GLOBAL);
+    file_target->push_back(attic_settings().WAYS_META);
+    file_target->push_back(attic_settings().WAY_CHANGELOG);
+    file_target->push_back(attic_settings().RELATIONS);
+    file_target->push_back(attic_settings().RELATIONS_UNDELETED);
+    file_target->push_back(attic_settings().RELATION_IDX_LIST);
+    file_target->push_back(attic_settings().RELATION_TAGS_LOCAL);
+    file_target->push_back(attic_settings().RELATION_TAGS_GLOBAL);
+    file_target->push_back(attic_settings().RELATIONS_META);
+    file_target->push_back(attic_settings().RELATION_CHANGELOG);
+
+    suspicious_files_present |= assure_files_absent(db_dir, files_to_avoid, "--attic");
   }
-  if (areas)
+  else if (areas)
   {
     files_to_manage.push_back(area_settings().AREAS);
     files_to_manage.push_back(area_settings().AREA_BLOCKS);
     files_to_manage.push_back(area_settings().AREA_TAGS_LOCAL);
     files_to_manage.push_back(area_settings().AREA_TAGS_GLOBAL);
   }
-  if (meta || attic)
-  {
-    files_to_manage.push_back(meta_settings().NODES_META);
-    files_to_manage.push_back(meta_settings().WAYS_META);
-    files_to_manage.push_back(meta_settings().RELATIONS_META);
-    files_to_manage.push_back(meta_settings().USER_DATA);
-    files_to_manage.push_back(meta_settings().USER_INDICES);
-  }
-  if (attic)
-  {
-    files_to_manage.push_back(attic_settings().NODES);
-    files_to_manage.push_back(attic_settings().NODES_UNDELETED);
-    files_to_manage.push_back(attic_settings().NODE_IDX_LIST);
-    files_to_manage.push_back(attic_settings().NODE_TAGS_LOCAL);
-    files_to_manage.push_back(attic_settings().NODE_TAGS_GLOBAL);
-    files_to_manage.push_back(attic_settings().NODES_META);
-    files_to_manage.push_back(attic_settings().NODE_CHANGELOG);
-    files_to_manage.push_back(attic_settings().WAYS);
-    files_to_manage.push_back(attic_settings().WAYS_UNDELETED);
-    files_to_manage.push_back(attic_settings().WAY_IDX_LIST);
-    files_to_manage.push_back(attic_settings().WAY_TAGS_LOCAL);
-    files_to_manage.push_back(attic_settings().WAY_TAGS_GLOBAL);
-    files_to_manage.push_back(attic_settings().WAYS_META);
-    files_to_manage.push_back(attic_settings().WAY_CHANGELOG);
-    files_to_manage.push_back(attic_settings().RELATIONS);
-    files_to_manage.push_back(attic_settings().RELATIONS_UNDELETED);
-    files_to_manage.push_back(attic_settings().RELATION_IDX_LIST);
-    files_to_manage.push_back(attic_settings().RELATION_TAGS_LOCAL);
-    files_to_manage.push_back(attic_settings().RELATION_TAGS_GLOBAL);
-    files_to_manage.push_back(attic_settings().RELATIONS_META);
-    files_to_manage.push_back(attic_settings().RELATION_CHANGELOG);
-  }
+  
+  if (suspicious_files_present)
+    return 3;
   
   if (!osm_base && !areas && !terminate)
   {

@@ -68,7 +68,7 @@ Dispatcher_Client::Dispatcher_Client
 }
 
 
-bool dispatcher_socket_present(const std::string& full_path)
+bool file_present(const std::string& full_path)
 {
   struct stat stat_buf;
   int result = stat(full_path.c_str(), &stat_buf);
