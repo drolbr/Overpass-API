@@ -266,9 +266,14 @@ int main(int argc, char *argv[])
     
     return 2;
   }
+  catch(Context_Error e)
+  {
+    error_output->runtime_error("Context error: " + e.message);
+    return 3;
+  }
   catch(Exit_Error e)
   {
-    return 3;
+    return 4;
   }
   catch(std::bad_alloc& e)
   {

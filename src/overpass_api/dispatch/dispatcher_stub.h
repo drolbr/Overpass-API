@@ -38,7 +38,9 @@
 #include <string>
 #include <vector>
 
+
 struct Exit_Error {};
+
 
 class Dispatcher_Stub : public Watchdog_Callback
 {

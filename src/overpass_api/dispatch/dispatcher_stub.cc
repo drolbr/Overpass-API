@@ -276,6 +276,10 @@ Dispatcher_Stub::Dispatcher_Stub
   }
   else
   {
+    if (dispatcher_socket_present(db_dir + osm_base_settings().shared_name))
+      throw Context_Error("File " + db_dir + osm_base_settings().shared_name + " present, "
+          "which indicates a running dispatcher. Delete file if no dispatcher is running.");
+    
     transaction = new Nonsynced_Transaction(false, false, db_dir, "");
     if (area_level > 0)
     {

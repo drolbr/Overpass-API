@@ -30,7 +30,6 @@
 #include "../frontend/output.h"
 #include "osm_updater.h"
 
-using namespace std;
 
 int main(int argc, char* argv[])
 {
@@ -112,6 +111,11 @@ int main(int argc, char* argv[])
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }
+  }
+  catch(Context_Error e)
+  {
+    std::cerr<<"Context error: "<<e.message<<'\n';
+    return 3;
   }
   catch (File_Error e)
   {

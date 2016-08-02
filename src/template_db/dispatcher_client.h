@@ -114,4 +114,15 @@ class Dispatcher_Client
 };
 
 
+bool dispatcher_socket_present(const std::string& full_path);
+
+
+struct Context_Error
+{
+  Context_Error(const std::string message_) : message(message_) {}
+  
+  std::string message;
+};
+
+
 #endif
