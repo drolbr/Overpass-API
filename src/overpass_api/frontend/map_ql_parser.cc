@@ -405,15 +405,12 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
 				    uint line_nr)
 {
   map< string, string > attr;
+  
   if (key_regex == haskv_plain)
     attr["k"] = key;
-  else if (key_regex == haskv_regex)
-    attr["regk"] = key;
   else
-  {
     attr["regk"] = key;
-    attr["key-case"] = "ignore";
-  }
+  
   if (regex == haskv_plain)
     attr["v"] = value;
   else if (regex == haskv_regex)
@@ -423,6 +420,7 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
     attr["regv"] = value;
     attr["case"] = "ignore";
   }
+  
   attr["modv"] = (straight ? "" : "not");
   return stmt_factory.create_statement("has-kv", line_nr, attr);
 }
