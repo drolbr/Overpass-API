@@ -1622,7 +1622,6 @@ Has_Kv_Statement::Has_Kv_Statement
   attributes["regv"] = "";
   attributes["modv"] = "";
   attributes["case"] = "sensitive";
-  attributes["key-case"] = "sensitive";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
