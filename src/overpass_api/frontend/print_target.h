@@ -65,7 +65,7 @@ class Output_Handle
     string output;
     uint32 written_elements_count;
     string first_type;
-    uint32 first_id;
+    uint64 first_id;
     string node_template;
     string way_template;
     string relation_template;
