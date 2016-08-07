@@ -3310,6 +3310,28 @@
     <nd ref="25063"/>
     <tag k="before" v="deletion"/>
   </way>
+  <way id="2601" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="2601"/>
+    <tag k="empty_value" v=""/>
+  </way>
+  <way id="2602" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="2602"/>
+    <tag k="" v="empty_key"/>
+  </way>
+  <way id="2603" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="2603"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
+  <way id="2604" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <nd ref="2604"/>
+    <tag k="multiple_values" v="no"/>
+  </way>
+  <way id="2605" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
+    <nd ref="2605"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
   <way id="11211" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="112111"/>
     <nd ref="112112"/>
@@ -5891,6 +5913,28 @@
     <tag k="multiple_values" v="first"/>
     <tag k="multiple_values" v="second"/>
   </node>
+  <way id="2601" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="2601"/>
+    <tag k="empty_value" v=""/>
+  </way>
+  <way id="2602" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <nd ref="2602"/>
+    <tag k="" v="empty_key"/>
+  </way>
+  <way id="2603" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <nd ref="2603"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
+  <way id="2604" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <nd ref="2604"/>
+    <tag k="multiple_values" v="no"/>
+  </way>
+  <way id="2605" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
+    <nd ref="2605"/>
+    <tag k="multiple_values" v="first"/>
+    <tag k="multiple_values" v="second"/>
+  </way>
   <relation id="2601" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="2601" role=""/>
     <tag k="empty_value" v=""/>
