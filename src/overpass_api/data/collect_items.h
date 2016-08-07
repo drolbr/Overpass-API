@@ -370,7 +370,7 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
       count = 0;
       rman.health_check(*stmt, 0, eval_map(result));
     }
-    if (predicate.match(it.object()))
+    if (predicate.match(it.apply_func(&Object::get_id)))
       result[it.index()].push_back(it.object());
   }
 }

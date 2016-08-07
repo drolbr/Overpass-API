@@ -121,6 +121,11 @@ struct Node_Skeleton
     *(uint32*)((uint8*)data+8) = ll_lower;
   }
   
+  static Node::Id_Type get_id(const void* data)
+  {
+    return *(const uint64*)data;
+  }
+
   bool operator<(const Node_Skeleton& a) const
   {
     return this->id.val() < a.id.val();

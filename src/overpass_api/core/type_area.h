@@ -286,6 +286,11 @@ struct Area_Skeleton
     }
   }
   
+  static Area::Id_Type get_id(const void* data)
+  {
+    return *(const uint32*)data;
+  }
+
   bool operator<(const Area_Skeleton& a) const
   {
     return (this->id < a.id);

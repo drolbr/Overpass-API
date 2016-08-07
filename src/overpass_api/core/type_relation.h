@@ -171,6 +171,11 @@ struct Relation_Skeleton
       *(start_ptr + i) = way_idxs[i];
   }
   
+  static Relation::Id_Type get_id(const void* data)
+  {
+    return *(const uint32*)data;
+  }
+
   bool operator<(const Relation_Skeleton& a) const
   {
     return this->id < a.id;

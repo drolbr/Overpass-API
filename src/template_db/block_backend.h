@@ -66,6 +66,9 @@ struct Block_Backend_Basic_Iterator
   const TIndex& index();
   const TObject& object();
   
+  template< typename T >
+  T apply_func(T(*)(const void *));
+
   uint32 block_size;
   uint32 pos;
   uint32* current_idx_pos;
@@ -345,6 +348,14 @@ const TObject& Block_Backend_Basic_Iterator< TIndex, TObject >::object()
     current_object = new TObject((void*)(buffer.ptr + pos));
   return *current_object;
 }
+
+template< class TIndex, class TObject >
+template< typename T >
+inline T Block_Backend_Basic_Iterator< TIndex, TObject >::apply_func(T(*f)(const void *))
+{
+  return f((void*)(buffer.ptr + pos));
+}
+
 
 /** Implementation Block_Backend_Flat_Iterator: ----------------------------*/
 

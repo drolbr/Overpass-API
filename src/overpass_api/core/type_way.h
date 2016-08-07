@@ -138,6 +138,11 @@ struct Way_Skeleton
     }
   }
   
+  static Way::Id_Type get_id(const void* data)
+  {
+    return *(const uint32*)data;
+  }
+
   bool operator<(const Way_Skeleton& a) const
   {
     return this->id < a.id;
