@@ -67,12 +67,18 @@ struct Block_Backend_Basic_Iterator
   const TObject& object();
   
   uint32 block_size;
-  uint32 pos;
   uint32* current_idx_pos;
   TIndex* current_index;
   TObject* current_object;
   
   Void_Pointer< uint8 > buffer;
+  
+  uint32 get_pos() const { return pos; }
+  void set_pos(uint32 pos_) { pos = pos_; }
+  void inc_pos(uint32 offset) { pos += offset; }
+  
+private:
+  uint32 pos;
 };
 
 template< class TIndex, class TObject, class TIterator >
@@ -272,8 +278,8 @@ struct Block_Backend
 template< class TIndex, class TObject >
 Block_Backend_Basic_Iterator< TIndex, TObject >::
     Block_Backend_Basic_Iterator(uint32 block_size_, bool is_end)
-: block_size(block_size_), pos(0), current_idx_pos(0), current_index(0),
-  current_object(0), buffer(block_size)
+: block_size(block_size_), current_idx_pos(0), current_index(0),
+  current_object(0), buffer(block_size), pos(0)
 {
   if (is_end)
     return;
@@ -282,8 +288,8 @@ Block_Backend_Basic_Iterator< TIndex, TObject >::
 template< class TIndex, class TObject >
 Block_Backend_Basic_Iterator< TIndex, TObject >::
     Block_Backend_Basic_Iterator(const Block_Backend_Basic_Iterator& it)
-: block_size(it.block_size), pos(it.pos),
-  current_idx_pos(0), current_index(0), current_object(0), buffer(block_size)
+: block_size(it.block_size),
+  current_idx_pos(0), current_index(0), current_object(0), buffer(block_size), pos(it.pos)
 {
   memcpy(buffer.ptr, it.buffer.ptr, block_size);
   current_idx_pos = (uint32*)(buffer.ptr + ((uint8*)it.current_idx_pos - it.buffer.ptr));
@@ -307,7 +313,7 @@ Block_Backend_Basic_Iterator< TIndex, TObject >::~Block_Backend_Basic_Iterator()
 template< class TIndex, class TObject >
 bool Block_Backend_Basic_Iterator< TIndex, TObject >::advance()
 {
-  pos += TObject::size_of((void*)(buffer.ptr + pos));
+  inc_pos(TObject::size_of((void*)(buffer.ptr + pos)));
   
   // invalidate cached object
   if (current_object != 0)
@@ -390,7 +396,7 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::operator==
     (const Block_Backend_Flat_Iterator& it) const
 {
-  bool res((this->pos == it.pos) && (file_it == it.file_it));
+  bool res((this->get_pos() == it.get_pos()) && (file_it == it.file_it));
   return (res);
 }
 
@@ -417,8 +423,8 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::search_next_index()
 {
   // search for the next suitable index
-  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
-  if (this->pos < *(uint32*)(this->buffer.ptr))
+  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->get_pos());
+  if (this->get_pos() < *(uint32*)(this->buffer.ptr))
   {
     if (this->current_index)
       delete this->current_index;
@@ -428,8 +434,8 @@ bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::search_next_inde
       throw File_Error(file_it.block_it->pos,
 		file_blocks.get_index().get_data_file_name(),
 	        "Block_Backend: index out of range.");
-    this->pos += 4;
-    this->pos += TIndex::size_of((void*)((this->buffer.ptr) + this->pos));
+    this->inc_pos(4);
+    this->inc_pos(TIndex::size_of((void*)((this->buffer.ptr) + this->get_pos())));
     return true;
   }
     
@@ -444,10 +450,10 @@ bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::read_block()
   if (file_it == file_end)
   {
     // there is no block left
-    this->pos = 0;
+    this->set_pos(0);
     return true;
   }
-  this->pos = 4;
+  this->set_pos(4);
   file_blocks.read_block(file_it, this->buffer.ptr);
   
   return false;
@@ -496,7 +502,7 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::operator==
     (const Block_Backend_Discrete_Iterator& it) const
 {
-  bool res((this->pos == it.pos) && (file_it == it.file_it));
+  bool res((this->get_pos() == it.get_pos()) && (file_it == it.file_it));
   return (res);
 }
   
@@ -523,34 +529,34 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::search_next_index()
 {
   // search for the next suitable index
-  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
-  while (this->pos < *(uint32*)(this->buffer.ptr))
+  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->get_pos());
+  while (this->get_pos() < *(uint32*)(this->buffer.ptr))
   {
-    this->pos += 4;
+    this->inc_pos(4);
     
     if (this->current_index)
       delete this->current_index;
-    this->current_index = new TIndex((void*)((this->buffer.ptr) + this->pos));
+    this->current_index = new TIndex((void*)((this->buffer.ptr) + this->get_pos()));
     while ((index_it != index_end) && (*index_it < *(this->current_index)))
       ++index_it;
     if (index_it == index_end)
     {
       // there cannot be data anymore, because there is no valid index left
       file_it = file_end;
-      this->pos = 0;
+      this->set_pos(0);
       return true;
     }
     if (*index_it == *(this->current_index))
     {
       // we have reached the next valid index
-      this->pos += TIndex::size_of((void*)((this->buffer.ptr) + this->pos));
+      this->inc_pos(TIndex::size_of((void*)((this->buffer.ptr) + this->get_pos())));
       return true;
     }
     delete this->current_index;
     this->current_index = 0;
     
-    this->pos = *(this->current_idx_pos);
-    this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
+    this->set_pos(*(this->current_idx_pos));
+    this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->get_pos());
   }
   
   return false;
@@ -568,10 +574,10 @@ bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::read_block()
   if (file_it == file_end)
   {
     // there is no block left
-    this->pos = 0;
+    this->set_pos(0);
     return true;
   }
-  this->pos = 4;
+  this->set_pos(4);
   file_blocks.read_block(file_it, this->buffer.ptr);
   
   return false;
@@ -619,7 +625,7 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::operator==
     (const Block_Backend_Range_Iterator& it) const
 {
-  return ((this->pos == it.pos) && (file_it == it.file_it));
+  return ((this->get_pos() == it.get_pos()) && (file_it == it.file_it));
 }
   
 template< class TIndex, class TObject, class TIterator >
@@ -645,14 +651,14 @@ template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_index()
 {
   // search for the next suitable index
-  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
-  while (this->pos < *(uint32*)(this->buffer.ptr))
+  this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->get_pos());
+  while (this->get_pos() < *(uint32*)(this->buffer.ptr))
   {
-    this->pos += 4;
+    this->inc_pos(4);
     
     if (this->current_index)
       delete this->current_index;
-    this->current_index = new TIndex((void*)((this->buffer.ptr) + this->pos));
+    this->current_index = new TIndex((void*)((this->buffer.ptr) + this->get_pos()));
     while ((index_it != index_end) &&
       (!(*(this->current_index) < index_it.upper_bound())))
       ++(index_it);
@@ -660,20 +666,20 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_ind
     {
       // there cannot be data anymore, because there is no valid index left
       file_it = file_end;
-      this->pos = 0;
+      this->set_pos(0);
       return true;
     }
     if (!(*(this->current_index) < index_it.lower_bound()))
     {
       // we have reached the next valid index
-      this->pos += TIndex::size_of((void*)((this->buffer.ptr) + this->pos));
+      this->inc_pos(TIndex::size_of((void*)((this->buffer.ptr) + this->get_pos())));
       return true;
     }
     delete this->current_index;
     this->current_index = 0;
     
-    this->pos = *(this->current_idx_pos);
-    this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->pos);
+    this->set_pos(*(this->current_idx_pos));
+    this->current_idx_pos = (uint32*)((this->buffer.ptr) + this->get_pos());
   }
   
   return false;
@@ -687,10 +693,10 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_block()
   if (file_it == file_end)
   {
     // there is no block left
-    this->pos = 0;
+    this->set_pos(0);
     return true;
   }
-  this->pos = 4;
+  this->set_pos(4);
   file_blocks.read_block(file_it, this->buffer.ptr);
   
   return false;
