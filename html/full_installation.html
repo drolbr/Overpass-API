@@ -51,9 +51,9 @@
 <p>Since version 0.6.98, the database can be cloned from an exisiting instance rather than created from scratch. This only takes 4 to 8 hours in comparison to 24 to 48 hours for an update from the planet file. Note that this feature is still rather experimental - please report any problems by eMail to me (roland.olbricht at gmx.de). If you don't want the entire planet or prefer a manually planet import for some other reason, use the <a href="#startup">manual import</a> instead.</p>
 
 <p>Download a clone of the database at <em>overpass-api.de</em> with the command:</p>
-<pre>../src/bin/download_clone.sh --source=http://overpass-api.de/api/ --db-dir=&quot;../db/&quot; --meta=no</pre>
+<pre>../src/bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;../db/&quot; --meta=no</pre>
 <p>or</p>
-<pre><strong>nohup</strong> ../src/bin/download_clone.sh --source=http://overpass-api.de/api/ --db-dir=&quot;../db/&quot; --meta=no <strong>&amp;</strong></pre>
+<pre><strong>nohup</strong> ../src/bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;../db/&quot; --meta=no <strong>&amp;</strong></pre>
 <p>If you want meta data, use <em>--meta=yes</em> instead of <em>--meta=no</em>. This downloads about 15 GB (25 GB with meta data) in several compressed files and uncompresses them to a ready-to-use database.</p>
 
 <p>Now you can proceed with <a href="#minute_updates">minute updates</a>.</p>
@@ -62,9 +62,9 @@
 <h2><a name="startup">Startup</a></h2>
 
 <p>The standard use case is to set up the database with the whole planet data and including meta data. If you haven't downloaded an <a href="http://wiki.openstreetmap.org/wiki/Planet.osm">OSM XML planet file</a> yet, you can fetch one for example with:</p>
-<pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet-latest.osm.bz2&quot;</pre>
+<pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet/planet-latest.osm.bz2&quot;</pre>
 <p>This file has a size of more than 20 GB. Thus, depending on your internet connection, it may take between 4 hours (fastest possible) and 22 hours (with 2 MBit) to download the file. If you are not working on your local machine, you may want the download to continue even if you logout. Use <em>nohup</em> for this:</p>
-<pre><strong>nohup</strong> wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet-latest.osm.bz2&quot; <strong>&amp;</strong></pre>
+<pre><strong>nohup</strong> wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet/planet-latest.osm.bz2&quot; <strong>&amp;</strong></pre>
 
 <p>Once you have the file, you can start the import. The import again may take up to 48 hours:</p>
 <pre>../src/bin/init_osm3s.sh planet.osm.bz2 &quot;../db/&quot; &quot;../&quot; --meta</pre>
@@ -82,18 +82,18 @@
 <p>The following steps are only needed if you want minutely updates. In this case, run the following commands:</p>
 
 <pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;../db/osm3s_v0.7.3_osm_base&quot;</pre>
+<pre>chmod 666 &quot;../db/osm3s_v0.7.52_osm_base&quot;</pre>
 <p>(without <em>--meta</em> if you have not processed meta data)</p>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
-<pre>nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/minute-replicate/&quot; &quot;../minute-diffs/&quot; &amp;</pre>
+<pre>nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;../minute-diffs/&quot; &amp;</pre>
 <p>This should start to fill the directory <em>&quot;../minute-diffs/&quot;</em> with subdirectories which have three digits as name and finally contain files ending in <em>osc.gz</em> and <em>state.txt</em>.</p>
 
 <pre>nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 <p>(with <em>--meta=no</em> instead if you have not processed meta data)</p>
-<p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. If you have obtained your database by cloning, you find the replicate id in the file <em>replicate_id</em> in the database directory. If you have imported the database from an OSM file, search on <a href="http://planet.openstreetmap.org/minute-replicate/">http://planet.openstreetmap.org/minute-replicate/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
+<p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. If you have obtained your database by cloning, you find the replicate id in the file <em>replicate_id</em> in the database directory. If you have imported the database from an OSM file, search on <a href="http://planet.openstreetmap.org/replication/minute/">http://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
 
-<p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: <em>&quot;../db/&quot;</em> is the directory of the database, <em>&quot;http://planet.openstreetmap.org/minute-replicate/&quot;</em> is the replicate diff's remote source, and <em>&quot;../minute-diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
+<p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: <em>&quot;../db/&quot;</em> is the directory of the database, <em>&quot;http://planet.openstreetmap.org/replication/minute/&quot;</em> is the replicate diff's remote source, and <em>&quot;../minute-diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
 
 <p>Congratulations! Now you have a database mirror that can serve the entire world and is always only a few minutes behind the OSM main database. We can now startup the additional modules:</p>
 
@@ -109,26 +109,26 @@
 ServerName www.overpass-api.de
 
 LogLevel info
-DocumentRoot /path/to/osm-3s_v0.7/html/
+DocumentRoot /path/to/osm-3s_v0.7.52/html/
 
-ScriptAlias /api/ /path/to/osm-3s_v0.7.3/cgi-bin/
-&lt;Directory &quot;/path/to/osm-3s_v0.7.3/cgi-bin/&quot;&gt;
+ScriptAlias /api/ /path/to/osm-3s_v0.7.52/cgi-bin/
+&lt;Directory &quot;/path/to/osm-3s_v0.7.52/cgi-bin/&quot;&gt;
   AllowOverride None
   Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
   Order allow,deny
   Allow from all
 &lt;/Directory&gt;
 </pre>
-<p>The essential part is to replace all occurences of the path <em>/path/to/osm-3s_v0.7.3/</em> to the real pathes. This configuration file tells Apache to serve the html files from the directory <em>/path/to/osm-3s_v0.7.3/html/</em> and to call programs in <em>/path/to/osm-3s_v0.7.3/cgi-bin/</em> by CGI. The <em>ScriptAlias</em> makes them visible externally as <em>/api/</em> instead of <em>/cgi-bin/</em>. For the remaining options, please look into the <a href="http://httpd.apache.org/">Apache documentation</a>.</p>
+<p>The essential part is to replace all occurences of the path <em>/path/to/osm-3s_v0.7.52/</em> to the real pathes. This configuration file tells Apache to serve the html files from the directory <em>/path/to/osm-3s_v0.7.52/html/</em> and to call programs in <em>/path/to/osm-3s_v0.7.52/cgi-bin/</em> by CGI. The <em>ScriptAlias</em> makes them visible externally as <em>/api/</em> instead of <em>/cgi-bin/</em>. For the remaining options, please look into the <a href="http://httpd.apache.org/">Apache documentation</a>.</p>
 
 <p>You need to check whether the involved directories and their parent directories have sufficient permissions for all users, because otherwise Apache (with its proxy user <em>www-data</em>) cannot access them:</p>
 <pre>chmod 755 /path
 chmod 755 /path/to
-chmod 755 /path/to/osm-3s_v0.7.3
-chmod 755 /path/to/osm-3s_v0.7.3/html
-chmod 755 /path/to/osm-3s_v0.7.3/bin
-chmod 755 /path/to/osm-3s_v0.7.3/cgi-bin
-chmod 755 /path/to/osm-3s_v0.7.3/db</pre>
+chmod 755 /path/to/osm-3s_v0.7.52
+chmod 755 /path/to/osm-3s_v0.7.52/html
+chmod 755 /path/to/osm-3s_v0.7.52/bin
+chmod 755 /path/to/osm-3s_v0.7.52/cgi-bin
+chmod 755 /path/to/osm-3s_v0.7.52/db</pre>
 <p>Some directories are added later for some of the optional modules.</p>
 
 <p>You can now (re-)start Apache to let the updated configuration come into effect:</p>
@@ -151,7 +151,7 @@ chmod 755 /path/to/osm-3s_v0.7.3/db</pre>
 
 <p>The next step is to start a second dispatcher that coordinates read and write operations for the areas related files in the database:</p>
 <pre>nohup ../bin/dispatcher --areas --db-dir=&quot;../db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;../db/osm3s_v0.7.3_areas&quot;</pre>
+<pre>chmod 666 &quot;../db/osm3s_v0.7.52_areas&quot;</pre>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
 <p>The third step then is to start the rule batch processor as a daemon:</p>
