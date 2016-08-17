@@ -96,7 +96,7 @@ struct Way_Skeleton
   
   Way_Skeleton(Way::Id_Type id_) : id(id_) {}
   
-  Way_Skeleton(void* data) : id(*(uint32*)data)
+  Way_Skeleton(void* data) : id(*(Id_Type*)data)
   {
     nds.reserve(*((uint16*)data + 2));
     for (int i(0); i < *((uint16*)data + 2); ++i)
@@ -110,7 +110,7 @@ struct Way_Skeleton
   Way_Skeleton(const Way& way)
       : id(way.id), nds(way.nds), geometry(way.geometry) {}
   
-  Way_Skeleton(uint32 id_, const std::vector< Node::Id_Type >& nds_, const std::vector< Quad_Coord >& geometry_)
+  Way_Skeleton(Id_Type id_, const std::vector< Node::Id_Type >& nds_, const std::vector< Quad_Coord >& geometry_)
       : id(id_), nds(nds_), geometry(geometry_) {}
   
   uint32 size_of() const
@@ -123,9 +123,14 @@ struct Way_Skeleton
     return (8 + 8 * *((uint16*)data + 2) + 8 * *((uint16*)data + 3));
   }
   
+  static Id_Type get_id(void* data)
+  {
+    return *(Id_Type*)data;
+  }
+  
   void to_data(void* data) const
   {
-    *(uint32*)data = id.val();
+    *(Id_Type*)data = id.val();
     *((uint16*)data + 2) = nds.size();
     *((uint16*)data + 3) = geometry.size();
     for (uint i(0); i < nds.size(); ++i)
@@ -163,7 +168,7 @@ struct Way_Delta
   
   Way_Delta() : id(0u), full(false) {}
   
-  Way_Delta(void* data) : id(*(uint32*)data), full(false)
+  Way_Delta(void* data) : id(*(Id_Type*)data), full(false)
   {
     if (*((uint32*)data + 1) == 0xffffffff)
     {
@@ -304,7 +309,7 @@ struct Way_Delta
   
   void to_data(void* data) const
   {
-    *(uint32*)data = id.val();
+    *(Id_Type*)data = id.val();
     if (full)
     {
       *((uint32*)data + 1) = 0xffffffff;

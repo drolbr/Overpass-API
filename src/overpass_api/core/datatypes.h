@@ -38,6 +38,8 @@
 
 struct String_Object
 {
+  typedef uint32 Id_Type;
+  
   String_Object(string s) : value(s) {}
   String_Object(void* data) : value()
   {
@@ -266,7 +268,9 @@ class Osm_Backend_Callback
 
 struct User_Data
 {
-  uint32 id;
+  typedef uint32 Id_Type;
+  
+  Id_Type id;
   string name;
   
   User_Data() : id(0) {}
@@ -410,9 +414,11 @@ const pair< TIndex, const TObject* >* binary_search_for_pair_id
 }
 
 
-template< typename Id_Type >
+template< typename Id_Type_ >
 struct Change_Entry
 {
+  typedef Id_Type_ Id_Type;
+  
   Change_Entry(const Id_Type& elem_id_, const Uint31_Index& old_idx_, const Uint31_Index& new_idx_)
       : old_idx(old_idx_), new_idx(new_idx_), elem_id(elem_id_) {}
 

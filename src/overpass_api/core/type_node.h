@@ -94,7 +94,7 @@ struct Node_Skeleton
   Node_Skeleton() : id(0ull) {}
   
   Node_Skeleton(void* data)
-    : id(*(uint64*)data), ll_lower(*(uint32*)((uint8*)data+8)) {}
+    : id(*(Id_Type*)data), ll_lower(*(uint32*)((uint8*)data+8)) {}
   
   Node_Skeleton(const Node& node)
   : id(node.id), ll_lower(node.ll_lower_) {}
@@ -115,9 +115,14 @@ struct Node_Skeleton
     return 12;
   }
   
+  static Id_Type get_id(void* data)
+  {
+    return *(Id_Type*)data;
+  }
+  
   void to_data(void* data) const
   {
-    *(uint64*)data = id.val();
+    *(Id_Type*)data = id.val();
     *(uint32*)((uint8*)data+8) = ll_lower;
   }
   

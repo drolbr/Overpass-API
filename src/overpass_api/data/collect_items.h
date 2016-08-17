@@ -310,7 +310,7 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
       if (stmt)
         rman.health_check(*stmt, 0, eval_map(result));
     }
-    if (predicate.match(it.object()))
+    if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
 }
@@ -328,7 +328,7 @@ void collect_items_discrete(Transaction& transaction,
       ::const_iterator >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
-    if (predicate.match(it.object()))
+    if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
 }
@@ -370,7 +370,7 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
       count = 0;
       rman.health_check(*stmt, 0, eval_map(result));
     }
-    if (predicate.match(it.object()))
+    if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
 }
@@ -409,7 +409,7 @@ void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
       count = 0;
       rman.health_check(stmt, 0, eval_map(result));
     }
-    if (predicate.match(it.object()))
+    if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
 }

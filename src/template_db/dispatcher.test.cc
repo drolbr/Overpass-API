@@ -33,6 +33,8 @@
 /* Sample class for TIndex */
 struct IntIndex
 {
+  typedef uint32 Id_Type;
+  
   IntIndex(uint32 i) : value(i) {}
   IntIndex(void* data) : value(*(uint32*)data) {}
   
@@ -77,6 +79,8 @@ struct IntIndex
 
 struct IntObject
 {
+  typedef uint32 Id_Type;
+  
   IntObject(void* data) : value(*(uint32*)data) {}
   IntObject(int i) : value(i) {}
   

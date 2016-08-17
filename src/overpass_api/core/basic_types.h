@@ -37,6 +37,8 @@ typedef unsigned long long uint64;
 
 struct Uint32_Index
 {
+  typedef uint32 Id_Type;
+  
   Uint32_Index() : value(0u) {}
   Uint32_Index(uint32 i) : value(i) {}
   Uint32_Index(void* data) : value(*(uint32*)data) {}
@@ -151,6 +153,8 @@ inline unsigned long long difference(Uint31_Index lhs, Uint31_Index rhs)
 
 struct Uint64
 {
+  typedef uint64 Id_Type;
+  
   Uint64() : value(0ull) {}
   Uint64(uint64 i) : value(i) {}
   Uint64(void* data) : value(*(uint64*)data) {}

@@ -64,36 +64,63 @@ public:
   Handle(Block_Backend_Basic_Ref& source_) : source(&source_), count(0), ptr(0), obj(0) {}
   Handle(const Handle& rhs) : source(rhs.source), count(rhs.count), ptr(0), obj(0) {}
   ~Handle() { delete obj; }
-  Handle& operator=(const Handle& rhs)
-  {
-    if (&rhs == this) return this;
-    delete obj;
-    obj = 0;
-    ptr = 0;
-    source = rhs.source;
-  }
-  const Object& object() const
-  {
-    void* new_ptr = source->get_ptr();
-    uint32 new_count = source->get_count();
-    if (new_ptr != ptr || new_count != count)
-    {
-      delete obj;
-      obj = 0;
-      ptr = new_ptr;
-      count = new_count;
-    }
-    if (obj == 0)
-      obj = new Object(ptr);
-    return *obj;
-  }
+  Handle& operator=(const Handle& rhs);
+  const Object& object() const;
+  typename Object::Id_Type id() const;
 
 private:
+  void update_ptr() const;
+  
   Block_Backend_Basic_Ref* source;
   mutable uint32 count;
   mutable void* ptr;
   mutable Object* obj;
 };
+
+
+template< typename Object >
+Handle< Object >& Handle< Object >::operator=(const Handle& rhs)
+{
+  if (&rhs == this) return this;
+  delete obj;
+  obj = 0;
+  ptr = 0;
+  source = rhs.source;
+  count = rhs.count;
+}
+  
+  
+template< typename Object >
+const Object& Handle< Object >::object() const
+{
+  update_ptr();
+  if (obj == 0)
+    obj = new Object(ptr);
+  return *obj;
+}
+  
+  
+template< typename Object >
+typename Object::Id_Type Handle< Object >::id() const
+{
+  update_ptr();
+  return Object::get_id(ptr);
+}
+  
+  
+template< typename Object >
+void Handle< Object >::update_ptr() const
+{
+  void* new_ptr = source->get_ptr();
+  uint32 new_count = source->get_count();
+  if (new_ptr != ptr || new_count != count)
+  {
+    delete obj;
+    obj = 0;
+    ptr = new_ptr;
+    count = new_count;
+  }
+}
 
 
 template< class TIndex >
@@ -134,6 +161,7 @@ struct Block_Backend_Basic_Iterator : public Block_Backend_Basic_Ref
   bool advance();
   const TIndex& index();
   const TObject& object();
+  const Handle< TObject >& handle() { return object_handle; }
   
   uint32 block_size;
   uint32* current_idx_pos;

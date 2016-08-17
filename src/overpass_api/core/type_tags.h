@@ -248,9 +248,11 @@ struct Tag_Index_Global
 };
 
 
-template< typename Id_Type >
+template< typename Id_Type_ >
 struct Tag_Object_Global
 {
+  typedef Id_Type_ Id_Type;
+  
   Uint31_Index idx;
   Id_Type id;
   

@@ -64,9 +64,9 @@ struct Relation
   
   Relation() : id(0u) {}
   
-  Relation(uint32 id_) : id(id_) {}
+  Relation(Id_Type id_) : id(id_) {}
   
-  Relation(uint32 id_, uint32 index_, const std::vector< Relation_Entry >& members_)
+  Relation(Id_Type id_, uint32 index_, const std::vector< Relation_Entry >& members_)
   : id(id_), index(index_), members(members_) {}
   
   static uint32 calc_index(const std::vector< uint32 >& memb_idxs)
@@ -114,7 +114,7 @@ struct Relation_Skeleton
   
   Relation_Skeleton(Relation::Id_Type id_) : id(id_) {}
   
-  Relation_Skeleton(void* data) : id(*(uint32*)data)
+  Relation_Skeleton(void* data) : id(*(Id_Type*)data)
   {
     members.resize(*((uint32*)data + 1));
     node_idxs.resize(*((uint32*)data + 2), 0u);
@@ -136,7 +136,7 @@ struct Relation_Skeleton
   Relation_Skeleton(const Relation& rel)
       : id(rel.id), members(rel.members), node_idxs(rel.node_idxs), way_idxs(rel.way_idxs) {}
   
-  Relation_Skeleton(uint32 id_, const std::vector< Relation_Entry >& members_,
+  Relation_Skeleton(Id_Type id_, const std::vector< Relation_Entry >& members_,
 		    const std::vector< Uint31_Index >& node_idxs_,
 		    const std::vector< Uint31_Index >& way_idxs_)
       : id(id_), members(members_), node_idxs(node_idxs_), way_idxs(way_idxs_) {}
@@ -151,9 +151,14 @@ struct Relation_Skeleton
     return 16 + 12 * *((uint32*)data + 1) + 4* *((uint32*)data + 2) + 4* *((uint32*)data + 3);
   }
   
+  static Id_Type get_id(void* data)
+  {
+    return *(Id_Type*)data;
+  }
+  
   void to_data(void* data) const
   {
-    *(uint32*)data = id.val();
+    *(Id_Type*)data = id.val();
     *((uint32*)data + 1) = members.size();
     *((uint32*)data + 2) = node_idxs.size();
     *((uint32*)data + 3) = way_idxs.size();
@@ -198,7 +203,7 @@ struct Relation_Delta
   
   Relation_Delta() : id(0u), full(false) {}
   
-  Relation_Delta(void* data) : id(*(uint32*)data), full(false)
+  Relation_Delta(void* data) : id(*(Id_Type*)data), full(false)
   {
     if (*((uint32*)data + 1) == 0xffffffff)
     {
@@ -372,7 +377,7 @@ struct Relation_Delta
   
   void to_data(void* data) const
   {
-    *(uint32*)data = id.val();
+    *(Id_Type*)data = id.val();
     if (full)
     {
       *((uint32*)data + 1) = 0xffffffff;
