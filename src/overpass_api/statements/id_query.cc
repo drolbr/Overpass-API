@@ -379,10 +379,6 @@ void get_elements(uint64 lower, uint64 upper, Statement* stmt, Resource_Manager&
     ids.push_back(i);
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
   
-  std::cout<<"DEBUG\n";
-  for (typename std::vector< Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-    std::cout<<"0x"<<std::hex<<it->val()<<'\t'<<std::dec<<::lat(it->val(), 0)<<'\t'<<::lon(it->val(),0)<<'\n';
-        
   if (rman.get_desired_timestamp() == NOW)
     collect_items_discrete(stmt, rman, *current_skeleton_file_properties< Skeleton >(), req,
         Id_Predicate< Skeleton >(ids), current_result);
@@ -399,94 +395,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
   
-  std::cout<<ref.val()<<'\n';
-  if (ref.val() == 42)
-  {
-//     {
-//     std::cout<<"DEBUG\n";
-//     std::vector< std::pair< Uint64, Uint32_Index > > idx_by_id;
-// 
-//     Block_Backend< Uint32_Index, Node_Skeleton > elems_db
-//         (rman.get_transaction()->data_index(osm_base_settings().NODES));
-//     for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
-//         it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
-//     {
-//       idx_by_id.push_back(std::make_pair(it.object().id, it.index()));
-//       
-//       if (idx_by_id.size() >= 16777216)
-//       {
-//         std::cout<<std::hex<<idx_by_id.front().second.val()<<" to "<<std::hex<<idx_by_id.back().second.val()<<":\n";
-//         std::sort(idx_by_id.begin(), idx_by_id.end());
-//         
-//         uint64 num_matches = 0;
-//         
-//         Random_File< Uint32_Index > random(rman.get_transaction()->random_index(osm_base_settings().NODES));
-//         for (std::vector< std::pair< Uint64, Uint32_Index > >::const_iterator it2 = idx_by_id.begin();
-//             it2 != idx_by_id.end(); ++it2)
-//         {
-//           if (random.get(it2->first.val()) == it2->second)
-//           {
-//             ++num_matches;
-//             if (num_matches % 1048576 == 0)
-//               std::cout<<"  "<<std::dec<<num_matches<<" matched so far.\n";
-//           }
-//           else
-//             std::cout<<"node "<<std::dec<<it2->first.val()<<" at "<<std::hex<<it2->second.val()
-//                 <<" has map index "<<random.get(it2->first.val()).val()<<'\n';
-//         }
-//         
-//         std::cout<<"  "<<std::dec<<num_matches<<" matched.\n";
-//         
-//         idx_by_id.clear();
-//       }
-//     }
-//     std::cout<<"done\n";
-//     }
-    
-    std::cout<<"DEBUG Attic\n";
-    std::vector< std::pair< Uint64, Uint31_Index > > idx_by_id;
-    
-    Block_Backend< Uint31_Index, Attic< Node_Skeleton > > elems_db
-        (rman.get_transaction()->data_index(attic_settings().NODES));
-    for (Block_Backend< Uint31_Index, Attic< Node_Skeleton > >::Flat_Iterator
-        it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
-    {
-      idx_by_id.push_back(std::make_pair(it.object().id, it.index()));
-      
-      if (idx_by_id.size() >= 16777216)
-      {
-        std::cout<<std::hex<<idx_by_id.front().second.val()<<" to "<<std::hex<<idx_by_id.back().second.val()<<":\n";
-        std::sort(idx_by_id.begin(), idx_by_id.end());
-        
-        uint64 num_matches = 0;
-        
-        Random_File< Uint31_Index > random(rman.get_transaction()->random_index(attic_settings().NODES));
-        for (std::vector< std::pair< Uint64, Uint31_Index > >::const_iterator it2 = idx_by_id.begin();
-            it2 != idx_by_id.end(); ++it2)
-        {
-          Uint31_Index idx = random.get(it2->first.val());
-          if (idx.val() == 0xff || idx == it2->second)
-          {
-            ++num_matches;
-            if (num_matches % 1048576 == 0)
-              std::cout<<"  "<<std::dec<<num_matches<<" matched so far.\n";
-          }
-          else
-            std::cout<<"node "<<std::dec<<it2->first.val()<<" at "<<std::hex<<it2->second.val()
-                <<' '<<std::dec<<::lat(it2->second.val(), 0)<<' '<<::lon(it2->second.val(),0)
-                <<" has map index "<<std::hex<<idx.val()
-                <<' '<<std::dec<<::lat(idx.val(), 0)<<' '<<::lon(idx.val(),0)
-                <<'\n';
-        }
-        
-        std::cout<<"  "<<std::dec<<num_matches<<" matched.\n";
-        
-        idx_by_id.clear();
-      }
-    }
-    std::cout<<"done\n";
-  }
-  else if (type == NODE)
+  if (type == NODE)
     get_elements(lower.val(), upper.val(), this, rman, into.nodes, into.attic_nodes);
   else if (type == WAY)
     get_elements(lower.val(), upper.val(), this, rman, into.ways, into.attic_ways);

@@ -887,20 +887,6 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
 {
   std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > result;
   
-  for (typename std::map< std::pair< Id_Type, std::string >, std::vector< Attic< std::string > > >::const_iterator
-      it = tags_by_id_and_time.begin(); it != tags_by_id_and_time.end(); ++it)
-  {
-    for (typename std::vector< Attic< std::string > >::const_iterator it2 = it->second.begin();
-        it2 != it->second.end(); ++it2)
-    {
-      if (*it2 == void_tag_value() + " " && std::distance(it->second.begin(), it2) < it->second.size() - 1)
-        std::cerr<<"tags_by_id_and_time\t"
-            <<it->second.size()<<' '<<std::distance(it->second.begin(), it2)<<'\t'
-            <<std::dec<<it->first.first.val()<<'\t'<<it->first.second
-            <<'\t'<<std::dec<<it2->timestamp<<'\t'<<std::string(*it2)<<'\n';
-    }
-  }
-  
   typename std::map< std::pair< Id_Type, std::string >, std::vector< Attic< std::string > > >
       ::const_iterator tit = tags_by_id_and_time.begin();
   for (typename std::map< Id_Type, std::vector< Attic< Uint31_Index > > >::const_iterator
@@ -1009,8 +995,6 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
 	    // If the older index is non-void then we write an entry for it
             if (it2->val() != 0u && *tit2 != void_tag_value() && *tit2 != void_tag_value() + " ")
             {
-              if (*tit2 == void_tag_value() + " ")
-                std::cerr<<"insert "<<tit->first.second<<' '<<std::dec<<it->first.val()<<'\n';
               result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, *tit2)]
                 .insert(Attic< Id_Type >(it->first, it2->timestamp));
             }
