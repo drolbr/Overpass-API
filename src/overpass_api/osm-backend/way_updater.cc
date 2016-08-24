@@ -966,13 +966,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
         new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
         
-    for (std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > >::const_iterator
-        it = new_attic_local_tags.begin(); it != new_attic_local_tags.end(); ++it)
-    {
-      if (it->first.value == void_tag_value() + " ")
-        std::cerr<<"void_tag_value_odd "<<std::hex<<it->first.key<<'\n';
-    }
-	
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > changelog
         = compute_changelog(new_data, implicitly_moved_skeletons,
