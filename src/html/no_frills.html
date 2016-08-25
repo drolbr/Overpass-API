@@ -29,7 +29,7 @@ The comands are explained afterwards:</p>
 gunzip &lt;osm-3s_v0.7.52.tar.gz | tar xvf -
 cd osm-3s_v0.7.52/
 ./configure --prefix=&quot;`pwd`&quot;
-make CXXFLAGS=&quot;-O3&quot;</pre>
+make</pre>
 
 <p><a href="#clone">Clone the database</a> or <a href="#startup">import a planet file</a>:</p>
 <pre>mkdir -p db</pre>
@@ -75,9 +75,9 @@ cd osm-3s_v0.7.52/</pre>
 <pre>../src/configure --prefix=&quot;`pwd`&quot;</pre>
 
 <p>Generate the executables:</p>
-<pre>make CXXFLAGS=&quot;-O3&quot;</pre>
+<pre>make</pre>
 <p>Another system than Linux may require here some extra parameters. For example, FreeBSD needs <em>-DNATIVE_LARGE_FILES</em>, because it doesn't have a separate <em>open64</em> function:</p>
-<pre>make CXXFLAGS=&quot;-O3&quot; <strong>CPPFLAGS=&quot;-DNATIVE_LARGE_FILES&quot;</strong></pre>
+<pre>make <strong>CPPFLAGS=&quot;-DNATIVE_LARGE_FILES&quot;</strong></pre>
 
 
 <h2><a name="clone">Fast Startup</a></h2>

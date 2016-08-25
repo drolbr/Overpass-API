@@ -32,7 +32,7 @@
 <p>To compile the software, you also need the <em>expat</em> library. If it is not already installed, you can get it on e.g. Ubuntu with:</p>
 <pre>sudo apt-get install expat libexpat1-dev zlib1g-dev</pre>
 <p>You can also include expat from sources; this way you don't need root permissions just to install expat: Download the latest tarball from <a href="http://sourceforge.net/projects/expat/">the project's page</a>. Expat itself is installed by unpacking, then <em>configure; make; make install</em>. To use these libraries, insert <em>CPPFLAGS=&quot;-I/path/to/expat/include&quot;</em> and <em>LDFLAGS=&quot;-static -L/path/to/expat/lib/&quot;</em> into the make command:</p>
-<pre>make <strong>CPPFLAGS=&quot;-I/path/to/expat/include&quot;</strong> CXXFLAGS=&quot;-O3&quot; <strong>LDFLAGS=&quot;-static -L/path/to/expat/lib/&quot;</strong> install</pre>
+<pre>make <strong>CPPFLAGS=&quot;-I/path/to/expat/include&quot;</strong> <strong>LDFLAGS=&quot;-static -L/path/to/expat/lib/&quot;</strong> install</pre>
 <p>where <em>/path/to/expat</em> must be replaced by the path that you have chosen in the <em>configure</em> step of <em>expat</em>. Note: If you need to supply more than one <em>CPPFLAGS</em> parameter this way, you should instead use one <em>CPPFLAGS</em> parameter which has both the arguments inside the quotation marks, separated by a blank.</p>
 
 <h2><a name="install">Software Installation</a></h2>
@@ -41,9 +41,9 @@
 <pre>./configure --prefix=&quot;`pwd`&quot;</pre>
 
 <p>Generate the executables:</p>
-<pre>make CXXFLAGS=&quot;-O3&quot;</pre>
+<pre>make</pre>
 <p>Other system than Linux may require here some extra parameters. For example, FreeBSD needs <em>-DNATIVE_LARGE_FILES</em>, because it doesn't have a separate <em>open64</em> function:</p>
-<pre>make CXXFLAGS=&quot;-O3&quot; <strong>CPPFLAGS=&quot;-DNATIVE_LARGE_FILES&quot;</strong></pre>
+<pre>make <strong>CPPFLAGS=&quot;-DNATIVE_LARGE_FILES&quot;</strong></pre>
 
 
 <h2><a name="clone">Fast Startup</a></h2>
