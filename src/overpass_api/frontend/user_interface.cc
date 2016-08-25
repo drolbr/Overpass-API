@@ -354,9 +354,6 @@ uint32 probe_client_token()
   if (ip_addr.find(".") != string::npos)
     return parse_ipv4_address(ip_addr);
   
-  string::size_type pos = ip_addr.find("::");
-  string::size_type old_pos = 0;
-  
   vector< uint16 > ipv6_address = (ip_addr.find("::") == string::npos ?
       parse_full_ipv6_address(ip_addr) :
       parse_short_ipv6_address(ip_addr));

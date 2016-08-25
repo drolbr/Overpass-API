@@ -67,7 +67,6 @@ struct Area_Updater : public Area_Usage_Listener
   virtual void flush();
   
 private:
-  uint32 update_counter;
   Transaction* transaction;
   bool external_transaction;
   string db_dir;

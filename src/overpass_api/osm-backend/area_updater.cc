@@ -32,14 +32,12 @@
 using namespace std;
 
 Area_Updater::Area_Updater(Transaction& transaction_)
-  : update_counter(0), transaction(&transaction_),
-    external_transaction(true),
+  : transaction(&transaction_), external_transaction(true),
     total_area_blocks_count(0)
 {}
 
 Area_Updater::Area_Updater(string db_dir_)
-  : update_counter(0), transaction(0),
-    external_transaction(false),
+  : transaction(0), external_transaction(false),
     db_dir(db_dir_), total_area_blocks_count(0)
 {}
 

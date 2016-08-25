@@ -56,7 +56,6 @@ class Polygon_Query_Statement : public Output_Statement
     bool covers_large_area() const { return covers_large_area_; }
 
   private:
-    unsigned int type;
     vector< Aligned_Segment > segments;
     bool covers_large_area_;
     vector< Query_Constraint* > constraints;
