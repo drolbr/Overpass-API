@@ -1114,9 +1114,6 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   for (typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
     it(index_values.begin()); it != index_values.end(); ++it)
   {
-    typename map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
-    debug_it(it);
-    
     if ((split_it != split.end()) && (it->first == *split_it))
     {
       *(uint32*)dest.ptr = pos - dest.ptr;

@@ -138,8 +138,8 @@ Generic_Statement_Maker< User_Statement > User_Statement::statement_maker("user"
 
 
 User_Statement::User_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
-    : Output_Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation_)
+    : Output_Statement(line_number_), bbox_limitation(bbox_limitation_)
 {
   map< string, string > attributes;
   
@@ -259,10 +259,10 @@ void User_Statement::calc_ranges
 void User_Statement::execute(Resource_Manager& rman)
 {
   Set into;
+  User_Constraint constraint(*this);
   
   if ((result_type == "") || (result_type == "node"))
   {
-    User_Constraint constraint(*this);
     set< pair< Uint32_Index, Uint32_Index > > ranges;
     constraint.get_ranges(rman, ranges);
     get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
@@ -270,12 +270,10 @@ void User_Statement::execute(Resource_Manager& rman)
          vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
          *osm_base_settings().NODES, *attic_settings().NODES);  
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
-    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
   }
   
   if ((result_type == "") || (result_type == "way"))
   {
-    User_Constraint constraint(*this);
     set< pair< Uint31_Index, Uint31_Index > > ranges;
     constraint.get_ranges(rman, ranges);
     get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
@@ -283,12 +281,10 @@ void User_Statement::execute(Resource_Manager& rman)
          vector< Way::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
          *osm_base_settings().WAYS, *attic_settings().WAYS);  
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.ways, into.attic_ways);
-    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
   }
   
   if ((result_type == "") || (result_type == "relation"))
   {
-    User_Constraint constraint(*this);
     set< pair< Uint31_Index, Uint31_Index > > ranges;
     constraint.get_ranges(rman, ranges);
     get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
@@ -296,8 +292,13 @@ void User_Statement::execute(Resource_Manager& rman)
          vector< Relation::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
          *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);  
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.relations, into.attic_relations);
-    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
   }
+  
+  if (bbox_limitation)
+    bbox_limitation->filter(rman, into, rman.get_desired_timestamp());
+  constraint.filter(*this, rman, into, rman.get_desired_timestamp());
+  if (bbox_limitation)
+    bbox_limitation->filter(*this, rman, into, rman.get_desired_timestamp());
 
   transfer_output(rman, into);
   rman.health_check(*this);

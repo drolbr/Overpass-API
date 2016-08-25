@@ -46,7 +46,7 @@ AC_FUNC_STAT
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([clock_gettime floor ftruncate getcwd munmap regcomp select shm_open socket sqrt strnlen])
 
-#AC_CONFIG_FILES([Makefile test-bin/Makefile])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile test-bin/Makefile])
+#AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 AC_SYS_LARGEFILE

@@ -57,6 +57,7 @@ class User_Statement : public Output_Statement
     string user_name;
     string result_type;
     vector< Query_Constraint* > constraints;
+    Query_Constraint* bbox_limitation;
 };
 
 #endif

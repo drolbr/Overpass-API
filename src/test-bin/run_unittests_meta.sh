@@ -38,6 +38,9 @@ user_test()
 {
   $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 >run/$3/user_$1_$2.log
   $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 tags >run/$3/user_tags_$1_$2.log
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 bbox >run/$3/user_bbox_$1_$2.log
+  $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 tags_bbox >run/$3/user_bbox_tags_$1_$2.log
+  
   echo "\
 <osm-script timeout=\"86400\">\
 \
@@ -76,6 +79,45 @@ user_test()
 \
 </osm-script>
 " >run/$3/tags_query_$2.xml  
+  
+  echo "\
+<osm-script timeout=\"86400\" bbox=\"10,1,10.5,1.5\">\
+\
+<user uid=\"$2\"/>\
+<print mode=\"meta\"/>\
+\
+</osm-script>
+" >run/$3/uid_bbox_query_$2.xml  
+  echo "\
+<osm-script timeout=\"86400\" bbox=\"10,1,10.5,1.5\">\
+\
+<user name=\"User_$2\"/>\
+<print mode=\"meta\"/>\
+\
+</osm-script>
+" >run/$3/name_bbox_query_$2.xml  
+
+  echo "\
+<osm-script timeout=\"86400\" bbox=\"10,1,10.5,1.5\">\
+\
+<query type=\"node\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+<query type=\"way\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+<query type=\"relation\">\
+  <user name=\"User_$2\"/>\
+  <has-kv k=\"foo\" v=\"bar\"/>\
+</query>\
+<print mode=\"meta\"/>\
+\
+</osm-script>
+" >run/$3/tags_bbox_query_$2.xml  
 
   $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/uid_query_$2.xml >run/$3/uid_$1_$2.log
   $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/name_query_$2.xml >run/$3/name_$1_$2.log
@@ -84,6 +126,14 @@ user_test()
   RES=$RES`diff -q run/$3/user_$1_$2.log run/$3/uid_$1_$2.log`
   RES=$RES`diff -q run/$3/user_$1_$2.log run/$3/name_$1_$2.log`
   RES=$RES`diff -q run/$3/user_tags_$1_$2.log run/$3/tags_$1_$2.log`
+  
+  $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/uid_bbox_query_$2.xml >run/$3/uid_bbox_$1_$2.log
+  $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/name_bbox_query_$2.xml >run/$3/name_bbox_$1_$2.log
+  $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/tags_bbox_query_$2.xml >run/$3/tags_bbox_$1_$2.log
+
+  RES=$RES`diff -q run/$3/user_bbox_$1_$2.log run/$3/uid_bbox_$1_$2.log`
+  RES=$RES`diff -q run/$3/user_bbox_$1_$2.log run/$3/name_bbox_$1_$2.log`
+  RES=$RES`diff -q run/$3/user_bbox_tags_$1_$2.log run/$3/tags_bbox_$1_$2.log`
 };
 
 
@@ -242,35 +292,4 @@ if [[ -n $RES || -s run/meta_1/diff_stderr.log ]]; then
 {
   echo `date +%T` "Test meta 1 succeeded."
   rm -R run/meta_1
-}; fi
-
-exit 0
-
-
-# Test the augmented diffs
-
-# Prepare testing the statements
-date +%T
-mkdir -p run/meta_2
-rm -fR run/meta_2/*
-$BASEDIR/bin/update_database --db-dir=run/meta_2/ --version=mock-up-init --meta <input/meta_2/augmented_init.osm
-
-# do the differential update including start/stop of dispatcher
-date +%T
-$BASEDIR/bin/dispatcher --osm-base --meta --db-dir=run/meta_2/ &
-sleep 1
-rm -f run/meta_2/transactions.log
-$BASEDIR/bin/update_database --version=mock-up-meta --produce-diff --meta <input/meta_2/augmented_source.osm >run/meta_2/augmented_diff.osm
-cat run/meta_2/transactions.log
-$BASEDIR/bin/dispatcher --terminate
-
-# compare outcome to expected outcome
-RES=`diff -q expected/meta_2/augmented_diff.osm run/meta_2/augmented_diff.osm`
-if [[ -n $RES || ! -f run/meta_2/augmented_diff.osm ]]; then
-{
-  echo `date +%T` "Test meta 2 FAILED."
-}; else
-{
-  echo `date +%T` "Test meta 2 succeeded."
-  rm -R run/meta_2
 }; fi

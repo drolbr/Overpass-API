@@ -175,5 +175,5 @@ nobase_dist_HEADERS = pt_diagrams/test_output.h pt_diagrams/processed_input.h pt
 EXTRA_DIST = html/command_line.html html/full_installation.html html/index.html html/no_frills.html html/open_layers_bbox.html html/open_layers_fixed.html html/open_layers_mashup.html html/open_layers_multilayer.html html/open_layers_popup.html html/output_formats.html html/overpass.js html/public_transport.html html/query_form.html html/technical_overview.html rules/areas.osm3s
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-#SUBDIRS = test-bin
-SUBDIRS =
+SUBDIRS = test-bin
+#SUBDIRS =
