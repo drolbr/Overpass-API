@@ -202,7 +202,7 @@ public:
 private:
   File_Blocks_Index< TIndex >* index;
   uint32 block_size;
-  uint32 max_size;
+  uint32 compression_factor;
   int compression_method;
   bool writeable;
   mutable uint read_count_;
@@ -507,14 +507,14 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
     (File_Blocks_Index_Base* index_) : 
      index((File_Blocks_Index< TIndex >*)index_),
      block_size(index->get_block_size()),
-     max_size(index->get_max_size()),
+     compression_factor(index->get_compression_factor()),
      compression_method(index->get_compression_method()),
      writeable(index->writeable()),
      read_count_(0),
      data_file(index->get_data_file_name(),
 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
 	       S_666, "File_Blocks::File_Blocks::1"),
-     buffer(index->get_block_size() * index->get_max_size() * 2)      // increased buffer size for lz4
+     buffer(index->get_block_size() * index->get_compression_factor() * 2)      // increased buffer size for lz4
 {
   // cerr<<"  "<<index->get_data_file_name()<<'\n'; //Debug
   
@@ -574,13 +574,13 @@ void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
   {
     Void_Pointer< void > input(block_size * it.block_it->size);
     data_file.read((uint8*)input.ptr, block_size * it.block_it->size, "File_Blocks::read_block::2");
-    Zlib_Inflate().decompress(input.ptr, block_size * it.block_it->size, buffer.ptr, block_size * max_size);
+    Zlib_Inflate().decompress(input.ptr, block_size * it.block_it->size, buffer.ptr, block_size * compression_factor);
   }
   else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
   {
     Void_Pointer< void > input(block_size * it.block_it->size);
     data_file.read((uint8*)input.ptr, block_size * it.block_it->size, "File_Blocks::read_block::2");
-    LZ4_Inflate().decompress(input.ptr, block_size * it.block_it->size, buffer.ptr, block_size * max_size);
+    LZ4_Inflate().decompress(input.ptr, block_size * it.block_it->size, buffer.ptr, block_size * compression_factor);
   }
 
   ++read_count_;
@@ -600,12 +600,12 @@ void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
   else if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
   {
     data_file.read((uint8*)buffer.ptr, block_size * it.block_it->size, "File_Blocks::read_block::4");
-    Zlib_Inflate().decompress(buffer.ptr, block_size * it.block_it->size, buffer_, block_size * max_size);
+    Zlib_Inflate().decompress(buffer.ptr, block_size * it.block_it->size, buffer_, block_size * compression_factor);
   }
   else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
   {
     data_file.read((uint8*)buffer.ptr, block_size * it.block_it->size, "File_Blocks::read_block::4");
-    LZ4_Inflate().decompress(buffer.ptr, block_size * it.block_it->size, buffer_, block_size * max_size);
+    LZ4_Inflate().decompress(buffer.ptr, block_size * it.block_it->size, buffer_, block_size * compression_factor);
   }
   
   if (!(it.block_it->index ==
@@ -712,14 +712,14 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
   {
     target = buffer.ptr;
-    uint32 compressed_size = Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * max_size);
+    uint32 compressed_size = Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * compression_factor);
     data_size = (compressed_size - 1) / block_size + 1;
     zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size); 
   }
   else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
   {
     target = buffer.ptr;
-    uint32 compressed_size = LZ4_Deflate().compress(buf, *(uint32*)buf, target, block_size * max_size * 2);
+    uint32 compressed_size = LZ4_Deflate().compress(buf, *(uint32*)buf, target, block_size * compression_factor * 2);
     data_size = (compressed_size - 1) / block_size + 1;
     zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size);
   }
@@ -764,12 +764,12 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
     {
       target = buffer.ptr;
-      data_size = (Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * max_size) - 1) / block_size + 1;
+      data_size = (Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * compression_factor) - 1) / block_size + 1;
     }
     else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
     {
       target = buffer.ptr;
-      data_size = (LZ4_Deflate().compress(buf, *(uint32*)buf, target, block_size * max_size * 2) - 1) / block_size + 1;
+      data_size = (LZ4_Deflate().compress(buf, *(uint32*)buf, target, block_size * compression_factor * 2) - 1) / block_size + 1;
     }
     
     it.block_it->pos = allocate_block(data_size);

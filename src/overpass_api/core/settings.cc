@@ -50,7 +50,7 @@ struct OSM_File_Properties : public File_Properties
   const string& get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
   
   uint32 get_block_size() const { return block_size/8; }
-  uint32 get_max_size() const { return 8; }
+  uint32 get_compression_factor() const { return 8; }
   uint32 get_compression_method() const {
 #ifdef HAVE_LZ4
     return File_Blocks_Index< TVal >::LZ4_COMPRESSION;
@@ -59,8 +59,8 @@ struct OSM_File_Properties : public File_Properties
 #endif
   }
   uint32 get_map_block_size() const { return map_block_size/8; }
-  uint32 get_map_max_size() const { return 8; }
-  uint32 get_map_compression_method() const { return File_Blocks_Index< TVal >::NO_COMPRESSION; }
+  uint32 get_map_compression_factor() const { return 8; }
+  uint32 get_map_compression_method() const { return File_Blocks_Index< TVal >::ZLIB_COMPRESSION; }
   
   vector< bool > get_data_footprint(const string& db_dir) const
   {

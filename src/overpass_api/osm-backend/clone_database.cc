@@ -40,8 +40,8 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 {
   try
   {
-    if (src_file_prop.get_block_size() * src_file_prop.get_max_size()
-        != dest_file_prop.get_block_size() * dest_file_prop.get_max_size())
+    if (src_file_prop.get_block_size() * src_file_prop.get_compression_factor()
+        != dest_file_prop.get_block_size() * dest_file_prop.get_compression_factor())
     {
       std::cout<<"Block sizes of source and destination format are incompatible.\n";
       return;
@@ -95,12 +95,12 @@ void clone_map_file(const File_Properties& file_prop, Transaction& transaction, 
     {
       if (src_idx.blocks[i].pos != src_idx.npos)
       {
-	for (uint32 j = 0; j < src_idx.get_block_size()/TIndex::max_size_of(); ++j)
+	for (uint32 j = 0; j < src_idx.get_block_size()*src_idx.get_compression_factor()/TIndex::max_size_of(); ++j)
 	{
 	  TIndex val =
-	      src_file.get(i*(src_idx.get_block_size()/TIndex::max_size_of()) + j);
+	      src_file.get(i*(src_idx.get_block_size()*src_idx.get_compression_factor()/TIndex::max_size_of()) + j);
 	  if (!(val == TIndex(uint32(0))))
-	    dest_file.put(i*(src_idx.get_block_size()/TIndex::max_size_of()) + j, val);
+	    dest_file.put(i*(src_idx.get_block_size()*src_idx.get_compression_factor()/TIndex::max_size_of()) + j, val);
 	}
       }
     }
@@ -159,54 +159,56 @@ void clone_database(Transaction& transaction, string dest_db_dir)
 				 transaction, dest_db_dir);
   clone_bin_file< Uint32_Index >(*meta_settings().USER_INDICES, *meta_settings().USER_INDICES,
 				 transaction, dest_db_dir);
-  
-  clone_bin_file< Uint31_Index >(*attic_settings().NODES, *attic_settings().NODES,
-				 transaction, dest_db_dir);
-  clone_map_file< Node_Skeleton::Id_Type, Uint31_Index >(*attic_settings().NODES, transaction, dest_db_dir);
-  clone_bin_file< Uint31_Index >(*attic_settings().NODES_UNDELETED, *attic_settings().NODES_UNDELETED,
-				 transaction, dest_db_dir);
-  clone_bin_file< Node::Id_Type >(*attic_settings().NODE_IDX_LIST, *attic_settings().NODE_IDX_LIST,
-				  transaction, dest_db_dir);
-  clone_bin_file< Tag_Index_Local >(*attic_settings().NODE_TAGS_LOCAL, *attic_settings().NODE_TAGS_LOCAL,
-				    transaction, dest_db_dir);
-  clone_bin_file< Tag_Index_Global >(*attic_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL,
-				     transaction, dest_db_dir);
-  clone_bin_file< Uint31_Index >(*attic_settings().NODES_META, *attic_settings().NODES_META,
-				 transaction, dest_db_dir);
-  clone_bin_file< Timestamp >(*attic_settings().NODE_CHANGELOG, *attic_settings().NODE_CHANGELOG,
-			      transaction, dest_db_dir);
-  
-  clone_bin_file< Uint31_Index >(*attic_settings().WAYS, *attic_settings().WAYS,
-				 transaction, dest_db_dir);
-  clone_map_file< Way_Skeleton::Id_Type, Uint31_Index >(*attic_settings().WAYS, transaction, dest_db_dir);
-  clone_bin_file< Uint31_Index >(*attic_settings().WAYS_UNDELETED, *attic_settings().WAYS_UNDELETED,
-				 transaction, dest_db_dir);
-  clone_bin_file< Way::Id_Type >(*attic_settings().WAY_IDX_LIST, *attic_settings().WAY_IDX_LIST,
-				 transaction, dest_db_dir);
-  clone_bin_file< Tag_Index_Local >(*attic_settings().WAY_TAGS_LOCAL, *attic_settings().WAY_TAGS_LOCAL,
-				    transaction, dest_db_dir);
-  clone_bin_file< Tag_Index_Global >(*attic_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL,
-				     transaction, dest_db_dir);
-  clone_bin_file< Uint31_Index >(*attic_settings().WAYS_META, *attic_settings().WAYS_META,
-				 transaction, dest_db_dir);
-  clone_bin_file< Timestamp >(*attic_settings().WAY_CHANGELOG, *attic_settings().WAY_CHANGELOG,
-			      transaction, dest_db_dir);
-  
-  clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS, *attic_settings().RELATIONS,
-				 transaction, dest_db_dir);
-  clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir);
-  clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS_UNDELETED, *attic_settings().RELATIONS_UNDELETED,
-				 transaction, dest_db_dir);
-  clone_bin_file< Relation::Id_Type >(*attic_settings().RELATION_IDX_LIST, *attic_settings().RELATION_IDX_LIST,
-				      transaction, dest_db_dir);
-  clone_bin_file< Tag_Index_Local >(
-      *attic_settings().RELATION_TAGS_LOCAL, *attic_settings().RELATION_TAGS_LOCAL,
-      transaction, dest_db_dir);
-  clone_bin_file< Tag_Index_Global >(
-      *attic_settings().RELATION_TAGS_GLOBAL, *attic_settings().RELATION_TAGS_GLOBAL,
-      transaction, dest_db_dir);
-  clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS_META, *attic_settings().RELATIONS_META,
-				 transaction, dest_db_dir);
-  clone_bin_file< Timestamp >(*attic_settings().RELATION_CHANGELOG, *attic_settings().RELATION_CHANGELOG,
-			      transaction, dest_db_dir);
+
+  {
+    clone_bin_file< Uint31_Index >(*attic_settings().NODES, *attic_settings().NODES,
+                                   transaction, dest_db_dir);
+    clone_map_file< Node_Skeleton::Id_Type, Uint31_Index >(*attic_settings().NODES, transaction, dest_db_dir);
+    clone_bin_file< Uint31_Index >(*attic_settings().NODES_UNDELETED, *attic_settings().NODES_UNDELETED,
+                                   transaction, dest_db_dir);
+    clone_bin_file< Node::Id_Type >(*attic_settings().NODE_IDX_LIST, *attic_settings().NODE_IDX_LIST,
+                                    transaction, dest_db_dir);
+    clone_bin_file< Tag_Index_Local >(*attic_settings().NODE_TAGS_LOCAL, *attic_settings().NODE_TAGS_LOCAL,
+                                      transaction, dest_db_dir);
+    clone_bin_file< Tag_Index_Global >(*attic_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL,
+                                       transaction, dest_db_dir);
+    clone_bin_file< Uint31_Index >(*attic_settings().NODES_META, *attic_settings().NODES_META,
+                                   transaction, dest_db_dir);
+    clone_bin_file< Timestamp >(*attic_settings().NODE_CHANGELOG, *attic_settings().NODE_CHANGELOG,
+                                transaction, dest_db_dir);
+    
+    clone_bin_file< Uint31_Index >(*attic_settings().WAYS, *attic_settings().WAYS,
+                                   transaction, dest_db_dir);
+    clone_map_file< Way_Skeleton::Id_Type, Uint31_Index >(*attic_settings().WAYS, transaction, dest_db_dir);
+    clone_bin_file< Uint31_Index >(*attic_settings().WAYS_UNDELETED, *attic_settings().WAYS_UNDELETED,
+                                   transaction, dest_db_dir);
+    clone_bin_file< Way::Id_Type >(*attic_settings().WAY_IDX_LIST, *attic_settings().WAY_IDX_LIST,
+                                   transaction, dest_db_dir);
+    clone_bin_file< Tag_Index_Local >(*attic_settings().WAY_TAGS_LOCAL, *attic_settings().WAY_TAGS_LOCAL,
+                                      transaction, dest_db_dir);
+    clone_bin_file< Tag_Index_Global >(*attic_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL,
+                                       transaction, dest_db_dir);
+    clone_bin_file< Uint31_Index >(*attic_settings().WAYS_META, *attic_settings().WAYS_META,
+                                   transaction, dest_db_dir);
+    clone_bin_file< Timestamp >(*attic_settings().WAY_CHANGELOG, *attic_settings().WAY_CHANGELOG,
+                                transaction, dest_db_dir);
+    
+    clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS, *attic_settings().RELATIONS,
+                                   transaction, dest_db_dir);
+    clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir);
+    clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS_UNDELETED, *attic_settings().RELATIONS_UNDELETED,
+                                   transaction, dest_db_dir);
+    clone_bin_file< Relation::Id_Type >(*attic_settings().RELATION_IDX_LIST, *attic_settings().RELATION_IDX_LIST,
+                                        transaction, dest_db_dir);
+    clone_bin_file< Tag_Index_Local >(
+        *attic_settings().RELATION_TAGS_LOCAL, *attic_settings().RELATION_TAGS_LOCAL,
+        transaction, dest_db_dir);
+    clone_bin_file< Tag_Index_Global >(
+        *attic_settings().RELATION_TAGS_GLOBAL, *attic_settings().RELATION_TAGS_GLOBAL,
+        transaction, dest_db_dir);
+    clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS_META, *attic_settings().RELATIONS_META,
+                                   transaction, dest_db_dir);
+    clone_bin_file< Timestamp >(*attic_settings().RELATION_CHANGELOG, *attic_settings().RELATION_CHANGELOG,
+                                transaction, dest_db_dir);
+  }
 }

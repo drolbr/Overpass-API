@@ -78,6 +78,14 @@ Dispatcher_Client::Dispatcher_Client
 }
 
 
+bool file_present(const std::string& full_path)
+{
+  struct stat stat_buf;
+  int result = stat(full_path.c_str(), &stat_buf);
+  return result == 0;
+}
+
+
 Dispatcher_Client::~Dispatcher_Client()
 {
   close(socket_descriptor);

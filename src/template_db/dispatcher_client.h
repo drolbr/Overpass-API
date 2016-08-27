@@ -96,4 +96,7 @@ class Dispatcher_Client
 };
 
 
+bool file_present(const std::string& full_path);
+
+
 #endif

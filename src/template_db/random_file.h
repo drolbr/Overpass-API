@@ -50,7 +50,7 @@ public:
 private:
   bool changed;
   uint32 index_size;
-  uint32 max_size;
+  uint32 compression_factor;
   
   Raw_File val_file;
   Random_File_Index* index;
@@ -71,14 +71,14 @@ private:
 template< typename Key, typename Value >
 Random_File< Key, Value >::Random_File(Random_File_Index* index_)
   : changed(false), index_size(Value::max_size_of()),
-  max_size(index_->get_max_size()),
+  compression_factor(index_->get_compression_factor()),
   val_file(index_->get_map_file_name(),
 	   index_->writeable() ? O_RDWR|O_CREAT : O_RDONLY,
 	   S_666, "Random_File:3"),
   index(index_),
-  cache(index_->get_block_size() * index_->get_max_size()), cache_pos(index->npos),
+  cache(index_->get_block_size() * index_->get_compression_factor()), cache_pos(index->npos),
   block_size(index_->get_block_size()),
-  buffer(index_->get_block_size() * index_->get_max_size() * 2)  // increased buffer size for lz4
+  buffer(index_->get_block_size() * index_->get_compression_factor() * 2)  // increased buffer size for lz4
 {}
 
 
@@ -93,8 +93,8 @@ Random_File< Key, Value >::~Random_File()
 template< typename Key, typename Value >
 Value Random_File< Key, Value >::get(Key pos)
 {
-  move_cache_window(pos.val() / (block_size*max_size /index_size));
-  return Value(cache.ptr + (pos.val() % (block_size*max_size/index_size))*index_size);
+  move_cache_window(pos.val() / (block_size*compression_factor /index_size));
+  return Value(cache.ptr + (pos.val() % (block_size*compression_factor/index_size))*index_size);
 }
 
 
@@ -104,8 +104,8 @@ void Random_File< Key, Value >::put(Key pos, const Value& val)
   if (!index->writeable())
     throw File_Error(0, index->get_map_file_name(), "Random_File:2");
   
-  move_cache_window(pos.val() / (block_size*max_size/index_size));
-  val.to_data(cache.ptr + (pos.val() % (block_size*max_size/index_size))*index_size);
+  move_cache_window(pos.val() / (block_size*compression_factor/index_size));
+  val.to_data(cache.ptr + (pos.val() % (block_size*compression_factor/index_size))*index_size);
   changed = true;
 }
 
@@ -119,22 +119,22 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
 
   if (changed)
   {
-    uint32 data_size = max_size;
+    uint32 data_size = compression_factor;
     void* target = cache.ptr;
 
-    if (index->compression_method == Random_File_Index::ZLIB_COMPRESSION)
+    if (index->get_compression_method() == Random_File_Index::ZLIB_COMPRESSION)
     {
       target = buffer.ptr;
       uint32 compressed_size = Zlib_Deflate(1)
-          .compress(cache.ptr, block_size * max_size, target, block_size * index->max_size);
+          .compress(cache.ptr, block_size * compression_factor, target, block_size * index->get_compression_factor());
       data_size = (compressed_size - 1) / block_size + 1;
       zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size); 
     }
-    else if (index->compression_method == Random_File_Index::LZ4_COMPRESSION)
+    else if (index->get_compression_method() == Random_File_Index::LZ4_COMPRESSION)
     {
       target = buffer.ptr;
       uint32 compressed_size = LZ4_Deflate()
-          .compress(cache.ptr, block_size * max_size, target, block_size * index->max_size * 2);
+          .compress(cache.ptr, block_size * compression_factor, target, block_size * index->get_compression_factor() * 2);
       data_size = (compressed_size - 1) / block_size + 1;
       zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size);
     }
@@ -159,25 +159,25 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
   if ((index->blocks.size() <= pos) || (index->blocks[pos].pos == index->npos))
   {
     // Reset the whole cache to zero.
-    for (uint32 i = 0; i < block_size * max_size; ++i)
+    for (uint32 i = 0; i < block_size * compression_factor; ++i)
       *(cache.ptr + i) = 0;
   }
   else
   {
     val_file.seek((int64)(index->blocks[pos].pos)*block_size, "Random_File:23");
-    if (index->compression_method == Random_File_Index::NO_COMPRESSION)
+    if (index->get_compression_method() == Random_File_Index::NO_COMPRESSION)
       val_file.read(cache.ptr, block_size * index->blocks[pos].size, "Random_File:24");
-    else if (index->compression_method == Random_File_Index::ZLIB_COMPRESSION)
+    else if (index->get_compression_method() == Random_File_Index::ZLIB_COMPRESSION)
     {
-      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:24");
+      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:25");
       Zlib_Inflate().decompress
-          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->max_size);
+          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->get_compression_factor());
     }
-    else if (index->compression_method == Random_File_Index::LZ4_COMPRESSION)
+    else if (index->get_compression_method() == Random_File_Index::LZ4_COMPRESSION)
     {
-      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:24");
+      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:26");
       LZ4_Inflate().decompress
-          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->max_size);
+          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->get_compression_factor());
     }
   }
   cache_pos = pos;

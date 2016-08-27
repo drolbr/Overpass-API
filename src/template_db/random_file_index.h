@@ -56,8 +56,13 @@ struct Random_File_Index
     
     std::string get_map_file_name() const { return map_file_name; }
     uint64 get_block_size() const { return block_size_; }
-    uint32 get_max_size() const { return max_size; }
+    uint32 get_compression_factor() const { return compression_factor; }
     uint32 get_compression_method() const { return compression_method; }
+    
+    static const int FILE_FORMAT_VERSION = 7512;
+    static const int NO_COMPRESSION = 0;
+    static const int ZLIB_COMPRESSION = 1;
+    static const int LZ4_COMPRESSION = 2;
     
   private:
     std::string index_file_name;
@@ -73,14 +78,9 @@ struct Random_File_Index
     
     const uint32 npos;
     
-    uint count;
-    uint32 max_size;
+  private:
+    uint32 compression_factor;
     int compression_method;
-    
-    static const int FILE_FORMAT_VERSION = 7512;
-    static const int NO_COMPRESSION = 0;
-    static const int ZLIB_COMPRESSION = 1;
-    static const int LZ4_COMPRESSION = 2;
 };
 
 
@@ -108,8 +108,7 @@ inline Random_File_Index::Random_File_Index
     block_count(0),
     block_size_(file_prop.get_map_block_size()),
     npos(std::numeric_limits< uint32 >::max()),
-    count(0),
-    max_size(file_prop.get_map_max_size()),
+    compression_factor(file_prop.get_map_compression_factor()),
     compression_method(file_prop.get_map_compression_method())
 {
   uint64 file_size = 0;
@@ -165,7 +164,7 @@ inline Random_File_Index::Random_File_Index
       if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
         throw File_Error(0, index_file_name, "Random_File_Index: Unsupported index file format version");
       block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
-      max_size = 1u<<*(uint8*)(index_buf.ptr + 5);
+      compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
       compression_method = *(uint16*)(index_buf.ptr + 6);
 
       block_count = file_size / block_size_;
@@ -252,7 +251,7 @@ inline Random_File_Index::~Random_File_Index()
   
   *(uint32*)index_buf.ptr = FILE_FORMAT_VERSION;
   *(uint8*)(index_buf.ptr + 4) = shift_log(block_size_);
-  *(uint8*)(index_buf.ptr + 5) = shift_log(max_size);
+  *(uint8*)(index_buf.ptr + 5) = shift_log(compression_factor);
   *(uint16*)(index_buf.ptr + 6) = compression_method;
 
   for (std::vector< Random_File_Index_Entry >::const_iterator

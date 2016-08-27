@@ -64,7 +64,7 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
     
     std::string get_data_file_name() const { return data_file_name; }
     uint64 get_block_size() const { return block_size_; }
-    uint32 get_max_size() const { return max_size; }
+    uint32 get_compression_factor() const { return compression_factor; }
     uint32 get_compression_method() const { return compression_method; }
     
   private:
@@ -78,7 +78,7 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
     std::vector< std::pair< uint32, uint32 > > void_blocks;
     uint32 block_count;
     uint64 block_size_;
-    uint32 max_size;
+    uint32 compression_factor;
     int compression_method;
     
     static const int FILE_FORMAT_VERSION = 7512;
@@ -110,7 +110,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
      file_name_extension_(file_name_extension),
      block_count(0),
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
-     max_size(file_prop.get_max_size()), // can be overwritten by index file
+     compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
      compression_method(file_prop.get_compression_method()) // can be overwritten by index file
 {
   uint64 file_size = 0;
@@ -165,7 +165,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
 	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
       block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
-      max_size = 1u<<*(uint8*)(index_buf.ptr + 5);
+      compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
       compression_method = *(uint16*)(index_buf.ptr + 6);
       
       block_count = file_size / block_size_;
@@ -258,7 +258,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   
   *(uint32*)index_buf.ptr = FILE_FORMAT_VERSION;
   *(uint8*)(index_buf.ptr + 4) = shift_log(block_size_);
-  *(uint8*)(index_buf.ptr + 5) = shift_log(max_size);
+  *(uint8*)(index_buf.ptr + 5) = shift_log(compression_factor);
   *(uint16*)(index_buf.ptr + 6) = compression_method;
   
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator

@@ -178,7 +178,7 @@ struct Test_File : File_Properties
     return 512;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
   {
     return 1;
   }
@@ -198,7 +198,7 @@ struct Test_File : File_Properties
     return 16;
   }
   
-  uint32 get_map_max_size() const
+  uint32 get_map_compression_factor() const
   {
     return 1;
   }

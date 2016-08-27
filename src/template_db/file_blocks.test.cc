@@ -133,12 +133,12 @@ struct Test_File : File_Properties
     return 512;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
   {
     return 1;
   }
   
-  uint32 get_map_max_size() const
+  uint32 get_map_compression_factor() const
   {
     return 1;
   }
@@ -224,12 +224,12 @@ struct Variable_Block_Test_File : File_Properties
     return 64;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
   {
     return 8;
   }
   
-  uint32 get_map_max_size() const
+  uint32 get_map_compression_factor() const
   {
     return 1;
   }
@@ -315,12 +315,12 @@ struct Compressed_Test_File : File_Properties
     return 8*1024;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
   {
     return 8;
   }
   
-  uint32 get_map_max_size() const
+  uint32 get_map_compression_factor() const
   {
     return 8;
   }
@@ -1182,7 +1182,8 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(20));
     indices.push_back(IntIndex(21));
     indices.push_back(IntIndex(22));
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size()
+        * Variable_Block_Test_File().get_compression_factor());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
@@ -1206,7 +1207,7 @@ int main(int argc, char* args[])
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     indices.clear();
     indices.push_back(IntIndex(30));
@@ -1335,7 +1336,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 25)
       ++it;
@@ -1371,7 +1372,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 26)
       ++it;
@@ -1407,7 +1408,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 60)
       ++it;
@@ -1444,7 +1445,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 65)
       ++it;
@@ -1482,7 +1483,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 68)
       ++it;
@@ -1519,7 +1520,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 70)
       ++it;
@@ -1557,7 +1558,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 20)
       ++it;
@@ -1617,7 +1618,7 @@ int main(int argc, char* args[])
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
     
-    void* buf = malloc(Compressed_Test_File().get_block_size() * Compressed_Test_File().get_max_size());
+    void* buf = malloc(Compressed_Test_File().get_block_size() * Compressed_Test_File().get_compression_factor());
     
     indices.clear();
     for (int i = 20; i < 21; ++i)
