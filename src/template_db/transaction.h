@@ -108,7 +108,7 @@ inline Random_File_Index* Nonsynced_Transaction::random_index(const File_Propert
   if (it != random_files.end())
     return it->second;
   
-  random_files[fp] = new Random_File_Index(*fp, writeable, use_shadow, db_dir, "");
+  random_files[fp] = new Random_File_Index(*fp, writeable, use_shadow, db_dir, file_name_extension);
   return random_files[fp];
 }
 
