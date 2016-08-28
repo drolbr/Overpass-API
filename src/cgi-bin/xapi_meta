@@ -37,30 +37,27 @@ if [[ "${BUF:0:5}" == "debug" ]]; then
 };
 fi
 
-# No mkdir - directory should be created and made world-writeable
-# by the maintainer to allow periodic cleanups.
-REQUEST_FILE=`mktemp /tmp/translate_xapi/XXXXXX`
-$BIN_DIR/translate_xapi --force-meta "${BUF}" >$REQUEST_FILE
+REQUEST_BUFFER=$($BIN_DIR/translate_xapi --force-meta "${BUF}")
 EXITCODE=$?
+
 if [[ $EXITCODE -ne 0 ]]; then
 {
   echo "Content-Type: text/plain; charset=utf-8"
   echo "Status: 400 Bad Request"
   echo
   echo "Error in [$BUF]:"
-  cat <$REQUEST_FILE
+  echo "$REQUEST_BUFFER"
 };
 else
 {
   if [[ $DEBUG == "yes" ]]; then
   {
-    cat <$REQUEST_FILE
+    echo "$REQUEST_BUFFER"
     echo
   };
   fi
   REQUEST_METHOD=
-  ./interpreter <$REQUEST_FILE
+  echo "$REQUEST_BUFFER" | ./interpreter
 };
 fi
 
-rm $REQUEST_FILE
