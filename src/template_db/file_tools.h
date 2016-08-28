@@ -35,6 +35,7 @@ struct Blocking_Client_Socket
   uint32 get_command();
   std::vector< uint32 > get_arguments(int num_arguments);
   void clear_state();
+  void send_data(uint32 result);
   void send_result(uint32 result);
   ~Blocking_Client_Socket();
 private:
@@ -61,9 +62,6 @@ private:
   std::map< pid_t, Blocking_Client_Socket* > connection_per_pid;
   uint32 last_pid;
 };
-
-
-void copy_file(const std::string& source, const std::string& dest);
 
 
 std::string getcwd();

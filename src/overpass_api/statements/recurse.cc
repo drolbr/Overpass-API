@@ -1797,7 +1797,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
         source_type = Relation_Entry::NODE;
       else if (stmt->get_type() == RECURSE_WAY_RELATION)
         source_type = Relation_Entry::WAY;
-      else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
+      else
         source_type = Relation_Entry::RELATION;
     
       vector< Relation_Entry::Ref_Type > ids;
@@ -1952,7 +1952,10 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   
-  if (stmt->get_type() != RECURSE_DOWN && stmt->get_type() != RECURSE_DOWN_REL)
+  if (mit == rman.sets().end())
+    return;
+  if (stmt->get_type() != RECURSE_DOWN && stmt->get_type() != RECURSE_DOWN_REL
+      && stmt->get_type() != RECURSE_UP && stmt->get_type() != RECURSE_UP_REL)
     return;
   
   if (stmt->get_type() == RECURSE_DOWN)

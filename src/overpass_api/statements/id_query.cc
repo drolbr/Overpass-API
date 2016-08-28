@@ -378,7 +378,7 @@ void get_elements(uint64 lower, uint64 upper, Statement* stmt, Resource_Manager&
   for (uint64 i = lower; i < upper; ++i)
     ids.push_back(i);
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
-        
+
   if (rman.get_desired_timestamp() == NOW)
     collect_items_discrete(stmt, rman, *current_skeleton_file_properties< Skeleton >(), req,
         Id_Predicate< Skeleton >(ids), current_result);

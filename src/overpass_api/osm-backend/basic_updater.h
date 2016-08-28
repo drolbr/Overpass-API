@@ -993,9 +993,11 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
                   .insert(Attic< Id_Type >(it->first, it2->timestamp));
 	    
 	    // If the older index is non-void then we write an entry for it
-            if (it2->val() != 0u)
+            if (it2->val() != 0u && *tit2 != void_tag_value() && *tit2 != void_tag_value() + " ")
+            {
               result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, *tit2)]
                 .insert(Attic< Id_Type >(it->first, it2->timestamp));
+            }
 	  }
 	  else
 	  {

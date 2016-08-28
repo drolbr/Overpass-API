@@ -30,8 +30,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -43,7 +45,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 int main(int argc, char *argv[])
 {  
@@ -126,6 +127,8 @@ int main(int argc, char *argv[])
       area_level = determine_area_level(error_output, area_level);
       Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --",
 				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024);
+      copy_file(dispatcher.resource_manager().get_transaction()->get_db_dir() + "/replicate_id",
+		clone_db_dir + "/replicate_id");
       
       clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
       return 0;
@@ -263,8 +266,26 @@ int main(int argc, char *argv[])
     
     return 2;
   }
+  catch(Context_Error e)
+  {
+    error_output->runtime_error("Context error: " + e.message);
+    return 3;
+  }
   catch(Exit_Error e)
   {
-    return 3;
+    return 4;
+  }
+  catch(std::bad_alloc& e)
+  {
+    rlimit limit;
+    getrlimit(RLIMIT_AS, &limit);
+    ostringstream temp;
+    temp<<"Query run out of memory using about "<<limit.rlim_cur/(1024*1024)<<" MB of RAM.";
+    error_output->runtime_error(temp.str());
+  }
+  catch(std::exception& e)
+  {
+    error_output->runtime_error(std::string("Query failed with the exception: ") + e.what());    
+    return 4;
   }
 }

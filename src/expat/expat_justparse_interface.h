@@ -52,7 +52,7 @@ struct Parse_Error
 
 struct Script_Parser
 {
-  Script_Parser() : p(XML_ParserCreate(NULL)), parser_online(true), counter(MAXCOUNT)
+  Script_Parser() : p(XML_ParserCreate(NULL)), parser_online(true)
   {
     if (!p)
       throw Parse_Error("Couldn't allocate memory for parser.");
@@ -138,9 +138,6 @@ private:
   
   //for the XMLParser
   char Buff[BUFFSIZE];
-  
-  const static uint MAXCOUNT = 1048576;
-  uint counter;
 };
 
 void parse(FILE* in,

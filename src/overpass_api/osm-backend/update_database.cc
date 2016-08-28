@@ -30,7 +30,6 @@
 #include "../frontend/output.h"
 #include "osm_updater.h"
 
-using namespace std;
 
 int main(int argc, char* argv[])
 {
@@ -63,6 +62,18 @@ int main(int argc, char* argv[])
       if (flush_limit == 0)
         flush_limit = std::numeric_limits< unsigned int >::max();
     }
+    else if (!(strncmp(argv[argpos], "--compression_method=", 21)))
+    {
+      if (string(argv[argpos]).substr(21) == "no")
+	basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+      else if (string(argv[argpos]).substr(21) == "gz")
+	basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+      else
+      {
+        cerr<<"For --compression_method, please use \"no\" or \"gz\" as value.\n";
+        abort = true;
+      }
+    }
     else
     {
       cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
@@ -72,7 +83,8 @@ int main(int argc, char* argv[])
   }
   if (abort)
   {
-    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]\n";
+    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
+        " [--compression_method=(no|gz)]\n";
     return 0;
   }
   
@@ -90,6 +102,11 @@ int main(int argc, char* argv[])
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }
+  }
+  catch(Context_Error e)
+  {
+    std::cerr<<"Context error: "<<e.message<<'\n';
+    return 3;
   }
   catch (File_Error e)
   {

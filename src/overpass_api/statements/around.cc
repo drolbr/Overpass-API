@@ -762,9 +762,6 @@ void add_coord(double lat, double lon, double radius,
   for (vector< pair< uint32, uint32 > >::const_iterator
       it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
   {
-    pair< Uint32_Index, Uint32_Index > range
-        (make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-    
     for (uint32 idx = Uint32_Index(it->first).val();
         idx < Uint32_Index(it->second).val(); ++idx)
       radius_lat_lons[idx].push_back(make_pair(lat, lon));

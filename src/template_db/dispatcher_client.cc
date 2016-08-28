@@ -25,8 +25,8 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/un.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -35,7 +35,7 @@
 
 Dispatcher_Client::Dispatcher_Client
     (const std::string& dispatcher_share_name_)
-    : dispatcher_share_name(dispatcher_share_name_)
+    : dispatcher_share_name(dispatcher_share_name_), socket("")
 {
   signal(SIGPIPE, SIG_IGN);
   
@@ -59,21 +59,11 @@ Dispatcher_Client::Dispatcher_Client
 		       4*sizeof(uint32)));
 
   // initialize the socket for the client
+  socket.open(db_dir + dispatcher_share_name_);  
   std::string socket_name = db_dir + dispatcher_share_name_;
-  socket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (socket_descriptor == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Client::2");  
-  struct sockaddr_un local;
-  local.sun_family = AF_UNIX;
-  strcpy(local.sun_path, socket_name.c_str());
-  if (connect(socket_descriptor, (struct sockaddr*)&local,
-      sizeof(local.sun_family) + strlen(local.sun_path)) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Client::3");
   
   pid_t pid = getpid();
-  if (send(socket_descriptor, &pid, sizeof(pid_t), 0) == -1)
+  if (send(socket.descriptor(), &pid, sizeof(pid_t), 0) == -1)
     throw File_Error(errno, dispatcher_share_name, "Dispatcher_Client::4");
 }
 
@@ -88,7 +78,6 @@ bool file_present(const std::string& full_path)
 
 Dispatcher_Client::~Dispatcher_Client()
 {
-  close(socket_descriptor);
   munmap((void*)dispatcher_shm_ptr,
 	 Dispatcher::SHM_SIZE + db_dir.size() + shadow_name.size());
   close(dispatcher_shm_fd);
@@ -98,7 +87,7 @@ Dispatcher_Client::~Dispatcher_Client()
 template< class TObject >
 void Dispatcher_Client::send_message(TObject message, const std::string& source_pos)
 {
-  if (send(socket_descriptor, &message, sizeof(TObject), 0) == -1)
+  if (send(socket.descriptor(), &message, sizeof(TObject), 0) == -1)
     throw File_Error(errno, dispatcher_share_name, source_pos);
 }
 
@@ -106,21 +95,16 @@ void Dispatcher_Client::send_message(TObject message, const std::string& source_
 uint32 Dispatcher_Client::ack_arrived()
 {
   uint32 answer = 0;
-  int bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
+  int bytes_read = recv(socket.descriptor(), &answer, sizeof(uint32), 0);
   while (bytes_read == -1)
   {
     millisleep(50);
-    bytes_read = recv(socket_descriptor, &answer, sizeof(uint32), 0);
+    bytes_read = recv(socket.descriptor(), &answer, sizeof(uint32), 0);
   }
   if (bytes_read == sizeof(uint32))
     return answer;
 
   return 0;  
-//   uint32 pid = getpid();
-//   if (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid)
-//     return 1;
-//   millisleep(50);  
-//   return (*(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) == pid ? 1 : 0);
 }
 
 
@@ -296,6 +280,42 @@ pid_t Dispatcher_Client::query_by_token(uint32 token)
   send_message(token, "Dispatcher_Client::query_by_token::socket::2");
     
   return ack_arrived();
+}
+
+
+Client_Status Dispatcher_Client::query_my_status(uint32 token)
+{
+                     
+  send_message(Dispatcher::QUERY_MY_STATUS, "Dispatcher_Client::query_my_status::socket::1");
+  send_message(token, "Dispatcher_Client::query_my_status::socket::2");
+  
+  Client_Status result;
+  result.rate_limit = ack_arrived();
+  
+  while (true)
+  {
+    Running_Query query;
+    query.status = ack_arrived();
+    if (query.status == 0)
+      break;
+    query.pid = ack_arrived();
+    query.max_time = ack_arrived();
+    query.max_space = ((uint64)ack_arrived() <<32) | ack_arrived();
+    query.start_time = ack_arrived();
+    result.queries.push_back(query);
+  }
+  
+  while (true)
+  {
+    uint32 slot_start = ack_arrived();
+    if (slot_start == 0)
+      break;
+    result.slot_starts.push_back(slot_start);
+  }
+  
+  std::sort(result.slot_starts.begin(), result.slot_starts.end());
+  
+  return result;
 }
 
 

@@ -19,18 +19,16 @@
 #ifndef DE__OSM3S___OVERPASS_API__OSM_BACKEND__OSM_UPDATER_H
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__OSM_UPDATER_H
 
+#include "../../template_db/dispatcher_client.h"
+#include "node_updater.h"
+#include "relation_updater.h"
+#include "way_updater.h"
+
 #include <dirent.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "node_updater.h"
-#include "relation_updater.h"
-#include "way_updater.h"
-
-using namespace std;
-
-class Dispatcher_Client;
 
 class Osm_Updater
 {

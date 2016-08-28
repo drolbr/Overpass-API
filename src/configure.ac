@@ -74,6 +74,7 @@ fi
 AC_SUBST(COMPRESS_LIBS, ["$COMPRESS_LIBS"])
 
 AC_CONFIG_FILES([Makefile test-bin/Makefile])
+#AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 AC_SYS_LARGEFILE
 

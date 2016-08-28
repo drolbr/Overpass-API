@@ -20,7 +20,7 @@
 
 <p>With a POSIX confirming operating system (this includes all kinds of Linux as well as FreeBSD, OpenBSD and several others), you have already fulfilled most base requirements.</p>
 
-<p>Concerning hardware, I suggest at least 1 GB of RAM. The more RAM is available, the better, because caching of disk content in the RAM will significantly speed up Overpass API. The processor speed will have little relevance. For the hard disk, it depends on what you want to install. A full planet database with minutely updates should have at least 150 GB of hard disk space at disposal. Without minute diffs and meta data, 50 GB would already suffice.</p>
+<p>Concerning hardware, I suggest at least 4 GB of RAM. The more RAM is available, the better, because caching of disk content in the RAM will significantly speed up Overpass API. The processor speed will have little relevance. For the hard disk, it depends on what you want to install. A full planet database with minutely updates should have at least 250 GB of hard disk space at disposal. Without minute diffs and meta data, 100 GB would already suffice.</p>
 
 <p>To automatically download diffs files, you need a command line download tool. I suggest <em>wget</em>. If it is not already installed, you can get it on e.g. Ubuntu with:</p>
 <pre>sudo apt-get install wget</pre>
@@ -30,31 +30,31 @@
 <pre>sudo apt-get install g++ make</pre>
 
 <p>To compile the software, you also need the <em>expat</em> library. If it is not already installed, you can get it on e.g. Ubuntu with:</p>
-<pre>sudo apt-get install expat libexpat1-dev</pre>
+<pre>sudo apt-get install expat libexpat1-dev zlib1g-dev</pre>
 <p>You can also include expat from sources; this way you don't need root permissions just to install expat: Download the latest tarball from <a href="http://sourceforge.net/projects/expat/">the project's page</a>. Expat itself is installed by unpacking, then <em>configure; make; make install</em>. To use these libraries, insert <em>CPPFLAGS=&quot;-I/path/to/expat/include&quot;</em> and <em>LDFLAGS=&quot;-static -L/path/to/expat/lib/&quot;</em> into the make command:</p>
-<pre>make <strong>CPPFLAGS=&quot;-I/path/to/expat/include&quot;</strong> CXXFLAGS=&quot;-O3&quot; <strong>LDFLAGS=&quot;-static -L/path/to/expat/lib/&quot;</strong> install</pre>
+<pre>make <strong>CPPFLAGS=&quot;-I/path/to/expat/include&quot;</strong> <strong>LDFLAGS=&quot;-static -L/path/to/expat/lib/&quot;</strong> install</pre>
 <p>where <em>/path/to/expat</em> must be replaced by the path that you have chosen in the <em>configure</em> step of <em>expat</em>. Note: If you need to supply more than one <em>CPPFLAGS</em> parameter this way, you should instead use one <em>CPPFLAGS</em> parameter which has both the arguments inside the quotation marks, separated by a blank.</p>
 
 <h2><a name="install">Software Installation</a></h2>
 
-<p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest the parent directory of the source code directory: this can be reached with &quot;`pwd`/../&quot;. To configure this output directory and detect necessary adaptions of your system, run in the <em>build</em> subdirectory:</p>
-<pre>../src/configure --prefix=&quot;`pwd`/../&quot;</pre>
+<p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest subdirectories of the source code directory: this can be achieved with &quot;`pwd`&quot;. To configure this output directory and detect necessary adaptions of your system, run:</p>
+<pre>./configure --prefix=&quot;`pwd`&quot;</pre>
 
 <p>Generate the executables:</p>
-<pre>make CXXFLAGS=&quot;-O3&quot; install</pre>
+<pre>make</pre>
 <p>Other system than Linux may require here some extra parameters. For example, FreeBSD needs <em>-DNATIVE_LARGE_FILES</em>, because it doesn't have a separate <em>open64</em> function:</p>
-<pre>make CXXFLAGS=&quot;-O3&quot; <strong>CPPFLAGS=&quot;-DNATIVE_LARGE_FILES&quot;</strong> install</pre>
+<pre>make <strong>CPPFLAGS=&quot;-DNATIVE_LARGE_FILES&quot;</strong></pre>
 
 
 <h2><a name="clone">Fast Startup</a></h2>
 
 <p>Since version 0.6.98, the database can be cloned from an exisiting instance rather than created from scratch. This only takes 4 to 8 hours in comparison to 24 to 48 hours for an update from the planet file. Note that this feature is still rather experimental - please report any problems by eMail to me (roland.olbricht at gmx.de). If you don't want the entire planet or prefer a manually planet import for some other reason, use the <a href="#startup">manual import</a> instead.</p>
 
-<p>Download a clone of the database at <em>overpass-api.de</em> with the command:</p>
-<pre>../src/bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;../db/&quot; --meta=no</pre>
+<p>Download a clone of the database at <em>dev.overpass-api.de</em> with the command:</p>
+<pre>bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no</pre>
 <p>or</p>
-<pre><strong>nohup</strong> ../src/bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;../db/&quot; --meta=no <strong>&amp;</strong></pre>
-<p>If you want meta data, use <em>--meta=yes</em> instead of <em>--meta=no</em>. This downloads about 15 GB (25 GB with meta data) in several compressed files and uncompresses them to a ready-to-use database.</p>
+<pre><strong>nohup</strong> bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no <strong>&amp;</strong></pre>
+<p>If you want meta data, use <em>--meta=yes</em> instead of <em>--meta=no</em>. If you want attic data (since 2012) then use <em>--meta=attic</em>. This downloads about 40 GB (70 GB with meta data, 170 GB with attic data) in several compressed files and uncompresses them to a ready-to-use database.</p>
 
 <p>Now you can proceed with <a href="#minute_updates">minute updates</a>.</p>
 
@@ -63,14 +63,14 @@
 
 <p>The standard use case is to set up the database with the whole planet data and including meta data. If you haven't downloaded an <a href="http://wiki.openstreetmap.org/wiki/Planet.osm">OSM XML planet file</a> yet, you can fetch one for example with:</p>
 <pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet/planet-latest.osm.bz2&quot;</pre>
-<p>This file has a size of more than 20 GB. Thus, depending on your internet connection, it may take between 4 hours (fastest possible) and 22 hours (with 2 MBit) to download the file. If you are not working on your local machine, you may want the download to continue even if you logout. Use <em>nohup</em> for this:</p>
+<p>This file has a size of about 60 GB. Thus, depending on your internet connection, it may take between 4 hours (fastest possible) and 66 hours (with 2 MBit) to download the file. If you are not working on your local machine, you may want the download to continue even if you logout. Use <em>nohup</em> for this:</p>
 <pre><strong>nohup</strong> wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet/planet-latest.osm.bz2&quot; <strong>&amp;</strong></pre>
 
 <p>Once you have the file, you can start the import. The import again may take up to 48 hours:</p>
-<pre>../src/bin/init_osm3s.sh planet.osm.bz2 &quot;../db/&quot; &quot;../&quot; --meta</pre>
+<pre>bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;../&quot; --meta</pre>
 <p>or</p>
-<pre>nohup ../src/bin/init_osm3s.sh planet.osm.bz2 &quot;../db/&quot; &quot;../&quot; --meta &amp;</pre>
-<p>You may need to adapt the parameters: The first parameter <em>planet.osm.bz2</em> is the osm file to process, the second parameter <em>&quot;../db/&quot;</em> is the directory where the database should go to, and the third parameter <em>&quot;../&quot;</em> is the base directory of the executables, i.e. there must exist <em>update_database</em> in the subdirectory <em>bin</em> of the location where the third parameter points to.</p>
+<pre>nohup bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta &amp;</pre>
+<p>You may need to adapt the parameters: The first parameter <em>planet.osm.bz2</em> is the osm file to process, the second parameter <em>&quot;db/&quot;</em> is the directory where the database should go to, and the third parameter <em>&quot;./&quot;</em> is the base directory of the executables, i.e. there must exist <em>update_database</em> in the subdirectory <em>bin</em> of the location where the third parameter points to.</p>
 
 <p>You can also use any other osm file. If you want to save half of the hard disk space and reduce the startup and update time by up to two thirds, you can omit meta data by omitting the <em>--meta</em> parameter.</p>
 
@@ -81,19 +81,22 @@
 
 <p>The following steps are only needed if you want minutely updates. In this case, run the following commands:</p>
 
-<pre>nohup ../bin/dispatcher --osm-base --meta --db-dir=&quot;../db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;../db/osm3s_v0.7.52_osm_base&quot;</pre>
+<pre>nohup bin/dispatcher --osm-base --meta --db-dir=&quot;db/&quot; &amp;</pre>
+<pre>chmod 666 &quot;db/osm3s_v0.7.52_osm_base&quot;</pre>
 <p>(without <em>--meta</em> if you have not processed meta data)</p>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
-<pre>nohup ../bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;../minute-diffs/&quot; &amp;</pre>
-<p>This should start to fill the directory <em>&quot;../minute-diffs/&quot;</em> with subdirectories which have three digits as name and finally contain files ending in <em>osc.gz</em> and <em>state.txt</em>.</p>
+<pre>nohup bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;</pre>
+<p>This should start to fill the directory <em>&quot;diffs/&quot;</em> with subdirectories which have three digits as name and finally contain files ending in <em>osc.gz</em> and <em>state.txt</em>.</p>
 
-<pre>nohup ../bin/apply_osc_to_db.sh &quot;../db/&quot; &quot;../minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
+<pre>nohup bin/apply_osc_to_db.sh &quot;db/&quot; &quot;diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 <p>(with <em>--meta=no</em> instead if you have not processed meta data)</p>
 <p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. If you have obtained your database by cloning, you find the replicate id in the file <em>replicate_id</em> in the database directory. If you have imported the database from an OSM file, search on <a href="http://planet.openstreetmap.org/replication/minute/">http://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
 
-<p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: <em>&quot;../db/&quot;</em> is the directory of the database, <em>&quot;http://planet.openstreetmap.org/replication/minute/&quot;</em> is the replicate diff's remote source, and <em>&quot;../minute-diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
+<p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: 
+<em>&quot;db/&quot;</em> is the directory of the database,
+<em>&quot;http://planet.openstreetmap.org/minute-replicate/&quot;</em> is the replicate diff's remote source, and
+<em>&quot;diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
 
 <p>Congratulations! Now you have a database mirror that can serve the entire world and is always only a few minutes behind the OSM main database. We can now startup the additional modules:</p>
 
@@ -147,15 +150,15 @@ chmod 755 /path/to/osm-3s_v0.7.52/db</pre>
 <p>To use areas with Overpass API, you essentially need another permanent running process that generates the current areas from the existing data in batch runs.</p>
 
 <p>First, you need to copy the <em>rules</em> directory into a subdirectory of the database directory:</p>
-<pre>cp -pR &quot;../rules&quot; &quot;../db/&quot;</pre>
+<pre>cp -pR &quot;rules&quot; &quot;db/&quot;</pre>
 
 <p>The next step is to start a second dispatcher that coordinates read and write operations for the areas related files in the database:</p>
-<pre>nohup ../bin/dispatcher --areas --db-dir=&quot;../db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;../db/osm3s_v0.7.52_areas&quot;</pre>
+<pre>nohup bin/dispatcher --areas --db-dir=&quot;db/&quot; &amp;</pre>
+<pre>chmod 666 &quot;db/osm3s_v0.7.52_areas&quot;</pre>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
 <p>The third step then is to start the rule batch processor as a daemon:</p>
-<pre>nohup ../bin/rules_loop.sh &quot;../db/&quot; &amp;</pre>
+<pre>nohup bin/rules_loop.sh &quot;db/&quot; &amp;</pre>
 <p>Now we don't want this process to impede the real business of the server. Therefore, I strongly suggest to priorize this process down. To do this, you need to find with</p>
 <pre>ps -ef | grep rules</pre>
 <p>the PIDs belonging to the processes <em>rules_loop.sh</em> and <em>./osm3s_query --progress --rules</em>. Run for each of the two PIDs the commands:</p>
@@ -169,7 +172,7 @@ ionice -c 2 -n 7 -p <em>PID</em></pre>
 <h2><a name="custom_output">Managing custom output</a></h2>
 
 <p>To make the <a href="output_formats.html#custom">custom output</a> feature operational, you only need to copy the default templates into the corresponding subdirectory of the database:</p>
-<pre>cp -pR &quot;../templates&quot; &quot;../db/&quot;</pre>
+<pre>cp -pR &quot;templates&quot; &quot;db/&quot;</pre>
 <p>No runtime component or change in the Apache configuration is needed.</p>
 
 </body>

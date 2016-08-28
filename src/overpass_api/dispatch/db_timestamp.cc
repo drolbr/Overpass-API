@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
       if (error_output.http_method == error_output.http_get
           || error_output.http_method == error_output.http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". Another request from your IP is still running.\n";
+            <<". Please check /api/status for the quota of your IP address.\n";
     }
     else
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;

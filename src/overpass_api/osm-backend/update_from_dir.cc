@@ -36,7 +36,6 @@
 #include "way_updater.h"
 #include "osm_updater.h"
 
-using namespace std;
 
 struct Node_Caller
 {
@@ -174,6 +173,11 @@ int main(int argc, char* argv[])
       
       osm_updater.finish_updater();
     }
+  }
+  catch(Context_Error e)
+  {
+    std::cerr<<"Context error: "<<e.message<<'\n';
+    return 3;
   }
   catch (const File_Error& e)
   {

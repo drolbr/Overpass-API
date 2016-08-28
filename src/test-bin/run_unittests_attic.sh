@@ -92,6 +92,23 @@ date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/changed_fw
 
 date '+%T'
 
+mkdir -p clone
+rm -fR clone/*
+date '+%T'; $BASEDIR/bin/osm3s_query --db-dir=./ --clone="clone/" >clone.out 2>clone.err
+
+date '+%T'
+
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query.ql >diff_clone_query.out 2>diff_clone_query.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0901.ql >diff_clone_query_0901.out 2>diff_clone_query_0901.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0902.ql >diff_clone_query_0902.out 2>diff_clone_query_0902.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0903.ql >diff_clone_query_0903.out 2>diff_clone_query_0903.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0904.ql >diff_clone_query_0904.out 2>diff_clone_query_0904.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0905.ql >diff_clone_query_0905.out 2>diff_clone_query_0905.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/diff_0902.ql >diff_clone_diff_0902.out 2>diff_clone_diff_0902.err
+date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/adiff_0902.ql >diff_clone_adiff_0902.out 2>diff_clone_adiff_0902.err
+
+date '+%T'
+
 for i in *.err; do
   diff -q "../../expected/attic_updater/$i" "$i"
 done

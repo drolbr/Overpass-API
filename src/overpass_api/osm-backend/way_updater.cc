@@ -965,7 +965,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
                                        existing_map_positions, existing_idx_lists);
     std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
         new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
-	
+        
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > changelog
         = compute_changelog(new_data, implicitly_moved_skeletons,

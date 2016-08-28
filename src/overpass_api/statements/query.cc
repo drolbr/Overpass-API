@@ -142,7 +142,7 @@ public:
 template< typename Id_Type, typename Iterator, typename Key_Regex, typename Val_Regex >
 void filter_id_list(
     std::vector< std::pair< Id_Type, Uint31_Index > >& new_ids, bool& filtered,
-    Iterator begin, Iterator end, const Key_Regex& key_regex, const Val_Regex& val_regex)
+    Iterator begin, Iterator end, const Key_Regex& key_regex, const Val_Regex& val_regex, bool check_keys_late)
 {
   std::vector< std::pair< Id_Type, Uint31_Index > > old_ids;
   old_ids.swap(new_ids);
@@ -153,6 +153,12 @@ void filter_id_list(
         && val_regex.matches(it.index().value) && (!filtered ||
 	binary_search(old_ids.begin(), old_ids.end(), std::make_pair(it.object().id, Uint31_Index(0u)))))
       new_ids.push_back(std::make_pair(it.object().id, it.object().idx));
+    
+    if (!filtered && check_keys_late && new_ids.size() > 1024*1024)
+    {
+      new_ids.clear();
+      return;
+    }
   }
   
   sort(new_ids.begin(), new_ids.end());
@@ -210,7 +216,7 @@ void filter_id_list(
 template< typename Skeleton, typename Id_Type >
 std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
   (const File_Properties& file_prop, const File_Properties& attic_file_prop, Resource_Manager& rman,
-   uint64 timestamp, bool check_keys_late)
+   uint64 timestamp, bool check_keys_late, bool& result_valid)
 {
   if (key_values.empty() && keys.empty() && key_regexes.empty() && regkey_regexes.empty())
     return std::vector< std::pair< Id_Type, Uint31_Index > >();
@@ -234,7 +240,12 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
       std::set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
       filter_id_list(new_ids, filtered,
 		     tags_db.discrete_begin(tag_req.begin(), tag_req.end()), tags_db.discrete_end(),
-		     Trivial_Regex(), Trivial_Regex());
+		     Trivial_Regex(), Trivial_Regex(), check_keys_late);
+      if (!filtered)
+      {
+	result_valid = false;
+	break;
+      }
     }
     else
       filter_id_list(new_ids, filtered, collect_attic_kv(kvit, timestamp, tags_db, *attic_tags_db.obj));
@@ -252,7 +263,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
         std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
 	filter_id_list(new_ids, filtered,
 		       tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
-			Trivial_Regex(), Trivial_Regex());
+			Trivial_Regex(), Trivial_Regex(), check_keys_late);
       }
       else
 	filter_id_list(new_ids, filtered, collect_attic_k(kit, timestamp, tags_db, *attic_tags_db.obj));
@@ -269,7 +280,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
         std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
 	filter_id_list(new_ids, filtered,
 	    tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
-		Trivial_Regex(), *krit->second);
+		Trivial_Regex(), *krit->second, check_keys_late);
       }
       else
 	filter_id_list(new_ids, filtered, collect_attic_kregv(krit, timestamp, tags_db, *attic_tags_db.obj));
@@ -286,7 +297,8 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
 	std::set< pair< Tag_Index_Global, Tag_Index_Global > > range_req
 	    = get_regk_req< Skeleton >(it->first, rman, *this);
 	filter_id_list(new_ids, filtered,
-	    tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(), *it->first, *it->second);
+	    tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
+	    *it->first, *it->second, check_keys_late);
       }
       else
 	filter_id_list(new_ids, filtered, collect_attic_regkregv< Skeleton, Id_Type >(
@@ -748,13 +760,16 @@ void Query_Statement::filter_by_tags
   formulate_range_query(range_set, coarse_indices);
 
   // prepare straight keys
-  map< string, vector< Regular_Expression* > > key_union;
+  map< string, pair< string, vector< Regular_Expression* > > > key_union;
   for (vector< string >::const_iterator it = keys.begin(); it != keys.end();
       ++it)
     key_union[*it];
+  for (vector< pair< string, string > >::const_iterator it = key_values.begin(); it != key_values.end();
+      ++it)
+    key_union[it->first].first = it->second;
   for (vector< pair< string, Regular_Expression* > >::const_iterator
       it = key_regexes.begin(); it != key_regexes.end(); ++it)
-    key_union[it->first].push_back(it->second);
+    key_union[it->first].second.push_back(it->second);
   
   // iterate over the result
   std::map< TIndex, std::vector< TObject > > result;
@@ -977,13 +992,16 @@ void Query_Statement::filter_by_tags
   formulate_range_query(range_set, coarse_indices);
 
   // prepare straight keys
-  map< string, vector< Regular_Expression* > > key_union;
+  map< string, pair< string, vector< Regular_Expression* > > > key_union;
   for (vector< string >::const_iterator it = keys.begin(); it != keys.end();
       ++it)
     key_union[*it];
+  for (vector< pair< string, string > >::const_iterator it = key_values.begin(); it != key_values.end();
+      ++it)
+    key_union[it->first].first = it->second;
   for (vector< pair< string, Regular_Expression* > >::const_iterator
       it = key_regexes.begin(); it != key_regexes.end(); ++it)
-    key_union[it->first].push_back(it->second);
+    key_union[it->first].second.push_back(it->second);
   
   // iterate over the result
   std::map< TIndex, std::vector< TObject > > result;
@@ -1097,8 +1115,9 @@ void Query_Statement::progress_1(vector< Id_Type >& ids, std::vector< Index >& r
      || (!key_regexes.empty() && !check_keys_late)
      || (!regkey_regexes.empty() && !check_keys_late))
   {
+    bool result_valid = true;
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
-        collect_ids< Skeleton, Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late);
+        collect_ids< Skeleton, Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late, result_valid);
     
     if (!key_nvalues.empty() || (!check_keys_late && !key_nregexes.empty()))
     {
@@ -1126,7 +1145,7 @@ void Query_Statement::progress_1(vector< Id_Type >& ids, std::vector< Index >& r
       }
     }
       
-    if (ids.empty())
+    if (ids.empty() && result_valid)
       answer_state = data_collected;
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty()) && !check_keys_late)

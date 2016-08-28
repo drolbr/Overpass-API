@@ -85,7 +85,7 @@ if [[ -z $REF ]]; then
 };    
 fi      
 
-CORRESPONDENCES=`$BIN_DIR/bbox_brim_query --only-corrs $BRIM_PARAMS`
+CORRESPONDENCES= #`$BIN_DIR/bbox_brim_query --only-corrs $BRIM_PARAMS`
 
 if [[ $CORRESPONDENCES -gt 0 ]]; then
 {
@@ -103,7 +103,7 @@ else
     echo
 
     REQUEST_METHOD=
-    $BIN_DIR/osm3s_query --no-mime <$BASEDIR/request.1 2>&1
+    $BIN_DIR/osm3s_query <$BASEDIR/request.1 2>&1
 
     echo
     echo "$BIN_DIR/draw_route_svg $SKETCH_PARAMS"
@@ -111,7 +111,7 @@ else
   else
   {
     REQUEST_METHOD=
-    $BIN_DIR/osm3s_query --quiet --no-mime <$BASEDIR/request.1 >$BASEDIR/answer.1
+    $BIN_DIR/osm3s_query --quiet <$BASEDIR/request.1 >$BASEDIR/answer.1
   };
   fi;
 

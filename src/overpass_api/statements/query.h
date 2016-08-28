@@ -68,7 +68,7 @@ class Query_Statement : public Output_Statement
     template< typename Skeleton, typename Id_Type >
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids
         (const File_Properties& file_prop, const File_Properties& attic_file_prop,
-         Resource_Manager& rman, uint64 timestamp, bool check_keys_late);
+         Resource_Manager& rman, uint64 timestamp, bool check_keys_late, bool& result_valid);
         
     template< class Id_Type >
     vector< Id_Type > collect_ids

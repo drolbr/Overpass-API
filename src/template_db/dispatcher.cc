@@ -42,46 +42,23 @@ Dispatcher_Socket::Dispatcher_Socket
      const std::string& shadow_name_,
      const std::string& db_dir_,
      uint max_num_reading_processes)
+  : socket("", max_num_reading_processes)
 {
   signal(SIGPIPE, SIG_IGN);
   
-  std::string shadow_name = shadow_name_;
   std::string db_dir = db_dir_;
   // get the absolute pathname of the current directory
   if (db_dir.substr(0, 1) != "/")
     db_dir = getcwd() + db_dir_;
-  if (shadow_name.substr(0, 1) != "/")
-    shadow_name = getcwd() + shadow_name_;
   
   // initialize the socket for the server
   socket_name = db_dir + dispatcher_share_name;
-  
-  socket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (socket_descriptor == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::2");
-  if (fcntl(socket_descriptor, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::3");  
-  struct sockaddr_un local;
-  local.sun_family = AF_UNIX;
-  strcpy(local.sun_path, socket_name.c_str());
-  if (bind(socket_descriptor, (struct sockaddr*)&local,
-      sizeof(local.sun_family) + strlen(local.sun_path)) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::4");
-  if (chmod(socket_name.c_str(), S_666) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::8");
-  if (listen(socket_descriptor, max_num_reading_processes) == -1)
-    throw File_Error
-        (errno, socket_name, "Dispatcher_Server::5");
+  socket.open(socket_name);
 }
 
 
 Dispatcher_Socket::~Dispatcher_Socket()
 {
-  close(socket_descriptor);
   remove(socket_name.c_str());
 }
 
@@ -90,7 +67,7 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
 {    
   struct sockaddr_un sockaddr_un_dummy;
   uint sockaddr_un_dummy_size = sizeof(sockaddr_un_dummy);
-  int socket_fd = accept(socket_descriptor, (sockaddr*)&sockaddr_un_dummy,
+  int socket_fd = accept(socket.descriptor(), (sockaddr*)&sockaddr_un_dummy,
 			 (socklen_t*)&sockaddr_un_dummy_size);
   if (socket_fd == -1)
   {
@@ -796,6 +773,48 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	}
 	
 	connection_per_pid.get(client_pid)->send_result(target_pid);
+      }
+      else if (command == QUERY_MY_STATUS)
+      {
+        Blocking_Client_Socket* connection = connection_per_pid.get(client_pid);
+        if (!connection)
+          continue;
+        
+        std::vector< uint32 > arguments = connection->get_arguments(1);
+        if (arguments.size() < 1)
+          continue;
+        uint32 client_token = arguments[0];
+        
+        connection->send_data(global_resource_planner.get_rate_limit());
+    
+        for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
+           it != global_resource_planner.get_active().end(); ++it)
+        {
+          if (it->client_token != client_token)
+            continue;
+          
+          if (processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
+            connection->send_data(REQUEST_READ_AND_IDX);
+          else
+            connection->send_data(READ_IDX_FINISHED);
+          
+          connection->send_data(it->client_pid);
+          connection->send_data(it->max_time);
+          connection->send_data(it->max_space >>32);
+          connection->send_data(it->max_space & 0xffffffff);
+          connection->send_data(it->start_time);
+        }
+        
+        connection->send_data(0);
+    
+        for (std::vector< Quota_Entry >::const_iterator it = global_resource_planner.get_afterwards().begin();
+            it != global_resource_planner.get_afterwards().end(); ++it)
+        {
+          if (it->client_token == client_token)
+            connection->send_data(it->expiration_time);
+        }
+        
+        connection->send_result(0);
       }
       else if (command == SET_GLOBAL_LIMITS)
       {
