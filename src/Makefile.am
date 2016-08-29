@@ -193,6 +193,7 @@ nobase_dist_HEADERS = \
   overpass_api/data/geometry.h\
   overpass_api/data/meta_collector.h\
   overpass_api/data/regular_expression.h\
+  overpass_api/data/user_data_cache.h\
   overpass_api/dispatch/dispatcher_stub.h\
   overpass_api/dispatch/resource_manager.h\
   overpass_api/dispatch/scripting_core.h\
@@ -243,6 +244,7 @@ nobase_dist_HEADERS = \
   template_db/file_blocks.h\
   template_db/file_blocks_index.h\
   template_db/file_tools.h\
+  template_db/lz4_wrapper.h\
   template_db/random_file.h\
   template_db/random_file_index.h\
   template_db/transaction.h\
