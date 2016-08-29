@@ -168,7 +168,7 @@ bin_translate_xapi_LDADD =
 bin_process_augmented_diffs_SOURCES = expat/process_augmented_diffs.cc expat/escape_xml.cc
 bin_process_augmented_diffs_LDADD = libexpatwrapper.la
 
-distdir = osm-3s_v0.7.52
+distdir = osm-3s_v0.7.53
 
 nobase_dist_HEADERS = \
   expat/escape_xml.h\
