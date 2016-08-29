@@ -62,15 +62,43 @@ int main(int argc, char* argv[])
       if (flush_limit == 0)
         flush_limit = std::numeric_limits< unsigned int >::max();
     }
-    else if (!(strncmp(argv[argpos], "--compression_method=", 21)))
+    else if (!(strncmp(argv[argpos], "--compression-method=", 21)))
     {
       if (string(argv[argpos]).substr(21) == "no")
 	basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
       else if (string(argv[argpos]).substr(21) == "gz")
 	basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+#ifdef HAVE_LZ4
+      else if (string(argv[argpos]).substr(21) == "lz4")
+        basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+#endif
       else
       {
-        cerr<<"For --compression_method, please use \"no\" or \"gz\" as value.\n";
+#ifdef HAVE_LZ4
+        cerr<<"For --compression-method, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+#else
+        cerr<<"For --compression-method, please use \"no\" or \"gz\" as value.\n";
+#endif
+        abort = true;
+      }
+    }
+    else if (!(strncmp(argv[argpos], "--map-compression-method=", 25)))
+    {
+      if (string(argv[argpos]).substr(21) == "no")
+        basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+      else if (string(argv[argpos]).substr(21) == "gz")
+        basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+#ifdef HAVE_LZ4
+      else if (string(argv[argpos]).substr(21) == "lz4")
+        basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+#endif
+      else
+      {
+#ifdef HAVE_LZ4
+        cerr<<"For --map-compression-method, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+#else
+        cerr<<"For --map-compression-method, please use \"no\" or \"gz\" as value.\n";
+#endif
         abort = true;
       }
     }

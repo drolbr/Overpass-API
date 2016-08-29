@@ -54,7 +54,7 @@ struct OSM_File_Properties : public File_Properties
   uint32 get_compression_method() const { return basic_settings().compression_method; }
   uint32 get_map_block_size() const { return map_block_size/8; }
   uint32 get_map_compression_factor() const { return 8; }
-  uint32 get_map_compression_method() const { return File_Blocks_Index< TVal >::ZLIB_COMPRESSION; }
+  uint32 get_map_compression_method() const { return basic_settings().map_compression_method; }
   
   vector< bool > get_data_footprint(const string& db_dir) const
   {
@@ -98,12 +98,12 @@ Basic_Settings::Basic_Settings()
   base_directory("./"),
   logfile_name("transactions.log"),
   shared_name_base("/osm3s_v0.7.53"),
-  
 #ifdef HAVE_LZ4
-  compression_method(File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION)
+  compression_method(File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION),
 #else
-  compression_method(File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION)
+  compression_method(File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION),
 #endif
+  map_compression_method(File_Blocks_Index< Uint31_Index >::NO_COMPRESSION)
 {}
 
 Basic_Settings& basic_settings()
