@@ -266,7 +266,8 @@ EXTRA_DIST = \
   html/public_transport.html\
   html/query_form.html\
   html/technical_overview.html\
-  rules/areas.osm3s
+  rules/areas.osm3s\
+  rules/areas_delta.osm3s
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
 SUBDIRS = test-bin
