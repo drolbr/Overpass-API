@@ -100,7 +100,7 @@ Osm_Script_Statement::Osm_Script_Statement
     else
     {
       ostringstream temp;
-      temp<<"A bounding box needs four comma separated values.";
+      temp<<"A bounding box needs four comma-separated values.";
       add_static_error(temp.str());
     }
     if (pos != string::npos)
@@ -112,7 +112,7 @@ Osm_Script_Statement::Osm_Script_Statement
     else
     {
       ostringstream temp;
-      temp<<"A bounding box needs four comma separated values.";
+      temp<<"A bounding box needs four comma-separated values.";
       add_static_error(temp.str());
     }
     if (pos != string::npos)
@@ -123,7 +123,7 @@ Osm_Script_Statement::Osm_Script_Statement
     else
     {
       ostringstream temp;
-      temp<<"A bounding box needs four comma separated values.";
+      temp<<"A bounding box needs four comma-separated values.";
       add_static_error(temp.str());
     }
     bbox_attributes["e"] = bbox_s.substr(from);

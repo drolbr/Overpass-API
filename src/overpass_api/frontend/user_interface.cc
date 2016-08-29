@@ -66,7 +66,8 @@ namespace
     if (input.size() > max_input_size)
     {
       ostringstream temp;
-      temp<<"Input too long (length: "<<input.size()<<", max. allowed: "<<max_input_size<<')';
+      temp<<"Input Input too long (length: "<<input.size()<<"). The maximum query length is "
+          <<(double)max_input_size/1024/1024<<" MB.";
       if (error_output)
 	error_output->add_encoding_error(temp.str());
       return input;

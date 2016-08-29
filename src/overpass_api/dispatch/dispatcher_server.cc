@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
       "  --osm-base: Start or talk to the dispatcher for the osm data.\n"
       "  --areas: Start or talk to the dispatcher for the areas data.\n"
       "  --meta: When starting the osm data dispatcher, also care for meta data.\n"
-      "  --attic: When starting the osm data dispatcher, also care for meta and attic data.\n"
+      "  --attic: When starting the osm data dispatcher, also care for meta and museum data.\n"
       "  --db-dir=$DB_DIR: The directory where the database resides.\n"
       "  --terminate: Stop the adressed dispatcher.\n"
       "  --status: Let the adressed dispatcher dump its status into\n"

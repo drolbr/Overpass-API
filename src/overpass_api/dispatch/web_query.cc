@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
       if (error_output.http_method == error_output.http_get
           || error_output.http_method == error_output.http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". Probably the server is overcrowded.\n";
+            <<". The server is probably too busy to handle your request.\n";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
@@ -193,8 +193,8 @@ int main(int argc, char *argv[])
       temp<<"Query timed out in \""<<e.stmt_name<<"\" at line "<<e.line_number
           <<" after "<<e.runtime<<" seconds.";
     else
-      temp<<"Query run out of memory in \""<<e.stmt_name<<"\" at line "
-          <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
+      temp<<"Query ran out of memory in \""<<e.stmt_name<<"\" at line "
+          <<e.line_number<<". It would need at least "<<e.size/(1024*1024)<<" MB of RAM to continue.";
     error_output.runtime_error(temp.str());
   }
   catch(std::bad_alloc& e)

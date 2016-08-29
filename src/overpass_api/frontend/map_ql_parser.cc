@@ -319,7 +319,7 @@ vector< TStatement* > collect_substatements_and_probe(typename TStatement::Facto
     if (is_difference && *token != ")")
     {
       if (error_output)
-        error_output->add_parse_error("difference takes always two operands", token.line_col().first);
+        error_output->add_parse_error("difference always requires two operands", token.line_col().first);
       clear_until_after(token, error_output, ")", false);
     }
   }
@@ -1540,7 +1540,7 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
   if (depth >= 1024)
   {
     if (error_output)
-      error_output->add_parse_error("Nesting of statements limited to 1023 levels", token.line_col().first);
+      error_output->add_parse_error("Nesting of statements is limited to 1023 levels", token.line_col().first);
     return 0;
   }
   
