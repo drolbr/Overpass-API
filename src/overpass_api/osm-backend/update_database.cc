@@ -84,12 +84,12 @@ int main(int argc, char* argv[])
     }
     else if (!(strncmp(argv[argpos], "--map-compression-method=", 25)))
     {
-      if (string(argv[argpos]).substr(21) == "no")
+      if (string(argv[argpos]).substr(25) == "no")
         basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
-      else if (string(argv[argpos]).substr(21) == "gz")
+      else if (string(argv[argpos]).substr(25) == "gz")
         basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
 #ifdef HAVE_LZ4
-      else if (string(argv[argpos]).substr(21) == "lz4")
+      else if (string(argv[argpos]).substr(25) == "lz4")
         basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
 #endif
       else
