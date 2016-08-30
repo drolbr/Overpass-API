@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<osm-script timeout="86400" element-limit="1073741824">
+<osm-script timeout="86400" element-limit="2073741824">
 
 <union>
   <query type="relation">
