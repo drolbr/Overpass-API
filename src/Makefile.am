@@ -1,6 +1,11 @@
 
 bin_mandatory = bin/osm3s_query bin/dispatcher bin/update_database bin/update_from_dir
-bin_script_mandatory = bin/apply_osc_to_db.sh bin/fetch_osc.sh bin/rules_loop.sh bin/download_clone.sh
+bin_script_mandatory = \
+  bin/apply_osc_to_db.sh\
+  bin/download_clone.sh\
+  bin/fetch_osc.sh\
+  bin/rules_delta_loop.sh\
+  bin/rules_loop.sh
 cgi_bin_mandatory = cgi-bin/interpreter cgi-bin/timestamp
 cgi_bin_script_mandatory = cgi-bin/kill_my_queries cgi-bin/map cgi-bin/status
 
