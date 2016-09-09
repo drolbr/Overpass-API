@@ -295,7 +295,7 @@ inline std::vector< bool > get_map_index_footprint
   Random_File_Index index(file_prop, false, use_shadow, db_dir, "");
   
   std::vector< bool > result(index.block_count, true);
-  for (typename std::vector< std::pair< uint32, uint32 > >::const_iterator
+  for (std::vector< std::pair< uint32, uint32 > >::const_iterator
       it = index.void_blocks.begin(); it != index.void_blocks.end(); ++it)
   {
     for (uint32 i = 0; i < it->first; ++i)

@@ -553,7 +553,10 @@ void write_to_index_empty_file_data(const std::vector< bool >& footprint, const 
     }
   }
   if (last_start < footprint.size())
+  {
     *pos = std::make_pair(footprint.size() - last_start, last_start);
+    ++pos;
+  }
   
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
 		S_666, "write_to_index_empty_file_data:1");
