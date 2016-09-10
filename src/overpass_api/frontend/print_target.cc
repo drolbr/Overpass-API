@@ -674,7 +674,8 @@ void Print_Target_Xml::print_item_count(const Output_Item_Count& item_count)
   cout<<"  <count total=\"" << item_count.total << "\" "
         "nodes=\"" << item_count.nodes << "\" "
         "ways=\"" << item_count.ways << "\" "
-        "relations=\"" << item_count.relations << "\"/>\n";
+        "relations=\"" << item_count.relations << "\" "
+        "areas=\"" << item_count.areas << "\"/>\n";
 }
 
 //-----------------------------------------------------------------------------
