@@ -59,7 +59,7 @@ struct Random_File_Index
     uint32 get_compression_factor() const { return compression_factor; }
     uint32 get_compression_method() const { return compression_method; }
     
-    static const int FILE_FORMAT_VERSION = 7512;
+    static const int FILE_FORMAT_VERSION = 1007053000;
     static const int NO_COMPRESSION = 0;
     static const int ZLIB_COMPRESSION = 1;
     static const int LZ4_COMPRESSION = 2;
@@ -138,8 +138,65 @@ inline Random_File_Index::Random_File_Index
     Void_Pointer< uint8 > index_buf(index_size);
     source_file.read(index_buf.ptr, index_size, "Random_File:14");
     
-    if (file_name_extension == ".legacy")
+    bool read_old_format = (file_name_extension == ".legacy" ||
+      (index_size > 0 && *(int32*)index_buf.ptr != FILE_FORMAT_VERSION && *(int32*)index_buf.ptr != 7512));
       // We support this way the old format although it has no version marker.
+    
+    if (!read_old_format && index_size > 0)
+    {
+      uint8 block_exp = *(uint8*)(index_buf.ptr + 4);
+      uint8 compression_exp = *(uint8*)(index_buf.ptr + 5);
+      uint16 guessed_compression_method = *(uint16*)(index_buf.ptr + 6);
+      uint32 guessed_compression_factor = 1u<<compression_exp;
+      
+      if (block_exp < 32 && compression_exp < 32 && guessed_compression_method < 3)
+      {
+        block_count = file_size / (1ull<<block_exp);
+        is_referred.resize(block_count, false);
+        
+        uint32 pos = 8;
+        while (pos < index_size)
+        {
+          Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
+              *(uint32*)(index_buf.ptr + pos + 4));
+
+          blocks.push_back(entry);
+          
+          if (entry.size > guessed_compression_factor)
+          {
+            read_old_format = true;
+            break;
+          }
+
+          if (entry.pos != npos)
+          {
+            if (entry.pos > block_count)
+            {
+              read_old_format = true;
+              break;
+            }
+            else
+              for (uint32 i = 0; i < entry.size; ++i)
+                is_referred[entry.pos + i] = true;
+          }
+        
+          pos += 8;
+        }
+      
+        if (read_old_format)
+          blocks.clear();
+        else
+        {
+          block_size_ = 1ull<<block_exp;
+          compression_factor = guessed_compression_factor;
+          compression_method = guessed_compression_method;
+        }
+      }
+      else
+        read_old_format = true;
+    }
+    
+    if (read_old_format)
     {
       block_count = file_size/block_size_;
       is_referred.resize(block_count, false);
@@ -161,38 +218,6 @@ inline Random_File_Index::Random_File_Index
         pos += 4;
       }
     }
-    else if (index_size > 0)
-    {
-      if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
-        throw File_Error(0, index_file_name, "Random_File_Index: Unsupported index file format version");
-      block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
-      compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
-      compression_method = *(uint16*)(index_buf.ptr + 6);
-
-      block_count = file_size / block_size_;
-      is_referred.resize(block_count, false);
-
-      uint32 pos = 8;
-      while (pos < index_size)
-      {
-        Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
-            *(uint32*)(index_buf.ptr + pos + 4));
-
-        blocks.push_back(entry);
-
-        if (entry.pos != npos)
-        {
-          if (entry.pos > block_count)
-            throw File_Error
-            (0, index_file_name, "Random_File: bad pos in index file");
-          else
-            for (uint32 i = 0; i < entry.size; ++i)
-              is_referred[entry.pos + i] = true;
-        }
-        
-        pos += 8;
-      }
-    }  
   }
   catch (File_Error e)
   {
