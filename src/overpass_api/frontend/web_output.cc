@@ -316,6 +316,8 @@ void Web_Output::display_remark(const string& text)
   else if (header_written == html)
     cout<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "
         <<text<<" </p>\n";
+  else if (header_written == csv)
+    cout<<"Remark: "<<text<<"\n";
 }
 
 void Web_Output::display_error(const string& text, uint write_mime)
@@ -330,4 +332,6 @@ void Web_Output::display_error(const string& text, uint write_mime)
         <<text<<" </p>\n";
   else if (header_written == json)
     messages += text;
+  else if (header_written == csv)
+    cout<<"Remark: "<<text<<"\n";
 }
