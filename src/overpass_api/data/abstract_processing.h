@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__DATA__ABSTRACT_PROCESSING_H
 #define DE__OSM3S___OVERPASS_API__DATA__ABSTRACT_PROCESSING_H
@@ -27,76 +27,74 @@
 
 //-----------------------------------------------------------------------------
 
-template < class TObject, class TPredicateA, class TPredicateB >
+template < class Object, class TPredicateA, class TPredicateB >
 class And_Predicate
 {
   public:
     And_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
         : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
-    bool match(const TObject& obj) const
-    {
-      return (predicate_a.match(obj) && predicate_b.match(obj));
-    }
+    bool match(const Object& obj) const { return (predicate_a.match(obj) && predicate_b.match(obj)); }
+    bool match(const Handle< Object >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
+    bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
     
   private:
     TPredicateA predicate_a;
     TPredicateB predicate_b;
 };
 
-template < class TObject, class TPredicateA, class TPredicateB >
+template < class Object, class TPredicateA, class TPredicateB >
 class Or_Predicate
 {
   public:
     Or_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
         : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
-    bool match(const TObject& obj) const
-    {
-      return (predicate_a.match(obj) || predicate_b.match(obj));
-    }
+    bool match(const Object& obj) const { return (predicate_a.match(obj) || predicate_b.match(obj)); }
+    bool match(const Handle< Object >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
+    bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
     
   private:
     TPredicateA predicate_a;
     TPredicateB predicate_b;
 };
 
-template < class TObject, class TPredicateA >
+template < class Object, class TPredicateA >
 class Not_Predicate
 {
   public:
     Not_Predicate(const TPredicateA& predicate_a_)
         : predicate_a(predicate_a_) {}
-    bool match(const TObject& obj) const
-    {
-      return (!predicate_a.match(obj));
-    }
+    bool match(const Object& obj) const { return (!predicate_a.match(obj)); }
+    bool match(const Handle< Object >& h) const { return (!predicate_a.match(h)); }
+    bool match(const Handle< Attic< Object > >& h) const { return (!predicate_a.match(h)); }
     
   private:
     TPredicateA predicate_a;
 };
 
-template < class TObject >
+template < class Object >
 class Trivial_Predicate
 {
   public:
     Trivial_Predicate() {}
-    bool match(const TObject& obj) const { return true; }
+    bool match(const Object& obj) const { return true; }
+    bool match(const Handle< Object >& h) const { return true; }
+    bool match(const Handle< Attic< Object > >& h) const { return true; }
 };
 
 //-----------------------------------------------------------------------------
 
-template < class TObject >
+template < class Object >
 class Id_Predicate
 {
   public:
-    Id_Predicate(const vector< typename TObject::Id_Type >& ids_)
+    Id_Predicate(const vector< typename Object::Id_Type >& ids_)
       : ids(ids_) {}
-    bool match(const TObject& obj) const
-    {
-      return binary_search(ids.begin(), ids.end(), obj.id);
-    }
+    bool match(const Object& obj) const { return binary_search(ids.begin(), ids.end(), obj.id); }
+    bool match(const Handle< Object >& h) const { return binary_search(ids.begin(), ids.end(), h.id()); }
+    bool match(const Handle< Attic< Object > >& h) const { return binary_search(ids.begin(), ids.end(), h.id()); }
     
   private:
-    const vector< typename TObject::Id_Type >& ids;
+    const vector< typename Object::Id_Type >& ids;
 };
 
 //-----------------------------------------------------------------------------
@@ -148,9 +146,11 @@ public:
   Get_Parent_Rels_Predicate(const vector< Uint64 >& ids_, uint32 child_type_)
     : ids(ids_), child_type(child_type_) {}
   bool match(const Relation_Skeleton& obj) const
-  {
-    return has_a_child_with_id(obj, ids, child_type);
-  }
+  { return has_a_child_with_id(obj, ids, child_type); }
+  bool match(const Handle< Relation_Skeleton >& h) const
+  { return has_a_child_with_id(h.object(), ids, child_type); }
+  bool match(const Handle< Attic< Relation_Skeleton > >& h) const
+  { return has_a_child_with_id(h.object(), ids, child_type); }
   
 private:
   const vector< Uint64 >& ids;
@@ -164,9 +164,11 @@ public:
   Get_Parent_Rels_Role_Predicate(const vector< Uint64 >& ids_, uint32 child_type_, uint32 role_id_)
     : ids(ids_), child_type(child_type_), role_id(role_id_) {}
   bool match(const Relation_Skeleton& obj) const
-  {
-    return has_a_child_with_id_and_role(obj, ids, child_type, role_id);
-  }
+  { return has_a_child_with_id_and_role(obj, ids, child_type, role_id); }
+  bool match(const Handle< Relation_Skeleton >& h) const
+  { return has_a_child_with_id_and_role(h.object(), ids, child_type, role_id); }
+  bool match(const Handle< Attic< Relation_Skeleton > >& h) const
+  { return has_a_child_with_id_and_role(h.object(), ids, child_type, role_id); }
   
 private:
   const vector< Uint64 >& ids;
@@ -180,10 +182,9 @@ class Get_Parent_Ways_Predicate
 public:
   Get_Parent_Ways_Predicate(const vector< Node::Id_Type >& ids_)
     : ids(ids_) {}
-  bool match(const Way_Skeleton& obj) const
-  {
-    return has_a_child_with_id(obj, ids);
-  }
+  bool match(const Way_Skeleton& obj) const { return has_a_child_with_id(obj, ids); }
+  bool match(const Handle< Way_Skeleton >& h) const { return has_a_child_with_id(h.object(), ids); }
+  bool match(const Handle< Attic< Way_Skeleton > >& h) const { return has_a_child_with_id(h.object(), ids); }
   
 private:
   const vector< Node::Id_Type >& ids;
@@ -361,7 +362,7 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
 {
   std::pair< std::vector< Index >, std::vector< Index > > result;
   
-  Random_File< Index > current(rman.get_transaction()->random_index
+  Random_File< typename Skeleton::Id_Type, Index > current(rman.get_transaction()->random_index
       (current_skeleton_file_properties< Skeleton >()));
   for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
       it = ids.begin(); it != ids.end(); ++it)
@@ -372,7 +373,7 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
   
   if (rman.get_desired_timestamp() != NOW)
   {
-    Random_File< Index > attic_random(rman.get_transaction()->random_index
+    Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
         (attic_skeleton_file_properties< Skeleton >()));
     std::set< typename Skeleton::Id_Type > idx_list_ids;
     for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator

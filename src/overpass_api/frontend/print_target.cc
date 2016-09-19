@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "../data/regular_expression.h"
 #include "output.h"
@@ -165,7 +165,7 @@ class Print_Target_Csv : public Print_Target
                           const OSM_Element_Metadata_Skeleton* meta,
                           const vector< pair< string, string > >* tags,
                           const map< uint32, string >* users,
-                          uint32 id, double lat, double lon);
+                          uint64 id, double lat, double lon);
 
     void process_csv_line(std::ostream& result, const Output_Item_Count& item_count);
 
@@ -219,13 +219,13 @@ class Print_Target_Custom : public Print_Target
     string get_output() const { return output; }
     uint32 get_written_elements_count() const { return written_elements_count; }
     string get_first_type() const { return first_type; }
-    uint32 get_first_id() const { return first_id; }
+    uint64 get_first_id() const { return first_id; }
     
   private:
     string output;
     uint32 written_elements_count;
     string first_type;
-    uint32 first_id;
+    uint64 first_id;
     string node_template;
     string way_template;
     string relation_template;
@@ -1002,7 +1002,7 @@ template< typename OSM_Element_Metadata_Skeleton >
 void Print_Target_Csv::process_csv_line(std::ostream& result, Object_Type::_ otype,
     const OSM_Element_Metadata_Skeleton* meta,
     const vector<pair<string, string> >* tags, const map<uint32, string>* users,
-    uint32 id, double lat, double lon)
+    uint64 id, double lat, double lon)
 {
   std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
   while (true)
@@ -1435,7 +1435,7 @@ string antiprocess_coords(const string& raw_template)
   return result.str();
 }
 
-string process_template(const string& raw_template, uint32 id, string type,
+string process_template(const string& raw_template, uint64 id, string type,
 			double south, double west, double north, double east, uint zoom,
 			const vector< pair< string, string > >* tags,
 			const vector< Node::Id_Type >* nds,

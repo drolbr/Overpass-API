@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "../../expat/expat_justparse_interface.h"
 #include "../../template_db/dispatcher.h"
@@ -30,8 +30,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -43,7 +45,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 int main(int argc, char *argv[])
 {  
@@ -126,6 +127,8 @@ int main(int argc, char *argv[])
       area_level = determine_area_level(error_output, area_level);
       Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --",
 				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024);
+      copy_file(dispatcher.resource_manager().get_transaction()->get_db_dir() + "/replicate_id",
+		clone_db_dir + "/replicate_id");
       
       clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
       return 0;
@@ -263,8 +266,26 @@ int main(int argc, char *argv[])
     
     return 2;
   }
+  catch(Context_Error e)
+  {
+    error_output->runtime_error("Context error: " + e.message);
+    return 3;
+  }
   catch(Exit_Error e)
   {
-    return 3;
+    return 4;
+  }
+  catch(std::bad_alloc& e)
+  {
+    rlimit limit;
+    getrlimit(RLIMIT_AS, &limit);
+    ostringstream temp;
+    temp<<"Query run out of memory using about "<<limit.rlim_cur/(1024*1024)<<" MB of RAM.";
+    error_output->runtime_error(temp.str());
+  }
+  catch(std::exception& e)
+  {
+    error_output->runtime_error(std::string("Query failed with the exception: ") + e.what());    
+    return 4;
   }
 }

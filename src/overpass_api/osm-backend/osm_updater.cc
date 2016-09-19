@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "node_updater.h"
 #include "osm_updater.h"
@@ -515,7 +515,7 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version_,
-			 meta_modes meta_, bool produce_augmented_diffs, unsigned int flush_limit_)
+			 meta_modes meta_, unsigned int flush_limit_)
   : dispatcher_client(0), meta(meta_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
@@ -550,9 +550,13 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, string db_dir, const string& data_version_,
-     meta_modes meta_, bool produce_augmented_diffs, unsigned int flush_limit_)
+     meta_modes meta_, unsigned int flush_limit_)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
+  if (file_present(db_dir + osm_base_settings().shared_name))
+    throw Context_Error("File " + db_dir + osm_base_settings().shared_name + " present, "
+        "which indicates a running dispatcher. Delete file if no dispatcher is running.");
+    
   {
     ofstream version((db_dir + "osm_base_version").c_str());
     version<<data_version_<<'\n';

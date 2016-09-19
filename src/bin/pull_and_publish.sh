@@ -176,7 +176,7 @@ if [[ -n $INSTALL ]]; then
   }; fi
   pushd "osm-3s_v$VERSION/build/"
   ../src/configure --prefix="$TARGET_DIR/"
-  make CXXFLAGS=-O3 install
+  make install
   popd
 };
 fi

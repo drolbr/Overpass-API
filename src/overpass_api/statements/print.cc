@@ -1,26 +1,26 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/meta_collector.h"
 #include "../frontend/print_target.h"
-#include "meta_collector.h"
 #include "print.h"
 
 #include <algorithm>
@@ -590,7 +590,7 @@ void Print_Statement::tags_quadtile
   formulate_range_query(range_set, coarse_indices);
   
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction, meta_file_prop);
+  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(), meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > items_db
@@ -628,7 +628,8 @@ void Print_Statement::tags_quadtile
 	if (++element_count > limit)
 	  return;
 	print_item(target, item_it->first.val(), *it2, &(tags_by_id[it2->id]),
-		   meta_printer.get(item_it->first, it2->id), &(meta_printer.users()));
+		   meta_printer.get(item_it->first, it2->id),
+		   meta_file_prop ? &(rman.users()) : 0);
       }
       ++item_it;
     }
@@ -655,9 +656,9 @@ void Print_Statement::tags_quadtile_attic
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, transaction, current_meta_file_prop);
+      (items, *rman.get_transaction(), current_meta_file_prop);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, transaction, attic_meta_file_prop);
+      (items, *rman.get_transaction(), attic_meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
@@ -710,7 +711,7 @@ void Print_Statement::tags_quadtile_attic
           meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
         print_item(target, item_it->first.val(), *it2,
                           &(tags_by_id[Attic< typename Object::Id_Type >(it2->id, it2->timestamp)]),
-                   meta, &(current_meta_printer.users()));
+                   meta, &(rman.users()));
       }
       ++item_it;
     }
@@ -893,7 +894,7 @@ void Print_Statement::tags_by_id
     sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
   
   // formulate meta query if meta data shall be printed
-  Meta_Collector< TIndex, typename TObject::Id_Type > meta_printer(items, transaction, meta_file_prop);
+  Meta_Collector< TIndex, typename TObject::Id_Type > meta_printer(items, *rman.get_transaction(), meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
@@ -937,10 +938,12 @@ void Print_Statement::tags_by_id
               (items_by_id[i.val()].first->id));
       if (++element_count > limit)
 	return;
-      print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
-		 &(tags_by_id[items_by_id[i.val()].first->id.val()]),
-		 (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id) ?
-		     &*meta_it : 0, &(meta_printer.users()));
+      if (meta_it != metadata.end() && meta_it->ref == items_by_id[i.val()].first->id)
+	print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+	    &(tags_by_id[items_by_id[i.val()].first->id.val()]), &*meta_it, &(rman.users()));
+      else
+	print_item(target, items_by_id[i.val()].second, *(items_by_id[i.val()].first),
+	    &(tags_by_id[items_by_id[i.val()].first->id.val()]), 0, 0);
     }
   }
 }
@@ -1017,12 +1020,12 @@ void Print_Statement::tags_by_id_attic
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
-      (current_items, transaction, current_meta_file_prop);
+      (current_items, *rman.get_transaction(), current_meta_file_prop);
   
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (attic_items, transaction, current_meta_file_prop);
+      (attic_items, *rman.get_transaction(), current_meta_file_prop);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (attic_items, transaction, attic_meta_file_prop);
+      (attic_items, *rman.get_transaction(), attic_meta_file_prop);
   
   // iterate over the result
   Block_Backend< Tag_Index_Local, typename Object::Id_Type > current_tags_db
@@ -1095,7 +1098,7 @@ void Print_Statement::tags_by_id_attic
         print_item(target, items_by_id[i.val()].idx.val(), *items_by_id[i.val()].obj,
 		 &(current_tags_by_id[items_by_id[i.val()].obj->id.val()]),
 		 (meta_it != only_current_metadata.end() && meta_it->ref == items_by_id[i.val()].obj->id) ?
-		     &*meta_it : 0, &(only_current_meta_printer.users()));
+		     &*meta_it : 0, &(rman.users()));
       }
       else
       {
@@ -1106,7 +1109,7 @@ void Print_Statement::tags_by_id_attic
 		   Attic< Object >(*items_by_id[i.val()].obj, items_by_id[i.val()].timestamp),
                  &(attic_tags_by_id[Attic< typename Object::Id_Type >
                      (items_by_id[i.val()].obj->id, items_by_id[i.val()].timestamp)]),
-                 meta_it != attic_metadata.end() ? &*meta_it : 0, &current_meta_printer.users());
+                 meta_it != attic_metadata.end() ? &*meta_it : 0, &rman.users());
       }
     }
   }
@@ -2340,9 +2343,6 @@ void Print_Statement::execute(Resource_Manager& rman)
 
   if (mode & Print_Target::PRINT_TAGS)
   {
-    User_Data_Cache* user_data_cache =
-        (collection_mode == collect_rhs ? new User_Data_Cache(*rman.get_transaction()) : 0);
-  
     if (order == order_by_id)
     {
       if (rman.get_desired_timestamp() == NOW)
@@ -2360,7 +2360,7 @@ void Print_Statement::execute(Resource_Manager& rman)
                    element_count);
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_nodes(rman, &rman.users(), add_deletion_information);
       
       if (rman.get_desired_timestamp() == NOW)
         tags_by_id(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
@@ -2377,7 +2377,7 @@ void Print_Statement::execute(Resource_Manager& rman)
                    element_count);
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_ways(rman, &rman.users(), add_deletion_information);
       
       if (rman.get_desired_timestamp() == NOW)
         tags_by_id(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
@@ -2394,7 +2394,7 @@ void Print_Statement::execute(Resource_Manager& rman)
                    element_count);
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_relations(rman, &rman.users(), add_deletion_information);
       
       if (rman.get_area_transaction())
 	tags_by_id(mit->second.areas, *area_settings().AREA_TAGS_LOCAL,
@@ -2418,7 +2418,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_nodes(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_nodes(rman, &rman.users(), add_deletion_information);
       
       tags_quadtile(mit->second.ways, *osm_base_settings().WAY_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -2435,7 +2435,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_ways(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_ways(rman, &rman.users(), add_deletion_information);
       
       tags_quadtile(mit->second.relations, *osm_base_settings().RELATION_TAGS_LOCAL,
 		    *target, rman, *rman.get_transaction(),
@@ -2452,7 +2452,7 @@ void Print_Statement::execute(Resource_Manager& rman)
       }
       
       if (collection_mode == collect_rhs)
-        collection_print_target->clear_relations(rman, &user_data_cache->users(), add_deletion_information);
+        collection_print_target->clear_relations(rman, &rman.users(), add_deletion_information);
       
       if (rman.get_area_transaction())
       {
@@ -2460,8 +2460,6 @@ void Print_Statement::execute(Resource_Manager& rman)
 		      *target, rman, *rman.get_area_transaction(), 0, element_count);
       }
     }
-    
-    delete user_data_cache;
   }
   else if (mode & Print_Target::PRINT_COUNT)
   {

@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___TEMPLATE_DB__DISPATCHER_CLIENT_H
 #define DE__OSM3S___TEMPLATE_DB__DISPATCHER_CLIENT_H
@@ -22,6 +22,23 @@
 #include "types.h"
 
 #include <vector>
+
+
+struct Running_Query
+{
+  uint32 status;
+  uint32 pid;
+  uint32 max_time;
+  uint64 max_space;
+  time_t start_time;
+};
+
+struct Client_Status
+{
+  uint32 rate_limit;
+  std::vector< Running_Query > queries;
+  std::vector< time_t > slot_starts;
+};
 
 
 class Dispatcher_Client
@@ -73,7 +90,8 @@ class Dispatcher_Client
     /** Query the pid of the instance with the given token. */
     pid_t query_by_token(uint32 token);
     
-    /** Purge another instance. */
+    Client_Status query_my_status(uint32 token);
+    
     void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units, int rate_limit);
     
     /** Called regularly to tell the dispatcher that this process is still alive */
@@ -87,12 +105,23 @@ class Dispatcher_Client
     int dispatcher_shm_fd;
     volatile uint8* dispatcher_shm_ptr;
     std::string db_dir, shadow_name;
-    int socket_descriptor;
+    Unix_Socket socket;
     
     uint32 ack_arrived();
     
     template< class TObject >
     void send_message(TObject message, const std::string& source_pos);
+};
+
+
+bool file_present(const std::string& full_path);
+
+
+struct Context_Error
+{
+  Context_Error(const std::string message_) : message(message_) {}
+  
+  std::string message;
 };
 
 

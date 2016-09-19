@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___TEMPLATE_DB__DISPATCHER_H
 #define DE__OSM3S___TEMPLATE_DB__DISPATCHER_H
@@ -157,7 +157,7 @@ public:
   std::vector< int >::size_type num_started_connections() { return started_connections.size(); }
     
 private:
-  int socket_descriptor;
+  Unix_Socket socket;
   std::string socket_name;
   std::vector< int > started_connections;  
 };
@@ -179,6 +179,7 @@ class Dispatcher
     static const uint32 PURGE = 4;
     static const uint32 SET_GLOBAL_LIMITS = 5;
     
+    static const uint32 QUERY_MY_STATUS = 15;
     static const uint32 REGISTER_PID = 16;
     static const uint32 SET_LIMITS = 17;
     static const uint32 PING = 18;

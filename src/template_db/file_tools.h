@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___TEMPLATE_DB__FILE_TOOLS_H
 #define DE__OSM3S___TEMPLATE_DB__FILE_TOOLS_H
@@ -35,6 +35,7 @@ struct Blocking_Client_Socket
   uint32 get_command();
   std::vector< uint32 > get_arguments(int num_arguments);
   void clear_state();
+  void send_data(uint32 result);
   void send_result(uint32 result);
   ~Blocking_Client_Socket();
 private:
@@ -61,9 +62,6 @@ private:
   std::map< pid_t, Blocking_Client_Socket* > connection_per_pid;
   uint32 last_pid;
 };
-
-
-void copy_file(const std::string& source, const std::string& dest);
 
 
 std::string getcwd();

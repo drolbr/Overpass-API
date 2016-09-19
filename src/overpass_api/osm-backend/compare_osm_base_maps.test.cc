@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <algorithm>
 #include <fstream>
@@ -43,7 +43,7 @@ void clear_nodes_to_map(vector< pair< uint32, Uint32_Index > >& id_to_idx,
   
   sort(id_to_idx.begin(), id_to_idx.end());
   
-  Random_File< Uint32_Index > random
+  Random_File< Node_Skeleton::Id_Type, Uint32_Index > random
       (transaction.random_index(osm_base_settings().NODES));
 
   for (vector< pair< uint32, Uint32_Index > >::const_iterator it(id_to_idx.begin());
@@ -89,7 +89,7 @@ void clear_ways_to_map(vector< pair< uint32, Uint31_Index > >& id_to_idx,
   
   sort(id_to_idx.begin(), id_to_idx.end());
   
-  Random_File< Uint31_Index > random
+  Random_File< Way_Skeleton::Id_Type, Uint31_Index > random
       (transaction.random_index(osm_base_settings().WAYS));
 
   for (vector< pair< uint32, Uint31_Index > >::const_iterator it(id_to_idx.begin());
@@ -135,7 +135,7 @@ void clear_relations_to_map(vector< pair< uint32, Uint31_Index > >& id_to_idx,
   
   sort(id_to_idx.begin(), id_to_idx.end());
   
-  Random_File< Uint31_Index > random
+  Random_File< Relation_Skeleton::Id_Type, Uint31_Index > random
       (transaction.random_index(osm_base_settings().RELATIONS));
 
   for (vector< pair< uint32, Uint31_Index > >::const_iterator it(id_to_idx.begin());

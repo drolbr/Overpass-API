@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "resource_manager.h"
 #include "scripting_core.h"
@@ -28,8 +28,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -170,7 +172,7 @@ int main(int argc, char *argv[])
       if (error_output.http_method == error_output.http_get
           || error_output.http_method == error_output.http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". Probably the server is overcrowded.\n";
+            <<". The server is probably too busy to handle your request.\n";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
@@ -178,7 +180,7 @@ int main(int argc, char *argv[])
       if (error_output.http_method == error_output.http_get
           || error_output.http_method == error_output.http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". Another request from your IP is still running.\n";
+            <<". Please check /api/status for the quota of your IP address.\n";
     }
     else
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
@@ -191,9 +193,21 @@ int main(int argc, char *argv[])
       temp<<"Query timed out in \""<<e.stmt_name<<"\" at line "<<e.line_number
           <<" after "<<e.runtime<<" seconds.";
     else
-      temp<<"Query run out of memory in \""<<e.stmt_name<<"\" at line "
-          <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
+      temp<<"Query ran out of memory in \""<<e.stmt_name<<"\" at line "
+          <<e.line_number<<". It would need at least "<<e.size/(1024*1024)<<" MB of RAM to continue.";
     error_output.runtime_error(temp.str());
+  }
+  catch(std::bad_alloc& e)
+  {
+    rlimit limit;
+    getrlimit(RLIMIT_AS, &limit);
+    ostringstream temp;
+    temp<<"Query run out of memory using about "<<limit.rlim_cur/(1024*1024)<<" MB of RAM.";
+    error_output.runtime_error(temp.str());
+  }
+  catch(std::exception& e)
+  {
+    error_output.runtime_error(std::string("Query failed with the exception: ") + e.what());    
   }
   catch(Exit_Error e) {}
 

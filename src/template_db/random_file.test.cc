@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <iostream>
 #include <list>
@@ -115,7 +115,7 @@ struct Test_File : File_Properties
     return 512;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
   {
     return 1;
   }
@@ -124,10 +124,20 @@ struct Test_File : File_Properties
   {
     return 0;
   }
+
+  uint32 get_map_compression_method() const
+  {
+    return 0;
+  }
   
   uint32 get_map_block_size() const
   {
     return 16*IntIndex::max_size_of();
+  }
+  
+  uint32 get_map_compression_factor() const
+  {
+    return 1;
   }
   
   vector< bool > get_data_footprint(const std::string& db_dir) const
@@ -171,22 +181,22 @@ void read_test()
 
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Random_File< IntIndex > id_file(transaction.random_index(&tf));
+    Random_File< IntIndex, IntIndex > id_file(transaction.random_index(&tf));
 
-    cout<<id_file.get(0).val()<<'\n';
-    cout<<id_file.get(1).val()<<'\n';
-    cout<<id_file.get(2).val()<<'\n';
-    cout<<id_file.get(3).val()<<'\n';
-    cout<<id_file.get(5).val()<<'\n';
-    cout<<id_file.get(6).val()<<'\n';
-    cout<<id_file.get(8).val()<<'\n';
-    cout<<id_file.get(16).val()<<'\n';
-    cout<<id_file.get(32).val()<<'\n';
-    cout<<id_file.get(48).val()<<'\n';
-    cout<<id_file.get(64).val()<<'\n';
-    cout<<id_file.get(80).val()<<'\n';
-    cout<<id_file.get(96).val()<<'\n';
-    cout<<id_file.get(112).val()<<'\n';
+    cout<<id_file.get(0u).val()<<'\n';
+    cout<<id_file.get(1u).val()<<'\n';
+    cout<<id_file.get(2u).val()<<'\n';
+    cout<<id_file.get(3u).val()<<'\n';
+    cout<<id_file.get(5u).val()<<'\n';
+    cout<<id_file.get(6u).val()<<'\n';
+    cout<<id_file.get(8u).val()<<'\n';
+    cout<<id_file.get(16u).val()<<'\n';
+    cout<<id_file.get(32u).val()<<'\n';
+    cout<<id_file.get(48u).val()<<'\n';
+    cout<<id_file.get(64u).val()<<'\n';
+    cout<<id_file.get(80u).val()<<'\n';
+    cout<<id_file.get(96u).val()<<'\n';
+    cout<<id_file.get(112u).val()<<'\n';
     
     cout<<"This block of read tests is complete.\n";
   }
@@ -225,10 +235,10 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     {
-      Random_File< IntIndex > blocks(transaction.random_index(&tf));
+      Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
     
-      blocks.put(2, 12);
-      blocks.put(5, 15);
+      blocks.put(2u, 12);
+      blocks.put(5u, 15);
     }
   }
   catch (File_Error e)
@@ -246,9 +256,9 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(transaction.random_index(&tf));
+    Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
     
-    blocks.put(6, 16);
+    blocks.put(6u, 16);
   }
   catch (File_Error e)
   {
@@ -265,9 +275,9 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(transaction.random_index(&tf));
+    Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
     
-    blocks.put(2, 32);
+    blocks.put(2u, 32);
   }
   catch (File_Error e)
   {
@@ -284,9 +294,9 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(transaction.random_index(&tf));
+    Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
     
-    blocks.put(16, 1);
+    blocks.put(16u, 1);
   }
   catch (File_Error e)
   {
@@ -303,11 +313,11 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(transaction.random_index(&tf));
+    Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
     
-    blocks.put(0, 2);
-    blocks.put(32, 3);
-    blocks.put(48, 4);
+    blocks.put(0u, 2);
+    blocks.put(32u, 3);
+    blocks.put(48u, 4);
   }
   catch (File_Error e)
   {
@@ -324,9 +334,9 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(transaction.random_index(&tf));
+    Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
     
-    blocks.put(80, 5);
+    blocks.put(80u, 5);
   }
   catch (File_Error e)
   {
@@ -343,9 +353,9 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Random_File< IntIndex > blocks(transaction.random_index(&tf));
+    Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
     
-    blocks.put(64, 6);
+    blocks.put(64u, 6);
   }
   catch (File_Error e)
   {

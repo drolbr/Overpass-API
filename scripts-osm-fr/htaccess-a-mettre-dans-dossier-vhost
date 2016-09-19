@@ -15,3 +15,7 @@ Rewriterule (.*) http://www.openstreetmap.org/$1 [R=301]
 #RewriteCond %{REQUEST_URI}  ^/oapi/interpreter(.*)
 #Rewriterule .* http://www.overpass-api.de/api/interpreter$1 [R=302]    
 
+#RewriteCond %{HTTP_USER_AGENT} Iceweasel [NC]
+RewriteCond %{HTTP_USER_AGENT} ^.*(okhttp|Velociraptor|Apache-HttpClient/UNAVAILABLE).*$ [NC]
+#RewriteCond %{HTTP_USER_AGENT} Wget [NC]
+RewriteRule .* junk [L]

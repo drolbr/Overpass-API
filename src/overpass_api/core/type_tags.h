@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_TAGS_H
 #define DE__OSM3S___OVERPASS_API__CORE__TYPE_TAGS_H
@@ -154,9 +154,14 @@ void generate_ids_by_coarse
     it(items.begin()); it != items.end(); ++it)
   {
     coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
+    std::vector< typename TObject::Id_Type >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
+    
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      ids_by_coarse[it->first.val() & 0x7fffff00].push_back(it2->id);
+      ids_by_coarse_.push_back(it2->id);
+    
+    std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
+    ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
   }
 }
 
@@ -171,10 +176,15 @@ void generate_ids_by_coarse
     it(items.begin()); it != items.end(); ++it)
   {
     coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
+    std::vector< Attic< typename TObject::Id_Type > >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
+    
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
-      ids_by_coarse[it->first.val() & 0x7fffff00].push_back
+      ids_by_coarse_.push_back
           (Attic< typename TObject::Id_Type >(it2->id, it2->timestamp));
+    
+    std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
+    ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
   }
 }
 
@@ -238,9 +248,11 @@ struct Tag_Index_Global
 };
 
 
-template< typename Id_Type >
+template< typename Id_Type_ >
 struct Tag_Object_Global
 {
+  typedef Id_Type_ Id_Type;
+  
   Uint31_Index idx;
   Id_Type id;
   

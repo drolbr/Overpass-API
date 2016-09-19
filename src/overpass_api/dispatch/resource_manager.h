@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__DISPATCH__RESOURCE_MANAGER_H
 #define DE__OSM3S___OVERPASS_API__DISPATCH__RESOURCE_MANAGER_H
@@ -22,6 +22,7 @@
 #include <ctime>
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
+#include "../data/user_data_cache.h"
 #include "../osm-backend/area_updater.h"
 
 using namespace std;
@@ -51,7 +52,8 @@ public:
       : transaction(&transaction_), error_output(error_output_),
         area_transaction(&area_transaction_),
         area_updater_(area_updater__),
-	watchdog(watchdog_), start_time(time(NULL)), last_ping_time(0), last_report_time(0),
+	watchdog(watchdog_),
+	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
 	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
 	
@@ -97,6 +99,8 @@ public:
   void set_diff_from_timestamp(uint64 timestamp) { diff_from_timestamp = timestamp; }
   void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
   
+  const std::map< uint32, std::string >& users() { return user_data_cache.users(*transaction); }
+
 private:
   map< string, Set > sets_;
   vector< const Set* > set_stack;
@@ -107,6 +111,7 @@ private:
   Transaction* area_transaction;
   Area_Usage_Listener* area_updater_;
   Watchdog_Callback* watchdog;
+  User_Data_Cache user_data_cache;
   int start_time;
   uint32 last_ping_time;
   uint32 last_report_time;

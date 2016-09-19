@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "../../expat/map_ql_input.h"
 #include "../core/datatypes.h"
@@ -319,7 +319,7 @@ vector< TStatement* > collect_substatements_and_probe(typename TStatement::Facto
     if (is_difference && *token != ")")
     {
       if (error_output)
-        error_output->add_parse_error("difference takes always two operands", token.line_col().first);
+        error_output->add_parse_error("difference always requires two operands", token.line_col().first);
       clear_until_after(token, error_output, ")", false);
     }
   }
@@ -405,15 +405,12 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
 				    uint line_nr)
 {
   map< string, string > attr;
+  
   if (key_regex == haskv_plain)
     attr["k"] = key;
-  else if (key_regex == haskv_regex)
-    attr["regk"] = key;
   else
-  {
     attr["regk"] = key;
-    attr["key-case"] = "ignore";
-  }
+  
   if (regex == haskv_plain)
     attr["v"] = value;
   else if (regex == haskv_regex)
@@ -423,6 +420,7 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
     attr["regv"] = value;
     attr["case"] = "ignore";
   }
+  
   attr["modv"] = (straight ? "" : "not");
   return stmt_factory.create_statement("has-kv", line_nr, attr);
 }
@@ -512,12 +510,40 @@ TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
 template< class TStatement >
 TStatement* create_user_statement
     (typename TStatement::Factory& stmt_factory,
-     string type, string name, string uid, string into, uint line_nr)
+     string type, vector< string > name, vector< string > uid, string into, uint line_nr)
 {
   map< string, string > attr;
+  std::vector< string >::iterator it;
+  int i;
+
   attr["into"] = into;
-  attr["uid"] = uid;
-  attr["name"] = name;
+
+  if (uid.empty())
+    attr["uid"] = "";
+
+  if (name.empty())
+    attr["name"] = "";
+
+  for(it = name.begin(), i = 0; it != name.end(); ++it, ++i)
+  {
+    std::stringstream id;
+    if (i == 0)
+      id << "name";
+    else
+      id << "name_" << i;
+    attr[id.str()] = *it;
+  }
+
+  for(it = uid.begin(), i = 0; it != uid.end(); ++it, ++i)
+  {
+    std::stringstream id;
+    if (i == 0)
+      id << "uid";
+    else
+      id << "uid_" << i;
+    attr[id.str()] = *it;
+  }
+
   attr["type"] = type;
   return stmt_factory.create_statement("user", line_nr, attr);
 }
@@ -977,6 +1003,10 @@ TStatement* create_query_substatement
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_icase, haskv_plain,
 	 (clause.attributes[2] == ""), clause.line_col.first);
+  else if (clause.statement == "has-kv_keyregex_icase")
+    return create_has_kv_statement< TStatement >
+        (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_icase, haskv_regex,
+     (clause.attributes[2] == ""), clause.line_col.first);
   else if (clause.statement == "has-kv_keyregex")
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_regex, haskv_regex,
@@ -990,10 +1020,10 @@ TStatement* create_query_substatement
         (stmt_factory, clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "user")
     return create_user_statement< TStatement >
-        (stmt_factory, type, clause.attributes[0], "", into, clause.line_col.first);
+        (stmt_factory, type, clause.attributes, vector<string>(), into, clause.line_col.first);
   else if (clause.statement == "uid")
     return create_user_statement< TStatement >
-        (stmt_factory, type, "", clause.attributes[0], into, clause.line_col.first);
+        (stmt_factory, type, vector<string>(), clause.attributes, into, clause.line_col.first);
   else if (clause.statement == "newer")
     return create_newer_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.line_col.first);
@@ -1114,6 +1144,19 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
       if (key_regex)
 	++token;
       
+      if (*token == "!")    // [!key] as shortcut for [key !~ ".*"]
+      {
+        ++token;
+        string key = get_text_token(token, error_output, "Key");
+        clear_until_after(token, error_output, "]");
+        Statement_Text clause("has-kv_regex", token.line_col());
+        clause.attributes.push_back(key);
+        clause.attributes.push_back(".*");
+        clause.attributes.push_back("!");
+        clauses.push_back(clause);
+        continue;
+      }
+
       string key = get_text_token(token, error_output, "Key");
       clear_until_after(token, error_output, "!", "~", "=", "!=", "]", false);
       
@@ -1175,7 +1218,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	  clear_until_after(token, error_output, ",", "]", false);
 	  if (*token == ",")
 	  {
-	    clause.statement = "has-kv_icase";
+	    clause.statement = "has-kv_keyregex_icase";
 	    ++token;
 	    clear_until_after(token, error_output, "i");
 	    clear_until_after(token, error_output, "]", false);
@@ -1241,7 +1284,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	Statement_Text clause("polygon", token.line_col());
 	++token;
 	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "List of Coordinates"));
+	clause.attributes.push_back(get_text_token(token, error_output, "list of coordinates"));
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
@@ -1249,18 +1292,36 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
       {
 	Statement_Text clause("user", token.line_col());
 	++token;
-	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "User name"));
-	clear_until_after(token, error_output, ")");
+	clear_until_after(token, error_output, ":", false);
+    if (*token == ":")
+	{
+	  do
+	  {
+	      ++token;
+	      clause.attributes.push_back(get_text_token(token, error_output, "User name"));
+	      clear_until_after(token, error_output, ",", ")", false);
+	  } while (token.good() && *token == ",");
+
+      clear_until_after(token, error_output, ")");
+    }
 	clauses.push_back(clause);
       }
       else if (*token == "uid")
       {
 	Statement_Text clause("uid", token.line_col());
 	++token;
-	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
-	clear_until_after(token, error_output, ")");
+	clear_until_after(token, error_output, ":", false);
+    if (*token == ":")
+    {
+      do
+      {
+          ++token;
+          clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
+	      clear_until_after(token, error_output, ",", ")", false);
+      } while (token.good() && *token == ",");
+
+      clear_until_after(token, error_output, ")");
+    }
 	clauses.push_back(clause);
       }
       else if (*token == "newer")
@@ -1400,7 +1461,17 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
 	error_output->add_parse_error("An empty query is not allowed", token.line_col().first);
     }
     else
-      statement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
+    {
+      if (type == "")
+        statement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
+      else
+      {
+        statement = create_query_statement< TStatement >
+           (stmt_factory, type, into, query_line_col.first);
+        TStatement* substatement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
+        statement->add_statement(substatement, "");
+      }
+    }
   }
   else if (clauses.size() == 1 && from == "")
   {
@@ -1408,6 +1479,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
        || clauses.front().statement == "has-kv_regex"
        || clauses.front().statement == "has-kv_keyregex"
        || clauses.front().statement == "has-kv_icase"
+       || clauses.front().statement == "has-kv_keyregex_icase"
        || (clauses.front().statement == "area" && type != "node")
        || (clauses.front().statement == "around" && type != "node")
        || (clauses.front().statement == "pivot" && type != "node")
@@ -1468,7 +1540,7 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory,
   if (depth >= 1024)
   {
     if (error_output)
-      error_output->add_parse_error("Nesting of statements limited to 1023 levels", token.line_col().first);
+      error_output->add_parse_error("Nesting of statements is limited to 1023 levels", token.line_col().first);
     return 0;
   }
   

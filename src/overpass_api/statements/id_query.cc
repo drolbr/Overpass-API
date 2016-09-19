@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <sstream>
 
@@ -40,7 +40,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 {
   set< TIndex > req;
   {
-    Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
+    Random_File< uint64, TIndex > random(rman.get_transaction()->random_index(&prop));
     for (Uint64 i = lower; i < upper; ++i)
       req.insert(random.get(i.val()));
   }    
@@ -63,7 +63,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 {
   set< TIndex > req;
   {
-    Random_File< TIndex > random(rman.get_transaction()->random_index(&prop));
+    Random_File< uint64, TIndex > random(rman.get_transaction()->random_index(&prop));
     for (typename TObject::Id_Type i = lower.val(); i.val() < upper.val(); ++i)
     {
       if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)
@@ -378,7 +378,7 @@ void get_elements(uint64 lower, uint64 upper, Statement* stmt, Resource_Manager&
   for (uint64 i = lower; i < upper; ++i)
     ids.push_back(i);
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
-        
+
   if (rman.get_desired_timestamp() == NOW)
     collect_items_discrete(stmt, rman, *current_skeleton_file_properties< Skeleton >(), req,
         Id_Predicate< Skeleton >(ids), current_result);

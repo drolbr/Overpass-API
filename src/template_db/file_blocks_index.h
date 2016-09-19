@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_INDEX_H
 #define DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_INDEX_H
@@ -41,8 +41,8 @@ struct File_Block_Index_Entry
   static const int SEGMENT = 3;
   static const int LAST_SEGMENT = 4;
   
-  File_Block_Index_Entry(const TIndex& i, uint32 pos_, uint32 size_, uint32 max_keysize_)
-    : index(i), pos(pos_), size(size_), max_keysize(max_keysize_) {}
+  File_Block_Index_Entry(const TIndex& index_, uint32 pos_, uint32 size_, uint32 max_keysize_)
+    : index(index_), pos(pos_), size(size_), max_keysize(max_keysize_) {}
   
   TIndex index;
   uint32 pos;
@@ -64,7 +64,7 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
     
     std::string get_data_file_name() const { return data_file_name; }
     uint64 get_block_size() const { return block_size_; }
-    uint32 get_max_size() const { return max_size; }
+    uint32 get_compression_factor() const { return compression_factor; }
     uint32 get_compression_method() const { return compression_method; }
     
   private:
@@ -78,12 +78,13 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
     std::vector< std::pair< uint32, uint32 > > void_blocks;
     uint32 block_count;
     uint64 block_size_;
-    uint32 max_size;
+    uint32 compression_factor;
     int compression_method;
     
     static const int FILE_FORMAT_VERSION = 7512;
     static const int NO_COMPRESSION = 0;
     static const int ZLIB_COMPRESSION = 1;
+    static const int LZ4_COMPRESSION = 2;
 };
 
 
@@ -109,7 +110,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
      file_name_extension_(file_name_extension),
      block_count(0),
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
-     max_size(file_prop.get_max_size()), // can be overwritten by index file
+     compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
      compression_method(file_prop.get_compression_method()) // can be overwritten by index file
 {
   uint64 file_size = 0;
@@ -142,7 +143,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       block_count = file_size / block_size_;
       is_referred.resize(block_count, false);
       
-      uint32 pos(0);
+      uint32 pos = 0;
       while (pos < index_size)
       {
         TIndex index(index_buf.ptr+pos);
@@ -164,7 +165,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
 	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
       block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
-      max_size = 1u<<*(uint8*)(index_buf.ptr + 5);
+      compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
       compression_method = *(uint16*)(index_buf.ptr + 6);
       
       block_count = file_size / block_size_;
@@ -239,19 +240,6 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
 }
 
 
-template< typename Int >
-int shift_log(Int val)
-{
-  int count = 0;
-  while (val > 1)
-  {
-    val = val>>1;
-    ++count;
-  }
-  return count;
-}
-
-
 template< class TIndex >
 File_Blocks_Index< TIndex >::~File_Blocks_Index()
 {
@@ -270,7 +258,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   
   *(uint32*)index_buf.ptr = FILE_FORMAT_VERSION;
   *(uint8*)(index_buf.ptr + 4) = shift_log(block_size_);
-  *(uint8*)(index_buf.ptr + 5) = shift_log(max_size);
+  *(uint8*)(index_buf.ptr + 5) = shift_log(compression_factor);
   *(uint16*)(index_buf.ptr + 6) = compression_method;
   
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator

@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <algorithm>
 #include <map>
@@ -1797,7 +1797,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
         source_type = Relation_Entry::NODE;
       else if (stmt->get_type() == RECURSE_WAY_RELATION)
         source_type = Relation_Entry::WAY;
-      else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
+      else
         source_type = Relation_Entry::RELATION;
     
       vector< Relation_Entry::Ref_Type > ids;
@@ -1952,7 +1952,10 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 {
   map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   
-  if (stmt->get_type() != RECURSE_DOWN && stmt->get_type() != RECURSE_DOWN_REL)
+  if (mit == rman.sets().end())
+    return;
+  if (stmt->get_type() != RECURSE_DOWN && stmt->get_type() != RECURSE_DOWN_REL
+      && stmt->get_type() != RECURSE_UP && stmt->get_type() != RECURSE_UP_REL)
     return;
   
   if (stmt->get_type() == RECURSE_DOWN)

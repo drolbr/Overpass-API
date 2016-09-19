@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <fstream>
 #include <iostream>
@@ -66,7 +66,8 @@ namespace
     if (input.size() > max_input_size)
     {
       ostringstream temp;
-      temp<<"Input too long (length: "<<input.size()<<", max. allowed: "<<max_input_size<<')';
+      temp<<"Input Input too long (length: "<<input.size()<<"). The maximum query length is "
+          <<(double)max_input_size/1024/1024<<" MB.";
       if (error_output)
 	error_output->add_encoding_error(temp.str());
       return input;
@@ -250,12 +251,8 @@ string probe_client_identifier()
 }
 
 
-uint32 probe_client_token()
+uint32 parse_ipv4_address(string ip_addr)
 {
-  string ip_addr = probe_client_identifier();
-  if (ip_addr == "")
-    return 0;
-  
   string::size_type pos = ip_addr.find(".");
   string::size_type old_pos = 0;
   uint32 client_token = 0;
@@ -264,12 +261,106 @@ uint32 probe_client_token()
   while (pos != string::npos)
   {
     client_token = (client_token<<8 |
-        atoll(ip_addr.substr(old_pos, pos - old_pos).c_str()));
+      atoll(ip_addr.substr(old_pos, pos - old_pos).c_str()));
     old_pos = pos + 1;
     pos = ip_addr.find(".", old_pos);
   }
-  client_token = (client_token<<8 |
-    atoll(ip_addr.substr(old_pos).c_str()));
+  client_token = (client_token<<8 | atoll(ip_addr.substr(old_pos).c_str()));
   
-  return client_token;
+  return client_token;  
+}
+
+
+int decode_hex(string representation)
+{
+  int result = 0;
+  string::size_type pos = 0;
+  
+  while (pos < representation.size())
+  {
+    if (representation[pos] >= '0' && representation[pos] <= '9')
+      result = (result<<4) | (representation[pos] - '0');
+    else if (representation[pos] >= 'a' && representation[pos] <= 'f')
+      result = (result<<4) | (representation[pos] - 'a' + 10);
+    else if (representation[pos] >= 'A' && representation[pos] <= 'F')
+      result = (result<<4) | (representation[pos] - 'A' + 10);
+    ++pos;
+  }
+  return result;
+}
+
+
+vector< uint16 > parse_short_ipv6_address(string ip_addr)
+{
+  vector< uint16 > ipv6_address;
+  
+  // Try shortened IPv6 address format
+  string::size_type upper_end = ip_addr.find("::");
+  string::size_type pos = ip_addr.find(":");
+  string::size_type old_pos = 0;
+  
+  while (pos < upper_end)
+  {
+    ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos, pos - old_pos).c_str()));
+    old_pos = pos + 1;
+    pos = ip_addr.find(":", old_pos);
+  }
+  ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos, upper_end - old_pos).c_str()));
+    
+  vector< uint16 > lower_ipv6_address;
+  old_pos = upper_end + 2;
+  pos = ip_addr.find(":", old_pos);
+  while (pos != string::npos)
+  {
+    lower_ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos, pos - old_pos).c_str()));
+    old_pos = pos + 1;
+    pos = ip_addr.find(":", old_pos);
+  }
+  lower_ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos).c_str()));
+   
+  ipv6_address.resize(8, 0);
+  for (vector< uint16 >::size_type i = 0; i < lower_ipv6_address.size(); ++i)
+    ipv6_address[i + 8 - lower_ipv6_address.size()] = lower_ipv6_address[i];
+  
+  return ipv6_address;
+}
+
+
+vector< uint16 > parse_full_ipv6_address(string ip_addr)
+{
+  vector< uint16 > ipv6_address;
+  
+  string::size_type pos = ip_addr.find(":");
+  string::size_type old_pos = 0;
+  
+  while (pos != string::npos)
+  {
+      ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos, pos - old_pos).c_str()));
+      old_pos = pos + 1;
+      pos = ip_addr.find(":", old_pos);
+  }
+    
+  ipv6_address.resize(8, 0);
+  
+  return ipv6_address;
+}
+
+
+uint32 probe_client_token()
+{
+  string ip_addr = probe_client_identifier();
+  if (ip_addr == "")
+    return 0;
+  
+  if (ip_addr.find(".") != string::npos)
+    return parse_ipv4_address(ip_addr);
+  
+  vector< uint16 > ipv6_address = (ip_addr.find("::") == string::npos ?
+      parse_full_ipv6_address(ip_addr) :
+      parse_short_ipv6_address(ip_addr));
+  
+  // We only consider the upper 64 bit of an IPv6 address.
+  // For the sake of simplicity we xor these bits to get a 32 bit token.
+  // This shall be reviewed once we know how IPv6 addresses really are distributed.
+  return ((ipv6_address[0] ^ ipv6_address[2])<<16 | (ipv6_address[1] ^ ipv6_address[3]));
 }
