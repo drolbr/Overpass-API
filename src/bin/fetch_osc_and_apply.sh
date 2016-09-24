@@ -19,7 +19,7 @@
 
 if [[ -z $1  ]]; then
 {
-  echo "Usage: $0 diff_url --meta=(yes|no)"
+  echo "Usage: $0 diff_url (--meta)"
   echo "Error : Set the URL to get diffs from (like http://planet.osm.org/replication/minute )"
   exit 0
 };
@@ -77,7 +77,7 @@ fetch_and_apply_minute_diff()
     rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
     return 2
   } ; fi
-  cat $TMP_DIFF_UNCOMPRESS | $EXEC_DIR/update_database $2 >> /dev/null 2>&1
+  cat $TMP_DIFF_UNCOMPRESS | $EXEC_DIR/update_database $2 >> $DB_DIR/apply_osc_to_db.log 2>&1
   ret=$?
   rm $TMP_DIFF 2>/dev/null
   rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
@@ -101,22 +101,13 @@ fetch_and_apply_minute_diff()
 
 };
 
-#Default is no meta
-META_OPTION=
-
-if [[ $2 == "--meta=yes" ]]; then
-{
-  META_OPTION="--meta"
-}; fi
-
-
 
 while [[ true ]];
 do
 {
   REPLICATE_ID=$(($REPLICATE_ID + 1))
   echo "`date '+%F %T'`: trying to apply $REPLICATE_ID" >>$DB_DIR/apply_osc_to_db.log
-  fetch_and_apply_minute_diff $REPLICATE_ID $META_OPTION
+  fetch_and_apply_minute_diff $REPLICATE_ID $2
   if [[ $? == 0 ]] ; then # Update success
   {
     echo "$REPLICATE_ID" > $DB_DIR/replicate_id
