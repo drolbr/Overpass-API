@@ -205,7 +205,7 @@ inline Random_File_Index::Random_File_Index
       while (pos < index_size)
       {
         Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
-            1); //block size is always 1 in the legacy format
+            compression_factor); //block size is always 1 in the legacy format
         blocks.push_back(entry);
         if (entry.pos != npos)
         {
