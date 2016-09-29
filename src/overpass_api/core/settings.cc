@@ -39,8 +39,7 @@ struct OSM_File_Properties : public File_Properties
 {
   OSM_File_Properties(const string& file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
-    : file_base_name(file_base_name_), block_size(block_size_),
-      map_block_size(map_block_size_ > 0 ? map_block_size_ : 0) {}
+    : file_base_name(file_base_name_), block_size(block_size_), map_block_size(map_block_size_) {}
   
   const string& get_file_name_trunk() const { return file_base_name; }
   
@@ -116,7 +115,7 @@ Basic_Settings& basic_settings()
 
 Osm_Base_Settings::Osm_Base_Settings()
 :
-  NODES(new OSM_File_Properties< Uint32_Index >("nodes", 512*1024, 64*1024)),
+  NODES(new OSM_File_Properties< Uint32_Index >("nodes", 512*1024, 256*1024)),
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("node_tags_local", 512*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
@@ -124,7 +123,7 @@ Osm_Base_Settings::Osm_Base_Settings()
   NODE_KEYS(new OSM_File_Properties< Uint32_Index >
       ("node_keys", 512*1024, 0)),
       
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 64*1024)),
+  WAYS(new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 256*1024)),
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("way_tags_local", 512*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
@@ -132,7 +131,7 @@ Osm_Base_Settings::Osm_Base_Settings()
   WAY_KEYS(new OSM_File_Properties< Uint32_Index >
       ("way_keys", 512*1024, 0)),
       
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations", 1024*1024, 64*1024)),
+  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations", 1024*1024, 256*1024)),
   RELATION_ROLES(new OSM_File_Properties< Uint32_Index >
       ("relation_roles", 512*1024, 0)),
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
@@ -161,7 +160,7 @@ Area_Settings::Area_Settings()
 :
   AREA_BLOCKS(new OSM_File_Properties< Uint31_Index >
       ("area_blocks", 512*1024, 64*1024)),
-  AREAS(new OSM_File_Properties< Uint31_Index >("areas", 2*1024*1024, 64*1024)),
+  AREAS(new OSM_File_Properties< Uint31_Index >("areas", 2*1024*1024, 256*1024)),
   AREA_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("area_tags_local", 256*1024, 0)),
   AREA_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
@@ -206,7 +205,7 @@ const Meta_Settings& meta_settings()
 
 Attic_Settings::Attic_Settings()
 :
-  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 512*1024, 64*1024)),
+  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 512*1024, 256*1024)),
   NODES_UNDELETED(new OSM_File_Properties< Uint31_Index >("nodes_attic_undeleted", 512*1024, 64*1024)),
   NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type >
       ("node_attic_indexes", 512*1024, 0)),
@@ -219,7 +218,7 @@ Attic_Settings::Attic_Settings()
   NODE_CHANGELOG(new OSM_File_Properties< Timestamp >
       ("node_changelog", 512*1024, 0)),
       
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 64*1024)),
+  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 256*1024)),
   WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index >("ways_attic_undeleted", 512*1024, 64*1024)),
   WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >
       ("way_attic_indexes", 512*1024, 0)),
@@ -232,7 +231,7 @@ Attic_Settings::Attic_Settings()
   WAY_CHANGELOG(new OSM_File_Properties< Timestamp >
       ("way_changelog", 512*1024, 0)),
       
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 1024*1024, 64*1024)),
+  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 1024*1024, 256*1024)),
   RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index >("relations_attic_undeleted", 512*1024, 64*1024)),
   RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type >
       ("relation_attic_indexes", 512*1024, 0)),
