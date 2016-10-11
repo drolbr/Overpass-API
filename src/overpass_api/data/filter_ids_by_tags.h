@@ -141,25 +141,24 @@ void filter_ids_by_tags
 
 template< typename Id_Type >
 void filter_ids_by_tags_old
-  (map< uint32, vector< Id_Type > >& ids_by_coarse,
+  (vector< Id_Type >& ids_by_coarse,
    const map< string, pair< string, vector< Regular_Expression* > > >& keys,
    const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& key_regexes,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
    uint32 coarse_index)
 {
-  vector< Id_Type > new_ids = ids_by_coarse[coarse_index & 0x7fffff00];
+  vector< Id_Type > new_ids = ids_by_coarse;
   
   filter_ids_by_tags(keys, key_regexes, items_db, tag_it, coarse_index & 0x7fffff00, new_ids, 0xffffff00);
 
-  new_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
+  new_ids.swap(ids_by_coarse);
     
   filter_ids_by_tags(keys, key_regexes, items_db, tag_it, coarse_index | 0x80000000, new_ids, 0xffffff00);
 
   vector< Id_Type > old_ids;
-  old_ids.swap(ids_by_coarse[coarse_index & 0x7fffff00]);
-  set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(),
-      back_inserter(ids_by_coarse[coarse_index & 0x7fffff00]));
+  old_ids.swap(ids_by_coarse);
+  set_union(old_ids.begin(), old_ids.end(), new_ids.begin(), new_ids.end(), back_inserter(ids_by_coarse));
 }
 
 

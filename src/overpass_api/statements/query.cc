@@ -791,25 +791,26 @@ void Query_Statement::filter_by_tags
       
   if (timestamp == NOW)
   {
-    for (typename set< TIndex >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+    for (typename map< uint32, vector< typename TObject::Id_Type > >::iterator
+        it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
     {
       if (++coarse_count >= 1024)
       {
         coarse_count = 0;
         rman.health_check(*this);
       }
+      vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
     
-      filter_ids_by_tags(key_union, regkey_regexes, items_db, tag_it,
-                         it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
+      filter_ids_by_tags(key_union, regkey_regexes, items_db, tag_it, it->first, ids_by_coarse_);
 
       while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->val()))
+          ((item_it->first.val() & 0x7fffff00) == it->first))
       {
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
 	     eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse[it->val()].begin(),
-              ids_by_coarse[it->val()].end(), eit->id))
+          if (binary_search(ids_by_coarse_.begin(),
+              ids_by_coarse_.end(), eit->id))
 	    result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
@@ -828,36 +829,38 @@ void Query_Statement::filter_by_tags
     typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator attic_item_it
         = attic_items->begin();
 
-    for (typename set< TIndex >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+    for (typename map< uint32, vector< typename TObject::Id_Type > >::iterator
+        it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
     {
       if (++coarse_count >= 1024)
       {
         coarse_count = 0;
         rman.health_check(*this);
       }
+      vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
     
       filter_ids_by_tags(key_union, regkey_regexes, timestamp, items_db, tag_it, attic_items_db, attic_tag_it,
-                         it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
+                         it->first, ids_by_coarse_);
     
       while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->val()))
+          ((item_it->first.val() & 0x7fffff00) == it->first))
       {
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
              eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end(), eit->id))
+          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
             result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
       }
     
       while ((attic_item_it != attic_items->end()) &&
-          ((attic_item_it->first.val() & 0x7fffff00) == it->val()))
+          ((attic_item_it->first.val() & 0x7fffff00) == it->first))
       {
         for (typename std::vector< Attic< TObject > >::const_iterator eit = attic_item_it->second.begin();
              eit != attic_item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end(), eit->id))
+          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
             attic_result[attic_item_it->first.val()].push_back(*eit);
         }
         ++attic_item_it;
@@ -893,27 +896,27 @@ void Query_Statement::filter_by_tags
   
   if (timestamp == NOW)
   {
-    for (typename set< TIndex >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+    for (typename map< uint32, vector< typename TObject::Id_Type > >::iterator
+        it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
     {
       if (++coarse_count >= 1024)
       {
         coarse_count = 0;
         rman.health_check(*this);
       }
+      vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
     
-      sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+      sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
     
-      filter_ids_by_ntags(nkey_union, items_db, ntag_it,
-                          it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
+      filter_ids_by_ntags(nkey_union, items_db, ntag_it, it->first, ids_by_coarse_);
     
       while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->val()))
+          ((item_it->first.val() & 0x7fffff00) == it->first))
       {
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
              eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse[it->val()].begin(),
-              ids_by_coarse[it->val()].end(), eit->id))
+          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
             result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
@@ -932,40 +935,40 @@ void Query_Statement::filter_by_tags
     typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator attic_item_it
         = attic_items->begin();
 
-    for (typename set< TIndex >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+    for (typename map< uint32, vector< typename TObject::Id_Type > >::iterator
+        it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
     {
       if (++coarse_count >= 1024)
       {
         coarse_count = 0;
         rman.health_check(*this);
       }
+      vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
     
-      sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+      sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
     
       filter_ids_by_ntags(nkey_union, timestamp, items_db, ntag_it, attic_items_db, attic_ntag_it,
-                          it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
+                          it->first, ids_by_coarse_);
     
       while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->val()))
+          ((item_it->first.val() & 0x7fffff00) == it->first))
       {
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
              eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse[it->val()].begin(),
-              ids_by_coarse[it->val()].end(), eit->id))
+          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
             result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
       }
     
       while ((attic_item_it != attic_items->end()) &&
-          ((attic_item_it->first.val() & 0x7fffff00) == it->val()))
+          ((attic_item_it->first.val() & 0x7fffff00) == it->first))
       {
         for (typename std::vector< Attic< TObject > >::const_iterator eit = attic_item_it->second.begin();
              eit != attic_item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse[it->val()].begin(),
-              ids_by_coarse[it->val()].end(), eit->id))
+          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
             attic_result[attic_item_it->first.val()].push_back(*eit);
         }
         ++attic_item_it;
@@ -1025,24 +1028,25 @@ void Query_Statement::filter_by_tags
       = items.begin();
       
   {
-    for (typename set< TIndex >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+    for (typename map< uint32, vector< typename TObject::Id_Type > >::iterator it = ids_by_coarse.begin();
+        it != ids_by_coarse.end(); ++it)
     {
       if (++coarse_count >= 1024)
       {
         coarse_count = 0;
         rman.health_check(*this);
       }
+      vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
     
-      filter_ids_by_tags_old(ids_by_coarse, key_union, regkey_regexes, items_db, tag_it, it->val());
+      filter_ids_by_tags_old(ids_by_coarse_, key_union, regkey_regexes, items_db, tag_it, it->first);
     
       while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->val()))
+          ((item_it->first.val() & 0x7fffff00) == it->first))
       {
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
 	     eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse[it->val()].begin(),
-              ids_by_coarse[it->val()].end(), eit->id))
+          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
 	    result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
@@ -1075,27 +1079,27 @@ void Query_Statement::filter_by_tags
   item_it = items.begin();
   
   {
-    for (typename set< TIndex >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+    for (typename map< uint32, vector< typename TObject::Id_Type > >::iterator it = ids_by_coarse.begin();
+        it != ids_by_coarse.end(); ++it)
     {
       if (++coarse_count >= 1024)
       {
         coarse_count = 0;
         rman.health_check(*this);
       }
+      vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
     
-      sort(ids_by_coarse[it->val()].begin(), ids_by_coarse[it->val()].end());
+      sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
     
-      filter_ids_by_ntags(nkey_union, items_db, ntag_it,
-                          it->val() & 0x7fffff00, ids_by_coarse[it->val() & 0x7fffff00]);
+      filter_ids_by_ntags(nkey_union, items_db, ntag_it, it->first, ids_by_coarse_);
     
       while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->val()))
+          ((item_it->first.val() & 0x7fffff00) == it->first))
       {
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
              eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse[it->val()].begin(),
-              ids_by_coarse[it->val()].end(), eit->id))
+          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
             result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
