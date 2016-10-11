@@ -144,6 +144,25 @@ void formulate_range_query
 }
 
 
+template< class Value >
+void formulate_range_query
+    (std::set< std::pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
+     const std::map< uint32, Value >& coarse_indices)
+{
+  for (typename std::map< uint32, Value >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
+  {
+    Tag_Index_Local lower, upper;
+    lower.index = it->first;
+    lower.key = "";
+    lower.value = "";
+    upper.index = it->first + 1;
+    upper.key = "";
+    upper.value = "";
+    range_set.insert(std::make_pair(lower, upper));
+  }
+}
+
+
 template< class TIndex, class TObject >
 void generate_ids_by_coarse
   (std::map< uint32, std::vector< typename TObject::Id_Type > >& ids_by_coarse,
