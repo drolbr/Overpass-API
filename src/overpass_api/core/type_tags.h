@@ -146,14 +146,12 @@ void formulate_range_query
 
 template< class TIndex, class TObject >
 void generate_ids_by_coarse
-  (std::set< TIndex >& coarse_indices,
-   std::map< uint32, std::vector< typename TObject::Id_Type > >& ids_by_coarse,
+  (std::map< uint32, std::vector< typename TObject::Id_Type > >& ids_by_coarse,
    const std::map< TIndex, std::vector< TObject > >& items)
 {
   for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
     it(items.begin()); it != items.end(); ++it)
   {
-    coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
     std::vector< typename TObject::Id_Type >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
     
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
@@ -173,14 +171,12 @@ void generate_ids_by_coarse
 
 template< class TIndex, class TObject >
 void generate_ids_by_coarse
-  (std::set< TIndex >& coarse_indices,
-   std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >& ids_by_coarse,
+  (std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >& ids_by_coarse,
    const std::map< TIndex, std::vector< TObject > >& items)
 {
   for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
     it(items.begin()); it != items.end(); ++it)
   {
-    coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
     std::vector< Attic< typename TObject::Id_Type > >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
     
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());

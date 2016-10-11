@@ -581,9 +581,12 @@ void Print_Statement::tags_quadtile
      const File_Properties* meta_file_prop, uint32& element_count)
 {
   //generate set of relevant coarse indices
-  set< Index > coarse_indices;
   map< uint32, vector< typename Object::Id_Type > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  generate_ids_by_coarse(ids_by_coarse, items);
+  set< Index > coarse_indices;
+  for (typename map< uint32, vector< typename Object::Id_Type > >::const_iterator it = ids_by_coarse.begin();
+      it != ids_by_coarse.end(); ++it)
+    coarse_indices.insert(Index(it->first));
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
@@ -646,9 +649,12 @@ void Print_Statement::tags_quadtile_attic
      uint32& element_count)
 {
   //generate set of relevant coarse indices
-  set< Index > coarse_indices;
   map< uint32, vector< Attic< typename Object::Id_Type > > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  generate_ids_by_coarse(ids_by_coarse, items);
+  set< Index > coarse_indices;
+  for (typename map< uint32, vector< Attic< typename Object::Id_Type > > >::const_iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    coarse_indices.insert(Index(it->first));
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
@@ -881,9 +887,12 @@ void Print_Statement::tags_by_id
        Skeleton_Comparator_By_Id< TObject >());
   
   //generate set of relevant coarse indices
-  set< TIndex > coarse_indices;
   map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  generate_ids_by_coarse(ids_by_coarse, items);
+  set< TIndex > coarse_indices;
+  for (typename map< uint32, vector< typename TObject::Id_Type > >::const_iterator it = ids_by_coarse.begin();
+      it != ids_by_coarse.end(); ++it)
+    coarse_indices.insert(TIndex(it->first));
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
@@ -995,13 +1004,19 @@ void Print_Statement::tags_by_id_attic
   sort(items_by_id.begin(), items_by_id.end());
   
   //generate set of relevant coarse indices
-  std::set< Index > current_coarse_indices;
   std::map< uint32, std::vector< typename Object::Id_Type > > current_ids_by_coarse;
-  generate_ids_by_coarse(current_coarse_indices, current_ids_by_coarse, current_items);
+  generate_ids_by_coarse(current_ids_by_coarse, current_items);
+  std::set< Index > current_coarse_indices;
+  for (typename std::map< uint32, vector< typename Object::Id_Type > >::const_iterator
+      it = current_ids_by_coarse.begin(); it != current_ids_by_coarse.end(); ++it)
+    current_coarse_indices.insert(Index(it->first));
   
-  std::set< Index > attic_coarse_indices;
   std::map< uint32, std::vector< Attic< typename Object::Id_Type > > > attic_ids_by_coarse;
-  generate_ids_by_coarse(attic_coarse_indices, attic_ids_by_coarse, attic_items);
+  generate_ids_by_coarse(attic_ids_by_coarse, attic_items);
+  std::set< Index > attic_coarse_indices;
+  for (typename std::map< uint32, std::vector< Attic< typename Object::Id_Type > > >::const_iterator
+      it = attic_ids_by_coarse.begin(); it != attic_ids_by_coarse.end(); ++it)
+    attic_coarse_indices.insert(Index(it->first));
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > current_range_set;

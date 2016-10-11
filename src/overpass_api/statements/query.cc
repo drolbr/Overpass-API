@@ -749,11 +749,14 @@ void Query_Statement::filter_by_tags
      Resource_Manager& rman, Transaction& transaction)
 {
   // generate set of relevant coarse indices
-  set< TIndex > coarse_indices;
   map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  generate_ids_by_coarse(ids_by_coarse, items);
   if (timestamp != NOW)
-    generate_ids_by_coarse(coarse_indices, ids_by_coarse, *attic_items);
+    generate_ids_by_coarse(ids_by_coarse, *attic_items);
+  set< TIndex > coarse_indices;
+  for (typename map< uint32, vector< typename TObject::Id_Type > >::const_iterator it = ids_by_coarse.begin();
+      it != ids_by_coarse.end(); ++it)
+    coarse_indices.insert(TIndex(it->first));
   
   // formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
@@ -983,9 +986,12 @@ void Query_Statement::filter_by_tags
      Resource_Manager& rman, Transaction& transaction)
 {
   // generate set of relevant coarse indices
-  set< TIndex > coarse_indices;
   map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
-  generate_ids_by_coarse(coarse_indices, ids_by_coarse, items);
+  generate_ids_by_coarse(ids_by_coarse, items);
+  set< TIndex > coarse_indices;
+  for (typename map< uint32, vector< typename TObject::Id_Type > >::const_iterator it = ids_by_coarse.begin();
+      it != ids_by_coarse.end(); ++it)
+    coarse_indices.insert(TIndex(it->first));
   
   // formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
