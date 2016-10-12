@@ -583,14 +583,10 @@ void Print_Statement::tags_quadtile
   //generate set of relevant coarse indices
   map< uint32, vector< typename Object::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(ids_by_coarse, items);
-  set< Index > coarse_indices;
-  for (typename map< uint32, vector< typename Object::Id_Type > >::const_iterator it = ids_by_coarse.begin();
-      it != ids_by_coarse.end(); ++it)
-    coarse_indices.insert(Index(it->first));
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
+  formulate_range_query(range_set, ids_by_coarse);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(), meta_file_prop);
@@ -649,14 +645,10 @@ void Print_Statement::tags_quadtile_attic
   //generate set of relevant coarse indices
   map< uint32, vector< Attic< typename Object::Id_Type > > > ids_by_coarse;
   generate_ids_by_coarse(ids_by_coarse, items);
-  set< Index > coarse_indices;
-  for (typename map< uint32, vector< Attic< typename Object::Id_Type > > >::const_iterator
-      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
-    coarse_indices.insert(Index(it->first));
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
+  formulate_range_query(range_set, ids_by_coarse);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
@@ -885,14 +877,10 @@ void Print_Statement::tags_by_id
   //generate set of relevant coarse indices
   map< uint32, vector< typename TObject::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(ids_by_coarse, items);
-  set< TIndex > coarse_indices;
-  for (typename map< uint32, vector< typename TObject::Id_Type > >::const_iterator it = ids_by_coarse.begin();
-      it != ids_by_coarse.end(); ++it)
-    coarse_indices.insert(TIndex(it->first));
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, coarse_indices);
+  formulate_range_query(range_set, ids_by_coarse);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< TIndex, typename TObject::Id_Type > meta_printer(items, *rman.get_transaction(), meta_file_prop);
@@ -998,24 +986,16 @@ void Print_Statement::tags_by_id_attic
   //generate set of relevant coarse indices
   std::map< uint32, std::vector< typename Object::Id_Type > > current_ids_by_coarse;
   generate_ids_by_coarse(current_ids_by_coarse, current_items);
-  std::set< Index > current_coarse_indices;
-  for (typename std::map< uint32, vector< typename Object::Id_Type > >::const_iterator
-      it = current_ids_by_coarse.begin(); it != current_ids_by_coarse.end(); ++it)
-    current_coarse_indices.insert(Index(it->first));
   
   std::map< uint32, std::vector< Attic< typename Object::Id_Type > > > attic_ids_by_coarse;
   generate_ids_by_coarse(attic_ids_by_coarse, attic_items);
-  std::set< Index > attic_coarse_indices;
-  for (typename std::map< uint32, std::vector< Attic< typename Object::Id_Type > > >::const_iterator
-      it = attic_ids_by_coarse.begin(); it != attic_ids_by_coarse.end(); ++it)
-    attic_coarse_indices.insert(Index(it->first));
   
   //formulate range query
   set< pair< Tag_Index_Local, Tag_Index_Local > > current_range_set;
-  formulate_range_query(current_range_set, current_coarse_indices);
+  formulate_range_query(current_range_set, current_ids_by_coarse);
   
   set< pair< Tag_Index_Local, Tag_Index_Local > > attic_range_set;
-  formulate_range_query(attic_range_set, attic_coarse_indices);
+  formulate_range_query(attic_range_set, attic_ids_by_coarse);
   
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
