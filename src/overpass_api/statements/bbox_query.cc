@@ -23,6 +23,7 @@
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
 #include "../data/collect_members.h"
+#include "../data/bbox_filter.h"
 #include "../data/geometry.h"
 #include "../data/way_geometry_store.h"
 #include "bbox_query.h"
@@ -80,58 +81,8 @@ bool Bbox_Constraint::get_ranges
 
 void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  // process nodes
-  uint32 south_ = ilat_(bbox->get_south());
-  uint32 north_ = ilat_(bbox->get_north());
-  int32 west_ = ilon_(bbox->get_west());
-  int32 east_ = ilon_(bbox->get_east());
-  
-  for (map< Uint32_Index, vector< Node_Skeleton > >::iterator it = into.nodes.begin();
-      it != into.nodes.end(); ++it)
-  {
-    vector< Node_Skeleton > local_into;
-    for (vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-    {
-      uint32 lat(::ilat(it->first.val(), iit->ll_lower));
-      int32 lon(::ilon(it->first.val(), iit->ll_lower));
-      if ((lat >= south_) && (lat <= north_) &&
-          (((lon >= west_) && (lon <= east_))
-            || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
-	local_into.push_back(*iit);
-    }
-    it->second.swap(local_into);
-  }  
-  
-  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
-      it != into.attic_nodes.end(); ++it)
-  {
-    vector< Attic< Node_Skeleton > > local_into;
-    for (vector< Attic< Node_Skeleton > >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-    {
-      uint32 lat(::ilat(it->first.val(), iit->ll_lower));
-      int32 lon(::ilon(it->first.val(), iit->ll_lower));
-      if ((lat >= south_) && (lat <= north_) &&
-          (((lon >= west_) && (lon <= east_))
-            || ((east_ < west_) && ((lon >= west_) || (lon <= east_)))))
-        local_into.push_back(*iit);
-    }
-    it->second.swap(local_into);
-  }
-
-  
-  const set< pair< Uint31_Index, Uint31_Index > >& ranges = bbox->get_ranges_31();
-  
-  // pre-process ways to reduce the load of the expensive filter
-  filter_ways_by_ranges(into.ways, ranges);
-  filter_ways_by_ranges(into.attic_ways, ranges);
-  
-  // pre-filter relations
-  filter_relations_by_ranges(into.relations, ranges);
-  filter_relations_by_ranges(into.attic_relations, ranges);
-  
-  //TODO: filter areas
+  Bbox_Filter filter(Bbox_Double(bbox->get_south(), bbox->get_west(), bbox->get_north(), bbox->get_east()));
+  filter.filter(into, timestamp);
 }
 
 

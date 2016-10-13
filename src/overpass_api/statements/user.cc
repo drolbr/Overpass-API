@@ -19,6 +19,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../data/bbox_filter.h"
 #include "../data/collect_members.h"
 #include "../data/meta_collector.h"
 #include "user.h"
@@ -326,12 +327,17 @@ void User_Statement::execute(Resource_Manager& rman)
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.relations, into.attic_relations);
   }
   
+  if (bbox_limitation)
+  {
+    Bbox_Filter filter(*bbox_limitation);
+    filter.filter(into, rman.get_desired_timestamp());
+    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
 //TODO
 //   if (bbox_limitation)
-//     bbox_limitation->filter(rman, into, rman.get_desired_timestamp());
-//   constraint.filter(*this, rman, into, rman.get_desired_timestamp());
-//   if (bbox_limitation)
 //     bbox_limitation->filter(*this, rman, into, rman.get_desired_timestamp());
+  }
+  else
+    constraint.filter(*this, rman, into, rman.get_desired_timestamp());  
 
   transfer_output(rman, into);
   rman.health_check(*this);
