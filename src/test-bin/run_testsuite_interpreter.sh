@@ -113,7 +113,7 @@ $BASEDIR/bin/update_database --db-dir=input/update_database/ --meta --version=mo
 
 # do the differential update including start/stop of dispatcher
 date +%T
-$BASEDIR/bin/dispatcher --osm-base --db-dir=input/update_database/ &
+$BASEDIR/bin/dispatcher --osm-base --meta --db-dir=input/update_database/ &
 sleep 1
 
 II=1

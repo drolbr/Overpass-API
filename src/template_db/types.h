@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___TEMPLATE_DB__TYPES_H
 #define DE__OSM3S___TEMPLATE_DB__TYPES_H
@@ -85,9 +85,11 @@ struct File_Properties
   virtual const std::string& get_id_suffix() const = 0;
   virtual const std::string& get_shadow_suffix() const = 0;
   virtual uint32 get_block_size() const = 0;
-  virtual uint32 get_max_size() const = 0;
+  virtual uint32 get_compression_factor() const = 0;
   virtual uint32 get_compression_method() const = 0;
   virtual uint32 get_map_block_size() const = 0;
+  virtual uint32 get_map_compression_factor() const = 0;
+  virtual uint32 get_map_compression_method() const = 0;
   virtual std::vector< bool > get_data_footprint(const std::string& db_dir) const = 0;
   virtual std::vector< bool > get_map_footprint(const std::string& db_dir) const = 0;
   virtual uint32 id_max_size_of() const = 0;
@@ -121,6 +123,7 @@ class Raw_File
     std::string name;
 };
 
+
 /** Simple RAII class to keep a pointer to some memory on the heap. */
 template < class T >
 class Void_Pointer
@@ -135,10 +138,28 @@ class Void_Pointer
     T* ptr;
 };
 
+
 inline bool file_exists(const std::string& filename)
 {
   return (access(filename.c_str(), F_OK) == 0);
 }
+
+
+/** Simple RAII class to keep a unix socket. */
+class Unix_Socket
+{
+public:
+  Unix_Socket(const std::string& socket_name = "", uint max_num_reading_processes = 0);
+  void open(const std::string& socket_name);
+  ~Unix_Socket();
+  
+  int descriptor() const { return socket_descriptor; }
+  
+private:
+  int socket_descriptor;
+  uint max_num_reading_processes;
+};
+
 
 //-----------------------------------------------------------------------------
 
@@ -193,11 +214,57 @@ inline void Raw_File::seek(uint64 pos, const std::string& caller_id) const
     throw File_Error(errno, name, caller_id);
 }
 
+//-----------------------------------------------------------------------------
+
+
+template< typename Int >
+int shift_log(Int val)
+{
+  int count = 0;
+  while (val > 1)
+  {
+    val = val>>1;
+    ++count;
+  }
+  return count;
+}
+
+
+template< typename Iterator, typename Object >
+void rearrange_block(const Iterator& begin, Iterator& it, Object to_move)
+{
+  Iterator predecessor = it;
+  if (it != begin)
+    --predecessor;
+  while (to_move < *predecessor)
+  {
+    *it = *predecessor;
+    --it;
+    if (it == begin)
+      break;
+    --predecessor;
+  }
+  *it = to_move;
+}
+
+
+inline void zero_padding(uint8* from, uint32 bytes)
+{
+  for (uint32 i = 0; i < bytes; ++i)
+    *(from + i) = 0;
+}
+
+
+//-----------------------------------------------------------------------------
+
 
 int& global_read_counter();
 
 
 void millisleep(uint32 milliseconds);
+
+
+void copy_file(const std::string& source, const std::string& dest);
 
 
 #endif

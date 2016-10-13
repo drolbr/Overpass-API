@@ -32,6 +32,7 @@ PLANET_FILE="$1"
 DB_DIR="$2"
 EXEC_DIR="$3"
 META="$4"
+COMPRESSION="$5"
 
 if [[ ! -s $PLANET_FILE ]]; then
 {
@@ -40,4 +41,4 @@ if [[ ! -s $PLANET_FILE ]]; then
 }; fi
 
 mkdir -p "$DB_DIR/"
-bunzip2 <$PLANET_FILE | $EXEC_DIR/bin/update_database --db-dir=$DB_DIR/ $META
+bunzip2 <$PLANET_FILE | $EXEC_DIR/bin/update_database --db-dir=$DB_DIR/ $META $COMPRESSION

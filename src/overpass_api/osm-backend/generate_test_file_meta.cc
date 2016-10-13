@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <cmath>
 #include <cstdlib>
@@ -41,16 +41,19 @@ struct V : public vector< T >
 struct Print_Control
 {
   Print_Control() : uid(0), tags_allowed_only(false) {}
-  Print_Control(uint uid_, const string& timestamp_, bool tags_allowed_only_)
-    : uid(uid_), timestamp(timestamp_), tags_allowed_only(tags_allowed_only_) {}
+  Print_Control(uint pattern_size_, uint uid_, const string& timestamp_, bool tags_allowed_only_, bool bbox_limited_)
+    : pattern_size(pattern_size_), uid(uid_), timestamp(timestamp_),
+      tags_allowed_only(tags_allowed_only_), bbox_limited(bbox_limited_) {}
   
   void meta_data(uint id, int variant) const;
   bool print_allowed(uint id, int variant) const;
   
   private:
+    uint pattern_size;
     uint uid;
     string timestamp;
     bool tags_allowed_only;
+    bool bbox_limited;
 };
 
 void Print_Control::meta_data(uint id, int variant) const
@@ -69,6 +72,25 @@ bool Print_Control::print_allowed(uint id, int variant) const
 {
   if (tags_allowed_only && (id % 7 != 0))
     return false;
+  
+  if (bbox_limited)
+  {
+    if (variant == 1 || variant == 4)
+    {
+      if (id > pattern_size*pattern_size || (id-1) % pattern_size >= pattern_size/2)
+        return false;
+    }
+    else if (variant == 2 || variant == 5)
+    {
+      if (id > pattern_size*pattern_size || id % pattern_size > pattern_size/2)
+        return false;
+    }
+    else if (variant == 3 || variant == 6)
+    {
+      if (id > pattern_size)
+        return false;
+    }
+  }
   
   if (timestamp != "")
   {
@@ -248,6 +270,7 @@ int main(int argc, char* args[])
   uint uid = 0;
   string timestamp;
   bool tags_allowed_only = false;
+  bool bbox_limited = false;
   bool more_tags = false;
   if (argc > 1)
     pattern_size = atoi(args[1]);
@@ -274,9 +297,16 @@ int main(int argc, char* args[])
   {
     if (string(args[4]) == "tags")
       tags_allowed_only = true;
+    if (string(args[4]) == "bbox")
+      bbox_limited = true;
+    if (string(args[4]) == "tags_bbox")
+    {
+      bbox_limited = true;
+      tags_allowed_only = true;
+    }
   }
   
-  Print_Control print_control(uid, timestamp, tags_allowed_only);
+  Print_Control print_control(pattern_size, uid, timestamp, tags_allowed_only, bbox_limited);
 
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -284,6 +314,9 @@ int main(int argc, char* args[])
   "<note>The data included in this document is from www.openstreetmap.org. "
   "The data is made available under ODbL.</note>\n"
   "<meta osm_base=\"mock-up-init\"/>\n\n";
+    
+  if (bbox_limited)
+    std::cout<<"  <bounds minlat=\"10\" minlon=\"1\" maxlat=\"10.5\" maxlon=\"1.5\"/>\n\n";
 
   if (pattern == before)
   {

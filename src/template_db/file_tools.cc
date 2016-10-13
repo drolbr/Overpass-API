@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "dispatcher.h"
 #include "file_tools.h"
@@ -36,25 +36,6 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-
-
-void copy_file(const std::string& source, const std::string& dest)
-{
-  if (!file_exists(source))
-    return;
-  
-  Raw_File source_file(source, O_RDONLY, S_666, "Dispatcher:1");
-  uint64 size = source_file.size("Dispatcher:2");
-  Raw_File dest_file(dest, O_RDWR|O_CREAT, S_666, "Dispatcher:3");
-  dest_file.resize(size, "Dispatcher:4");
-  
-  Void_Pointer< uint8 > buf(64*1024);
-  while (size > 0)
-  {
-    size = read(source_file.fd(), buf.ptr, 64*1024);
-    dest_file.write(buf.ptr, size, "Dispatcher:5");
-  }
-}
 
 
 std::string getcwd()
@@ -160,6 +141,12 @@ void Blocking_Client_Socket::clear_state()
     return;
   }
   state = waiting;
+}
+
+
+void Blocking_Client_Socket::send_data(uint32 result)
+{
+  send(socket_descriptor, &result, sizeof(uint32), 0);
 }
 
 

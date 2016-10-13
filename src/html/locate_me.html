@@ -222,7 +222,7 @@
                 var type_letter = (osm_element.type == "node" ? "N"
                     : (osm_element.type == "way" ? "W" : "R"));
                 var nominatim_req = OpenLayers.Request.GET({
-                    url: "http://nominatim.openstreetmap.org/reverse?"
+                    url: "https://nominatim.openstreetmap.org/reverse?"
                         + nominatim_identfier + "&format=json"
                         + "&osm_type=" + type_letter + "&osm_id=" + osm_element.id,
                     async: false
@@ -374,10 +374,10 @@
           layerMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
           map.addLayer(layerMapnik);
           layerDe = new OpenLayers.Layer.OSM("OSM_de",
-              ["http://a.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
-               "http://b.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
-               "http://c.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
-               "http://d.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png"]);
+              ["https://a.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
+               "https://b.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
+               "https://c.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png",
+               "https://d.tile.openstreetmap.de/tiles/osmde/${z}/${x}/${y}.png"]);
           map.addLayer(layerDe);
           layerCycleMap = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
           map.addLayer(layerCycleMap);
@@ -411,7 +411,7 @@
                   alert("The W3C Geolocation API isn't availble.");
           }
           
-          var click = new Click("http://overpass-api.de/api/interpreter?data=[timeout:3][out:json];", 0.0000001, map);
+          var click = new Click("https://overpass-api.de/api/interpreter?data=[timeout:3][out:json];", 0.0000001, map);
           map.addControl(click);
           click.activate();
       }
@@ -430,7 +430,7 @@
       function showCustomLayer(query)
       {
           hideCustomLayers();
-          var layer = make_auto_zoom_layer("http://overpass-api.de/api/interpreter?data=" + query + "out+skel;", "blue", 11);
+          var layer = make_auto_zoom_layer("https://overpass-api.de/api/interpreter?data=" + query + "out+skel;", "blue", 11);
           map.addLayers([layer]);
           customLayers.push(layer);
           layer.display(true);
@@ -482,6 +482,11 @@
           "Gasstation": ["[amenity=fuel]"],
           "WC": ["[amenity=toilets]"],
 
+          "Parcels": ["[amenity=post_office]","[amenity=vending_machine][vending~'parcel_pickup'][operator=DHL]","[amenity=post_office][operator=Hermes]"],
+          "Post": ["[amenity=post_office]"],
+          "DHL": ["[amenity=vending_machine][vending~'parcel_pickup'][operator=DHL]"],
+          "Hermes": ["[amenity=post_office][operator=Hermes]"],
+          
           "Foodsource": ["[shop=supermarket]", "[shop=convenience]"],
           "Chemist": ["[shop=chemist]"],
           "Pharmacy": ["[amenity=pharmacy]"],
@@ -568,6 +573,7 @@
           clearChoiceMenu();
           addPOIFolder("Start", "zurück");
           addPOIFolder("ATM", "Geldautomat");
+          addPOIFolder("Parcels", "Paket-Service");
           addPOILayerChoice("Postbox", "Briefkasten");
           addPOILayerChoice("Gasstation", "Tankstelle");
           addPOILayerChoice("WC", "WC");
@@ -581,6 +587,15 @@
           addPOILayerChoice("Postbank", "Cash Group");
           addPOILayerChoice("Volksbank", "Volksbank");
           addPOILayerChoice("Sparda", "Cash Pool");
+      }
+      
+      function prepareParcelsMenu() {
+          clearChoiceMenu();
+          addPOIFolder("Service", "zurück");
+          addPOILayerChoice("Parcels", "alle");
+          addPOILayerChoice("Post", "Postamt oder -agentur");
+          addPOILayerChoice("DHL", "Packstation");
+          addPOILayerChoice("Hermes", "Hermes");
       }
       
       function prepareShoppingMenu() {

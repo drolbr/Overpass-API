@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "datatypes.h"
 #include "settings.h"
@@ -33,33 +33,36 @@
 #include <unistd.h>
 
 
+#include <iostream>
 template < typename TVal >
 struct OSM_File_Properties : public File_Properties
 {
-  OSM_File_Properties(const string& file_base_name_, uint32 block_size_,
+  OSM_File_Properties(const std::string& file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
     : file_base_name(file_base_name_), block_size(block_size_),
-      map_block_size(map_block_size_ > 0 ? map_block_size_*TVal::max_size_of() : 0) {}
+      map_block_size(map_block_size_ > 0 ? map_block_size_ : 0) {}
   
-  const string& get_file_name_trunk() const { return file_base_name; }
+  const std::string& get_file_name_trunk() const { return file_base_name; }
   
-  const string& get_index_suffix() const { return basic_settings().INDEX_SUFFIX; }
-  const string& get_data_suffix() const { return basic_settings().DATA_SUFFIX; }
-  const string& get_id_suffix() const { return basic_settings().ID_SUFFIX; }  
-  const string& get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
+  const std::string& get_index_suffix() const { return basic_settings().INDEX_SUFFIX; }
+  const std::string& get_data_suffix() const { return basic_settings().DATA_SUFFIX; }
+  const std::string& get_id_suffix() const { return basic_settings().ID_SUFFIX; }  
+  const std::string& get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
   
-  uint32 get_block_size() const { return block_size/4; }
-  uint32 get_max_size() const { return 4; }
-  uint32 get_compression_method() const { return File_Blocks_Index< TVal >::ZLIB_COMPRESSION; }
-  uint32 get_map_block_size() const { return map_block_size; }
+  uint32 get_block_size() const { return block_size/8; }
+  uint32 get_compression_factor() const { return 8; }
+  uint32 get_compression_method() const { return basic_settings().compression_method; }
+  uint32 get_map_block_size() const { return map_block_size/8; }
+  uint32 get_map_compression_factor() const { return 8; }
+  uint32 get_map_compression_method() const { return basic_settings().map_compression_method; }
   
-  vector< bool > get_data_footprint(const string& db_dir) const
+  std::vector< bool > get_data_footprint(const std::string& db_dir) const
   {
-    vector< bool > temp = get_data_index_footprint< TVal >(*this, db_dir);
+    std::vector< bool > temp = get_data_index_footprint< TVal >(*this, db_dir);
     return temp;
   }
   
-  vector< bool > get_map_footprint(const string& db_dir) const
+  std::vector< bool > get_map_footprint(const std::string& db_dir) const
   {
     return get_map_index_footprint(*this, db_dir);
   }
@@ -70,14 +73,14 @@ struct OSM_File_Properties : public File_Properties
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
+      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
     return new File_Blocks_Index< TVal >
         (*this, writeable, use_shadow, db_dir, file_name_extension);
   }
 
-  string file_base_name;
+  std::string file_base_name;
   uint32 block_size;
   uint32 map_block_size;
 };
@@ -94,7 +97,13 @@ Basic_Settings::Basic_Settings()
 
   base_directory("./"),
   logfile_name("transactions.log"),
-  shared_name_base("/osm3s_v0.7.52")
+  shared_name_base("/osm3s_v0.7.53"),
+#ifdef HAVE_LZ4
+  compression_method(File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION),
+#else
+  compression_method(File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION),
+#endif
+  map_compression_method(File_Blocks_Index< Uint31_Index >::NO_COMPRESSION)
 {}
 
 Basic_Settings& basic_settings()
@@ -136,7 +145,7 @@ Osm_Base_Settings::Osm_Base_Settings()
   shared_name(basic_settings().shared_name_base + "_osm_base"),
   max_num_processes(20),
   purge_timeout(900),
-  total_available_space(4ll*1024*1024*1024),
+  total_available_space(12ll*1024*1024*1024),
   total_available_time_units(256*1024)
 {}
 
@@ -247,24 +256,24 @@ const Attic_Settings& attic_settings()
 
 void show_mem_status()
 {
-  ostringstream proc_file_name_("");
+  std::ostringstream proc_file_name_("");
   proc_file_name_<<"/proc/"<<getpid()<<"/stat";
-  ifstream stat(proc_file_name_.str().c_str());
+  std::ifstream stat(proc_file_name_.str().c_str());
   while (stat.good())
   {
-    string line;
+    std::string line;
     getline(stat, line);
-    cerr<<line;
+    std::cerr<<line;
   }
-  cerr<<'\n';
+  std::cerr<<'\n';
 }
 
 //-----------------------------------------------------------------------------
 
-Logger::Logger(const string& db_dir)
+Logger::Logger(const std::string& db_dir)
   : logfile_full_name(db_dir + basic_settings().logfile_name) {}
 
-void Logger::annotated_log(const string& message)
+void Logger::annotated_log(const std::string& message)
 {
   // Collect current time in a user-readable form.
   time_t time_t_ = time(0);
@@ -274,17 +283,17 @@ void Logger::annotated_log(const string& message)
   if (tm_)
     strftime(strftime_buf, 21, "%F %H:%M:%S ", tm_);
   
-  ofstream out(logfile_full_name.c_str(), ios_base::app);
+  std::ofstream out(logfile_full_name.c_str(), std::ios_base::app);
   out<<strftime_buf<<'['<<getpid()<<"] "<<message<<'\n';
 }
 
-void Logger::raw_log(const string& message)
+void Logger::raw_log(const std::string& message)
 {
-  ofstream out(logfile_full_name.c_str(), ios_base::app);
+  std::ofstream out(logfile_full_name.c_str(), std::ios_base::app);
   out<<message<<'\n';
 }
 
-const string& get_logfile_name()
+const std::string& get_logfile_name()
 {
   return basic_settings().logfile_name;
 }

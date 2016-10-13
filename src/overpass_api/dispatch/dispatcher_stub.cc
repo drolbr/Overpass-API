@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "dispatcher_stub.h"
 #include "../frontend/user_interface.h"
@@ -23,8 +23,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -63,6 +65,28 @@ string de_escape(string input)
 }
 
 
+void set_limits(uint32 time, uint64 space)
+{
+  rlimit limit;
+  
+  int result = getrlimit(RLIMIT_CPU, &limit);
+  if (result == 0 && time < limit.rlim_cur && time < limit.rlim_max)
+  {
+    limit.rlim_cur = time;
+    limit.rlim_max = time;
+    result = setrlimit(RLIMIT_CPU, &limit);
+  }
+  
+  result = getrlimit(RLIMIT_AS, &limit);
+  if (result == 0 && space < limit.rlim_cur && space < limit.rlim_max)
+  {
+    limit.rlim_cur = space;
+    limit.rlim_max = space;
+    result = setrlimit(RLIMIT_AS, &limit);
+  }
+}
+
+
 Dispatcher_Stub::Dispatcher_Stub
     (string db_dir_, Error_Output* error_output_, string xml_raw, meta_modes meta_, int area_level,
      uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings)
@@ -70,6 +94,9 @@ Dispatcher_Stub::Dispatcher_Stub
       dispatcher_client(0), area_dispatcher_client(0),
       transaction(0), area_transaction(0), rman(0), meta(meta_)
 {
+  if (max_allowed_time > 0)
+    set_limits(2*max_allowed_time + 60, 2*max_allowed_space + 1024*1024*1024);
+  
   if (db_dir == "")
   {
     uint32 client_token = probe_client_token();
@@ -249,6 +276,10 @@ Dispatcher_Stub::Dispatcher_Stub
   }
   else
   {
+    if (file_present(db_dir + osm_base_settings().shared_name))
+      throw Context_Error("File " + db_dir + osm_base_settings().shared_name + " present, "
+          "which indicates a running dispatcher. Delete file if no dispatcher is running.");
+    
     transaction = new Nonsynced_Transaction(false, false, db_dir, "");
     if (area_level > 0)
     {

@@ -31,7 +31,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include "../../src/expat/expat_justparse_interface.h"
+#include "../expat/expat_justparse_interface.h"
 
 #include "read_input.h"
 

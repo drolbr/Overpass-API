@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <iostream>
 #include <list>
@@ -63,16 +63,16 @@ struct IntIndex
 };
 
 
-typedef list< IntIndex >::const_iterator IntIterator;
+typedef std::list< IntIndex >::const_iterator IntIterator;
 
 
-struct IntRangeIterator : list< pair< IntIndex, IntIndex > >::const_iterator
+struct IntRangeIterator : std::list< std::pair< IntIndex, IntIndex > >::const_iterator
 {
   IntRangeIterator() {}
   
   IntRangeIterator
-    (const list< pair< IntIndex, IntIndex > >::const_iterator it)
-    : list< pair< IntIndex, IntIndex > >::const_iterator(it) {}
+    (const std::list< std::pair< IntIndex, IntIndex > >::const_iterator it)
+    : std::list< std::pair< IntIndex, IntIndex > >::const_iterator(it) {}
   
   const IntIndex& lower_bound() const
   {
@@ -133,12 +133,22 @@ struct Test_File : File_Properties
     return 512;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
+  {
+    return 1;
+  }
+  
+  uint32 get_map_compression_factor() const
   {
     return 1;
   }
   
   uint32 get_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+  }
+
+  uint32 get_map_compression_method() const
   {
     return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
   }
@@ -148,24 +158,24 @@ struct Test_File : File_Properties
     return 16;
   }
   
-  vector< bool > get_data_footprint(const string& db_dir) const
+  std::vector< bool > get_data_footprint(const std::string& db_dir) const
   {
-    return vector< bool >();
+    return std::vector< bool >();
   }
   
-  vector< bool > get_map_footprint(const string& db_dir) const
+  std::vector< bool > get_map_footprint(const std::string& db_dir) const
   {
-    return vector< bool >();
+    return std::vector< bool >();
   }  
 
   uint32 id_max_size_of() const
   {
-    throw string();
+    throw std::string();
     return 0;
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
+      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
     return new File_Blocks_Index< IntIndex >
@@ -176,34 +186,34 @@ struct Test_File : File_Properties
 
 struct Variable_Block_Test_File : File_Properties
 {
-  const string& get_basedir() const
+  const std::string& get_basedir() const
   {
     return BASE_DIRECTORY;
   }
   
-  const string& get_file_name_trunk() const
+  const std::string& get_file_name_trunk() const
   {
     static std::string result("variable");
     return result;
   }
   
-  const string& get_index_suffix() const
+  const std::string& get_index_suffix() const
   {
     return INDEX_SUFFIX;
   }
 
-  const string& get_data_suffix() const
+  const std::string& get_data_suffix() const
   {
     return DATA_SUFFIX;
   }
 
-  const string& get_id_suffix() const
+  const std::string& get_id_suffix() const
   {
     static std::string result("");
     return result;
   }
 
-  const string& get_shadow_suffix() const
+  const std::string& get_shadow_suffix() const
   {
     static std::string result(".shadow");
     return result;
@@ -214,12 +224,22 @@ struct Variable_Block_Test_File : File_Properties
     return 64;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
   {
     return 8;
   }
   
+  uint32 get_map_compression_factor() const
+  {
+    return 1;
+  }
+  
   uint32 get_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+  }
+
+  uint32 get_map_compression_method() const
   {
     return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
   }
@@ -229,14 +249,14 @@ struct Variable_Block_Test_File : File_Properties
     return 16;
   }
   
-  vector< bool > get_data_footprint(const std::string& db_dir) const
+  std::vector< bool > get_data_footprint(const std::string& db_dir) const
   {
-    return vector< bool >();
+    return std::vector< bool >();
   }
   
-  vector< bool > get_map_footprint(const std::string& db_dir) const
+  std::vector< bool > get_map_footprint(const std::string& db_dir) const
   {
-    return vector< bool >();
+    return std::vector< bool >();
   }  
 
   uint32 id_max_size_of() const
@@ -257,34 +277,34 @@ struct Variable_Block_Test_File : File_Properties
 
 struct Compressed_Test_File : File_Properties
 {
-  const string& get_basedir() const
+  const std::string& get_basedir() const
   {
     return BASE_DIRECTORY;
   }
   
-  const string& get_file_name_trunk() const
+  const std::string& get_file_name_trunk() const
   {
     static std::string result("compressed");
     return result;
   }
   
-  const string& get_index_suffix() const
+  const std::string& get_index_suffix() const
   {
     return INDEX_SUFFIX;
   }
 
-  const string& get_data_suffix() const
+  const std::string& get_data_suffix() const
   {
     return DATA_SUFFIX;
   }
 
-  const string& get_id_suffix() const
+  const std::string& get_id_suffix() const
   {
     static std::string result("");
     return result;
   }
 
-  const string& get_shadow_suffix() const
+  const std::string& get_shadow_suffix() const
   {
     static std::string result(".shadow");
     return result;
@@ -295,14 +315,28 @@ struct Compressed_Test_File : File_Properties
     return 8*1024;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
+  {
+    return 8;
+  }
+  
+  uint32 get_map_compression_factor() const
   {
     return 8;
   }
   
   uint32 get_compression_method() const
   {
+#ifdef HAVE_LZ4
+    return File_Blocks_Index< IntIndex >::LZ4_COMPRESSION;
+#else
     return File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION;
+#endif
+  }
+
+  uint32 get_map_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
   }
   
   uint32 get_map_block_size() const
@@ -310,24 +344,24 @@ struct Compressed_Test_File : File_Properties
     return 4*1024;
   }
   
-  vector< bool > get_data_footprint(const string& db_dir) const
+  std::vector< bool > get_data_footprint(const std::string& db_dir) const
   {
-    return vector< bool >();
+    return std::vector< bool >();
   }
   
-  vector< bool > get_map_footprint(const string& db_dir) const
+  std::vector< bool > get_map_footprint(const std::string& db_dir) const
   {
-    return vector< bool >();
+    return std::vector< bool >();
   }  
 
   uint32 id_max_size_of() const
   {
-    throw string();
+    throw std::string();
     return 0;
   }
   
   File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const string& db_dir, const string& file_name_extension)
+      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
     return new File_Blocks_Index< IntIndex >
@@ -343,19 +377,19 @@ void read_loop
 {
   while (!(it == blocks.flat_end()))
   {
-    cout<<"Predicted size "<<blocks.answer_size(it);
+    std::cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data((uint8*)(blocks.read_block(it)));
-    cout<<", real size "<<(*(uint32*)data)<<" bytes, "
+    std::cout<<", real size "<<(*(uint32*)data)<<" bytes, "
     <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
     <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
     if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
     {
       uint8* pos(data+sizeof(uint32));
       pos += *(uint32*)pos;
-      cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
+      std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
       <<"second index "<<*(uint32*)(pos+sizeof(uint32));
     }
-    cout<<'\n';
+    std::cout<<'\n';
     ++it;
   }
 }
@@ -367,22 +401,22 @@ void read_loop
   while (!(it == blocks.discrete_end()))
   {
     uint32 answer_size(blocks.answer_size(it));
-    cout<<"Predicted size "<<answer_size;
+    std::cout<<"Predicted size "<<answer_size;
     if (answer_size > 0)
     {
       uint8* data((uint8*)(blocks.read_block(it)));
-      cout<<", real size "<<(*(uint32*)data)<<" bytes, "
+      std::cout<<", real size "<<(*(uint32*)data)<<" bytes, "
 	  <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
 	  <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
       if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
       {
 	uint8* pos(data+sizeof(uint32));
 	pos += *(uint32*)pos;
-	cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
+	std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
 	    <<"second index "<<*(uint32*)(pos+sizeof(uint32));
       }
     }
-    cout<<'\n';
+    std::cout<<'\n';
     ++it;
   }
 }
@@ -393,19 +427,19 @@ void read_loop
 {
   while (!(it == blocks.range_end()))
   {
-    cout<<"Predicted size "<<blocks.answer_size(it);
+    std::cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data((uint8*)(blocks.read_block(it)));
-    cout<<", real size "<<(*(uint32*)data)<<" bytes, "
+    std::cout<<", real size "<<(*(uint32*)data)<<" bytes, "
     <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
     <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
     if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
     {
       uint8* pos(data+sizeof(uint32));
       pos += *(uint32*)pos;
-      cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
+      std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
       <<"second index "<<*(uint32*)(pos+sizeof(uint32));
     }
-    cout<<'\n';
+    std::cout<<'\n';
     ++it;
   }
 }
@@ -415,118 +449,118 @@ void read_test()
 {
   try
   {
-    cout<<"Read test\n";
+    std::cout<<"Read test\n";
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 
-    vector< bool > footprint = get_data_index_footprint< IntIndex >
+    std::vector< bool > footprint = get_data_index_footprint< IntIndex >
         (Test_File(), BASE_DIRECTORY);
-    cout<<"Index footprint: ";
-    for (vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
+    std::cout<<"Index footprint: ";
+    for (std::vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
         ++it)
-      cout<<*it;
-    cout<<'\n';
+      std::cout<<*it;
+    std::cout<<'\n';
 
-    cout<<"Reading all blocks ...\n";
+    std::cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
     read_loop(blocks, fit);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
 
-    list< IntIndex > index_list;
+    std::list< IntIndex > index_list;
     for (unsigned int i(0); i < 100; i += 9)
       index_list.push_back(&i);
-    cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
+    std::cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
 	it(blocks.discrete_begin(index_list.begin(), index_list.end()));
     read_loop(blocks, it);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
     index_list.clear();
     for (unsigned int i(0); i < 10; ++i)
       index_list.push_back(&i);
-    cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
+    std::cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
     read_loop(blocks, it);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
 
-    list< pair< IntIndex, IntIndex > > range_list;
+    std::list< std::pair< IntIndex, IntIndex > > range_list;
     uint32 fool(0), foou(10);
-    range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
-    cout<<"Reading blocks with indices [0, 10[ ...\n";
+    range_list.push_back(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    std::cout<<"Reading blocks with indices [0, 10[ ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator
 	rit(blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end())));
     read_loop(blocks, rit);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
     index_list.clear();
     for (unsigned int i(90); i < 100; ++i)
       index_list.push_back(&i);
-    cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
+    std::cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
     read_loop(blocks, it);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
     range_list.clear();
     fool = 90;
     foou = 100;
-    range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
-    cout<<"Reading blocks with indices [90, 100[ ...\n";
+    range_list.push_back(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    std::cout<<"Reading blocks with indices [90, 100[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
     read_loop(blocks, rit);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
     index_list.clear();
     uint32 foo(50);
     index_list.push_back(&foo);
-    cout<<"Reading blocks with index 50 ...\n";
+    std::cout<<"Reading blocks with index 50 ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
     read_loop(blocks, it);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
     range_list.clear();
     fool = 50;
     foou = 51;
-    range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
-    cout<<"Reading blocks with indices [50, 51[ ...\n";
+    range_list.push_back(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    std::cout<<"Reading blocks with indices [50, 51[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
     read_loop(blocks, rit);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
     range_list.clear();
     fool = 0;
     foou = 10;
-    range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+    range_list.push_back(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
     fool = 50;
     foou = 51;
-    range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
+    range_list.push_back(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
     fool = 90;
     foou = 100;
-    range_list.push_back(make_pair(IntIndex(&fool), IntIndex(&foou)));
-    cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
+    range_list.push_back(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    std::cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
     read_loop(blocks, rit);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
     index_list.clear();
-    cout<<"Reading blocks with indices \\emptyset ...\n";
+    std::cout<<"Reading blocks with indices \\emptyset ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
     read_loop(blocks, it);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
-    cout<<"This block of read tests is complete.\n";
+    std::cout<<"This block of read tests is complete.\n";
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
 	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is the expected correct behaviour)\n";
+    std::cout<<"(This is the expected correct behaviour)\n";
   }
 }
 
@@ -535,33 +569,33 @@ void variable_block_read_test()
 {
   try
   {
-    cout<<"Compressed Read test\n";
+    std::cout<<"Compressed Read test\n";
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 
-    vector< bool > footprint = get_data_index_footprint< IntIndex >
+    std::vector< bool > footprint = get_data_index_footprint< IntIndex >
         (Variable_Block_Test_File(), BASE_DIRECTORY);
-    cout<<"Index footprint: ";
-    for (vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
+    std::cout<<"Index footprint: ";
+    for (std::vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
         ++it)
-      cout<<*it;
-    cout<<'\n';
+      std::cout<<*it;
+    std::cout<<'\n';
 
-    cout<<"Reading all blocks ...\n";
+    std::cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
     read_loop(blocks, fit);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
-    cout<<"This block of read tests is complete.\n";
+    std::cout<<"This block of read tests is complete.\n";
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
 	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is the expected correct behaviour)\n";
+    std::cout<<"(This is the expected correct behaviour)\n";
   }
 }
 
@@ -570,38 +604,38 @@ void compressed_read_test()
 {
   try
   {
-    cout<<"Compressed Read test\n";
+    std::cout<<"Compressed Read test\n";
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Compressed_Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 
-    vector< bool > footprint = get_data_index_footprint< IntIndex >
+    std::vector< bool > footprint = get_data_index_footprint< IntIndex >
         (Variable_Block_Test_File(), BASE_DIRECTORY);
-    cout<<"Index footprint: ";
-    for (vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
+    std::cout<<"Index footprint: ";
+    for (std::vector< bool >::const_iterator it(footprint.begin()); it != footprint.end();
         ++it)
-      cout<<*it;
-    cout<<'\n';
+      std::cout<<*it;
+    std::cout<<'\n';
 
-    cout<<"Reading all blocks ...\n";
+    std::cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
     read_loop(blocks, fit);
-    cout<<"... all blocks read.\n";
+    std::cout<<"... all blocks read.\n";
   
-    cout<<"This block of read tests is complete.\n";
+    std::cout<<"This block of read tests is complete.\n";
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
 	<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is the expected correct behaviour)\n";
+    std::cout<<"(This is the expected correct behaviour)\n";
   }
 }
 
 
-uint32 prepare_block(void* block, const list< IntIndex >& indices)
+uint32 prepare_block(void* block, const std::list< IntIndex >& indices)
 {
   uint32 max_keysize(0);
   
@@ -612,7 +646,7 @@ uint32 prepare_block(void* block, const list< IntIndex >& indices)
   }
   
   uint32 pos(sizeof(uint32));
-  for (list< IntIndex >::const_iterator it(indices.begin());
+  for (std::list< IntIndex >::const_iterator it(indices.begin());
       it != indices.end(); ++it)
   {
     if ((*it).val() + 12 > max_keysize)
@@ -645,21 +679,41 @@ int main(int argc, char* args[])
         + Test_File().get_index_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(index_fd);
+  
+  if ((test_to_execute == "") || (test_to_execute == "info"))
+  {
+    Compressed_Test_File tf;
+    
+    if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::NO_COMPRESSION)
+      std::cout<<"Using no compression for bin files.\n";
+    else if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION)
+      std::cout<<"Using zlib compression for bin files.\n";
+    else if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::LZ4_COMPRESSION)
+      std::cout<<"Using lz4 compression for bin files.\n";
+    
+    if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::NO_COMPRESSION)
+      std::cout<<"Using no compression for map files.\n";
+    else if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION)
+      std::cout<<"Using zlib compression for map files.\n";
+    else if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::LZ4_COMPRESSION)
+      std::cout<<"Using lz4 compression for map files.\n";
+  }
+  
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
-    cout<<"** Test the behaviour for an empty file\n";
+    std::cout<<"** Test the behaviour for an empty file\n";
     read_test();
   }
   
   if ((test_to_execute == "") || (test_to_execute == "2"))
-    cout<<"** Test the behaviour for a file with one entry - part 1\n";
+    std::cout<<"** Test the behaviour for a file with one entry - part 1\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(49));
@@ -671,22 +725,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "2"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "3"))
-    cout<<"** Test the behaviour for a file with one entry - part 2\n";
+    std::cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(51));
@@ -697,22 +751,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "3"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "4"))
-    cout<<"** Test the behaviour for a file with three entries\n";
+    std::cout<<"** Test the behaviour for a file with three entries\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(9));
@@ -728,22 +782,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "4"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "5"))
-    cout<<"** Test insertion everywhere\n";
+    std::cout<<"** Test insertion everywhere\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(10));
@@ -785,22 +839,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "5"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "6"))
-    cout<<"** Test to replace blocks\n";
+    std::cout<<"** Test to replace blocks\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices, work;
+    std::list< IntIndex > indices, work;
     
     indices.clear();
     indices.push_back(IntIndex(7));
@@ -835,22 +889,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "6"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "7"))
-    cout<<"** Delete blocks in between\n";
+    std::cout<<"** Delete blocks in between\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(51));
@@ -866,22 +920,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "7"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "8"))
-    cout<<"** Delete blocks at the begin and the end\n";
+    std::cout<<"** Delete blocks at the begin and the end\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(7));
@@ -895,22 +949,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "8"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "9"))
-    cout<<"** Test insertion again\n";
+    std::cout<<"** Test insertion again\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices, work;
+    std::list< IntIndex > indices, work;
     
     indices.clear();
     for (unsigned int i(20); i < 30; ++i)
@@ -934,22 +988,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "9"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "10"))
-    cout<<"** Delete everything\n";
+    std::cout<<"** Delete everything\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     for (unsigned int i(0); i < 100; ++i)
@@ -965,22 +1019,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "10"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "11"))
-    cout<<"** Insert two series of segments\n";
+    std::cout<<"** Insert two series of segments\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(40));
@@ -1002,22 +1056,22 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "11"))
     read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "12"))
-    cout<<"** Replace by other series of segments\n";
+    std::cout<<"** Replace by other series of segments\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices, work;
+    std::list< IntIndex > indices, work;
     
     indices.clear();
     indices.push_back(IntIndex(8));
@@ -1078,9 +1132,9 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "12"))
     read_test();
@@ -1110,49 +1164,50 @@ int main(int argc, char* args[])
   close(index_fd);
   if ((test_to_execute == "") || (test_to_execute == "13"))
   {
-    cout<<"** Test the behaviour for an empty file\n";
+    std::cout<<"** Test the behaviour for an empty file\n";
     variable_block_read_test();
   }
   
   if ((test_to_execute == "") || (test_to_execute == "14"))
-    cout<<"** Test the behaviour for a compressed file with one entry - part 1\n";
+    std::cout<<"** Test the behaviour for a compressed file with one entry - part 1\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
     indices.clear();
     indices.push_back(IntIndex(20));
     indices.push_back(IntIndex(21));
     indices.push_back(IntIndex(22));
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size()
+        * Variable_Block_Test_File().get_compression_factor());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "14"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "15"))
-    cout<<"** Test the behaviour for a compressed file with multiple small entries\n";
+    std::cout<<"** Test the behaviour for a compressed file with multiple small entries\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     indices.clear();
     indices.push_back(IntIndex(30));
@@ -1222,15 +1277,15 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "15"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "16"))
-    cout<<"** Test the behaviour for a compressed file with multiple deletions\n";
+    std::cout<<"** Test the behaviour for a compressed file with multiple deletions\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
@@ -1238,7 +1293,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 	
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
     
@@ -1258,15 +1313,15 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "16"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "17"))
-    cout<<"** Test the behaviour for the gap filling strategy - part 1\n";
+    std::cout<<"** Test the behaviour for the gap filling strategy - part 1\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
@@ -1274,14 +1329,14 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 	
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 25)
       ++it;
@@ -1294,15 +1349,15 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "17"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "18"))
-    cout<<"** Test the behaviour for the gap filling strategy - part 2\n";
+    std::cout<<"** Test the behaviour for the gap filling strategy - part 2\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
@@ -1310,14 +1365,14 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 	
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 26)
       ++it;
@@ -1330,15 +1385,15 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "18"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "19"))
-    cout<<"** Test the behaviour for the gap filling strategy - part 3\n";
+    std::cout<<"** Test the behaviour for the gap filling strategy - part 3\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
@@ -1346,14 +1401,14 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 	
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 60)
       ++it;
@@ -1367,15 +1422,15 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "19"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "20"))
-    cout<<"** Test the behaviour for the gap filling strategy - part 4\n";
+    std::cout<<"** Test the behaviour for the gap filling strategy - part 4\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
@@ -1383,14 +1438,14 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 	
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 65)
       ++it;
@@ -1405,15 +1460,15 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "20"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "21"))
-    cout<<"** Test the behaviour for the gap filling strategy - part 5\n";
+    std::cout<<"** Test the behaviour for the gap filling strategy - part 5\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
@@ -1421,14 +1476,14 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 	
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 68)
       ++it;
@@ -1442,15 +1497,15 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "21"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "22"))
-    cout<<"** Test the behaviour for the gap filling strategy - part 6\n";
+    std::cout<<"** Test the behaviour for the gap filling strategy - part 6\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
@@ -1458,14 +1513,14 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 	
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 70)
       ++it;
@@ -1480,15 +1535,15 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "22"))
     variable_block_read_test();
   
   if ((test_to_execute == "") || (test_to_execute == "23"))
-    cout<<"** Test the behaviour for the gap filling strategy - with replace block\n";
+    std::cout<<"** Test the behaviour for the gap filling strategy - with replace block\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
@@ -1496,14 +1551,14 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
 	
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
     
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
     
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_max_size());
+    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
     
     while (!(it == blocks.discrete_end()) && it.block_it->index < 20)
       ++it;
@@ -1517,9 +1572,9 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "23"))
     variable_block_read_test();
@@ -1549,21 +1604,21 @@ int main(int argc, char* args[])
   close(index_fd);
   if ((test_to_execute == "") || (test_to_execute == "24"))
   {
-    cout<<"** Test the behaviour for an empty file\n";
+    std::cout<<"** Test the behaviour for an empty file\n";
     compressed_read_test();
   }
   
   if ((test_to_execute == "") || (test_to_execute == "25"))
-    cout<<"** Test the behaviour for a compressed file with some entries\n";
+    std::cout<<"** Test the behaviour for a compressed file with some entries\n";
   try
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Compressed_Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    list< IntIndex > indices;
+    std::list< IntIndex > indices;
     
-    void* buf = malloc(Compressed_Test_File().get_block_size() * Compressed_Test_File().get_max_size());
+    void* buf = malloc(Compressed_Test_File().get_block_size() * Compressed_Test_File().get_compression_factor());
     
     indices.clear();
     for (int i = 20; i < 21; ++i)
@@ -1587,9 +1642,9 @@ int main(int argc, char* args[])
   }
   catch (File_Error e)
   {
-    cout<<"File error catched: "
+    std::cout<<"File error catched: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    cout<<"(This is unexpected)\n";
+    std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "25"))
     compressed_read_test();

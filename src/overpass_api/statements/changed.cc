@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <sstream>
 
@@ -166,6 +166,7 @@ bool Changed_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relati
 
 void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
+  if (!stmt->trivial())
   {
     std::vector< Node_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint32_Index, Node_Skeleton >
@@ -174,6 +175,8 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     filter_elems(ids, into.nodes);
     filter_elems(ids, into.attic_nodes);
   }
+  
+  if (!stmt->trivial())
   {
     std::vector< Way_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint31_Index, Way_Skeleton >
@@ -182,6 +185,8 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     filter_elems(ids, into.ways);
     filter_elems(ids, into.attic_ways);
   }
+  
+  if (!stmt->trivial())
   {
     std::vector< Relation_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint31_Index, Relation_Skeleton >
@@ -198,7 +203,7 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
 
 Changed_Statement::Changed_Statement
     (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_), since(NOW), until(NOW)
+    : Output_Statement(line_number_), since(NOW), until(NOW), behave_trivial(false)
 {
   map< string, string > attributes;
   
@@ -210,7 +215,10 @@ Changed_Statement::Changed_Statement
   
   set_output(attributes["into"]);
   
-  if ((attributes["since"] == "auto") ^ (attributes["until"] == "auto"))
+  if (attributes["since"] == "init")
+    behave_trivial = true;
+  
+  if (!behave_trivial && ((attributes["since"] == "auto") ^ (attributes["until"] == "auto")))
   {
     ostringstream temp;
     temp<<"The attributes \"since\" and \"until\" must be set either both or none.";
@@ -228,7 +236,7 @@ Changed_Statement::Changed_Statement
         atoi(timestamp.c_str()+17) //second
         ).timestamp;
 	
-  if (timestamp != "auto" && (since == 0 || since == NOW))
+  if (!behave_trivial && timestamp != "auto" && (since == 0 || since == NOW))
   {
     ostringstream temp;
     temp<<"The attribute \"since\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
@@ -246,7 +254,7 @@ Changed_Statement::Changed_Statement
         atoi(timestamp.c_str()+17) //second
         ).timestamp;
 	
-  if (timestamp != "auto" && (until == 0 || until == NOW))
+  if (!behave_trivial && timestamp != "auto" && (until == 0 || until == NOW))
   {
     ostringstream temp;
     temp<<"The attribute \"until\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";

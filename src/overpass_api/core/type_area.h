@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_AREA_H
 #define DE__OSM3S___OVERPASS_API__CORE__TYPE_AREA_H
@@ -254,7 +254,7 @@ struct Area_Skeleton
   
   Area_Skeleton(void* data) : id(0u)
   {
-    id = *(uint32*)data;
+    id = *(Id_Type*)data;
     for (uint i(0); i < *((uint32*)data + 1); ++i)
       used_indices.push_back(*((uint32*)data + i + 2));
   }
@@ -272,9 +272,14 @@ struct Area_Skeleton
     return (8 + 4 * *((uint32*)data + 1));
   }
   
+  static Id_Type get_id(void* data)
+  {
+    return *(Id_Type*)data;
+  }
+  
   void to_data(void* data) const
   {
-    *(uint32*)data = id.val();
+    *(Id_Type*)data = id.val();
     *((uint32*)data + 1) = used_indices.size();
     uint i(2);
     for (std::vector< uint32 >::const_iterator it(used_indices.begin());
@@ -305,15 +310,15 @@ struct Area_Block
   
   Area_Block() : id(0u) {}
   
-  Area_Block(void* data) : id(*(uint32*)data)
+  Area_Block(void* data) : id(*(Id_Type*)data)
   {
-    id = *(uint32*)data;
+    id = *(Id_Type*)data;
     coors.resize(*((uint16*)data + 2));
     for (int i(0); i < *((uint16*)data + 2); ++i)
       coors[i] = (*(uint64*)((uint8*)data + 6 + 5*i)) & (uint64)0xffffffffffull;
   }
   
-  Area_Block(uint32 id_, const std::vector< uint64 >& coors_)
+  Area_Block(Id_Type id_, const std::vector< uint64 >& coors_)
   : id(id_), coors(coors_) {}
   
   uint32 size_of() const
@@ -328,7 +333,7 @@ struct Area_Block
   
   void to_data(void* data) const
   {
-    *(uint32*)data = id.val();
+    *(Id_Type*)data = id.val();
     *((uint16*)data + 2) = coors.size();
     for (uint i(0); i < coors.size(); ++i)
     {

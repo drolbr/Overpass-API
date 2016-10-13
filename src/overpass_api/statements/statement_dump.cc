@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "../frontend/output.h"
 #include "statement_dump.h"
@@ -481,6 +481,12 @@ std::string Statement_Dump::dump_compact_map_ql() const
     if (attributes.find("type") != attributes.end())
     {
       std::string rel_type = attributes.find("type")->second;
+      if (rel_type == "down" || rel_type == "down-rel" ||
+          rel_type == "up"   || rel_type == "up-rel")
+      {
+        if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
+          result += "." + attributes.find("from")->second;
+      }
       if (rel_type == "way-node" || rel_type == "relation-node")
 	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
@@ -687,6 +693,12 @@ std::string Statement_Dump::dump_bbox_map_ql() const
     if (attributes.find("type") != attributes.end())
     {
       std::string rel_type = attributes.find("type")->second;
+      if (rel_type == "down" || rel_type == "down-rel" ||
+          rel_type == "up"   || rel_type == "up-rel")
+      {
+        if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
+          result += "." + attributes.find("from")->second;
+      }
       if (rel_type == "way-node" || rel_type == "relation-node")
 	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")
@@ -902,6 +914,12 @@ std::string Statement_Dump::dump_pretty_map_ql() const
     if (attributes.find("type") != attributes.end())
     {
       std::string rel_type = attributes.find("type")->second;
+      if (rel_type == "down" || rel_type == "down-rel" ||
+          rel_type == "up"   || rel_type == "up-rel")
+      {
+        if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
+          result += "." + attributes.find("from")->second + " ";
+      }
       if (rel_type == "way-node" || rel_type == "relation-node")
 	result += "node" + dump_subquery_map_ql(name_, attributes);
       else if (rel_type == "relation-way" || rel_type == "node-way")

@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <fstream>
 #include <iomanip>
@@ -36,7 +36,6 @@
 #include "way_updater.h"
 #include "osm_updater.h"
 
-using namespace std;
 
 struct Node_Caller
 {
@@ -88,7 +87,6 @@ int main(int argc, char* argv[])
   string source_dir, db_dir, data_version;
   vector< string > source_file_names;
   meta_modes meta = only_data;
-  bool produce_augmented_diffs = false;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
   
@@ -113,8 +111,6 @@ int main(int argc, char* argv[])
       meta = keep_meta;
     else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
       meta = keep_attic;
-    else if (!(strncmp(argv[argpos], "--produce-diff", 6)))
-      produce_augmented_diffs = true;
     else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
     {
       flush_limit = atoll(string(argv[argpos]).substr(13).c_str()) *1024*1024;
@@ -128,15 +124,10 @@ int main(int argc, char* argv[])
     }
     ++argpos;
   }
-  if (db_dir != "" && produce_augmented_diffs)
-  {
-    cerr<<"Augmented diffs can only be produced with running dispatcher.\n";
-    abort = true;
-  }
   if (abort)
   {
     cerr<<"Usage: "<<argv[0]<<" --osc-dir=DIR"
-          " [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--produce-diff]\n";
+          " [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush-size=FLUSH_SIZE]\n";
     return -1;
   }
   
@@ -162,8 +153,7 @@ int main(int argc, char* argv[])
   {
     if (db_dir == "")
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta,
-                              produce_augmented_diffs, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);
@@ -174,8 +164,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta,
-                              produce_augmented_diffs, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
       get_verbatim_callback()->parser_started();
       
       process_source_files< Node_Caller >(source_dir, source_file_names);
@@ -184,6 +173,11 @@ int main(int argc, char* argv[])
       
       osm_updater.finish_updater();
     }
+  }
+  catch(Context_Error e)
+  {
+    std::cerr<<"Context error: "<<e.message<<'\n';
+    return 3;
   }
   catch (const File_Error& e)
   {

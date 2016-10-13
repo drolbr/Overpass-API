@@ -21,7 +21,7 @@
 # $2 - local destination
 fetch_file()
 {
-  wget -nv -O "$2" "$1"
+  wget -q -O "$2" "$1"
 };
 
 EXEC_DIR="`dirname $0`/"
@@ -32,7 +32,9 @@ if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 fi
 
 BIN_DIR="$EXEC_DIR/../bin"
-BASE_URL="http://overpass-api.de/api"
+
+# Set BASE_URL to your own server's external name
+BASE_URL="http://localhost/api"
 
 echo "Content-Type: text/html; charset=utf-8"
 echo

@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__DATA__FILTER_IDS_BY_TAGS_H
 #define DE__OSM3S___OVERPASS_API__DATA__FILTER_IDS_BY_TAGS_H
@@ -22,7 +22,7 @@
 
 template< typename Id_Type >
 void filter_ids_by_tags
-  (const map< string, vector< Regular_Expression* > >& keys,
+  (const map< string, pair< string, vector< Regular_Expression* > > >& keys,
    const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& key_regexes,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
@@ -33,7 +33,7 @@ void filter_ids_by_tags
   string last_key, last_value;  
   bool key_relevant = false;
   bool valid = false;
-  map< string, vector< Regular_Expression* > >::const_iterator key_it = keys.begin();
+  map< string, pair< string, vector< Regular_Expression* > > >::const_iterator key_it = keys.begin();
   
   std::vector< Id_Type > old_ids;
   std::vector< uint64 > matched_by_key_regexes;
@@ -79,9 +79,9 @@ void filter_ids_by_tags
     {
       if (key_relevant)
       {
-	valid = true;
-	for (vector< Regular_Expression* >::const_iterator rit = key_it->second.begin();
-	    rit != key_it->second.end(); ++rit)
+	valid = key_it->second.first == "" || tag_it.index().value == key_it->second.first;
+	for (vector< Regular_Expression* >::const_iterator rit = key_it->second.second.begin();
+	    valid && rit != key_it->second.second.end(); ++rit)
 	  valid &= (*rit)->matches(tag_it.index().value);
       }
       
@@ -91,7 +91,7 @@ void filter_ids_by_tags
       for (std::vector< uint64 >::const_iterator reg_it = matched_by_key_regexes.begin();
 	  reg_it != matched_by_key_regexes.end(); ++reg_it)
       {
-	if (key_regexes[*reg_it].second->matches(last_value))
+	if (last_value != void_tag_value() && key_regexes[*reg_it].second->matches(last_value))
 	  matched_by_both_regexes.push_back(*reg_it);
       }
     }
@@ -142,7 +142,7 @@ void filter_ids_by_tags
 template< typename Id_Type >
 void filter_ids_by_tags_old
   (map< uint32, vector< Id_Type > >& ids_by_coarse,
-   const map< string, vector< Regular_Expression* > >& keys,
+   const map< string, pair< string, vector< Regular_Expression* > > >& keys,
    const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& key_regexes,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
    typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator& tag_it,
@@ -179,16 +179,17 @@ struct Tag_Entry_Listener_Value_Regex : public Tag_Entry_Listener< Id_Type >
 {
 public:
   Tag_Entry_Listener_Value_Regex(
-      const std::string& key, const std::vector< Regular_Expression* >& conditions,
+      const std::string& key, const std::string& value, const std::vector< Regular_Expression* >& conditions,
       const std::vector< Id_Type >& old_ids)
-      : key_(key), conditions_(conditions), old_ids_(&old_ids) {}
+      : key_(key), value_(value), conditions_(conditions), old_ids_(&old_ids) {}
       
   bool notify_key(const std::string& key) { return key == key_; }
   
   bool value_relevant(const std::string& value) const
   {
-    bool valid = true;
-    for (vector< Regular_Expression* >::const_iterator it = conditions_.begin(); it != conditions_.end(); ++it)
+    bool valid = value_ == "" || value_ == value;
+    for (vector< Regular_Expression* >::const_iterator it = conditions_.begin(); valid && it != conditions_.end();
+        ++it)
       valid &= (*it)->matches(value);
     return valid;
   }
@@ -198,10 +199,13 @@ public:
     if (std::binary_search(old_ids_->begin(), old_ids_->end(), id))
     {
       std::pair< uint64, uint64 >& timestamp_ref = timestamps[id];
-      timestamp_ref.second = timestamp;
+      if (timestamp_ref.second == 0 || timestamp <= timestamp_ref.second)
+      {
+        timestamp_ref.second = timestamp;
       
-      if (value_relevant)
-	timestamp_ref.first = timestamp;
+        if (value_relevant)
+	  timestamp_ref.first = timestamp;
+      }
     }
   }
   
@@ -220,6 +224,7 @@ public:
       
 private:
   std::string key_;
+  std::string value_;
   std::vector< Regular_Expression* > conditions_;
   const std::vector< Id_Type >* old_ids_;
   std::map< Id_Type, std::pair< uint64, uint64 > > timestamps;
@@ -243,7 +248,7 @@ public:
   
   bool value_relevant(const std::string& value) const
   {
-    return value_->matches(value);
+    return value != void_tag_value() && value_->matches(value);
   }
   
   void eval_id(Id_Type id, uint64 timestamp, bool value_relevant)
@@ -322,7 +327,7 @@ void update_listeners_values(
 
 template< typename Id_Type >
 void filter_ids_by_tags
-  (const map< string, vector< Regular_Expression* > >& keys,
+  (const map< string, pair< string, vector< Regular_Expression* > > >& keys,
    const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& key_regexes,
    uint64 timestamp,
    const Block_Backend< Tag_Index_Local, Id_Type >& items_db,
@@ -338,9 +343,10 @@ void filter_ids_by_tags
     tag_key_listeners.push_back(Tag_Entry_Listener_Key_Regex< Id_Type >(it->first, it->second, new_ids));
   
   std::vector< Tag_Entry_Listener_Value_Regex< Id_Type > > tag_value_listeners;
-  for (map< string, vector< Regular_Expression* > >::const_iterator key_it = keys.begin();
+  for (map< string, pair< string, vector< Regular_Expression* > > >::const_iterator key_it = keys.begin();
        key_it != keys.end(); ++key_it)
-    tag_value_listeners.push_back(Tag_Entry_Listener_Value_Regex< Id_Type >(key_it->first, key_it->second, new_ids));
+    tag_value_listeners.push_back(Tag_Entry_Listener_Value_Regex< Id_Type >(
+        key_it->first, key_it->second.first, key_it->second.second, new_ids));
   
   std::vector< Tag_Entry_Listener< Id_Type >* > tag_listeners;
   for (typename std::vector< Tag_Entry_Listener_Key_Regex< Id_Type > >::iterator it = tag_key_listeners.begin();

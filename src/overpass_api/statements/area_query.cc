@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <cctype>
 #include <fstream>
@@ -397,11 +397,16 @@ void Area_Query_Statement::collect_nodes
 
   typename std::map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
   
+  uint32 loop_count = 0;
   uint32 current_idx(0);
   while (!(area_it == area_blocks_db.discrete_end()))
   {
     current_idx = area_it.index().val();
-    rman.health_check(*this);
+    if (loop_count > 1024*1024)
+    {
+      rman.health_check(*this);
+      loop_count = 0;
+    }
     
     map< Area_Skeleton::Id_Type, vector< Area_Block > > areas;
     while ((!(area_it == area_blocks_db.discrete_end())) &&
@@ -435,6 +440,8 @@ void Area_Query_Statement::collect_nodes
           for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
 	       ++it2)
           {
+            ++loop_count;
+            
 	    int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
 	    if (check == Coord_Query_Statement::HIT && add_border)
 	    {
@@ -673,11 +680,16 @@ void Area_Query_Statement::collect_ways
   map< uint32, vector< pair< uint32, Way::Id_Type > > >::const_iterator nodes_it = way_coords_to_id.begin();
   
   // Fill node_status with the area related status of each node and segment
+  uint32 loop_count = 0;
   uint32 current_idx(0);
   while (!(area_it == area_blocks_db.discrete_end()))
   {
     current_idx = area_it.index().val();
-    rman.health_check(*this);
+    if (loop_count > 64*1024)
+    {
+      rman.health_check(*this);
+      loop_count = 0;
+    }
     
     map< Area_Skeleton::Id_Type, vector< Area_Block > > areas;
     while ((!(area_it == area_blocks_db.discrete_end())) &&
@@ -707,6 +719,8 @@ void Area_Query_Statement::collect_ways
           for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
 	       ++it2)
           {
+            ++loop_count;
+            
 	    int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
 	    if (check == Coord_Query_Statement::HIT)
             {

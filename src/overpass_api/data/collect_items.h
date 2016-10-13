@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 
 #ifndef DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
@@ -310,7 +310,7 @@ void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
       if (stmt)
         rman.health_check(*stmt, 0, eval_map(result));
     }
-    if (predicate.match(it.object()))
+    if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
 }
@@ -328,7 +328,7 @@ void collect_items_discrete(Transaction& transaction,
       ::const_iterator >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
-    if (predicate.match(it.object()))
+    if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
 }
@@ -370,7 +370,7 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
       count = 0;
       rman.health_check(*stmt, 0, eval_map(result));
     }
-    if (predicate.match(it.object()))
+    if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
 }
@@ -409,7 +409,7 @@ void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
       count = 0;
       rman.health_check(stmt, 0, eval_map(result));
     }
-    if (predicate.match(it.object()))
+    if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
 }
@@ -441,7 +441,7 @@ std::vector< Index > get_indexes_
 {
   std::vector< Index > result;
   
-  Random_File< Index > current(rman.get_transaction()->random_index
+  Random_File< typename Skeleton::Id_Type, Index > current(rman.get_transaction()->random_index
       (current_skeleton_file_properties< Skeleton >()));
   for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
       it = ids.begin(); it != ids.end(); ++it)
@@ -452,7 +452,7 @@ std::vector< Index > get_indexes_
   
   if (rman.get_desired_timestamp() != NOW || get_attic_idxs)
   {
-    Random_File< Index > attic_random(rman.get_transaction()->random_index
+    Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
         (attic_skeleton_file_properties< Skeleton >()));
     std::set< typename Skeleton::Id_Type > idx_list_ids;
     for (typename std::vector< typename Skeleton::Id_Type >::const_iterator

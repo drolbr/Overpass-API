@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__CORE__DATATYPES_H
 #define DE__OSM3S___OVERPASS_API__CORE__DATATYPES_H
@@ -38,7 +38,10 @@
 
 struct String_Object
 {
+  typedef uint32 Id_Type;
+  
   String_Object(std::string s) : value(s) {}
+  
   String_Object(void* data) : value()
   {
     value = std::string(((int8*)data + 2), *(uint16*)data);
@@ -300,6 +303,8 @@ class Osm_Backend_Callback
 
 struct User_Data
 {
+  typedef uint32 Id_Type;
+  
   uint32 id;
   std::string name;
   
@@ -444,9 +449,11 @@ const std::pair< TIndex, const TObject* >* binary_search_for_pair_id
 }
 
 
-template< typename Id_Type >
+template< typename Id_Type_ >
 struct Change_Entry
 {
+  typedef Id_Type_ Id_Type;
+  
   Change_Entry(const Id_Type& elem_id_, const Uint31_Index& old_idx_, const Uint31_Index& new_idx_)
       : old_idx(old_idx_), new_idx(new_idx_), elem_id(elem_id_) {}
 

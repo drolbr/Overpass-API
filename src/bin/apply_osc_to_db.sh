@@ -30,7 +30,13 @@ if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 }; fi
 
 DB_DIR=`$EXEC_DIR/dispatcher --show-dir`
+
 REPLICATE_DIR="$1"
+if [[ ! ${REPLICATE_DIR:0:1} == "/" ]]; then
+{
+  REPLICATE_DIR="`pwd`/$REPLICATE_DIR"
+}; fi
+
 START=$2
 META=
 

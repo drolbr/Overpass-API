@@ -35,6 +35,8 @@ if [[ $REQUEST_METHOD == "OPTIONS" ]]; then {
 echo
 
 TIMESTAMP=`./timestamp | tail -n 1`
-EPOCHSECS=`date --date=$TIMESTAMP '+%s'`
 
-echo $(( ( $EPOCHSECS - 1347432960 ) / 60 ))
+if [[ ${TIMESTAMP:0:1} == "2" ]]; then
+  EPOCHSECS=`date --date=$TIMESTAMP '+%s'`
+  echo $(( ( $EPOCHSECS - 1347432960 ) / 60 ))
+fi

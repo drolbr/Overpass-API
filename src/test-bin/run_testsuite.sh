@@ -26,6 +26,41 @@ if [[ -z $1  ]]; then
 };
 fi
 
+# Check whether we do compile with tests.
+# Otherweise we will likely not test the current code
+if [[ -r ../src/Makefile.am ]]; then
+{
+  RES=`cat ../src/Makefile.am | grep -E '^SUBDIRS = test-bin'`
+  if [[ -z $RES ]]; then
+  {
+    echo "According to the Makefile.am, the tests haven't compiled. Please turn on test-bin in the Makefile.am"
+    exit 0
+  };
+  fi
+};
+else
+{
+  echo "Cannot locate ../src/Makefile.am . Please run the tests in the osm-3s_testing subdirectory."
+  exit 0
+};
+fi
+if [[ -r ../src/configure.ac ]]; then
+{
+  RES=`cat ../src/configure.ac | grep -E '^AC_CONFIG_FILES.* test-bin/Makefile'`
+  if [[ -z $RES ]]; then
+  {
+    echo "According to configure.ac, the tests haven't compiled. Please turn on test-bin in configure.ac"
+    exit 0
+  };
+  fi
+};
+else
+{
+  echo "Cannot locate ../src/configure.ac . Please run the tests in the osm-3s_testing subdirectory."
+  exit 0
+};
+fi
+
 # The size of the test pattern. Asymptotically, the test pattern consists of
 # size^2 elements. The size must be divisible by ten. For a full featured test,
 # set the value to 2000.

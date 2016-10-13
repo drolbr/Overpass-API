@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__CORE__TYPE_RELATION_H
 #define DE__OSM3S___OVERPASS_API__CORE__TYPE_RELATION_H
@@ -64,9 +64,9 @@ struct Relation
   
   Relation() : id(0u) {}
   
-  Relation(uint32 id_) : id(id_) {}
+  Relation(Id_Type id_) : id(id_) {}
   
-  Relation(uint32 id_, uint32 index_, const std::vector< Relation_Entry >& members_)
+  Relation(Id_Type id_, uint32 index_, const std::vector< Relation_Entry >& members_)
   : id(id_), index(index_), members(members_) {}
   
   static uint32 calc_index(const std::vector< uint32 >& memb_idxs)
@@ -114,7 +114,7 @@ struct Relation_Skeleton
   
   Relation_Skeleton(Relation::Id_Type id_) : id(id_) {}
   
-  Relation_Skeleton(void* data) : id(*(uint32*)data)
+  Relation_Skeleton(void* data) : id(*(Id_Type*)data)
   {
     members.resize(*((uint32*)data + 1));
     node_idxs.resize(*((uint32*)data + 2), 0u);
@@ -136,7 +136,7 @@ struct Relation_Skeleton
   Relation_Skeleton(const Relation& rel)
       : id(rel.id), members(rel.members), node_idxs(rel.node_idxs), way_idxs(rel.way_idxs) {}
   
-  Relation_Skeleton(uint32 id_, const std::vector< Relation_Entry >& members_,
+  Relation_Skeleton(Id_Type id_, const std::vector< Relation_Entry >& members_,
 		    const std::vector< Uint31_Index >& node_idxs_,
 		    const std::vector< Uint31_Index >& way_idxs_)
       : id(id_), members(members_), node_idxs(node_idxs_), way_idxs(way_idxs_) {}
@@ -151,9 +151,14 @@ struct Relation_Skeleton
     return 16 + 12 * *((uint32*)data + 1) + 4* *((uint32*)data + 2) + 4* *((uint32*)data + 3);
   }
   
+  static Id_Type get_id(void* data)
+  {
+    return *(Id_Type*)data;
+  }
+  
   void to_data(void* data) const
   {
-    *(uint32*)data = id.val();
+    *(Id_Type*)data = id.val();
     *((uint32*)data + 1) = members.size();
     *((uint32*)data + 2) = node_idxs.size();
     *((uint32*)data + 3) = way_idxs.size();
@@ -198,7 +203,7 @@ struct Relation_Delta
   
   Relation_Delta() : id(0u), full(false) {}
   
-  Relation_Delta(void* data) : id(*(uint32*)data), full(false)
+  Relation_Delta(void* data) : id(*(Id_Type*)data), full(false)
   {
     if (*((uint32*)data + 1) == 0xffffffff)
     {
@@ -372,7 +377,7 @@ struct Relation_Delta
   
   void to_data(void* data) const
   {
-    *(uint32*)data = id.val();
+    *(Id_Type*)data = id.val();
     if (full)
     {
       *((uint32*)data + 1) = 0xffffffff;

@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__DATA__FILTER_BY_TAGS_H
 #define DE__OSM3S___OVERPASS_API__DATA__FILTER_BY_TAGS_H
@@ -213,7 +213,8 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kregv(
       Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
       !(it2 == attic_tags_db.range_end()); ++it2)
   {
-    if (it2.object().timestamp > timestamp && krit->second->matches(it2.index().value))
+    if (it2.object().timestamp > timestamp && it2.index().value != void_tag_value()
+        && krit->second->matches(it2.index().value))
     {
       std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id];
       if (ref.first == 0 || it2.object().timestamp < ref.first)
@@ -280,7 +281,8 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_regkregv(
       last_key = it2.index().key;
       matches = krit->first->matches(it2.index().key);
     }
-    if (it2.object().timestamp > timestamp && matches && krit->second->matches(it2.index().value))
+    if (it2.object().timestamp > timestamp && matches && it2.index().value != void_tag_value()
+        && krit->second->matches(it2.index().value))
     {
       std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id][last_key];
       if (ref.first == 0 || it2.object().timestamp < ref.first)

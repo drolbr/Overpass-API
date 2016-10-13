@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Overpass_API.
-*
-* Overpass_API is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Overpass_API is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Overpass_API.
+ *
+ * Overpass_API is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Overpass_API is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef DE__OSM3S___OVERPASS_API__OSM_BACKEND__BASIC_UPDATER_H
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__BASIC_UPDATER_H
@@ -104,7 +104,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > get_existing_map_positions
     (const std::vector< Id_Type >& ids,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  Random_File< Uint31_Index > random(transaction.random_index(&file_properties));
+  Random_File< Id_Type, Uint31_Index > random(transaction.random_index(&file_properties));
   
   std::vector< std::pair< Id_Type, Uint31_Index > > result;
   for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
@@ -475,7 +475,7 @@ void update_map_positions
     (std::vector< std::pair< Id_Type, Uint31_Index > > new_idx_positions,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  Random_File< Uint31_Index > random(transaction.random_index(&file_properties));
+  Random_File< Id_Type, Uint31_Index > random(transaction.random_index(&file_properties));
   
   for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
       it = new_idx_positions.begin(); it != new_idx_positions.end(); ++it)
@@ -993,9 +993,11 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
                   .insert(Attic< Id_Type >(it->first, it2->timestamp));
 	    
 	    // If the older index is non-void then we write an entry for it
-            if (it2->val() != 0u)
+            if (it2->val() != 0u && *tit2 != void_tag_value() && *tit2 != void_tag_value() + " ")
+            {
               result[Tag_Index_Local(Uint31_Index(it2->val() & 0x7fffff00), tit->first.second, *tit2)]
                 .insert(Attic< Id_Type >(it->first, it2->timestamp));
+            }
 	  }
 	  else
 	  {

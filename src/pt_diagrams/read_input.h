@@ -30,6 +30,7 @@ typedef unsigned int uint32;
 class OSMElement
 {
   public:
+    virtual ~OSMElement() {}
     virtual void operator()() const {}
 };
 

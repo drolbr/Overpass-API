@@ -1,20 +1,20 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
-*
-* This file is part of Template_DB.
-*
-* Template_DB is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as
-* published by the Free Software Foundation, either version 3 of the
-* License, or (at your option) any later version.
-*
-* Template_DB is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Template_DB.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+ *
+ * This file is part of Template_DB.
+ *
+ * Template_DB is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * Template_DB is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <iostream>
 #include <list>
@@ -36,6 +36,8 @@ using namespace std;
 /* Sample class for TIndex */
 struct IntIndex
 {
+  typedef uint32 Id_Type;
+  
   IntIndex(void* data) : value(*(uint32*)data) {}
   IntIndex(int i) : value(i) {}
   
@@ -75,6 +77,8 @@ struct IntIndex
 
 struct IntObject
 {
+  typedef uint32 Id_Type;
+  
   IntObject(void* data) : value(*(uint32*)data) {}
   IntObject(int i) : value(i) {}
   
@@ -174,7 +178,7 @@ struct Test_File : File_Properties
     return 512;
   }
   
-  uint32 get_max_size() const
+  uint32 get_compression_factor() const
   {
     return 1;
   }
@@ -183,10 +187,20 @@ struct Test_File : File_Properties
   {
     return 0;
   }
+
+  uint32 get_map_compression_method() const
+  {
+    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+  }
   
   uint32 get_map_block_size() const
   {
     return 16;
+  }
+  
+  uint32 get_map_compression_factor() const
+  {
+    return 1;
   }
   
   vector< bool > get_data_footprint(const std::string& db_dir) const
