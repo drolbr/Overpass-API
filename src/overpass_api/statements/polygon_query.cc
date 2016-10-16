@@ -25,7 +25,6 @@
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
-#include "../data/geometry.h"
 #include "area_query.h"
 #include "coord_query.h"
 #include "make_area.h"

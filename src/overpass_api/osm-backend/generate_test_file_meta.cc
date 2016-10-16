@@ -316,7 +316,7 @@ int main(int argc, char* args[])
   "<meta osm_base=\"mock-up-init\"/>\n\n";
     
   if (bbox_limited)
-    std::cout<<"  <bounds minlat=\"10\" minlon=\"1\" maxlat=\"10.5\" maxlon=\"1.5\"/>\n\n";
+    std::cout<<"  <bounds minlat=\"10.0000000\" minlon=\"1.0000000\" maxlat=\"10.5000000\" maxlon=\"1.5000000\"/>\n\n";
 
   if (pattern == before)
   {

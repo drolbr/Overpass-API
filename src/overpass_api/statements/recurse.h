@@ -52,23 +52,5 @@ class Recurse_Statement : public Output_Statement
     vector< Query_Constraint* > constraints;
 };
 
-struct Order_By_Node_Id
-{
-  bool operator() (const pair< Uint32_Index, const Node_Skeleton* >& a,
-		   const pair< Uint32_Index, const Node_Skeleton* >& b)
-  {
-    return (a.second->id < b.second->id);
-  }
-};
-
-struct Order_By_Way_Id
-{
-  bool operator() (const pair< Uint31_Index, const Way_Skeleton* >& a,
-		   const pair< Uint31_Index, const Way_Skeleton* >& b)
-  {
-    return (a.second->id < b.second->id);
-  }
-};
-
 
 #endif

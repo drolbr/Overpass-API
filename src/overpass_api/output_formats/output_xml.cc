@@ -43,6 +43,17 @@ void Output_XML::display_error(const std::string& text)
 }
 
 
+void Output_XML::print_global_bbox(const Bbox_Double& bbox)
+{
+  std::cout<<"  <bounds"
+      " minlat=\""<<std::fixed<<std::setprecision(7)<<bbox.south<<"\""
+      " minlon=\""<<std::fixed<<std::setprecision(7)<<bbox.west<<"\""
+      " maxlat=\""<<std::fixed<<std::setprecision(7)<<bbox.north<<"\""
+      " maxlon=\""<<std::fixed<<std::setprecision(7)<<bbox.east<<"\""
+      "/>\n\n";
+}
+
+
 template< typename Id_Type >
 void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 		    const std::map< uint32, std::string >& users)

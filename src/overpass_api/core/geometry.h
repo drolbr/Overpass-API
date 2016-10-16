@@ -32,6 +32,9 @@ public:
   
   double south, west, north, east;
   
+  bool contains(const Point_Double& point) const;
+  bool intersects(const Point_Double& from, const Point_Double& to) const;
+  
   const static Bbox_Double invalid;
 };
 

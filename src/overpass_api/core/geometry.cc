@@ -21,6 +21,57 @@ double Bbox_Double::center_lon() const
 }
 
 
+bool Bbox_Double::contains(const Point_Double& point) const
+{
+  if (point.lat < south || point.lat > north)
+    return false;
+  
+  if (east >= west)
+    return point.lon >= west && point.lon <= east;
+  
+  return point.lon >= west || point.lon <= east;
+}
+
+
+bool Bbox_Double::intersects(const Point_Double& from, const Point_Double& to) const
+{
+  // TODO: correct behaviour over 180°
+
+  double from_lon = from.lon;
+  if (from.lat < south)
+  {
+    if (to.lat < south)
+      return false;
+    // Otherwise just adjust from.lat and from.lon
+    from_lon += (to.lon - from.lon)*(south - from.lat)/(to.lat - from.lat);
+  }
+  else if (from.lat > north)
+  {
+    if (to.lat > north)
+      return false;
+    // Otherwise just adjust from.lat and from.lon
+    from_lon += (to.lon - from.lon)*(north - from.lat)/(to.lat - from.lat);
+  }
+
+  double to_lon = to.lon;
+  if (to.lat < south)
+    // Adjust to.lat and to.lon
+    to_lon += (from.lon - to.lon)*(south - to.lat)/(from.lat - to.lat);
+  else if (to.lat > north)
+    // Adjust to.lat and to.lon
+    to_lon += (from.lon - to.lon)*(north - to.lat)/(from.lat - to.lat);
+
+  // Now we know that both latitudes are between south and north.
+  // Thus we only need to check whether the segment touches the bbox in its east-west-extension.
+  if (from_lon < west && to_lon < west)
+    return false;
+  if (from_lon > east && to_lon > east)
+    return false;
+  
+  return true;
+}
+
+
 Bbox_Double* calc_bounds(const std::vector< Point_Double >& points)
 {
   double south = 100.0;

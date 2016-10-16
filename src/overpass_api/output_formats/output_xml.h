@@ -30,7 +30,7 @@ public:
   virtual void display_remark(const std::string& text);
   virtual void display_error(const std::string& text);
 
-  virtual void print_global_bbox(const Bbox_Double& bbox) {}
+  virtual void print_global_bbox(const Bbox_Double& bbox);
   
   virtual void print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,

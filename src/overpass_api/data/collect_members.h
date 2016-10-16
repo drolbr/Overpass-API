@@ -749,4 +749,24 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
     (const Statement* stmt, Resource_Manager& rman,
      const std::vector< Node::Id_Type >& map_ids, const std::vector< uint32 >& parents);
 
+
+struct Order_By_Node_Id
+{
+  bool operator() (const pair< Uint32_Index, const Node_Skeleton* >& a,
+		   const pair< Uint32_Index, const Node_Skeleton* >& b)
+  {
+    return (a.second->id < b.second->id);
+  }
+};
+
+
+struct Order_By_Way_Id
+{
+  bool operator() (const pair< Uint31_Index, const Way_Skeleton* >& a,
+		   const pair< Uint31_Index, const Way_Skeleton* >& b)
+  {
+    return (a.second->id < b.second->id);
+  }
+};
+
 #endif

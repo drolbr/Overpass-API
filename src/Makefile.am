@@ -19,7 +19,7 @@ bin_script_clone = bin/compress_clone.sh bin/clone.sh
 cgi_bin_clone =
 cgi_bin_script_clone = cgi-bin/trigger_clone
 
-bin_augmented_diffs = bin/process_augmented_diffs bin/uncgi
+bin_augmented_diffs =
 bin_script_augmented_diffs =
 cgi_bin_augmented_diffs =
 cgi_bin_script_augmented_diffs = cgi-bin/augmented_diff cgi-bin/augmented_diff_status cgi-bin/augmented_state_by_date
@@ -177,8 +177,6 @@ bin_bbox_brim_query_SOURCES = pt_diagrams/bbox-brim-query.cc
 bin_bbox_brim_query_LDADD = libexpatwrapper.la
 bin_translate_xapi_SOURCES = expat/translate_xapi.cc expat/escape_xml.cc
 bin_translate_xapi_LDADD = 
-bin_process_augmented_diffs_SOURCES = expat/process_augmented_diffs.cc expat/escape_xml.cc
-bin_process_augmented_diffs_LDADD = libexpatwrapper.la
 
 distdir = osm-3s_v0.7.53
 
@@ -189,6 +187,7 @@ nobase_dist_HEADERS = \
   lib/overpass.h\
   overpass_api/core/basic_types.h\
   overpass_api/core/datatypes.h\
+  overpass_api/core/geometry.h\
   overpass_api/core/index_computations.h\
   overpass_api/core/settings.h\
   overpass_api/core/type_area.h\
@@ -202,7 +201,6 @@ nobase_dist_HEADERS = \
   overpass_api/data/filenames.h\
   overpass_api/data/filter_by_tags.h\
   overpass_api/data/filter_ids_by_tags.h\
-  overpass_api/data/geometry.h\
   overpass_api/data/meta_collector.h\
   overpass_api/data/regular_expression.h\
   overpass_api/data/user_data_cache.h\
