@@ -93,36 +93,42 @@ dist_templates_DATA = templates/default.wiki templates/base.wiki
 noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la libweboutput.la
 
 statements_cc = \
-overpass_api/statements/statement.cc \
-overpass_api/statements/area_query.cc \
-overpass_api/statements/around.cc \
-overpass_api/statements/bbox_query.cc \
-overpass_api/statements/changed.cc \
-overpass_api/statements/coord_query.cc \
-overpass_api/statements/difference.cc \
-overpass_api/statements/foreach.cc \
-overpass_api/statements/id_query.cc \
-overpass_api/statements/item.cc \
-overpass_api/statements/make.cc \
-overpass_api/statements/make_area.cc \
-overpass_api/statements/map_to_area.cc \
-overpass_api/statements/newer.cc \
-overpass_api/statements/osm_script.cc \
-overpass_api/statements/pivot.cc \
-overpass_api/statements/polygon_query.cc \
-overpass_api/statements/print.cc \
-overpass_api/statements/query.cc \
-overpass_api/statements/recurse.cc \
-overpass_api/statements/union.cc \
-overpass_api/statements/user.cc \
-expat/escape_json.cc expat/escape_xml.cc
+  overpass_api/data/bbox_filter.cc \
+  overpass_api/statements/statement.cc \
+  overpass_api/statements/area_query.cc \
+  overpass_api/statements/around.cc \
+  overpass_api/statements/bbox_query.cc \
+  overpass_api/statements/changed.cc \
+  overpass_api/statements/coord_query.cc \
+  overpass_api/statements/difference.cc \
+  overpass_api/statements/foreach.cc \
+  overpass_api/statements/id_query.cc \
+  overpass_api/statements/item.cc \
+  overpass_api/statements/make.cc \
+  overpass_api/statements/make_area.cc \
+  overpass_api/statements/map_to_area.cc \
+  overpass_api/statements/newer.cc \
+  overpass_api/statements/osm_script.cc \
+  overpass_api/statements/pivot.cc \
+  overpass_api/statements/polygon_query.cc \
+  overpass_api/statements/print.cc \
+  overpass_api/statements/query.cc \
+  overpass_api/statements/recurse.cc \
+  overpass_api/statements/union.cc \
+  overpass_api/statements/user.cc \
+  expat/escape_json.cc \
+  expat/escape_xml.cc
 
 output_formats_cc = \
-overpass_api/output_formats/output_csv.cc overpass_api/output_formats/output_csv_factory.cc \
-overpass_api/output_formats/output_custom.cc overpass_api/output_formats/output_custom_factory.cc \
-overpass_api/output_formats/output_json.cc overpass_api/output_formats/output_json_factory.cc \
-overpass_api/output_formats/output_xml.cc overpass_api/output_formats/output_xml_factory.cc \
-overpass_api/output_formats/output_popup_factory.cc
+  overpass_api/output_formats/output_csv.cc \
+  overpass_api/output_formats/output_csv_factory.cc \
+  overpass_api/output_formats/output_custom.cc \
+  overpass_api/output_formats/output_custom_factory.cc \
+  overpass_api/output_formats/output_json.cc \
+  overpass_api/output_formats/output_json_factory.cc \
+  overpass_api/output_formats/output_xml.cc \
+  overpass_api/output_formats/output_xml_factory.cc \
+  overpass_api/output_formats/output_popup_factory.cc
 
 libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
