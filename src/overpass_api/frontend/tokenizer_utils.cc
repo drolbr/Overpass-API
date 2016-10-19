@@ -121,6 +121,31 @@ std::string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
 }
 
 
+std::string get_identifier_token(Tokenizer_Wrapper& token, Error_Output* error_output,
+		      std::string type_of_token)
+{
+  std::string result = "";
+  bool result_valid = true;
+
+  if (!token.good() || (*token).size() == 0)
+    result_valid = false;
+  else if (isalpha((*token)[0]) || isdigit((*token)[0]) || (*token)[0] == '_')
+    result = *token;
+  else
+    result_valid = false;
+  
+  if (result_valid)
+    ++token;
+  else
+  {
+    if (error_output)
+      error_output->add_parse_error(type_of_token + " expected - '" + *token + "' found.", token.line_col().first);
+  }
+  
+  return result;
+}
+
+
 void process_after(Tokenizer_Wrapper& token, Error_Output* error_output, bool after)
 {
   if (!token.good())

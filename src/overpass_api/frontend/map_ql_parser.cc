@@ -51,7 +51,7 @@ string probe_into(Tokenizer_Wrapper& token, Error_Output* error_output)
     ++token;
     clear_until_after(token, error_output, ".");
     if (token.good())
-      into = get_text_token(token, error_output, "Variable");
+      into = get_identifier_token(token, error_output, "Variable");
   }
   return into;
 }
@@ -63,7 +63,7 @@ string probe_from(Tokenizer_Wrapper& token, Error_Output* error_output)
   {
     ++token;
     if (token.good())
-      from = get_text_token(token, error_output, "Variable");
+      from = get_identifier_token(token, error_output, "Variable");
   }
   return from;
 }
@@ -518,7 +518,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
 {
   ++token;
   std::vector< std::string > result;
-  result.push_back(get_text_token(token, error_output, "Keyword"));  
+  result.push_back(get_identifier_token(token, error_output, "Keyword"));
   clear_until_after(token, error_output, ":", "]");
   result.push_back(get_text_token(token, error_output, "Value"));
   if (result.front() == "out")
@@ -534,7 +534,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
     else
       parsed_query.set_output_handler(format_parser, &token, error_output);
     
-    clear_until_after(token, error_output, "]", true);      
+    clear_until_after(token, error_output, "]", true);
   }
   else if (result.front() == "diff" || result.front() == "adiff")
   {
@@ -543,7 +543,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
     {
       ++token;
       result.push_back(get_text_token(token, error_output, "Value"));
-      clear_until_after(token, error_output, "]", true);      
+      clear_until_after(token, error_output, "]", true);
     }
     else
       ++token;
@@ -772,7 +772,7 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     if (token.good() && *token == ".")
     {
       ++token;
-      func_from = get_text_token(token, error_output, "Input set");
+      func_from = get_identifier_token(token, error_output, "Input set");
     }
     
     if (!token.good() || *token != "(")
@@ -786,7 +786,7 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     else if (value == "count")
     {
       ++token;
-      std::string type = get_text_token(token, error_output, "Count type");
+      std::string type = get_identifier_token(token, error_output, "Count type");
       value_stack.push_back(std::make_pair(0, create_tag_value_count< TStatement >(
           stmt_factory, type, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
@@ -909,10 +909,8 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
   {
     ++token;
     if (*token != ";")
-    {
-      type = *token;
-      ++token;
-    }
+      type = get_identifier_token(token, error_output, "Element class name");
+    
     while (token.good() && *token != ";" && *token != "->")
     {
       if (*token == ",")
@@ -940,7 +938,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
         if (token.good() && *token == ".")
         {
           ++token;
-          key = get_text_token(token, error_output, "Input set");
+          key = get_identifier_token(token, error_output, "Input set");
         }
       }
       else
@@ -1430,7 +1428,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	    || *token == "bn" || *token == "bw" || *token == "br")
       {
 	Statement_Text clause("recurse", token.line_col());
-	clause.attributes.push_back(get_text_token(token, error_output, "Recurse type"));
+	clause.attributes.push_back(get_identifier_token(token, error_output, "Recurse type"));
 	clause.attributes.push_back(probe_from(token, error_output));
         clear_until_after(token, error_output, ":", ")", false);
         if (*token == ":")
@@ -1471,7 +1469,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
-      else if (isdigit((*token)[0]) || 
+      else if (isdigit((*token)[0]) ||
 	       ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1])))
       {
 	string first_number = get_text_token(token, error_output, "Number");
