@@ -724,7 +724,7 @@ Tag_Value_Min_Value::Tag_Value_Min_Value
   
   attributes["from"] = "_";
   attributes["k"] = "";
-  attributes["generic"] == "no";
+  attributes["generic"] = "no";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -840,7 +840,7 @@ Tag_Value_Max_Value::Tag_Value_Max_Value
   
   attributes["from"] = "_";
   attributes["k"] = "";
-  attributes["generic"] == "no";
+  attributes["generic"] = "no";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
