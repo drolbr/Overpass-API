@@ -593,12 +593,10 @@ std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets, co
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Union_Value > Tag_Value_Union_Value::statement_maker("value-union-value");
-
-
-Tag_Value_Union_Value::Tag_Value_Union_Value
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_), unique(true)
+Tag_Value_Aggregator::Tag_Value_Aggregator
+    (const string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
+      Parsed_Query& global_settings)
+    : Tag_Value(line_number_)
 {
   std::map< std::string, std::string > attributes;
   
@@ -606,7 +604,7 @@ Tag_Value_Union_Value::Tag_Value_Union_Value
   attributes["k"] = "";
   attributes["generic"] = "no";
   
-  eval_attributes_array(get_name(), attributes, input_attributes);
+  eval_attributes_array(func_name, attributes, input_attributes);
   
   input = attributes["from"];
   key = attributes["k"];
@@ -615,16 +613,41 @@ Tag_Value_Union_Value::Tag_Value_Union_Value
   if (generic)
   {
     if (key != "")
-      add_static_error("In statement \"value-union-value\" the attribute \"generic\" must have the value "
+      add_static_error(std::string("In statement \"") + func_name + "\" the attribute \"generic\" must have the value "
           "\"no\" if the attribute \"k\" is a non-empty string.");      
   }
   else if (!(attributes["generic"] == "no"))
-    add_static_error("In statement \"value-union-value\" the attribute \"generic\" must have the value "
+    add_static_error(std::string("In statement \"") + func_name + "\" the attribute \"generic\" must have the value "
         "\"yes\" or the value \"no\". \"no\" would be taken as default.");
 }
 
 
-std::string Tag_Value_Union_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+
+void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+
+void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+
+void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+
+void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+
+void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+
+void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+
+void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+
+
+std::string Tag_Value_Aggregator::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
   if (key)
     return value_per_key[*key];
@@ -633,8 +656,18 @@ std::string Tag_Value_Union_Value::eval(const std::map< std::string, Set >& sets
 }
 
 
-void update_value(const std::vector< std::pair< std::string, std::string > >* tags,
-    const std::string& key, std::string& value, std::map< std::string, std::string >* value_per_key, bool& unique)
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Union_Value > Tag_Value_Union_Value::statement_maker("value-union-value");
+
+
+Tag_Value_Union_Value::Tag_Value_Union_Value
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Aggregator("value-union-value", line_number_, input_attributes, global_settings), unique(true) {}
+
+
+void Tag_Value_Union_Value::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
 {
   if (!tags)
     return;
@@ -654,50 +687,17 @@ void update_value(const std::vector< std::pair< std::string, std::string > >* ta
         value = "< multiple values found >";
       }
     }
-    else if (value_per_key)
+    else if (generic)
     {
-      std::map< std::string, std::string >::iterator it_tag = value_per_key->find(it->first);
+      std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
       
-      if (it_tag == value_per_key->end())
-        value_per_key->insert(*it);
+      if (it_tag == value_per_key.end())
+        value_per_key.insert(*it);
       else if (it_tag->second != it->second)
         it_tag->second = "< multiple values found >";
     }
   }
 }
-
-
-void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
-
-void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
-
-void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
-
-void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
-
-void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
-
-void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
-
-void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
-
-void Tag_Value_Union_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(tags, key, value, generic ? &value_per_key : 0, unique); }
 
 
 void Tag_Value_Union_Value::clear()
@@ -716,43 +716,10 @@ Generic_Statement_Maker< Tag_Value_Min_Value > Tag_Value_Min_Value::statement_ma
 
 Tag_Value_Min_Value::Tag_Value_Min_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_), value_set(false)
-{
-  std::map< std::string, std::string > attributes;
-  
-  attributes["from"] = "_";
-  attributes["k"] = "";
-  attributes["generic"] = "no";
-  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-  
-  input = attributes["from"];
-  key = attributes["k"];
-  generic = (attributes["generic"] == "yes");
-  
-  if (generic)
-  {
-    if (key != "")
-      add_static_error("In statement \"value-min-value\" the attribute \"generic\" must have the value "
-          "\"no\" if the attribute \"k\" is a non-empty string.");      
-  }
-  else if (!(attributes["generic"] == "no"))
-    add_static_error("In statement \"value-min-value\" the attribute \"generic\" must have the value "
-        "\"yes\" or the value \"no\". \"no\" would be taken as default.");
-}
+    : Tag_Value_Aggregator("value-min-value", line_number_, input_attributes, global_settings), value_set(false) {}
 
 
-std::string Tag_Value_Min_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
-{
-  if (key)
-    return value_per_key[*key];
-  else
-    return value;
-}
-
-
-void update_value_min(const std::vector< std::pair< std::string, std::string > >* tags,
-    const std::string& key, std::string& value, std::map< std::string, std::string >* value_per_key, bool& value_set)
+void Tag_Value_Min_Value::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
 {
   if (!tags)
     return;
@@ -770,50 +737,17 @@ void update_value_min(const std::vector< std::pair< std::string, std::string > >
         value = it->second;
       }
     }
-    else if (value_per_key)
+    else if (generic)
     {
-      std::map< std::string, std::string >::iterator it_tag = value_per_key->find(it->first);
+      std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
       
-      if (it_tag != value_per_key->end())
+      if (it_tag != value_per_key.end())
         it_tag->second = std::min(it_tag->second, it->second);
       else
-        value_per_key->insert(*it);
+        value_per_key.insert(*it);
     }
   }
 }
-
-
-void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Min_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_min(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 
 void Tag_Value_Min_Value::clear()
@@ -832,43 +766,10 @@ Generic_Statement_Maker< Tag_Value_Max_Value > Tag_Value_Max_Value::statement_ma
 
 Tag_Value_Max_Value::Tag_Value_Max_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_), value_set(false)
-{
-  std::map< std::string, std::string > attributes;
-  
-  attributes["from"] = "_";
-  attributes["k"] = "";
-  attributes["generic"] = "no";
-  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-  
-  input = attributes["from"];
-  key = attributes["k"];
-  generic = (attributes["generic"] == "yes");
-  
-  if (generic)
-  {
-    if (key != "")
-      add_static_error("In statement \"value-max-value\" the attribute \"generic\" must have the value "
-          "\"no\" if the attribute \"k\" is a non-empty string.");      
-  }
-  else if (!(attributes["generic"] == "no"))
-    add_static_error("In statement \"value-max-value\" the attribute \"generic\" must have the value "
-        "\"yes\" or the value \"no\". \"no\" would be taken as default.");
-}
+    : Tag_Value_Aggregator("value-max-value", line_number_, input_attributes, global_settings), value_set(false) {}
 
 
-std::string Tag_Value_Max_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
-{
-  if (key)
-    return value_per_key[*key];
-  else
-    return value;
-}
-
-
-void update_value_max(const std::vector< std::pair< std::string, std::string > >* tags,
-    const std::string& key, std::string& value, std::map< std::string, std::string >* value_per_key, bool& value_set)
+void Tag_Value_Max_Value::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
 {
   if (!tags)
     return;
@@ -886,50 +787,17 @@ void update_value_max(const std::vector< std::pair< std::string, std::string > >
         value = it->second;
       }
     }
-    else if (value_per_key)
+    else if (generic)
     {
-      std::map< std::string, std::string >::iterator it_tag = value_per_key->find(it->first);
+      std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
       
-      if (it_tag != value_per_key->end())
+      if (it_tag != value_per_key.end())
         it_tag->second = std::max(it_tag->second, it->second);
       else
-        value_per_key->insert(*it);
+        value_per_key.insert(*it);
     }
   }
 }
-
-
-void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
-
-void Tag_Value_Max_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_max(tags, key, value, generic ? &value_per_key : 0, value_set); }
 
 
 void Tag_Value_Max_Value::clear()
@@ -948,30 +816,7 @@ Generic_Statement_Maker< Tag_Value_Set_Value > Tag_Value_Set_Value::statement_ma
 
 Tag_Value_Set_Value::Tag_Value_Set_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_)
-{
-  std::map< std::string, std::string > attributes;
-  
-  attributes["from"] = "_";
-  attributes["k"] = "";
-  attributes["generic"] = "no";
-  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-  
-  input = attributes["from"];
-  key = attributes["k"];
-  generic = (attributes["generic"] == "yes");
-  
-  if (generic)
-  {
-    if (key != "")
-      add_static_error("In statement \"value-set-value\" the attribute \"generic\" must have the value "
-          "\"no\" if the attribute \"k\" is a non-empty string.");      
-  }
-  else if (!(attributes["generic"] == "no"))
-    add_static_error("In statement \"value-set-value\" the attribute \"generic\" must have the value "
-        "\"yes\" or the value \"no\". \"no\" would be taken as default.");
-}
+    : Tag_Value_Aggregator("value-set-value", line_number_, input_attributes, global_settings) {}
 
 
 std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
@@ -1006,9 +851,7 @@ std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets, 
 }
 
 
-void update_value_set(const std::vector< std::pair< std::string, std::string > >* tags,
-    const std::string& key, std::vector< std::string >& values,
-    std::map< std::string, std::vector< std::string > >* values_per_key)
+void Tag_Value_Set_Value::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
 {
   if (!tags)
     return;
@@ -1018,43 +861,10 @@ void update_value_set(const std::vector< std::pair< std::string, std::string > >
   {
     if (it->first == key)
       values.push_back(it->second);
-    else if (values_per_key)
-      (*values_per_key)[it->first].push_back(it->second);
+    else if (generic)
+      values_per_key[it->first].push_back(it->second);
   }
 }
-
-
-void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
-
-void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
-
-void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
-
-void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
-
-void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
-
-void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
-
-void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
-
-void Tag_Value_Set_Value::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value_set(tags, key, values, generic ? &values_per_key : 0); }
 
 
 void Tag_Value_Set_Value::clear()

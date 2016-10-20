@@ -237,7 +237,42 @@ public:
 };
 
 
-class Tag_Value_Union_Value : public Tag_Value
+struct Tag_Value_Aggregator : public Tag_Value
+{
+  Tag_Value_Aggregator(const string& func_name, int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);  
+  
+  virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
+  
+  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  
+  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags) = 0;
+  
+  std::string input;
+  std::string key;
+  bool generic;
+  std::string value;
+  mutable std::map< std::string, std::string > value_per_key;  
+};
+
+
+class Tag_Value_Union_Value : public Tag_Value_Aggregator
 {
 public:
   Tag_Value_Union_Value(int line_number_, const map< string, string >& input_attributes,
@@ -249,38 +284,15 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Union_Value > statement_maker;
   
-  virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
-  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
   virtual void clear();
   
-  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
-  
 private:
-  std::string input;
-  std::string key;
-  bool generic;
-  std::string value;
-  mutable std::map< std::string, std::string > value_per_key;
   bool unique;
 };
 
 
-class Tag_Value_Min_Value : public Tag_Value
+class Tag_Value_Min_Value : public Tag_Value_Aggregator
 {
 public:
   Tag_Value_Min_Value(int line_number_, const map< string, string >& input_attributes,
@@ -292,38 +304,15 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Min_Value > statement_maker;
   
-  virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
-  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
   virtual void clear();
   
-  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
-  
 private:
-  std::string input;
-  std::string key;
-  bool generic;
-  std::string value;
-  mutable std::map< std::string, std::string > value_per_key;
   bool value_set;
 };
 
 
-class Tag_Value_Max_Value : public Tag_Value
+class Tag_Value_Max_Value : public Tag_Value_Aggregator
 {
 public:
   Tag_Value_Max_Value(int line_number_, const map< string, string >& input_attributes,
@@ -335,38 +324,15 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Max_Value > statement_maker;
   
-  virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
-  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
   virtual void clear();
   
-  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
-  
 private:
-  std::string input;
-  std::string key;
-  bool generic;
-  std::string value;
-  mutable std::map< std::string, std::string > value_per_key;
   bool value_set;
 };
 
 
-class Tag_Value_Set_Value : public Tag_Value
+class Tag_Value_Set_Value : public Tag_Value_Aggregator
 {
 public:
   Tag_Value_Set_Value(int line_number_, const map< string, string >& input_attributes,
@@ -378,31 +344,12 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Set_Value > statement_maker;
   
-  virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
-  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
   virtual void clear();
   
   virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
   
 private:
-  std::string input;
-  std::string key;
-  bool generic;
   mutable std::vector< std::string > values;
   mutable std::map< std::string, std::vector< std::string > > values_per_key;
 };
