@@ -294,14 +294,6 @@ Tag_Value_Fixed::Tag_Value_Fixed
   eval_attributes_array(get_name(), attributes, input_attributes);
   
   value = attributes["v"];
-  
-  if (value == "")
-  {
-    ostringstream temp("");
-    temp<<"For the attribute \"v\" of the element \"value-fixed\""
-        <<" the only allowed values are non-empty strings.";
-    add_static_error(temp.str());
-  }
 }
 
 

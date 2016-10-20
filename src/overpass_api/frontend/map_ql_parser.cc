@@ -776,13 +776,8 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     }
     
     if (!token.good() || *token != "(")
-    {
-      if (value == "")
-        ++token;
-      else
-        value_stack.push_back(std::make_pair(0, create_tag_value_fixed< TStatement >(
-            stmt_factory, value, token.line_col().first)));
-    }
+      value_stack.push_back(std::make_pair(0, create_tag_value_fixed< TStatement >(
+          stmt_factory, value, token.line_col().first)));
     else if (value == "count")
     {
       ++token;
