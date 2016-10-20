@@ -54,13 +54,19 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
   Set_Tag_Statement* set_tag = dynamic_cast< Set_Tag_Statement* >(statement);
   if (set_tag)
   {
-    evaluators.push_back(set_tag);
     if (set_tag->get_key())
-      ;
+    {
+      for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+      {
+        if ((*it)->get_key() && *(*it)->get_key() == *set_tag->get_key())
+          add_static_error(std::string("A key cannot be added twice to an element: \"") + *set_tag->get_key() + '\"');
+      }
+    }
     else if (!multi_evaluator)
       multi_evaluator = set_tag;
     else
       add_static_error("A make statement can have at most one any-key set-tag statement.");
+    evaluators.push_back(set_tag);
   }
   else
     substatement_error(get_name(), statement);
