@@ -656,7 +656,7 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
       else if (*token == "quirks")
 	mode = "quirks";
       else if (*token == "count")
-    mode = "count";
+        mode = "count";
       else if (*token == "qt")
 	order = "quadtile";
       else if (*token == "asc")
@@ -839,8 +839,8 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
       clear_until_after(token, error_output, ")", true);
     }
     else
-      value_stack.push_back(std::make_pair(0, create_tag_value_fixed< TStatement >(
-          stmt_factory, value, token.line_col().first)));
+      error_output->add_parse_error(std::string("\"") + value
+          + "\" is not a function name, but is followed by a left parenthesis", token.line_col().first);
   }
   
   if (expect_parenthesis)
