@@ -596,7 +596,7 @@ std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets, co
 Tag_Value_Aggregator::Tag_Value_Aggregator
     (const string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
-    : Tag_Value(line_number_)
+    : Tag_Value(line_number_), value_set(false)
 {
   std::map< std::string, std::string > attributes;
   
@@ -619,6 +619,37 @@ Tag_Value_Aggregator::Tag_Value_Aggregator
   else if (!(attributes["generic"] == "no"))
     add_static_error(std::string("In statement \"") + func_name + "\" the attribute \"generic\" must have the value "
         "\"yes\" or the value \"no\". \"no\" would be taken as default.");
+}
+
+
+void Tag_Value_Aggregator::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (!tags)
+    return;
+  
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
+      it != tags->end(); ++it)
+  {
+    if (it->first == key)
+    {
+      if (value_set)
+        value = update_value(value, it->second);
+      else
+      {
+        value_set = true;
+        value = it->second;
+      }
+    }
+    else if (generic)
+    {
+      std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
+      
+      if (it_tag == value_per_key.end())
+        value_per_key.insert(*it);
+      else if (it_tag->second != it->second)
+        it_tag->second = update_value(it_tag->second, it->second);
+    }
+  }
 }
 
 
@@ -656,6 +687,14 @@ std::string Tag_Value_Aggregator::eval(const std::map< std::string, Set >& sets,
 }
 
 
+void Tag_Value_Aggregator::clear()
+{
+  value_set = false;
+  value = "";
+  value_per_key.clear();
+}
+
+
 //-----------------------------------------------------------------------------
 
 
@@ -664,47 +703,15 @@ Generic_Statement_Maker< Tag_Value_Union_Value > Tag_Value_Union_Value::statemen
 
 Tag_Value_Union_Value::Tag_Value_Union_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Aggregator("value-union-value", line_number_, input_attributes, global_settings), unique(true) {}
+    : Tag_Value_Aggregator("value-union-value", line_number_, input_attributes, global_settings) {}
 
 
-void Tag_Value_Union_Value::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Union_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
-  if (!tags)
-    return;
-  
-  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
-      it != tags->end(); ++it)
-  {
-    if (it->first == key)
-    {
-      if (it->second == value)
-        ;
-      else if (value == "")
-        value = it->second;
-      else
-      {
-        unique = false;
-        value = "< multiple values found >";
-      }
-    }
-    else if (generic)
-    {
-      std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
-      
-      if (it_tag == value_per_key.end())
-        value_per_key.insert(*it);
-      else if (it_tag->second != it->second)
-        it_tag->second = "< multiple values found >";
-    }
-  }
-}
-
-
-void Tag_Value_Union_Value::clear()
-{
-  unique = true;
-  value = "";
-  value_per_key.clear();
+  if (agg_value == new_value)
+    return agg_value;
+  else
+    return "< multiple values found >";
 }
 
 
@@ -716,45 +723,17 @@ Generic_Statement_Maker< Tag_Value_Min_Value > Tag_Value_Min_Value::statement_ma
 
 Tag_Value_Min_Value::Tag_Value_Min_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Aggregator("value-min-value", line_number_, input_attributes, global_settings), value_set(false) {}
+    : Tag_Value_Aggregator("value-min-value", line_number_, input_attributes, global_settings) {}
 
 
-void Tag_Value_Min_Value::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Min_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
-  if (!tags)
-    return;
+  double lhs_d = 0;
+  double rhs_d = 0;
+  if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
+    return lhs_d < rhs_d ? agg_value : new_value;
   
-  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
-      it != tags->end(); ++it)
-  {
-    if (it->first == key)
-    {
-      if (value_set)
-        value = std::min(value, it->second);
-      else
-      {
-        value_set = true;
-        value = it->second;
-      }
-    }
-    else if (generic)
-    {
-      std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
-      
-      if (it_tag != value_per_key.end())
-        it_tag->second = std::min(it_tag->second, it->second);
-      else
-        value_per_key.insert(*it);
-    }
-  }
-}
-
-
-void Tag_Value_Min_Value::clear()
-{
-  value_set = false;
-  value = "";
-  value_per_key.clear();
+  return std::min(agg_value, new_value);
 }
 
 
@@ -766,45 +745,17 @@ Generic_Statement_Maker< Tag_Value_Max_Value > Tag_Value_Max_Value::statement_ma
 
 Tag_Value_Max_Value::Tag_Value_Max_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Aggregator("value-max-value", line_number_, input_attributes, global_settings), value_set(false) {}
+    : Tag_Value_Aggregator("value-max-value", line_number_, input_attributes, global_settings) {}
 
 
-void Tag_Value_Max_Value::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Max_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
-  if (!tags)
-    return;
+  double lhs_d = 0;
+  double rhs_d = 0;
+  if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
+    return lhs_d > rhs_d ? agg_value : new_value;
   
-  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
-      it != tags->end(); ++it)
-  {
-    if (it->first == key)
-    {
-      if (value_set)
-        value = std::max(value, it->second);
-      else
-      {
-        value_set = true;
-        value = it->second;
-      }
-    }
-    else if (generic)
-    {
-      std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
-      
-      if (it_tag != value_per_key.end())
-        it_tag->second = std::max(it_tag->second, it->second);
-      else
-        value_per_key.insert(*it);
-    }
-  }
-}
-
-
-void Tag_Value_Max_Value::clear()
-{
-  value_set = false;
-  value = "";
-  value_per_key.clear();
+  return std::max(agg_value, new_value);
 }
 
 

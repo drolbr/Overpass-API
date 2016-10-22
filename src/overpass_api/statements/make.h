@@ -244,6 +244,9 @@ struct Tag_Value_Aggregator : public Tag_Value
   
   virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
   virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
+  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual std::string update_value(const std::string& agg_value, const std::string& new_value) = 0;
+  virtual void clear();
   
   virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
@@ -260,14 +263,13 @@ struct Tag_Value_Aggregator : public Tag_Value
   virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags);
-  
-  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags) = 0;
+      const std::vector< std::pair< std::string, std::string > >* tags);  
   
   std::string input;
   std::string key;
   bool generic;
   std::string value;
+  bool value_set;
   mutable std::map< std::string, std::string > value_per_key;  
 };
 
@@ -284,11 +286,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Union_Value > statement_maker;
   
-  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
-  virtual void clear();
-  
-private:
-  bool unique;
+  virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
@@ -304,11 +302,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Min_Value > statement_maker;
   
-  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
-  virtual void clear();
-  
-private:
-  bool value_set;
+  virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
@@ -324,11 +318,7 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Max_Value > statement_maker;
   
-  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
-  virtual void clear();
-  
-private:
-  bool value_set;
+  virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
@@ -345,6 +335,7 @@ public:
   static Generic_Statement_Maker< Tag_Value_Set_Value > statement_maker;
   
   virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
+  virtual std::string update_value(const std::string& agg_value, const std::string& new_value) { return ""; }
   virtual void clear();
   
   virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
