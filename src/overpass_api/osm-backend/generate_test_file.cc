@@ -3751,6 +3751,12 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
+    if (string(args[2]) == "make_36")
+      cout<<
+      "  <id-and-type id=\"1\">\n"
+      "    <tag k=\"id\" v=\"1;"<<global_node_offset + 1<<";"<<global_node_offset + 2<<"\"/>\n"
+      "    <tag k=\"type\" v=\"node;relation;way\"/>\n"
+      "  </id-and-type>\n";
 
     cout<<"</osm>\n";
   }

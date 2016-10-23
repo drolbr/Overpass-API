@@ -596,34 +596,54 @@ std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets, co
 Tag_Value_Aggregator::Tag_Value_Aggregator
     (const string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
-    : Tag_Value(line_number_), value_set(false)
+    : Tag_Value(line_number_), key_type(tag), value_set(false)
 {
   std::map< std::string, std::string > attributes;
   
   attributes["from"] = "_";
   attributes["k"] = "";
-  attributes["generic"] = "no";
+  attributes["keytype"] = "tag";
   
   eval_attributes_array(func_name, attributes, input_attributes);
   
   input = attributes["from"];
   key = attributes["k"];
-  generic = (attributes["generic"] == "yes");
   
-  if (generic)
+  if (attributes["keytype"] == "tag")
+    ;
+  else if (attributes["keytype"] == "generic")
+    key_type = generic;
+  else if (attributes["keytype"] == "id")
+    key_type = id;
+  else if (attributes["keytype"] == "type")
+    key_type = type;
+  else
+    add_static_error(std::string("In statement \"") + func_name + "\" the attribute \"keytype\" must have the value "
+        "\"tag\", \"generic\", \"id\", or \"type\". \"tag\" will be taken as default.");
+  
+  if (key_type != tag)
   {
     if (key != "")
       add_static_error(std::string("In statement \"") + func_name + "\" the attribute \"generic\" must have the value "
           "\"no\" if the attribute \"k\" is a non-empty string.");      
-  }
-  else if (!(attributes["generic"] == "no"))
-    add_static_error(std::string("In statement \"") + func_name + "\" the attribute \"generic\" must have the value "
-        "\"yes\" or the value \"no\". \"no\" would be taken as default.");
+  }  
 }
 
 
-void Tag_Value_Aggregator::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
+void Tag_Value_Aggregator::update_value(const std::string& id, const std::string& type,
+    const std::vector< std::pair< std::string, std::string > >* tags)
 {
+  if (key_type == Tag_Value_Aggregator::id)
+  {
+    value = update_value(value, id);
+    return;
+  }
+  else if (key_type == Tag_Value_Aggregator::type)
+  {
+    value = update_value(value, type);
+    return;
+  }
+  
   if (!tags)
     return;
   
@@ -640,7 +660,7 @@ void Tag_Value_Aggregator::update_value(const std::vector< std::pair< std::strin
         value = it->second;
       }
     }
-    else if (generic)
+    else if (key_type == generic)
     {
       std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
       
@@ -654,28 +674,36 @@ void Tag_Value_Aggregator::update_value(const std::vector< std::pair< std::strin
 
 
 void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(to_string(elem.id.val()), "node", tags); }
 
 void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(to_string(elem.id.val()), "node", tags); }
 
 void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(to_string(elem.id.val()), "way", tags); }
 
 void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(to_string(elem.id.val()), "way", tags); }
 
 void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(to_string(elem.id.val()), "relation", tags); }
 
 void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(to_string(elem.id.val()), "relation", tags); }
 
 void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(to_string(elem.id.val()), "area", tags); }
 
 void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags) { update_value(tags); }
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{ update_value(to_string(elem.id.val()), elem.type_name, tags); }
 
 
 std::string Tag_Value_Aggregator::eval(const std::map< std::string, Set >& sets, const std::string* key) const
@@ -802,8 +830,20 @@ std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets, 
 }
 
 
-void Tag_Value_Set_Value::update_value(const std::vector< std::pair< std::string, std::string > >* tags)
+void Tag_Value_Set_Value::update_value(const std::string& id, const std::string& type,
+    const std::vector< std::pair< std::string, std::string > >* tags)
 {
+  if (key_type == Tag_Value_Aggregator::id)
+  {
+    values.push_back(id);
+    return;
+  }
+  else if (key_type == Tag_Value_Aggregator::type)
+  {
+    values.push_back(type);
+    return;
+  }
+  
   if (!tags)
     return;
   
@@ -812,7 +852,7 @@ void Tag_Value_Set_Value::update_value(const std::vector< std::pair< std::string
   {
     if (it->first == key)
       values.push_back(it->second);
-    else if (generic)
+    else if (key_type == generic)
       values_per_key[it->first].push_back(it->second);
   }
 }

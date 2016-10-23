@@ -66,7 +66,7 @@ inline Nonsynced_Transaction::Nonsynced_Transaction
     file_name_extension(file_name_extension_), db_dir(db_dir_)
 {
   if (!db_dir.empty() && db_dir[db_dir.size()-1] != '/')
-    db_dir += db_dir + "/";
+    db_dir += "/";
 }
 
     

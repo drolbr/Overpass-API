@@ -222,14 +222,20 @@ TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
 }
 
 
+enum Object_Type { tag, generic, id, object_type };
+
 template< class TStatement >
 TStatement* create_tag_value_union_value(typename TStatement::Factory& stmt_factory,
-    string type, string key, bool generic, string from, uint line_nr)
+    string type, string key, Object_Type key_type, string from, uint line_nr)
 {
   map< string, string > attr;
   attr["from"] = from;
-  if (generic)
-    attr["generic"] = "yes";
+  if (key_type == generic)
+    attr["keytype"] = "generic";
+  else if (key_type == id)
+    attr["keytype"] = "id";
+  else if (key_type == object_type)
+    attr["keytype"] = "type";
   else
     attr["k"] = key;
   return stmt_factory.create_statement(type, line_nr, attr);
@@ -790,52 +796,108 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     {
       ++token;
       std::string key;
-      bool generic = (expect_generic && token.good() && *token == "::");
-      if (generic)
+      Object_Type key_type = tag;
+      if (token.good() && *token == "::")
+      {
         ++token;
+        if (!token.good() || *token == ")")
+          key_type = expect_generic ? generic : tag;
+        else
+        {
+          if (*token == "id")
+            key_type = id;
+          else if (*token == "type")
+            key_type = object_type;
+          else
+            error_output->add_parse_error("In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"", token.line_col().first);
+          ++token;
+        }          
+      }
       else
         key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-union-value", key, generic, func_from, token.line_col().first)));
+          stmt_factory, "value-union-value", key, key_type, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else if (value == "min")
     {
       ++token;
       std::string key;
-      bool generic = (expect_generic && token.good() && *token == "::");
-      if (generic)
+      Object_Type key_type = tag;
+      if (token.good() && *token == "::")
+      {
         ++token;
+        if (!token.good() || *token == ")")
+          key_type = expect_generic ? generic : tag;
+        else
+        {
+          if (*token == "id")
+            key_type = id;
+          else if (*token == "type")
+            key_type = object_type;
+          else
+            error_output->add_parse_error("In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"", token.line_col().first);
+          ++token;
+        }          
+      }
       else
         key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-min-value", key, generic, func_from, token.line_col().first)));
+          stmt_factory, "value-min-value", key, key_type, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else if (value == "max")
     {
       ++token;
       std::string key;
-      bool generic = (expect_generic && token.good() && *token == "::");
-      if (generic)
+      Object_Type key_type = tag;
+      if (token.good() && *token == "::")
+      {
         ++token;
+        if (!token.good() || *token == ")")
+          key_type = expect_generic ? generic : tag;
+        else
+        {
+          if (*token == "id")
+            key_type = id;
+          else if (*token == "type")
+            key_type = object_type;
+          else
+            error_output->add_parse_error("In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"", token.line_col().first);
+          ++token;
+        }          
+      }
       else
         key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-max-value", key, generic, func_from, token.line_col().first)));
+          stmt_factory, "value-max-value", key, key_type, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else if (value == "set")
     {
       ++token;
       std::string key;
-      bool generic = (expect_generic && token.good() && *token == "::");
-      if (generic)
+      Object_Type key_type = tag;
+      if (token.good() && *token == "::")
+      {
         ++token;
+        if (!token.good() || *token == ")")
+          key_type = expect_generic ? generic : tag;
+        else
+        {
+          if (*token == "id")
+            key_type = id;
+          else if (*token == "type")
+            key_type = object_type;
+          else
+            error_output->add_parse_error("In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"", token.line_col().first);
+          ++token;
+        }          
+      }
       else
         key = get_text_token(token, error_output, "Key to evaluate");
       value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-set-value", key, generic, func_from, token.line_col().first)));
+          stmt_factory, "value-set-value", key, key_type, func_from, token.line_col().first)));
       clear_until_after(token, error_output, ")", true);
     }
     else

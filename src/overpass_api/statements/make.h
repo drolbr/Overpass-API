@@ -239,12 +239,16 @@ public:
 
 struct Tag_Value_Aggregator : public Tag_Value
 {
+  enum Object_Type { tag, generic, id, type };
+  
+  
   Tag_Value_Aggregator(const string& func_name, int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);  
   
   virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
   virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
-  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void update_value(const std::string& id, const std::string& type,
+      const std::vector< std::pair< std::string, std::string > >* tags);
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value) = 0;
   virtual void clear();
   
@@ -267,7 +271,7 @@ struct Tag_Value_Aggregator : public Tag_Value
   
   std::string input;
   std::string key;
-  bool generic;
+  Object_Type key_type;
   std::string value;
   bool value_set;
   mutable std::map< std::string, std::string > value_per_key;  
@@ -334,7 +338,8 @@ public:
   
   static Generic_Statement_Maker< Tag_Value_Set_Value > statement_maker;
   
-  virtual void update_value(const std::vector< std::pair< std::string, std::string > >* tags);  
+  virtual void update_value(const std::string& id, const std::string& type,
+      const std::vector< std::pair< std::string, std::string > >* tags);  
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value) { return ""; }
   virtual void clear();
   
