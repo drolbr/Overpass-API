@@ -736,61 +736,65 @@ int main(int argc, char* args[])
     if ((test_to_execute == "") || (test_to_execute == "12"))
       add_test(global_settings, transaction, "test-plus", "sum", " 1", "2_");
     if ((test_to_execute == "") || (test_to_execute == "13"))
-      multiply_test(global_settings, transaction, "test-times", "product", "2", "6.5");
+      add_test(global_settings, transaction, "test-plus", "sum", "100000000000000000", "1");
     if ((test_to_execute == "") || (test_to_execute == "14"))
-      multiply_test(global_settings, transaction, "test-times", "product", "_2", "7");
+      multiply_test(global_settings, transaction, "test-times", "product", "2", "6.5");
     if ((test_to_execute == "") || (test_to_execute == "15"))
-      minus_test(global_settings, transaction, "test-minus", "difference", "2", "5");
+      multiply_test(global_settings, transaction, "test-times", "product", "_2", "7");
     if ((test_to_execute == "") || (test_to_execute == "16"))
-      minus_test(global_settings, transaction, "test-minus", "difference", "_2", "5");
+      minus_test(global_settings, transaction, "test-minus", "difference", "2", "5");
     if ((test_to_execute == "") || (test_to_execute == "17"))
-      divide_test(global_settings, transaction, "test-divided", "quotient", "8", "9");
+      minus_test(global_settings, transaction, "test-minus", "difference", "_2", "5");
     if ((test_to_execute == "") || (test_to_execute == "18"))
-      divide_test(global_settings, transaction, "test-divided", "quotient", "_8", "9");
+      minus_test(global_settings, transaction, "test-minus", "difference", "100000000000000001", "100000000000000000");
     if ((test_to_execute == "") || (test_to_execute == "19"))
-      union_value_test(global_settings, transaction, "union-value", "_", 1, global_node_offset);
+      divide_test(global_settings, transaction, "test-divided", "quotient", "8", "9");
     if ((test_to_execute == "") || (test_to_execute == "20"))
-      union_value_test(global_settings, transaction, "union-value", "foo", 1, global_node_offset);
+      divide_test(global_settings, transaction, "test-divided", "quotient", "_8", "9");
     if ((test_to_execute == "") || (test_to_execute == "21"))
-      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+      union_value_test(global_settings, transaction, "union-value", "_", 1, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "22"))
-      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+      union_value_test(global_settings, transaction, "union-value", "foo", 1, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "23"))
-      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "24"))
-      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "25"))
-      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "26"))
-      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "27"))
+      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "28"))
+      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "29"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "", "",
           true, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "28"))
+    if ((test_to_execute == "") || (test_to_execute == "30"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "node_key", "",
           true, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "29"))
-      any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "", "node_key",
-          true, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "30"))
-      any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
-          true, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "31"))
-      any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "foo", 7, 14, "way_key", "node_key",
+      any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "", "node_key",
           true, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "32"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
-          false, global_node_offset);
+          true, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "33"))
-      any_key_test< Tag_Value_Min_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
-          false, global_node_offset);
+      any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "foo", 7, 14, "way_key", "node_key",
+          true, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "34"))
-      any_key_test< Tag_Value_Max_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
+      any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
           false, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "35"))
-      any_key_test< Tag_Value_Union_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
+      any_key_test< Tag_Value_Min_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
           false, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "36"))
+      any_key_test< Tag_Value_Max_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
+          false, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "37"))
+      any_key_test< Tag_Value_Union_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
+          false, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "38"))
       value_id_type_test(global_settings, transaction, "id-and-type", "_", 1, global_node_offset);
 
     std::cout<<"</osm>\n";

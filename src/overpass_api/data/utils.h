@@ -60,4 +60,13 @@ inline bool try_double(const std::string& input, double& result)
 }
 
 
+inline bool try_int64(const std::string& input, int64& result)
+{
+  const char* input_c = input.c_str();
+  char* end_c = 0;
+  result = strtoll(input_c, &end_c, 0);
+  return input_c + input.size() == end_c;
+}
+
+
 #endif

@@ -493,13 +493,18 @@ std::string Tag_Value_Plus::eval(const std::map< std::string, Set >& sets, const
 {
   std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
   std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  double lhs_d = 0;
-  double rhs_d = 0;
   
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return to_string(lhs_l + rhs_l);
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d + rhs_d);
-  else
-    return lhs_s + rhs_s;
+  
+  return lhs_s + rhs_s;
 }
 
 
@@ -522,13 +527,18 @@ std::string Tag_Value_Minus::eval(const std::map< std::string, Set >& sets, cons
 {
   std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
   std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  double lhs_d = 0;
-  double rhs_d = 0;
   
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return to_string(lhs_l - rhs_l);
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d - rhs_d);
-  else
-    return "NaN";
+  
+  return "NaN";
 }
 
 
@@ -551,13 +561,18 @@ std::string Tag_Value_Times::eval(const std::map< std::string, Set >& sets, cons
 {
   std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
   std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  double lhs_d = 0;
-  double rhs_d = 0;
   
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return to_string(lhs_l * rhs_l);
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d * rhs_d);
-  else
-    return "NaN";
+  
+  return "NaN";
 }
 
 
@@ -580,13 +595,15 @@ std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets, co
 {
   std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
   std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  double lhs_d = 0;
-  double rhs_d = 0;
+
+  // On purpose no int64 detection  
   
+  double lhs_d = 0;
+  double rhs_d = 0;  
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d / rhs_d);
-  else
-    return "NaN";
+  
+  return "NaN";
 }
 
 
@@ -755,11 +772,16 @@ Tag_Value_Min_Value::Tag_Value_Min_Value
 
 
 std::string Tag_Value_Min_Value::update_value(const std::string& agg_value, const std::string& new_value)
-{
+{  
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(agg_value, lhs_l) && try_int64(new_value, rhs_l))
+    return rhs_l < lhs_l ? new_value : agg_value;
+  
   double lhs_d = 0;
-  double rhs_d = 0;
+  double rhs_d = 0;  
   if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
-    return lhs_d < rhs_d ? agg_value : new_value;
+    return rhs_d < lhs_d ? new_value : agg_value;
   
   return std::min(agg_value, new_value);
 }
@@ -778,10 +800,15 @@ Tag_Value_Max_Value::Tag_Value_Max_Value
 
 std::string Tag_Value_Max_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(agg_value, lhs_l) && try_int64(new_value, rhs_l))
+    return rhs_l > lhs_l ? new_value : agg_value;
+  
   double lhs_d = 0;
-  double rhs_d = 0;
+  double rhs_d = 0;  
   if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
-    return lhs_d > rhs_d ? agg_value : new_value;
+    return rhs_d > lhs_d ? new_value : agg_value;
   
   return std::max(agg_value, new_value);
 }
