@@ -3767,6 +3767,12 @@ int main(int argc, char* args[])
       "    <tag k=\"id\" v=\"1;"<<global_node_offset + 1<<";"<<global_node_offset + 2<<"\"/>\n"
       "    <tag k=\"type\" v=\"node;relation;way\"/>\n"
       "  </id-and-type>\n";
+    if (string(args[2]) == "make_39")
+      cout<<
+      "  <key-id id=\"42\"/>\n";
+    if (string(args[2]) == "make_40")
+      cout<<
+      "  <key-id id=\""<<global_node_offset + 2<<"\"/>\n";
 
     cout<<"</osm>\n";
   }

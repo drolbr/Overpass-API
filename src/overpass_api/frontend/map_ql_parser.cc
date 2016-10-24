@@ -188,13 +188,20 @@ TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
 }
 
 
+enum Object_Type { tag, generic, id, object_type };
+
 template< class TStatement >
 TStatement* create_set_tag_statement(typename TStatement::Factory& stmt_factory,
-    string key, bool generic, uint line_nr)
+    string key, Object_Type key_type, uint line_nr)
 {
   map< string, string > attr;
-  if (generic)
+  if (key_type == id)
+    attr["keytype"] = "id";
+  else if (key_type == generic)    
+  {
     attr["from"] = key;
+    attr["keytype"] = "generic";
+  }
   else
     attr["k"] = key;
   return stmt_factory.create_statement("set-tag", line_nr, attr);
@@ -221,8 +228,6 @@ TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("value-count", line_nr, attr);
 }
 
-
-enum Object_Type { tag, generic, id, object_type };
 
 template< class TStatement >
 TStatement* create_tag_value_union_value(typename TStatement::Factory& stmt_factory,
@@ -979,34 +984,43 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
         
         std::string key = get_text_token(token, error_output, "Tag key");
         evaluators.push_back(create_set_tag_statement< TStatement >(
-            stmt_factory, key, false, token.line_col().first));
+            stmt_factory, key, tag, token.line_col().first));
         
         clear_until_after(token, error_output, ",", ";", "->", false);
         continue;
       }
       
-      bool generic = (token.good() && *token == "::");
       std::string key;
-      if (generic)
+      Object_Type key_type = tag;
+      if (token.good() && *token == "::")
       {
         ++token;
         
         key = "_";
-        if (token.good() && *token == ".")
+        key_type = generic;
+        if (token.good())
         {
-          ++token;
-          key = get_identifier_token(token, error_output, "Input set");
+          if (*token == ".")
+          {
+            ++token;
+            key = get_identifier_token(token, error_output, "Input set");
+          }
+          else if (*token == "id")
+          {
+            ++token;
+            key_type = id;
+          }
         }
       }
       else
         key = get_text_token(token, error_output, "Tag key");
       
       clear_until_after(token, error_output, "=");
-      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, false, generic);
+      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, false, key_type == generic);
       if (stmt)
       {
         TStatement* key_stmt = create_set_tag_statement< TStatement >(
-            stmt_factory, key, generic, token.line_col().first);
+            stmt_factory, key, key_type, token.line_col().first);
         key_stmt->add_statement(stmt, "");
         evaluators.push_back(key_stmt);
       }

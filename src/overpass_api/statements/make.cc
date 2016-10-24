@@ -26,7 +26,7 @@ Generic_Statement_Maker< Make_Statement > Make_Statement::statement_maker("make"
 
 Make_Statement::Make_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_), multi_evaluator(0)
+    : Output_Statement(line_number_), id_evaluator(0), multi_evaluator(0)
 {
   std::map< std::string, std::string > attributes;
   
@@ -61,6 +61,13 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
         if ((*it)->get_key() && *(*it)->get_key() == *set_tag->get_key())
           add_static_error(std::string("A key cannot be added twice to an element: \"") + *set_tag->get_key() + '\"');
       }
+    }
+    else if (set_tag->should_set_id())
+    {
+      if (!id_evaluator)
+        id_evaluator = set_tag;
+      else
+        add_static_error("A make statement can have at most one set-tag statement of subtype setting the id.");
     }
     else if (!multi_evaluator)
       multi_evaluator = set_tag;
@@ -222,13 +229,18 @@ void Make_Statement::execute(Resource_Manager& rman)
   
   Set into;
   
+  int64 id = 0;
+  bool id_fixed = false;
+  
   std::vector< std::pair< std::string, std::string > > tags;
   for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
   {
     if (!(*it)->get_tag_value())
         continue;
     
-    if ((*it)->get_key())
+    if ((*it)->should_set_id())
+      id_fixed = try_int64((*it)->eval(rman.sets(), 0), id);
+    else if ((*it)->get_key())
       tags.push_back(std::make_pair(*(*it)->get_key(), (*it)->eval(rman.sets(), 0)));
     else
     {
@@ -240,7 +252,7 @@ void Make_Statement::execute(Resource_Manager& rman)
   }
 
   into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(
-      type, rman.get_global_settings().dispense_derived_id(), tags));
+      type, id_fixed ? id : rman.get_global_settings().dispense_derived_id(), tags));
   
   transfer_output(rman, into);
   rman.health_check(*this);
@@ -255,19 +267,34 @@ Generic_Statement_Maker< Set_Tag_Statement > Set_Tag_Statement::statement_maker(
 
 Set_Tag_Statement::Set_Tag_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Statement(line_number_), tag_value(0)
+    : Statement(line_number_), set_id(false), tag_value(0)
 {
   std::map< std::string, std::string > attributes;
   
   attributes["k"] = "";
   attributes["from"] = "_";
+  attributes["keytype"] = "tag";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
-  if (attributes["k"] != "")
-    keys.push_back(attributes["k"]);
-  else
-    input = attributes["from"];
+  if (attributes["keytype"] == "tag")
+  {
+    if (attributes["k"] != "")
+      keys.push_back(attributes["k"]);
+    else
+      add_static_error("For the statement \"set-tag\" in mode \"keytype\"=\"tag\", "
+          "the attribute \"k\" must be nonempty.");
+  }
+  else if (attributes["keytype"] == "generic")
+  {
+    if (attributes["from"] != "")
+      input = attributes["from"];
+    else
+      add_static_error("For the statement \"set-tag\" in mode \"keytype\"=\"tag\", "
+          "the attribute \"from\" must be nonempty. Default is \"_\".");
+  }
+  else if (attributes["keytype"] == "id")
+    set_id = true;
 }
 
 
@@ -652,12 +679,24 @@ void Tag_Value_Aggregator::update_value(const std::string& id, const std::string
 {
   if (key_type == Tag_Value_Aggregator::id)
   {
-    value = update_value(value, id);
+    if (value_set)
+      value = update_value(value, id);
+    else
+    {
+      value_set = true;
+      value = id;
+    }
     return;
   }
   else if (key_type == Tag_Value_Aggregator::type)
   {
-    value = update_value(value, type);
+    if (value_set)
+      value = update_value(value, type);
+    else
+    {
+      value_set = true;
+      value = type;
+    }
     return;
   }
   

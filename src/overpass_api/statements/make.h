@@ -47,6 +47,7 @@ private:
   std::string input;
   std::string type;
   std::vector< Set_Tag_Statement* > evaluators;
+  Set_Tag_Statement* id_evaluator;
   Set_Tag_Statement* multi_evaluator;
 };
 
@@ -93,6 +94,7 @@ public:
   const std::string* get_key() const { return input != "" ? 0 : &keys.front(); }
   const std::vector< std::string >* get_keys() const { return input != "" ? &keys : 0; }
   void set_keys(const std::vector< std::string >& keys_) { keys = keys_; }
+  bool should_set_id() const { return set_id; }
   Tag_Value* get_tag_value() const { return tag_value; }
   const std::string& get_input_name() const { return input; }
   std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const
@@ -101,6 +103,7 @@ public:
 private:
   std::string input;
   std::vector< std::string > keys;
+  bool set_id;
   Tag_Value* tag_value;
 };
 

@@ -634,6 +634,50 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
       
+void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string from, uint64 ref, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  if (ref > 0)
+    prepare_value_test(global_settings, rman, from, ref, ref+1, global_node_offset);
+  
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Make_Statement stmt(0, attributes, global_settings);
+  
+  attributes.clear();
+  attributes["keytype"] = "id";
+  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  
+  if (ref > 0)
+  {
+    attributes["keytype"] = "id";
+    if (from != "_")
+      attributes["from"] = from;
+    Tag_Value_Max_Value stmt10(0, attributes, global_settings);
+    stmt1.add_statement(&stmt10, "");
+  
+    stmt.execute(rman);
+  }
+  else
+  {
+    attributes["v"] = "42";
+    Tag_Value_Fixed stmt10(0, attributes, global_settings);
+    stmt1.add_statement(&stmt10, "");
+  
+    stmt.execute(rman);
+  }
+  
+  {
+    const char* attributes[] = { 0 };
+    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    stmt.execute(rman);
+  }
+}
+     
+      
 template< typename Tag_Value_X_Value >
 void any_key_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string from, uint64 ref1, uint64 ref2, std::string key1, std::string key2,
@@ -658,6 +702,7 @@ void any_key_test(Parsed_Query& global_settings, Transaction& transaction,
     stmt.add_statement(&stmt1, "");
   
   attributes.clear();
+  attributes["keytype"] = "generic";
   if (from != "_")
     attributes["from"] = from;
   Set_Tag_Statement stmt2(0, attributes, global_settings);
@@ -796,6 +841,10 @@ int main(int argc, char* args[])
           false, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "38"))
       value_id_type_test(global_settings, transaction, "id-and-type", "_", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "39"))
+      key_id_test(global_settings, transaction, "key-id", "_", 0, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "40"))
+      key_id_test(global_settings, transaction, "key-id", "_", 1, global_node_offset);
 
     std::cout<<"</osm>\n";
   }
