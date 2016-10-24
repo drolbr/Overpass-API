@@ -186,18 +186,11 @@ int main(int argc, char *argv[])
     else
       ;
     
-//   double timecounter = 0;
-//   timeval tv;
-//   gettimeofday(&tv, 0);
-//   timecounter -= tv.tv_sec + double(tv.tv_usec)/1000000;
-  
+    dispatcher.start_cpu_timer();
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
-    
-//   gettimeofday(&tv, 0);
-//   timecounter += tv.tv_sec + double(tv.tv_usec)/1000000;
-//   std::cerr<<timecounter<<'\n';
+    dispatcher.stop_cpu_timer();
     
     if (osm_script && osm_script->get_type() == "custom")
     {

@@ -118,9 +118,11 @@ int main(int argc, char *argv[])
       else
         osm_script->set_template_name(template_name);
       
+      dispatcher.start_cpu_timer();
       for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	   it != get_statement_stack()->end(); ++it)
         (*it)->execute(dispatcher.resource_manager());
+      dispatcher.stop_cpu_timer();
 
       if (osm_script && osm_script->get_type() == "custom")
       {
