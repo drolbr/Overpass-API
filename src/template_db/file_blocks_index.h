@@ -97,16 +97,16 @@ private:
   std::vector< std::pair< uint32, uint32 > > void_blocks;
   bool void_blocks_initialized;
     
-public:
-  uint32 block_count;
   uint64 block_size_;
   uint32 compression_factor;
   int compression_method;
     
-private:
   void init_structure_params();
   void init_blocks();
   void init_void_blocks();
+  
+public:
+  uint32 block_count;  
 };
 
 
@@ -132,10 +132,10 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
      file_name_extension_(file_name_extension),
      index_buf(0), file_size(0), index_size(0),
      void_blocks_initialized(false),
-     block_count(0),
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
      compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
-     compression_method(file_prop.get_compression_method()) // can be overwritten by index file
+     compression_method(file_prop.get_compression_method()), // can be overwritten by index file
+     block_count(0)
 {
   try
   {
