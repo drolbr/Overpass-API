@@ -219,8 +219,8 @@ int main(int argc, char *argv[])
       cout<<"ways_meta address "<<index_base<<'\n';
       File_Blocks_Index< Uint31_Index >* index = (File_Blocks_Index< Uint31_Index >*)index_base;
       cout<<"ways_meta";
-      for (int i = 0; i < (int)index->void_blocks.size(); ++i)
-	cout<<' '<<index->void_blocks[i].first<<' '<<index->void_blocks[i].second;
+      for (int i = 0; i < (int)index->get_void_blocks().size(); ++i)
+	cout<<' '<<index->get_void_blocks()[i].first<<' '<<index->get_void_blocks()[i].second;
       cout<<'\n';
       Flat_Meta_Collector< Uint31_Index, Way::Id_Type > meta_collector
           (*rman.get_transaction(), props);
