@@ -67,7 +67,12 @@ public:
   uint32 get_compression_factor() const { return compression_factor; }
   uint32 get_compression_method() const { return compression_method; }
     
-  std::list< File_Block_Index_Entry< TIndex > >& get_blocks() { return blocks; }
+  std::list< File_Block_Index_Entry< TIndex > >& get_blocks()
+  {
+    if (index_buf.ptr)
+      init_blocks();
+    return blocks;
+  }
   std::vector< std::pair< uint32, uint32 > >& get_void_blocks()
   {
     if (!void_blocks_initialized)
@@ -99,6 +104,7 @@ public:
   int compression_method;
     
 private:
+  void init_structure_params();
   void init_blocks();
   void init_void_blocks();
 };
@@ -159,10 +165,28 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     index_buf.resize(0);
   }
   
-  init_blocks();
+  init_structure_params();
   
   if (empty_index_file_name != "")
     init_void_blocks();
+}
+
+
+template< class TIndex >
+void File_Blocks_Index< TIndex >::init_structure_params()
+{
+  if (index_buf.ptr)
+  {
+    if (file_name_extension_ != ".legacy")
+    {
+      if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
+	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
+      block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
+      compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
+      compression_method = *(uint16*)(index_buf.ptr + 6);
+    }      
+    block_count = file_size / block_size_;
+  }
 }
 
 
@@ -174,8 +198,6 @@ void File_Blocks_Index< TIndex >::init_blocks()
     if (file_name_extension_ == ".legacy")
       // We support this way the old format although it has no version marker.
     {
-      block_count = file_size / block_size_;
-      
       uint32 pos = 0;
       while (pos < index_size)
       {
@@ -193,14 +215,6 @@ void File_Blocks_Index< TIndex >::init_blocks()
     }
     else if (index_size > 0)
     {
-      if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
-	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
-      block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
-      compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
-      compression_method = *(uint16*)(index_buf.ptr + 6);
-      
-      block_count = file_size / block_size_;
-      
       uint32 pos = 8;
       while (pos < index_size)
       {
@@ -226,6 +240,9 @@ void File_Blocks_Index< TIndex >::init_blocks()
 template< class TIndex >
 void File_Blocks_Index< TIndex >::init_void_blocks()
 {
+  if (index_buf.ptr)
+    init_blocks();
+  
   std::vector< bool > is_referred(block_count, false);
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = blocks.begin();
       it != blocks.end(); ++it)
