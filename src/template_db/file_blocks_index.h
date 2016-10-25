@@ -85,6 +85,9 @@ private:
   std::string empty_index_file_name;
   std::string data_file_name;
   std::string file_name_extension_;
+  Void_Pointer< uint8 > index_buf;
+  uint64 file_size;
+  uint32 index_size;
   std::list< File_Block_Index_Entry< TIndex > > blocks;
   std::vector< std::pair< uint32, uint32 > > void_blocks;
   bool void_blocks_initialized;
@@ -96,6 +99,7 @@ public:
   int compression_method;
     
 private:
+  void init_blocks();
   void init_void_blocks();
 };
 
@@ -120,13 +124,13 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
      data_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()),
      file_name_extension_(file_name_extension),
+     index_buf(0), file_size(0), index_size(0),
      void_blocks_initialized(false),
      block_count(0),
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
      compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
      compression_method(file_prop.get_compression_method()) // can be overwritten by index file
 {
-  uint64 file_size = 0;
   try
   {
     Raw_File val_file(data_file_name, O_RDONLY, S_666, "File_Blocks_Index::File_Blocks_Index::1");
@@ -144,11 +148,30 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
 			 "File_Blocks_Index::File_Blocks_Index::3");
 			 
     // read index file
-    uint32 index_size = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
-    Void_Pointer< uint8 > index_buf(index_size);
+    index_size = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
+    index_buf.resize(index_size);
     source_file.read(index_buf.ptr, index_size, "File_Blocks_Index::File_Blocks_Index::5");
-    
-    if (file_name_extension == ".legacy")
+  }
+  catch (File_Error e)
+  {
+    if (e.error_number != 2)
+      throw e;
+    index_buf.resize(0);
+  }
+  
+  init_blocks();
+  
+  if (empty_index_file_name != "")
+    init_void_blocks();
+}
+
+
+template< class TIndex >
+void File_Blocks_Index< TIndex >::init_blocks()
+{
+  if (index_buf.ptr)
+  {
+    if (file_name_extension_ == ".legacy")
       // We support this way the old format although it has no version marker.
     {
       block_count = file_size / block_size_;
@@ -194,15 +217,9 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
         pos += TIndex::size_of(index_buf.ptr + pos);
       }
     }
+    
+    index_buf.resize(0);
   }
-  catch (File_Error e)
-  {
-    if (e.error_number != 2)
-      throw e;
-  }
-  
-  if (empty_index_file_name != "")
-    init_void_blocks();
 }
 
 

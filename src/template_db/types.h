@@ -131,11 +131,25 @@ class Void_Pointer
   Void_Pointer(const Void_Pointer&);
   Void_Pointer& operator=(const Void_Pointer&);
   
-  public:
-    Void_Pointer(int block_size) { ptr = (T*)malloc(block_size); }
-    ~Void_Pointer() { free(ptr); }
+public:
+  explicit Void_Pointer(int block_size) { ptr = block_size > 0 ? (T*)malloc(block_size) : 0; }
+  ~Void_Pointer() { clear(); }
   
-    T* ptr;
+  void clear()
+  {
+    if (ptr)
+      free(ptr);
+    ptr = 0;
+  }
+  void resize(int block_size)
+  {
+    clear();
+    ptr = 0;
+    if (block_size > 0)
+      ptr = (T*)malloc(block_size);
+  }
+  
+  T* ptr;
 };
 
 
