@@ -272,7 +272,7 @@ vector< TStatement* > collect_substatements(typename TStatement::Factory& stmt_f
   clear_until_after(token, error_output, "(");
   while (token.good() && *token != ")")
   {
-    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, ++depth);
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, depth+1);
     if (substatement)
       substatements.push_back(substatement);
     clear_until_after(token, error_output, ";", ")", false);
@@ -296,7 +296,7 @@ vector< TStatement* > collect_substatements_and_probe(typename TStatement::Facto
   clear_until_after(token, error_output, "(");
   if (token.good() && *token != ")")
   {
-    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, ++depth);
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, depth+1);
     if (substatement)
       substatements.push_back(substatement);
     clear_until_after(token, error_output, ";", ")", "-", false);
@@ -310,7 +310,7 @@ vector< TStatement* > collect_substatements_and_probe(typename TStatement::Facto
   }
   if (token.good() && *token != ")")
   {
-    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, ++depth);
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, depth+1);
     if (substatement)
       substatements.push_back(substatement);
     clear_until_after(token, error_output, ";", ")", false);
@@ -325,7 +325,7 @@ vector< TStatement* > collect_substatements_and_probe(typename TStatement::Facto
   }
   while (token.good() && *token != ")")
   {
-    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, ++depth);
+    TStatement* substatement = parse_statement< TStatement >(stmt_factory, token, error_output, depth+1);
     if (substatement)
       substatements.push_back(substatement);
     clear_until_after(token, error_output, ";", ")", false);
@@ -779,7 +779,7 @@ TStatement* parse_union(typename TStatement::Factory& stmt_factory,
   
   bool is_difference = false;
   vector< TStatement* > substatements =
-      collect_substatements_and_probe< TStatement >(stmt_factory, token, error_output, is_difference, depth);
+      collect_substatements_and_probe< TStatement >(stmt_factory, token, error_output, is_difference, depth+1);
   string into = probe_into(token, error_output);
   
   if (is_difference)
@@ -810,7 +810,7 @@ TStatement* parse_foreach(typename TStatement::Factory& stmt_factory,
   string from = probe_from(token, error_output);
   string into = probe_into(token, error_output);
   vector< TStatement* > substatements =
-      collect_substatements< TStatement >(stmt_factory, token, error_output, depth);
+      collect_substatements< TStatement >(stmt_factory, token, error_output, depth+1);
 
   TStatement* statement = create_foreach_statement< TStatement >
       (stmt_factory, from, into, line_col.first);
