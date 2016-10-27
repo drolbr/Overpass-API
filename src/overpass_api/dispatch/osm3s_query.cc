@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
   string clone_db_dir = "";
   uint log_level = Error_Output::ASSISTING;
   Debug_Level debug_level = parser_execute;
+  Clone_Settings clone_settings;
   int area_level = 0;
   bool respect_timeout = true;
   
@@ -92,6 +93,48 @@ int main(int argc, char *argv[])
       if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
 	clone_db_dir += '/';
     }
+    else if (!(strncmp(argv[argpos], "--clone-compression=", 20)))
+    {
+      clone_settings.has_compression_method = true;
+      if (string(argv[argpos]).substr(20) == "no")
+        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+      else if (string(argv[argpos]).substr(20) == "gz")
+        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+#ifdef HAVE_LZ4
+      else if (string(argv[argpos]).substr(20) == "lz4")
+        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+#endif
+      else
+      {
+#ifdef HAVE_LZ4
+        cerr<<"For --clone-compression, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+#else
+        cerr<<"For --clone-compression, please use \"no\" or \"gz\" as value.\n";
+#endif
+        return 0;
+      }
+    }
+    else if (!(strncmp(argv[argpos], "--clone-map-compression=", 24)))
+    {
+      clone_settings.has_map_compression_method = true;
+      if (string(argv[argpos]).substr(24) == "no")
+        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+      else if (string(argv[argpos]).substr(24) == "gz")
+        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+#ifdef HAVE_LZ4
+      else if (string(argv[argpos]).substr(24) == "lz4")
+        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+#endif
+      else
+      {
+#ifdef HAVE_LZ4
+        cerr<<"For --clone-map-compression, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+#else
+        cerr<<"For --clone-map-compression, please use \"no\" or \"gz\" as value.\n";
+#endif
+        return 0;
+      }
+    }
     else
     {
       cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
@@ -104,6 +147,8 @@ int main(int argc, char *argv[])
       "  --dump-bbox-map-ql: Don't execute the query but only dump the query in a suitable form\n"
       "        for an OpenLayers slippy map.\n"
       "  --clone=$TARGET_DIR: Write a consistent copy of the entire database to the given $TARGET_DIR.\n"
+      "  --clone-compression=$METHOD: Use a specific compression method $METHOD for clone bin files\n"
+      "  --clone-map-compression=$METHOD: Use a specific compression method $METHOD for clone map files\n"
       "  --rules: Ignore all time limits and allow area creation by this query.\n"
       "  --quiet: Don't print anything on stderr.\n"
       "  --concise: Print concise information on stderr.\n"
@@ -114,7 +159,7 @@ int main(int argc, char *argv[])
     }
     ++argpos;
   }
-  
+
   Error_Output* error_output(new Console_Output(log_level));
   Statement::set_error_output(error_output);
   
@@ -131,7 +176,7 @@ int main(int argc, char *argv[])
       copy_file(dispatcher.resource_manager().get_transaction()->get_db_dir() + "/replicate_id",
 		clone_db_dir + "/replicate_id");
       
-      clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
+      clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir, clone_settings);
       return 0;
     }
     

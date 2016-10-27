@@ -19,10 +19,11 @@
 #ifndef DE__OSM3S___OVERPASS_API__OSM_BACKEND__CLONE_DATABASE_H
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__CLONE_DATABASE_H
 
+#include "../core/settings.h"
 #include "../../template_db/transaction.h"
 
 #include <string>
 
-void clone_database(Transaction& transaction, std::string dest_db_dir);
+void clone_database(Transaction& transaction, std::string dest_db_dir,  Clone_Settings clone_settings);
 
 #endif

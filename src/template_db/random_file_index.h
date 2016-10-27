@@ -58,6 +58,7 @@ public:
   uint64 get_block_size() const { return block_size_; }
   uint32 get_compression_factor() const { return compression_factor; }
   uint32 get_compression_method() const { return compression_method; }
+  void set_compression_method(int compression_method_) { compression_method = compression_method_; }
     
   std::vector< Random_File_Index_Entry >& get_blocks()
   {
