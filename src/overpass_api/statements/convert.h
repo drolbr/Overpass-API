@@ -16,8 +16,8 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__MAKE_H
-#define DE__OSM3S___OVERPASS_API__STATEMENTS__MAKE_H
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__CONVERT_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__CONVERT_H
 
 
 #include "statement.h"
@@ -30,16 +30,16 @@
 class Set_Tag_Statement;
 
 
-class Make_Statement : public Output_Statement
+class Convert_Statement : public Output_Statement
 {
 public:
-  Make_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
+  Convert_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                    Parsed_Query& global_settings);
-  virtual std::string get_name() const { return "make"; }
+  virtual std::string get_name() const { return "convert"; }
   virtual void add_statement(Statement* statement, string text);
   virtual void execute(Resource_Manager& rman);
-  virtual ~Make_Statement();
-  static Generic_Statement_Maker< Make_Statement > statement_maker;
+  virtual ~Convert_Statement();
+  static Generic_Statement_Maker< Convert_Statement > statement_maker;
     
   std::string get_source_name() const { return input; }
 

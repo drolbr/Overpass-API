@@ -178,13 +178,24 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
-TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
+TStatement* create_convert_statement(typename TStatement::Factory& stmt_factory,
     string into, string type, uint line_nr)
 {
   map< string, string > attr;
   attr["into"] = into;
   attr["type"] = type;
-  return stmt_factory.create_statement("make", line_nr, attr);
+  return stmt_factory.create_statement("convert", line_nr, attr);
+}
+
+
+template< class TStatement >
+TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
+    string strategy, string into, string type, uint line_nr)
+{
+  map< string, string > attr;
+  attr["into"] = into;
+  attr["type"] = type;
+  return stmt_factory.create_statement(strategy, line_nr, attr);
 }
 
 
@@ -962,12 +973,12 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
 
 template< class TStatement >
 TStatement* parse_make(typename TStatement::Factory& stmt_factory,
-                       Tokenizer_Wrapper& token, Error_Output* error_output)
+                       Tokenizer_Wrapper& token, Error_Output* error_output, const std::string& strategy)
 {
   TStatement* statement = 0;
   std::vector< TStatement* > evaluators;
   std::string type = "";
-  if (*token == "make")
+  if (*token == strategy)
   {
     ++token;
     if (*token != ";")
@@ -1027,7 +1038,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory,
     }
     string into = probe_into(token, error_output);
     
-    statement = create_make_statement< TStatement >(stmt_factory, into, type, token.line_col().first);
+    statement = create_make_statement< TStatement >(stmt_factory, strategy, into, type, token.line_col().first);
     {
       for (typename std::vector< TStatement* >::const_iterator it = evaluators.begin();
           it != evaluators.end(); ++it)
@@ -1698,8 +1709,10 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
 
   if (token.good() && *token == "out")
     return parse_output< TStatement >(stmt_factory, from, token, error_output);
+  if (token.good() && *token == "convert")
+    return parse_make< TStatement >(stmt_factory, token, error_output, "convert");
   if (token.good() && *token == "make")
-    return parse_make< TStatement >(stmt_factory, token, error_output);
+    return parse_make< TStatement >(stmt_factory, token, error_output, "make");
   if (token.good() && (*token == "<" || *token == "<<" || *token == ">" || *token == ">>"))
     return parse_full_recurse< TStatement >(stmt_factory, token, from, error_output);
   if (token.good() && *token == "is_in")

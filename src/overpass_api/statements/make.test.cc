@@ -21,6 +21,7 @@
 #include "id_query.h"
 #include "make.h"
 #include "print.h"
+#include "tag_value.h"
 #include "union.h"
 
 

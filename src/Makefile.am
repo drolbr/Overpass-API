@@ -99,6 +99,7 @@ statements_cc = \
   overpass_api/statements/around.cc \
   overpass_api/statements/bbox_query.cc \
   overpass_api/statements/changed.cc \
+  overpass_api/statements/convert.cc \
   overpass_api/statements/coord_query.cc \
   overpass_api/statements/difference.cc \
   overpass_api/statements/foreach.cc \
@@ -112,6 +113,7 @@ statements_cc = \
   overpass_api/statements/pivot.cc \
   overpass_api/statements/polygon_query.cc \
   overpass_api/statements/print.cc \
+  overpass_api/statements/tag_value.cc \
   overpass_api/statements/query.cc \
   overpass_api/statements/recurse.cc \
   overpass_api/statements/union.cc \
