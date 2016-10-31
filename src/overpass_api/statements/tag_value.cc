@@ -524,7 +524,7 @@ void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Derived
 
 std::string Tag_Value_Aggregator::eval(const std::map< std::string, Set >& sets, const std::string* key) const
 {
-  if (key)
+  if (key && key_type == Tag_Value_Aggregator::generic)
     return value_per_key[*key];
   else
     return value;
@@ -628,7 +628,7 @@ std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets, 
 {
   std::vector< std::string >* values_ = 0;
   
-  if (key)
+  if (key && key_type == Tag_Value_Aggregator::generic)
   {
     std::map< std::string, std::vector< std::string > >::iterator it = values_per_key.find(*key);
     if (it == values_per_key.end())
@@ -678,7 +678,7 @@ void Tag_Value_Set_Value::update_value(const std::string& id, const std::string&
   {
     if (it->first == key)
       values.push_back(it->second);
-    else if (key_type == generic)
+    else if (key_type == Tag_Value_Aggregator::generic)
       values_per_key[it->first].push_back(it->second);
   }
 }

@@ -3776,6 +3776,80 @@ int main(int argc, char* args[])
 
     cout<<"</osm>\n";
   }
+  else if ((argc > 2) && (string(args[2]).substr(0, 8) == "convert_"))
+  {
+    cout<<
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<osm>\n";
+    
+    if (string(args[2]) == "convert_1" || string(args[2]) == "convert_3")
+      cout<<
+      "  <just-copy id=\"2\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "  </just-copy>\n"
+      "  <just-copy id=\"3\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "  </just-copy>\n"
+      "  <just-copy id=\"4\">\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </just-copy>\n"
+      "  <just-copy id=\"5\">\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "  </just-copy>\n"
+      "  <just-copy id=\"6\">\n"
+      "    <tag k=\"number\" v=\"1000\"/>\n"
+      "  </just-copy>\n";
+    if (string(args[2]) == "convert_4" || string(args[2]) == "convert_5")
+      cout<<
+      "  <into id=\"2\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "  </into>\n"
+      "  <into id=\"3\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "  </into>\n"
+      "  <into id=\"4\">\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </into>\n"
+      "  <into id=\"5\">\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "  </into>\n"
+      "  <into id=\"6\">\n"
+      "    <tag k=\"number\" v=\"1000\"/>\n"
+      "  </into>\n";
+    if (string(args[2]) == "convert_6")
+      cout<<
+      "  <rewrite id=\"2\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n"
+      "  <rewrite id=\"3\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n"
+      "  <rewrite id=\"4\">\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n"
+      "  <rewrite id=\"5\">\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n"
+      "  <rewrite id=\"6\">\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n";
+
+    cout<<"</osm>\n";
+  }
   else
   {
     cout<<

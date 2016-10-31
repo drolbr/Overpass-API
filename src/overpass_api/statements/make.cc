@@ -185,38 +185,36 @@ void Make_Statement::execute(Resource_Manager& rman)
     
     if (needs_tags)
     {
-      std::map< std::string, Set >::const_iterator mit(rman.sets().find(it_set->first));
-      
       bool multi_evaluator_ = multi_evaluator && multi_evaluator->get_input_name() == it_set->first;
       std::vector< std::string > found_keys;
       
       notify_tags< Uint32_Index, Node_Skeleton >(
-          *rman.get_transaction(), it_set->first, mit->second.nodes, evaluators,
+          *rman.get_transaction(), it_set->first, it_set->second.nodes, evaluators,
           multi_evaluator_ ? &found_keys : 0);
       if (rman.get_desired_timestamp() != NOW)
         notify_tags< Uint32_Index, Node_Skeleton >(
-            *rman.get_transaction(), it_set->first, mit->second.attic_nodes, evaluators,
+            *rman.get_transaction(), it_set->first, it_set->second.attic_nodes, evaluators,
             multi_evaluator_ ? &found_keys : 0);
       notify_tags< Uint31_Index, Way_Skeleton >(
-          *rman.get_transaction(), it_set->first, mit->second.ways, evaluators,
+          *rman.get_transaction(), it_set->first, it_set->second.ways, evaluators,
           multi_evaluator_ ? &found_keys : 0);
       if (rman.get_desired_timestamp() != NOW)
         notify_tags< Uint31_Index, Way_Skeleton >(
-            *rman.get_transaction(), it_set->first, mit->second.attic_ways, evaluators,
+            *rman.get_transaction(), it_set->first, it_set->second.attic_ways, evaluators,
             multi_evaluator_ ? &found_keys : 0);
       notify_tags< Uint31_Index, Relation_Skeleton >(
-          *rman.get_transaction(), it_set->first, mit->second.relations, evaluators,
+          *rman.get_transaction(), it_set->first, it_set->second.relations, evaluators,
           multi_evaluator_ ? &found_keys : 0);
       if (rman.get_desired_timestamp() != NOW)
         notify_tags< Uint31_Index, Relation_Skeleton >(
-            *rman.get_transaction(), it_set->first, mit->second.attic_relations, evaluators,
+            *rman.get_transaction(), it_set->first, it_set->second.attic_relations, evaluators,
             multi_evaluator_ ? &found_keys : 0);
-      if (!mit->second.areas.empty())
+      if (!it_set->second.areas.empty())
         notify_tags< Uint31_Index, Area_Skeleton >(
-            *rman.get_transaction(), it_set->first, mit->second.areas, evaluators,
+            *rman.get_transaction(), it_set->first, it_set->second.areas, evaluators,
             multi_evaluator_ ? &found_keys : 0);
       notify_tags< Uint31_Index, Derived_Structure >(
-          *rman.get_transaction(), it_set->first, mit->second.deriveds, evaluators,
+          *rman.get_transaction(), it_set->first, it_set->second.deriveds, evaluators,
           multi_evaluator_ ? &found_keys : 0);
       
       if (multi_evaluator_)

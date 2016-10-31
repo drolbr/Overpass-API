@@ -209,4 +209,9 @@ prepare_test_loop make 40 $DATA_SIZE
 date +%T
 perform_test_loop make 40 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
+# Test the make statement
+prepare_test_loop convert 6 $DATA_SIZE
+date +%T
+perform_test_loop convert 6 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+
 rm -f input/update_database/*

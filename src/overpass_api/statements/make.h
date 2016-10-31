@@ -40,11 +40,8 @@ public:
   virtual void execute(Resource_Manager& rman);
   virtual ~Make_Statement();
   static Generic_Statement_Maker< Make_Statement > statement_maker;
-    
-  std::string get_source_name() const { return input; }
 
 private:
-  std::string input;
   std::string type;
   std::vector< Set_Tag_Statement* > evaluators;
   Set_Tag_Statement* id_evaluator;

@@ -129,7 +129,7 @@ std::string get_identifier_token(Tokenizer_Wrapper& token, Error_Output* error_o
 
   if (!token.good() || (*token).size() == 0)
     result_valid = false;
-  else if (isalpha((*token)[0]) || isdigit((*token)[0]) || (*token)[0] == '_')
+  else if (isalpha((*token)[0]) || (*token)[0] == '_')
     result = *token;
   else
     result_valid = false;
