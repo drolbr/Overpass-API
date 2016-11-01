@@ -328,8 +328,10 @@ int main(int argc, char* argv[])
   {
     try
     {
+      time_t now = time(0); 
       uint32 client_token = probe_client_token();
       cout<<"Connected as: "<<client_token<<'\n';
+      cout<<"Current time: "<<to_date(now)<<'\n';
       
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
@@ -339,7 +341,7 @@ int main(int argc, char* argv[])
         cout<<(status.rate_limit - status.slot_starts.size() - status.queries.size())<<" slots available now.\n";
       for (std::vector< time_t >::const_iterator it = status.slot_starts.begin(); it != status.slot_starts.end();
           ++it)
-        cout<<"Slot available after: "<<to_date(*it)<<'\n';
+        cout<<"Slot available after: "<<to_date(*it)<<", in "<<*it - now<<" seconds.\n";
       cout<<"Currently running queries (pid, space limit, time limit, start time):\n";
       for (std::vector< Running_Query >::const_iterator it = status.queries.begin(); it != status.queries.end(); ++it)
         cout<<it->pid<<'\t'<<it->max_space<<'\t'<<it->max_time<<'\t'<<to_date(it->start_time)<<'\n';
