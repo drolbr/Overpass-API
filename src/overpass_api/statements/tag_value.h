@@ -32,7 +32,11 @@ struct Tag_Value : public Statement
   Tag_Value(int line_number) : Statement(line_number) {}
   
   virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const = 0;
-  virtual bool needs_tags(const std::string& set_name) const { return false; }
+  
+  virtual uint needs_tags(const std::string& set_name) const { return 0; }
+  const static uint SKELETON = 1;
+  const static uint TAGS = 2;
+  
   virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags) {}
   virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
@@ -105,7 +109,7 @@ private:
 class Tag_Value_Count : public Tag_Value
 {
 public:
-  enum Objects { nothing, nodes, ways, relations, deriveds };
+  enum Objects { nothing, nodes, ways, relations, deriveds, tags, members };
   
   Tag_Value_Count(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -114,6 +118,25 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Tag_Value_Count() {}
   
+  virtual uint needs_tags(const std::string& set_name) const;
+  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void clear() { counter = 0; }
+  
   static Generic_Statement_Maker< Tag_Value_Count > statement_maker;
   
   virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
@@ -121,6 +144,7 @@ public:
 private:
   std::string input;
   Objects to_count;
+  uint64 counter;
 };
 
 
@@ -133,8 +157,16 @@ public:
   
   virtual string get_result_name() const { return ""; }
   
-  virtual bool needs_tags(const std::string& set_name) const
-  { return (lhs && lhs->needs_tags(set_name)) || (rhs && rhs->needs_tags(set_name)); }
+  virtual uint needs_tags(const std::string& set_name) const
+  {
+    if (lhs && rhs)
+      return lhs->needs_tags(set_name) | rhs->needs_tags(set_name);
+    else if (lhs)
+      return lhs->needs_tags(set_name);
+    else if (rhs)
+      return rhs->needs_tags(set_name);
+    return 0;
+  }
   virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
       const std::vector< std::pair< std::string, std::string > >* tags);
   virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
@@ -223,7 +255,7 @@ struct Tag_Value_Aggregator : public Tag_Value
   Tag_Value_Aggregator(const string& func_name, int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);  
   
-  virtual bool needs_tags(const std::string& set_name) const { return set_name == input; }
+  virtual uint needs_tags(const std::string& set_name) const { return set_name == input ? TAGS : 0; }
   virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
   virtual void update_value(const std::string& id, const std::string& type,
       const std::vector< std::pair< std::string, std::string > >* tags);

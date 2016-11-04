@@ -158,6 +158,28 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Tag_Value_Count stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   
+  attributes.clear();
+  attributes["k"] = "tags";
+  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  stmt.add_statement(&stmt4, "");
+  attributes.clear();
+  attributes["type"] = "tags";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Count stmt40(0, attributes, global_settings);
+  stmt4.add_statement(&stmt40, "");
+  
+  attributes.clear();
+  attributes["k"] = "members";
+  Set_Tag_Statement stmt5(0, attributes, global_settings);
+  stmt.add_statement(&stmt5, "");
+  attributes.clear();
+  attributes["type"] = "members";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Count stmt50(0, attributes, global_settings);
+  stmt5.add_statement(&stmt50, "");
+  
   stmt.execute(rman);
   
   {

@@ -1888,13 +1888,11 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
       || stmt->get_type() == RECURSE_WAY_RELATION
       || stmt->get_type() == RECURSE_RELATION_BACKWARDS)
   {
-    uint32 source_type;    
+    uint32 source_type = Relation_Entry::RELATION;
     if (stmt->get_type() == RECURSE_NODE_RELATION)
       source_type = Relation_Entry::NODE;
     else if (stmt->get_type() == RECURSE_WAY_RELATION)
       source_type = Relation_Entry::WAY;
-    else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
-      source_type = Relation_Entry::RELATION;
     
     vector< Relation_Entry::Ref_Type > ids;
     if (stmt->get_type() == RECURSE_NODE_RELATION)

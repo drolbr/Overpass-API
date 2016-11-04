@@ -39,7 +39,7 @@ unsigned int count(const std::map< Index, std::vector< Skeleton > >& elems)
        it != elems.end(); ++it)
     result += it->second.size();
   return result;
-}	
+}
 
 
 template < typename T >

@@ -201,6 +201,107 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
     stmt.execute(rman);
   }
 }
+
+
+void count_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string from, uint64 ref, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+
+  {
+    std::map< std::string, std::string > attributes;
+    if (from != "_")
+      attributes["into"] = from;
+    Union_Statement union_(0, attributes, global_settings);
+
+    attributes.clear();
+    attributes["type"] = "node";
+    attributes["ref"] = to_string(ref + global_node_offset);
+    Id_Query_Statement stmt1(0, attributes, global_settings);
+    union_.add_statement(&stmt1, "");
+
+    attributes.clear();
+    attributes["type"] = "way";
+    attributes["ref"] = to_string(ref);
+    Id_Query_Statement stmt2(0, attributes, global_settings);
+    union_.add_statement(&stmt2, "");
+
+    attributes.clear();
+    attributes["type"] = "relation";
+    attributes["ref"] = to_string(ref);
+    Id_Query_Statement stmt3(0, attributes, global_settings);
+    union_.add_statement(&stmt3, "");
+    
+    union_.execute(rman);
+  }
+  
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Convert_Statement stmt(0, attributes, global_settings);
+  
+  attributes.clear();
+  attributes["k"] = "nodes";
+  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  if (from != "_")
+    attributes["from"] = from;
+  attributes["type"] = "nodes";
+  Tag_Value_Count stmt10(0, attributes, global_settings);
+  stmt1.add_statement(&stmt10, "");
+  
+  attributes.clear();
+  attributes["k"] = "ways";
+  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  stmt.add_statement(&stmt2, "");
+  attributes.clear();
+  attributes["type"] = "ways";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Count stmt20(0, attributes, global_settings);
+  stmt2.add_statement(&stmt20, "");
+  
+  attributes.clear();
+  attributes["k"] = "relations";
+  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  stmt.add_statement(&stmt3, "");
+  attributes.clear();
+  attributes["type"] = "relations";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Count stmt30(0, attributes, global_settings);
+  stmt3.add_statement(&stmt30, "");
+  
+  attributes.clear();
+  attributes["k"] = "tags";
+  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  stmt.add_statement(&stmt4, "");
+  attributes.clear();
+  attributes["type"] = "tags";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Count stmt40(0, attributes, global_settings);
+  stmt4.add_statement(&stmt40, "");
+  
+  attributes.clear();
+  attributes["k"] = "members";
+  Set_Tag_Statement stmt5(0, attributes, global_settings);
+  stmt.add_statement(&stmt5, "");
+  attributes.clear();
+  attributes["type"] = "members";
+  if (from != "_")
+    attributes["from"] = from;
+  Tag_Value_Count stmt50(0, attributes, global_settings);
+  stmt5.add_statement(&stmt50, "");
+  
+  stmt.execute(rman);
+  
+  {
+    const char* attributes[] = { 0 };
+    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    stmt.execute(rman);
+  }
+}
      
       
 int main(int argc, char* args[])
@@ -236,6 +337,8 @@ int main(int argc, char* args[])
       into_test(global_settings, transaction, "into", "some_set", global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "6"))
       tag_manipulation_test(global_settings, transaction, "rewrite", "some_set", 7, 14, "1000", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "7"))
+      count_test(global_settings, transaction, "count-from-default", "_", 1, global_node_offset);
 
     std::cout<<"</osm>\n";
   }

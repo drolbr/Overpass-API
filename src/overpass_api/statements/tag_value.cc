@@ -104,7 +104,7 @@ Generic_Statement_Maker< Tag_Value_Count > Tag_Value_Count::statement_maker("val
 
 Tag_Value_Count::Tag_Value_Count
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_)
+    : Tag_Value(line_number_), counter(0)
 {
   std::map< std::string, std::string > attributes;
   
@@ -123,13 +123,103 @@ Tag_Value_Count::Tag_Value_Count
     to_count = relations;
   else if (attributes["type"] == "deriveds")
     to_count = deriveds;
+  else if (attributes["type"] == "tags")
+    to_count = tags;
+  else if (attributes["type"] == "members")
+    to_count = members;
   else
   {
     ostringstream temp("");
     temp<<"For the attribute \"type\" of the element \"value-count\""
-        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", or \"deriveds\" strings.";
+        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", \"deriveds\", \"tags\", "
+          "or \"members\" strings.";
     add_static_error(temp.str());
   }
+}
+
+
+uint Tag_Value_Count::needs_tags(const std::string& set_name) const
+{
+  if (set_name != input)
+    return 0;
+  
+  if (to_count == tags)
+    return TAGS;
+  else if (to_count == members)
+    return SKELETON;
+  return 0;
+}
+
+
+void Tag_Value_Count::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (to_count == Tag_Value_Count::tags && tags)
+    counter += tags->size();
+}
+
+
+void Tag_Value_Count::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (to_count == Tag_Value_Count::tags && tags)
+    counter += tags->size();
+}
+
+
+void Tag_Value_Count::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (to_count == Tag_Value_Count::tags && tags)
+    counter += tags->size();
+  else if (to_count == Tag_Value_Count::members)
+    counter += elem.nds.size();
+}
+
+
+void Tag_Value_Count::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (to_count == Tag_Value_Count::tags && tags)
+    counter += tags->size();
+  else if (to_count == Tag_Value_Count::members)
+    counter += elem.nds.size();
+}
+
+
+void Tag_Value_Count::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (to_count == Tag_Value_Count::tags && tags)
+    counter += tags->size();
+  else if (to_count == Tag_Value_Count::members)
+    counter += elem.members.size();
+}
+
+
+void Tag_Value_Count::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (to_count == Tag_Value_Count::tags && tags)
+    counter += tags->size();
+  else if (to_count == Tag_Value_Count::members)
+    counter += elem.members.size();
+}
+
+
+void Tag_Value_Count::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (to_count == Tag_Value_Count::tags && tags)
+    counter += tags->size();
+}
+
+
+void Tag_Value_Count::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (to_count == Tag_Value_Count::tags && tags)
+    counter += tags->size();
 }
 
 
@@ -148,6 +238,8 @@ std::string Tag_Value_Count::eval(const std::map< std::string, Set >& sets, cons
     return to_string(count(from.relations) + count(from.attic_relations));
   else if (to_count == deriveds)
     return to_string(count(from.areas) + count(from.deriveds));
+  else if (to_count == tags || to_count == members)
+    return to_string(counter);
   return "0";
 }
 

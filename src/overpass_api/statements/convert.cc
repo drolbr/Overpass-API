@@ -100,8 +100,6 @@ void generate_elems(Transaction& transaction, const std::string& set_name,
     {
       const std::vector< std::pair< std::string, std::string > >* tags =
           tag_store.get(it_idx->first, *it_elem);
-      if (!tags)
-        continue;
       for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
           it_evals != evaluators.end(); ++it_evals)
       {
@@ -109,6 +107,8 @@ void generate_elems(Transaction& transaction, const std::string& set_name,
           (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tags);
       }
       
+      if (!tags)
+        continue;
       if (multi_evaluator)
       {
         std::vector< std::string > found_keys;
