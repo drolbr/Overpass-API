@@ -191,6 +191,34 @@ protected:
 };
 
 
+class Tag_Value_Equal : public Tag_Value_Pair_Operator
+{
+public:
+  Tag_Value_Equal(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-equal"; }
+  virtual ~Tag_Value_Equal() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Equal > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
+};
+
+
+class Tag_Value_Less : public Tag_Value_Pair_Operator
+{
+public:
+  Tag_Value_Less(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-less"; }
+  virtual ~Tag_Value_Less() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Less > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
+};
+
+
 class Tag_Value_Plus : public Tag_Value_Pair_Operator
 {
 public:

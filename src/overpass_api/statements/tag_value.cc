@@ -356,6 +356,74 @@ void Tag_Value_Pair_Operator::clear()
 //-----------------------------------------------------------------------------
 
 
+Generic_Statement_Maker< Tag_Value_Equal > Tag_Value_Equal::statement_maker("value-equal");
+
+
+Tag_Value_Equal::Tag_Value_Equal
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Pair_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Tag_Value_Equal::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+{
+  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
+  
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return lhs_l == rhs_l ? "1" : "0";
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return lhs_d == rhs_d ? "1" : "0";
+  
+  return lhs_s == rhs_s ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Less > Tag_Value_Less::statement_maker("value-less");
+
+
+Tag_Value_Less::Tag_Value_Less
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Pair_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Tag_Value_Less::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+{
+  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
+  
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return lhs_l < rhs_l ? "1" : "0";
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return lhs_d < rhs_d ? "1" : "0";
+  
+  return lhs_s < rhs_s ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Generic_Statement_Maker< Tag_Value_Plus > Tag_Value_Plus::statement_maker("value-plus");
 
 

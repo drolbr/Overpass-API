@@ -3595,65 +3595,130 @@ int main(int argc, char* args[])
       "  </count-from-foo>\n";
     if (string(args[2]) == "make_9")
       cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"1\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_10")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"1\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_11")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"1\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_12")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"0\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_13")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"0\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_14")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_15")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_16")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_17")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"0\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_18")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_19")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"0\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_20")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_21")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_22")
+      cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"9\"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_10")
+    if (string(args[2]) == "make_23")
       cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"10 \"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_11")
+    if (string(args[2]) == "make_24")
       cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"11\"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_12")
+    if (string(args[2]) == "make_25")
       cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\" 12_\"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_13")
+    if (string(args[2]) == "make_26")
       cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"100000000000000001\"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_14")
+    if (string(args[2]) == "make_27")
       cout<<
       "  <test-times id=\"1\">\n"
       "    <tag k=\"product\" v=\"13\"/>\n"
       "  </test-times>\n";
-    if (string(args[2]) == "make_15")
+    if (string(args[2]) == "make_28")
       cout<<
       "  <test-times id=\"1\">\n"
       "    <tag k=\"product\" v=\"NaN\"/>\n"
       "  </test-times>\n";
-    if (string(args[2]) == "make_16")
+    if (string(args[2]) == "make_29")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"difference\" v=\"-3\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_17")
+    if (string(args[2]) == "make_30")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"difference\" v=\"NaN\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_18")
+    if (string(args[2]) == "make_31")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"difference\" v=\"1\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_19")
+    if (string(args[2]) == "make_32")
       cout<<
       "  <test-divided id=\"1\">\n"
       "    <tag k=\"quotient\" v=\"0.88888888888889\"/>\n"
       "  </test-divided>\n";
-    if (string(args[2]) == "make_20")
+    if (string(args[2]) == "make_33")
       cout<<
       "  <test-divided id=\"1\">\n"
       "    <tag k=\"quotient\" v=\"NaN\"/>\n"
       "  </test-divided>\n";
-    if (string(args[2]) == "make_21" || string(args[2]) == "make_22")
+    if (string(args[2]) == "make_34" || string(args[2]) == "make_35")
       cout<<
       "  <union-value id=\"1\">\n"
       "    <tag k=\"node_key\" v=\"node_few\"/>\n"
@@ -3661,7 +3726,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
       "    <tag k=\"unused_key\" v=\"\"/>\n"
       "  </union-value>\n";
-    if (string(args[2]) == "make_23" || string(args[2]) == "make_24")
+    if (string(args[2]) == "make_36" || string(args[2]) == "make_37")
       cout<<
       "  <min-value id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
@@ -3669,7 +3734,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </min-value>\n";
-    if (string(args[2]) == "make_25" || string(args[2]) == "make_26")
+    if (string(args[2]) == "make_38" || string(args[2]) == "make_39")
       cout<<
       "  <max-value id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
@@ -3677,7 +3742,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </max-value>\n";
-    if (string(args[2]) == "make_27" || string(args[2]) == "make_28")
+    if (string(args[2]) == "make_40" || string(args[2]) == "make_41")
       cout<<
       "  <value-set id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
@@ -3685,7 +3750,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </value-set>\n";
-    if (string(args[2]) == "make_29")
+    if (string(args[2]) == "make_42")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key\" v=\"node_few\"/>\n"
@@ -3695,7 +3760,7 @@ int main(int argc, char* args[])
       "    <tag k=\"way_key\" v=\"way_few\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_30")
+    if (string(args[2]) == "make_43")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
@@ -3705,7 +3770,7 @@ int main(int argc, char* args[])
       "    <tag k=\"way_key\" v=\"way_few\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_31")
+    if (string(args[2]) == "make_44")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
@@ -3715,7 +3780,7 @@ int main(int argc, char* args[])
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_32")
+    if (string(args[2]) == "make_45")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
@@ -3725,7 +3790,7 @@ int main(int argc, char* args[])
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_33")
+    if (string(args[2]) == "make_46")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
@@ -3735,7 +3800,7 @@ int main(int argc, char* args[])
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_34")
+    if (string(args[2]) == "make_47")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
@@ -3743,7 +3808,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_35")
+    if (string(args[2]) == "make_48")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
@@ -3751,7 +3816,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_36")
+    if (string(args[2]) == "make_49")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
@@ -3759,7 +3824,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_37")
+    if (string(args[2]) == "make_50")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"&lt; multiple values found &gt;\"/>\n"
@@ -3767,16 +3832,16 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_38")
+    if (string(args[2]) == "make_51")
       cout<<
       "  <id-and-type id=\"1\">\n"
       "    <tag k=\"id\" v=\"1;"<<global_node_offset + 1<<";"<<global_node_offset + 2<<"\"/>\n"
       "    <tag k=\"type\" v=\"node;relation;way\"/>\n"
       "  </id-and-type>\n";
-    if (string(args[2]) == "make_39")
+    if (string(args[2]) == "make_52")
       cout<<
       "  <key-id id=\"42\"/>\n";
-    if (string(args[2]) == "make_40")
+    if (string(args[2]) == "make_53")
       cout<<
       "  <key-id id=\""<<global_node_offset + 2<<"\"/>\n";
 
