@@ -89,7 +89,7 @@ void generate_elems(Transaction& transaction, const std::string& set_name,
     std::vector< Set_Tag_Statement* >& evaluators, Set_Tag_Statement* multi_evaluator,
     const std::vector< std::string >& declared_keys, Set& into, Resource_Manager& rman, const std::string& type)
 {
-  Tag_Store< Index, Object > tag_store(transaction);
+  Tag_Store< Index, Object > tag_store(transaction);  
   tag_store.prefetch_all(items);
   
   for (typename std::map< Index, std::vector< Object > >::const_iterator it_idx = items.begin();
@@ -234,34 +234,37 @@ void Convert_Statement::execute(Resource_Manager& rman)
   
   std::map< std::string, Set >::const_iterator mit(rman.sets().find(input));
   
-  generate_elems< Uint32_Index, Node_Skeleton >(
-      *rman.get_transaction(), input, mit->second.nodes, evaluators,
-      multi_evaluator, declared_keys, into, rman, type);
-  if (rman.get_desired_timestamp() != NOW)
+  if (mit != rman.sets().end())
+  {
     generate_elems< Uint32_Index, Node_Skeleton >(
-        *rman.get_transaction(), input, mit->second.attic_nodes, evaluators,
+        *rman.get_transaction(), input, mit->second.nodes, evaluators,
         multi_evaluator, declared_keys, into, rman, type);
-  generate_elems< Uint31_Index, Way_Skeleton >(
-      *rman.get_transaction(), input, mit->second.ways, evaluators,
-      multi_evaluator, declared_keys, into, rman, type);
-  if (rman.get_desired_timestamp() != NOW)
+    if (rman.get_desired_timestamp() != NOW)
+      generate_elems< Uint32_Index, Node_Skeleton >(
+          *rman.get_transaction(), input, mit->second.attic_nodes, evaluators,
+          multi_evaluator, declared_keys, into, rman, type);
     generate_elems< Uint31_Index, Way_Skeleton >(
-        *rman.get_transaction(), input, mit->second.attic_ways, evaluators,
+        *rman.get_transaction(), input, mit->second.ways, evaluators,
         multi_evaluator, declared_keys, into, rman, type);
-  generate_elems< Uint31_Index, Relation_Skeleton >(
-      *rman.get_transaction(), input, mit->second.relations, evaluators,
-      multi_evaluator, declared_keys, into, rman, type);
-  if (rman.get_desired_timestamp() != NOW)
+    if (rman.get_desired_timestamp() != NOW)
+      generate_elems< Uint31_Index, Way_Skeleton >(
+          *rman.get_transaction(), input, mit->second.attic_ways, evaluators,
+          multi_evaluator, declared_keys, into, rman, type);
     generate_elems< Uint31_Index, Relation_Skeleton >(
-        *rman.get_transaction(), input, mit->second.attic_relations, evaluators,
+        *rman.get_transaction(), input, mit->second.relations, evaluators,
         multi_evaluator, declared_keys, into, rman, type);
-  if (!mit->second.areas.empty())
-    generate_elems< Uint31_Index, Area_Skeleton >(
-        *rman.get_transaction(), input, mit->second.areas, evaluators,
+    if (rman.get_desired_timestamp() != NOW)
+      generate_elems< Uint31_Index, Relation_Skeleton >(
+          *rman.get_transaction(), input, mit->second.attic_relations, evaluators,
+          multi_evaluator, declared_keys, into, rman, type);
+    if (!mit->second.areas.empty())
+      generate_elems< Uint31_Index, Area_Skeleton >(
+          *rman.get_transaction(), input, mit->second.areas, evaluators,
+          multi_evaluator, declared_keys, into, rman, type);
+    generate_elems< Uint31_Index, Derived_Structure >(
+        *rman.get_transaction(), input, mit->second.deriveds, evaluators,
         multi_evaluator, declared_keys, into, rman, type);
-  generate_elems< Uint31_Index, Derived_Structure >(
-      *rman.get_transaction(), input, mit->second.deriveds, evaluators,
-      multi_evaluator, declared_keys, into, rman, type);
+  }
     
   transfer_output(rman, into);
   rman.health_check(*this);

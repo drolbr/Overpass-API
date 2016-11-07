@@ -710,262 +710,147 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
-TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
-    Error_Output* error_output, bool expect_parenthesis, bool expect_generic)
+TStatement* stmt_from_function_expr(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
+    const std::string& type, const std::string& from, const Token_Node_Ptr& tree_it)
 {
-  std::vector< std::pair< int, TStatement* > > value_stack;
-
-  std::string func_from = "";
-  while (token.good() && *token != "," && *token != ";" && *token != "->" && *token != ")")
+  std::string key;
+  Object_Type key_type = tag;
+  if (tree_it->token == "::")
   {
-    if (*token == "(")
-    {
-      ++token;
-      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, true, expect_generic);
-      if (stmt)
-        value_stack.push_back(std::make_pair(0, stmt));
-      continue;
-    }
-    
-    if (*token == "==")
-    {
-      value_stack.push_back(std::make_pair(
-          2, create_tag_value_x< TStatement >("value-equal", stmt_factory, token.line_col().first)));
-      ++token;
-      continue;
-    }
-        
-    if (*token == "<")
-    {
-      value_stack.push_back(std::make_pair(
-          2, create_tag_value_x< TStatement >("value-less", stmt_factory, token.line_col().first)));
-      ++token;
-      continue;
-    }
-        
-    if (*token == "+")
-    {
-      value_stack.push_back(std::make_pair(
-          2, create_tag_value_x< TStatement >("value-plus", stmt_factory, token.line_col().first)));
-      ++token;
-      continue;
-    }
-        
-    if (*token == "-")
-    {
-      value_stack.push_back(std::make_pair(
-          2, create_tag_value_x< TStatement >("value-minus", stmt_factory, token.line_col().first)));
-      ++token;
-      continue;
-    }
-        
-    if (*token == "*")
-    {
-      value_stack.push_back(std::make_pair(
-          1, create_tag_value_x< TStatement >("value-times", stmt_factory, token.line_col().first)));
-      ++token;
-      continue;
-    }
-        
-    if (*token == "/")
-    {
-      value_stack.push_back(std::make_pair(
-          1, create_tag_value_x< TStatement >("value-divided", stmt_factory, token.line_col().first)));
-      ++token;
-      continue;
-    }
-        
-    std::string value = get_text_token(token, error_output, "Tag value");
-    if (value.empty())
-    {
-      ++token;
-      continue;
-    }
-    
-    if (!value.empty() && value[0] == '-' && !value_stack.empty() && value_stack.back().first == 0)
-    {
-      value_stack.push_back(std::make_pair(
-          2, create_tag_value_x< TStatement >("value-minus", stmt_factory, token.line_col().first)));
-      value = value.substr(1);
-    }
-      
-    func_from = "_";
-    if (token.good() && *token == ".")
-    {
-      ++token;
-      func_from = get_identifier_token(token, error_output, "Input set");
-    }
-    
-    if (!token.good() || *token != "(")
-      value_stack.push_back(std::make_pair(0, create_tag_value_fixed< TStatement >(
-          stmt_factory, value, token.line_col().first)));
-    else if (value == "count")
-    {
-      ++token;
-      std::string type = get_identifier_token(token, error_output, "Count type");
-      value_stack.push_back(std::make_pair(0, create_tag_value_count< TStatement >(
-          stmt_factory, type, func_from, token.line_col().first)));
-      clear_until_after(token, error_output, ")", true);
-    }
-    else if (value == "u")
-    {
-      ++token;
-      std::string key;
-      Object_Type key_type = tag;
-      if (token.good() && *token == "::")
-      {
-        ++token;
-        if (!token.good() || *token == ")")
-          key_type = expect_generic ? generic : tag;
-        else
-        {
-          if (*token == "id")
-            key_type = id;
-          else if (*token == "type")
-            key_type = object_type;
-          else
-            error_output->add_parse_error("In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"", token.line_col().first);
-          ++token;
-        }          
-      }
-      else
-        key = get_text_token(token, error_output, "Key to evaluate");
-      value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-union-value", key, key_type, func_from, token.line_col().first)));
-      clear_until_after(token, error_output, ")", true);
-    }
-    else if (value == "min")
-    {
-      ++token;
-      std::string key;
-      Object_Type key_type = tag;
-      if (token.good() && *token == "::")
-      {
-        ++token;
-        if (!token.good() || *token == ")")
-          key_type = expect_generic ? generic : tag;
-        else
-        {
-          if (*token == "id")
-            key_type = id;
-          else if (*token == "type")
-            key_type = object_type;
-          else
-            error_output->add_parse_error("In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"", token.line_col().first);
-          ++token;
-        }          
-      }
-      else
-        key = get_text_token(token, error_output, "Key to evaluate");
-      value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-min-value", key, key_type, func_from, token.line_col().first)));
-      clear_until_after(token, error_output, ")", true);
-    }
-    else if (value == "max")
-    {
-      ++token;
-      std::string key;
-      Object_Type key_type = tag;
-      if (token.good() && *token == "::")
-      {
-        ++token;
-        if (!token.good() || *token == ")")
-          key_type = expect_generic ? generic : tag;
-        else
-        {
-          if (*token == "id")
-            key_type = id;
-          else if (*token == "type")
-            key_type = object_type;
-          else
-            error_output->add_parse_error("In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"", token.line_col().first);
-          ++token;
-        }          
-      }
-      else
-        key = get_text_token(token, error_output, "Key to evaluate");
-      value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-max-value", key, key_type, func_from, token.line_col().first)));
-      clear_until_after(token, error_output, ")", true);
-    }
-    else if (value == "set")
-    {
-      ++token;
-      std::string key;
-      Object_Type key_type = tag;
-      if (token.good() && *token == "::")
-      {
-        ++token;
-        if (!token.good() || *token == ")")
-          key_type = expect_generic ? generic : tag;
-        else
-        {
-          if (*token == "id")
-            key_type = id;
-          else if (*token == "type")
-            key_type = object_type;
-          else
-            error_output->add_parse_error("In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"", token.line_col().first);
-          ++token;
-        }          
-      }
-      else
-        key = get_text_token(token, error_output, "Key to evaluate");
-      value_stack.push_back(std::make_pair(0, create_tag_value_union_value< TStatement >(
-          stmt_factory, "value-set-value", key, key_type, func_from, token.line_col().first)));
-      clear_until_after(token, error_output, ")", true);
-    }
+    if (tree_it->rhs == 0)
+      key_type = generic;
+    else if (tree_it.rhs()->token == "id")
+      key_type = id;
+    else if (tree_it.rhs()->token == "type")
+      key_type = object_type;
     else
-      error_output->add_parse_error(std::string("\"") + value
-          + "\" is not a function name, but is followed by a left parenthesis", token.line_col().first);
-  }
-  
-  if (expect_parenthesis)
-  {
-    if (*token == ")")
-      ++token;
-    else
-      error_output->add_parse_error("A right parenthesis is missing", token.line_col().first);
+      error_output->add_parse_error(
+          "In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"",
+          tree_it->line_col.first);
   }
   else
+    key = tree_it->token;
+  return create_tag_value_union_value< TStatement >(
+      stmt_factory, type, key, key_type, from, tree_it->line_col.first);
+}
+
+
+template< class TStatement >
+TStatement* stmt_from_blank_function_expr(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
+    const std::string& type, const std::string& from, const Token_Node_Ptr& tree_it)
+{
+  if (type == "count")
+    return create_tag_value_count< TStatement >(stmt_factory, tree_it->token, from, tree_it->line_col.first);
+  else if (type == "u")
+    return stmt_from_function_expr< TStatement >(
+        stmt_factory, error_output, "value-union-value", from, tree_it);
+  else if (type == "min")
+    return stmt_from_function_expr< TStatement >(
+        stmt_factory, error_output, "value-min-value", from, tree_it);
+  else if (type == "max")
+    return stmt_from_function_expr< TStatement >(
+        stmt_factory, error_output, "value-max-value", from, tree_it);
+  else if (type == "set")
+    return stmt_from_function_expr< TStatement >(
+        stmt_factory, error_output, "value-set-value", from, tree_it);
+  return 0;
+}
+
+
+template< class TStatement >
+TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
+    const Token_Node_Ptr& tree_it)
+{
+  if (tree_it->lhs != 0)
   {
-    if (*token == ")")
+    if (tree_it->rhs != 0)
     {
-      error_output->add_parse_error("Unmatched right parenthesis found", token.line_col().first);
-      ++token;
-    }
-  }
-  
-  for (int i = 1; i <= 2; ++i)
-  {
-    int target_j = 0;
-    for (uint j = 0; j < value_stack.size(); ++j)
-    {
-      if (value_stack[j].first == i)
+      if (tree_it->token == "(")
+        return stmt_from_blank_function_expr< TStatement >(
+            stmt_factory, error_output, tree_it.lhs()->token, "_", tree_it.rhs());
+      else if (tree_it->token == ".")
       {
-        if (target_j == 0)
-          error_output->add_parse_error("Missing left hand size operand", token.line_col().first);
-        else if (j+1 == value_stack.size())
-          error_output->add_parse_error("Missing right hand size operand", token.line_col().first);
-        else if (value_stack[target_j-1].first != 0 || value_stack[j+1].first != 0)
-          error_output->add_parse_error("Missing operand between operators", token.line_col().first);
-        {
-          value_stack[j].second->add_statement(value_stack[target_j-1].second, "");
-          value_stack[j].second->add_statement(value_stack[j+1].second, "");
-          value_stack[target_j-1].first = 0;
-          value_stack[target_j-1].second = value_stack[j].second;
-          ++j;
-        }
+        if (tree_it.rhs()->token == "(")
+          return stmt_from_blank_function_expr< TStatement >(stmt_factory, error_output,
+              tree_it.lhs()->token, tree_it.rhs().lhs()->token, tree_it.rhs().rhs());
+      }
+      
+      TStatement* stmt = 0;
+      if (tree_it->token == "==")
+        stmt = create_tag_value_x< TStatement >("value-equal", stmt_factory, tree_it->line_col.first);
+      if (tree_it->token == "<")
+        stmt = create_tag_value_x< TStatement >("value-less", stmt_factory, tree_it->line_col.first);
+      if (tree_it->token == "+")
+        stmt = create_tag_value_x< TStatement >("value-plus", stmt_factory, tree_it->line_col.first);
+      if (tree_it->token == "-")
+        stmt = create_tag_value_x< TStatement >("value-minus", stmt_factory, tree_it->line_col.first);
+      if (tree_it->token == "*")
+        stmt = create_tag_value_x< TStatement >("value-times", stmt_factory, tree_it->line_col.first);
+      if (tree_it->token == "/")
+        stmt = create_tag_value_x< TStatement >("value-divided", stmt_factory, tree_it->line_col.first);
+    
+      if (stmt)
+      {
+        TStatement* lhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.lhs());
+        if (lhs)
+          stmt->add_statement(lhs, "");
+        
+        TStatement* rhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
+        if (rhs)
+          stmt->add_statement(rhs, "");
       }
       else
-        value_stack[target_j++] = value_stack[j];
+        error_output->add_parse_error(
+          std::string("\"") + tree_it->token + "\" cannot be used as binary operator",
+          tree_it->line_col.first);
+      return stmt;
     }
-    value_stack.resize(target_j);
+    
+    error_output->add_parse_error(
+        std::string("\"") + tree_it->token + "\" needs a right hand side argument",
+        tree_it->line_col.first);
+    return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.lhs());
   }
   
-  if (value_stack.size() == 1)
-    return value_stack.front().second;
-  error_output->add_parse_error("Invalid expression in value assignment", token.line_col().first);
+  if (tree_it->rhs != 0)
+  {
+    if (tree_it->token == "(")
+      return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
+    
+    if (tree_it->token == "-")
+    {
+      TStatement* stmt = create_tag_value_x< TStatement >("value-minus", stmt_factory, tree_it->line_col.first);
+      TStatement* lhs = create_tag_value_fixed< TStatement >(stmt_factory, "0", tree_it->line_col.first);
+      if (lhs)
+        stmt->add_statement(lhs, "");
+      TStatement* rhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
+      if (rhs)
+        stmt->add_statement(rhs, "");
+      return stmt;
+    }
+    
+    error_output->add_parse_error(
+        std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
+    return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
+  }
+  
+  return create_tag_value_fixed< TStatement >(stmt_factory, tree_it->token, tree_it->line_col.first);
+}
+
+
+template< class TStatement >
+TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
+    Error_Output* error_output)
+{
+  Token_Tree tree(token, error_output);
+  if (!tree.tree.empty())
+  {
+    TStatement* stmt = stmt_from_value_tree< TStatement >(stmt_factory, error_output,
+                                                          Token_Node_Ptr(tree, tree.tree[0].rhs));
+    if (stmt)
+      return stmt;
+  }
+  
   return 0;
 }
 
@@ -1026,7 +911,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
         key = get_text_token(token, error_output, "Tag key");
       
       clear_until_after(token, error_output, "=");
-      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, false, key_type == generic);
+      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output);
       if (stmt)
       {
         TStatement* key_stmt = create_set_tag_statement< TStatement >(

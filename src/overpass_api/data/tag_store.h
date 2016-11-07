@@ -260,7 +260,6 @@ template< typename Index, typename Object >
 void Tag_Store< Index, Object >::prefetch_all(const std::map< Index, std::vector< Object > >& elems)
 {
   use_index = true;
-  
   //generate std::set of relevant coarse indices
   std::set< Index > coarse_indices;
   generate_ids_by_coarse(coarse_indices, ids_by_coarse, elems);

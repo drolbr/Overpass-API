@@ -247,3 +247,106 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
     ++token;
   process_after(token, error_output, after);
 }
+
+
+Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  static std::map< std::string, uint > priority;
+  if (priority.empty())
+  {
+    priority[","] = 1;
+    priority["="] = 2;
+    priority[":"] = 3;
+    priority["?"] = 4;
+    priority["||"] = 5;
+    priority["&&"] = 6;
+    priority["=="] = 7;
+    priority["!="] = 7;
+    priority["<"] = 8;
+    priority["<="] = 8;
+    priority[">"] = 8;
+    priority[">="] = 8;
+    priority["+"] = 10;
+    priority["-"] = 10;
+    priority["*"] = 11;
+    priority["/"] = 11;
+    priority["%"] = 11;
+    priority["."] = 12;
+    priority["->"] = 12;
+    priority["!"] = 13;
+    priority["::"] = 15;
+  }
+  
+  tree.push_back(Token_Node("", std::make_pair(0u, 0u)));
+  std::vector< uint > stack;
+  stack.push_back(0);
+  
+  while (token.good() && *token != "," && *token != ";" && *token != "->")
+  {
+    if (*token == "(" || *token == "[" || *token == "{")
+    {
+      tree.push_back(Token_Node(*token, token.line_col()));
+      tree.back().lhs = tree[stack.back()].rhs;
+      tree[stack.back()].rhs = tree.size()-1;
+      stack.push_back(tree.size()-1);
+    }
+    else if (*token == ")" || *token == "]" ||*token == "}")
+    {
+      uint stack_pos = stack.size()-1;
+      while (stack_pos > 0 && tree[stack[stack_pos]].token != ")"
+          && tree[stack[stack_pos]].token != "]" && tree[stack[stack_pos]].token != "}")
+        --stack_pos;
+      if (stack.empty())
+        error_output->add_parse_error(std::string("Unmatched ") + *token, token.line_col().first);
+      else
+        stack.resize(stack_pos);
+    }
+    else
+    {
+      std::map< std::string, uint >::const_iterator prio_it = priority.find(*token);
+      uint prio = prio_it != priority.end() ? prio_it->second : 0;
+      bool unary_minus = false;
+      if (*token != "" && (*token)[0] == '-')
+      {
+        prio = 10;
+        unary_minus = true;
+      }
+      
+      if (prio > 0)
+      {
+        if (stack.back() < tree.size()-1)
+        {
+          uint stack_pos = stack.size()-1;
+          while (stack_pos > 0)
+          {
+            std::map< std::string, uint >::const_iterator stack_prio_it
+                = priority.find(tree[stack[stack_pos]].token);
+            if (stack_prio_it == priority.end() || stack_prio_it->second < prio)
+              break;
+            --stack_pos;
+          }
+          stack.resize(stack_pos+1);
+        }
+        tree.push_back(Token_Node(unary_minus ? "-" : *token, token.line_col()));
+        tree.back().lhs = tree[stack.back()].rhs;
+        tree[stack.back()].rhs = tree.size()-1;
+        stack.push_back(tree.size()-1);
+        
+        if (unary_minus)
+        {
+          tree.push_back(Token_Node((*token).substr(1), token.line_col()));
+          tree[stack.back()].rhs = tree.size()-1;
+        }
+      }
+      else if (tree[stack.back()].rhs == 0)
+      {
+        tree.push_back(Token_Node(*token, token.line_col()));
+        tree[stack.back()].rhs = tree.size()-1;
+      }
+      else
+        error_output->add_parse_error(std::string("Operator expected, but \"") + *token + "\"found.",
+                                      token.line_col().first);
+    }
+    ++token;
+  }
+}

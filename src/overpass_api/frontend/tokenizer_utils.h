@@ -49,3 +49,38 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 		       std::string target_1, std::string target_2, std::string target_3, std::string target_4,
 		       std::string target_5, bool after = true);
+
+
+struct Token_Node
+{
+  Token_Node(const std::string& token_, std::pair< uint, uint > line_col_)
+      : token(token_), line_col(line_col_), lhs(0), rhs(0) {}
+  
+  std::string token;
+  std::pair< uint, uint > line_col;
+  uint lhs;
+  uint rhs;
+};
+
+
+struct Token_Tree
+{
+  Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output);
+  
+  std::vector< Token_Node > tree;
+};
+
+
+struct Token_Node_Ptr
+{
+  Token_Node_Ptr(const Token_Tree& tree_, uint pos_ = 0) : tree(&tree_), pos(pos_) {}
+  
+  const Token_Node& operator*() const { return tree->tree[pos]; }
+  const Token_Node* operator->() const { return &tree->tree[pos]; }
+  Token_Node_Ptr lhs() const { return Token_Node_Ptr(*tree, tree->tree[pos].lhs); }
+  Token_Node_Ptr rhs() const { return Token_Node_Ptr(*tree, tree->tree[pos].rhs); }
+  
+private:
+  const Token_Tree* tree;
+  uint pos;
+};
