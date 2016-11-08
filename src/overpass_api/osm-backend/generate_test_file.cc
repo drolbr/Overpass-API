@@ -3770,15 +3770,35 @@ int main(int argc, char* args[])
       "  </test-minus>\n";
     if (string(args[2]) == "make_44")
       cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"negation\" v=\"-3.14\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_45")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"negation\" v=\"3\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_46")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"negation\" v=\"-100000000000000000\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_47")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"negation\" v=\"NaN\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_48")
+      cout<<
       "  <test-divided id=\"1\">\n"
       "    <tag k=\"quotient\" v=\"0.88888888888889\"/>\n"
       "  </test-divided>\n";
-    if (string(args[2]) == "make_45")
+    if (string(args[2]) == "make_49")
       cout<<
       "  <test-divided id=\"1\">\n"
       "    <tag k=\"quotient\" v=\"NaN\"/>\n"
       "  </test-divided>\n";
-    if (string(args[2]) == "make_46" || string(args[2]) == "make_47")
+    if (string(args[2]) == "make_50" || string(args[2]) == "make_51")
       cout<<
       "  <union-value id=\"1\">\n"
       "    <tag k=\"node_key\" v=\"node_few\"/>\n"
@@ -3786,7 +3806,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
       "    <tag k=\"unused_key\" v=\"\"/>\n"
       "  </union-value>\n";
-    if (string(args[2]) == "make_48" || string(args[2]) == "make_49")
+    if (string(args[2]) == "make_52" || string(args[2]) == "make_53")
       cout<<
       "  <min-value id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
@@ -3794,7 +3814,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </min-value>\n";
-    if (string(args[2]) == "make_50" || string(args[2]) == "make_51")
+    if (string(args[2]) == "make_54" || string(args[2]) == "make_55")
       cout<<
       "  <max-value id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
@@ -3802,7 +3822,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </max-value>\n";
-    if (string(args[2]) == "make_52" || string(args[2]) == "make_53")
+    if (string(args[2]) == "make_56" || string(args[2]) == "make_57")
       cout<<
       "  <value-set id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
@@ -3810,7 +3830,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </value-set>\n";
-    if (string(args[2]) == "make_54")
+    if (string(args[2]) == "make_58")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key\" v=\"node_few\"/>\n"
@@ -3820,55 +3840,55 @@ int main(int argc, char* args[])
       "    <tag k=\"way_key\" v=\"way_few\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_55")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_56")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_57")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_58")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
-      "  </any-key>\n";
     if (string(args[2]) == "make_59")
       cout<<
       "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_60")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_61")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_62")
+      cout<<
+      "  <any-key id=\"1\">\n"
+      "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+      "  </any-key>\n";
+    if (string(args[2]) == "make_63")
+      cout<<
+      "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_60")
+    if (string(args[2]) == "make_64")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
@@ -3876,7 +3896,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_61")
+    if (string(args[2]) == "make_65")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
@@ -3884,7 +3904,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_62")
+    if (string(args[2]) == "make_66")
       cout<<
       "  <any-key id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"&lt; multiple values found &gt;\"/>\n"
@@ -3892,16 +3912,16 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "  </any-key>\n";
-    if (string(args[2]) == "make_63")
+    if (string(args[2]) == "make_67")
       cout<<
       "  <id-and-type id=\"1\">\n"
       "    <tag k=\"id\" v=\"1;"<<global_node_offset + 1<<";"<<global_node_offset + 2<<"\"/>\n"
       "    <tag k=\"type\" v=\"node;relation;way\"/>\n"
       "  </id-and-type>\n";
-    if (string(args[2]) == "make_64")
+    if (string(args[2]) == "make_68")
       cout<<
       "  <key-id id=\"42\"/>\n";
-    if (string(args[2]) == "make_65")
+    if (string(args[2]) == "make_69")
       cout<<
       "  <key-id id=\""<<global_node_offset + 2<<"\"/>\n";
 

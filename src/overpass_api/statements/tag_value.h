@@ -191,6 +191,44 @@ protected:
 };
 
 
+class Tag_Value_Prefix_Operator : public Tag_Value
+{
+public:
+  Tag_Value_Prefix_Operator(int line_number_);
+  virtual void add_statement(Statement* statement, string text);
+  virtual void execute(Resource_Manager& rman) {}
+  
+  virtual string get_result_name() const { return ""; }
+  
+  virtual uint needs_tags(const std::string& set_name) const
+  {
+    if (rhs)
+      return rhs->needs_tags(set_name);
+    return 0;
+  }
+  virtual void tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags);
+  virtual void clear();
+  
+protected:
+  Tag_Value* rhs;
+};
+
+
 class Tag_Value_And : public Tag_Value_Pair_Operator
 {
 public:
@@ -219,7 +257,7 @@ public:
 };
 
 
-class Tag_Value_Not : public Tag_Value_Pair_Operator
+class Tag_Value_Not : public Tag_Value_Prefix_Operator
 {
 public:
   Tag_Value_Not(int line_number_, const map< string, string >& input_attributes,
@@ -270,6 +308,20 @@ public:
   virtual ~Tag_Value_Plus() {}
   
   static Generic_Statement_Maker< Tag_Value_Plus > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
+};
+
+
+class Tag_Value_Negate : public Tag_Value_Prefix_Operator
+{
+public:
+  Tag_Value_Negate(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-negate"; }
+  virtual ~Tag_Value_Negate() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Negate > statement_maker;
   
   virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
 };

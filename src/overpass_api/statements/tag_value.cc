@@ -356,6 +356,95 @@ void Tag_Value_Pair_Operator::clear()
 //-----------------------------------------------------------------------------
 
 
+Tag_Value_Prefix_Operator::Tag_Value_Prefix_Operator(int line_number_) : Tag_Value(line_number_), rhs(0) {}
+
+
+void Tag_Value_Prefix_Operator::add_statement(Statement* statement, std::string text)
+{
+  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  if (!tag_value_)
+    substatement_error(get_name(), statement);
+  else if (!rhs)
+    rhs = tag_value_;
+  else
+    add_static_error(get_name() + " must have exactly one tag-value substatements.");
+}
+
+
+void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
+      const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  if (rhs)
+    rhs->tag_notice(set_name, elem, tags);
+}
+
+
+void Tag_Value_Prefix_Operator::clear()
+{
+  if (rhs)
+    rhs->clear();
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Generic_Statement_Maker< Tag_Value_And > Tag_Value_And::statement_maker("value-and");
 
 
@@ -419,7 +508,7 @@ Generic_Statement_Maker< Tag_Value_Not > Tag_Value_Not::statement_maker("value-n
 
 Tag_Value_Not::Tag_Value_Not
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Tag_Value_Prefix_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
@@ -537,6 +626,37 @@ std::string Tag_Value_Plus::eval(const std::map< std::string, Set >& sets, const
     return to_string(lhs_d + rhs_d);
   
   return lhs_s + rhs_s;
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Negate > Tag_Value_Negate::statement_maker("value-negate");
+
+
+Tag_Value_Negate::Tag_Value_Negate
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Prefix_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Tag_Value_Negate::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+{
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
+  
+  int64 rhs_l = 0;  
+  if (try_int64(rhs_s, rhs_l))
+    return to_string(-rhs_l);
+  
+  double rhs_d = 0;  
+  if (try_double(rhs_s, rhs_d))
+    return to_string(-rhs_d);
+  
+  return "NaN";
 }
 
 
