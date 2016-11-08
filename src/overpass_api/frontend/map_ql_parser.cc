@@ -729,7 +729,7 @@ TStatement* stmt_from_function_expr(typename TStatement::Factory& stmt_factory, 
           tree_it->line_col.first);
   }
   else
-    key = tree_it->token;
+    key = decode_json(tree_it->token, error_output);
   return create_tag_value_union_value< TStatement >(
       stmt_factory, type, key, key_type, from, tree_it->line_col.first);
 }
@@ -776,6 +776,10 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
       }
       
       TStatement* stmt = 0;
+      if (tree_it->token == "&&")
+        stmt = create_tag_value_x< TStatement >("value-and", stmt_factory, tree_it->line_col.first);
+      if (tree_it->token == "||")
+        stmt = create_tag_value_x< TStatement >("value-or", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "==")
         stmt = create_tag_value_x< TStatement >("value-equal", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "<")
@@ -828,13 +832,25 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
         stmt->add_statement(rhs, "");
       return stmt;
     }
+    else if (tree_it->token == "!")
+    {
+      TStatement* stmt = create_tag_value_x< TStatement >("value-not", stmt_factory, tree_it->line_col.first);
+      TStatement* lhs = create_tag_value_fixed< TStatement >(stmt_factory, "0", tree_it->line_col.first);
+      if (lhs)
+        stmt->add_statement(lhs, "");
+      TStatement* rhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
+      if (rhs)
+        stmt->add_statement(rhs, "");
+      return stmt;
+    }
     
     error_output->add_parse_error(
         std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
     return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
   }
   
-  return create_tag_value_fixed< TStatement >(stmt_factory, tree_it->token, tree_it->line_col.first);
+  return create_tag_value_fixed< TStatement >(stmt_factory,
+      decode_json(tree_it->token, error_output), tree_it->line_col.first);
 }
 
 

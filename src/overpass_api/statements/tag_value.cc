@@ -356,6 +356,91 @@ void Tag_Value_Pair_Operator::clear()
 //-----------------------------------------------------------------------------
 
 
+Generic_Statement_Maker< Tag_Value_And > Tag_Value_And::statement_maker("value-and");
+
+
+Tag_Value_And::Tag_Value_And
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Pair_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Tag_Value_And::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+{
+  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return lhs_d && rhs_d ? "1" : "0";
+  
+  return (lhs_s != "") && (rhs_s != "") ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Or > Tag_Value_Or::statement_maker("value-or");
+
+
+Tag_Value_Or::Tag_Value_Or
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Pair_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Tag_Value_Or::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+{
+  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return lhs_d || rhs_d ? "1" : "0";
+  
+  return (lhs_s != "") || (rhs_s != "") ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Not > Tag_Value_Not::statement_maker("value-not");
+
+
+Tag_Value_Not::Tag_Value_Not
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Pair_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Tag_Value_Not::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+{
+  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
+  
+  double rhs_d = 0;  
+  if (try_double(rhs_s, rhs_d))
+    return !rhs_d ? "1" : "0";
+  
+  return rhs_s == "" ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Generic_Statement_Maker< Tag_Value_Equal > Tag_Value_Equal::statement_maker("value-equal");
 
 

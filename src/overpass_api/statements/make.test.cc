@@ -698,103 +698,127 @@ int main(int argc, char* args[])
     if ((test_to_execute == "") || (test_to_execute == "8"))
       count_test(global_settings, transaction, "count-from-foo", "foo", 1, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "9"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "9.5", "9.50");
+      pair_test< Tag_Value_And >(global_settings, transaction, "test-and", "and", "1", "0");
     if ((test_to_execute == "") || (test_to_execute == "10"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "99", "099");
+      pair_test< Tag_Value_And >(global_settings, transaction, "test-and", "and", "0", "1");
     if ((test_to_execute == "") || (test_to_execute == "11"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "nine", "nine");
+      pair_test< Tag_Value_And >(global_settings, transaction, "test-and", "and", "false", "false");
     if ((test_to_execute == "") || (test_to_execute == "12"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "nine", "nine ");
+      pair_test< Tag_Value_And >(global_settings, transaction, "test-and", "and", "true", "");
     if ((test_to_execute == "") || (test_to_execute == "13"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "99", "99 ");
+      pair_test< Tag_Value_Or >(global_settings, transaction, "test-or", "or", "1", "0");
     if ((test_to_execute == "") || (test_to_execute == "14"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9.5", "10");
+      pair_test< Tag_Value_Or >(global_settings, transaction, "test-or", "or", "0", "1");
     if ((test_to_execute == "") || (test_to_execute == "15"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9", "10.1");
+      pair_test< Tag_Value_Or >(global_settings, transaction, "test-or", "or", "true", "true");
     if ((test_to_execute == "") || (test_to_execute == "16"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9", "10");
+      pair_test< Tag_Value_Or >(global_settings, transaction, "test-or", "or", "", "");
     if ((test_to_execute == "") || (test_to_execute == "17"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "10", "9");
+      pair_test< Tag_Value_Not >(global_settings, transaction, "test-not", "not", "void", "0");
     if ((test_to_execute == "") || (test_to_execute == "18"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "a", "b");
+      pair_test< Tag_Value_Not >(global_settings, transaction, "test-not", "not", "void", "1");
     if ((test_to_execute == "") || (test_to_execute == "19"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "b", "a");
+      pair_test< Tag_Value_Not >(global_settings, transaction, "test-not", "not", "void", "false");
     if ((test_to_execute == "") || (test_to_execute == "20"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "1", "a");
+      pair_test< Tag_Value_Not >(global_settings, transaction, "test-not", "not", "void", "");
     if ((test_to_execute == "") || (test_to_execute == "21"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", " ", "1");
+      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "9.5", "9.50");
     if ((test_to_execute == "") || (test_to_execute == "22"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "5.5", "3.5");
+      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "99", "099");
     if ((test_to_execute == "") || (test_to_execute == "23"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "1", "0 ");
+      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "nine", "nine");
     if ((test_to_execute == "") || (test_to_execute == "24"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "10");
+      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "nine", "nine ");
     if ((test_to_execute == "") || (test_to_execute == "25"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "2_");
+      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "99", "99 ");
     if ((test_to_execute == "") || (test_to_execute == "26"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "100000000000000000", "1");
+      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9.5", "10");
     if ((test_to_execute == "") || (test_to_execute == "27"))
-      pair_test< Tag_Value_Times >(global_settings, transaction, "test-times", "product", "2", "6.5");
+      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9", "10.1");
     if ((test_to_execute == "") || (test_to_execute == "28"))
-      pair_test< Tag_Value_Times >(global_settings, transaction, "test-times", "product", "_2", "7");
+      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9", "10");
     if ((test_to_execute == "") || (test_to_execute == "29"))
-      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "2", "5");
+      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "10", "9");
     if ((test_to_execute == "") || (test_to_execute == "30"))
-      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "_2", "5");
+      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "a", "b");
     if ((test_to_execute == "") || (test_to_execute == "31"))
-      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "100000000000000001", "100000000000000000");
+      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "b", "a");
     if ((test_to_execute == "") || (test_to_execute == "32"))
-      pair_test< Tag_Value_Divided >(global_settings, transaction, "test-divided", "quotient", "8", "9");
+      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "1", "a");
     if ((test_to_execute == "") || (test_to_execute == "33"))
-      pair_test< Tag_Value_Divided >(global_settings, transaction, "test-divided", "quotient", "_8", "9");
+      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", " ", "1");
     if ((test_to_execute == "") || (test_to_execute == "34"))
-      union_value_test(global_settings, transaction, "union-value", "_", 1, global_node_offset);
+      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "5.5", "3.5");
     if ((test_to_execute == "") || (test_to_execute == "35"))
-      union_value_test(global_settings, transaction, "union-value", "foo", 1, global_node_offset);
+      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "1", "0 ");
     if ((test_to_execute == "") || (test_to_execute == "36"))
-      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "10");
     if ((test_to_execute == "") || (test_to_execute == "37"))
-      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "2_");
     if ((test_to_execute == "") || (test_to_execute == "38"))
-      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "100000000000000000", "1");
     if ((test_to_execute == "") || (test_to_execute == "39"))
-      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+      pair_test< Tag_Value_Times >(global_settings, transaction, "test-times", "product", "2", "6.5");
     if ((test_to_execute == "") || (test_to_execute == "40"))
-      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+      pair_test< Tag_Value_Times >(global_settings, transaction, "test-times", "product", "_2", "7");
     if ((test_to_execute == "") || (test_to_execute == "41"))
-      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "2", "5");
     if ((test_to_execute == "") || (test_to_execute == "42"))
+      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "_2", "5");
+    if ((test_to_execute == "") || (test_to_execute == "43"))
+      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "100000000000000001", "100000000000000000");
+    if ((test_to_execute == "") || (test_to_execute == "44"))
+      pair_test< Tag_Value_Divided >(global_settings, transaction, "test-divided", "quotient", "8", "9");
+    if ((test_to_execute == "") || (test_to_execute == "45"))
+      pair_test< Tag_Value_Divided >(global_settings, transaction, "test-divided", "quotient", "_8", "9");
+    if ((test_to_execute == "") || (test_to_execute == "46"))
+      union_value_test(global_settings, transaction, "union-value", "_", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "47"))
+      union_value_test(global_settings, transaction, "union-value", "foo", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "48"))
+      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "49"))
+      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "50"))
+      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "51"))
+      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "52"))
+      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "53"))
+      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "54"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "", "",
           true, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "43"))
+    if ((test_to_execute == "") || (test_to_execute == "55"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "node_key", "",
           true, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "44"))
+    if ((test_to_execute == "") || (test_to_execute == "56"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "", "node_key",
           true, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "45"))
+    if ((test_to_execute == "") || (test_to_execute == "57"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
           true, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "46"))
+    if ((test_to_execute == "") || (test_to_execute == "58"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "foo", 7, 14, "way_key", "node_key",
           true, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "47"))
+    if ((test_to_execute == "") || (test_to_execute == "59"))
       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
           false, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "48"))
+    if ((test_to_execute == "") || (test_to_execute == "60"))
       any_key_test< Tag_Value_Min_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
           false, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "49"))
+    if ((test_to_execute == "") || (test_to_execute == "61"))
       any_key_test< Tag_Value_Max_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
           false, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "50"))
+    if ((test_to_execute == "") || (test_to_execute == "62"))
       any_key_test< Tag_Value_Union_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
           false, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "51"))
+    if ((test_to_execute == "") || (test_to_execute == "63"))
       value_id_type_test(global_settings, transaction, "id-and-type", "_", 1, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "52"))
+    if ((test_to_execute == "") || (test_to_execute == "64"))
       key_id_test(global_settings, transaction, "key-id", "_", 0, global_node_offset);
-    if ((test_to_execute == "") || (test_to_execute == "53"))
+    if ((test_to_execute == "") || (test_to_execute == "65"))
       key_id_test(global_settings, transaction, "key-id", "_", 1, global_node_offset);
 
     std::cout<<"</osm>\n";

@@ -20,6 +20,80 @@
 #include "tokenizer_utils.h"
 
 
+void decode_to_utf8(std::string& result, std::string::size_type& from, std::string::size_type& to,
+                    Error_Output* error_output)
+{
+  std::string::size_type limit = from + 4;
+  if (result.size() < limit)
+    limit = result.size();
+  
+  uint val = 0;
+  while (from < limit)
+  {
+    val *= 16;
+    if (result[from] <= '9' && result[from] >= '0')
+      val += (result[from] - '0');
+    else if (result[from] >= 'a' && result[from] <= 'f')
+      val += (result[from] - ('a' - 10));
+    else if (result[from] >= 'A' && result[from] <= 'F')
+      val += (result[from] - ('A' - 10));
+    else
+      break;
+    ++from;
+  }
+  if (val < 0x20)
+  {
+    if (error_output)
+      error_output->add_parse_error("Invalid UTF-8 character (value below 32) in escape sequence.", 0);
+  }
+  else if (val < 0x80)
+    result[to++] = val;
+  else if (val < 0x800)
+  {
+    result[to++] = 0xc0 | (val>>6);
+    result[to++] = 0x80 | (val & 0x3f);
+  }
+  else
+  {
+    result[to++] = 0xe0 | (val>>12);
+    result[to++] = 0x80 | ((val>>6) & 0x3f);
+    result[to++] = 0x80 | (val & 0x3f);
+  }
+}
+
+
+std::string decode_json(std::string result, Error_Output* error_output)
+{
+  if (result[0] != '\"' && result[0] != '\'')
+    return result;
+  
+  std::string::size_type j = 0;
+  for (std::string::size_type i = 1; i < result.size()-1; ++i)
+  {
+    if (result[i] == '\\')
+    {
+      ++i;
+      if (result[i] == 'n')
+        result[j++] = '\n';
+      else if (result[i] == 't')
+        result[j++] = '\t';
+      else if (result[i] == 'u')
+      {
+        decode_to_utf8(result, ++i, j, error_output);
+        --i;
+      }
+      else
+        result[j++] = result[i];
+    }
+    else
+      result[j++] = result[i];
+  }
+  result.resize(j);
+    
+  return result;
+}
+
+
 std::string decode_to_utf8(const std::string& token, std::string::size_type& pos, Error_Output* error_output)
 {
   uint val = 0;

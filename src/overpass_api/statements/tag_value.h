@@ -191,6 +191,48 @@ protected:
 };
 
 
+class Tag_Value_And : public Tag_Value_Pair_Operator
+{
+public:
+  Tag_Value_And(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-and"; }
+  virtual ~Tag_Value_And() {}
+  
+  static Generic_Statement_Maker< Tag_Value_And > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
+};
+
+
+class Tag_Value_Or : public Tag_Value_Pair_Operator
+{
+public:
+  Tag_Value_Or(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-or"; }
+  virtual ~Tag_Value_Or() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Or > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
+};
+
+
+class Tag_Value_Not : public Tag_Value_Pair_Operator
+{
+public:
+  Tag_Value_Not(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "value-not"; }
+  virtual ~Tag_Value_Not() {}
+  
+  static Generic_Statement_Maker< Tag_Value_Not > statement_maker;
+  
+  virtual std::string eval(const std::map< std::string, Set >& sets, const std::string* tag) const;
+};
+
+
 class Tag_Value_Equal : public Tag_Value_Pair_Operator
 {
 public:
