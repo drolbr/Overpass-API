@@ -22,6 +22,54 @@
 #include "tag_value.h"
 
 
+void Set_With_Context::prefetch(const Set_Usage& usage, const Set& set, Transaction& transaction)
+{
+  base = &set;
+  
+  if (usage.usage & Set_Usage::TAGS)
+  {
+    tag_store_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(transaction);
+    tag_store_nodes->prefetch_all(set.nodes);
+    
+    if (!set.attic_nodes.empty())
+    {
+      tag_store_attic_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(transaction);
+      tag_store_attic_nodes->prefetch_all(set.attic_nodes);
+    }
+    
+    tag_store_ways = new Tag_Store< Uint31_Index, Way_Skeleton >(transaction);
+    tag_store_ways->prefetch_all(set.ways);
+    
+    if (!set.attic_ways.empty())
+    {
+      tag_store_attic_ways = new Tag_Store< Uint31_Index, Way_Skeleton >(transaction);
+      tag_store_attic_ways->prefetch_all(set.attic_ways);
+    }
+    
+    tag_store_relations = new Tag_Store< Uint31_Index, Relation_Skeleton >(transaction);
+    tag_store_relations->prefetch_all(set.relations);
+    
+    if (!set.attic_relations.empty())
+    {
+      tag_store_attic_relations = new Tag_Store< Uint31_Index, Relation_Skeleton >(transaction);
+      tag_store_attic_relations->prefetch_all(set.attic_relations);
+    }
+    
+    if (!base->areas.empty())
+    {
+      tag_store_areas = new Tag_Store< Uint31_Index, Area_Skeleton >(transaction);
+      tag_store_areas->prefetch_all(set.areas);
+    }
+    
+    tag_store_deriveds = new Tag_Store< Uint31_Index, Derived_Structure >(transaction);
+    tag_store_deriveds->prefetch_all(set.deriveds);
+  }
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Generic_Statement_Maker< Set_Tag_Statement > Set_Tag_Statement::statement_maker("set-tag");
 
 
@@ -32,7 +80,6 @@ Set_Tag_Statement::Set_Tag_Statement
   std::map< std::string, std::string > attributes;
   
   attributes["k"] = "";
-  attributes["from"] = "_";
   attributes["keytype"] = "tag";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
@@ -45,16 +92,11 @@ Set_Tag_Statement::Set_Tag_Statement
       add_static_error("For the statement \"set-tag\" in mode \"keytype\"=\"tag\", "
           "the attribute \"k\" must be nonempty.");
   }
-  else if (attributes["keytype"] == "generic")
-  {
-    if (attributes["from"] != "")
-      input = attributes["from"];
-    else
-      add_static_error("For the statement \"set-tag\" in mode \"keytype\"=\"tag\", "
-          "the attribute \"from\" must be nonempty. Default is \"_\".");
-  }
   else if (attributes["keytype"] == "id")
     set_id = true;
+  else if (attributes["keytype"] != "generic")
+    add_static_error("For the attribute \"keytype\" of the element \"set-tag\""
+        " the only allowed values are \"tag\", \"id\", or \"generic\".");
 }
 
 
@@ -67,6 +109,99 @@ void Set_Tag_Statement::add_statement(Statement* statement, std::string text)
     add_static_error("set-tag must have exactly one tag-value substatement.");
   else
     substatement_error(get_name(), statement);
+}
+
+
+std::string Set_Tag_Statement::eval(const std::string* key)
+{
+  return tag_value ? tag_value->eval(key) : "";
+}
+
+
+std::string Set_Tag_Statement::eval(const Node_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return tag_value ? tag_value->eval(elem, tags, key) : "";
+}
+
+
+std::string Set_Tag_Statement::eval(const Attic< Node_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return tag_value ? tag_value->eval(elem, tags, key) : "";
+}
+
+
+std::string Set_Tag_Statement::eval(const Way_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return tag_value ? tag_value->eval(elem, tags, key) : "";
+}
+
+
+std::string Set_Tag_Statement::eval(const Attic< Way_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return tag_value ? tag_value->eval(elem, tags, key) : "";
+}
+
+
+std::string Set_Tag_Statement::eval(const Relation_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return tag_value ? tag_value->eval(elem, tags, key) : "";
+}
+
+
+std::string Set_Tag_Statement::eval(const Attic< Relation_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return tag_value ? tag_value->eval(elem, tags, key) : "";
+}
+
+
+std::string Set_Tag_Statement::eval(const Area_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return tag_value ? tag_value->eval(elem, tags, key) : "";
+}
+
+
+std::string Set_Tag_Statement::eval(const Derived_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return tag_value ? tag_value->eval(elem, tags, key) : "";
+}
+
+
+void Set_Tag_Statement::prefetch(const Set_With_Context& set)
+{
+  if (tag_value)
+    tag_value->prefetch(set);
+}
+
+
+std::pair< std::vector< Set_Usage >, uint > Set_Tag_Statement::used_sets() const
+{
+  if (tag_value)
+  {
+    if (input == "")
+      return tag_value->used_sets();
+    
+    std::pair< std::vector< Set_Usage >, uint > result = tag_value->used_sets();
+    std::vector< Set_Usage >::iterator it =
+        std::lower_bound(result.first.begin(), result.first.end(), Set_Usage(input, 0u));
+    if (it == result.first.end() || it->set_name != input)
+      result.first.insert(it, Set_Usage(input, Set_Usage::TAGS));
+    else
+      it->usage |= Set_Usage::TAGS;
+    return result;
+  }
+  
+  std::vector< Set_Usage > result;
+  if (input != "")
+    result.push_back(Set_Usage(input, Set_Usage::TAGS));
+  return std::make_pair(result, 0u);
 }
 
 
@@ -90,9 +225,87 @@ Tag_Value_Fixed::Tag_Value_Fixed
 }
 
 
-std::string Tag_Value_Fixed::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Id > Tag_Value_Id::statement_maker("value-id");
+
+
+Tag_Value_Id::Tag_Value_Id
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_)
 {
-  return value;
+  std::map< std::string, std::string > attributes;
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Type > Tag_Value_Type::statement_maker("value-type");
+
+
+Tag_Value_Type::Tag_Value_Type
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+std::string find_value(const std::vector< std::pair< std::string, std::string > >* tags, const std::string& key)
+{
+  if (!tags)
+    return "";
+  
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
+      it != tags->end(); ++it)
+  {
+    if (it->first == key)
+      return it->second;
+  }
+  
+  return "";
+}
+
+
+Generic_Statement_Maker< Tag_Value_Value > Tag_Value_Value::statement_maker("value-value");
+
+
+Tag_Value_Value::Tag_Value_Value
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  
+  attributes["k"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  key = attributes["k"];
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Tag_Value_Generic > Tag_Value_Generic::statement_maker("value-generic");
+
+
+Tag_Value_Generic::Tag_Value_Generic
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
@@ -138,109 +351,139 @@ Tag_Value_Count::Tag_Value_Count
 }
 
 
-uint Tag_Value_Count::needs_tags(const std::string& set_name) const
+std::string Tag_Value_Count::eval(const std::string* key)
 {
-  if (set_name != input)
-    return 0;
+  if (to_count == Tag_Value_Count::members || to_count == Tag_Value_Count::tags)
+    return "0";
+  return to_string(counter);
+}
+
+
+std::string Tag_Value_Count::eval(const Node_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  if (to_count == Tag_Value_Count::members)
+    return "0";
+  else if (to_count == Tag_Value_Count::tags)
+    return to_string(tags->size());
+  return to_string(counter);
+}
+
+
+std::string Tag_Value_Count::eval(const Attic< Node_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  if (to_count == Tag_Value_Count::members)
+    return "0";
+  else if (to_count == Tag_Value_Count::tags)
+    return to_string(tags->size());
+  return to_string(counter);
+}
+
+
+std::string Tag_Value_Count::eval(const Way_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  if (to_count == Tag_Value_Count::members)
+    return to_string(elem->nds.size());
+  else if (to_count == Tag_Value_Count::tags)
+    return to_string(tags->size());
+  return to_string(counter);
+}
+
+
+std::string Tag_Value_Count::eval(const Attic< Way_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  if (to_count == Tag_Value_Count::members)
+    return to_string(elem->nds.size());
+  else if (to_count == Tag_Value_Count::tags)
+    return to_string(tags->size());
+  return to_string(counter);
+}
+
+
+std::string Tag_Value_Count::eval(const Relation_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  if (to_count == Tag_Value_Count::members)
+    return to_string(elem->members.size());
+  else if (to_count == Tag_Value_Count::tags)
+    return to_string(tags->size());
+  return to_string(counter);
+}
+
+
+std::string Tag_Value_Count::eval(const Attic< Relation_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  if (to_count == Tag_Value_Count::members)
+    return to_string(elem->members.size());
+  else if (to_count == Tag_Value_Count::tags)
+    return to_string(tags->size());
+  return to_string(counter);
+}
+
+
+std::string Tag_Value_Count::eval(const Area_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  if (to_count == Tag_Value_Count::members)
+    return "0";
+  else if (to_count == Tag_Value_Count::tags)
+    return to_string(tags->size());
+  return to_string(counter);
+}
+
+
+std::string Tag_Value_Count::eval(const Derived_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  if (to_count == Tag_Value_Count::members)
+    return "0";
+  else if (to_count == Tag_Value_Count::tags)
+    return to_string(tags->size());
+  return to_string(counter);
+}
+
+
+void Tag_Value_Count::prefetch(const Set_With_Context& set)
+{
+  if (set.name == input)
+  {
+    if (to_count == Tag_Value_Count::nodes)
+      counter = count(set.base->nodes) + count(set.base->attic_nodes);
+    else if (to_count == Tag_Value_Count::ways)
+      counter = count(set.base->ways) + count(set.base->attic_ways);
+    else if (to_count == Tag_Value_Count::relations)
+      counter = count(set.base->relations) + count(set.base->attic_relations);
+  }
+}
+
+
+std::pair< std::vector< Set_Usage >, uint > Tag_Value_Count::used_sets() const
+{
+  std::vector< Set_Usage > result;
+  if (to_count == Tag_Value_Count::nodes || to_count == Tag_Value_Count::ways || to_count == Tag_Value_Count::relations)
+    result.push_back(Set_Usage(input, 1u));
+  if (to_count == Tag_Value_Count::tags)
+    return std::make_pair(result, 2u);
+  else if (to_count == Tag_Value_Count::members)
+    return std::make_pair(result, 1u);
+  return std::make_pair(result, 0u);
+}
+
   
-  if (to_count == tags)
-    return TAGS;
-  else if (to_count == members)
-    return SKELETON;
-  return 0;
-}
-
-
-void Tag_Value_Count::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::vector< std::string > Tag_Value_Count::used_tags() const
 {
-  if (to_count == Tag_Value_Count::tags && tags)
-    counter += tags->size();
+  std::vector< std::string > result;
+  return result;
 }
+  
 
-
-void Tag_Value_Count::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+void Tag_Value_Count::clear()
 {
-  if (to_count == Tag_Value_Count::tags && tags)
-    counter += tags->size();
-}
-
-
-void Tag_Value_Count::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{
-  if (to_count == Tag_Value_Count::tags && tags)
-    counter += tags->size();
-  else if (to_count == Tag_Value_Count::members)
-    counter += elem.nds.size();
-}
-
-
-void Tag_Value_Count::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{
-  if (to_count == Tag_Value_Count::tags && tags)
-    counter += tags->size();
-  else if (to_count == Tag_Value_Count::members)
-    counter += elem.nds.size();
-}
-
-
-void Tag_Value_Count::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{
-  if (to_count == Tag_Value_Count::tags && tags)
-    counter += tags->size();
-  else if (to_count == Tag_Value_Count::members)
-    counter += elem.members.size();
-}
-
-
-void Tag_Value_Count::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{
-  if (to_count == Tag_Value_Count::tags && tags)
-    counter += tags->size();
-  else if (to_count == Tag_Value_Count::members)
-    counter += elem.members.size();
-}
-
-
-void Tag_Value_Count::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{
-  if (to_count == Tag_Value_Count::tags && tags)
-    counter += tags->size();
-}
-
-
-void Tag_Value_Count::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{
-  if (to_count == Tag_Value_Count::tags && tags)
-    counter += tags->size();
-}
-
-
-std::string Tag_Value_Count::eval(const std::map< std::string, Set >& sets, const std::string* key) const
-{
-  std::map< std::string, Set >::const_iterator mit(sets.find(input));
-  if (mit == sets.end())
-    return "";
-  const Set& from = mit->second;
-    
-  if (to_count == nodes)
-    return to_string(count(from.nodes) + count(from.attic_nodes));
-  else if (to_count == ways)
-    return to_string(count(from.ways) + count(from.attic_ways));
-  else if (to_count == relations)
-    return to_string(count(from.relations) + count(from.attic_relations));
-  else if (to_count == deriveds)
-    return to_string(count(from.areas) + count(from.deriveds));
-  else if (to_count == tags || to_count == members)
-    return to_string(counter);
-  return "0";
+  counter = 0;
 }
 
 
@@ -264,85 +507,145 @@ void Tag_Value_Pair_Operator::add_statement(Statement* statement, std::string te
 }
 
 
-void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Pair_Operator::eval(const std::string* key)
 {
-  if (lhs)
-    lhs->tag_notice(set_name, elem, tags);
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(lhs ? lhs->eval(key) : "", rhs ? rhs->eval(key) : "");
 }
 
 
-void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Pair_Operator::eval(const Node_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (lhs)
-    lhs->tag_notice(set_name, elem, tags);
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Pair_Operator::eval(const Attic< Node_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (lhs)
-    lhs->tag_notice(set_name, elem, tags);
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Pair_Operator::eval(const Way_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (lhs)
-    lhs->tag_notice(set_name, elem, tags);
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Pair_Operator::eval(const Attic< Way_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (lhs)
-    lhs->tag_notice(set_name, elem, tags);
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Pair_Operator::eval(const Relation_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (lhs)
-    lhs->tag_notice(set_name, elem, tags);
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Pair_Operator::eval(const Attic< Relation_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (lhs)
-    lhs->tag_notice(set_name, elem, tags);
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Pair_Operator::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Pair_Operator::eval(const Area_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (lhs)
-    lhs->tag_notice(set_name, elem, tags);
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
+
+std::string Tag_Value_Pair_Operator::eval(const Derived_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
+}
+
+    
+void Tag_Value_Pair_Operator::prefetch(const Set_With_Context& set)
+{
+  if (lhs)
+    lhs->prefetch(set);
+  if (rhs)
+    rhs->prefetch(set);
+}
+
+
+std::pair< std::vector< Set_Usage >, uint > union_usage(const std::pair< std::vector< Set_Usage >, uint >& lhs,
+    const std::pair< std::vector< Set_Usage >, uint >& rhs)
+{
+  std::vector< Set_Usage > result(lhs.first.size() + rhs.first.size(), Set_Usage("", 0u));
+    
+  std::vector< Set_Usage >::const_iterator it_lhs = lhs.first.begin();
+  std::vector< Set_Usage >::const_iterator it_rhs = rhs.first.begin();
+  std::vector< Set_Usage >::iterator it_res = result.begin();
+    
+  while (it_lhs != lhs.first.end() && it_rhs != rhs.first.end())
+  {
+    if (it_lhs->set_name < it_rhs->set_name)
+    {
+      *it_res = *it_lhs;
+      ++it_res;
+      ++it_lhs;        
+    }
+    else if (it_rhs->set_name < it_lhs->set_name)
+    {
+      *it_res = *it_rhs;
+      ++it_res;
+      ++it_rhs;
+    }
+    else
+    {
+      *it_res = *it_lhs;
+      it_res->usage |= it_rhs->usage;
+      ++it_res;
+      ++it_lhs;
+      ++it_rhs;
+    }
+  }
+  
+  it_res = std::copy(it_lhs, lhs.first.end(), it_res);
+  it_res = std::copy(it_rhs, rhs.first.end(), it_res);  
+  result.erase(it_res, result.end());
+  
+  return std::make_pair(result, lhs.second | rhs.second);
+}
+
+
+std::pair< std::vector< Set_Usage >, uint > Tag_Value_Pair_Operator::used_sets() const
+{
+  if (lhs && rhs)
+    return union_usage(lhs->used_sets(), rhs->used_sets());
+  else if (lhs)
+    return lhs->used_sets();
+  else if (rhs)
+    return rhs->used_sets();
+  return std::make_pair(std::vector< Set_Usage >(), 0u);
+}
+
+
+std::vector< std::string > Tag_Value_Pair_Operator::used_tags() const
+{
+  std::vector< std::string > lhs_result;
+  if (lhs)
+    lhs->used_tags().swap(lhs_result);
+  std::vector< std::string > rhs_result;
+  if (rhs)
+    rhs->used_tags().swap(rhs_result);
+  
+  std::vector< std::string > result(lhs_result.size() + rhs_result.size());
+  result.erase(std::set_union(lhs_result.begin(), lhs_result.end(), rhs_result.begin(), rhs_result.end(),
+      result.begin()), result.end());
+  return result;
+}
+  
 
 void Tag_Value_Pair_Operator::clear()
 {
@@ -371,69 +674,91 @@ void Tag_Value_Prefix_Operator::add_statement(Statement* statement, std::string 
 }
 
 
-void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Prefix_Operator::eval(const std::string* key)
 {
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(rhs ? rhs->eval(key) : "");
 }
 
 
-void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Prefix_Operator::eval(const Node_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Prefix_Operator::eval(const Attic< Node_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Prefix_Operator::eval(const Way_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Prefix_Operator::eval(const Attic< Way_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Prefix_Operator::eval(const Relation_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Prefix_Operator::eval(const Attic< Relation_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-void Tag_Value_Prefix_Operator::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
+std::string Tag_Value_Prefix_Operator::eval(const Area_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (rhs)
-    rhs->tag_notice(set_name, elem, tags);
+  return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
+
+std::string Tag_Value_Prefix_Operator::eval(const Derived_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+{
+  return process(rhs ? rhs->eval(elem, tags, key) : "");
+}
+
+    
+void Tag_Value_Prefix_Operator::prefetch(const Set_With_Context& set)
+{
+  if (rhs)
+    rhs->prefetch(set);
+}
+  
+
+std::pair< std::vector< Set_Usage >, uint > Tag_Value_Prefix_Operator::used_sets() const
+{
+  if (rhs)
+    return rhs->used_sets();
+  return std::make_pair(std::vector< Set_Usage >(), 0u);
+}
+
+
+std::vector< std::string > Tag_Value_Prefix_Operator::used_tags() const
+{
+  if (rhs)
+    return rhs->used_tags();
+  
+  return std::vector< std::string >();
+}
+  
 
 void Tag_Value_Prefix_Operator::clear()
 {
@@ -457,11 +782,8 @@ Tag_Value_And::Tag_Value_And
 }
 
 
-std::string Tag_Value_And::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_And::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   double lhs_d = 0;
   double rhs_d = 0;  
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
@@ -486,11 +808,8 @@ Tag_Value_Or::Tag_Value_Or
 }
 
 
-std::string Tag_Value_Or::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Or::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   double lhs_d = 0;
   double rhs_d = 0;  
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
@@ -515,10 +834,8 @@ Tag_Value_Not::Tag_Value_Not
 }
 
 
-std::string Tag_Value_Not::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Not::process(const std::string& rhs_s) const
 {
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   double rhs_d = 0;  
   if (try_double(rhs_s, rhs_d))
     return !rhs_d ? "1" : "0";
@@ -542,11 +859,8 @@ Tag_Value_Equal::Tag_Value_Equal
 }
 
 
-std::string Tag_Value_Equal::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
@@ -576,11 +890,8 @@ Tag_Value_Less::Tag_Value_Less
 }
 
 
-std::string Tag_Value_Less::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Less::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
@@ -610,11 +921,8 @@ Tag_Value_Plus::Tag_Value_Plus
 }
 
 
-std::string Tag_Value_Plus::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Plus::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
@@ -644,10 +952,8 @@ Tag_Value_Negate::Tag_Value_Negate
 }
 
 
-std::string Tag_Value_Negate::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Negate::process(const std::string& rhs_s) const
 {
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   int64 rhs_l = 0;  
   if (try_int64(rhs_s, rhs_l))
     return to_string(-rhs_l);
@@ -675,11 +981,8 @@ Tag_Value_Minus::Tag_Value_Minus
 }
 
 
-std::string Tag_Value_Minus::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Minus::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
@@ -709,11 +1012,8 @@ Tag_Value_Times::Tag_Value_Times
 }
 
 
-std::string Tag_Value_Times::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Times::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-  
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
@@ -743,11 +1043,8 @@ Tag_Value_Divided::Tag_Value_Divided
 }
 
 
-std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Divided::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  std::string lhs_s = lhs ? lhs->eval(sets, key) : "";
-  std::string rhs_s = rhs ? rhs->eval(sets, key) : "";
-
   // On purpose no int64 detection  
   
   double lhs_d = 0;
@@ -765,142 +1062,97 @@ std::string Tag_Value_Divided::eval(const std::map< std::string, Set >& sets, co
 Tag_Value_Aggregator::Tag_Value_Aggregator
     (const string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
-    : Tag_Value(line_number_), key_type(tag), value_set(false)
+    : Tag_Value(line_number_), rhs(0), input_set(0), value_set(false)
 {
   std::map< std::string, std::string > attributes;
   
   attributes["from"] = "_";
-  attributes["k"] = "";
-  attributes["keytype"] = "tag";
   
   eval_attributes_array(func_name, attributes, input_attributes);
   
-  input = attributes["from"];
-  key = attributes["k"];
-  
-  if (attributes["keytype"] == "tag")
-    ;
-  else if (attributes["keytype"] == "generic")
-    key_type = generic;
-  else if (attributes["keytype"] == "id")
-    key_type = id;
-  else if (attributes["keytype"] == "type")
-    key_type = type;
-  else
-    add_static_error(std::string("In statement \"") + func_name + "\" the attribute \"keytype\" must have the value "
-        "\"tag\", \"generic\", \"id\", or \"type\". \"tag\" will be taken as default.");
-  
-  if (key_type != tag)
-  {
-    if (key != "")
-      add_static_error(std::string("In statement \"") + func_name + "\" the attribute \"generic\" must have the value "
-          "\"no\" if the attribute \"k\" is a non-empty string.");      
-  }  
+  input = attributes["from"];  
 }
 
 
-void Tag_Value_Aggregator::update_value(const std::string& id, const std::string& type,
-    const std::vector< std::pair< std::string, std::string > >* tags)
+void Tag_Value_Aggregator::add_statement(Statement* statement, std::string text)
 {
-  if (key_type == Tag_Value_Aggregator::id)
+  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  if (!tag_value_)
+    substatement_error(get_name(), statement);
+  else if (!rhs)
+    rhs = tag_value_;
+  else
+    add_static_error(get_name() + " must have exactly one tag-value substatements.");
+}
+
+
+template< typename Index, typename Maybe_Attic, typename Object >
+void eval_elems(Tag_Value_Aggregator* aggregator, const std::map< Index, std::vector< Maybe_Attic > >& elems,
+    Tag_Store< Index, Object >* tag_store, const std::string* key)
+{
+  for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator idx_it = elems.begin();
+      idx_it != elems.end(); ++idx_it)
   {
-    if (value_set)
-      value = update_value(value, id);
-    else
+    for (typename std::vector< Maybe_Attic >::const_iterator elem_it = idx_it->second.begin();
+        elem_it != idx_it->second.end(); ++elem_it)
     {
-      value_set = true;
-      value = id;
-    }
-    return;
-  }
-  else if (key_type == Tag_Value_Aggregator::type)
-  {
-    if (value_set)
-      value = update_value(value, type);
-    else
-    {
-      value_set = true;
-      value = type;
-    }
-    return;
-  }
-  
-  if (!tags)
-    return;
-  
-  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
-      it != tags->end(); ++it)
-  {
-    if (it->first == key)
-    {
-      if (value_set)
-        value = update_value(value, it->second);
+      std::string value = aggregator->rhs->eval(&*elem_it, tag_store->get(idx_it->first, *elem_it), key);
+      
+      if (aggregator->value_set)
+        aggregator->value = aggregator->update_value(aggregator->value, value);
       else
       {
-        value_set = true;
-        value = it->second;
+        aggregator->value = value;
+        aggregator->value_set = true;
       }
-    }
-    else if (key_type == generic)
-    {
-      std::map< std::string, std::string >::iterator it_tag = value_per_key.find(it->first);
-      
-      if (it_tag == value_per_key.end())
-        value_per_key.insert(*it);
-      else if (it_tag->second != it->second)
-        it_tag->second = update_value(it_tag->second, it->second);
     }
   }
 }
 
-
-void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Node_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(to_string(elem.id.val()), "node", tags); }
-
-void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Node_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(to_string(elem.id.val()), "node", tags); }
-
-void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Way_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(to_string(elem.id.val()), "way", tags); }
-
-void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Way_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(to_string(elem.id.val()), "way", tags); }
-
-void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Relation_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(to_string(elem.id.val()), "relation", tags); }
-
-void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Attic< Relation_Skeleton >& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(to_string(elem.id.val()), "relation", tags); }
-
-void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Area_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(to_string(elem.id.val()), "area", tags); }
-
-void Tag_Value_Aggregator::tag_notice(const std::string& set_name, const Derived_Skeleton& elem,
-      const std::vector< std::pair< std::string, std::string > >* tags)
-{ update_value(to_string(elem.id.val()), elem.type_name, tags); }
-
-
-std::string Tag_Value_Aggregator::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+  
+std::string Tag_Value_Aggregator::eval_input(const std::string* key)
 {
-  if (key && key_type == Tag_Value_Aggregator::generic)
-    return value_per_key[*key];
-  else
-    return value;
+  if (!input_set || !rhs)
+    return "";
+  
+  value_set = false;
+  eval_elems(this, input_set->base->nodes, input_set->tag_store_nodes, key);
+  eval_elems(this, input_set->base->attic_nodes, input_set->tag_store_attic_nodes, key);
+  eval_elems(this, input_set->base->ways, input_set->tag_store_ways, key);
+  eval_elems(this, input_set->base->attic_ways, input_set->tag_store_attic_ways, key);
+  eval_elems(this, input_set->base->relations, input_set->tag_store_relations, key);
+  eval_elems(this, input_set->base->attic_relations, input_set->tag_store_attic_relations, key);
+  eval_elems(this, input_set->base->areas, input_set->tag_store_areas, key);
+  eval_elems(this, input_set->base->deriveds, input_set->tag_store_deriveds, key);
+  
+  return value;
 }
 
 
-void Tag_Value_Aggregator::clear()
+void Tag_Value_Aggregator::prefetch(const Set_With_Context& set)
 {
-  value_set = false;
-  value = "";
-  value_per_key.clear();
+  if (set.name == input)
+    input_set = &set;
+}
+
+  
+std::pair< std::vector< Set_Usage >, uint > Tag_Value_Aggregator::used_sets() const
+{
+  if (rhs)
+  {
+    std::pair< std::vector< Set_Usage >, uint > result = rhs->used_sets();
+    std::vector< Set_Usage >::iterator it =
+        std::lower_bound(result.first.begin(), result.first.end(), Set_Usage(input, 0u));
+    if (it == result.first.end() || it->set_name != input)
+      result.first.insert(it, Set_Usage(input, result.second));
+    else
+      it->usage |= result.second;
+    return result;
+  }
+  
+  std::vector< Set_Usage > result;
+  result.push_back(Set_Usage(input, 0u));
+  return std::make_pair(result, 0u);
 }
 
 
@@ -947,6 +1199,11 @@ std::string Tag_Value_Min_Value::update_value(const std::string& agg_value, cons
   if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
     return rhs_d < lhs_d ? new_value : agg_value;
   
+  if (new_value == "")
+    return agg_value;
+  if (agg_value == "")
+    return new_value;
+    
   return std::min(agg_value, new_value);
 }
 
@@ -981,6 +1238,33 @@ std::string Tag_Value_Max_Value::update_value(const std::string& agg_value, cons
 //-----------------------------------------------------------------------------
 
 
+Generic_Statement_Maker< Tag_Value_Sum_Value > Tag_Value_Sum_Value::statement_maker("value-sum-value");
+
+
+Tag_Value_Sum_Value::Tag_Value_Sum_Value
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Tag_Value_Aggregator("value-sum-value", line_number_, input_attributes, global_settings) {}
+
+
+std::string Tag_Value_Sum_Value::update_value(const std::string& agg_value, const std::string& new_value)
+{
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(agg_value, lhs_l) && try_int64(new_value, rhs_l))
+    return to_string(lhs_l + rhs_l);
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
+    return to_string(lhs_d + rhs_d);
+  
+  return "NaN";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Generic_Statement_Maker< Tag_Value_Set_Value > Tag_Value_Set_Value::statement_maker("value-set-value");
 
 
@@ -989,68 +1273,29 @@ Tag_Value_Set_Value::Tag_Value_Set_Value
     : Tag_Value_Aggregator("value-set-value", line_number_, input_attributes, global_settings) {}
 
 
-std::string Tag_Value_Set_Value::eval(const std::map< std::string, Set >& sets, const std::string* key) const
+std::string Tag_Value_Set_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
-  std::vector< std::string >* values_ = 0;
+  if (values.empty())
+    values.push_back(agg_value);
+  values.push_back(new_value);
   
-  if (key && key_type == Tag_Value_Aggregator::generic)
-  {
-    std::map< std::string, std::vector< std::string > >::iterator it = values_per_key.find(*key);
-    if (it == values_per_key.end())
-      return "";
-    values_ = &it->second;
-  }
-  else
-    values_ = &values;
-  
-  std::sort(values_->begin(), values_->end());
-  values_->erase(std::unique(values_->begin(), values_->end()), values_->end());
+  std::sort(values.begin(), values.end());
+  values.erase(std::unique(values.begin(), values.end()), values.end());
   
   std::string result;
-  
-  std::vector< std::string >::const_iterator it = values_->begin();
-  if (it != values_->end())
+  std::vector< std::string >::const_iterator it = values.begin();
+  if (it != values.end())
   {
     result = *it;
     ++it;
   }
-  for (; it != values_->end(); ++it)
+  for (; it != values.end(); ++it)
     result += ";" + *it;
-  
   return result;
-}
-
-
-void Tag_Value_Set_Value::update_value(const std::string& id, const std::string& type,
-    const std::vector< std::pair< std::string, std::string > >* tags)
-{
-  if (key_type == Tag_Value_Aggregator::id)
-  {
-    values.push_back(id);
-    return;
-  }
-  else if (key_type == Tag_Value_Aggregator::type)
-  {
-    values.push_back(type);
-    return;
-  }
-  
-  if (!tags)
-    return;
-  
-  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
-      it != tags->end(); ++it)
-  {
-    if (it->first == key)
-      values.push_back(it->second);
-    else if (key_type == Tag_Value_Aggregator::generic)
-      values_per_key[it->first].push_back(it->second);
-  }
 }
 
 
 void Tag_Value_Set_Value::clear()
 {
   values.clear();
-  values_per_key.clear();
 }

@@ -232,6 +232,16 @@ TStatement* create_tag_value_fixed(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
+TStatement* create_tag_value_value(typename TStatement::Factory& stmt_factory,
+    string key, uint line_nr)
+{
+  map< string, string > attr;
+  attr["k"] = key;
+  return stmt_factory.create_statement("value-value", line_nr, attr);
+}
+
+
+template< class TStatement >
 TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
     string type, string from, uint line_nr)
 {
@@ -810,6 +820,14 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
       return stmt;
     }
     
+    if (tree_it->token == "(")
+    {
+      if (tree_it.lhs()->token == "id")
+        return create_tag_value_x< TStatement >("value-id", stmt_factory, tree_it->line_col.first);
+      else if (tree_it.lhs()->token == "type")
+        return create_tag_value_x< TStatement >("value-type", stmt_factory, tree_it->line_col.first);
+    }
+    
     error_output->add_parse_error(
         std::string("\"") + tree_it->token + "\" needs a right hand side argument",
         tree_it->line_col.first);
@@ -820,6 +838,10 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
   {
     if (tree_it->token == "(")
       return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
+    
+    if (tree_it->token == "[")
+      return create_tag_value_value< TStatement >(stmt_factory, decode_json(tree_it.rhs()->token, error_output),
+          tree_it->line_col.first);
     
     if (tree_it->token == "-")
     {
@@ -848,6 +870,9 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
         std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
     return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
   }
+  
+  if (tree_it->token == "::")
+    return create_tag_value_x< TStatement >("value-generic", stmt_factory, tree_it->line_col.first);
   
   return create_tag_value_fixed< TStatement >(stmt_factory,
       decode_json(tree_it->token, error_output), tree_it->line_col.first);

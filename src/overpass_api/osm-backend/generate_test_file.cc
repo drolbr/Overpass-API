@@ -3581,8 +3581,8 @@ int main(int argc, char* args[])
       "    <tag k=\"nodes\" v=\"0\"/>\n"
       "    <tag k=\"ways\" v=\"0\"/>\n"
       "    <tag k=\"relations\" v=\"0\"/>\n"
-      "    <tag k=\"tags\" v=\"0\"/>\n"
-      "    <tag k=\"members\" v=\"0\"/>\n"
+      "    <tag k=\"tags\" v=\"\"/>\n"
+      "    <tag k=\"members\" v=\"\"/>\n"
       "  </count-from-default>\n";
     if (string(args[2]) == "make_8")
       cout<<
@@ -3978,22 +3978,22 @@ int main(int argc, char* args[])
     if (string(args[2]) == "convert_6")
       cout<<
       "  <rewrite id=\"2\">\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
       "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
       "  </rewrite>\n"
       "  <rewrite id=\"3\">\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
       "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
       "  </rewrite>\n"
       "  <rewrite id=\"4\">\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
       "    <tag k=\"way_key\" v=\"way_few\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
       "  </rewrite>\n"
       "  <rewrite id=\"5\">\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
       "  </rewrite>\n"
       "  <rewrite id=\"6\">\n"
       "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"

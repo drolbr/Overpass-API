@@ -163,22 +163,28 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
-  attributes["type"] = "tags";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt40(0, attributes, global_settings);
+  Tag_Value_Sum_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
+  attributes.clear();
+  attributes["type"] = "tags";
+  Tag_Value_Count stmt400(0, attributes, global_settings);
+  stmt40.add_statement(&stmt400, "");
   
   attributes.clear();
   attributes["k"] = "members";
   Set_Tag_Statement stmt5(0, attributes, global_settings);
   stmt.add_statement(&stmt5, "");
   attributes.clear();
-  attributes["type"] = "members";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt50(0, attributes, global_settings);
+  Tag_Value_Sum_Value stmt50(0, attributes, global_settings);
   stmt5.add_statement(&stmt50, "");
+  attributes.clear();
+  attributes["type"] = "members";
+  Tag_Value_Count stmt500(0, attributes, global_settings);
+  stmt50.add_statement(&stmt500, "");
   
   stmt.execute(rman);
   
@@ -307,44 +313,56 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  attributes["k"] = "node_key";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Union_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
+  attributes.clear();
+  attributes["k"] = "node_key";
+  Tag_Value_Value stmt100(0, attributes, global_settings);
+  stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
   attributes["k"] = "way_key";
   Set_Tag_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
-  attributes["k"] = "way_key";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Union_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
+  attributes.clear();
+  attributes["k"] = "way_key";
+  Tag_Value_Value stmt200(0, attributes, global_settings);
+  stmt20.add_statement(&stmt200, "");
   
   attributes.clear();
   attributes["k"] = "relation_key";
   Set_Tag_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
-  attributes["k"] = "relation_key";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Union_Value stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
+  attributes.clear();
+  attributes["k"] = "relation_key";
+  Tag_Value_Value stmt300(0, attributes, global_settings);
+  stmt30.add_statement(&stmt300, "");
   
   attributes.clear();
   attributes["k"] = "unused_key";
   Set_Tag_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
-  attributes["k"] = "unused_key";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Union_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
+  attributes.clear();
+  attributes["k"] = "unused_key";
+  Tag_Value_Value stmt400(0, attributes, global_settings);
+  stmt40.add_statement(&stmt400, "");
   
   stmt.execute(rman);
   
@@ -371,44 +389,56 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  attributes["k"] = "node_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Min_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
+  attributes.clear();
+  attributes["k"] = "node_key_7";
+  Tag_Value_Value stmt100(0, attributes, global_settings);
+  stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
   attributes["k"] = "way_key_7";
   Set_Tag_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
-  attributes["k"] = "way_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Min_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
+  attributes.clear();
+  attributes["k"] = "way_key_7";
+  Tag_Value_Value stmt200(0, attributes, global_settings);
+  stmt20.add_statement(&stmt200, "");
   
   attributes.clear();
   attributes["k"] = "relation_key_7";
   Set_Tag_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
-  attributes["k"] = "relation_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Min_Value stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
+  attributes.clear();
+  attributes["k"] = "relation_key_7";
+  Tag_Value_Value stmt300(0, attributes, global_settings);
+  stmt30.add_statement(&stmt300, "");
   
   attributes.clear();
   attributes["k"] = "unused_key_7";
   Set_Tag_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
-  attributes["k"] = "unused_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Min_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
+  attributes.clear();
+  attributes["k"] = "unused_key_7";
+  Tag_Value_Value stmt400(0, attributes, global_settings);
+  stmt40.add_statement(&stmt400, "");
   
   stmt.execute(rman);
   
@@ -435,44 +465,56 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  attributes["k"] = "node_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Max_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
+  attributes.clear();
+  attributes["k"] = "node_key_7";
+  Tag_Value_Value stmt100(0, attributes, global_settings);
+  stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
   attributes["k"] = "way_key_7";
   Set_Tag_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
-  attributes["k"] = "way_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Max_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
+  attributes.clear();
+  attributes["k"] = "way_key_7";
+  Tag_Value_Value stmt200(0, attributes, global_settings);
+  stmt20.add_statement(&stmt200, "");
   
   attributes.clear();
   attributes["k"] = "relation_key_7";
   Set_Tag_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
-  attributes["k"] = "relation_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Max_Value stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
+  attributes.clear();
+  attributes["k"] = "relation_key_7";
+  Tag_Value_Value stmt300(0, attributes, global_settings);
+  stmt30.add_statement(&stmt300, "");
   
   attributes.clear();
   attributes["k"] = "unused_key_7";
   Set_Tag_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
-  attributes["k"] = "unused_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Max_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
+  attributes.clear();
+  attributes["k"] = "unused_key_7";
+  Tag_Value_Value stmt400(0, attributes, global_settings);
+  stmt40.add_statement(&stmt400, "");
   
   stmt.execute(rman);
   
@@ -499,44 +541,56 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  attributes["k"] = "node_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Set_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
+  attributes.clear();
+  attributes["k"] = "node_key_7";
+  Tag_Value_Value stmt100(0, attributes, global_settings);
+  stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
   attributes["k"] = "way_key_7";
   Set_Tag_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
-  attributes["k"] = "way_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Set_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
+  attributes.clear();
+  attributes["k"] = "way_key_7";
+  Tag_Value_Value stmt200(0, attributes, global_settings);
+  stmt20.add_statement(&stmt200, "");
   
   attributes.clear();
   attributes["k"] = "relation_key_7";
   Set_Tag_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
-  attributes["k"] = "relation_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Set_Value stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
+  attributes.clear();
+  attributes["k"] = "relation_key_7";
+  Tag_Value_Value stmt300(0, attributes, global_settings);
+  stmt30.add_statement(&stmt300, "");
   
   attributes.clear();
   attributes["k"] = "unused_key_7";
   Set_Tag_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
-  attributes["k"] = "unused_key_7";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Set_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
+  attributes.clear();
+  attributes["k"] = "unused_key_7";
+  Tag_Value_Value stmt400(0, attributes, global_settings);
+  stmt40.add_statement(&stmt400, "");
   
   stmt.execute(rman);
   
@@ -563,22 +617,26 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  attributes["keytype"] = "id";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Set_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
+  attributes.clear();
+  Tag_Value_Id stmt100(0, attributes, global_settings);
+  stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
   attributes["k"] = "type";
   Set_Tag_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
-  attributes["keytype"] = "type";
   if (from != "_")
     attributes["from"] = from;
   Tag_Value_Set_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
+  attributes.clear();
+  Tag_Value_Type stmt200(0, attributes, global_settings);
+  stmt20.add_statement(&stmt200, "");
   
   stmt.execute(rman);
   

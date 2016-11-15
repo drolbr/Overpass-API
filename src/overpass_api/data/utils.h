@@ -75,4 +75,18 @@ inline bool try_int64(const std::string& input, int64& result)
 }
 
 
+template< typename T >
+struct Array
+{
+  Array(unsigned int size) : ptr(0)
+  {
+    if (size > 0)
+      ptr = new T[size];
+  }
+  ~Array() { delete[] ptr; }
+  
+  T* ptr;
+};
+
+
 #endif

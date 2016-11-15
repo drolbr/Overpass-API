@@ -81,177 +81,130 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
 }
 
 
-template< typename Index, typename Object >
-void notify_tags(Transaction& transaction, const std::string& set_name,
-    const std::map< Index, std::vector< Object > >& items,
-    std::vector< Set_Tag_Statement* >& evaluators, std::vector< std::string >* found_keys)
-{
-  Tag_Store< Index, Object > tag_store(transaction);
-  tag_store.prefetch_all(items);
-  
-  for (typename std::map< Index, std::vector< Object > >::const_iterator it_idx = items.begin();
-      it_idx != items.end(); ++it_idx)
-  {
-    for (typename std::vector< Object >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      const std::vector< std::pair< std::string, std::string > >* tags =
-          tag_store.get(it_idx->first, *it_elem);
-      for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
-          it_evals != evaluators.end(); ++it_evals)
-      {
-        if ((*it_evals)->get_tag_value() && (*it_evals)->get_tag_value()->needs_tags(set_name))
-          (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tags);
-      }
-      
-      if (!tags)
-        continue;
-      if (found_keys)
-      {
-        for (std::vector< std::pair< std::string, std::string > >::const_iterator it_keys = tags->begin();
-            it_keys != tags->end(); ++it_keys)
-          found_keys->push_back(it_keys->first);
-      }
-    }
-    
-    if (found_keys)
-    {
-      std::sort(found_keys->begin(), found_keys->end());
-      found_keys->erase(std::unique(found_keys->begin(), found_keys->end()), found_keys->end());
-    }
-  } 
-}
-
-
-template< typename Index, typename Object >
-void notify_tags(Transaction& transaction, const std::string& set_name,
-    const std::map< Index, std::vector< Attic< Object > > >& items,
-    std::vector< Set_Tag_Statement* >& evaluators, std::vector< std::string >* found_keys)
-{
-  Tag_Store< Index, Object > tag_store(transaction);
-  tag_store.prefetch_all(items);
-  
-  for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator it_idx = items.begin();
-      it_idx != items.end(); ++it_idx)
-  {
-    for (typename std::vector< Attic< Object > >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      const std::vector< std::pair< std::string, std::string > >* tags =
-          tag_store.get(it_idx->first, *it_elem);
-      if (!tags)
-        continue;
-      for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
-          it_evals != evaluators.end(); ++it_evals)
-      {
-        if ((*it_evals)->get_tag_value() && (*it_evals)->get_tag_value()->needs_tags(set_name))
-          (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tags);
-      }
-      
-      if (found_keys)
-      {
-        for (std::vector< std::pair< std::string, std::string > >::const_iterator it_keys = tags->begin();
-            it_keys != tags->end(); ++it_keys)
-          found_keys->push_back(it_keys->first);
-      }
-    }
-    
-    if (found_keys)
-    {
-      std::sort(found_keys->begin(), found_keys->end());
-      found_keys->erase(std::unique(found_keys->begin(), found_keys->end()), found_keys->end());
-    }
-  } 
-}
+// template< typename Index, typename Object >
+// void notify_tags(Transaction& transaction, const std::string& set_name,
+//     const std::map< Index, std::vector< Object > >& items,
+//     std::vector< Set_Tag_Statement* >& evaluators, std::vector< std::string >* found_keys)
+// {
+//   Tag_Store< Index, Object > tag_store(transaction);
+//   tag_store.prefetch_all(items);
+//   
+//   for (typename std::map< Index, std::vector< Object > >::const_iterator it_idx = items.begin();
+//       it_idx != items.end(); ++it_idx)
+//   {
+//     for (typename std::vector< Object >::const_iterator it_elem = it_idx->second.begin();
+//         it_elem != it_idx->second.end(); ++it_elem)
+//     {
+//       const std::vector< std::pair< std::string, std::string > >* tags =
+//           tag_store.get(it_idx->first, *it_elem);
+//       for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
+//           it_evals != evaluators.end(); ++it_evals)
+//       {
+//         if ((*it_evals)->get_tag_value() && (*it_evals)->get_tag_value()->needs_tags(set_name))
+//           (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tags);
+//       }
+//       
+//       if (!tags)
+//         continue;
+//       if (found_keys)
+//       {
+//         for (std::vector< std::pair< std::string, std::string > >::const_iterator it_keys = tags->begin();
+//             it_keys != tags->end(); ++it_keys)
+//           found_keys->push_back(it_keys->first);
+//       }
+//     }
+//     
+//     if (found_keys)
+//     {
+//       std::sort(found_keys->begin(), found_keys->end());
+//       found_keys->erase(std::unique(found_keys->begin(), found_keys->end()), found_keys->end());
+//     }
+//   } 
+// }
+// 
+// 
+// template< typename Index, typename Object >
+// void notify_tags(Transaction& transaction, const std::string& set_name,
+//     const std::map< Index, std::vector< Attic< Object > > >& items,
+//     std::vector< Set_Tag_Statement* >& evaluators, std::vector< std::string >* found_keys)
+// {
+//   Tag_Store< Index, Object > tag_store(transaction);
+//   tag_store.prefetch_all(items);
+//   
+//   for (typename std::map< Index, std::vector< Attic< Object > > >::const_iterator it_idx = items.begin();
+//       it_idx != items.end(); ++it_idx)
+//   {
+//     for (typename std::vector< Attic< Object > >::const_iterator it_elem = it_idx->second.begin();
+//         it_elem != it_idx->second.end(); ++it_elem)
+//     {
+//       const std::vector< std::pair< std::string, std::string > >* tags =
+//           tag_store.get(it_idx->first, *it_elem);
+//       if (!tags)
+//         continue;
+//       for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
+//           it_evals != evaluators.end(); ++it_evals)
+//       {
+//         if ((*it_evals)->get_tag_value() && (*it_evals)->get_tag_value()->needs_tags(set_name))
+//           (*it_evals)->get_tag_value()->tag_notice(set_name, *it_elem, tags);
+//       }
+//       
+//       if (found_keys)
+//       {
+//         for (std::vector< std::pair< std::string, std::string > >::const_iterator it_keys = tags->begin();
+//             it_keys != tags->end(); ++it_keys)
+//           found_keys->push_back(it_keys->first);
+//       }
+//     }
+//     
+//     if (found_keys)
+//     {
+//       std::sort(found_keys->begin(), found_keys->end());
+//       found_keys->erase(std::unique(found_keys->begin(), found_keys->end()), found_keys->end());
+//     }
+//   } 
+// }
 
 
 void Make_Statement::execute(Resource_Manager& rman)
 {
-  std::vector< std::string > declared_keys;
+  std::pair< std::vector< Set_Usage >, uint > set_usage;
   for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-  {
-    if ((*it)->get_key())
-      declared_keys.push_back(*(*it)->get_key());
-  }
-  std::sort(declared_keys.begin(), declared_keys.end());
-  declared_keys.erase(std::unique(declared_keys.begin(), declared_keys.end()), declared_keys.end());
-
-  for (std::map< std::string, Set >::const_iterator it_set = rman.sets().begin(); it_set != rman.sets().end();
-      ++it_set)
-  {
-    bool needs_tags = multi_evaluator;
-    for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-        needs_tags |= (*it)->get_tag_value() && (*it)->get_tag_value()->needs_tags(it_set->first);
-    
-    if (needs_tags)
-    {
-      bool multi_evaluator_ = multi_evaluator && multi_evaluator->get_input_name() == it_set->first;
-      std::vector< std::string > found_keys;
-      
-      notify_tags< Uint32_Index, Node_Skeleton >(
-          *rman.get_transaction(), it_set->first, it_set->second.nodes, evaluators,
-          multi_evaluator_ ? &found_keys : 0);
-      if (rman.get_desired_timestamp() != NOW)
-        notify_tags< Uint32_Index, Node_Skeleton >(
-            *rman.get_transaction(), it_set->first, it_set->second.attic_nodes, evaluators,
-            multi_evaluator_ ? &found_keys : 0);
-      notify_tags< Uint31_Index, Way_Skeleton >(
-          *rman.get_transaction(), it_set->first, it_set->second.ways, evaluators,
-          multi_evaluator_ ? &found_keys : 0);
-      if (rman.get_desired_timestamp() != NOW)
-        notify_tags< Uint31_Index, Way_Skeleton >(
-            *rman.get_transaction(), it_set->first, it_set->second.attic_ways, evaluators,
-            multi_evaluator_ ? &found_keys : 0);
-      notify_tags< Uint31_Index, Relation_Skeleton >(
-          *rman.get_transaction(), it_set->first, it_set->second.relations, evaluators,
-          multi_evaluator_ ? &found_keys : 0);
-      if (rman.get_desired_timestamp() != NOW)
-        notify_tags< Uint31_Index, Relation_Skeleton >(
-            *rman.get_transaction(), it_set->first, it_set->second.attic_relations, evaluators,
-            multi_evaluator_ ? &found_keys : 0);
-      if (!it_set->second.areas.empty())
-        notify_tags< Uint31_Index, Area_Skeleton >(
-            *rman.get_transaction(), it_set->first, it_set->second.areas, evaluators,
-            multi_evaluator_ ? &found_keys : 0);
-      notify_tags< Uint31_Index, Derived_Structure >(
-          *rman.get_transaction(), it_set->first, it_set->second.deriveds, evaluators,
-          multi_evaluator_ ? &found_keys : 0);
-      
-      if (multi_evaluator_)
-      {
-        found_keys.erase(std::set_difference(found_keys.begin(), found_keys.end(),
-            declared_keys.begin(), declared_keys.end(), found_keys.begin()), found_keys.end());
-        multi_evaluator->set_keys(found_keys);
-      }
-    }
-  }
+    set_usage = union_usage(set_usage, (*it)->used_sets());
   
+  Array< Set_With_Context > set_contexts(set_usage.first.size());
+  for (std::vector< Set_Usage >::iterator it = set_usage.first.begin(); it != set_usage.first.end(); ++it)
+  {
+    Set_With_Context& context = set_contexts.ptr[std::distance(set_usage.first.begin(), it)];
+    context.name = it->set_name;
+    
+    std::map< std::string, Set >::const_iterator mit(rman.sets().find(context.name));
+    if (mit != rman.sets().end())
+      context.prefetch(*it, mit->second, *rman.get_transaction());
+    
+    for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+      (*it)->prefetch(context);
+  }
+
   Set into;
   
   int64 id = 0;
   bool id_fixed = false;
   
-  std::vector< std::pair< std::string, std::string > > tags;
-  for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+  std::vector< std::pair< std::string, std::string > > result_tags;
+  
+  for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
+      it_evals != evaluators.end(); ++it_evals)
   {
-    if (!(*it)->get_tag_value())
-        continue;
-    
-    if ((*it)->should_set_id())
-      id_fixed = try_int64((*it)->eval(rman.sets(), 0), id);
-    else if ((*it)->get_key())
-      tags.push_back(std::make_pair(*(*it)->get_key(), (*it)->eval(rman.sets(), 0)));
-    else
-    {
-      const std::vector< std::string >& keys = *(*it)->get_keys();
-      for (std::vector< std::string >::const_iterator it_keys = keys.begin(); it_keys != keys.end(); ++it_keys)
-        tags.push_back(std::make_pair(*it_keys, (*it)->eval(rman.sets(), &*it_keys)));
-    }
-    (*it)->get_tag_value()->clear();
+    if (!(*it_evals)->has_value())
+      continue;
+    else if ((*it_evals)->get_key())
+      result_tags.push_back(std::make_pair(*(*it_evals)->get_key(), (*it_evals)->eval()));
+    else if ((*it_evals)->should_set_id())
+      id_fixed = try_int64((*it_evals)->eval(), id);
   }
 
   into.deriveds[Uint31_Index(0u)].push_back(Derived_Structure(
-      type, id_fixed ? id : rman.get_global_settings().dispense_derived_id(), tags));
+      type, id_fixed ? id : rman.get_global_settings().dispense_derived_id(), result_tags));
   
   transfer_output(rman, into);
   rman.health_check(*this);

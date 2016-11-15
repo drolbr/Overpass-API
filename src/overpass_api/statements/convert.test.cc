@@ -92,15 +92,10 @@ void just_copy_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["keytype"] = "generic";
-  if (from != "_")
-    attributes["from"] = from;
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  attributes["keytype"] = "generic";
-  if (from != "_")
-    attributes["from"] = from;
-  Tag_Value_Union_Value stmt10(0, attributes, global_settings);
+  Tag_Value_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   stmt.execute(rman);
@@ -129,8 +124,7 @@ void into_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  attributes["keytype"] = "generic";
-  Tag_Value_Union_Value stmt10(0, attributes, global_settings);
+  Tag_Value_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   stmt.execute(rman);
@@ -157,15 +151,10 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   
   attributes.clear();
   attributes["keytype"] = "generic";
-  if (from != "_")
-    attributes["from"] = from;
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  attributes["keytype"] = "generic";
-  if (from != "_")
-    attributes["from"] = from;
-  Tag_Value_Union_Value stmt10(0, attributes, global_settings);
+  Tag_Value_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   attributes.clear();
@@ -174,22 +163,16 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   attributes["v"] = "extra_value";
-  if (from != "_")
-    attributes["from"] = from;
   Tag_Value_Fixed stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   
   attributes.clear();
   attributes["k"] = "node_key";
-  if (from != "_")
-    attributes["from"] = from;
   Set_Tag_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   
   attributes.clear();
   attributes["k"] = "number";
-  if (from != "_")
-    attributes["from"] = from;
   Set_Tag_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   

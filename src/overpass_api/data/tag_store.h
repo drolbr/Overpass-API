@@ -16,6 +16,9 @@
 * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef DE__OSM3S___OVERPASS_API__DATA__TAG_STORE_H
+#define DE__OSM3S___OVERPASS_API__DATA__TAG_STORE_H
+
 
 #include "filenames.h"
 #include "../core/datatypes.h"
@@ -438,3 +441,6 @@ const std::vector< std::pair< std::string, std::string > >*
   else
     return 0;
 }
+
+
+#endif
