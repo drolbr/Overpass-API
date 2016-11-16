@@ -366,11 +366,11 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output)
     }
     else if (*token == ")" || *token == "]" ||*token == "}")
     {
-      uint stack_pos = stack.size()-1;
-      while (stack_pos > 0 && tree[stack[stack_pos]].token != ")"
-          && tree[stack[stack_pos]].token != "]" && tree[stack[stack_pos]].token != "}")
+      int stack_pos = stack.size()-1;
+      while (stack_pos >= 0 && tree[stack[stack_pos]].token != "("
+          && tree[stack[stack_pos]].token != "[" && tree[stack[stack_pos]].token != "{")
         --stack_pos;
-      if (stack.empty())
+      if (stack_pos < 0)
         error_output->add_parse_error(std::string("Unmatched ") + *token, token.line_col().first);
       else
         stack.resize(stack_pos);

@@ -211,10 +211,7 @@ TStatement* create_set_tag_statement(typename TStatement::Factory& stmt_factory,
   if (key_type == id)
     attr["keytype"] = "id";
   else if (key_type == generic)    
-  {
-    attr["from"] = key;
     attr["keytype"] = "generic";
-  }
   else
     attr["k"] = key;
   return stmt_factory.create_statement("set-tag", line_nr, attr);
@@ -254,18 +251,10 @@ TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_tag_value_union_value(typename TStatement::Factory& stmt_factory,
-    string type, string key, Object_Type key_type, string from, uint line_nr)
+    string type, string from, uint line_nr)
 {
   map< string, string > attr;
   attr["from"] = from;
-  if (key_type == generic)
-    attr["keytype"] = "generic";
-  else if (key_type == id)
-    attr["keytype"] = "id";
-  else if (key_type == object_type)
-    attr["keytype"] = "type";
-  else
-    attr["k"] = key;
   return stmt_factory.create_statement(type, line_nr, attr);
 }
 
@@ -720,50 +709,42 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
-TStatement* stmt_from_function_expr(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
-    const std::string& type, const std::string& from, const Token_Node_Ptr& tree_it)
-{
-  std::string key;
-  Object_Type key_type = tag;
-  if (tree_it->token == "::")
-  {
-    if (tree_it->rhs == 0)
-      key_type = generic;
-    else if (tree_it.rhs()->token == "id")
-      key_type = id;
-    else if (tree_it.rhs()->token == "type")
-      key_type = object_type;
-    else
-      error_output->add_parse_error(
-          "In aggregate functions after \"::\" the only allowed tokens are \"id\" or \"type\"",
-          tree_it->line_col.first);
-  }
-  else
-    key = decode_json(tree_it->token, error_output);
-  return create_tag_value_union_value< TStatement >(
-      stmt_factory, type, key, key_type, from, tree_it->line_col.first);
-}
+TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
+    const Token_Node_Ptr& tree_it);
 
 
 template< class TStatement >
 TStatement* stmt_from_blank_function_expr(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
     const std::string& type, const std::string& from, const Token_Node_Ptr& tree_it)
 {
+  TStatement* stmt = 0;
   if (type == "count")
     return create_tag_value_count< TStatement >(stmt_factory, tree_it->token, from, tree_it->line_col.first);
   else if (type == "u")
-    return stmt_from_function_expr< TStatement >(
-        stmt_factory, error_output, "value-union-value", from, tree_it);
+    stmt = create_tag_value_union_value< TStatement >(
+        stmt_factory, "value-union-value", from, tree_it->line_col.first);
   else if (type == "min")
-    return stmt_from_function_expr< TStatement >(
-        stmt_factory, error_output, "value-min-value", from, tree_it);
+    stmt = create_tag_value_union_value< TStatement >(
+        stmt_factory, "value-min-value", from, tree_it->line_col.first);
   else if (type == "max")
-    return stmt_from_function_expr< TStatement >(
-        stmt_factory, error_output, "value-max-value", from, tree_it);
+    stmt = create_tag_value_union_value< TStatement >(
+        stmt_factory, "value-max-value", from, tree_it->line_col.first);
+  else if (type == "sum")
+    stmt = create_tag_value_union_value< TStatement >(
+        stmt_factory, "value-sum-value", from, tree_it->line_col.first);
   else if (type == "set")
-    return stmt_from_function_expr< TStatement >(
-        stmt_factory, error_output, "value-set-value", from, tree_it);
-  return 0;
+    stmt = create_tag_value_union_value< TStatement >(
+        stmt_factory, "value-set-value", from, tree_it->line_col.first);
+    
+  if (stmt)
+  {
+    TStatement* rhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it);
+    if (stmt && rhs)
+      stmt->add_statement(rhs, "");
+  }
+  else
+    error_output->add_parse_error(std::string("Function \"") + type + "\" not known", tree_it->line_col.first);
+  return stmt;
 }
 
 
@@ -776,8 +757,8 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
     if (tree_it->rhs != 0)
     {
       if (tree_it->token == "(")
-        return stmt_from_blank_function_expr< TStatement >(
-            stmt_factory, error_output, tree_it.lhs()->token, "_", tree_it.rhs());
+        return stmt_from_blank_function_expr< TStatement >(stmt_factory, error_output,
+            tree_it.lhs()->token, "_", tree_it.rhs());
       else if (tree_it->token == ".")
       {
         if (tree_it.rhs()->token == "(")
