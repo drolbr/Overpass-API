@@ -694,63 +694,6 @@ void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
       
-// template< typename Tag_Value_X_Value >
-// void any_key_test(Parsed_Query& global_settings, Transaction& transaction,
-//     std::string type, std::string from, uint64 ref1, uint64 ref2, std::string key1, std::string key2,
-//     bool show_extra_keys, uint64 global_node_offset)
-// {
-//   Resource_Manager rman(transaction, &global_settings);
-//   prepare_value_test(global_settings, rman, from, ref1, ref2, global_node_offset);
-//   
-//   std::map< std::string, std::string > attributes;
-//   attributes["type"] = type;
-//   Make_Statement stmt(0, attributes, global_settings);
-//   
-//   attributes.clear();
-//   attributes["k"] = key1;
-//   Set_Tag_Statement stmt1(0, attributes, global_settings);
-//   attributes.clear();
-//   attributes["v"] = "val_" + key1;
-//   Tag_Value_Fixed stmt10(0, attributes, global_settings);
-//   if (show_extra_keys)
-//     stmt1.add_statement(&stmt10, "");
-//   if (key1 != "")
-//     stmt.add_statement(&stmt1, "");
-//   
-//   attributes.clear();
-//   attributes["keytype"] = "generic";
-//   if (from != "_")
-//     attributes["from"] = from;
-//   Set_Tag_Statement stmt2(0, attributes, global_settings);
-//   stmt.add_statement(&stmt2, "");
-//   attributes.clear();
-//   attributes["keytype"] = "generic";
-//   if (from != "_")
-//     attributes["from"] = from;
-//   Tag_Value_X_Value stmt20(0, attributes, global_settings);
-//   stmt2.add_statement(&stmt20, "");
-//   
-//   attributes.clear();
-//   attributes["k"] = key2;
-//   Set_Tag_Statement stmt3(0, attributes, global_settings);
-//   attributes.clear();
-//   attributes["v"] = "val_" + key2;
-//   Tag_Value_Fixed stmt30(0, attributes, global_settings);
-//   if (show_extra_keys)
-//     stmt3.add_statement(&stmt30, "");
-//   if (key2 != "")
-//     stmt.add_statement(&stmt3, "");
-//   
-//   stmt.execute(rman);
-//   
-//   {
-//     const char* attributes[] = { 0 };
-//     Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-//     stmt.execute(rman);
-//   }
-// }
-     
-      
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -886,33 +829,6 @@ int main(int argc, char* args[])
       set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "57"))
       set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "58"))
-//       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "", "",
-//           true, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "59"))
-//       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "node_key", "",
-//           true, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "60"))
-//       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "", "node_key",
-//           true, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "61"))
-//       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
-//           true, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "62"))
-//       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "foo", 7, 14, "way_key", "node_key",
-//           true, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "63"))
-//       any_key_test< Tag_Value_Set_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
-//           false, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "64"))
-//       any_key_test< Tag_Value_Min_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
-//           false, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "65"))
-//       any_key_test< Tag_Value_Max_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
-//           false, global_node_offset);
-//     if ((test_to_execute == "") || (test_to_execute == "66"))
-//       any_key_test< Tag_Value_Union_Value >(global_settings, transaction, "any-key", "_", 7, 14, "way_key", "node_key",
-//           false, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "58"))
       value_id_type_test(global_settings, transaction, "id-and-type", "_", 1, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "59"))
