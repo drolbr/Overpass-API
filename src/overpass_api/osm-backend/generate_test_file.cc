@@ -3830,98 +3830,98 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </value-set>\n";
+//     if (string(args[2]) == "make_58")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+//       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "  </any-key>\n";
+//     if (string(args[2]) == "make_59")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+//       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "  </any-key>\n";
+//     if (string(args[2]) == "make_60")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+//       "  </any-key>\n";
+//     if (string(args[2]) == "make_61")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
+//       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+//       "  </any-key>\n";
+//     if (string(args[2]) == "make_62")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
+//       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
+//       "  </any-key>\n";
+//     if (string(args[2]) == "make_63")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "  </any-key>\n";
+//     if (string(args[2]) == "make_64")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "  </any-key>\n";
+//     if (string(args[2]) == "make_65")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "  </any-key>\n";
+//     if (string(args[2]) == "make_66")
+//       cout<<
+//       "  <any-key id=\"1\">\n"
+//       "    <tag k=\"node_key_7\" v=\"&lt; multiple values found &gt;\"/>\n"
+//       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+//       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+//       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+//       "  </any-key>\n";
     if (string(args[2]) == "make_58")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_59")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_60")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_61")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_62")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"way_key\" v=\"val_way_key\"/>\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "    <tag k=\"node_key\" v=\"val_node_key\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_63")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_64")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_65")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_66")
-      cout<<
-      "  <any-key id=\"1\">\n"
-      "    <tag k=\"node_key_7\" v=\"&lt; multiple values found &gt;\"/>\n"
-      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
-      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
-      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
-      "  </any-key>\n";
-    if (string(args[2]) == "make_67")
       cout<<
       "  <id-and-type id=\"1\">\n"
       "    <tag k=\"id\" v=\"1;"<<global_node_offset + 1<<";"<<global_node_offset + 2<<"\"/>\n"
       "    <tag k=\"type\" v=\"node;relation;way\"/>\n"
       "  </id-and-type>\n";
-    if (string(args[2]) == "make_68")
+    if (string(args[2]) == "make_59")
       cout<<
       "  <key-id id=\"42\"/>\n";
-    if (string(args[2]) == "make_69")
+    if (string(args[2]) == "make_60")
       cout<<
       "  <key-id id=\""<<global_node_offset + 2<<"\"/>\n";
 

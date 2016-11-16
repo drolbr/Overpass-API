@@ -1096,7 +1096,8 @@ void eval_elems(Tag_Value_Aggregator* aggregator, const std::map< Index, std::ve
     for (typename std::vector< Maybe_Attic >::const_iterator elem_it = idx_it->second.begin();
         elem_it != idx_it->second.end(); ++elem_it)
     {
-      std::string value = aggregator->rhs->eval(&*elem_it, tag_store->get(idx_it->first, *elem_it), key);
+      std::string value = aggregator->rhs->eval(&*elem_it,
+          tag_store ? tag_store->get(idx_it->first, *elem_it) : 0, key);
       
       if (aggregator->value_set)
         aggregator->value = aggregator->update_value(aggregator->value, value);
@@ -1169,8 +1170,10 @@ Tag_Value_Union_Value::Tag_Value_Union_Value
 
 std::string Tag_Value_Union_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
-  if (agg_value == new_value)
+  if (new_value == "" || agg_value == new_value)
     return agg_value;
+  else if (agg_value == "")
+    return new_value;
   else
     return "< multiple values found >";
 }
@@ -1284,6 +1287,8 @@ std::string Tag_Value_Set_Value::update_value(const std::string& agg_value, cons
   
   std::string result;
   std::vector< std::string >::const_iterator it = values.begin();
+  if (it != values.end() && *it == "")
+    ++it;
   if (it != values.end())
   {
     result = *it;
