@@ -22,6 +22,7 @@
 
 #include "statement.h"
 #include "../data/tag_store.h"
+#include "../data/utils.h"
 
 #include <map>
 #include <string>

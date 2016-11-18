@@ -210,6 +210,10 @@ void Convert_Statement::execute(Resource_Manager& rman)
         context.name, context.base->deriveds, context.tag_store_deriveds, evaluators,
         multi_evaluator, declared_keys, into, rman, type);
   }
+      
+  for (std::vector< Set_Tag_Statement* >::const_iterator it_evals = evaluators.begin();
+      it_evals != evaluators.end(); ++it_evals)
+    (*it_evals)->clear();
     
   transfer_output(rman, into);
   rman.health_check(*this);

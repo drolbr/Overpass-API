@@ -102,6 +102,7 @@ statements_cc = \
   overpass_api/statements/convert.cc \
   overpass_api/statements/coord_query.cc \
   overpass_api/statements/difference.cc \
+  overpass_api/statements/filter.cc \
   overpass_api/statements/foreach.cc \
   overpass_api/statements/id_query.cc \
   overpass_api/statements/item.cc \

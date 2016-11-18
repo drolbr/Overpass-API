@@ -227,9 +227,9 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
+  attributes["type"] = "nodes";
   if (from != "_")
     attributes["from"] = from;
-  attributes["type"] = "nodes";
   Tag_Value_Count stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   

@@ -24,6 +24,7 @@
 #include "../output_formats/output_xml.h"
 #include "around.h"
 #include "bbox_query.h"
+#include "filter.h"
 #include "id_query.h"
 #include "item.h"
 #include "query.h"
@@ -334,24 +335,6 @@ void perform_key_regex_query
 }
 
 
-template< class T >
-string to_string(T d)
-{
-  ostringstream out;
-  out<<d;
-  return out.str();
-}
-
-
-template< >
-string to_string< double >(double d)
-{
-  ostringstream out;
-  out<<setprecision(14)<<d;
-  return out.str();
-}
-
-
 void perform_query_with_around
     (string id_type, string type, string key1, string value1, string db_dir, uint pattern_size,
      uint64 global_node_offset, bool big_radius = false)
@@ -618,6 +601,41 @@ void perform_query_with_bbox
       cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");
     }
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_filter_with_bbox
+    (string type, string key1, string value1,
+     string south, string north, string west, string east, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Bbox_Query_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("n", north)("s", south)("e", east)("w", west).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Tag_Value_Equal > stmt4;
+      SProxy< Tag_Value_Value > stmt5;
+      SProxy< Tag_Value_Fixed > stmt6;      
+      stmt4.stmt().add_statement(&stmt6("v", value1).stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
   }
   catch (File_Error e)
   {
@@ -1539,6 +1557,11 @@ int main(int argc, char* args[])
     // Test a single regex on keys with bounding box
     perform_multi_query_with_bbox("way", "way_key_2/4", "",
 	"^way_key_11$", "^way_value_..$", "^way_key_5", "^way", 0x66, true, 51, 51.5, 7, 8, args[3]);
+    
+  if ((test_to_execute == "") || (test_to_execute == "151"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_query_with_bbox("way", "way_key_5", "way_value_5",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
   
   cout<<"</osm>\n";
   return 0;

@@ -205,6 +205,13 @@ std::pair< std::vector< Set_Usage >, uint > Set_Tag_Statement::used_sets() const
 }
 
 
+void Set_Tag_Statement::clear()
+{
+  if (tag_value)
+    tag_value->clear();
+}
+
+
 //-----------------------------------------------------------------------------
 
 
