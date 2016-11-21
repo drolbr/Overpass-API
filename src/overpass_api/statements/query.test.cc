@@ -625,6 +625,42 @@ void perform_filter_with_bbox
       stmt1("type", type);
       SProxy< Bbox_Query_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2("n", north)("s", south)("e", east)("w", west).stmt(), "");
+//       SProxy< Has_Kv_Statement > stmt3;
+//       stmt1.stmt().add_statement(&stmt3("k", key1)("v", value1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Tag_Value_Equal > stmt4;
+      SProxy< Tag_Value_Value > stmt5;
+      SProxy< Tag_Value_Fixed > stmt6;      
+      stmt4.stmt().add_statement(&stmt6("v", value1).stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_filter_with_key
+    (string type, string key1, string value1, string key2, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key2).stmt(), "");
       SProxy< Filter_Statement > stmt3;
       SProxy< Tag_Value_Equal > stmt4;
       SProxy< Tag_Value_Value > stmt5;
@@ -1560,8 +1596,27 @@ int main(int argc, char* args[])
     
   if ((test_to_execute == "") || (test_to_execute == "151"))
     // Test a bbox combined with a key-value pair via a filter
-    perform_query_with_bbox("way", "way_key_5", "way_value_5",
+    perform_filter_with_bbox("node", "node_key_5", "node_value_5",
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "152"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_filter_with_bbox("way", "way_key_5", "way_value_5",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "153"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_filter_with_bbox("relation", "relation_key_2/4", "relation_value_0",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+    
+  if ((test_to_execute == "") || (test_to_execute == "154"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_filter_with_key("node", "node_key_5", "node_value_5", "node_key", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "155"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_filter_with_key("way", "way_key_5", "way_value_5", "way_key", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "156"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_filter_with_key("relation", "relation_key_5", "relation_value_5",
+                            "relation_key_2/4", args[3]);
   
   cout<<"</osm>\n";
   return 0;

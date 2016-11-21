@@ -200,6 +200,13 @@ TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement(strategy, line_nr, attr);
 }
 
+template< class TStatement >
+TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory, uint line_nr)
+{
+  map< string, string > attr;
+  return stmt_factory.create_statement("filter", line_nr, attr);
+}
+
 
 enum Object_Type { tag, generic, id, object_type };
 
@@ -862,9 +869,9 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
 
 template< class TStatement >
 TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
-    Error_Output* error_output)
+    Error_Output* error_output, bool parenthesis_expected)
 {
-  Token_Tree tree(token, error_output);
+  Token_Tree tree(token, error_output, parenthesis_expected);
   if (!tree.tree.empty())
   {
     TStatement* stmt = stmt_from_value_tree< TStatement >(stmt_factory, error_output,
@@ -933,7 +940,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
         key = get_text_token(token, error_output, "Tag key");
       
       clear_until_after(token, error_output, "=");
-      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output);
+      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, false);
       if (stmt)
       {
         TStatement* key_stmt = create_set_tag_statement< TStatement >(
@@ -1187,6 +1194,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
   pair< uint, uint > query_line_col = token.line_col();
   
   vector< Statement_Text > clauses;
+  vector< TStatement* > value_stmts;
   while (token.good() && (*token == "[" || *token == "(" || *token == "."))
   {
     if (*token == "[")
@@ -1346,17 +1354,17 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	Statement_Text clause("user", token.line_col());
 	++token;
 	clear_until_after(token, error_output, ":", false);
-    if (*token == ":")
+        if (*token == ":")
 	{
 	  do
 	  {
-	      ++token;
-	      clause.attributes.push_back(get_text_token(token, error_output, "User name"));
-	      clear_until_after(token, error_output, ",", ")", false);
+	    ++token;
+	    clause.attributes.push_back(get_text_token(token, error_output, "User name"));
+	    clear_until_after(token, error_output, ",", ")", false);
 	  } while (token.good() && *token == ",");
 
-      clear_until_after(token, error_output, ")");
-    }
+          clear_until_after(token, error_output, ")");
+        }
 	clauses.push_back(clause);
       }
       else if (*token == "uid")
@@ -1364,17 +1372,17 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	Statement_Text clause("uid", token.line_col());
 	++token;
 	clear_until_after(token, error_output, ":", false);
-    if (*token == ":")
-    {
-      do
-      {
-          ++token;
-          clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
-	      clear_until_after(token, error_output, ",", ")", false);
-      } while (token.good() && *token == ",");
+        if (*token == ":")
+        {
+          do
+          {
+            ++token;
+            clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
+	    clear_until_after(token, error_output, ",", ")", false);
+          } while (token.good() && *token == ",");
 
-      clear_until_after(token, error_output, ")");
-    }
+          clear_until_after(token, error_output, ")");
+        }
 	clauses.push_back(clause);
       }
       else if (*token == "newer")
@@ -1445,6 +1453,18 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
         Statement_Text clause("pivot", token.line_col());
         ++token;
         clause.attributes.push_back(probe_from(token, error_output));
+        clear_until_after(token, error_output, ")");
+        clauses.push_back(clause);
+      }
+      else if (*token == "if")
+      {
+        Statement_Text clause("if", token.line_col());
+        ++token;
+	if (*token == ":")
+	{
+	  ++token;
+          value_stmts.push_back(parse_value_tree< TStatement >(stmt_factory, token, error_output, true));
+	}
         clear_until_after(token, error_output, ")");
         clauses.push_back(clause);
       }
@@ -1526,7 +1546,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
       }
     }
   }
-  else if (clauses.size() == 1 && from == "")
+  else if (clauses.size() == 1 && from == "" && value_stmts.empty())
   {
     if (clauses.front().statement == "has-kv"
        || clauses.front().statement == "has-kv_regex"
@@ -1577,6 +1597,16 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
           (stmt_factory, token, error_output, *it, type, from, "_");
       if (substatement)
 	statement->add_statement(substatement, "");
+    }
+    for (typename vector< TStatement* >::const_iterator it = value_stmts.begin(); it != value_stmts.end(); ++it)
+    {
+      TStatement* substatement = create_filter_statement< TStatement >(stmt_factory, query_line_col.first);
+      if (substatement)
+      {
+        if (*it)
+          substatement->add_statement(*it, "");
+	statement->add_statement(substatement, "");
+      }
     }
   }
   

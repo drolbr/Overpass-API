@@ -67,7 +67,7 @@ struct Token_Node
 
 struct Token_Tree
 {
-  Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output);
+  Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, bool parenthesis_expected);
   
   std::vector< Token_Node > tree;
 };

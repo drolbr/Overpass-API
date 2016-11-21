@@ -29,7 +29,7 @@ class Filter_Constraint : public Query_Constraint
   public:
     bool delivers_data(Resource_Manager& rman) { return false; }
     
-    Filter_Constraint(Filter_Statement& bbox_) {}
+    Filter_Constraint(Filter_Statement& stmt_) : stmt(&stmt_) {}
     bool get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges) { return false; }
     bool get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges) { return false; }
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp) {}

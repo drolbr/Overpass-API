@@ -323,7 +323,7 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 }
 
 
-Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output)
+Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, bool parenthesis_expected)
 {
   static std::map< std::string, uint > priority;
   if (priority.empty())
@@ -371,7 +371,12 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output)
           && tree[stack[stack_pos]].token != "[" && tree[stack[stack_pos]].token != "{")
         --stack_pos;
       if (stack_pos < 0)
-        error_output->add_parse_error(std::string("Unmatched ") + *token, token.line_col().first);
+      {
+        if (parenthesis_expected)
+          return;
+        else
+          error_output->add_parse_error(std::string("Unmatched ") + *token, token.line_col().first);
+      }
       else
         stack.resize(stack_pos);
     }
