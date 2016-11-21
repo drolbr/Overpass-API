@@ -221,6 +221,9 @@ void collect_tags
    const std::vector< Id_Type >& ids, uint32 coarse_index)
 {
   while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0x7fffff00) < coarse_index))
+    ++tag_it;
+  while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0x7fffff00) == coarse_index))
   {
     if ((binary_search(ids.begin(), ids.end(), tag_it.object())))
