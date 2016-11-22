@@ -77,12 +77,12 @@ bool Print_Control::print_allowed(uint id, int variant) const
   {
     if (variant == 1 || variant == 4)
     {
-      if (id > pattern_size*pattern_size || (id-1) % pattern_size >= pattern_size/2)
+      if (id > pattern_size*pattern_size/2 || (id-1) % pattern_size >= pattern_size/2)
         return false;
     }
     else if (variant == 2 || variant == 5)
     {
-      if (id > pattern_size*pattern_size || id % pattern_size > pattern_size/2)
+      if (id > pattern_size*pattern_size/2 || id % pattern_size > pattern_size/2)
         return false;
     }
     else if (variant == 3 || variant == 6)
