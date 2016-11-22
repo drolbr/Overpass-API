@@ -2420,7 +2420,7 @@ struct Accept_Query_153 : public Accept_All_Tags
   
   virtual bool admit_node(uint id) const { return false; }
   virtual bool admit_way(uint id) const { return false; }
-  virtual bool admit_relation(uint id) const { return id == 18 || id == 22; }
+  virtual bool admit_relation(uint id) const { return id == 18 || (id == 22 && pattern_size <= 362); }
   
   private:
     uint pattern_size;
