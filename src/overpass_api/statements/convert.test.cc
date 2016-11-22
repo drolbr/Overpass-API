@@ -69,7 +69,7 @@ void prepare_value_test(Parsed_Query& global_settings, Resource_Manager& rman,
   stmt5.add_statement(&stmt50, "");
   attributes.clear();
   attributes["v"] = derived_num;
-  Tag_Value_Fixed stmt500(0, attributes, global_settings);
+  Evaluator_Fixed stmt500(0, attributes, global_settings);
   stmt50.add_statement(&stmt500, "");
   
   if (derived_num != "")
@@ -95,7 +95,7 @@ void just_copy_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  Tag_Value_Generic stmt10(0, attributes, global_settings);
+  Evaluator_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   stmt.execute(rman);
@@ -124,7 +124,7 @@ void into_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  Tag_Value_Generic stmt10(0, attributes, global_settings);
+  Evaluator_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   stmt.execute(rman);
@@ -154,7 +154,7 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  Tag_Value_Generic stmt10(0, attributes, global_settings);
+  Evaluator_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   attributes.clear();
@@ -163,7 +163,7 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   attributes["v"] = "extra_value";
-  Tag_Value_Fixed stmt20(0, attributes, global_settings);
+  Evaluator_Fixed stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   
   attributes.clear();
@@ -230,7 +230,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "nodes";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt10(0, attributes, global_settings);
+  Evaluator_Count stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   attributes.clear();
@@ -241,7 +241,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "ways";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt20(0, attributes, global_settings);
+  Evaluator_Count stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   
   attributes.clear();
@@ -252,7 +252,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "relations";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt30(0, attributes, global_settings);
+  Evaluator_Count stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   
   attributes.clear();
@@ -263,7 +263,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "tags";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt40(0, attributes, global_settings);
+  Evaluator_Count stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
   
   attributes.clear();
@@ -274,7 +274,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "members";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt50(0, attributes, global_settings);
+  Evaluator_Count stmt50(0, attributes, global_settings);
   stmt5.add_statement(&stmt50, "");
   
   stmt.execute(rman);

@@ -231,7 +231,7 @@ TStatement* create_tag_value_fixed(typename TStatement::Factory& stmt_factory,
 {
   map< string, string > attr;
   attr["v"] = value;
-  return stmt_factory.create_statement("value-fixed", line_nr, attr);
+  return stmt_factory.create_statement("eval-fixed", line_nr, attr);
 }
 
 
@@ -241,7 +241,7 @@ TStatement* create_tag_value_value(typename TStatement::Factory& stmt_factory,
 {
   map< string, string > attr;
   attr["k"] = key;
-  return stmt_factory.create_statement("value-value", line_nr, attr);
+  return stmt_factory.create_statement("eval-value", line_nr, attr);
 }
 
 
@@ -252,7 +252,7 @@ TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
   map< string, string > attr;
   attr["from"] = from;
   attr["type"] = type;
-  return stmt_factory.create_statement("value-count", line_nr, attr);
+  return stmt_factory.create_statement("eval-count", line_nr, attr);
 }
 
 
@@ -729,19 +729,19 @@ TStatement* stmt_from_blank_function_expr(typename TStatement::Factory& stmt_fac
     return create_tag_value_count< TStatement >(stmt_factory, tree_it->token, from, tree_it->line_col.first);
   else if (type == "u")
     stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "value-union-value", from, tree_it->line_col.first);
+        stmt_factory, "eval-union-value", from, tree_it->line_col.first);
   else if (type == "min")
     stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "value-min-value", from, tree_it->line_col.first);
+        stmt_factory, "eval-min-value", from, tree_it->line_col.first);
   else if (type == "max")
     stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "value-max-value", from, tree_it->line_col.first);
+        stmt_factory, "eval-max-value", from, tree_it->line_col.first);
   else if (type == "sum")
     stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "value-sum-value", from, tree_it->line_col.first);
+        stmt_factory, "eval-sum-value", from, tree_it->line_col.first);
   else if (type == "set")
     stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "value-set-value", from, tree_it->line_col.first);
+        stmt_factory, "eval-set-value", from, tree_it->line_col.first);
     
   if (stmt)
   {
@@ -775,21 +775,21 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
       
       TStatement* stmt = 0;
       if (tree_it->token == "&&")
-        stmt = create_tag_value_x< TStatement >("value-and", stmt_factory, tree_it->line_col.first);
+        stmt = create_tag_value_x< TStatement >("eval-and", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "||")
-        stmt = create_tag_value_x< TStatement >("value-or", stmt_factory, tree_it->line_col.first);
+        stmt = create_tag_value_x< TStatement >("eval-or", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "==")
-        stmt = create_tag_value_x< TStatement >("value-equal", stmt_factory, tree_it->line_col.first);
+        stmt = create_tag_value_x< TStatement >("eval-equal", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "<")
-        stmt = create_tag_value_x< TStatement >("value-less", stmt_factory, tree_it->line_col.first);
+        stmt = create_tag_value_x< TStatement >("eval-less", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "+")
-        stmt = create_tag_value_x< TStatement >("value-plus", stmt_factory, tree_it->line_col.first);
+        stmt = create_tag_value_x< TStatement >("eval-plus", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "-")
-        stmt = create_tag_value_x< TStatement >("value-minus", stmt_factory, tree_it->line_col.first);
+        stmt = create_tag_value_x< TStatement >("eval-minus", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "*")
-        stmt = create_tag_value_x< TStatement >("value-times", stmt_factory, tree_it->line_col.first);
+        stmt = create_tag_value_x< TStatement >("eval-times", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "/")
-        stmt = create_tag_value_x< TStatement >("value-divided", stmt_factory, tree_it->line_col.first);
+        stmt = create_tag_value_x< TStatement >("eval-divided", stmt_factory, tree_it->line_col.first);
     
       if (stmt)
       {
@@ -811,9 +811,9 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
     if (tree_it->token == "(")
     {
       if (tree_it.lhs()->token == "id")
-        return create_tag_value_x< TStatement >("value-id", stmt_factory, tree_it->line_col.first);
+        return create_tag_value_x< TStatement >("eval-id", stmt_factory, tree_it->line_col.first);
       else if (tree_it.lhs()->token == "type")
-        return create_tag_value_x< TStatement >("value-type", stmt_factory, tree_it->line_col.first);
+        return create_tag_value_x< TStatement >("eval-type", stmt_factory, tree_it->line_col.first);
     }
     
     error_output->add_parse_error(
@@ -833,7 +833,7 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
     
     if (tree_it->token == "-")
     {
-      TStatement* stmt = create_tag_value_x< TStatement >("value-minus", stmt_factory, tree_it->line_col.first);
+      TStatement* stmt = create_tag_value_x< TStatement >("eval-minus", stmt_factory, tree_it->line_col.first);
       TStatement* lhs = create_tag_value_fixed< TStatement >(stmt_factory, "0", tree_it->line_col.first);
       if (lhs)
         stmt->add_statement(lhs, "");
@@ -844,7 +844,7 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
     }
     else if (tree_it->token == "!")
     {
-      TStatement* stmt = create_tag_value_x< TStatement >("value-not", stmt_factory, tree_it->line_col.first);
+      TStatement* stmt = create_tag_value_x< TStatement >("eval-not", stmt_factory, tree_it->line_col.first);
       TStatement* lhs = create_tag_value_fixed< TStatement >(stmt_factory, "0", tree_it->line_col.first);
       if (lhs)
         stmt->add_statement(lhs, "");
@@ -860,7 +860,7 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
   }
   
   if (tree_it->token == "::")
-    return create_tag_value_x< TStatement >("value-generic", stmt_factory, tree_it->line_col.first);
+    return create_tag_value_x< TStatement >("eval-generic", stmt_factory, tree_it->line_col.first);
   
   return create_tag_value_fixed< TStatement >(stmt_factory,
       decode_json(tree_it->token, error_output), tree_it->line_col.first);

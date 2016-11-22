@@ -43,7 +43,7 @@ class Filter_Constraint : public Query_Constraint
 
 template< typename Index, typename Maybe_Attic, typename Object >
 void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
-    Tag_Store< Index, Object >* tag_store, Tag_Value& criterion)
+    Tag_Store< Index, Object >* tag_store, Evaluator& criterion)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -131,13 +131,13 @@ Filter_Statement::~Filter_Statement()
 
 void Filter_Statement::add_statement(Statement* statement, std::string text)
 {
-  Tag_Value* tag_value = dynamic_cast< Tag_Value* >(statement);
+  Evaluator* tag_value = dynamic_cast< Evaluator* >(statement);
   if (tag_value)
   {
     if (!criterion)
       criterion = tag_value;
     else
-      add_static_error("A filter statement can have at most one tag-value statement.");
+      add_static_error("A filter statement can have at most one evaluator statement.");
   }
   else
     substatement_error(get_name(), statement);

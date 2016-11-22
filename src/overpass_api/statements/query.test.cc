@@ -628,9 +628,9 @@ void perform_filter_with_bbox
 //       SProxy< Has_Kv_Statement > stmt3;
 //       stmt1.stmt().add_statement(&stmt3("k", key1)("v", value1).stmt(), "");
       SProxy< Filter_Statement > stmt3;
-      SProxy< Tag_Value_Equal > stmt4;
-      SProxy< Tag_Value_Value > stmt5;
-      SProxy< Tag_Value_Fixed > stmt6;      
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Fixed > stmt6;      
       stmt4.stmt().add_statement(&stmt6("v", value1).stmt(), "");
       stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
       stmt3.stmt().add_statement(&stmt4.stmt(), "");
@@ -662,9 +662,9 @@ void perform_filter_with_key
       SProxy< Has_Kv_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2("k", key2).stmt(), "");
       SProxy< Filter_Statement > stmt3;
-      SProxy< Tag_Value_Equal > stmt4;
-      SProxy< Tag_Value_Value > stmt5;
-      SProxy< Tag_Value_Fixed > stmt6;      
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Fixed > stmt6;      
       stmt4.stmt().add_statement(&stmt6("v", value1).stmt(), "");
       stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
       stmt3.stmt().add_statement(&stmt4.stmt(), "");

@@ -83,9 +83,9 @@ public:
 };
 
 
-struct Tag_Value : public Statement
+struct Evaluator : public Statement
 {
-  Tag_Value(int line_number) : Statement(line_number) {}
+  Evaluator(int line_number) : Statement(line_number) {}
 
   virtual std::string eval(const std::string* key) = 0;
   virtual std::string eval(const Node_Skeleton* elem,
@@ -162,21 +162,21 @@ private:
   std::string input;
   std::vector< std::string > keys;
   bool set_id;
-  Tag_Value* tag_value;
+  Evaluator* tag_value;
 };
 
 
-class Tag_Value_Fixed : public Tag_Value
+class Evaluator_Fixed : public Evaluator
 {
 public:
-  Tag_Value_Fixed(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Fixed(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-fixed"; }
+  virtual string get_name() const { return "eval-fixed"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Fixed() {}
+  virtual ~Evaluator_Fixed() {}
   
-  static Generic_Statement_Maker< Tag_Value_Fixed > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Fixed > statement_maker;
 
   virtual std::string eval(const std::string* key) { return value; }
   virtual std::string eval(const Node_Skeleton* elem,
@@ -210,17 +210,17 @@ private:
 };
 
 
-class Tag_Value_Id : public Tag_Value
+class Evaluator_Id : public Evaluator
 {
 public:
-  Tag_Value_Id(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Id(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-id"; }
+  virtual string get_name() const { return "eval-id"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Id() {}
+  virtual ~Evaluator_Id() {}
   
-  static Generic_Statement_Maker< Tag_Value_Id > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Id > statement_maker;
 
   virtual std::string eval(const std::string* key) { return ""; }
   virtual std::string eval(const Node_Skeleton* elem,
@@ -259,17 +259,17 @@ public:
 };
 
 
-class Tag_Value_Type : public Tag_Value
+class Evaluator_Type : public Evaluator
 {
 public:
-  Tag_Value_Type(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Type(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-type"; }
+  virtual string get_name() const { return "eval-type"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Type() {}
+  virtual ~Evaluator_Type() {}
   
-  static Generic_Statement_Maker< Tag_Value_Type > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Type > statement_maker;
 
   virtual std::string eval(const std::string* key) { return ""; }
   virtual std::string eval(const Node_Skeleton* elem,
@@ -311,17 +311,17 @@ public:
 std::string find_value(const std::vector< std::pair< std::string, std::string > >* tags, const std::string& key);
 
 
-class Tag_Value_Value : public Tag_Value
+class Evaluator_Value : public Evaluator
 {
 public:
-  Tag_Value_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-value"; }
+  virtual string get_name() const { return "eval-value"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Value() {}
+  virtual ~Evaluator_Value() {}
   
-  static Generic_Statement_Maker< Tag_Value_Value > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Value > statement_maker;
 
   virtual std::string eval(const std::string* key) { return ""; }
   virtual std::string eval(const Node_Skeleton* elem,
@@ -368,17 +368,17 @@ private:
 };
 
 
-class Tag_Value_Generic : public Tag_Value
+class Evaluator_Generic : public Evaluator
 {
 public:
-  Tag_Value_Generic(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Generic(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-generic"; }
+  virtual string get_name() const { return "eval-generic"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Generic() {}
+  virtual ~Evaluator_Generic() {}
   
-  static Generic_Statement_Maker< Tag_Value_Generic > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Generic > statement_maker;
 
   virtual std::string eval(const std::string* key) { return ""; }
   virtual std::string eval(const Node_Skeleton* elem,
@@ -417,19 +417,19 @@ public:
 };
 
 
-class Tag_Value_Count : public Tag_Value
+class Evaluator_Count : public Evaluator
 {
 public:
   enum Objects { nothing, nodes, ways, relations, deriveds, tags, members };
   
-  Tag_Value_Count(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Count(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-count"; }
+  virtual string get_name() const { return "eval-count"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Count() {}
+  virtual ~Evaluator_Count() {}
   
-  static Generic_Statement_Maker< Tag_Value_Count > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Count > statement_maker;
 
   virtual std::string eval(const std::string* key);
   virtual std::string eval(const Node_Skeleton* elem,
@@ -464,10 +464,10 @@ private:
 };
 
 
-class Tag_Value_Pair_Operator : public Tag_Value
+class Evaluator_Pair_Operator : public Evaluator
 {
 public:
-  Tag_Value_Pair_Operator(int line_number_);
+  Evaluator_Pair_Operator(int line_number_);
   virtual void add_statement(Statement* statement, string text);
   virtual void execute(Resource_Manager& rman) {}
   
@@ -502,15 +502,15 @@ public:
   virtual void clear();
   
 protected:
-  Tag_Value* lhs;
-  Tag_Value* rhs;
+  Evaluator* lhs;
+  Evaluator* rhs;
 };
 
 
-class Tag_Value_Prefix_Operator : public Tag_Value
+class Evaluator_Prefix_Operator : public Evaluator
 {
 public:
-  Tag_Value_Prefix_Operator(int line_number_);
+  Evaluator_Prefix_Operator(int line_number_);
   virtual void add_statement(Statement* statement, string text);
   virtual void execute(Resource_Manager& rman) {}
   
@@ -545,156 +545,156 @@ public:
   virtual void clear();
   
 protected:
-  Tag_Value* rhs;
+  Evaluator* rhs;
 };
 
 
-class Tag_Value_And : public Tag_Value_Pair_Operator
+class Evaluator_And : public Evaluator_Pair_Operator
 {
 public:
-  Tag_Value_And(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_And(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-and"; }
-  virtual ~Tag_Value_And() {}
+  virtual string get_name() const { return "eval-and"; }
+  virtual ~Evaluator_And() {}
   
-  static Generic_Statement_Maker< Tag_Value_And > statement_maker;
+  static Generic_Statement_Maker< Evaluator_And > statement_maker;
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Or : public Tag_Value_Pair_Operator
+class Evaluator_Or : public Evaluator_Pair_Operator
 {
 public:
-  Tag_Value_Or(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Or(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-or"; }
-  virtual ~Tag_Value_Or() {}
+  virtual string get_name() const { return "eval-or"; }
+  virtual ~Evaluator_Or() {}
   
-  static Generic_Statement_Maker< Tag_Value_Or > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Or > statement_maker;
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Not : public Tag_Value_Prefix_Operator
+class Evaluator_Not : public Evaluator_Prefix_Operator
 {
 public:
-  Tag_Value_Not(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Not(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-not"; }
-  virtual ~Tag_Value_Not() {}
+  virtual string get_name() const { return "eval-not"; }
+  virtual ~Evaluator_Not() {}
   
-  static Generic_Statement_Maker< Tag_Value_Not > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Not > statement_maker;
   
   virtual std::string process(const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Equal : public Tag_Value_Pair_Operator
+class Evaluator_Equal : public Evaluator_Pair_Operator
 {
 public:
-  Tag_Value_Equal(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Equal(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-equal"; }
-  virtual ~Tag_Value_Equal() {}
+  virtual string get_name() const { return "eval-equal"; }
+  virtual ~Evaluator_Equal() {}
   
-  static Generic_Statement_Maker< Tag_Value_Equal > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Equal > statement_maker;
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Less : public Tag_Value_Pair_Operator
+class Evaluator_Less : public Evaluator_Pair_Operator
 {
 public:
-  Tag_Value_Less(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Less(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-less"; }
-  virtual ~Tag_Value_Less() {}
+  virtual string get_name() const { return "eval-less"; }
+  virtual ~Evaluator_Less() {}
   
-  static Generic_Statement_Maker< Tag_Value_Less > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Less > statement_maker;
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Plus : public Tag_Value_Pair_Operator
+class Evaluator_Plus : public Evaluator_Pair_Operator
 {
 public:
-  Tag_Value_Plus(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Plus(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-plus"; }
-  virtual ~Tag_Value_Plus() {}
+  virtual string get_name() const { return "eval-plus"; }
+  virtual ~Evaluator_Plus() {}
   
-  static Generic_Statement_Maker< Tag_Value_Plus > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Plus > statement_maker;
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Negate : public Tag_Value_Prefix_Operator
+class Evaluator_Negate : public Evaluator_Prefix_Operator
 {
 public:
-  Tag_Value_Negate(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Negate(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-negate"; }
-  virtual ~Tag_Value_Negate() {}
+  virtual string get_name() const { return "eval-negate"; }
+  virtual ~Evaluator_Negate() {}
   
-  static Generic_Statement_Maker< Tag_Value_Negate > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Negate > statement_maker;
   
   virtual std::string process(const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Minus : public Tag_Value_Pair_Operator
+class Evaluator_Minus : public Evaluator_Pair_Operator
 {
 public:
-  Tag_Value_Minus(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Minus(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-minus"; }
-  virtual ~Tag_Value_Minus() {}
+  virtual string get_name() const { return "eval-minus"; }
+  virtual ~Evaluator_Minus() {}
   
-  static Generic_Statement_Maker< Tag_Value_Minus > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Minus > statement_maker;
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Times : public Tag_Value_Pair_Operator
+class Evaluator_Times : public Evaluator_Pair_Operator
 {
 public:
-  Tag_Value_Times(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Times(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-times"; }
-  virtual ~Tag_Value_Times() {}
+  virtual string get_name() const { return "eval-times"; }
+  virtual ~Evaluator_Times() {}
   
-  static Generic_Statement_Maker< Tag_Value_Times > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Times > statement_maker;
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Tag_Value_Divided : public Tag_Value_Pair_Operator
+class Evaluator_Divided : public Evaluator_Pair_Operator
 {
 public:
-  Tag_Value_Divided(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Divided(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-divided-by"; }
-  virtual ~Tag_Value_Divided() {}
+  virtual string get_name() const { return "eval-divided-by"; }
+  virtual ~Evaluator_Divided() {}
   
-  static Generic_Statement_Maker< Tag_Value_Divided > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Divided > statement_maker;
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-struct Tag_Value_Aggregator : public Tag_Value
+struct Evaluator_Aggregator : public Evaluator
 {
   enum Object_Type { tag, generic, id, type };
   
   
-  Tag_Value_Aggregator(const string& func_name, int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Aggregator(const string& func_name, int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);  
   virtual void add_statement(Statement* statement, string text);
   
@@ -736,88 +736,88 @@ struct Tag_Value_Aggregator : public Tag_Value
   virtual void clear() {}
   
   std::string input;
-  Tag_Value* rhs;
+  Evaluator* rhs;
   const Set_With_Context* input_set;
   bool value_set;
   std::string value;
 };
 
 
-class Tag_Value_Union_Value : public Tag_Value_Aggregator
+class Evaluator_Union_Value : public Evaluator_Aggregator
 {
 public:
-  Tag_Value_Union_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Union_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-union-value"; }
+  virtual string get_name() const { return "eval-union-value"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Union_Value() {}
+  virtual ~Evaluator_Union_Value() {}
   
-  static Generic_Statement_Maker< Tag_Value_Union_Value > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Union_Value > statement_maker;
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
-class Tag_Value_Min_Value : public Tag_Value_Aggregator
+class Evaluator_Min_Value : public Evaluator_Aggregator
 {
 public:
-  Tag_Value_Min_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Min_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-min-value"; }
+  virtual string get_name() const { return "eval-min-value"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Min_Value() {}
+  virtual ~Evaluator_Min_Value() {}
   
-  static Generic_Statement_Maker< Tag_Value_Min_Value > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Min_Value > statement_maker;
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
-class Tag_Value_Max_Value : public Tag_Value_Aggregator
+class Evaluator_Max_Value : public Evaluator_Aggregator
 {
 public:
-  Tag_Value_Max_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Max_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-max-value"; }
+  virtual string get_name() const { return "eval-max-value"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Max_Value() {}
+  virtual ~Evaluator_Max_Value() {}
   
-  static Generic_Statement_Maker< Tag_Value_Max_Value > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Max_Value > statement_maker;
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
-class Tag_Value_Sum_Value : public Tag_Value_Aggregator
+class Evaluator_Sum_Value : public Evaluator_Aggregator
 {
 public:
-  Tag_Value_Sum_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Sum_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-sum-value"; }
+  virtual string get_name() const { return "eval-sum-value"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Sum_Value() {}
+  virtual ~Evaluator_Sum_Value() {}
   
-  static Generic_Statement_Maker< Tag_Value_Sum_Value > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Sum_Value > statement_maker;
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
-class Tag_Value_Set_Value : public Tag_Value_Aggregator
+class Evaluator_Set_Value : public Evaluator_Aggregator
 {
 public:
-  Tag_Value_Set_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Set_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "value-set-value"; }
+  virtual string get_name() const { return "eval-set-value"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Tag_Value_Set_Value() {}
+  virtual ~Evaluator_Set_Value() {}
   
-  static Generic_Statement_Maker< Tag_Value_Set_Value > statement_maker;
+  static Generic_Statement_Maker< Evaluator_Set_Value > statement_maker;
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
   

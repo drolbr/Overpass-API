@@ -39,11 +39,11 @@ class Filter_Statement : public Output_Statement
     
     virtual Query_Constraint* get_query_constraint();
     
-    Tag_Value* get_criterion() { return criterion; }
+    Evaluator* get_criterion() { return criterion; }
 
   private:
     vector< Query_Constraint* > constraints;
-    Tag_Value* criterion;
+    Evaluator* criterion;
 };
 
 

@@ -66,7 +66,7 @@ void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   attributes["v"] = value1;
-  Tag_Value_Fixed stmt10(0, attributes, global_settings);
+  Evaluator_Fixed stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   attributes.clear();
@@ -74,7 +74,7 @@ void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt2(0, attributes, global_settings);
   attributes.clear();
   attributes["v"] = value2;
-  Tag_Value_Fixed stmt20(0, attributes, global_settings);
+  Evaluator_Fixed stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   if (key2 != "")
     stmt.add_statement(&stmt2, "");
@@ -133,7 +133,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   if (from != "_")
     attributes["from"] = from;
   attributes["type"] = "nodes";
-  Tag_Value_Count stmt10(0, attributes, global_settings);
+  Evaluator_Count stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   attributes.clear();
@@ -144,7 +144,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "ways";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt20(0, attributes, global_settings);
+  Evaluator_Count stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   
   attributes.clear();
@@ -155,7 +155,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "relations";
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Count stmt30(0, attributes, global_settings);
+  Evaluator_Count stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   
   attributes.clear();
@@ -165,11 +165,11 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Sum_Value stmt40(0, attributes, global_settings);
+  Evaluator_Sum_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
   attributes.clear();
   attributes["type"] = "tags";
-  Tag_Value_Count stmt400(0, attributes, global_settings);
+  Evaluator_Count stmt400(0, attributes, global_settings);
   stmt40.add_statement(&stmt400, "");
   
   attributes.clear();
@@ -179,11 +179,11 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Sum_Value stmt50(0, attributes, global_settings);
+  Evaluator_Sum_Value stmt50(0, attributes, global_settings);
   stmt5.add_statement(&stmt50, "");
   attributes.clear();
   attributes["type"] = "members";
-  Tag_Value_Count stmt500(0, attributes, global_settings);
+  Evaluator_Count stmt500(0, attributes, global_settings);
   stmt50.add_statement(&stmt500, "");
   
   stmt.execute(rman);
@@ -196,7 +196,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
 
-template< typename Tag_Value_Pair >
+template< typename Evaluator_Pair >
 void pair_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string key, std::string value1, std::string value2)
 {
@@ -211,12 +211,12 @@ void pair_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  Tag_Value_Pair stmt10(0, attributes, global_settings);
+  Evaluator_Pair stmt10(0, attributes, global_settings);
   attributes["v"] = value1;
-  Tag_Value_Fixed stmt101(0, attributes, global_settings);
+  Evaluator_Fixed stmt101(0, attributes, global_settings);
   stmt10.add_statement(&stmt101, "");
   attributes["v"] = value2;
-  Tag_Value_Fixed stmt102(0, attributes, global_settings);
+  Evaluator_Fixed stmt102(0, attributes, global_settings);
   stmt10.add_statement(&stmt102, "");
   stmt1.add_statement(&stmt10, "");  
   
@@ -230,7 +230,7 @@ void pair_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
       
-template< typename Tag_Value_Prefix >
+template< typename Evaluator_Prefix >
 void prefix_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string key, std::string value)
 {
@@ -245,9 +245,9 @@ void prefix_test(Parsed_Query& global_settings, Transaction& transaction,
   Set_Tag_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
-  Tag_Value_Prefix stmt10(0, attributes, global_settings);
+  Evaluator_Prefix stmt10(0, attributes, global_settings);
   attributes["v"] = value;
-  Tag_Value_Fixed stmt101(0, attributes, global_settings);
+  Evaluator_Fixed stmt101(0, attributes, global_settings);
   stmt10.add_statement(&stmt101, "");
   stmt1.add_statement(&stmt10, "");  
   
@@ -315,11 +315,11 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Union_Value stmt10(0, attributes, global_settings);
+  Evaluator_Union_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   attributes.clear();
   attributes["k"] = "node_key";
-  Tag_Value_Value stmt100(0, attributes, global_settings);
+  Evaluator_Value stmt100(0, attributes, global_settings);
   stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
@@ -329,11 +329,11 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Union_Value stmt20(0, attributes, global_settings);
+  Evaluator_Union_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   attributes.clear();
   attributes["k"] = "way_key";
-  Tag_Value_Value stmt200(0, attributes, global_settings);
+  Evaluator_Value stmt200(0, attributes, global_settings);
   stmt20.add_statement(&stmt200, "");
   
   attributes.clear();
@@ -343,11 +343,11 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Union_Value stmt30(0, attributes, global_settings);
+  Evaluator_Union_Value stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   attributes.clear();
   attributes["k"] = "relation_key";
-  Tag_Value_Value stmt300(0, attributes, global_settings);
+  Evaluator_Value stmt300(0, attributes, global_settings);
   stmt30.add_statement(&stmt300, "");
   
   attributes.clear();
@@ -357,11 +357,11 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Union_Value stmt40(0, attributes, global_settings);
+  Evaluator_Union_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
   attributes.clear();
   attributes["k"] = "unused_key";
-  Tag_Value_Value stmt400(0, attributes, global_settings);
+  Evaluator_Value stmt400(0, attributes, global_settings);
   stmt40.add_statement(&stmt400, "");
   
   stmt.execute(rman);
@@ -391,11 +391,11 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Min_Value stmt10(0, attributes, global_settings);
+  Evaluator_Min_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   attributes.clear();
   attributes["k"] = "node_key_7";
-  Tag_Value_Value stmt100(0, attributes, global_settings);
+  Evaluator_Value stmt100(0, attributes, global_settings);
   stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
@@ -405,11 +405,11 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Min_Value stmt20(0, attributes, global_settings);
+  Evaluator_Min_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   attributes.clear();
   attributes["k"] = "way_key_7";
-  Tag_Value_Value stmt200(0, attributes, global_settings);
+  Evaluator_Value stmt200(0, attributes, global_settings);
   stmt20.add_statement(&stmt200, "");
   
   attributes.clear();
@@ -419,11 +419,11 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Min_Value stmt30(0, attributes, global_settings);
+  Evaluator_Min_Value stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   attributes.clear();
   attributes["k"] = "relation_key_7";
-  Tag_Value_Value stmt300(0, attributes, global_settings);
+  Evaluator_Value stmt300(0, attributes, global_settings);
   stmt30.add_statement(&stmt300, "");
   
   attributes.clear();
@@ -433,11 +433,11 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Min_Value stmt40(0, attributes, global_settings);
+  Evaluator_Min_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
   attributes.clear();
   attributes["k"] = "unused_key_7";
-  Tag_Value_Value stmt400(0, attributes, global_settings);
+  Evaluator_Value stmt400(0, attributes, global_settings);
   stmt40.add_statement(&stmt400, "");
   
   stmt.execute(rman);
@@ -467,11 +467,11 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Max_Value stmt10(0, attributes, global_settings);
+  Evaluator_Max_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   attributes.clear();
   attributes["k"] = "node_key_7";
-  Tag_Value_Value stmt100(0, attributes, global_settings);
+  Evaluator_Value stmt100(0, attributes, global_settings);
   stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
@@ -481,11 +481,11 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Max_Value stmt20(0, attributes, global_settings);
+  Evaluator_Max_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   attributes.clear();
   attributes["k"] = "way_key_7";
-  Tag_Value_Value stmt200(0, attributes, global_settings);
+  Evaluator_Value stmt200(0, attributes, global_settings);
   stmt20.add_statement(&stmt200, "");
   
   attributes.clear();
@@ -495,11 +495,11 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Max_Value stmt30(0, attributes, global_settings);
+  Evaluator_Max_Value stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   attributes.clear();
   attributes["k"] = "relation_key_7";
-  Tag_Value_Value stmt300(0, attributes, global_settings);
+  Evaluator_Value stmt300(0, attributes, global_settings);
   stmt30.add_statement(&stmt300, "");
   
   attributes.clear();
@@ -509,11 +509,11 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Max_Value stmt40(0, attributes, global_settings);
+  Evaluator_Max_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
   attributes.clear();
   attributes["k"] = "unused_key_7";
-  Tag_Value_Value stmt400(0, attributes, global_settings);
+  Evaluator_Value stmt400(0, attributes, global_settings);
   stmt40.add_statement(&stmt400, "");
   
   stmt.execute(rman);
@@ -543,11 +543,11 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Set_Value stmt10(0, attributes, global_settings);
+  Evaluator_Set_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   attributes.clear();
   attributes["k"] = "node_key_7";
-  Tag_Value_Value stmt100(0, attributes, global_settings);
+  Evaluator_Value stmt100(0, attributes, global_settings);
   stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
@@ -557,11 +557,11 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Set_Value stmt20(0, attributes, global_settings);
+  Evaluator_Set_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   attributes.clear();
   attributes["k"] = "way_key_7";
-  Tag_Value_Value stmt200(0, attributes, global_settings);
+  Evaluator_Value stmt200(0, attributes, global_settings);
   stmt20.add_statement(&stmt200, "");
   
   attributes.clear();
@@ -571,11 +571,11 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Set_Value stmt30(0, attributes, global_settings);
+  Evaluator_Set_Value stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   attributes.clear();
   attributes["k"] = "relation_key_7";
-  Tag_Value_Value stmt300(0, attributes, global_settings);
+  Evaluator_Value stmt300(0, attributes, global_settings);
   stmt30.add_statement(&stmt300, "");
   
   attributes.clear();
@@ -585,11 +585,11 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Set_Value stmt40(0, attributes, global_settings);
+  Evaluator_Set_Value stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
   attributes.clear();
   attributes["k"] = "unused_key_7";
-  Tag_Value_Value stmt400(0, attributes, global_settings);
+  Evaluator_Value stmt400(0, attributes, global_settings);
   stmt40.add_statement(&stmt400, "");
   
   stmt.execute(rman);
@@ -619,10 +619,10 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Set_Value stmt10(0, attributes, global_settings);
+  Evaluator_Set_Value stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   attributes.clear();
-  Tag_Value_Id stmt100(0, attributes, global_settings);
+  Evaluator_Id stmt100(0, attributes, global_settings);
   stmt10.add_statement(&stmt100, "");
   
   attributes.clear();
@@ -632,10 +632,10 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   if (from != "_")
     attributes["from"] = from;
-  Tag_Value_Set_Value stmt20(0, attributes, global_settings);
+  Evaluator_Set_Value stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   attributes.clear();
-  Tag_Value_Type stmt200(0, attributes, global_settings);
+  Evaluator_Type stmt200(0, attributes, global_settings);
   stmt20.add_statement(&stmt200, "");
   
   stmt.execute(rman);
@@ -669,10 +669,10 @@ void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
   {
     if (from != "_")
       attributes["from"] = from;
-    Tag_Value_Max_Value stmt10(0, attributes, global_settings);
+    Evaluator_Max_Value stmt10(0, attributes, global_settings);
     stmt1.add_statement(&stmt10, "");
     attributes.clear();
-    Tag_Value_Id stmt100(0, attributes, global_settings);
+    Evaluator_Id stmt100(0, attributes, global_settings);
     stmt10.add_statement(&stmt100, "");
   
     stmt.execute(rman);
@@ -680,7 +680,7 @@ void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
   else
   {
     attributes["v"] = "42";
-    Tag_Value_Fixed stmt10(0, attributes, global_settings);
+    Evaluator_Fixed stmt10(0, attributes, global_settings);
     stmt1.add_statement(&stmt10, "");
   
     stmt.execute(rman);
@@ -732,87 +732,87 @@ int main(int argc, char* args[])
     if ((test_to_execute == "") || (test_to_execute == "8"))
       count_test(global_settings, transaction, "count-from-foo", "foo", 1, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "9"))
-      pair_test< Tag_Value_And >(global_settings, transaction, "test-and", "and", "1", "0");
+      pair_test< Evaluator_And >(global_settings, transaction, "test-and", "and", "1", "0");
     if ((test_to_execute == "") || (test_to_execute == "10"))
-      pair_test< Tag_Value_And >(global_settings, transaction, "test-and", "and", "0", "1");
+      pair_test< Evaluator_And >(global_settings, transaction, "test-and", "and", "0", "1");
     if ((test_to_execute == "") || (test_to_execute == "11"))
-      pair_test< Tag_Value_And >(global_settings, transaction, "test-and", "and", "false", "false");
+      pair_test< Evaluator_And >(global_settings, transaction, "test-and", "and", "false", "false");
     if ((test_to_execute == "") || (test_to_execute == "12"))
-      pair_test< Tag_Value_And >(global_settings, transaction, "test-and", "and", "true", "");
+      pair_test< Evaluator_And >(global_settings, transaction, "test-and", "and", "true", "");
     if ((test_to_execute == "") || (test_to_execute == "13"))
-      pair_test< Tag_Value_Or >(global_settings, transaction, "test-or", "or", "1", "0");
+      pair_test< Evaluator_Or >(global_settings, transaction, "test-or", "or", "1", "0");
     if ((test_to_execute == "") || (test_to_execute == "14"))
-      pair_test< Tag_Value_Or >(global_settings, transaction, "test-or", "or", "0", "1");
+      pair_test< Evaluator_Or >(global_settings, transaction, "test-or", "or", "0", "1");
     if ((test_to_execute == "") || (test_to_execute == "15"))
-      pair_test< Tag_Value_Or >(global_settings, transaction, "test-or", "or", "true", "true");
+      pair_test< Evaluator_Or >(global_settings, transaction, "test-or", "or", "true", "true");
     if ((test_to_execute == "") || (test_to_execute == "16"))
-      pair_test< Tag_Value_Or >(global_settings, transaction, "test-or", "or", "", "");
+      pair_test< Evaluator_Or >(global_settings, transaction, "test-or", "or", "", "");
     if ((test_to_execute == "") || (test_to_execute == "17"))
-      prefix_test< Tag_Value_Not >(global_settings, transaction, "test-not", "not", "0");
+      prefix_test< Evaluator_Not >(global_settings, transaction, "test-not", "not", "0");
     if ((test_to_execute == "") || (test_to_execute == "18"))
-      prefix_test< Tag_Value_Not >(global_settings, transaction, "test-not", "not", "1");
+      prefix_test< Evaluator_Not >(global_settings, transaction, "test-not", "not", "1");
     if ((test_to_execute == "") || (test_to_execute == "19"))
-      prefix_test< Tag_Value_Not >(global_settings, transaction, "test-not", "not", "false");
+      prefix_test< Evaluator_Not >(global_settings, transaction, "test-not", "not", "false");
     if ((test_to_execute == "") || (test_to_execute == "20"))
-      prefix_test< Tag_Value_Not >(global_settings, transaction, "test-not", "not", "");
+      prefix_test< Evaluator_Not >(global_settings, transaction, "test-not", "not", "");
     if ((test_to_execute == "") || (test_to_execute == "21"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "9.5", "9.50");
+      pair_test< Evaluator_Equal >(global_settings, transaction, "test-equal", "equal", "9.5", "9.50");
     if ((test_to_execute == "") || (test_to_execute == "22"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "99", "099");
+      pair_test< Evaluator_Equal >(global_settings, transaction, "test-equal", "equal", "99", "099");
     if ((test_to_execute == "") || (test_to_execute == "23"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "nine", "nine");
+      pair_test< Evaluator_Equal >(global_settings, transaction, "test-equal", "equal", "nine", "nine");
     if ((test_to_execute == "") || (test_to_execute == "24"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "nine", "nine ");
+      pair_test< Evaluator_Equal >(global_settings, transaction, "test-equal", "equal", "nine", "nine ");
     if ((test_to_execute == "") || (test_to_execute == "25"))
-      pair_test< Tag_Value_Equal >(global_settings, transaction, "test-equal", "equal", "99", "99 ");
+      pair_test< Evaluator_Equal >(global_settings, transaction, "test-equal", "equal", "99", "99 ");
     if ((test_to_execute == "") || (test_to_execute == "26"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9.5", "10");
+      pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", "9.5", "10");
     if ((test_to_execute == "") || (test_to_execute == "27"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9", "10.1");
+      pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", "9", "10.1");
     if ((test_to_execute == "") || (test_to_execute == "28"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "9", "10");
+      pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", "9", "10");
     if ((test_to_execute == "") || (test_to_execute == "29"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "10", "9");
+      pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", "10", "9");
     if ((test_to_execute == "") || (test_to_execute == "30"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "a", "b");
+      pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", "a", "b");
     if ((test_to_execute == "") || (test_to_execute == "31"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "b", "a");
+      pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", "b", "a");
     if ((test_to_execute == "") || (test_to_execute == "32"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", "1", "a");
+      pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", "1", "a");
     if ((test_to_execute == "") || (test_to_execute == "33"))
-      pair_test< Tag_Value_Less >(global_settings, transaction, "test-less", "less", " ", "1");
+      pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", " ", "1");
     if ((test_to_execute == "") || (test_to_execute == "34"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "5.5", "3.5");
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "5.5", "3.5");
     if ((test_to_execute == "") || (test_to_execute == "35"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "1", "0 ");
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "1", "0 ");
     if ((test_to_execute == "") || (test_to_execute == "36"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "10");
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "10");
     if ((test_to_execute == "") || (test_to_execute == "37"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "2_");
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "2_");
     if ((test_to_execute == "") || (test_to_execute == "38"))
-      pair_test< Tag_Value_Plus >(global_settings, transaction, "test-plus", "sum", "100000000000000000", "1");
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "100000000000000000", "1");
     if ((test_to_execute == "") || (test_to_execute == "39"))
-      pair_test< Tag_Value_Times >(global_settings, transaction, "test-times", "product", "2", "6.5");
+      pair_test< Evaluator_Times >(global_settings, transaction, "test-times", "product", "2", "6.5");
     if ((test_to_execute == "") || (test_to_execute == "40"))
-      pair_test< Tag_Value_Times >(global_settings, transaction, "test-times", "product", "_2", "7");
+      pair_test< Evaluator_Times >(global_settings, transaction, "test-times", "product", "_2", "7");
     if ((test_to_execute == "") || (test_to_execute == "41"))
-      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "2", "5");
+      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "2", "5");
     if ((test_to_execute == "") || (test_to_execute == "42"))
-      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "_2", "5");
+      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "_2", "5");
     if ((test_to_execute == "") || (test_to_execute == "43"))
-      pair_test< Tag_Value_Minus >(global_settings, transaction, "test-minus", "difference", "100000000000000001", "100000000000000000");
+      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "100000000000000001", "100000000000000000");
     if ((test_to_execute == "") || (test_to_execute == "44"))
-      prefix_test< Tag_Value_Negate >(global_settings, transaction, "test-minus", "negation", "3.14");
+      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "3.14");
     if ((test_to_execute == "") || (test_to_execute == "45"))
-      prefix_test< Tag_Value_Negate >(global_settings, transaction, "test-minus", "negation", "-3.");
+      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "-3.");
     if ((test_to_execute == "") || (test_to_execute == "46"))
-      prefix_test< Tag_Value_Negate >(global_settings, transaction, "test-minus", "negation", "100000000000000000");
+      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "100000000000000000");
     if ((test_to_execute == "") || (test_to_execute == "47"))
-      prefix_test< Tag_Value_Negate >(global_settings, transaction, "test-minus", "negation", "one");
+      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "one");
     if ((test_to_execute == "") || (test_to_execute == "48"))
-      pair_test< Tag_Value_Divided >(global_settings, transaction, "test-divided", "quotient", "8", "9");
+      pair_test< Evaluator_Divided >(global_settings, transaction, "test-divided", "quotient", "8", "9");
     if ((test_to_execute == "") || (test_to_execute == "49"))
-      pair_test< Tag_Value_Divided >(global_settings, transaction, "test-divided", "quotient", "_8", "9");
+      pair_test< Evaluator_Divided >(global_settings, transaction, "test-divided", "quotient", "_8", "9");
     if ((test_to_execute == "") || (test_to_execute == "50"))
       union_value_test(global_settings, transaction, "union-value", "_", 1, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "51"))

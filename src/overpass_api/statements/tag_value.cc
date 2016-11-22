@@ -102,11 +102,11 @@ Set_Tag_Statement::Set_Tag_Statement
 
 void Set_Tag_Statement::add_statement(Statement* statement, std::string text)
 {
-  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (tag_value_ && !tag_value)
     tag_value = tag_value_;
   else if (tag_value)
-    add_static_error("set-tag must have exactly one tag-value substatement.");
+    add_static_error("set-tag must have exactly one evaluator substatement.");
   else
     substatement_error(get_name(), statement);
 }
@@ -215,12 +215,12 @@ void Set_Tag_Statement::clear()
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Fixed > Tag_Value_Fixed::statement_maker("value-fixed");
+Generic_Statement_Maker< Evaluator_Fixed > Evaluator_Fixed::statement_maker("eval-fixed");
 
 
-Tag_Value_Fixed::Tag_Value_Fixed
+Evaluator_Fixed::Evaluator_Fixed
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_)
+    : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
   
@@ -235,12 +235,12 @@ Tag_Value_Fixed::Tag_Value_Fixed
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Id > Tag_Value_Id::statement_maker("value-id");
+Generic_Statement_Maker< Evaluator_Id > Evaluator_Id::statement_maker("eval-id");
 
 
-Tag_Value_Id::Tag_Value_Id
+Evaluator_Id::Evaluator_Id
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_)
+    : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
   
@@ -251,12 +251,12 @@ Tag_Value_Id::Tag_Value_Id
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Type > Tag_Value_Type::statement_maker("value-type");
+Generic_Statement_Maker< Evaluator_Type > Evaluator_Type::statement_maker("eval-type");
 
 
-Tag_Value_Type::Tag_Value_Type
+Evaluator_Type::Evaluator_Type
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_)
+    : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
   
@@ -283,12 +283,12 @@ std::string find_value(const std::vector< std::pair< std::string, std::string > 
 }
 
 
-Generic_Statement_Maker< Tag_Value_Value > Tag_Value_Value::statement_maker("value-value");
+Generic_Statement_Maker< Evaluator_Value > Evaluator_Value::statement_maker("eval-value");
 
 
-Tag_Value_Value::Tag_Value_Value
+Evaluator_Value::Evaluator_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_)
+    : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
   
@@ -303,12 +303,12 @@ Tag_Value_Value::Tag_Value_Value
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Generic > Tag_Value_Generic::statement_maker("value-generic");
+Generic_Statement_Maker< Evaluator_Generic > Evaluator_Generic::statement_maker("eval-generic");
 
 
-Tag_Value_Generic::Tag_Value_Generic
+Evaluator_Generic::Evaluator_Generic
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_)
+    : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
   
@@ -319,12 +319,12 @@ Tag_Value_Generic::Tag_Value_Generic
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Count > Tag_Value_Count::statement_maker("value-count");
+Generic_Statement_Maker< Evaluator_Count > Evaluator_Count::statement_maker("eval-count");
 
 
-Tag_Value_Count::Tag_Value_Count
+Evaluator_Count::Evaluator_Count
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value(line_number_), counter(0)
+    : Evaluator(line_number_), counter(0)
 {
   std::map< std::string, std::string > attributes;
   
@@ -350,7 +350,7 @@ Tag_Value_Count::Tag_Value_Count
   else
   {
     ostringstream temp("");
-    temp<<"For the attribute \"type\" of the element \"value-count\""
+    temp<<"For the attribute \"type\" of the element \"eval-count\""
         <<" the only allowed values are \"nodes\", \"ways\", \"relations\", \"deriveds\", \"tags\", "
           "or \"members\" strings.";
     add_static_error(temp.str());
@@ -358,137 +358,137 @@ Tag_Value_Count::Tag_Value_Count
 }
 
 
-std::string Tag_Value_Count::eval(const std::string* key)
+std::string Evaluator_Count::eval(const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members || to_count == Tag_Value_Count::tags)
+  if (to_count == Evaluator_Count::members || to_count == Evaluator_Count::tags)
     return "0";
   return to_string(counter);
 }
 
 
-std::string Tag_Value_Count::eval(const Node_Skeleton* elem,
+std::string Evaluator_Count::eval(const Node_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members)
+  if (to_count == Evaluator_Count::members)
     return "0";
-  else if (to_count == Tag_Value_Count::tags)
+  else if (to_count == Evaluator_Count::tags)
     return to_string(tags->size());
   return to_string(counter);
 }
 
 
-std::string Tag_Value_Count::eval(const Attic< Node_Skeleton >* elem,
+std::string Evaluator_Count::eval(const Attic< Node_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members)
+  if (to_count == Evaluator_Count::members)
     return "0";
-  else if (to_count == Tag_Value_Count::tags)
+  else if (to_count == Evaluator_Count::tags)
     return to_string(tags->size());
   return to_string(counter);
 }
 
 
-std::string Tag_Value_Count::eval(const Way_Skeleton* elem,
+std::string Evaluator_Count::eval(const Way_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members)
+  if (to_count == Evaluator_Count::members)
     return to_string(elem->nds.size());
-  else if (to_count == Tag_Value_Count::tags)
+  else if (to_count == Evaluator_Count::tags)
     return to_string(tags->size());
   return to_string(counter);
 }
 
 
-std::string Tag_Value_Count::eval(const Attic< Way_Skeleton >* elem,
+std::string Evaluator_Count::eval(const Attic< Way_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members)
+  if (to_count == Evaluator_Count::members)
     return to_string(elem->nds.size());
-  else if (to_count == Tag_Value_Count::tags)
+  else if (to_count == Evaluator_Count::tags)
     return to_string(tags->size());
   return to_string(counter);
 }
 
 
-std::string Tag_Value_Count::eval(const Relation_Skeleton* elem,
+std::string Evaluator_Count::eval(const Relation_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members)
+  if (to_count == Evaluator_Count::members)
     return to_string(elem->members.size());
-  else if (to_count == Tag_Value_Count::tags)
+  else if (to_count == Evaluator_Count::tags)
     return to_string(tags->size());
   return to_string(counter);
 }
 
 
-std::string Tag_Value_Count::eval(const Attic< Relation_Skeleton >* elem,
+std::string Evaluator_Count::eval(const Attic< Relation_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members)
+  if (to_count == Evaluator_Count::members)
     return to_string(elem->members.size());
-  else if (to_count == Tag_Value_Count::tags)
+  else if (to_count == Evaluator_Count::tags)
     return to_string(tags->size());
   return to_string(counter);
 }
 
 
-std::string Tag_Value_Count::eval(const Area_Skeleton* elem,
+std::string Evaluator_Count::eval(const Area_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members)
+  if (to_count == Evaluator_Count::members)
     return "0";
-  else if (to_count == Tag_Value_Count::tags)
+  else if (to_count == Evaluator_Count::tags)
     return to_string(tags->size());
   return to_string(counter);
 }
 
 
-std::string Tag_Value_Count::eval(const Derived_Skeleton* elem,
+std::string Evaluator_Count::eval(const Derived_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
-  if (to_count == Tag_Value_Count::members)
+  if (to_count == Evaluator_Count::members)
     return "0";
-  else if (to_count == Tag_Value_Count::tags)
+  else if (to_count == Evaluator_Count::tags)
     return to_string(tags->size());
   return to_string(counter);
 }
 
 
-void Tag_Value_Count::prefetch(const Set_With_Context& set)
+void Evaluator_Count::prefetch(const Set_With_Context& set)
 {
   if (set.name == input)
   {
-    if (to_count == Tag_Value_Count::nodes)
+    if (to_count == Evaluator_Count::nodes)
       counter = count(set.base->nodes) + count(set.base->attic_nodes);
-    else if (to_count == Tag_Value_Count::ways)
+    else if (to_count == Evaluator_Count::ways)
       counter = count(set.base->ways) + count(set.base->attic_ways);
-    else if (to_count == Tag_Value_Count::relations)
+    else if (to_count == Evaluator_Count::relations)
       counter = count(set.base->relations) + count(set.base->attic_relations);
   }
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > Tag_Value_Count::used_sets() const
+std::pair< std::vector< Set_Usage >, uint > Evaluator_Count::used_sets() const
 {
   std::vector< Set_Usage > result;
-  if (to_count == Tag_Value_Count::nodes || to_count == Tag_Value_Count::ways || to_count == Tag_Value_Count::relations)
+  if (to_count == Evaluator_Count::nodes || to_count == Evaluator_Count::ways || to_count == Evaluator_Count::relations)
     result.push_back(Set_Usage(input, 1u));
-  if (to_count == Tag_Value_Count::tags)
+  if (to_count == Evaluator_Count::tags)
     return std::make_pair(result, 2u);
-  else if (to_count == Tag_Value_Count::members)
+  else if (to_count == Evaluator_Count::members)
     return std::make_pair(result, 1u);
   return std::make_pair(result, 0u);
 }
 
   
-std::vector< std::string > Tag_Value_Count::used_tags() const
+std::vector< std::string > Evaluator_Count::used_tags() const
 {
   std::vector< std::string > result;
   return result;
 }
   
 
-void Tag_Value_Count::clear()
+void Evaluator_Count::clear()
 {
   counter = 0;
 }
@@ -497,12 +497,12 @@ void Tag_Value_Count::clear()
 //-----------------------------------------------------------------------------
 
 
-Tag_Value_Pair_Operator::Tag_Value_Pair_Operator(int line_number_) : Tag_Value(line_number_), lhs(0), rhs(0) {}
+Evaluator_Pair_Operator::Evaluator_Pair_Operator(int line_number_) : Evaluator(line_number_), lhs(0), rhs(0) {}
 
 
-void Tag_Value_Pair_Operator::add_statement(Statement* statement, std::string text)
+void Evaluator_Pair_Operator::add_statement(Statement* statement, std::string text)
 {
-  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (!tag_value_)
     substatement_error(get_name(), statement);
   else if (!lhs)
@@ -510,73 +510,73 @@ void Tag_Value_Pair_Operator::add_statement(Statement* statement, std::string te
   else if (!rhs)
     rhs = tag_value_;
   else
-    add_static_error(get_name() + " must have exactly two tag-value substatements.");
+    add_static_error(get_name() + " must have exactly two evaluator substatements.");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const std::string* key)
+std::string Evaluator_Pair_Operator::eval(const std::string* key)
 {
   return process(lhs ? lhs->eval(key) : "", rhs ? rhs->eval(key) : "");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const Node_Skeleton* elem,
+std::string Evaluator_Pair_Operator::eval(const Node_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const Attic< Node_Skeleton >* elem,
+std::string Evaluator_Pair_Operator::eval(const Attic< Node_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const Way_Skeleton* elem,
+std::string Evaluator_Pair_Operator::eval(const Way_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const Attic< Way_Skeleton >* elem,
+std::string Evaluator_Pair_Operator::eval(const Attic< Way_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const Relation_Skeleton* elem,
+std::string Evaluator_Pair_Operator::eval(const Relation_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const Attic< Relation_Skeleton >* elem,
+std::string Evaluator_Pair_Operator::eval(const Attic< Relation_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const Area_Skeleton* elem,
+std::string Evaluator_Pair_Operator::eval(const Area_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Pair_Operator::eval(const Derived_Skeleton* elem,
+std::string Evaluator_Pair_Operator::eval(const Derived_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(lhs ? lhs->eval(elem, tags, key) : "", rhs ? rhs->eval(elem, tags, key) : "");
 }
 
     
-void Tag_Value_Pair_Operator::prefetch(const Set_With_Context& set)
+void Evaluator_Pair_Operator::prefetch(const Set_With_Context& set)
 {
   if (lhs)
     lhs->prefetch(set);
@@ -626,7 +626,7 @@ std::pair< std::vector< Set_Usage >, uint > union_usage(const std::pair< std::ve
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > Tag_Value_Pair_Operator::used_sets() const
+std::pair< std::vector< Set_Usage >, uint > Evaluator_Pair_Operator::used_sets() const
 {
   if (lhs && rhs)
     return union_usage(lhs->used_sets(), rhs->used_sets());
@@ -638,7 +638,7 @@ std::pair< std::vector< Set_Usage >, uint > Tag_Value_Pair_Operator::used_sets()
 }
 
 
-std::vector< std::string > Tag_Value_Pair_Operator::used_tags() const
+std::vector< std::string > Evaluator_Pair_Operator::used_tags() const
 {
   std::vector< std::string > lhs_result;
   if (lhs)
@@ -654,7 +654,7 @@ std::vector< std::string > Tag_Value_Pair_Operator::used_tags() const
 }
   
 
-void Tag_Value_Pair_Operator::clear()
+void Evaluator_Pair_Operator::clear()
 {
   if (lhs)
     lhs->clear();
@@ -666,91 +666,91 @@ void Tag_Value_Pair_Operator::clear()
 //-----------------------------------------------------------------------------
 
 
-Tag_Value_Prefix_Operator::Tag_Value_Prefix_Operator(int line_number_) : Tag_Value(line_number_), rhs(0) {}
+Evaluator_Prefix_Operator::Evaluator_Prefix_Operator(int line_number_) : Evaluator(line_number_), rhs(0) {}
 
 
-void Tag_Value_Prefix_Operator::add_statement(Statement* statement, std::string text)
+void Evaluator_Prefix_Operator::add_statement(Statement* statement, std::string text)
 {
-  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (!tag_value_)
     substatement_error(get_name(), statement);
   else if (!rhs)
     rhs = tag_value_;
   else
-    add_static_error(get_name() + " must have exactly one tag-value substatements.");
+    add_static_error(get_name() + " must have exactly one evaluator substatements.");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const std::string* key)
+std::string Evaluator_Prefix_Operator::eval(const std::string* key)
 {
   return process(rhs ? rhs->eval(key) : "");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const Node_Skeleton* elem,
+std::string Evaluator_Prefix_Operator::eval(const Node_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const Attic< Node_Skeleton >* elem,
+std::string Evaluator_Prefix_Operator::eval(const Attic< Node_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const Way_Skeleton* elem,
+std::string Evaluator_Prefix_Operator::eval(const Way_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const Attic< Way_Skeleton >* elem,
+std::string Evaluator_Prefix_Operator::eval(const Attic< Way_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const Relation_Skeleton* elem,
+std::string Evaluator_Prefix_Operator::eval(const Relation_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const Attic< Relation_Skeleton >* elem,
+std::string Evaluator_Prefix_Operator::eval(const Attic< Relation_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const Area_Skeleton* elem,
+std::string Evaluator_Prefix_Operator::eval(const Area_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Tag_Value_Prefix_Operator::eval(const Derived_Skeleton* elem,
+std::string Evaluator_Prefix_Operator::eval(const Derived_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
 {
   return process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
     
-void Tag_Value_Prefix_Operator::prefetch(const Set_With_Context& set)
+void Evaluator_Prefix_Operator::prefetch(const Set_With_Context& set)
 {
   if (rhs)
     rhs->prefetch(set);
 }
   
 
-std::pair< std::vector< Set_Usage >, uint > Tag_Value_Prefix_Operator::used_sets() const
+std::pair< std::vector< Set_Usage >, uint > Evaluator_Prefix_Operator::used_sets() const
 {
   if (rhs)
     return rhs->used_sets();
@@ -758,7 +758,7 @@ std::pair< std::vector< Set_Usage >, uint > Tag_Value_Prefix_Operator::used_sets
 }
 
 
-std::vector< std::string > Tag_Value_Prefix_Operator::used_tags() const
+std::vector< std::string > Evaluator_Prefix_Operator::used_tags() const
 {
   if (rhs)
     return rhs->used_tags();
@@ -767,7 +767,7 @@ std::vector< std::string > Tag_Value_Prefix_Operator::used_tags() const
 }
   
 
-void Tag_Value_Prefix_Operator::clear()
+void Evaluator_Prefix_Operator::clear()
 {
   if (rhs)
     rhs->clear();
@@ -777,19 +777,19 @@ void Tag_Value_Prefix_Operator::clear()
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_And > Tag_Value_And::statement_maker("value-and");
+Generic_Statement_Maker< Evaluator_And > Evaluator_And::statement_maker("eval-and");
 
 
-Tag_Value_And::Tag_Value_And
+Evaluator_And::Evaluator_And
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Evaluator_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_And::process(const std::string& lhs_s, const std::string& rhs_s) const
+std::string Evaluator_And::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   double lhs_d = 0;
   double rhs_d = 0;  
@@ -803,19 +803,19 @@ std::string Tag_Value_And::process(const std::string& lhs_s, const std::string& 
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Or > Tag_Value_Or::statement_maker("value-or");
+Generic_Statement_Maker< Evaluator_Or > Evaluator_Or::statement_maker("eval-or");
 
 
-Tag_Value_Or::Tag_Value_Or
+Evaluator_Or::Evaluator_Or
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Evaluator_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Or::process(const std::string& lhs_s, const std::string& rhs_s) const
+std::string Evaluator_Or::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   double lhs_d = 0;
   double rhs_d = 0;  
@@ -829,19 +829,19 @@ std::string Tag_Value_Or::process(const std::string& lhs_s, const std::string& r
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Not > Tag_Value_Not::statement_maker("value-not");
+Generic_Statement_Maker< Evaluator_Not > Evaluator_Not::statement_maker("eval-not");
 
 
-Tag_Value_Not::Tag_Value_Not
+Evaluator_Not::Evaluator_Not
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Prefix_Operator(line_number_)
+    : Evaluator_Prefix_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Not::process(const std::string& rhs_s) const
+std::string Evaluator_Not::process(const std::string& rhs_s) const
 {
   double rhs_d = 0;  
   if (try_double(rhs_s, rhs_d))
@@ -854,19 +854,19 @@ std::string Tag_Value_Not::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Equal > Tag_Value_Equal::statement_maker("value-equal");
+Generic_Statement_Maker< Evaluator_Equal > Evaluator_Equal::statement_maker("eval-equal");
 
 
-Tag_Value_Equal::Tag_Value_Equal
+Evaluator_Equal::Evaluator_Equal
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Evaluator_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
+std::string Evaluator_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
@@ -885,19 +885,19 @@ std::string Tag_Value_Equal::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Less > Tag_Value_Less::statement_maker("value-less");
+Generic_Statement_Maker< Evaluator_Less > Evaluator_Less::statement_maker("eval-less");
 
 
-Tag_Value_Less::Tag_Value_Less
+Evaluator_Less::Evaluator_Less
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Evaluator_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Less::process(const std::string& lhs_s, const std::string& rhs_s) const
+std::string Evaluator_Less::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
@@ -916,19 +916,19 @@ std::string Tag_Value_Less::process(const std::string& lhs_s, const std::string&
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Plus > Tag_Value_Plus::statement_maker("value-plus");
+Generic_Statement_Maker< Evaluator_Plus > Evaluator_Plus::statement_maker("eval-plus");
 
 
-Tag_Value_Plus::Tag_Value_Plus
+Evaluator_Plus::Evaluator_Plus
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Evaluator_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Plus::process(const std::string& lhs_s, const std::string& rhs_s) const
+std::string Evaluator_Plus::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
@@ -947,19 +947,19 @@ std::string Tag_Value_Plus::process(const std::string& lhs_s, const std::string&
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Negate > Tag_Value_Negate::statement_maker("value-negate");
+Generic_Statement_Maker< Evaluator_Negate > Evaluator_Negate::statement_maker("eval-negate");
 
 
-Tag_Value_Negate::Tag_Value_Negate
+Evaluator_Negate::Evaluator_Negate
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Prefix_Operator(line_number_)
+    : Evaluator_Prefix_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Negate::process(const std::string& rhs_s) const
+std::string Evaluator_Negate::process(const std::string& rhs_s) const
 {
   int64 rhs_l = 0;  
   if (try_int64(rhs_s, rhs_l))
@@ -976,19 +976,19 @@ std::string Tag_Value_Negate::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Minus > Tag_Value_Minus::statement_maker("value-minus");
+Generic_Statement_Maker< Evaluator_Minus > Evaluator_Minus::statement_maker("eval-minus");
 
 
-Tag_Value_Minus::Tag_Value_Minus
+Evaluator_Minus::Evaluator_Minus
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Evaluator_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Minus::process(const std::string& lhs_s, const std::string& rhs_s) const
+std::string Evaluator_Minus::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
@@ -1007,19 +1007,19 @@ std::string Tag_Value_Minus::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Times > Tag_Value_Times::statement_maker("value-times");
+Generic_Statement_Maker< Evaluator_Times > Evaluator_Times::statement_maker("eval-times");
 
 
-Tag_Value_Times::Tag_Value_Times
+Evaluator_Times::Evaluator_Times
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Evaluator_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Times::process(const std::string& lhs_s, const std::string& rhs_s) const
+std::string Evaluator_Times::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
@@ -1038,19 +1038,19 @@ std::string Tag_Value_Times::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Divided > Tag_Value_Divided::statement_maker("value-divided");
+Generic_Statement_Maker< Evaluator_Divided > Evaluator_Divided::statement_maker("eval-divided");
 
 
-Tag_Value_Divided::Tag_Value_Divided
+Evaluator_Divided::Evaluator_Divided
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Pair_Operator(line_number_)
+    : Evaluator_Pair_Operator(line_number_)
 {
   std::map< std::string, std::string > attributes;  
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
-std::string Tag_Value_Divided::process(const std::string& lhs_s, const std::string& rhs_s) const
+std::string Evaluator_Divided::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   // On purpose no int64 detection  
   
@@ -1066,10 +1066,10 @@ std::string Tag_Value_Divided::process(const std::string& lhs_s, const std::stri
 //-----------------------------------------------------------------------------
 
 
-Tag_Value_Aggregator::Tag_Value_Aggregator
+Evaluator_Aggregator::Evaluator_Aggregator
     (const string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
-    : Tag_Value(line_number_), rhs(0), input_set(0), value_set(false)
+    : Evaluator(line_number_), rhs(0), input_set(0), value_set(false)
 {
   std::map< std::string, std::string > attributes;
   
@@ -1081,20 +1081,20 @@ Tag_Value_Aggregator::Tag_Value_Aggregator
 }
 
 
-void Tag_Value_Aggregator::add_statement(Statement* statement, std::string text)
+void Evaluator_Aggregator::add_statement(Statement* statement, std::string text)
 {
-  Tag_Value* tag_value_ = dynamic_cast< Tag_Value* >(statement);
+  Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (!tag_value_)
     substatement_error(get_name(), statement);
   else if (!rhs)
     rhs = tag_value_;
   else
-    add_static_error(get_name() + " must have exactly one tag-value substatements.");
+    add_static_error(get_name() + " must have exactly one evaluator substatements.");
 }
 
 
 template< typename Index, typename Maybe_Attic, typename Object >
-void eval_elems(Tag_Value_Aggregator* aggregator, const std::map< Index, std::vector< Maybe_Attic > >& elems,
+void eval_elems(Evaluator_Aggregator* aggregator, const std::map< Index, std::vector< Maybe_Attic > >& elems,
     Tag_Store< Index, Object >* tag_store, const std::string* key)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator idx_it = elems.begin();
@@ -1118,7 +1118,7 @@ void eval_elems(Tag_Value_Aggregator* aggregator, const std::map< Index, std::ve
 }
 
   
-std::string Tag_Value_Aggregator::eval_input(const std::string* key)
+std::string Evaluator_Aggregator::eval_input(const std::string* key)
 {
   if (!input_set || !rhs)
     return "";
@@ -1137,14 +1137,14 @@ std::string Tag_Value_Aggregator::eval_input(const std::string* key)
 }
 
 
-void Tag_Value_Aggregator::prefetch(const Set_With_Context& set)
+void Evaluator_Aggregator::prefetch(const Set_With_Context& set)
 {
   if (set.name == input)
     input_set = &set;
 }
 
   
-std::pair< std::vector< Set_Usage >, uint > Tag_Value_Aggregator::used_sets() const
+std::pair< std::vector< Set_Usage >, uint > Evaluator_Aggregator::used_sets() const
 {
   if (rhs)
   {
@@ -1167,15 +1167,15 @@ std::pair< std::vector< Set_Usage >, uint > Tag_Value_Aggregator::used_sets() co
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Union_Value > Tag_Value_Union_Value::statement_maker("value-union-value");
+Generic_Statement_Maker< Evaluator_Union_Value > Evaluator_Union_Value::statement_maker("eval-union-value");
 
 
-Tag_Value_Union_Value::Tag_Value_Union_Value
+Evaluator_Union_Value::Evaluator_Union_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Aggregator("value-union-value", line_number_, input_attributes, global_settings) {}
+    : Evaluator_Aggregator("eval-union-value", line_number_, input_attributes, global_settings) {}
 
 
-std::string Tag_Value_Union_Value::update_value(const std::string& agg_value, const std::string& new_value)
+std::string Evaluator_Union_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
   if (new_value == "" || agg_value == new_value)
     return agg_value;
@@ -1189,15 +1189,15 @@ std::string Tag_Value_Union_Value::update_value(const std::string& agg_value, co
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Min_Value > Tag_Value_Min_Value::statement_maker("value-min-value");
+Generic_Statement_Maker< Evaluator_Min_Value > Evaluator_Min_Value::statement_maker("eval-min-value");
 
 
-Tag_Value_Min_Value::Tag_Value_Min_Value
+Evaluator_Min_Value::Evaluator_Min_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Aggregator("value-min-value", line_number_, input_attributes, global_settings) {}
+    : Evaluator_Aggregator("eval-min-value", line_number_, input_attributes, global_settings) {}
 
 
-std::string Tag_Value_Min_Value::update_value(const std::string& agg_value, const std::string& new_value)
+std::string Evaluator_Min_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {  
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
@@ -1221,15 +1221,15 @@ std::string Tag_Value_Min_Value::update_value(const std::string& agg_value, cons
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Max_Value > Tag_Value_Max_Value::statement_maker("value-max-value");
+Generic_Statement_Maker< Evaluator_Max_Value > Evaluator_Max_Value::statement_maker("eval-max-value");
 
 
-Tag_Value_Max_Value::Tag_Value_Max_Value
+Evaluator_Max_Value::Evaluator_Max_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Aggregator("value-max-value", line_number_, input_attributes, global_settings) {}
+    : Evaluator_Aggregator("eval-max-value", line_number_, input_attributes, global_settings) {}
 
 
-std::string Tag_Value_Max_Value::update_value(const std::string& agg_value, const std::string& new_value)
+std::string Evaluator_Max_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
@@ -1248,15 +1248,15 @@ std::string Tag_Value_Max_Value::update_value(const std::string& agg_value, cons
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Sum_Value > Tag_Value_Sum_Value::statement_maker("value-sum-value");
+Generic_Statement_Maker< Evaluator_Sum_Value > Evaluator_Sum_Value::statement_maker("eval-sum-value");
 
 
-Tag_Value_Sum_Value::Tag_Value_Sum_Value
+Evaluator_Sum_Value::Evaluator_Sum_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Aggregator("value-sum-value", line_number_, input_attributes, global_settings) {}
+    : Evaluator_Aggregator("eval-sum-value", line_number_, input_attributes, global_settings) {}
 
 
-std::string Tag_Value_Sum_Value::update_value(const std::string& agg_value, const std::string& new_value)
+std::string Evaluator_Sum_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
   int64 lhs_l = 0;
   int64 rhs_l = 0;  
@@ -1275,15 +1275,15 @@ std::string Tag_Value_Sum_Value::update_value(const std::string& agg_value, cons
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Tag_Value_Set_Value > Tag_Value_Set_Value::statement_maker("value-set-value");
+Generic_Statement_Maker< Evaluator_Set_Value > Evaluator_Set_Value::statement_maker("eval-set-value");
 
 
-Tag_Value_Set_Value::Tag_Value_Set_Value
+Evaluator_Set_Value::Evaluator_Set_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Tag_Value_Aggregator("value-set-value", line_number_, input_attributes, global_settings) {}
+    : Evaluator_Aggregator("eval-set-value", line_number_, input_attributes, global_settings) {}
 
 
-std::string Tag_Value_Set_Value::update_value(const std::string& agg_value, const std::string& new_value)
+std::string Evaluator_Set_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
   if (values.empty())
     values.push_back(agg_value);
@@ -1307,7 +1307,7 @@ std::string Tag_Value_Set_Value::update_value(const std::string& agg_value, cons
 }
 
 
-void Tag_Value_Set_Value::clear()
+void Evaluator_Set_Value::clear()
 {
   values.clear();
 }
