@@ -95,9 +95,11 @@ noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la l
 statements_cc = \
   overpass_api/data/bbox_filter.cc \
   overpass_api/statements/statement.cc \
+  overpass_api/statements/aggregators.cc \
   overpass_api/statements/area_query.cc \
   overpass_api/statements/around.cc \
   overpass_api/statements/bbox_query.cc \
+  overpass_api/statements/binary_operators.cc \
   overpass_api/statements/changed.cc \
   overpass_api/statements/convert.cc \
   overpass_api/statements/coord_query.cc \
@@ -117,6 +119,7 @@ statements_cc = \
   overpass_api/statements/tag_value.cc \
   overpass_api/statements/query.cc \
   overpass_api/statements/recurse.cc \
+  overpass_api/statements/unary_operators.cc \
   overpass_api/statements/union.cc \
   overpass_api/statements/user.cc \
   expat/escape_json.cc \
@@ -231,16 +234,21 @@ nobase_dist_HEADERS = \
   overpass_api/osm-backend/relation_updater.h\
   overpass_api/osm-backend/tags_updater.h\
   overpass_api/osm-backend/way_updater.h\
+  overpass_api/statements/aggregators.h\
   overpass_api/statements/area_query.h\
   overpass_api/statements/around.h\
   overpass_api/statements/bbox_query.h\
+  overpass_api/statements/binary_operators.h\
   overpass_api/statements/changed.h\
+  overpass_api/statements/convert.h\
   overpass_api/statements/coord_query.h\
   overpass_api/statements/difference.h\
+  overpass_api/statements/filter.h\
   overpass_api/statements/foreach.h\
   overpass_api/statements/id_query.h\
   overpass_api/statements/item.h\
   overpass_api/statements/make_area.h\
+  overpass_api/statements/make.h\
   overpass_api/statements/map_to_area.h\
   overpass_api/statements/newer.h\
   overpass_api/statements/osm_script.h\
@@ -251,6 +259,8 @@ nobase_dist_HEADERS = \
   overpass_api/statements/recurse.h\
   overpass_api/statements/statement_dump.h\
   overpass_api/statements/statement.h\
+  overpass_api/statements/tag_value.h\
+  overpass_api/statements/unary_operators.h\
   overpass_api/statements/union.h\
   overpass_api/statements/user.h\
   pt_diagrams/processed_input.h\

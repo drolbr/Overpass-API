@@ -18,10 +18,13 @@
 
 
 #include "../data/utils.h"
+#include "aggregators.h"
+#include "binary_operators.h"
 #include "id_query.h"
 #include "make.h"
 #include "print.h"
 #include "tag_value.h"
+#include "unary_operators.h"
 #include "union.h"
 
 

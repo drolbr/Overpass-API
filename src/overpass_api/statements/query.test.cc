@@ -24,12 +24,14 @@
 #include "../output_formats/output_xml.h"
 #include "around.h"
 #include "bbox_query.h"
+#include "binary_operators.h"
 #include "filter.h"
 #include "id_query.h"
 #include "item.h"
 #include "query.h"
 #include "print.h"
 #include "recurse.h"
+#include "unary_operators.h"
 #include "union.h"
 
 
