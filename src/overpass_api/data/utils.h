@@ -20,9 +20,9 @@
 #define DE__OSM3S___OVERPASS_API__DATA__UTILS_H
 
 
-#include "../core/basic_types.h"
+#include "../core/datatypes.h"
 
-
+#include <algorithm>
 #include <cstdlib>
 #include <iomanip>
 #include <map>
@@ -87,6 +87,27 @@ struct Array
   
   T* ptr;
 };
+
+
+template< typename Index, typename Object >
+void sort_second(std::map< Index, std::vector< Object > >& items)
+{
+  for (typename std::map< Index, std::vector< Object > >::iterator it = items.begin(); it != items.end(); ++it)
+    std::sort(it->second.begin(), it->second.end());
+}
+
+
+inline void sort(Set& set)
+{
+  sort_second(set.nodes);
+  sort_second(set.attic_nodes);
+  sort_second(set.ways);
+  sort_second(set.attic_ways);
+  sort_second(set.relations);
+  sort_second(set.attic_relations);
+  sort_second(set.areas);
+  sort_second(set.deriveds);
+}
 
 
 #endif

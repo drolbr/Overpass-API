@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "../data/abstract_processing.h"
+#include "../data/utils.h"
 #include "union.h"
 
 
@@ -74,6 +75,7 @@ void Union_Statement::execute(Resource_Manager& rman)
     rman.pop_reference();
     
     Set& summand(rman.sets()[(*it)->get_result_name()]);
+    sort(summand);
 
     indexed_set_union(base_set.nodes, summand.nodes);
     indexed_set_union(base_set.attic_nodes, summand.attic_nodes);
