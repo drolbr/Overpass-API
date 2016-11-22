@@ -23,6 +23,7 @@
 #include "id_query.h"
 #include "make.h"
 #include "print.h"
+#include "set_tag.h"
 #include "tag_value.h"
 #include "unary_operators.h"
 #include "union.h"

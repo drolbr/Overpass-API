@@ -20,7 +20,7 @@
 #include "../data/tag_store.h"
 #include "../data/utils.h"
 #include "convert.h"
-#include "tag_value.h"
+#include "set_tag.h"
 
 
 Generic_Statement_Maker< Convert_Statement > Convert_Statement::statement_maker("convert");

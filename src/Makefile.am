@@ -94,7 +94,6 @@ noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la l
 
 statements_cc = \
   overpass_api/data/bbox_filter.cc \
-  overpass_api/statements/statement.cc \
   overpass_api/statements/aggregators.cc \
   overpass_api/statements/area_query.cc \
   overpass_api/statements/around.cc \
@@ -104,21 +103,24 @@ statements_cc = \
   overpass_api/statements/convert.cc \
   overpass_api/statements/coord_query.cc \
   overpass_api/statements/difference.cc \
+  overpass_api/statements/evaluator.cc \
   overpass_api/statements/filter.cc \
   overpass_api/statements/foreach.cc \
   overpass_api/statements/id_query.cc \
   overpass_api/statements/item.cc \
-  overpass_api/statements/make.cc \
   overpass_api/statements/make_area.cc \
+  overpass_api/statements/make.cc \
   overpass_api/statements/map_to_area.cc \
   overpass_api/statements/newer.cc \
   overpass_api/statements/osm_script.cc \
   overpass_api/statements/pivot.cc \
   overpass_api/statements/polygon_query.cc \
   overpass_api/statements/print.cc \
-  overpass_api/statements/tag_value.cc \
   overpass_api/statements/query.cc \
   overpass_api/statements/recurse.cc \
+  overpass_api/statements/set_tag.cc \
+  overpass_api/statements/statement.cc \
+  overpass_api/statements/tag_value.cc \
   overpass_api/statements/unary_operators.cc \
   overpass_api/statements/union.cc \
   overpass_api/statements/user.cc \
@@ -243,6 +245,7 @@ nobase_dist_HEADERS = \
   overpass_api/statements/convert.h\
   overpass_api/statements/coord_query.h\
   overpass_api/statements/difference.h\
+  overpass_api/statements/evaluator.h\
   overpass_api/statements/filter.h\
   overpass_api/statements/foreach.h\
   overpass_api/statements/id_query.h\
@@ -257,6 +260,7 @@ nobase_dist_HEADERS = \
   overpass_api/statements/print.h\
   overpass_api/statements/query.h\
   overpass_api/statements/recurse.h\
+  overpass_api/statements/set_tag.h\
   overpass_api/statements/statement_dump.h\
   overpass_api/statements/statement.h\
   overpass_api/statements/tag_value.h\

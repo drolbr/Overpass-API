@@ -110,47 +110,6 @@ void Evaluator_Pair_Operator::prefetch(const Set_With_Context& set)
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > union_usage(const std::pair< std::vector< Set_Usage >, uint >& lhs,
-    const std::pair< std::vector< Set_Usage >, uint >& rhs)
-{
-  std::vector< Set_Usage > result(lhs.first.size() + rhs.first.size(), Set_Usage("", 0u));
-    
-  std::vector< Set_Usage >::const_iterator it_lhs = lhs.first.begin();
-  std::vector< Set_Usage >::const_iterator it_rhs = rhs.first.begin();
-  std::vector< Set_Usage >::iterator it_res = result.begin();
-    
-  while (it_lhs != lhs.first.end() && it_rhs != rhs.first.end())
-  {
-    if (it_lhs->set_name < it_rhs->set_name)
-    {
-      *it_res = *it_lhs;
-      ++it_res;
-      ++it_lhs;        
-    }
-    else if (it_rhs->set_name < it_lhs->set_name)
-    {
-      *it_res = *it_rhs;
-      ++it_res;
-      ++it_rhs;
-    }
-    else
-    {
-      *it_res = *it_lhs;
-      it_res->usage |= it_rhs->usage;
-      ++it_res;
-      ++it_lhs;
-      ++it_rhs;
-    }
-  }
-  
-  it_res = std::copy(it_lhs, lhs.first.end(), it_res);
-  it_res = std::copy(it_rhs, rhs.first.end(), it_res);  
-  result.erase(it_res, result.end());
-  
-  return std::make_pair(result, lhs.second | rhs.second);
-}
-
-
 std::pair< std::vector< Set_Usage >, uint > Evaluator_Pair_Operator::used_sets() const
 {
   if (lhs && rhs)

@@ -22,8 +22,8 @@
 
 #include "../data/tag_store.h"
 #include "../data/utils.h"
+#include "evaluator.h"
 #include "statement.h"
-#include "tag_value.h"
 
 #include <map>
 #include <string>
