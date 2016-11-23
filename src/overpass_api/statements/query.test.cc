@@ -22,6 +22,7 @@
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
 #include "../output_formats/output_xml.h"
+#include "aggregators.h"
 #include "around.h"
 #include "bbox_query.h"
 #include "binary_operators.h"
@@ -674,6 +675,84 @@ void perform_filter_with_key
       stmt1.stmt().execute(rman);
     }
     perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_filter_from_previous_element
+    (string type, uint64 start_id, string key1, string key2, string from_set, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("ref", to_string(start_id));
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Union_Value > stmt6;
+      SProxy< Evaluator_Value > stmt7;
+      stmt6.stmt().add_statement(&stmt7("k", key2).stmt(), "");
+      stmt4.stmt().add_statement(&stmt6.stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+    
+    std::string from_set = "foo";
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("ref", to_string(start_id));
+      stmt1("into", from_set);        
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("into", "b");
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Union_Value > stmt6;
+      SProxy< Evaluator_Value > stmt7;
+      stmt6("from", from_set).stmt().add_statement(&stmt7("k", key2).stmt(), "");
+      stmt4.stmt().add_statement(&stmt6.stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    
+    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
+      (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
+      (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    {
+      cout<<"Sets \"_\" and \"b\" differ:\n";
+      perform_print(rman, "b");
+    }
   }
   catch (File_Error e)
   {
@@ -1610,15 +1689,25 @@ int main(int argc, char* args[])
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
     
   if ((test_to_execute == "") || (test_to_execute == "154"))
-    // Test a bbox combined with a key-value pair via a filter
+    // Test a key combined with a key-value pair via a filter
     perform_filter_with_key("node", "node_key_5", "node_value_5", "node_key", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "155"))
-    // Test a bbox combined with a key-value pair via a filter
+    // Test a key combined with a key-value pair via a filter
     perform_filter_with_key("way", "way_key_5", "way_value_5", "way_key", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "156"))
-    // Test a bbox combined with a key-value pair via a filter
+    // Test a key combined with a key-value pair via a filter
     perform_filter_with_key("relation", "relation_key_5", "relation_value_5",
                             "relation_key_2/4", args[3]);
+    
+  if ((test_to_execute == "") || (test_to_execute == "157"))
+    // Test a key-value pair via a filter set by a previous element
+    perform_filter_from_previous_element("node", 14 + global_node_offset, "node_key_11", "node_key_7", "_", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "158"))
+    // Test a key-value pair via a filter set by a previous element
+    perform_filter_from_previous_element("way", 14, "way_key_11", "way_key_7", "_", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "159"))
+    // Test a key-value pair via a filter set by a previous element
+    perform_filter_from_previous_element("relation", 14, "relation_key_11", "relation_key_7", "_", args[3]);
   
   cout<<"</osm>\n";
   return 0;
