@@ -43,7 +43,7 @@ class Filter_Constraint : public Query_Constraint
 
 template< typename Index, typename Maybe_Attic, typename Object >
 void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
-    Tag_Store< Index, Object >* tag_store, Evaluator& criterion)
+    Tag_Store< Index, Object >* tag_store, Eval_Task& task)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -58,7 +58,7 @@ void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
           tag_store ? tag_store->get(it_idx->first, *it_elem) : 0;
       std::vector< std::pair< std::string, std::string > > result_tags;
       
-      std::string valuation = criterion.eval(&*it_elem, tags, 0);
+      std::string valuation = task.eval(&*it_elem, tags, 0);
       
       double val_d = 0;
       if (valuation != "" && (!try_double(valuation, val_d) || val_d != 0))
@@ -77,31 +77,25 @@ void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, S
   
   std::pair< std::vector< Set_Usage >, uint > set_usage = stmt->get_criterion()->used_sets();
   
-  Array< Set_With_Context > set_contexts(set_usage.first.size());
-  for (std::vector< Set_Usage >::iterator it = set_usage.first.begin(); it != set_usage.first.end(); ++it)
-  {
-    Set_With_Context& context = set_contexts.ptr[std::distance(set_usage.first.begin(), it)];
-    context.name = it->set_name;
-    
-    std::map< std::string, Set >::const_iterator mit(rman.sets().find(context.name));
-    if (mit != rman.sets().end())
-      context.prefetch(*it, mit->second, *rman.get_transaction());
-    
-    stmt->get_criterion()->prefetch(context);
-  }
+  Prepare_Task_Context context(set_usage, rman);
+  
+  Owner< Eval_Task > task(stmt->get_criterion()->get_task(context));
   
   Set_With_Context into_context;
   into_context.name = "";
   into_context.prefetch(Set_Usage(into_context.name, set_usage.second), into, *rman.get_transaction());
 
-  eval_elems(into.nodes, into_context.tag_store_nodes, *stmt->get_criterion());
-  eval_elems(into.attic_nodes, into_context.tag_store_attic_nodes, *stmt->get_criterion());
-  eval_elems(into.ways, into_context.tag_store_ways, *stmt->get_criterion());
-  eval_elems(into.attic_ways, into_context.tag_store_attic_ways, *stmt->get_criterion());
-  eval_elems(into.relations, into_context.tag_store_relations, *stmt->get_criterion());
-  eval_elems(into.attic_relations, into_context.tag_store_attic_relations, *stmt->get_criterion());
-  eval_elems(into.areas, into_context.tag_store_areas, *stmt->get_criterion());
-  eval_elems(into.deriveds, into_context.tag_store_deriveds, *stmt->get_criterion());
+  if (task)
+  {
+    eval_elems(into.nodes, into_context.tag_store_nodes, *task);
+    eval_elems(into.attic_nodes, into_context.tag_store_attic_nodes, *task);
+    eval_elems(into.ways, into_context.tag_store_ways, *task);
+    eval_elems(into.attic_ways, into_context.tag_store_attic_ways, *task);
+    eval_elems(into.relations, into_context.tag_store_relations, *task);
+    eval_elems(into.attic_relations, into_context.tag_store_attic_relations, *task);
+    eval_elems(into.areas, into_context.tag_store_areas, *task);
+    eval_elems(into.deriveds, into_context.tag_store_deriveds, *task);
+  }
 }
 
 

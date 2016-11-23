@@ -37,72 +37,72 @@ void Evaluator_Prefix_Operator::add_statement(Statement* statement, std::string 
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const std::string* key)
+Eval_Task* Evaluator_Prefix_Operator::get_task(const Prepare_Task_Context& context)
 {
-  return process(rhs ? rhs->eval(key) : "");
+  Eval_Task* rhs_task = rhs ? rhs->get_task(context) : 0;
+  return new Unary_Eval_Task(rhs_task, this);
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const Node_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+std::string Unary_Eval_Task::eval(const std::string* key) const
 {
-  return process(rhs ? rhs->eval(elem, tags, key) : "");
+  return evaluator->process(rhs ? rhs->eval(key) : "");
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const Attic< Node_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+std::string Unary_Eval_Task::eval(const Node_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  return process(rhs ? rhs->eval(elem, tags, key) : "");
+  return evaluator->process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const Way_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+std::string Unary_Eval_Task::eval(const Attic< Node_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  return process(rhs ? rhs->eval(elem, tags, key) : "");
+  return evaluator->process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const Attic< Way_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+std::string Unary_Eval_Task::eval(const Way_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  return process(rhs ? rhs->eval(elem, tags, key) : "");
+  return evaluator->process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const Relation_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+std::string Unary_Eval_Task::eval(const Attic< Way_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  return process(rhs ? rhs->eval(elem, tags, key) : "");
+  return evaluator->process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const Attic< Relation_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+std::string Unary_Eval_Task::eval(const Relation_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  return process(rhs ? rhs->eval(elem, tags, key) : "");
+  return evaluator->process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const Area_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+std::string Unary_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  return process(rhs ? rhs->eval(elem, tags, key) : "");
+  return evaluator->process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
 
-std::string Evaluator_Prefix_Operator::eval(const Derived_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
+std::string Unary_Eval_Task::eval(const Area_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  return process(rhs ? rhs->eval(elem, tags, key) : "");
+  return evaluator->process(rhs ? rhs->eval(elem, tags, key) : "");
 }
 
-    
-void Evaluator_Prefix_Operator::prefetch(const Set_With_Context& set)
+
+std::string Unary_Eval_Task::eval(const Derived_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (rhs)
-    rhs->prefetch(set);
+  return evaluator->process(rhs ? rhs->eval(elem, tags, key) : "");
 }
   
 
@@ -120,13 +120,6 @@ std::vector< std::string > Evaluator_Prefix_Operator::used_tags() const
     return rhs->used_tags();
   
   return std::vector< std::string >();
-}
-  
-
-void Evaluator_Prefix_Operator::clear()
-{
-  if (rhs)
-    rhs->clear();
 }
 
 

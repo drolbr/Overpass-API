@@ -67,6 +67,33 @@ void Set_With_Context::prefetch(const Set_Usage& usage, const Set& set, Transact
 }
 
 
+Prepare_Task_Context::Prepare_Task_Context(
+    std::pair< std::vector< Set_Usage >, uint > set_usage, Resource_Manager& rman)
+    : contexts(set_usage.first.size())
+{
+  for (std::vector< Set_Usage >::iterator it = set_usage.first.begin(); it != set_usage.first.end(); ++it)
+  {
+    Set_With_Context& context = contexts[std::distance(set_usage.first.begin(), it)];
+    context.name = it->set_name;
+    
+    std::map< std::string, Set >::const_iterator mit(rman.sets().find(context.name));
+    if (mit != rman.sets().end())
+      context.prefetch(*it, mit->second, *rman.get_transaction());
+  }
+}
+
+
+const Set_With_Context* Prepare_Task_Context::get_set(const std::string& set_name) const
+{
+  for (uint i = 0; i < contexts.size(); ++i)
+  {
+    if (contexts[i].name == set_name)
+      return &contexts[i];
+  }
+  return 0;
+}
+
+
 std::pair< std::vector< Set_Usage >, uint > union_usage(const std::pair< std::vector< Set_Usage >, uint >& lhs,
     const std::pair< std::vector< Set_Usage >, uint >& rhs)
 {

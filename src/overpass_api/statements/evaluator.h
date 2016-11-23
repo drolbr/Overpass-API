@@ -83,35 +83,68 @@ public:
 };
 
 
+struct Prepare_Task_Context
+{
+  Prepare_Task_Context(std::pair< std::vector< Set_Usage >, uint > set_usage, Resource_Manager& rman);
+  const Set_With_Context* get_set(const std::string& set_name) const;
+  
+private:
+  Array< Set_With_Context > contexts;
+};
+
+
+struct Eval_Task
+{
+  virtual ~Eval_Task() {}
+  
+  virtual std::string eval(const std::string* key) const = 0;
+  
+  virtual std::string eval(const Node_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return eval(key); }
+  virtual std::string eval(const Attic< Node_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return eval(key); }
+  virtual std::string eval(const Way_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return eval(key); }
+  virtual std::string eval(const Attic< Way_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return eval(key); }
+  virtual std::string eval(const Relation_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return eval(key); }
+  virtual std::string eval(const Attic< Relation_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return eval(key); }
+  virtual std::string eval(const Area_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return eval(key); }
+  virtual std::string eval(const Derived_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return eval(key); }
+};
+
+
+struct Const_Eval_Task : public Eval_Task
+{
+  Const_Eval_Task(const std::string& value_) : value(value_) {}
+  
+  virtual std::string eval(const std::string* key) const { return value; }
+
+private:
+  std::string value;
+};
+
+
 struct Evaluator : public Statement
 {
   Evaluator(int line_number) : Statement(line_number) {}
-
-  virtual std::string eval(const std::string* key) = 0;
-  virtual std::string eval(const Node_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) = 0;
-  virtual std::string eval(const Attic< Node_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) = 0;
-  virtual std::string eval(const Way_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) = 0;
-  virtual std::string eval(const Attic< Way_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) = 0;
-  virtual std::string eval(const Relation_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) = 0;
-  virtual std::string eval(const Attic< Relation_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) = 0;
-  virtual std::string eval(const Area_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) = 0;
-  virtual std::string eval(const Derived_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) = 0;
-      
-  virtual void prefetch(const Set_With_Context& set) = 0;
   
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const = 0;
-  
   virtual std::vector< std::string > used_tags() const = 0;
   
-  virtual void clear() = 0;
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context) = 0;
 };
 
 

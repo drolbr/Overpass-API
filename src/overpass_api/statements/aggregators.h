@@ -38,42 +38,15 @@ struct Evaluator_Aggregator : public Evaluator
   Evaluator_Aggregator(const string& func_name, int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);  
   virtual void add_statement(Statement* statement, string text);
-  
-  virtual std::string update_value(const std::string& agg_value, const std::string& new_value) = 0;
-  
-  std::string eval_input(const std::string* key);
-  
-  virtual std::string eval(const std::string* key) { return eval_input(key); }
-  virtual std::string eval(const Node_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
-  { return eval_input(key); }
-  virtual std::string eval(const Attic< Node_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
-  { return eval_input(key); }
-  virtual std::string eval(const Way_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
-  { return eval_input(key); }
-  virtual std::string eval(const Attic< Way_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
-  { return eval_input(key); }
-  virtual std::string eval(const Relation_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
-  { return eval_input(key); }
-  virtual std::string eval(const Attic< Relation_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
-  { return eval_input(key); }
-  virtual std::string eval(const Area_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
-  { return eval_input(key); }
-  virtual std::string eval(const Derived_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key)
-  { return eval_input(key); }
-      
-  virtual void prefetch(const Set_With_Context& set);
+  virtual void execute(Resource_Manager& rman) {}
   
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;
-
   virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }  
+  
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context);
+  
+  virtual std::string update_value(const std::string& agg_value, const std::string& new_value) = 0;
+
   virtual void clear() {}
   
   std::string input;
@@ -91,7 +64,6 @@ public:
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-union-value"; }
   virtual string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Union_Value() {}
   
   static Generic_Statement_Maker< Evaluator_Union_Value > statement_maker;
@@ -107,7 +79,6 @@ public:
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-min-value"; }
   virtual string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Min_Value() {}
   
   static Generic_Statement_Maker< Evaluator_Min_Value > statement_maker;
@@ -123,7 +94,6 @@ public:
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-max-value"; }
   virtual string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Max_Value() {}
   
   static Generic_Statement_Maker< Evaluator_Max_Value > statement_maker;
@@ -139,7 +109,6 @@ public:
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-sum-value"; }
   virtual string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Sum_Value() {}
   
   static Generic_Statement_Maker< Evaluator_Sum_Value > statement_maker;
@@ -155,7 +124,6 @@ public:
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-set-value"; }
   virtual string get_result_name() const { return ""; }
-  virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Set_Value() {}
   
   static Generic_Statement_Maker< Evaluator_Set_Value > statement_maker;

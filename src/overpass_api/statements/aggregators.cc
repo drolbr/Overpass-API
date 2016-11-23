@@ -33,7 +33,7 @@ Evaluator_Aggregator::Evaluator_Aggregator
   
   eval_attributes_array(func_name, attributes, input_attributes);
   
-  input = attributes["from"];  
+  input = attributes["from"];
 }
 
 
@@ -50,8 +50,8 @@ void Evaluator_Aggregator::add_statement(Statement* statement, std::string text)
 
 
 template< typename Index, typename Maybe_Attic, typename Object >
-void eval_elems(Evaluator_Aggregator* aggregator, const std::map< Index, std::vector< Maybe_Attic > >& elems,
-    Tag_Store< Index, Object >* tag_store, const std::string* key)
+void eval_elems(Evaluator_Aggregator* aggregator, Eval_Task& task,
+    const std::map< Index, std::vector< Maybe_Attic > >& elems, Tag_Store< Index, Object >* tag_store)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator idx_it = elems.begin();
       idx_it != elems.end(); ++idx_it)
@@ -59,8 +59,7 @@ void eval_elems(Evaluator_Aggregator* aggregator, const std::map< Index, std::ve
     for (typename std::vector< Maybe_Attic >::const_iterator elem_it = idx_it->second.begin();
         elem_it != idx_it->second.end(); ++elem_it)
     {
-      std::string value = aggregator->rhs->eval(&*elem_it,
-          tag_store ? tag_store->get(idx_it->first, *elem_it) : 0, key);
+      std::string value = task.eval(&*elem_it, tag_store ? tag_store->get(idx_it->first, *elem_it) : 0, 0);
       
       if (aggregator->value_set)
         aggregator->value = aggregator->update_value(aggregator->value, value);
@@ -74,29 +73,30 @@ void eval_elems(Evaluator_Aggregator* aggregator, const std::map< Index, std::ve
 }
 
   
-std::string Evaluator_Aggregator::eval_input(const std::string* key)
+Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
 {
-  if (!input_set || !rhs)
-    return "";
+  if (!rhs)
+    return 0;
+  
+  Owner < Eval_Task > rhs_task(rhs->get_task(context));
+  if (!rhs_task)
+    return 0;
+  
+  const Set_With_Context* input_set = context.get_set(input);
+  if (!input_set)
+    return 0;
   
   value_set = false;
-  eval_elems(this, input_set->base->nodes, input_set->tag_store_nodes, key);
-  eval_elems(this, input_set->base->attic_nodes, input_set->tag_store_attic_nodes, key);
-  eval_elems(this, input_set->base->ways, input_set->tag_store_ways, key);
-  eval_elems(this, input_set->base->attic_ways, input_set->tag_store_attic_ways, key);
-  eval_elems(this, input_set->base->relations, input_set->tag_store_relations, key);
-  eval_elems(this, input_set->base->attic_relations, input_set->tag_store_attic_relations, key);
-  eval_elems(this, input_set->base->areas, input_set->tag_store_areas, key);
-  eval_elems(this, input_set->base->deriveds, input_set->tag_store_deriveds, key);
-  
-  return value;
-}
+  eval_elems(this, *rhs_task, input_set->base->nodes, input_set->tag_store_nodes);
+  eval_elems(this, *rhs_task, input_set->base->attic_nodes, input_set->tag_store_attic_nodes);
+  eval_elems(this, *rhs_task, input_set->base->ways, input_set->tag_store_ways);
+  eval_elems(this, *rhs_task, input_set->base->attic_ways, input_set->tag_store_attic_ways);
+  eval_elems(this, *rhs_task, input_set->base->relations, input_set->tag_store_relations);
+  eval_elems(this, *rhs_task, input_set->base->attic_relations, input_set->tag_store_attic_relations);
+  eval_elems(this, *rhs_task, input_set->base->areas, input_set->tag_store_areas);
+  eval_elems(this, *rhs_task, input_set->base->deriveds, input_set->tag_store_deriveds);
 
-
-void Evaluator_Aggregator::prefetch(const Set_With_Context& set)
-{
-  if (set.name == input)
-    input_set = &set;
+  return new Const_Eval_Task(value);
 }
 
   

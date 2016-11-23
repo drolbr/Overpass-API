@@ -30,6 +30,47 @@
 #include <vector>
 
 
+struct Set_Prop_Task
+{
+  enum Mode { single_key, set_id, generic };
+  
+  Set_Prop_Task(Eval_Task* rhs_, const std::string& key_, Mode mode_) : rhs(rhs_), key(key_), mode(mode_) {}
+  ~Set_Prop_Task() { delete rhs; }
+  
+  void process(Derived_Structure& result, bool& id_set) const;
+  
+  void process(const Node_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
+    Derived_Structure& result, bool& id_set) const;
+  void process(const Attic< Node_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
+    Derived_Structure& result, bool& id_set) const;
+  void process(const Way_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
+    Derived_Structure& result, bool& id_set) const;
+  void process(const Attic< Way_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
+    Derived_Structure& result, bool& id_set) const;
+  void process(const Relation_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
+    Derived_Structure& result, bool& id_set) const;
+  void process(const Attic< Relation_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
+    Derived_Structure& result, bool& id_set) const;
+  void process(const Area_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
+    Derived_Structure& result, bool& id_set) const;
+  void process(const Derived_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
+    Derived_Structure& result, bool& id_set) const;
+    
+private:
+  Eval_Task* rhs;
+  std::string key;
+  Mode mode;
+};
+
+
 class Set_Tag_Statement : public Statement
 {
 public:
@@ -42,36 +83,15 @@ public:
   virtual ~Set_Tag_Statement() {}
     
   static Generic_Statement_Maker< Set_Tag_Statement > statement_maker;
-
-  std::string eval(const std::string* key = 0);
-  std::string eval(const Node_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key = 0);
-  std::string eval(const Attic< Node_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key = 0);
-  std::string eval(const Way_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key = 0);
-  std::string eval(const Attic< Way_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key = 0);
-  std::string eval(const Relation_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key = 0);
-  std::string eval(const Attic< Relation_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key = 0);
-  std::string eval(const Area_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key = 0);
-  std::string eval(const Derived_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key = 0);
-      
-  void prefetch(const Set_With_Context& set);
   
-  std::pair< std::vector< Set_Usage >, uint > used_sets() const;
-  
+  std::pair< std::vector< Set_Usage >, uint > used_sets() const;  
   std::vector< std::string > used_tags() const;
+  
+  Set_Prop_Task* get_task(const Prepare_Task_Context& context);
    
   const std::string* get_key() const { return input != "" ? 0 : &keys.front(); }
   bool has_value() const { return tag_value; }
   bool should_set_id() const { return set_id; }
-  
-  void clear();
     
 private:
   std::string input;

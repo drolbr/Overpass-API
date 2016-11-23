@@ -35,41 +35,55 @@ class Evaluator_Pair_Operator : public Evaluator
 public:
   Evaluator_Pair_Operator(int line_number_);
   virtual void add_statement(Statement* statement, string text);
-  virtual void execute(Resource_Manager& rman) {}
-  
+  virtual void execute(Resource_Manager& rman) {}  
   virtual string get_result_name() const { return ""; }
   
-  virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const = 0;
-  
-  virtual std::string eval(const std::string* key);
-  virtual std::string eval(const Node_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key);
-  virtual std::string eval(const Attic< Node_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key);
-  virtual std::string eval(const Way_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key);
-  virtual std::string eval(const Attic< Way_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key);
-  virtual std::string eval(const Relation_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key);
-  virtual std::string eval(const Attic< Relation_Skeleton >* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key);
-  virtual std::string eval(const Area_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key);
-  virtual std::string eval(const Derived_Skeleton* elem,
-      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key);
-      
-  virtual void prefetch(const Set_With_Context& set);
-  
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;
-  
   virtual std::vector< std::string > used_tags() const;
   
-  virtual void clear();
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context);
+  
+  virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const = 0;
   
 protected:
   Evaluator* lhs;
   Evaluator* rhs;
+};
+
+
+struct Binary_Eval_Task : public Eval_Task
+{
+  Binary_Eval_Task(Eval_Task* lhs_, Eval_Task* rhs_, Evaluator_Pair_Operator* evaluator_)
+      : lhs(lhs_), rhs(rhs_), evaluator(evaluator_) {}
+  ~Binary_Eval_Task()
+  {
+    delete lhs;
+    delete rhs;
+  }
+  
+  virtual std::string eval(const std::string* key) const;
+  
+  virtual std::string eval(const Node_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Attic< Node_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Way_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Attic< Way_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Relation_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Attic< Relation_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Area_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Derived_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+
+private:
+  Eval_Task* lhs;
+  Eval_Task* rhs;
+  Evaluator_Pair_Operator* evaluator;
 };
 
 
