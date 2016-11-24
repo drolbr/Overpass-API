@@ -46,8 +46,6 @@ struct Evaluator_Aggregator : public Evaluator
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value) = 0;
-
-  virtual void clear() {}
   
   std::string input;
   Evaluator* rhs;
@@ -130,9 +128,7 @@ public:
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
   
-  virtual void clear();
-  
-  std::vector< std::string > values;
+  std::set< std::string > values;
 };
 
 

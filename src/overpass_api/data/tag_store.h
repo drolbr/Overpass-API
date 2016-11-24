@@ -435,6 +435,38 @@ const std::vector< std::pair< std::string, std::string > >*
       collect_tags< typename Object::Id_Type >(tags_by_id, *items_db, *tag_it,
           ids_by_coarse[stored_index.val()], stored_index.val());
   }
+  else if (use_index && Index(index.val() & 0x7fffff00) < stored_index)
+  {
+    if (attic_items_db)
+    {
+      delete tag_it;
+      tag_it = new typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator(
+          items_db->range_begin
+          (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+      delete attic_tag_it;
+      attic_tag_it = new typename Block_Backend< Tag_Index_Local, Attic< typename Object::Id_Type > >::Range_Iterator(
+          attic_items_db->range_begin
+          (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    }
+    else
+    {
+      delete tag_it;
+      tag_it = new typename Block_Backend< Tag_Index_Local, typename Object::Id_Type >::Range_Iterator(
+          items_db->range_begin(Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    }
+    
+    tags_by_id.clear();
+    stored_index = Index(index.val() & 0x7fffff00);
+    if (attic_items_db)
+      collect_attic_tags< typename Object::Id_Type >(tags_by_id, *items_db, *tag_it, *attic_items_db, *attic_tag_it,
+          attic_ids_by_coarse[stored_index.val()], stored_index.val());
+    else      
+      collect_tags< typename Object::Id_Type >(tags_by_id, *items_db, *tag_it,
+          ids_by_coarse[stored_index.val()], stored_index.val());
+  }
   
   typename std::map< typename Object::Id_Type, std::vector< std::pair< std::string, std::string > > >::const_iterator
       it = tags_by_id.find(elem.id);

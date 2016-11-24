@@ -242,14 +242,12 @@ Evaluator_Set_Value::Evaluator_Set_Value
 std::string Evaluator_Set_Value::update_value(const std::string& agg_value, const std::string& new_value)
 {
   if (values.empty())
-    values.push_back(agg_value);
-  values.push_back(new_value);
+    values.insert(agg_value);
   
-  std::sort(values.begin(), values.end());
-  values.erase(std::unique(values.begin(), values.end()), values.end());
+  values.insert(new_value);
   
   std::string result;
-  std::vector< std::string >::const_iterator it = values.begin();
+  std::set< std::string >::const_iterator it = values.begin();
   if (it != values.end() && *it == "")
     ++it;
   if (it != values.end())
@@ -260,10 +258,4 @@ std::string Evaluator_Set_Value::update_value(const std::string& agg_value, cons
   for (; it != values.end(); ++it)
     result += ";" + *it;
   return result;
-}
-
-
-void Evaluator_Set_Value::clear()
-{
-  values.clear();
 }
