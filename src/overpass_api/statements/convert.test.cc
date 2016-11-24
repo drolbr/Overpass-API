@@ -288,6 +288,59 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
       
+void is_tag_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_value_test(global_settings, rman, "_", 7, 14, "1000", global_node_offset);
+  
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Convert_Statement stmt(0, attributes, global_settings);
+  
+  attributes.clear();
+  attributes["k"] = "node_key";
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  attributes["k"] = "node_key";
+  Evaluator_Is_Tag stmt10(0, attributes, global_settings);
+  stmt1.add_statement(&stmt10, "");
+  attributes.clear();
+  attributes["k"] = "way_key";
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
+  stmt.add_statement(&stmt2, "");
+  attributes.clear();
+  attributes["k"] = "way_key";
+  Evaluator_Is_Tag stmt20(0, attributes, global_settings);
+  stmt2.add_statement(&stmt20, "");
+  attributes.clear();
+  attributes["k"] = "relation_key";
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
+  stmt.add_statement(&stmt3, "");
+  attributes.clear();
+  attributes["k"] = "relation_key";
+  Evaluator_Is_Tag stmt30(0, attributes, global_settings);
+  stmt3.add_statement(&stmt30, "");
+  attributes.clear();
+  attributes["k"] = "number";
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
+  stmt.add_statement(&stmt4, "");
+  attributes.clear();
+  attributes["k"] = "number";
+  Evaluator_Is_Tag stmt40(0, attributes, global_settings);
+  stmt4.add_statement(&stmt40, "");
+  
+  stmt.execute(rman);
+  
+  {
+    attributes.clear();
+    Print_Statement stmt(0, attributes, global_settings);
+    stmt.execute(rman);
+  }
+}
+     
+      
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -323,6 +376,8 @@ int main(int argc, char* args[])
       tag_manipulation_test(global_settings, transaction, "rewrite", "some_set", 7, 14, "1000", global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "7"))
       count_test(global_settings, transaction, "count-from-default", "_", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "8"))
+      is_tag_test(global_settings, transaction, "is-tag", global_node_offset);
 
     std::cout<<"</osm>\n";
   }

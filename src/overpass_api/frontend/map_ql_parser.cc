@@ -236,12 +236,12 @@ TStatement* create_tag_value_fixed(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
-TStatement* create_tag_value_value(typename TStatement::Factory& stmt_factory,
-    string key, uint line_nr)
+TStatement* create_key_aware_func(typename TStatement::Factory& stmt_factory,
+    string type, string key, uint line_nr)
 {
   map< string, string > attr;
   attr["k"] = key;
-  return stmt_factory.create_statement("eval-value", line_nr, attr);
+  return stmt_factory.create_statement(type, line_nr, attr);
 }
 
 
@@ -742,6 +742,9 @@ TStatement* stmt_from_blank_function_expr(typename TStatement::Factory& stmt_fac
   else if (type == "set")
     stmt = create_tag_value_union_value< TStatement >(
         stmt_factory, "eval-set-value", from, tree_it->line_col.first);
+  else if (type == "is_tag")
+    return create_key_aware_func< TStatement >(
+        stmt_factory, "eval-is-tag", decode_json(tree_it->token, error_output), tree_it->line_col.first);
     
   if (stmt)
   {
@@ -759,9 +762,9 @@ template< class TStatement >
 TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
     const Token_Node_Ptr& tree_it)
 {
-  if (tree_it->lhs != 0)
+  if (tree_it->lhs)
   {
-    if (tree_it->rhs != 0)
+    if (tree_it->rhs)
     {
       if (tree_it->token == "(")
         return stmt_from_blank_function_expr< TStatement >(stmt_factory, error_output,
@@ -828,8 +831,8 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
       return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
     
     if (tree_it->token == "[")
-      return create_tag_value_value< TStatement >(stmt_factory, decode_json(tree_it.rhs()->token, error_output),
-          tree_it->line_col.first);
+      return create_key_aware_func< TStatement >(stmt_factory, "eval-value",
+          decode_json(tree_it.rhs()->token, error_output), tree_it->line_col.first);
     
     if (tree_it->token == "-")
     {

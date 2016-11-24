@@ -110,6 +110,42 @@ Evaluator_Value::Evaluator_Value
 //-----------------------------------------------------------------------------
 
 
+std::string exists_value(const std::vector< std::pair< std::string, std::string > >* tags, const std::string& key)
+{
+  if (!tags)
+    return "0";
+  
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
+      it != tags->end(); ++it)
+  {
+    if (it->first == key)
+      return "1";
+  }
+  
+  return "0";
+}
+
+
+Generic_Statement_Maker< Evaluator_Is_Tag > Evaluator_Is_Tag::statement_maker("eval-is-tag");
+
+
+Evaluator_Is_Tag::Evaluator_Is_Tag
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  
+  attributes["k"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  key = attributes["k"];
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Generic_Statement_Maker< Evaluator_Generic > Evaluator_Generic::statement_maker("eval-generic");
 
 

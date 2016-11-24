@@ -4057,6 +4057,38 @@ int main(int argc, char* args[])
       "    <tag k=\"tags\" v=\"2\"/>\n"
       "    <tag k=\"members\" v=\"2\"/>\n"
       "  </count-from-default>\n";
+    if (string(args[2]) == "convert_8")
+      cout<<
+      "  <is-tag id=\"2\">\n"
+      "    <tag k=\"node_key\" v=\"1\"/>\n"
+      "    <tag k=\"way_key\" v=\"0\"/>\n"
+      "    <tag k=\"relation_key\" v=\"0\"/>\n"
+      "    <tag k=\"number\" v=\"0\"/>\n"
+      "  </is-tag>\n"
+      "  <is-tag id=\"3\">\n"
+      "    <tag k=\"node_key\" v=\"1\"/>\n"
+      "    <tag k=\"way_key\" v=\"0\"/>\n"
+      "    <tag k=\"relation_key\" v=\"0\"/>\n"
+      "    <tag k=\"number\" v=\"0\"/>\n"
+      "  </is-tag>\n"
+      "  <is-tag id=\"4\">\n"
+      "    <tag k=\"node_key\" v=\"0\"/>\n"
+      "    <tag k=\"way_key\" v=\"1\"/>\n"
+      "    <tag k=\"relation_key\" v=\"0\"/>\n"
+      "    <tag k=\"number\" v=\"0\"/>\n"
+      "  </is-tag>\n"
+      "  <is-tag id=\"5\">\n"
+      "    <tag k=\"node_key\" v=\"0\"/>\n"
+      "    <tag k=\"way_key\" v=\"0\"/>\n"
+      "    <tag k=\"relation_key\" v=\"1\"/>\n"
+      "    <tag k=\"number\" v=\"0\"/>\n"
+      "  </is-tag>\n"
+      "  <is-tag id=\"6\">\n"
+      "    <tag k=\"node_key\" v=\"0\"/>\n"
+      "    <tag k=\"way_key\" v=\"0\"/>\n"
+      "    <tag k=\"relation_key\" v=\"0\"/>\n"
+      "    <tag k=\"number\" v=\"1\"/>\n"
+      "  </is-tag>\n";
 
     cout<<"</osm>\n";
   }

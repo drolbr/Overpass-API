@@ -210,8 +210,8 @@ date +%T
 perform_test_loop make 60 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the make statement
-prepare_test_loop convert 7 $DATA_SIZE
+prepare_test_loop convert 8 $DATA_SIZE
 date +%T
-perform_test_loop convert 7 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+perform_test_loop convert 8 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 rm -f input/update_database/*

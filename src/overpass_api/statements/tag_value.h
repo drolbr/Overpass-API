@@ -223,6 +223,74 @@ private:
 };
 
 
+std::string exists_value(const std::vector< std::pair< std::string, std::string > >* tags, const std::string& key);
+
+
+struct Is_Tag_Eval_Task : public Eval_Task
+{
+  Is_Tag_Eval_Task(const std::string& key_) : key(key_) {}
+  
+  virtual std::string eval(const std::string* key) const { return ""; }
+  
+  virtual std::string eval(const Node_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return exists_value(tags, this->key); }
+  virtual std::string eval(const Attic< Node_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return exists_value(tags, this->key); }
+  virtual std::string eval(const Way_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return exists_value(tags, this->key); }
+  virtual std::string eval(const Attic< Way_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return exists_value(tags, this->key); }
+  virtual std::string eval(const Relation_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return exists_value(tags, this->key); }
+  virtual std::string eval(const Attic< Relation_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return exists_value(tags, this->key); }
+  virtual std::string eval(const Area_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return exists_value(tags, this->key); }
+  virtual std::string eval(const Derived_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+      { return exists_value(tags, this->key); }
+      
+private:
+  std::string key;
+};
+
+
+class Evaluator_Is_Tag : public Evaluator
+{
+public:
+  Evaluator_Is_Tag(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "eval-is-tag"; }
+  virtual string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Is_Tag() {}
+  
+  static Generic_Statement_Maker< Evaluator_Is_Tag > statement_maker;
+  
+  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
+  { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }
+  
+  virtual std::vector< std::string > used_tags() const
+  {
+    std::vector< std::string > result;
+    result.push_back(key);
+    return result;
+  }
+  
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Is_Tag_Eval_Task(key); }
+  
+private:
+  std::string key;
+};
+
+
 struct Generic_Eval_Task : public Eval_Task
 {
   virtual std::string eval(const std::string* key) const { return ""; }
