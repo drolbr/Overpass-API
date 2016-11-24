@@ -23,7 +23,7 @@
 #include "id_query.h"
 #include "make.h"
 #include "print.h"
-#include "set_tag.h"
+#include "set_prop.h"
 #include "tag_value.h"
 #include "unary_operators.h"
 #include "union.h"
@@ -66,7 +66,7 @@ void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = key1;
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   attributes["v"] = value1;
@@ -75,7 +75,7 @@ void plain_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = key2;
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   attributes.clear();
   attributes["v"] = value2;
   Evaluator_Fixed stmt20(0, attributes, global_settings);
@@ -131,7 +131,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "nodes";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   if (from != "_")
@@ -142,7 +142,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "ways";
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   attributes["type"] = "ways";
@@ -153,7 +153,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "relations";
-  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
   attributes["type"] = "relations";
@@ -164,7 +164,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "tags";
-  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
   if (from != "_")
@@ -178,7 +178,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "members";
-  Set_Tag_Statement stmt5(0, attributes, global_settings);
+  Set_Prop_Statement stmt5(0, attributes, global_settings);
   stmt.add_statement(&stmt5, "");
   attributes.clear();
   if (from != "_")
@@ -212,7 +212,7 @@ void pair_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = key;
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   Evaluator_Pair stmt10(0, attributes, global_settings);
@@ -246,7 +246,7 @@ void prefix_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = key;
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   Evaluator_Prefix stmt10(0, attributes, global_settings);
@@ -314,7 +314,7 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "node_key";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   if (from != "_")
@@ -328,7 +328,7 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "way_key";
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   if (from != "_")
@@ -342,7 +342,7 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "relation_key";
-  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
   if (from != "_")
@@ -356,7 +356,7 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "unused_key";
-  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
   if (from != "_")
@@ -390,7 +390,7 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "node_key_7";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   if (from != "_")
@@ -404,7 +404,7 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "way_key_7";
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   if (from != "_")
@@ -418,7 +418,7 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "relation_key_7";
-  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
   if (from != "_")
@@ -432,7 +432,7 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "unused_key_7";
-  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
   if (from != "_")
@@ -466,7 +466,7 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "node_key_7";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   if (from != "_")
@@ -480,7 +480,7 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "way_key_7";
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   if (from != "_")
@@ -494,7 +494,7 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "relation_key_7";
-  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
   if (from != "_")
@@ -508,7 +508,7 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "unused_key_7";
-  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
   if (from != "_")
@@ -542,7 +542,7 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "node_key_7";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   if (from != "_")
@@ -556,7 +556,7 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "way_key_7";
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   if (from != "_")
@@ -570,7 +570,7 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "relation_key_7";
-  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
   if (from != "_")
@@ -584,7 +584,7 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "unused_key_7";
-  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
   if (from != "_")
@@ -618,7 +618,7 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "id";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   if (from != "_")
@@ -631,7 +631,7 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "type";
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   if (from != "_")
@@ -665,7 +665,7 @@ void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["keytype"] = "id";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   

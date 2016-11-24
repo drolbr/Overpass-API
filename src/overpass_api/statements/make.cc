@@ -20,7 +20,7 @@
 #include "../data/tag_store.h"
 #include "../data/utils.h"
 #include "make.h"
-#include "set_tag.h"
+#include "set_prop.h"
 
 
 Generic_Statement_Maker< Make_Statement > Make_Statement::statement_maker("make");
@@ -52,29 +52,29 @@ Make_Statement::~Make_Statement()
 
 void Make_Statement::add_statement(Statement* statement, std::string text)
 {
-  Set_Tag_Statement* set_tag = dynamic_cast< Set_Tag_Statement* >(statement);
-  if (set_tag)
+  Set_Prop_Statement* set_prop = dynamic_cast< Set_Prop_Statement* >(statement);
+  if (set_prop)
   {
-    if (set_tag->get_key())
+    if (set_prop->get_key())
     {
-      for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+      for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
       {
-        if ((*it)->get_key() && *(*it)->get_key() == *set_tag->get_key())
-          add_static_error(std::string("A key cannot be added twice to an element: \"") + *set_tag->get_key() + '\"');
+        if ((*it)->get_key() && *(*it)->get_key() == *set_prop->get_key())
+          add_static_error(std::string("A key cannot be added twice to an element: \"") + *set_prop->get_key() + '\"');
       }
     }
-    else if (set_tag->should_set_id())
+    else if (set_prop->should_set_id())
     {
       if (!id_evaluator)
-        id_evaluator = set_tag;
+        id_evaluator = set_prop;
       else
-        add_static_error("A make statement can have at most one set-tag statement of subtype setting the id.");
+        add_static_error("A make statement can have at most one set-prop statement of subtype setting the id.");
     }
     else if (!multi_evaluator)
-      multi_evaluator = set_tag;
+      multi_evaluator = set_prop;
     else
-      add_static_error("A make statement can have at most one any-key set-tag statement.");
-    evaluators.push_back(set_tag);
+      add_static_error("A make statement can have at most one any-key set-prop statement.");
+    evaluators.push_back(set_prop);
   }
   else
     substatement_error(get_name(), statement);
@@ -84,13 +84,13 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
 void Make_Statement::execute(Resource_Manager& rman)
 {
   std::pair< std::vector< Set_Usage >, uint > set_usage;
-  for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+  for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     set_usage = union_usage(set_usage, (*it)->used_sets());
   
   Prepare_Task_Context context(set_usage, rman);
   
   Owning_Array< Set_Prop_Task* > tasks;
-  for (std::vector< Set_Tag_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+  for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     tasks.push_back((*it)->get_task(context));
   
   Derived_Structure result(type, 0ull);

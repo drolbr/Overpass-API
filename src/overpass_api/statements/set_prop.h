@@ -71,18 +71,18 @@ private:
 };
 
 
-class Set_Tag_Statement : public Statement
+class Set_Prop_Statement : public Statement
 {
 public:
-  Set_Tag_Statement(int line_number_, const map< string, string >& input_attributes,
+  Set_Prop_Statement(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "set-tag"; }
+  virtual string get_name() const { return "set-prop"; }
   virtual string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, string text);
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Set_Tag_Statement() {}
+  virtual ~Set_Prop_Statement() {}
     
-  static Generic_Statement_Maker< Set_Tag_Statement > statement_maker;
+  static Generic_Statement_Maker< Set_Prop_Statement > statement_maker;
   
   std::pair< std::vector< Set_Usage >, uint > used_sets() const;  
   std::vector< std::string > used_tags() const;

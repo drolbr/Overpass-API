@@ -22,7 +22,7 @@
 #include "convert.h"
 #include "make.h"
 #include "print.h"
-#include "set_tag.h"
+#include "set_prop.h"
 #include "tag_value.h"
 #include "union.h"
 
@@ -66,7 +66,7 @@ void prepare_value_test(Parsed_Query& global_settings, Resource_Manager& rman,
   
   attributes.clear();
   attributes["k"] = "number";
-  Set_Tag_Statement stmt50(0, attributes, global_settings);
+  Set_Prop_Statement stmt50(0, attributes, global_settings);
   stmt5.add_statement(&stmt50, "");
   attributes.clear();
   attributes["v"] = derived_num;
@@ -93,7 +93,7 @@ void just_copy_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["keytype"] = "generic";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   Evaluator_Generic stmt10(0, attributes, global_settings);
@@ -122,7 +122,7 @@ void into_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["keytype"] = "generic";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   Evaluator_Generic stmt10(0, attributes, global_settings);
@@ -152,7 +152,7 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   
   attributes.clear();
   attributes["keytype"] = "generic";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   Evaluator_Generic stmt10(0, attributes, global_settings);
@@ -160,7 +160,7 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   
   attributes.clear();
   attributes["k"] = "extra_key";
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   attributes["v"] = "extra_value";
@@ -169,12 +169,12 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   
   attributes.clear();
   attributes["k"] = "node_key";
-  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   
   attributes.clear();
   attributes["k"] = "number";
-  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   
   stmt.execute(rman);
@@ -225,7 +225,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "nodes";
-  Set_Tag_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
   stmt.add_statement(&stmt1, "");
   attributes.clear();
   attributes["type"] = "nodes";
@@ -236,7 +236,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "ways";
-  Set_Tag_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
   stmt.add_statement(&stmt2, "");
   attributes.clear();
   attributes["type"] = "ways";
@@ -247,7 +247,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "relations";
-  Set_Tag_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
   attributes.clear();
   attributes["type"] = "relations";
@@ -258,7 +258,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "tags";
-  Set_Tag_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
   attributes["type"] = "tags";
@@ -269,7 +269,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   
   attributes.clear();
   attributes["k"] = "members";
-  Set_Tag_Statement stmt5(0, attributes, global_settings);
+  Set_Prop_Statement stmt5(0, attributes, global_settings);
   stmt.add_statement(&stmt5, "");
   attributes.clear();
   attributes["type"] = "members";

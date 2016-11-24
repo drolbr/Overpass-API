@@ -211,7 +211,7 @@ TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory, 
 enum Object_Type { tag, generic, id, object_type };
 
 template< class TStatement >
-TStatement* create_set_tag_statement(typename TStatement::Factory& stmt_factory,
+TStatement* create_set_prop_statement(typename TStatement::Factory& stmt_factory,
     string key, Object_Type key_type, uint line_nr)
 {
   map< string, string > attr;
@@ -221,7 +221,7 @@ TStatement* create_set_tag_statement(typename TStatement::Factory& stmt_factory,
     attr["keytype"] = "generic";
   else
     attr["k"] = key;
-  return stmt_factory.create_statement("set-tag", line_nr, attr);
+  return stmt_factory.create_statement("set-prop", line_nr, attr);
 }
 
 
@@ -907,7 +907,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
         ++token;
         
         std::string key = get_text_token(token, error_output, "Tag key");
-        evaluators.push_back(create_set_tag_statement< TStatement >(
+        evaluators.push_back(create_set_prop_statement< TStatement >(
             stmt_factory, key, tag, token.line_col().first));
         
         clear_until_after(token, error_output, ",", ";", "->", false);
@@ -943,7 +943,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
       TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, false);
       if (stmt)
       {
-        TStatement* key_stmt = create_set_tag_statement< TStatement >(
+        TStatement* key_stmt = create_set_prop_statement< TStatement >(
             stmt_factory, key, key_type, token.line_col().first);
         key_stmt->add_statement(stmt, "");
         evaluators.push_back(key_stmt);

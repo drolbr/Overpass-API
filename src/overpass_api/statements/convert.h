@@ -27,7 +27,7 @@
 #include <vector>
 
 
-class Set_Tag_Statement;
+class Set_Prop_Statement;
 
 
 class Convert_Statement : public Output_Statement
@@ -46,9 +46,9 @@ public:
 private:
   std::string input;
   std::string type;
-  std::vector< Set_Tag_Statement* > evaluators;
-  Set_Tag_Statement* id_evaluator;
-  Set_Tag_Statement* multi_evaluator;
+  std::vector< Set_Prop_Statement* > evaluators;
+  Set_Prop_Statement* id_evaluator;
+  Set_Prop_Statement* multi_evaluator;
 };
 
 

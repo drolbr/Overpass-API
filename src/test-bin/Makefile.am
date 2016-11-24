@@ -39,7 +39,7 @@ statements_cc = \
   ../overpass_api/statements/print.cc \
   ../overpass_api/statements/query.cc \
   ../overpass_api/statements/recurse.cc \
-  ../overpass_api/statements/set_tag.cc \
+  ../overpass_api/statements/set_prop.cc \
   ../overpass_api/statements/statement.cc \
   ../overpass_api/statements/tag_value.cc \
   ../overpass_api/statements/unary_operators.cc \

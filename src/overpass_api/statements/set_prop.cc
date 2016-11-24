@@ -19,13 +19,13 @@
 
 #include "../data/tag_store.h"
 #include "../data/utils.h"
-#include "set_tag.h"
+#include "set_prop.h"
 
 
-Generic_Statement_Maker< Set_Tag_Statement > Set_Tag_Statement::statement_maker("set-tag");
+Generic_Statement_Maker< Set_Prop_Statement > Set_Prop_Statement::statement_maker("set-prop");
 
 
-Set_Tag_Statement::Set_Tag_Statement
+Set_Prop_Statement::Set_Prop_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_), set_id(false), tag_value(0)
 {
@@ -41,30 +41,30 @@ Set_Tag_Statement::Set_Tag_Statement
     if (attributes["k"] != "")
       keys.push_back(attributes["k"]);
     else
-      add_static_error("For the statement \"set-tag\" in mode \"keytype\"=\"tag\", "
+      add_static_error("For the statement \"set-prop\" in mode \"keytype\"=\"tag\", "
           "the attribute \"k\" must be nonempty.");
   }
   else if (attributes["keytype"] == "id")
     set_id = true;
   else if (attributes["keytype"] != "generic")
-    add_static_error("For the attribute \"keytype\" of the element \"set-tag\""
+    add_static_error("For the attribute \"keytype\" of the element \"set-prop\""
         " the only allowed values are \"tag\", \"id\", or \"generic\".");
 }
 
 
-void Set_Tag_Statement::add_statement(Statement* statement, std::string text)
+void Set_Prop_Statement::add_statement(Statement* statement, std::string text)
 {
   Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
   if (tag_value_ && !tag_value)
     tag_value = tag_value_;
   else if (tag_value)
-    add_static_error("set-tag must have exactly one evaluator substatement.");
+    add_static_error("set-prop must have exactly one evaluator substatement.");
   else
     substatement_error(get_name(), statement);
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > Set_Tag_Statement::used_sets() const
+std::pair< std::vector< Set_Usage >, uint > Set_Prop_Statement::used_sets() const
 {
   if (tag_value)
   {
@@ -88,7 +88,7 @@ std::pair< std::vector< Set_Usage >, uint > Set_Tag_Statement::used_sets() const
 }
 
 
-Set_Prop_Task* Set_Tag_Statement::get_task(const Prepare_Task_Context& context)
+Set_Prop_Task* Set_Prop_Statement::get_task(const Prepare_Task_Context& context)
 {
   Eval_Task* rhs_task = tag_value ? tag_value->get_task(context) : 0;
   return new Set_Prop_Task(rhs_task, keys.empty() ? "" : keys.front(),
