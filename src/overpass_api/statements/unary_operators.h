@@ -109,4 +109,32 @@ public:
 };
 
 
+class Evaluator_Number : public Evaluator_Prefix_Operator
+{
+public:
+  Evaluator_Number(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "eval-number"; }
+  virtual ~Evaluator_Number() {}
+  
+  static Generic_Statement_Maker< Evaluator_Number > statement_maker;
+  
+  virtual std::string process(const std::string& rhs_result) const;
+};
+
+
+class Evaluator_Is_Num : public Evaluator_Prefix_Operator
+{
+public:
+  Evaluator_Is_Num(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "eval-is-num"; }
+  virtual ~Evaluator_Is_Num() {}
+  
+  static Generic_Statement_Maker< Evaluator_Is_Num > statement_maker;
+  
+  virtual std::string process(const std::string& rhs_result) const;
+};
+
+
 #endif

@@ -400,9 +400,19 @@ inline void Tokenizer< In >::get(string& s)
     {
       while (buffer.size() > pos && isdigit(buffer[pos]))
         grow_buffer((++pos) + 1);
+      
       if (buffer.size() > pos && buffer[pos] == '.')
       {
         grow_buffer((++pos) + 1);
+        while (buffer.size() > pos && isdigit(buffer[pos]))
+	  grow_buffer((++pos) + 1);
+      }
+      
+      if (buffer.size() > pos && buffer[pos] == 'e')
+      {
+        grow_buffer((++pos) + 1);
+        if (buffer.size() > pos && buffer[pos] == '-')
+	  grow_buffer((++pos) + 1);
         while (buffer.size() > pos && isdigit(buffer[pos]))
 	  grow_buffer((++pos) + 1);
       }

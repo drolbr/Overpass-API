@@ -3960,6 +3960,19 @@ int main(int argc, char* args[])
     if (string(args[2]) == "make_60")
       cout<<
       "  <key-id id=\""<<global_node_offset + 2<<"\"/>\n";
+    if (string(args[2]) == "make_61")
+      cout<<
+      "  <test-number id=\"1\">\n"
+      "    <tag k=\"nan\" v=\"NaN\"/>\n"
+      "    <tag k=\"three\" v=\"3\"/>\n"
+      "    <tag k=\"one_trillion\" v=\"1000000000000\"/>\n"
+      "    <tag k=\"minus_fourty-two\" v=\"-42\"/>\n"
+      "    <tag k=\"is_nan\" v=\"0\"/>\n"
+      "    <tag k=\"is_three\" v=\"1\"/>\n"
+      "    <tag k=\"is_one_trillion\" v=\"1\"/>\n"
+      "    <tag k=\"is_minus_fourty-two\" v=\"1\"/>\n"
+      "    <tag k=\"empty_isnt_num\" v=\"0\"/>\n"
+      "  </test-number>\n";
 
     cout<<"</osm>\n";
   }

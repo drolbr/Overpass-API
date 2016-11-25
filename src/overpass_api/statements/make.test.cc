@@ -652,6 +652,133 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
 }
      
       
+void number_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Make_Statement stmt(0, attributes, global_settings);
+  
+  attributes.clear();
+  attributes["k"] = "nan";
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  Evaluator_Number stmt10(0, attributes, global_settings);
+  stmt1.add_statement(&stmt10, "");
+  attributes.clear();
+  attributes["v"] = "-.";
+  Evaluator_Fixed stmt100(0, attributes, global_settings);
+  stmt10.add_statement(&stmt100, "");
+  
+  attributes.clear();
+  attributes["k"] = "three";
+  Set_Prop_Statement stmt2(0, attributes, global_settings);
+  stmt.add_statement(&stmt2, "");
+  attributes.clear();
+  Evaluator_Number stmt20(0, attributes, global_settings);
+  stmt2.add_statement(&stmt20, "");
+  attributes.clear();
+  attributes["v"] = "3.";
+  Evaluator_Fixed stmt200(0, attributes, global_settings);
+  stmt20.add_statement(&stmt200, "");
+  
+  attributes.clear();
+  attributes["k"] = "one_trillion";
+  Set_Prop_Statement stmt3(0, attributes, global_settings);
+  stmt.add_statement(&stmt3, "");
+  attributes.clear();
+  Evaluator_Number stmt30(0, attributes, global_settings);
+  stmt3.add_statement(&stmt30, "");
+  attributes.clear();
+  attributes["v"] = "1e12";
+  Evaluator_Fixed stmt300(0, attributes, global_settings);
+  stmt30.add_statement(&stmt300, "");
+  
+  attributes.clear();
+  attributes["k"] = "minus_fourty-two";
+  Set_Prop_Statement stmt4(0, attributes, global_settings);
+  stmt.add_statement(&stmt4, "");
+  attributes.clear();
+  Evaluator_Number stmt40(0, attributes, global_settings);
+  stmt4.add_statement(&stmt40, "");
+  attributes.clear();
+  attributes["v"] = "-42";
+  Evaluator_Fixed stmt400(0, attributes, global_settings);
+  stmt40.add_statement(&stmt400, "");
+  
+  attributes.clear();
+  attributes["k"] = "is_nan";
+  Set_Prop_Statement stmt5(0, attributes, global_settings);
+  stmt.add_statement(&stmt5, "");
+  attributes.clear();
+  Evaluator_Is_Num stmt50(0, attributes, global_settings);
+  stmt5.add_statement(&stmt50, "");
+  attributes.clear();
+  attributes["v"] = "-.";
+  Evaluator_Fixed stmt500(0, attributes, global_settings);
+  stmt50.add_statement(&stmt500, "");
+  
+  attributes.clear();
+  attributes["k"] = "is_three";
+  Set_Prop_Statement stmt6(0, attributes, global_settings);
+  stmt.add_statement(&stmt6, "");
+  attributes.clear();
+  Evaluator_Is_Num stmt60(0, attributes, global_settings);
+  stmt6.add_statement(&stmt60, "");
+  attributes.clear();
+  attributes["v"] = "3.";
+  Evaluator_Fixed stmt600(0, attributes, global_settings);
+  stmt60.add_statement(&stmt600, "");
+  
+  attributes.clear();
+  attributes["k"] = "is_one_trillion";
+  Set_Prop_Statement stmt7(0, attributes, global_settings);
+  stmt.add_statement(&stmt7, "");
+  attributes.clear();
+  Evaluator_Is_Num stmt70(0, attributes, global_settings);
+  stmt7.add_statement(&stmt70, "");
+  attributes.clear();
+  attributes["v"] = "1e12";
+  Evaluator_Fixed stmt700(0, attributes, global_settings);
+  stmt70.add_statement(&stmt700, "");
+  
+  attributes.clear();
+  attributes["k"] = "is_minus_fourty-two";
+  Set_Prop_Statement stmt8(0, attributes, global_settings);
+  stmt.add_statement(&stmt8, "");
+  attributes.clear();
+  Evaluator_Is_Num stmt80(0, attributes, global_settings);
+  stmt8.add_statement(&stmt80, "");
+  attributes.clear();
+  attributes["v"] = "-42";
+  Evaluator_Fixed stmt800(0, attributes, global_settings);
+  stmt80.add_statement(&stmt800, "");
+  
+  attributes.clear();
+  attributes["k"] = "empty_isnt_num";
+  Set_Prop_Statement stmt9(0, attributes, global_settings);
+  stmt.add_statement(&stmt9, "");
+  attributes.clear();
+  Evaluator_Is_Num stmt90(0, attributes, global_settings);
+  stmt9.add_statement(&stmt90, "");
+  attributes.clear();
+  attributes["v"] = "";
+  Evaluator_Fixed stmt900(0, attributes, global_settings);
+  stmt90.add_statement(&stmt900, "");
+  
+  stmt.execute(rman);
+  
+  {
+    const char* attributes[] = { 0 };
+    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    stmt.execute(rman);
+  }
+}
+     
+      
 void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string from, uint64 ref, uint64 global_node_offset)
 {
@@ -839,6 +966,8 @@ int main(int argc, char* args[])
       key_id_test(global_settings, transaction, "key-id", "_", 0, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "60"))
       key_id_test(global_settings, transaction, "key-id", "_", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "61"))
+      number_test(global_settings, transaction, "test-number", global_node_offset);
 
     std::cout<<"</osm>\n";
   }

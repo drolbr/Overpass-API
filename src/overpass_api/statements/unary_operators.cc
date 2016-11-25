@@ -175,3 +175,61 @@ std::string Evaluator_Negate::process(const std::string& rhs_s) const
   
   return "NaN";
 }
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Evaluator_Number > Evaluator_Number::statement_maker("eval-number");
+
+
+Evaluator_Number::Evaluator_Number
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator_Prefix_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Evaluator_Number::process(const std::string& rhs_s) const
+{
+  int64 rhs_l = 0;
+  if (try_int64(rhs_s, rhs_l))
+    return to_string(rhs_l);
+  
+  double rhs_d = 0;  
+  if (try_double(rhs_s, rhs_d))
+    return to_string(rhs_d);
+  
+  return "NaN";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Generic_Statement_Maker< Evaluator_Is_Num > Evaluator_Is_Num::statement_maker("eval-is-num");
+
+
+Evaluator_Is_Num::Evaluator_Is_Num
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator_Prefix_Operator(line_number_)
+{
+  std::map< std::string, std::string > attributes;  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Evaluator_Is_Num::process(const std::string& rhs_s) const
+{
+  int64 rhs_l = 0;
+  if (try_int64(rhs_s, rhs_l))
+    return "1";
+  
+  double rhs_d = 0;  
+  if (try_double(rhs_s, rhs_d))
+    return "1";
+  
+  return "0";
+}

@@ -742,6 +742,12 @@ TStatement* stmt_from_blank_function_expr(typename TStatement::Factory& stmt_fac
   else if (type == "set")
     stmt = create_tag_value_union_value< TStatement >(
         stmt_factory, "eval-set-value", from, tree_it->line_col.first);
+  else if (type == "number")
+    stmt = create_tag_value_x< TStatement >(
+        "eval-number", stmt_factory, tree_it->line_col.first);
+  else if (type == "is_num")
+    stmt = create_tag_value_x< TStatement >(
+        "eval-is-num", stmt_factory, tree_it->line_col.first);
   else if (type == "is_tag")
     return create_key_aware_func< TStatement >(
         stmt_factory, "eval-is-tag", decode_json(tree_it->token, error_output), tree_it->line_col.first);
