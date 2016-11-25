@@ -22,7 +22,18 @@
 #include "tag_value.h"
 
 
-Generic_Statement_Maker< Evaluator_Fixed > Evaluator_Fixed::statement_maker("eval-fixed");
+Evaluator_Fixed::Statement_Maker Evaluator_Fixed::statement_maker;
+
+
+Statement* Evaluator_Fixed::Statement_Maker::create_statement
+    (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->lhs || tree_it->rhs)
+    return 0;
+  map< string, string > attributes;
+  attributes["v"] = decode_json(tree_it->token, error_output);
+  return new Evaluator_Fixed(tree_it->line_col.first, attributes, global_settings);
+}
 
 
 Evaluator_Fixed::Evaluator_Fixed
@@ -146,7 +157,17 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Generic > Evaluator_Generic::statement_maker("eval-generic");
+Evaluator_Generic::Statement_Maker Evaluator_Generic::statement_maker;
+
+
+Statement* Evaluator_Generic::Statement_Maker::create_statement
+    (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->lhs || tree_it->rhs)
+    return 0;
+  map< string, string > attributes;
+  return new Evaluator_Generic(tree_it->line_col.first, attributes, global_settings);
+}
 
 
 Evaluator_Generic::Evaluator_Generic

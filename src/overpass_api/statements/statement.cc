@@ -32,6 +32,12 @@ map< string, Statement::Statement_Maker* >& Statement::maker_by_name()
   return makers;
 }
 
+map< string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_token()
+{
+  static map< string, std::vector< Statement::Statement_Maker* > > makers;
+  return makers;
+}
+
 void Statement::eval_attributes_array(string element, map< string, string >& attributes,
 				      const map< string, string >& input)
 {
@@ -91,12 +97,14 @@ void Statement::display_starttag()
   //display_verbatim(get_source(startpos, tagendpos - startpos));
 }
 
+
 Statement::Factory::~Factory()
 {
   for (vector< Statement* >::const_iterator it = created_statements.begin();
       it != created_statements.end(); ++it)
     delete *it;
 }
+
 
 Statement* Statement::Factory::create_statement
     (string element, int line_number, const map< string, string >& attributes)
@@ -122,7 +130,76 @@ Statement* Statement::Factory::create_statement
   return statement;
 }
 
+
+Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
+{
+  Statement* statement = 0;
+  
+  map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+      Statement::maker_by_token().find(tree_it->token);
+  
+  if (all_it != Statement::maker_by_token().end())
+  {
+    std::vector< Statement::Statement_Maker* >::iterator maker_it = all_it->second.begin();
+    
+    while (!statement && maker_it != all_it->second.end())
+    {
+      statement = (*maker_it)->create_statement(tree_it, global_settings, Statement::error_output);
+      ++maker_it;
+    }
+    while (maker_it != all_it->second.end())
+    {
+      Statement* bis = (*maker_it)->create_statement(tree_it, global_settings, Statement::error_output);
+      if (bis)
+      {
+        statement = 0;
+        if (Statement::error_output)
+          Statement::error_output->add_static_error(std::string("Token \"") + tree_it->token
+              + "\" has ambiguous resolutions to \"" + statement->get_name() + "\" and \"" + bis->get_name() + "\".",
+              tree_it->line_col.first);
+      }
+      ++maker_it;
+    }
+  }
+  
+  if (statement)
+  {
+    created_statements.push_back(statement);
+    return statement;
+  }
+  
+  all_it = Statement::maker_by_token().find("");
+  
+  if (all_it != Statement::maker_by_token().end())
+  {
+    std::vector< Statement::Statement_Maker* >::iterator maker_it = all_it->second.begin();
+    
+    while (!statement && maker_it != all_it->second.end())
+    {
+      statement = (*maker_it)->create_statement(tree_it, global_settings, Statement::error_output);
+      ++maker_it;
+    }
+    while (maker_it != all_it->second.end())
+    {
+      Statement* bis = (*maker_it)->create_statement(tree_it, global_settings, Statement::error_output);
+      if (bis)
+      {
+        statement = 0;
+        if (Statement::error_output)
+          Statement::error_output->add_static_error(std::string("Token \"") + tree_it->token
+              + "\" has ambiguous resolutions to \"" + statement->get_name() + "\" and \"" + bis->get_name() + "\".",
+              tree_it->line_col.first);
+      }
+      ++maker_it;
+    }
+  }
+  
+  return statement;
+}
+
+
 Error_Output* Statement::error_output = 0;
+
 
 void Statement::add_static_error(string error)
 {
@@ -130,17 +207,20 @@ void Statement::add_static_error(string error)
     error_output->add_static_error(error, line_number);
 }
 
+
 void Statement::add_static_remark(string remark)
 {
   if (error_output)
     error_output->add_static_remark(remark, line_number);
 }
 
+
 void Statement::runtime_remark(string error) const
 {
   if (error_output)
     error_output->runtime_remark(error);
 }
+
 
 map< string, string > convert_c_pairs(const char** attr)
 {

@@ -20,6 +20,8 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__TAG_VALUE_H
 
 
+#include "../../expat/escape_json.h"
+#include "../../expat/escape_xml.h"
 #include "../data/tag_store.h"
 #include "../data/utils.h"
 #include "evaluator.h"
@@ -33,14 +35,26 @@
 class Evaluator_Fixed : public Evaluator
 {
 public:
+  class Statement_Maker : public Generic_Statement_Maker< Evaluator_Fixed >
+  {
+    public:
+      virtual Statement* create_statement
+          (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output);    
+      Statement_Maker() : Generic_Statement_Maker("eval-fixed") { Statement::maker_by_token()[""].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-fixed v=\"" + escape_xml(value) + "\"/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return escape_cstr(value); }
+  virtual std::string dump_pretty_ql(const std::string&) const { return escape_cstr(value); }
+
   Evaluator_Fixed(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-fixed"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Fixed() {}
-  
-  static Generic_Statement_Maker< Evaluator_Fixed > statement_maker;
   
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::pair< std::vector< Set_Usage >, uint >(); }  
@@ -325,14 +339,26 @@ struct Generic_Eval_Task : public Eval_Task
 class Evaluator_Generic : public Evaluator
 {
 public:
+  class Statement_Maker : public Generic_Statement_Maker< Evaluator_Generic >
+  {
+    public:
+      virtual Statement* create_statement
+          (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output);    
+      Statement_Maker() : Generic_Statement_Maker("eval-generic") { Statement::maker_by_token()["::"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-generic/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return "::"; }
+  virtual std::string dump_pretty_ql(const std::string&) const { return "::"; }
+
   Evaluator_Generic(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-generic"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Generic() {}
-  
-  static Generic_Statement_Maker< Evaluator_Generic > statement_maker;
   
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }

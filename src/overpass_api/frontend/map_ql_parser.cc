@@ -868,11 +868,13 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
     return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
   }
   
-  if (tree_it->token == "::")
-    return create_tag_value_x< TStatement >("eval-generic", stmt_factory, tree_it->line_col.first);
+  TStatement* stmt = stmt_factory.create_statement(tree_it);
   
-  return create_tag_value_fixed< TStatement >(stmt_factory,
-      decode_json(tree_it->token, error_output), tree_it->line_col.first);
+  if (!stmt)
+    error_output->add_parse_error(std::string("Token \"") + tree_it->token
+        + "\" has not been recognized as statement", tree_it->line_col.first);
+  
+  return stmt;
 }
 
 
@@ -1749,9 +1751,9 @@ void parse_and_validate_map_ql
 }
 
 void parse_and_dump_xml_from_map_ql
-    (const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
+    (Statement::Factory& stmt_factory_, const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
 {
-  Statement_Dump::Factory stmt_factory;
+  Statement_Dump::Factory stmt_factory(stmt_factory_);
   vector< Statement_Dump* > stmt_seq;
   generic_parse_and_validate_map_ql< Statement_Dump >(stmt_factory, xml_raw, error_output, stmt_seq, parsed_query);
   for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();
@@ -1763,9 +1765,9 @@ void parse_and_dump_xml_from_map_ql
 }
 
 void parse_and_dump_compact_from_map_ql
-    (const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
+    (Statement::Factory& stmt_factory_, const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
 {
-  Statement_Dump::Factory stmt_factory;
+  Statement_Dump::Factory stmt_factory(stmt_factory_);
   vector< Statement_Dump* > stmt_seq;
   generic_parse_and_validate_map_ql< Statement_Dump >(stmt_factory, xml_raw, error_output, stmt_seq, parsed_query);
   for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();
@@ -1777,9 +1779,9 @@ void parse_and_dump_compact_from_map_ql
 }
 
 void parse_and_dump_bbox_from_map_ql
-    (const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
+    (Statement::Factory& stmt_factory_, const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
 {
-  Statement_Dump::Factory stmt_factory;
+  Statement_Dump::Factory stmt_factory(stmt_factory_);
   vector< Statement_Dump* > stmt_seq;
   generic_parse_and_validate_map_ql< Statement_Dump >(stmt_factory, xml_raw, error_output, stmt_seq, parsed_query);
   for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();
@@ -1791,9 +1793,9 @@ void parse_and_dump_bbox_from_map_ql
 }
 
 void parse_and_dump_pretty_from_map_ql
-    (const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
+    (Statement::Factory& stmt_factory_, const string& xml_raw, Error_Output* error_output, Parsed_Query& parsed_query)
 {
-  Statement_Dump::Factory stmt_factory;
+  Statement_Dump::Factory stmt_factory(stmt_factory_);
   vector< Statement_Dump* > stmt_seq;
   generic_parse_and_validate_map_ql< Statement_Dump >(stmt_factory, xml_raw, error_output, stmt_seq, parsed_query);
   for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();

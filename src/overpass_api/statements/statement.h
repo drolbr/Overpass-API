@@ -27,6 +27,7 @@
 #include "../core/parsed_query.h"
 #include "../core/settings.h"
 #include "../dispatch/resource_manager.h"
+#include "../frontend/tokenizer_utils.h"
 #include "../osm-backend/area_updater.h"
 
 using namespace std;
@@ -93,6 +94,7 @@ class Statement
       
       Statement* create_statement(string element, int line_number,
 				  const map< string, string >& attributes);
+      Statement* create_statement(const Token_Node_Ptr& tree_it);
       
       vector< Statement* > created_statements;
       Error_Output* error_output_;
@@ -104,10 +106,13 @@ class Statement
       public:
 	virtual Statement* create_statement
 	    (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings) = 0;
+	virtual Statement* create_statement
+	    (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output) = 0;
 	virtual ~Statement_Maker() {}
     };
     
     static map< string, Statement_Maker* >& maker_by_name();
+    static map< string, std::vector< Statement_Maker* > >& maker_by_token();
     
     Statement(int line_number_) : line_number(line_number_), progress(0) {}
     
@@ -134,7 +139,11 @@ class Statement
     
     void display_full();
     void display_starttag();
-        
+    
+    virtual std::string dump_xml(const std::string&) const { return ""; }
+    virtual std::string dump_compact_ql(const std::string&) const { return ""; }
+    virtual std::string dump_pretty_ql(const std::string&) const { return ""; }
+    
     static void set_error_output(Error_Output* error_output_)
     {
       error_output = error_output_;
@@ -179,6 +188,12 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
         (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings)
     {
       return new TStatement(line_number, attributes, global_settings);
+    }
+    
+    virtual Statement* create_statement
+        (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output)
+    {
+      return 0;
     }
     
     Generic_Statement_Maker(const string& name) { Statement::maker_by_name()[name] = this; }

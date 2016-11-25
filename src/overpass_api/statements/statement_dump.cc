@@ -18,6 +18,7 @@
 
 #include "../frontend/output.h"
 #include "statement_dump.h"
+#include "statement.h"
 
 #include <map>
 #include <string>
@@ -58,7 +59,13 @@ std::string Statement_Dump::dump_xml() const
 {
   std::string result;
   
-  if (substatements.empty())
+  if (name_ == "universal_dump")
+  {
+    std::map< std::string, std::string >::const_iterator it = attributes.find("xml");
+    if (it != attributes.end())
+      result += it->second;
+  }
+  else if (substatements.empty())
   {
     result = std::string("<") + name_;
     for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
@@ -960,6 +967,22 @@ Statement_Dump* Statement_Dump::Factory::create_statement
     (std::string element, int line_number, const std::map< std::string, std::string >& attributes)
 {
   return new Statement_Dump(element, attributes);
+}
+
+
+Statement_Dump* Statement_Dump::Factory::create_statement(const Token_Node_Ptr& tree_it)
+{
+  Statement* stmt = stmt_factory->create_statement(tree_it);
+  if (stmt)
+  {
+    std::map< std::string, std::string > attributes;
+    attributes["xml"] = stmt->dump_xml("");
+    attributes["pretty_ql"] = stmt->dump_pretty_ql("");
+    attributes["compact_ql"] = stmt->dump_compact_ql("");
+    return new Statement_Dump("universal_dump", attributes);
+  }
+  
+  return 0;
 }
 
 

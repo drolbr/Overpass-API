@@ -150,7 +150,7 @@ void Convert_Statement::execute(Resource_Manager& rman)
   Set into;
   const Set_With_Context* context_from = context.get_set(input);
   
-  if (context_from)
+  if (context_from && context_from->base)
   {
     generate_elems< Uint32_Index, Node_Skeleton >(
         context_from->name, context_from->base->nodes, context_from->tag_store_nodes, tasks,

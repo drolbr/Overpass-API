@@ -17,6 +17,9 @@
 */
 
 
+#ifndef DE__OSM3S___OVERPASS_API__FRONTEND__TOKENIZER_UTILS_H
+#define DE__OSM3S___OVERPASS_API__FRONTEND__TOKENIZER_UTILS_H
+
 #include "../core/datatypes.h"
 #include "../../expat/map_ql_input.h"
 
@@ -86,3 +89,6 @@ private:
   const Token_Tree* tree;
   uint pos;
 };
+
+
+#endif

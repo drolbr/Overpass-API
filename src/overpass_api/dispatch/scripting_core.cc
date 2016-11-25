@@ -158,7 +158,7 @@ bool parse_and_validate
       if (debug_level == parser_dump_xml || debug_level == parser_dump_compact_map_ql
 	  || debug_level == parser_dump_pretty_map_ql || debug_level == parser_dump_bbox_map_ql)
       {
-	Statement_Dump::Factory stmt_dump_factory;
+	Statement_Dump::Factory stmt_dump_factory(stmt_factory);
 	stmt_dump_factory_global = &stmt_dump_factory;
 	xml_parser.parse(xml_raw, start< Statement_Dump >, end< Statement_Dump >);
       
@@ -218,13 +218,13 @@ bool parse_and_validate
 	root->set_factory(&stmt_factory);
     }
     else if (debug_level == parser_dump_xml)
-      parse_and_dump_xml_from_map_ql(xml_raw, error_output, parsed_query);
+      parse_and_dump_xml_from_map_ql(stmt_factory, xml_raw, error_output, parsed_query);
     else if (debug_level == parser_dump_compact_map_ql)
-      parse_and_dump_compact_from_map_ql(xml_raw, error_output, parsed_query);
+      parse_and_dump_compact_from_map_ql(stmt_factory, xml_raw, error_output, parsed_query);
     else if (debug_level == parser_dump_bbox_map_ql)
-      parse_and_dump_bbox_from_map_ql(xml_raw, error_output, parsed_query);
+      parse_and_dump_bbox_from_map_ql(stmt_factory, xml_raw, error_output, parsed_query);
     else if (debug_level == parser_dump_pretty_map_ql)
-      parse_and_dump_pretty_from_map_ql(xml_raw, error_output, parsed_query);
+      parse_and_dump_pretty_from_map_ql(stmt_factory, xml_raw, error_output, parsed_query);
   }
   
   if ((error_output) && (error_output->display_parse_errors()))
