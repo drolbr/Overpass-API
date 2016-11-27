@@ -385,7 +385,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
       std::map< std::string, uint >::const_iterator prio_it = priority.find(*token);
       uint prio = prio_it != priority.end() ? prio_it->second : 0;
       bool unary_minus = false;
-      if (*token != "" && (*token)[0] == '-')
+      if ((*token).size() > 1 && (*token)[0] == '-')
       {
         prio = 10;
         unary_minus = true;
