@@ -144,12 +144,12 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
     
     while (!statement && maker_it != all_it->second.end())
     {
-      statement = (*maker_it)->create_statement(tree_it, global_settings, Statement::error_output);
+      statement = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
       ++maker_it;
     }
     while (maker_it != all_it->second.end())
     {
-      Statement* bis = (*maker_it)->create_statement(tree_it, global_settings, Statement::error_output);
+      Statement* bis = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
       if (bis)
       {
         statement = 0;
@@ -176,12 +176,12 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
     
     while (!statement && maker_it != all_it->second.end())
     {
-      statement = (*maker_it)->create_statement(tree_it, global_settings, Statement::error_output);
+      statement = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
       ++maker_it;
     }
     while (maker_it != all_it->second.end())
     {
-      Statement* bis = (*maker_it)->create_statement(tree_it, global_settings, Statement::error_output);
+      Statement* bis = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
       if (bis)
       {
         statement = 0;

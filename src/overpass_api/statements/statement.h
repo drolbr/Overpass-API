@@ -106,8 +106,8 @@ class Statement
       public:
 	virtual Statement* create_statement
 	    (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings) = 0;
-	virtual Statement* create_statement
-	    (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output) = 0;
+        virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+            Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output) = 0;
 	virtual ~Statement_Maker() {}
     };
     
@@ -190,8 +190,8 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
       return new TStatement(line_number, attributes, global_settings);
     }
     
-    virtual Statement* create_statement
-        (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output)
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
     {
       return 0;
     }

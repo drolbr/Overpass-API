@@ -25,8 +25,8 @@
 Evaluator_Fixed::Statement_Maker Evaluator_Fixed::statement_maker;
 
 
-Statement* Evaluator_Fixed::Statement_Maker::create_statement
-    (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output)
+Statement* Evaluator_Fixed::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->lhs || tree_it->rhs)
     return 0;
@@ -101,7 +101,24 @@ std::string find_value(const std::vector< std::pair< std::string, std::string > 
 }
 
 
-Generic_Statement_Maker< Evaluator_Value > Evaluator_Value::statement_maker("eval-value");
+Evaluator_Value::Statement_Maker Evaluator_Value::statement_maker;
+
+
+Statement* Evaluator_Value::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->lhs)
+    return 0;
+  if (!tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("Operator \"[\" needs a tag key as argument", tree_it->line_col.first);
+    return 0;
+  }
+  map< string, string > attributes;
+  attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
+  return new Evaluator_Value(tree_it->line_col.first, attributes, global_settings);
+}
 
 
 Evaluator_Value::Evaluator_Value
@@ -160,8 +177,8 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
 Evaluator_Generic::Statement_Maker Evaluator_Generic::statement_maker;
 
 
-Statement* Evaluator_Generic::Statement_Maker::create_statement
-    (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output)
+Statement* Evaluator_Generic::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->lhs || tree_it->rhs)
     return 0;

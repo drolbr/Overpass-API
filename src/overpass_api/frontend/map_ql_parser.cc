@@ -226,16 +226,6 @@ TStatement* create_set_prop_statement(typename TStatement::Factory& stmt_factory
 
 
 template< class TStatement >
-TStatement* create_tag_value_fixed(typename TStatement::Factory& stmt_factory,
-    string value, uint line_nr)
-{
-  map< string, string > attr;
-  attr["v"] = value;
-  return stmt_factory.create_statement("eval-fixed", line_nr, attr);
-}
-
-
-template< class TStatement >
 TStatement* create_key_aware_func(typename TStatement::Factory& stmt_factory,
     string type, string key, uint line_nr)
 {
@@ -835,44 +825,22 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
   {
     if (tree_it->token == "(")
       return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
-    
-    if (tree_it->token == "[")
-      return create_key_aware_func< TStatement >(stmt_factory, "eval-value",
-          decode_json(tree_it.rhs()->token, error_output), tree_it->line_col.first);
-    
-    if (tree_it->token == "-")
-    {
-      TStatement* stmt = create_tag_value_x< TStatement >("eval-minus", stmt_factory, tree_it->line_col.first);
-      TStatement* lhs = create_tag_value_fixed< TStatement >(stmt_factory, "0", tree_it->line_col.first);
-      if (lhs)
-        stmt->add_statement(lhs, "");
-      TStatement* rhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
-      if (rhs)
-        stmt->add_statement(rhs, "");
-      return stmt;
-    }
-    else if (tree_it->token == "!")
-    {
-      TStatement* stmt = create_tag_value_x< TStatement >("eval-not", stmt_factory, tree_it->line_col.first);
-      TStatement* lhs = create_tag_value_fixed< TStatement >(stmt_factory, "0", tree_it->line_col.first);
-      if (lhs)
-        stmt->add_statement(lhs, "");
-      TStatement* rhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
-      if (rhs)
-        stmt->add_statement(rhs, "");
-      return stmt;
-    }
-    
-    error_output->add_parse_error(
-        std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
-    return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
   }
   
   TStatement* stmt = stmt_factory.create_statement(tree_it);
   
   if (!stmt)
-    error_output->add_parse_error(std::string("Token \"") + tree_it->token
-        + "\" has not been recognized as statement", tree_it->line_col.first);
+  {
+    if (tree_it->rhs == 0)
+      error_output->add_parse_error(std::string("Token \"") + tree_it->token
+          + "\" has not been recognized as statement", tree_it->line_col.first);
+    else
+    {
+      error_output->add_parse_error(
+          std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
+      return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
+    }
+  }
   
   return stmt;
 }

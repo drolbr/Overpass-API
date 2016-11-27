@@ -126,7 +126,26 @@ std::vector< std::string > Evaluator_Prefix_Operator::used_tags() const
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Not > Evaluator_Not::statement_maker("eval-not");
+Evaluator_Not::Statement_Maker Evaluator_Not::statement_maker;
+
+
+Statement* Evaluator_Not::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->lhs || !tree_it->rhs)
+    return 0;
+  map< string, string > attributes;
+  Statement* result = new Evaluator_Not(tree_it->line_col.first, attributes, global_settings);
+  if (result)
+  {
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error("Operator \"!\" needs a right-hand-side argument", tree_it->line_col.first);
+  }
+  return result;
+}
 
 
 Evaluator_Not::Evaluator_Not
@@ -151,7 +170,26 @@ std::string Evaluator_Not::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Negate > Evaluator_Negate::statement_maker("eval-negate");
+Evaluator_Negate::Statement_Maker Evaluator_Negate::statement_maker;
+
+
+Statement* Evaluator_Negate::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->lhs || !tree_it->rhs)
+    return 0;
+  map< string, string > attributes;
+  Statement* result = new Evaluator_Negate(tree_it->line_col.first, attributes, global_settings);
+  if (result)
+  {
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error("Operator \"!\" needs a right-hand-side argument", tree_it->line_col.first);
+  }
+  return result;
+}
 
 
 Evaluator_Negate::Evaluator_Negate

@@ -84,12 +84,23 @@ private:
 class Evaluator_Not : public Evaluator_Prefix_Operator
 {
 public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Not >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-not") { Statement::maker_by_token()["!"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-not>\n" + rhs->dump_xml(indent + "  ") + indent + "</eval-not>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return std::string("!") + rhs->dump_compact_ql(""); }
+  virtual std::string dump_pretty_ql(const std::string&) const { return std::string("! ") + rhs->dump_pretty_ql(""); }
+
   Evaluator_Not(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-not"; }
   virtual ~Evaluator_Not() {}
-  
-  static Generic_Statement_Maker< Evaluator_Not > statement_maker;
   
   virtual std::string process(const std::string& rhs_result) const;
 };
@@ -98,12 +109,23 @@ public:
 class Evaluator_Negate : public Evaluator_Prefix_Operator
 {
 public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Negate >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-negate") { Statement::maker_by_token()["-"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-negate>\n" + rhs->dump_xml(indent + "  ") + indent + "</eval-negate>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return std::string("-") + rhs->dump_compact_ql(""); }
+  virtual std::string dump_pretty_ql(const std::string&) const { return std::string("-") + rhs->dump_pretty_ql(""); }
+      
   Evaluator_Negate(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-negate"; }
   virtual ~Evaluator_Negate() {}
-  
-  static Generic_Statement_Maker< Evaluator_Negate > statement_maker;
   
   virtual std::string process(const std::string& rhs_result) const;
 };

@@ -35,12 +35,11 @@
 class Evaluator_Fixed : public Evaluator
 {
 public:
-  class Statement_Maker : public Generic_Statement_Maker< Evaluator_Fixed >
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Fixed >
   {
-    public:
-      virtual Statement* create_statement
-          (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output);    
-      Statement_Maker() : Generic_Statement_Maker("eval-fixed") { Statement::maker_by_token()[""].push_back(this); }
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-fixed") { Statement::maker_by_token()[""].push_back(this); }
   };
   static Statement_Maker statement_maker;
       
@@ -211,14 +210,25 @@ private:
 class Evaluator_Value : public Evaluator
 {
 public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Value >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-value") { Statement::maker_by_token()["["].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-value k=\"" + escape_xml(key) + "\"/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return std::string("[") + escape_cstr(key) + "]"; }
+  virtual std::string dump_pretty_ql(const std::string&) const { return std::string("[") + escape_cstr(key) + "]"; }
+
   Evaluator_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-value"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Value() {}
-  
-  static Generic_Statement_Maker< Evaluator_Value > statement_maker;
   
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }
@@ -339,12 +349,11 @@ struct Generic_Eval_Task : public Eval_Task
 class Evaluator_Generic : public Evaluator
 {
 public:
-  class Statement_Maker : public Generic_Statement_Maker< Evaluator_Generic >
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Generic >
   {
-    public:
-      virtual Statement* create_statement
-          (const Token_Node_Ptr& tree_it, Parsed_Query& global_settings, Error_Output* error_output);    
-      Statement_Maker() : Generic_Statement_Maker("eval-generic") { Statement::maker_by_token()["::"].push_back(this); }
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-generic") { Statement::maker_by_token()["::"].push_back(this); }
   };
   static Statement_Maker statement_maker;
       
