@@ -24,7 +24,6 @@
 #include "osm_script.h"
 #include "statement.h"
 
-using namespace std;
 
 map< string, Statement::Statement_Maker* >& Statement::maker_by_name()
 {
@@ -32,11 +31,20 @@ map< string, Statement::Statement_Maker* >& Statement::maker_by_name()
   return makers;
 }
 
+
 map< string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_token()
 {
   static map< string, std::vector< Statement::Statement_Maker* > > makers;
   return makers;
 }
+
+
+map< string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_func_name()
+{
+  static map< string, std::vector< Statement::Statement_Maker* > > makers;
+  return makers;
+}
+
 
 void Statement::eval_attributes_array(string element, map< string, string >& attributes,
 				      const map< string, string >& input)
@@ -135,6 +143,47 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
 {
   Statement* statement = 0;
   
+  if (tree_it->token == "(")
+  {
+    if (tree_it->lhs)
+    {
+      map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+          Statement::maker_by_func_name().find(tree_it.lhs()->token);
+          
+      if (all_it != Statement::maker_by_func_name().end())
+      {
+        std::vector< Statement::Statement_Maker* >::iterator maker_it = all_it->second.begin();
+    
+        while (!statement && maker_it != all_it->second.end())
+        {
+          statement = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
+          ++maker_it;
+        }
+        while (maker_it != all_it->second.end())
+        {
+          Statement* bis = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
+          if (bis)
+          {
+            if (Statement::error_output)
+              Statement::error_output->add_static_error(std::string("Function name \"") + tree_it.lhs()->token
+                  + "\" has ambiguous resolutions to \"" + statement->get_name() + "\" and \""
+                  + bis->get_name() + "\".", tree_it->line_col.first);
+            delete statement;
+            statement = 0;
+          }
+          ++maker_it;
+        }
+      }
+    }
+    else if (tree_it->rhs)
+      return create_statement(tree_it.rhs());
+    else
+    {
+      Statement::error_output->add_static_error("Empty parentheses cannot be evaluated.", tree_it->line_col.first);
+      return 0;
+    }
+  }
+  
   map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
       Statement::maker_by_token().find(tree_it->token);
   
@@ -152,11 +201,12 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
       Statement* bis = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
       if (bis)
       {
-        statement = 0;
         if (Statement::error_output)
           Statement::error_output->add_static_error(std::string("Token \"") + tree_it->token
               + "\" has ambiguous resolutions to \"" + statement->get_name() + "\" and \"" + bis->get_name() + "\".",
               tree_it->line_col.first);
+        delete statement;
+        statement = 0;
       }
       ++maker_it;
     }

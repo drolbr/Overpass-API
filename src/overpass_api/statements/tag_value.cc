@@ -53,7 +53,17 @@ Evaluator_Fixed::Evaluator_Fixed
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Id > Evaluator_Id::statement_maker("eval-id");
+Evaluator_Id::Statement_Maker Evaluator_Id::statement_maker;
+
+
+Statement* Evaluator_Id::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->rhs)
+    return 0;
+  map< string, string > attributes;
+  return new Evaluator_Id(tree_it->line_col.first, attributes, global_settings);
+}
 
 
 Evaluator_Id::Evaluator_Id
@@ -69,7 +79,17 @@ Evaluator_Id::Evaluator_Id
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Type > Evaluator_Type::statement_maker("eval-type");
+Evaluator_Type::Statement_Maker Evaluator_Type::statement_maker;
+
+
+Statement* Evaluator_Type::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->rhs)
+    return 0;
+  map< string, string > attributes;
+  return new Evaluator_Type(tree_it->line_col.first, attributes, global_settings);
+}
 
 
 Evaluator_Type::Evaluator_Type

@@ -113,6 +113,7 @@ class Statement
     
     static map< string, Statement_Maker* >& maker_by_name();
     static map< string, std::vector< Statement_Maker* > >& maker_by_token();
+    static map< string, std::vector< Statement_Maker* > >& maker_by_func_name();
     
     Statement(int line_number_) : line_number(line_number_), progress(0) {}
     

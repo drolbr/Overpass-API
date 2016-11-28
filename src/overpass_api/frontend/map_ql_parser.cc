@@ -806,40 +806,27 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
           tree_it->line_col.first);
       return stmt;
     }
-    
-    if (tree_it->token == "(")
-    {
-      if (tree_it.lhs()->token == "id")
-        return create_tag_value_x< TStatement >("eval-id", stmt_factory, tree_it->line_col.first);
-      else if (tree_it.lhs()->token == "type")
-        return create_tag_value_x< TStatement >("eval-type", stmt_factory, tree_it->line_col.first);
-    }
-    
-    error_output->add_parse_error(
-        std::string("\"") + tree_it->token + "\" needs a right hand side argument",
-        tree_it->line_col.first);
-    return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.lhs());
-  }
-  
-  if (tree_it->rhs != 0)
-  {
-    if (tree_it->token == "(")
-      return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
   }
   
   TStatement* stmt = stmt_factory.create_statement(tree_it);
   
   if (!stmt)
   {
-    if (tree_it->rhs == 0)
-      error_output->add_parse_error(std::string("Token \"") + tree_it->token
-          + "\" has not been recognized as statement", tree_it->line_col.first);
-    else
+    if (tree_it->lhs)
+    {
+      if (!tree_it->rhs)
+        error_output->add_parse_error(
+            std::string("\"") + tree_it->token + "\" needs a right hand side argument", tree_it->line_col.first);        
+    }
+    if (tree_it->rhs)
     {
       error_output->add_parse_error(
           std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
       return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
     }
+    else
+      error_output->add_parse_error(std::string("Token \"") + tree_it->token
+          + "\" has not been recognized as statement", tree_it->line_col.first);
   }
   
   return stmt;
@@ -851,15 +838,10 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
     Error_Output* error_output, bool parenthesis_expected)
 {
   Token_Tree tree(token, error_output, parenthesis_expected);
-  if (!tree.tree.empty())
-  {
-    TStatement* stmt = stmt_from_value_tree< TStatement >(stmt_factory, error_output,
-                                                          Token_Node_Ptr(tree, tree.tree[0].rhs));
-    if (stmt)
-      return stmt;
-  }
+  if (tree.tree.empty())
+    return 0;
   
-  return 0;
+  return stmt_from_value_tree< TStatement >(stmt_factory, error_output, Token_Node_Ptr(tree, tree.tree[0].rhs));
 }
 
 

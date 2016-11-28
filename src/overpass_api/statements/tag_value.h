@@ -100,14 +100,25 @@ struct Id_Eval_Task : public Eval_Task
 class Evaluator_Id : public Evaluator
 {
 public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Id >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-id") { Statement::maker_by_func_name()["id"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-id/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return "id()"; }
+  virtual std::string dump_pretty_ql(const std::string&) const { return "id()"; }
+
   Evaluator_Id(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-id"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Id() {}
-  
-  static Generic_Statement_Maker< Evaluator_Id > statement_maker;
 
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::SKELETON); }  
@@ -151,14 +162,25 @@ struct Type_Eval_Task : public Eval_Task
 class Evaluator_Type : public Evaluator
 {
 public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Id >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-id") { Statement::maker_by_func_name()["type"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-id/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return "id()"; }
+  virtual std::string dump_pretty_ql(const std::string&) const { return "id()"; }
+
   Evaluator_Type(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-type"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Type() {}
-  
-  static Generic_Statement_Maker< Evaluator_Type > statement_maker;
 
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::SKELETON); }
