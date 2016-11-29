@@ -678,37 +678,7 @@ template< class TStatement >
 TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
     const Token_Node_Ptr& tree_it)
 {
-  TStatement* stmt = stmt_factory.create_statement(tree_it);
-  if (stmt)
-    return stmt;
-  
-  if (tree_it->lhs)
-  {
-    if (tree_it->rhs)
-    {      
-      if (tree_it->token == "(" || tree_it->token != ".")
-        error_output->add_parse_error(std::string("Function \"") + tree_it.lhs()->token + "\" not known",
-            tree_it->line_col.first);
-      else
-        error_output->add_parse_error(
-            std::string("\"") + tree_it->token + "\" cannot be used as binary operator",
-            tree_it->line_col.first);
-    }
-    else
-      error_output->add_parse_error(
-          std::string("\"") + tree_it->token + "\" needs a right hand side argument", tree_it->line_col.first);        
-  }  
-  else if (tree_it->rhs)
-  {
-    error_output->add_parse_error(
-        std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
-    return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
-  }
-  else
-    error_output->add_parse_error(std::string("Token \"") + tree_it->token
-        + "\" has not been recognized as statement", tree_it->line_col.first);
-  
-  return 0;
+  return stmt_factory.create_statement(tree_it);
 }
 
 
