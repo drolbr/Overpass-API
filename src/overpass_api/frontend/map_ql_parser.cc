@@ -226,14 +226,6 @@ TStatement* create_set_prop_statement(typename TStatement::Factory& stmt_factory
 
 
 template< class TStatement >
-TStatement* create_tag_value_x(const std::string& type, typename TStatement::Factory& stmt_factory, uint line_nr)
-{
-  map< string, string > attr;
-  return stmt_factory.create_statement(type, line_nr, attr);
-}
-
-
-template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
                                    string from, string mode, string order, string limit, string geometry,
                                    string south, string north, string west, string east,
@@ -675,14 +667,6 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
-TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
-    const Token_Node_Ptr& tree_it)
-{
-  return stmt_factory.create_statement(tree_it);
-}
-
-
-template< class TStatement >
 TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
     Error_Output* error_output, bool parenthesis_expected)
 {
@@ -690,7 +674,7 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
   if (tree.tree.empty())
     return 0;
   
-  return stmt_from_value_tree< TStatement >(stmt_factory, error_output, Token_Node_Ptr(tree, tree.tree[0].rhs));
+  return stmt_factory.create_statement(Token_Node_Ptr(tree, tree.tree[0].rhs));
 }
 
 
