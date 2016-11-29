@@ -59,8 +59,18 @@ Evaluator_Id::Statement_Maker Evaluator_Id::statement_maker;
 Statement* Evaluator_Id::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_it->rhs)
+  if (tree_it->token != "(")
+  {
+    if (error_output)
+      error_output->add_parse_error("id() cannot have an input set", tree_it->line_col.first);
     return 0;
+  }
+  if (tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("id() cannot have an argument", tree_it->line_col.first);
+    return 0;
+  }
   map< string, string > attributes;
   return new Evaluator_Id(tree_it->line_col.first, attributes, global_settings);
 }
@@ -85,8 +95,18 @@ Evaluator_Type::Statement_Maker Evaluator_Type::statement_maker;
 Statement* Evaluator_Type::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_it->rhs)
+  if (tree_it->token != "(")
+  {
+    if (error_output)
+      error_output->add_parse_error("type() cannot have an input set", tree_it->line_col.first);
     return 0;
+  }
+  if (tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("type() cannot have an argument", tree_it->line_col.first);
+    return 0;
+  }
   map< string, string > attributes;
   return new Evaluator_Type(tree_it->line_col.first, attributes, global_settings);
 }
@@ -174,7 +194,34 @@ std::string exists_value(const std::vector< std::pair< std::string, std::string 
 }
 
 
-Generic_Statement_Maker< Evaluator_Is_Tag > Evaluator_Is_Tag::statement_maker("eval-is-tag");
+Evaluator_Is_Tag::Statement_Maker Evaluator_Is_Tag::statement_maker;
+
+
+Statement* Evaluator_Is_Tag::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->token != "(")
+  {
+    if (error_output)
+      error_output->add_parse_error("is_tag(...) cannot have an input set", tree_it->line_col.first);
+    return 0;
+  }
+  if (!tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("is_tag(key) needs a string as argument", tree_it->line_col.first);
+    return 0;
+  }
+  if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("is_tag(key) needs a simple string as argument", tree_it->line_col.first);
+    return 0;
+  }
+  map< string, string > attributes;
+  attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
+  return new Evaluator_Is_Tag(tree_it->line_col.first, attributes, global_settings);
+}
 
 
 Evaluator_Is_Tag::Evaluator_Is_Tag
@@ -220,7 +267,67 @@ Evaluator_Generic::Evaluator_Generic
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Count > Evaluator_Count::statement_maker("eval-count");
+Evaluator_Count::Statement_Maker Evaluator_Count::statement_maker;
+
+
+Statement* Evaluator_Count::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  map< string, string > attributes;
+  
+  if (tree_it->token == "(")
+  {
+    if (!tree_it->lhs)
+      return 0;
+    if (!tree_it->rhs)
+    {
+      if (error_output)
+        error_output->add_parse_error("count(object_type) needs an argument", tree_it->line_col.first);
+      return 0;
+    }
+    
+    attributes["from"] = "_";
+    attributes["type"] = tree_it.rhs()->token;
+  }
+  else
+  {
+    if (!tree_it->lhs)
+      return 0;
+    if (!tree_it->rhs || !tree_it.rhs()->rhs)
+    {
+      if (error_output)
+        error_output->add_parse_error("count(object_type) needs an argument", tree_it->line_col.first);
+      return 0;
+    }
+    if (!tree_it.rhs()->lhs)
+    {
+      if (error_output)
+        error_output->add_parse_error("Input set required if dot is present", tree_it->line_col.first);
+      return 0;
+    }
+    
+    attributes["from"] = tree_it.rhs().lhs()->token;
+    attributes["type"] = tree_it.rhs().rhs()->token;
+  }
+  
+  return new Evaluator_Count(tree_it->line_col.first, attributes, global_settings);
+}
+
+
+std::string Evaluator_Count::to_string(Evaluator_Count::Objects objects)
+{
+  if (objects == nodes)
+    return "node";
+  if (objects == ways)
+    return "ways";
+  if (objects == relations)
+    return "relations";
+  if (objects == deriveds)
+    return "deriveds";
+  if (objects == tags)
+    return "tags";
+  return "members";
+}
 
 
 Evaluator_Count::Evaluator_Count
@@ -297,7 +404,7 @@ Eval_Task* Evaluator_Count::get_task(const Prepare_Task_Context& context)
       counter = count(set->base->relations) + count(set->base->attic_relations);
   }
   
-  return new Const_Eval_Task(to_string(counter));
+  return new Const_Eval_Task(::to_string(counter));
 }
 
 

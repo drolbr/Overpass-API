@@ -218,7 +218,36 @@ std::string Evaluator_Negate::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Number > Evaluator_Number::statement_maker("eval-number");
+Evaluator_Number::Statement_Maker Evaluator_Number::statement_maker;
+
+
+Statement* Evaluator_Number::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->token != "(")
+  {
+    if (error_output)
+      error_output->add_parse_error("number(...) cannot have an input set", tree_it->line_col.first);
+    return 0;
+  }
+  if (!tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("number(...) needs an argument", tree_it->line_col.first);
+    return 0;
+  }
+  map< string, string > attributes;
+  Statement* result = new Evaluator_Number(tree_it->line_col.first, attributes, global_settings);
+  if (result)
+  {
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error("number(...) needs an argument", tree_it->line_col.first);
+  }
+  return result;
+}
 
 
 Evaluator_Number::Evaluator_Number
@@ -247,7 +276,36 @@ std::string Evaluator_Number::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Is_Num > Evaluator_Is_Num::statement_maker("eval-is-num");
+Evaluator_Is_Num::Statement_Maker Evaluator_Is_Num::statement_maker;
+
+
+Statement* Evaluator_Is_Num::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_it->token != "(")
+  {
+    if (error_output)
+      error_output->add_parse_error("is_num(...) cannot have an input set", tree_it->line_col.first);
+    return 0;
+  }
+  if (!tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("is_num(...) needs an argument", tree_it->line_col.first);
+    return 0;
+  }
+  map< string, string > attributes;
+  Statement* result = new Evaluator_Is_Num(tree_it->line_col.first, attributes, global_settings);
+  if (result)
+  {
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error("is_num(...) needs an argument", tree_it->line_col.first);
+  }
+  return result;
+}
 
 
 Evaluator_Is_Num::Evaluator_Is_Num

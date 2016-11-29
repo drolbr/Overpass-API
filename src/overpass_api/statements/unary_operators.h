@@ -134,12 +134,26 @@ public:
 class Evaluator_Number : public Evaluator_Prefix_Operator
 {
 public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Number >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-number")
+    { Statement::maker_by_func_name()["number"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-number>\n" + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-number>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return std::string("number(\"") + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
+  virtual std::string dump_pretty_ql(const std::string&) const
+  { return std::string("number(\"") + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
+
   Evaluator_Number(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-number"; }
   virtual ~Evaluator_Number() {}
-  
-  static Generic_Statement_Maker< Evaluator_Number > statement_maker;
   
   virtual std::string process(const std::string& rhs_result) const;
 };
@@ -148,12 +162,26 @@ public:
 class Evaluator_Is_Num : public Evaluator_Prefix_Operator
 {
 public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Is_Num >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-is-num")
+    { Statement::maker_by_func_name()["is_num"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-is-num>\n" + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-is-num>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return std::string("is_num(\"") + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
+  virtual std::string dump_pretty_ql(const std::string&) const
+  { return std::string("is_num(\"") + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
+
   Evaluator_Is_Num(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "eval-is-num"; }
   virtual ~Evaluator_Is_Num() {}
-  
-  static Generic_Statement_Maker< Evaluator_Is_Num > statement_maker;
   
   virtual std::string process(const std::string& rhs_result) const;
 };

@@ -226,37 +226,6 @@ TStatement* create_set_prop_statement(typename TStatement::Factory& stmt_factory
 
 
 template< class TStatement >
-TStatement* create_key_aware_func(typename TStatement::Factory& stmt_factory,
-    string type, string key, uint line_nr)
-{
-  map< string, string > attr;
-  attr["k"] = key;
-  return stmt_factory.create_statement(type, line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_tag_value_count(typename TStatement::Factory& stmt_factory,
-    string type, string from, uint line_nr)
-{
-  map< string, string > attr;
-  attr["from"] = from;
-  attr["type"] = type;
-  return stmt_factory.create_statement("eval-count", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_tag_value_union_value(typename TStatement::Factory& stmt_factory,
-    string type, string from, uint line_nr)
-{
-  map< string, string > attr;
-  attr["from"] = from;
-  return stmt_factory.create_statement(type, line_nr, attr);
-}
-
-
-template< class TStatement >
 TStatement* create_tag_value_x(const std::string& type, typename TStatement::Factory& stmt_factory, uint line_nr)
 {
   map< string, string > attr;
@@ -711,46 +680,9 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
 
 
 template< class TStatement >
-TStatement* stmt_from_blank_function_expr(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
-    const std::string& type, const std::string& from, const Token_Node_Ptr& tree_it)
+void stmt_from_blank_function_expr(const std::string& type, const Token_Node_Ptr& tree_it)
 {
-  TStatement* stmt = 0;
-  if (type == "count")
-    return create_tag_value_count< TStatement >(stmt_factory, tree_it->token, from, tree_it->line_col.first);
-  else if (type == "u")
-    stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "eval-union-value", from, tree_it->line_col.first);
-  else if (type == "min")
-    stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "eval-min-value", from, tree_it->line_col.first);
-  else if (type == "max")
-    stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "eval-max-value", from, tree_it->line_col.first);
-  else if (type == "sum")
-    stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "eval-sum-value", from, tree_it->line_col.first);
-  else if (type == "set")
-    stmt = create_tag_value_union_value< TStatement >(
-        stmt_factory, "eval-set-value", from, tree_it->line_col.first);
-  else if (type == "number")
-    stmt = create_tag_value_x< TStatement >(
-        "eval-number", stmt_factory, tree_it->line_col.first);
-  else if (type == "is_num")
-    stmt = create_tag_value_x< TStatement >(
-        "eval-is-num", stmt_factory, tree_it->line_col.first);
-  else if (type == "is_tag")
-    return create_key_aware_func< TStatement >(
-        stmt_factory, "eval-is-tag", decode_json(tree_it->token, error_output), tree_it->line_col.first);
-    
-  if (stmt)
-  {
-    TStatement* rhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it);
-    if (stmt && rhs)
-      stmt->add_statement(rhs, "");
-  }
-  else
-    error_output->add_parse_error(std::string("Function \"") + type + "\" not known", tree_it->line_col.first);
-  return stmt;
+  error_output->add_parse_error(std::string("Function \"") + type + "\" not known", tree_it->line_col.first);
 }
 
 
@@ -762,17 +694,19 @@ TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Err
   {
     if (tree_it->rhs)
     {
+      TStatement* stmt = stmt_factory.create_statement(tree_it);
+      if (stmt)
+        return stmt;
+      
       if (tree_it->token == "(")
-        return stmt_from_blank_function_expr< TStatement >(stmt_factory, error_output,
-            tree_it.lhs()->token, "_", tree_it.rhs());
+        return stmt_from_blank_function_expr< TStatement >(tree_it.lhs()->token, tree_it.rhs());
       else if (tree_it->token == ".")
       {
         if (tree_it.rhs()->token == "(")
-          return stmt_from_blank_function_expr< TStatement >(stmt_factory, error_output,
-              tree_it.lhs()->token, tree_it.rhs().lhs()->token, tree_it.rhs().rhs());
+          return stmt_from_blank_function_expr< TStatement >(tree_it.lhs()->token, tree_it.rhs().rhs());
       }
       
-      TStatement* stmt = 0;
+      stmt = 0;
       if (tree_it->token == "&&")
         stmt = create_tag_value_x< TStatement >("eval-and", stmt_factory, tree_it->line_col.first);
       if (tree_it->token == "||")

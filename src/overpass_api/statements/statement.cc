@@ -183,6 +183,39 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
       return 0;
     }
   }
+  else if (tree_it->token == ".")
+  {
+    if (tree_it->lhs && tree_it->rhs && tree_it.rhs()->token == "(")
+    {
+      map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+          Statement::maker_by_func_name().find(tree_it.lhs()->token);
+          
+      if (all_it != Statement::maker_by_func_name().end())
+      {
+        std::vector< Statement::Statement_Maker* >::iterator maker_it = all_it->second.begin();
+    
+        while (!statement && maker_it != all_it->second.end())
+        {
+          statement = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
+          ++maker_it;
+        }
+        while (maker_it != all_it->second.end())
+        {
+          Statement* bis = (*maker_it)->create_statement(tree_it, *this, global_settings, Statement::error_output);
+          if (bis)
+          {
+            if (Statement::error_output)
+              Statement::error_output->add_static_error(std::string("Function name \"") + tree_it.lhs()->token
+                  + "\" has ambiguous resolutions to \"" + statement->get_name() + "\" and \""
+                  + bis->get_name() + "\".", tree_it->line_col.first);
+            delete statement;
+            statement = 0;
+          }
+          ++maker_it;
+        }
+      }
+    }
+  }
   
   map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
       Statement::maker_by_token().find(tree_it->token);
