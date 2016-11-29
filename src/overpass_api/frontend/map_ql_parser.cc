@@ -676,94 +676,39 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
-    const Token_Node_Ptr& tree_it);
-
-
-template< class TStatement >
-void stmt_from_blank_function_expr(const std::string& type, const Token_Node_Ptr& tree_it)
-{
-  error_output->add_parse_error(std::string("Function \"") + type + "\" not known", tree_it->line_col.first);
-}
-
-
-template< class TStatement >
-TStatement* stmt_from_value_tree(typename TStatement::Factory& stmt_factory, Error_Output* error_output,
     const Token_Node_Ptr& tree_it)
 {
+  TStatement* stmt = stmt_factory.create_statement(tree_it);
+  if (stmt)
+    return stmt;
+  
   if (tree_it->lhs)
   {
     if (tree_it->rhs)
-    {
-      TStatement* stmt = stmt_factory.create_statement(tree_it);
-      if (stmt)
-        return stmt;
-      
-      if (tree_it->token == "(")
-        return stmt_from_blank_function_expr< TStatement >(tree_it.lhs()->token, tree_it.rhs());
-      else if (tree_it->token == ".")
-      {
-        if (tree_it.rhs()->token == "(")
-          return stmt_from_blank_function_expr< TStatement >(tree_it.lhs()->token, tree_it.rhs().rhs());
-      }
-      
-      stmt = 0;
-      if (tree_it->token == "&&")
-        stmt = create_tag_value_x< TStatement >("eval-and", stmt_factory, tree_it->line_col.first);
-      if (tree_it->token == "||")
-        stmt = create_tag_value_x< TStatement >("eval-or", stmt_factory, tree_it->line_col.first);
-      if (tree_it->token == "==")
-        stmt = create_tag_value_x< TStatement >("eval-equal", stmt_factory, tree_it->line_col.first);
-      if (tree_it->token == "<")
-        stmt = create_tag_value_x< TStatement >("eval-less", stmt_factory, tree_it->line_col.first);
-      if (tree_it->token == "+")
-        stmt = create_tag_value_x< TStatement >("eval-plus", stmt_factory, tree_it->line_col.first);
-      if (tree_it->token == "-")
-        stmt = create_tag_value_x< TStatement >("eval-minus", stmt_factory, tree_it->line_col.first);
-      if (tree_it->token == "*")
-        stmt = create_tag_value_x< TStatement >("eval-times", stmt_factory, tree_it->line_col.first);
-      if (tree_it->token == "/")
-        stmt = create_tag_value_x< TStatement >("eval-divided", stmt_factory, tree_it->line_col.first);
-    
-      if (stmt)
-      {
-        TStatement* lhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.lhs());
-        if (lhs)
-          stmt->add_statement(lhs, "");
-        
-        TStatement* rhs = stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
-        if (rhs)
-          stmt->add_statement(rhs, "");
-      }
+    {      
+      if (tree_it->token == "(" || tree_it->token != ".")
+        error_output->add_parse_error(std::string("Function \"") + tree_it.lhs()->token + "\" not known",
+            tree_it->line_col.first);
       else
         error_output->add_parse_error(
-          std::string("\"") + tree_it->token + "\" cannot be used as binary operator",
-          tree_it->line_col.first);
-      return stmt;
-    }
-  }
-  
-  TStatement* stmt = stmt_factory.create_statement(tree_it);
-  
-  if (!stmt)
-  {
-    if (tree_it->lhs)
-    {
-      if (!tree_it->rhs)
-        error_output->add_parse_error(
-            std::string("\"") + tree_it->token + "\" needs a right hand side argument", tree_it->line_col.first);        
-    }
-    if (tree_it->rhs)
-    {
-      error_output->add_parse_error(
-          std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
-      return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
+            std::string("\"") + tree_it->token + "\" cannot be used as binary operator",
+            tree_it->line_col.first);
     }
     else
-      error_output->add_parse_error(std::string("Token \"") + tree_it->token
-          + "\" has not been recognized as statement", tree_it->line_col.first);
+      error_output->add_parse_error(
+          std::string("\"") + tree_it->token + "\" needs a right hand side argument", tree_it->line_col.first);        
+  }  
+  else if (tree_it->rhs)
+  {
+    error_output->add_parse_error(
+        std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
+    return stmt_from_value_tree< TStatement >(stmt_factory, error_output, tree_it.rhs());
   }
+  else
+    error_output->add_parse_error(std::string("Token \"") + tree_it->token
+        + "\" has not been recognized as statement", tree_it->line_col.first);
   
-  return stmt;
+  return 0;
 }
 
 

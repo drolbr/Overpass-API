@@ -137,10 +137,45 @@ std::vector< std::string > Evaluator_Pair_Operator::used_tags() const
 }
 
 
+template< typename Evaluator >
+Statement* make_statement(const std::string& operator_name, const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (!tree_it->lhs || !tree_it->rhs)
+    return 0;
+  map< string, string > attributes;
+  Statement* result = new Evaluator(tree_it->line_col.first, attributes, global_settings);
+  if (result)
+  {
+    Statement* lhs = stmt_factory.create_statement(tree_it.lhs());
+    if (lhs)
+      result->add_statement(lhs, "");
+    else if (error_output)
+      error_output->add_parse_error(std::string("Operator \"") + operator_name
+          + "\" needs a left-hand-side argument", tree_it->line_col.first);
+    
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error(std::string("Operator \"") + operator_name
+          + "\" needs a right-hand-side argument", tree_it->line_col.first);
+  }
+  return result;
+}
+
+
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_And > Evaluator_And::statement_maker("eval-and");
+Evaluator_And::Statement_Maker Evaluator_And::statement_maker;
+
+
+Statement* Evaluator_And::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  return make_statement< Evaluator_And >("&&", tree_it, stmt_factory, global_settings, error_output);
+}
 
 
 Evaluator_And::Evaluator_And
@@ -166,7 +201,14 @@ std::string Evaluator_And::process(const std::string& lhs_s, const std::string& 
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Or > Evaluator_Or::statement_maker("eval-or");
+Evaluator_Or::Statement_Maker Evaluator_Or::statement_maker;
+
+
+Statement* Evaluator_Or::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  return make_statement< Evaluator_Or >("||", tree_it, stmt_factory, global_settings, error_output);
+}
 
 
 Evaluator_Or::Evaluator_Or
@@ -192,7 +234,14 @@ std::string Evaluator_Or::process(const std::string& lhs_s, const std::string& r
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Equal > Evaluator_Equal::statement_maker("eval-equal");
+Evaluator_Equal::Statement_Maker Evaluator_Equal::statement_maker;
+
+
+Statement* Evaluator_Equal::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  return make_statement< Evaluator_Equal >("==", tree_it, stmt_factory, global_settings, error_output);
+}
 
 
 Evaluator_Equal::Evaluator_Equal
@@ -223,7 +272,14 @@ std::string Evaluator_Equal::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Less > Evaluator_Less::statement_maker("eval-less");
+Evaluator_Less::Statement_Maker Evaluator_Less::statement_maker;
+
+
+Statement* Evaluator_Less::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  return make_statement< Evaluator_Less >("<", tree_it, stmt_factory, global_settings, error_output);
+}
 
 
 Evaluator_Less::Evaluator_Less
@@ -254,7 +310,14 @@ std::string Evaluator_Less::process(const std::string& lhs_s, const std::string&
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Plus > Evaluator_Plus::statement_maker("eval-plus");
+Evaluator_Plus::Statement_Maker Evaluator_Plus::statement_maker;
+
+
+Statement* Evaluator_Plus::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  return make_statement< Evaluator_Plus >("+", tree_it, stmt_factory, global_settings, error_output);
+}
 
 
 Evaluator_Plus::Evaluator_Plus
@@ -285,7 +348,14 @@ std::string Evaluator_Plus::process(const std::string& lhs_s, const std::string&
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Minus > Evaluator_Minus::statement_maker("eval-minus");
+Evaluator_Minus::Statement_Maker Evaluator_Minus::statement_maker;
+
+
+Statement* Evaluator_Minus::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  return make_statement< Evaluator_Minus >("-", tree_it, stmt_factory, global_settings, error_output);
+}
 
 
 Evaluator_Minus::Evaluator_Minus
@@ -316,7 +386,14 @@ std::string Evaluator_Minus::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Times > Evaluator_Times::statement_maker("eval-times");
+Evaluator_Times::Statement_Maker Evaluator_Times::statement_maker;
+
+
+Statement* Evaluator_Times::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  return make_statement< Evaluator_Times >("*", tree_it, stmt_factory, global_settings, error_output);
+}
 
 
 Evaluator_Times::Evaluator_Times
@@ -347,7 +424,14 @@ std::string Evaluator_Times::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Evaluator_Divided > Evaluator_Divided::statement_maker("eval-divided");
+Evaluator_Divided::Statement_Maker Evaluator_Divided::statement_maker;
+
+
+Statement* Evaluator_Divided::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  return make_statement< Evaluator_Divided >("/", tree_it, stmt_factory, global_settings, error_output);
+}
 
 
 Evaluator_Divided::Evaluator_Divided
