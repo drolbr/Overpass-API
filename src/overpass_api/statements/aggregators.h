@@ -73,9 +73,6 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("u") + (input != "_" ? std::string(".") + input : "") + "(\""
     + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return std::string("u") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
 
   Evaluator_Union_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -105,9 +102,6 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("min") + (input != "_" ? std::string(".") + input : "") + "(\""
     + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return std::string("min") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
 
   Evaluator_Min_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -137,9 +131,6 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("max") + (input != "_" ? std::string(".") + input : "") + "(\""
     + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return std::string("max") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
 
   Evaluator_Max_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -169,9 +160,6 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("sum") + (input != "_" ? std::string(".") + input : "") + "(\""
     + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return std::string("sum") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
 
   Evaluator_Sum_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -201,9 +189,6 @@ public:
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("set") + (input != "_" ? std::string(".") + input : "") + "(\""
     + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return std::string("set") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
 
   Evaluator_Set_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);

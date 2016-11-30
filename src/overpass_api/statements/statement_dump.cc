@@ -83,18 +83,7 @@ std::string Statement_Dump::dump_xml() const
 
     for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
-    {
       result += indent((*it)->dump_xml());
-/*      std::string subresult = (*it)->dump_xml();
-      std::string::size_type pos = 0;
-      std::string::size_type next = subresult.find('\n', pos);
-      while (next != std::string::npos)
-      {
-	result += std::string("  ") + subresult.substr(pos, next-pos) + '\n';
-	pos = next + 1;
-	next = subresult.find('\n', pos);
-      }*/
-    }
     
     result += std::string("</") + name_ + ">\n";
   }
@@ -208,7 +197,8 @@ std::string escape_quotation_marks(const std::string& input)
   return result;
 }
 
-std::string dump_subquery_map_ql(const std::string& name, const std::map< std::string, std::string >& attributes)
+std::string dump_subquery_map_ql(const std::string& name, const std::map< std::string, std::string >& attributes,
+    const std::vector< Statement_Dump* >* substatements = 0)
 {
   std::string result;
 
@@ -240,6 +230,13 @@ std::string dump_subquery_map_ql(const std::string& name, const std::map< std::s
     if (attributes.find("regv") != attributes.end() && attributes.find("regv")->second != "")
       result += "~\"" + escape_quotation_marks(attributes.find("regv")->second) + "\"";
     result += "]";
+  }
+  else if (name == "filter")
+  {
+    result += "(if:";
+    if (substatements && !substatements->empty())
+      result += substatements->front()->attribute("compact_ql");
+    result += ")";
   }
   else if (name == "recurse")
   {
@@ -455,7 +452,7 @@ std::string Statement_Dump::dump_compact_map_ql() const
         it != substatements.end(); ++it)
     {
       if ((*it)->name_ != "item")
-        result += dump_subquery_map_ql((*it)->name_, (*it)->attributes);
+        result += dump_subquery_map_ql((*it)->name_, (*it)->attributes, &(*it)->substatements);
     }
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")

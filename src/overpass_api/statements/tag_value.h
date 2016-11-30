@@ -45,8 +45,7 @@ public:
       
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-fixed v=\"" + escape_xml(value) + "\"/>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const { return std::string("\"") + escape_cstr(value) + "\""; }
-  virtual std::string dump_pretty_ql(const std::string&) const { return std::string("\"") + escape_cstr(value) + "\""; }
+  virtual std::string dump_compact_ql(const std::string&) const;
 
   Evaluator_Fixed(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -111,7 +110,6 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-id/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "id()"; }
-  virtual std::string dump_pretty_ql(const std::string&) const { return "id()"; }
 
   Evaluator_Id(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -166,14 +164,12 @@ public:
   {
     virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-id") { Statement::maker_by_func_name()["type"].push_back(this); }
+    Statement_Maker() : Generic_Statement_Maker("eval-type") { Statement::maker_by_func_name()["type"].push_back(this); }
   };
   static Statement_Maker statement_maker;
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-id/>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const { return "id()"; }
-  virtual std::string dump_pretty_ql(const std::string&) const { return "id()"; }
+  virtual std::string dump_xml(const std::string& indent) const { return indent + "<eval-type/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return "type()"; }
 
   Evaluator_Type(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -243,7 +239,6 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-value k=\"" + escape_xml(key) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return std::string("[\"") + escape_cstr(key) + "\"]"; }
-  virtual std::string dump_pretty_ql(const std::string&) const { return std::string("[\"") + escape_cstr(key) + "\"]"; }
 
   Evaluator_Value(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -324,8 +319,6 @@ public:
   { return indent + "<eval-is-tag k=\"" + escape_xml(key) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("is_tag(\"") + escape_cstr(key) + "\")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return std::string("is_tag(\"") + escape_cstr(key) + "\")"; }
 
   Evaluator_Is_Tag(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -396,7 +389,6 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-generic/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "::"; }
-  virtual std::string dump_pretty_ql(const std::string&) const { return "::"; }
 
   Evaluator_Generic(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -432,8 +424,6 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-count from=\"" + input + "\" type=\"" + to_string(to_count) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("count") + (input != "_" ? std::string(".") + input : "") + "(" + to_string(to_count) + ")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
   { return std::string("count") + (input != "_" ? std::string(".") + input : "") + "(" + to_string(to_count) + ")"; }
 
   Evaluator_Count(int line_number_, const map< string, string >& input_attributes,

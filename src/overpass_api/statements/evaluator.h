@@ -145,6 +145,8 @@ struct Evaluator : public Statement
   virtual std::vector< std::string > used_tags() const = 0;
   
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) = 0;
+  
+  virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
 };
 
 

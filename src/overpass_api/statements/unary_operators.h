@@ -95,7 +95,6 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-not>\n" + rhs->dump_xml(indent + "  ") + indent + "</eval-not>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return std::string("!") + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const { return std::string("! ") + rhs->dump_pretty_ql(""); }
 
   Evaluator_Not(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -120,7 +119,6 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-negate>\n" + rhs->dump_xml(indent + "  ") + indent + "</eval-negate>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return std::string("-") + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const { return std::string("-") + rhs->dump_pretty_ql(""); }
       
   Evaluator_Negate(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -147,8 +145,6 @@ public:
   { return indent + "<eval-number>\n" + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-number>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("number(\"") + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return std::string("number(\"") + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
 
   Evaluator_Number(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -175,8 +171,6 @@ public:
   { return indent + "<eval-is-num>\n" + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-is-num>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("is_num(\"") + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return std::string("is_num(\"") + (rhs ? rhs->dump_pretty_ql("") : "") + "\")"; }
 
   Evaluator_Is_Num(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);

@@ -103,8 +103,6 @@ public:
       + indent + "</eval-and>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return lhs->dump_compact_ql("") + "&&" + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return lhs->dump_pretty_ql("") + "&&" + rhs->dump_pretty_ql(""); }
       
   Evaluator_And(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -131,8 +129,6 @@ public:
       + indent + "</eval-or>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return lhs->dump_compact_ql("") + "||" + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return lhs->dump_pretty_ql("") + "||" + rhs->dump_pretty_ql(""); }
       
   Evaluator_Or(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -159,8 +155,6 @@ public:
       + indent + "</eval-equal>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return lhs->dump_compact_ql("") + "==" + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return lhs->dump_pretty_ql("") + "==" + rhs->dump_pretty_ql(""); }
       
   Evaluator_Equal(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -187,8 +181,6 @@ public:
       + indent + "</eval-less>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return lhs->dump_compact_ql("") + "<" + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return lhs->dump_pretty_ql("") + "<" + rhs->dump_pretty_ql(""); }
       
   Evaluator_Less(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -215,8 +207,6 @@ public:
       + indent + "</eval-plus>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return lhs->dump_compact_ql("") + "+" + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return lhs->dump_pretty_ql("") + "+" + rhs->dump_pretty_ql(""); }
       
   Evaluator_Plus(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -243,8 +233,6 @@ public:
       + indent + "</eval-minus>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return lhs->dump_compact_ql("") + "-" + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return lhs->dump_pretty_ql("") + "-" + rhs->dump_pretty_ql(""); }
   
   Evaluator_Minus(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -271,8 +259,6 @@ public:
       + indent + "</eval-times>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return lhs->dump_compact_ql("") + "*" + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return lhs->dump_pretty_ql("") + "*" + rhs->dump_pretty_ql(""); }
       
   Evaluator_Times(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -299,8 +285,6 @@ public:
       + indent + "</eval-divided-by>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return lhs->dump_compact_ql("") + "/" + rhs->dump_compact_ql(""); }
-  virtual std::string dump_pretty_ql(const std::string&) const
-  { return lhs->dump_pretty_ql("") + "/" + rhs->dump_pretty_ql(""); }
       
   Evaluator_Divided(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);

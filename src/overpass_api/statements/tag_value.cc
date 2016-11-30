@@ -50,6 +50,20 @@ Evaluator_Fixed::Evaluator_Fixed
 }
 
 
+std::string Evaluator_Fixed::dump_compact_ql(const std::string&) const
+{
+  int64 value_l = 0;  
+  if (try_int64(value, value_l))
+    return to_string(value_l);
+  
+  double value_d = 0;  
+  if (try_double(value, value_d))
+    return to_string(value_d);
+  
+  return std::string("\"") + escape_cstr(value) + "\"";
+}
+
+
 //-----------------------------------------------------------------------------
 
 
