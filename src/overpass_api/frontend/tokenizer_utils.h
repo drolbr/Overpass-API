@@ -68,6 +68,9 @@ struct Token_Node
 };
 
 
+int operator_priority(const std::string& operator_name, bool unary);
+
+
 struct Token_Tree
 {
   Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, bool parenthesis_expected);

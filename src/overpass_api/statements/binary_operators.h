@@ -34,6 +34,8 @@ class Evaluator_Pair_Operator : public Evaluator
 {
 public:
   Evaluator_Pair_Operator(int line_number_);
+  virtual ~Evaluator_Pair_Operator() {}
+
   virtual void add_statement(Statement* statement, string text);
   virtual void execute(Resource_Manager& rman) {}  
   virtual string get_result_name() const { return ""; }
@@ -44,6 +46,10 @@ public:
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const = 0;
+
+  static bool applicable_by_subtree_structure(const Token_Node_Ptr& tree_it) { return tree_it->lhs && tree_it->rhs; }
+  static void add_substatements(Statement* result, const std::string& operator_name, const Token_Node_Ptr& tree_it,
+      Statement::Factory& stmt_factory, Error_Output* error_output);
   
 protected:
   Evaluator* lhs;
@@ -87,209 +93,135 @@ private:
 };
 
 
-class Evaluator_And : public Evaluator_Pair_Operator
+template< typename Evaluator_ >
+struct Evaluator_Pair_Operator_Syntax : public Evaluator_Pair_Operator
 {
-public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_And >
+  Evaluator_Pair_Operator_Syntax(int line_number_, const map< string, string >& input_attributes)
+    : Evaluator_Pair_Operator(line_number_)
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-and") { Statement::maker_by_token()["&&"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
+    std::map< std::string, std::string > attributes;  
+    eval_attributes_array(Evaluator_::stmt_name(), attributes, input_attributes);    
+  }
+  
   virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-and>\n" + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
-      + indent + "</eval-and>\n"; }
+  {
+    return indent + "<" + Evaluator_::stmt_name() + ">\n"
+        + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
+        + indent + "</" + Evaluator_::stmt_name() + ">\n";
+  }
+  
   virtual std::string dump_compact_ql(const std::string&) const
-  { return lhs->dump_compact_ql("") + "&&" + rhs->dump_compact_ql(""); }
-      
-  Evaluator_And(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-and"; }
-  virtual ~Evaluator_And() {}
+  {
+    return (lhs->get_operator_priority() < get_operator_priority() ? std::string("(") + lhs->dump_compact_ql("") + ")"
+        : lhs->dump_compact_ql("")) + Evaluator_::stmt_operator()
+        + (rhs->get_operator_priority() < get_operator_priority() ? std::string("(") + rhs->dump_compact_ql("") + ")"
+        : rhs->dump_compact_ql(""));
+  }
+  
+  virtual string get_name() const { return Evaluator_::stmt_name(); }
+  virtual int get_operator_priority() const { return operator_priority(Evaluator_::stmt_operator(), false); }  
+};
+
+
+struct Evaluator_And : public Evaluator_Pair_Operator_Syntax< Evaluator_And >
+{
+  static Operator_Stmt_Maker< Evaluator_And > statement_maker;
+  static std::string stmt_operator() { return "&&"; }
+  static std::string stmt_name() { return "eval-and"; }
+
+  Evaluator_And(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_And >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Evaluator_Or : public Evaluator_Pair_Operator
+struct Evaluator_Or : public Evaluator_Pair_Operator_Syntax< Evaluator_Or >
 {
-public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Or >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-or") { Statement::maker_by_token()["||"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
+  static Operator_Stmt_Maker< Evaluator_Or > statement_maker;
+  static std::string stmt_operator() { return "||"; }
+  static std::string stmt_name() { return "eval-or"; }
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-or>\n" + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
-      + indent + "</eval-or>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return lhs->dump_compact_ql("") + "||" + rhs->dump_compact_ql(""); }
-      
-  Evaluator_Or(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-or"; }
-  virtual ~Evaluator_Or() {}
+  Evaluator_Or(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Or >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Evaluator_Equal : public Evaluator_Pair_Operator
+struct Evaluator_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_Equal >
 {
-public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Equal >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-equal") { Statement::maker_by_token()["=="].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
+  static Operator_Stmt_Maker< Evaluator_Equal > statement_maker;
+  static std::string stmt_operator() { return "=="; }
+  static std::string stmt_name() { return "eval-equal"; }
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-equal>\n" + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
-      + indent + "</eval-equal>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return lhs->dump_compact_ql("") + "==" + rhs->dump_compact_ql(""); }
-      
-  Evaluator_Equal(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-equal"; }
-  virtual ~Evaluator_Equal() {}
+  Evaluator_Equal(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Equal >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Evaluator_Less : public Evaluator_Pair_Operator
+struct Evaluator_Less : public Evaluator_Pair_Operator_Syntax< Evaluator_Less >
 {
-public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Less >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-less") { Statement::maker_by_token()["<"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
+  static Operator_Stmt_Maker< Evaluator_Less > statement_maker;
+  static std::string stmt_operator() { return "<"; }
+  static std::string stmt_name() { return "eval-less"; }
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-less>\n" + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
-      + indent + "</eval-less>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return lhs->dump_compact_ql("") + "<" + rhs->dump_compact_ql(""); }
-      
-  Evaluator_Less(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-less"; }
-  virtual ~Evaluator_Less() {}
+  Evaluator_Less(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Less >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Evaluator_Plus : public Evaluator_Pair_Operator
+struct Evaluator_Plus : public Evaluator_Pair_Operator_Syntax< Evaluator_Plus >
 {
-public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Plus >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-plus") { Statement::maker_by_token()["+"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
+  static Operator_Stmt_Maker< Evaluator_Plus > statement_maker;
+  static std::string stmt_operator() { return "+"; }
+  static std::string stmt_name() { return "eval-plus"; }
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-plus>\n" + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
-      + indent + "</eval-plus>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return lhs->dump_compact_ql("") + "+" + rhs->dump_compact_ql(""); }
-      
-  Evaluator_Plus(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-plus"; }
-  virtual ~Evaluator_Plus() {}
+  Evaluator_Plus(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Plus >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Evaluator_Minus : public Evaluator_Pair_Operator
+struct Evaluator_Minus : public Evaluator_Pair_Operator_Syntax< Evaluator_Minus >
 {
-public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Minus >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-minus") { Statement::maker_by_token()["-"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-minus>\n" + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
-      + indent + "</eval-minus>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return lhs->dump_compact_ql("") + "-" + rhs->dump_compact_ql(""); }
+  static Operator_Stmt_Maker< Evaluator_Minus > statement_maker;
+  static std::string stmt_operator() { return "-"; }
+  static std::string stmt_name() { return "eval-minus"; }
   
-  Evaluator_Minus(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-minus"; }
-  virtual ~Evaluator_Minus() {}
+  Evaluator_Minus(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Minus >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Evaluator_Times : public Evaluator_Pair_Operator
+struct Evaluator_Times : public Evaluator_Pair_Operator_Syntax< Evaluator_Times >
 {
-public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Times >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-times") { Statement::maker_by_token()["*"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
+  static Operator_Stmt_Maker< Evaluator_Times > statement_maker;
+  static std::string stmt_operator() { return "*"; }
+  static std::string stmt_name() { return "eval-times"; }
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-times>\n" + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
-      + indent + "</eval-times>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return lhs->dump_compact_ql("") + "*" + rhs->dump_compact_ql(""); }
-      
-  Evaluator_Times(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-times"; }
-  virtual ~Evaluator_Times() {}
+  Evaluator_Times(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Times >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
 
-class Evaluator_Divided : public Evaluator_Pair_Operator
+struct Evaluator_Divided : public Evaluator_Pair_Operator_Syntax< Evaluator_Divided >
 {
-public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Divided >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-divided-by") { Statement::maker_by_token()["/"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
+  static Operator_Stmt_Maker< Evaluator_Divided > statement_maker;
+  static std::string stmt_operator() { return "/"; }
+  static std::string stmt_name() { return "eval-divided-by"; }
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-divided-by>\n" + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
-      + indent + "</eval-divided-by>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return lhs->dump_compact_ql("") + "/" + rhs->dump_compact_ql(""); }
-      
-  Evaluator_Divided(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-divided-by"; }
-  virtual ~Evaluator_Divided() {}
+  Evaluator_Divided(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Divided >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };

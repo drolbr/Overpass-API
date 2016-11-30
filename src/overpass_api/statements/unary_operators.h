@@ -45,6 +45,10 @@ public:
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
   
   virtual std::string process(const std::string& rhs_result) const = 0;
+
+  static bool applicable_by_subtree_structure(const Token_Node_Ptr& tree_it) { return !tree_it->lhs && tree_it->rhs; }
+  static void add_substatements(Statement* result, const std::string& operator_name, const Token_Node_Ptr& tree_it,
+      Statement::Factory& stmt_factory, Error_Output* error_output);
     
 protected:
   Evaluator* rhs;
@@ -81,49 +85,58 @@ private:
 };
 
 
-class Evaluator_Not : public Evaluator_Prefix_Operator
+template< typename Evaluator_ >
+struct Evaluator_Prefix_Operator_Syntax : public Evaluator_Prefix_Operator
+{
+  Evaluator_Prefix_Operator_Syntax(int line_number_, const map< string, string >& input_attributes)
+    : Evaluator_Prefix_Operator(line_number_)
+  {
+    std::map< std::string, std::string > attributes;  
+    eval_attributes_array(Evaluator_::stmt_name(), attributes, input_attributes);    
+  }
+  
+  virtual std::string dump_xml(const std::string& indent) const
+  {
+    return indent + "<" + Evaluator_::stmt_name() + ">\n"
+        + rhs->dump_xml(indent + "  ")
+        + indent + "</" + Evaluator_::stmt_name() + ">\n";
+  }
+  
+  virtual std::string dump_compact_ql(const std::string&) const
+  {
+    if (rhs->get_operator_priority() < get_operator_priority())
+      return Evaluator_::stmt_operator() + "(" + rhs->dump_compact_ql("") + ")";
+    return Evaluator_::stmt_operator() + rhs->dump_compact_ql("");
+  }
+  
+  virtual string get_name() const { return Evaluator_::stmt_name(); }
+  virtual int get_operator_priority() const { return operator_priority(Evaluator_::stmt_operator(), true); }  
+};
+
+
+class Evaluator_Not : public Evaluator_Prefix_Operator_Syntax< Evaluator_Not >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Not >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-not") { Statement::maker_by_token()["!"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-not>\n" + rhs->dump_xml(indent + "  ") + indent + "</eval-not>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const { return std::string("!") + rhs->dump_compact_ql(""); }
+  static Operator_Stmt_Maker< Evaluator_Not > statement_maker;
+  static std::string stmt_operator() { return "!"; }
+  static std::string stmt_name() { return "eval-not"; }
 
-  Evaluator_Not(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-not"; }
-  virtual ~Evaluator_Not() {}
+  Evaluator_Not(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Prefix_Operator_Syntax< Evaluator_Not >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& rhs_result) const;
 };
 
 
-class Evaluator_Negate : public Evaluator_Prefix_Operator
+class Evaluator_Negate : public Evaluator_Prefix_Operator_Syntax< Evaluator_Negate >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Negate >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-negate") { Statement::maker_by_token()["-"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
+  static Operator_Stmt_Maker< Evaluator_Negate > statement_maker;
+  static std::string stmt_operator() { return "-"; }
+  static std::string stmt_name() { return "eval-negate"; }
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-negate>\n" + rhs->dump_xml(indent + "  ") + indent + "</eval-negate>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const { return std::string("-") + rhs->dump_compact_ql(""); }
-      
-  Evaluator_Negate(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-negate"; }
-  virtual ~Evaluator_Negate() {}
+  Evaluator_Negate(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Prefix_Operator_Syntax< Evaluator_Negate >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& rhs_result) const;
 };

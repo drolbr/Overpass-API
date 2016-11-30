@@ -37,6 +37,21 @@ void Evaluator_Prefix_Operator::add_statement(Statement* statement, std::string 
 }
 
 
+void Evaluator_Prefix_Operator::add_substatements(Statement* result, const std::string& operator_name,
+    const Token_Node_Ptr& tree_it, Statement::Factory& stmt_factory, Error_Output* error_output)
+{    
+  if (result)
+  {
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error(std::string("Operator \"") + operator_name
+          + "\" needs a right-hand-side argument", tree_it->line_col.first);
+  }  
+}
+
+
 Eval_Task* Evaluator_Prefix_Operator::get_task(const Prepare_Task_Context& context)
 {
   Eval_Task* rhs_task = rhs ? rhs->get_task(context) : 0;
@@ -126,35 +141,7 @@ std::vector< std::string > Evaluator_Prefix_Operator::used_tags() const
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Not::Statement_Maker Evaluator_Not::statement_maker;
-
-
-Statement* Evaluator_Not::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (tree_it->lhs || !tree_it->rhs)
-    return 0;
-  map< string, string > attributes;
-  Statement* result = new Evaluator_Not(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("Operator \"!\" needs a right-hand-side argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Not::Evaluator_Not
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Prefix_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Not > Evaluator_Not::statement_maker;
 
 
 std::string Evaluator_Not::process(const std::string& rhs_s) const
@@ -170,35 +157,7 @@ std::string Evaluator_Not::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Negate::Statement_Maker Evaluator_Negate::statement_maker;
-
-
-Statement* Evaluator_Negate::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (tree_it->lhs || !tree_it->rhs)
-    return 0;
-  map< string, string > attributes;
-  Statement* result = new Evaluator_Negate(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("Operator \"!\" needs a right-hand-side argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Negate::Evaluator_Negate
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Prefix_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Negate > Evaluator_Negate::statement_maker;
 
 
 std::string Evaluator_Negate::process(const std::string& rhs_s) const

@@ -39,6 +39,28 @@ void Evaluator_Pair_Operator::add_statement(Statement* statement, std::string te
 }
 
 
+void Evaluator_Pair_Operator::add_substatements(Statement* result, const std::string& operator_name,
+    const Token_Node_Ptr& tree_it, Statement::Factory& stmt_factory, Error_Output* error_output)
+{    
+  if (result)
+  {
+    Statement* lhs = stmt_factory.create_statement(tree_it.lhs());
+    if (lhs)
+      result->add_statement(lhs, "");
+    else if (error_output)
+      error_output->add_parse_error(std::string("Operator \"") + operator_name
+          + "\" needs a left-hand-side argument", tree_it->line_col.first);
+    
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error(std::string("Operator \"") + operator_name
+          + "\" needs a right-hand-side argument", tree_it->line_col.first);
+  }  
+}
+
+
 Eval_Task* Evaluator_Pair_Operator::get_task(const Prepare_Task_Context& context)
 {
   Eval_Task* lhs_task = lhs ? lhs->get_task(context) : 0;
@@ -137,54 +159,10 @@ std::vector< std::string > Evaluator_Pair_Operator::used_tags() const
 }
 
 
-template< typename Evaluator >
-Statement* make_statement(const std::string& operator_name, const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it->lhs || !tree_it->rhs)
-    return 0;
-  map< string, string > attributes;
-  Statement* result = new Evaluator(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* lhs = stmt_factory.create_statement(tree_it.lhs());
-    if (lhs)
-      result->add_statement(lhs, "");
-    else if (error_output)
-      error_output->add_parse_error(std::string("Operator \"") + operator_name
-          + "\" needs a left-hand-side argument", tree_it->line_col.first);
-    
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error(std::string("Operator \"") + operator_name
-          + "\" needs a right-hand-side argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
 //-----------------------------------------------------------------------------
 
 
-Evaluator_And::Statement_Maker Evaluator_And::statement_maker;
-
-
-Statement* Evaluator_And::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  return make_statement< Evaluator_And >("&&", tree_it, stmt_factory, global_settings, error_output);
-}
-
-
-Evaluator_And::Evaluator_And
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Pair_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_And > Evaluator_And::statement_maker;
 
 
 std::string Evaluator_And::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -201,23 +179,7 @@ std::string Evaluator_And::process(const std::string& lhs_s, const std::string& 
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Or::Statement_Maker Evaluator_Or::statement_maker;
-
-
-Statement* Evaluator_Or::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  return make_statement< Evaluator_Or >("||", tree_it, stmt_factory, global_settings, error_output);
-}
-
-
-Evaluator_Or::Evaluator_Or
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Pair_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Or > Evaluator_Or::statement_maker;
 
 
 std::string Evaluator_Or::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -234,23 +196,7 @@ std::string Evaluator_Or::process(const std::string& lhs_s, const std::string& r
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Equal::Statement_Maker Evaluator_Equal::statement_maker;
-
-
-Statement* Evaluator_Equal::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  return make_statement< Evaluator_Equal >("==", tree_it, stmt_factory, global_settings, error_output);
-}
-
-
-Evaluator_Equal::Evaluator_Equal
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Pair_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Equal > Evaluator_Equal::statement_maker;
 
 
 std::string Evaluator_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -272,23 +218,7 @@ std::string Evaluator_Equal::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Less::Statement_Maker Evaluator_Less::statement_maker;
-
-
-Statement* Evaluator_Less::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  return make_statement< Evaluator_Less >("<", tree_it, stmt_factory, global_settings, error_output);
-}
-
-
-Evaluator_Less::Evaluator_Less
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Pair_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Less > Evaluator_Less::statement_maker;
 
 
 std::string Evaluator_Less::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -310,23 +240,7 @@ std::string Evaluator_Less::process(const std::string& lhs_s, const std::string&
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Plus::Statement_Maker Evaluator_Plus::statement_maker;
-
-
-Statement* Evaluator_Plus::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  return make_statement< Evaluator_Plus >("+", tree_it, stmt_factory, global_settings, error_output);
-}
-
-
-Evaluator_Plus::Evaluator_Plus
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Pair_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Plus > Evaluator_Plus::statement_maker;
 
 
 std::string Evaluator_Plus::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -348,23 +262,7 @@ std::string Evaluator_Plus::process(const std::string& lhs_s, const std::string&
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Minus::Statement_Maker Evaluator_Minus::statement_maker;
-
-
-Statement* Evaluator_Minus::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  return make_statement< Evaluator_Minus >("-", tree_it, stmt_factory, global_settings, error_output);
-}
-
-
-Evaluator_Minus::Evaluator_Minus
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Pair_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Minus > Evaluator_Minus::statement_maker;
 
 
 std::string Evaluator_Minus::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -386,23 +284,7 @@ std::string Evaluator_Minus::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Times::Statement_Maker Evaluator_Times::statement_maker;
-
-
-Statement* Evaluator_Times::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  return make_statement< Evaluator_Times >("*", tree_it, stmt_factory, global_settings, error_output);
-}
-
-
-Evaluator_Times::Evaluator_Times
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Pair_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Times > Evaluator_Times::statement_maker;
 
 
 std::string Evaluator_Times::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -424,23 +306,7 @@ std::string Evaluator_Times::process(const std::string& lhs_s, const std::string
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Divided::Statement_Maker Evaluator_Divided::statement_maker;
-
-
-Statement* Evaluator_Divided::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  return make_statement< Evaluator_Divided >("/", tree_it, stmt_factory, global_settings, error_output);
-}
-
-
-Evaluator_Divided::Evaluator_Divided
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Pair_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+Operator_Stmt_Maker< Evaluator_Divided > Evaluator_Divided::statement_maker;
 
 
 std::string Evaluator_Divided::process(const std::string& lhs_s, const std::string& rhs_s) const

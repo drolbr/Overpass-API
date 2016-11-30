@@ -147,11 +147,33 @@ struct Evaluator : public Statement
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) = 0;
   
   virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+  virtual int get_operator_priority() const { return std::numeric_limits< int >::max(); }
 };
 
 
 std::pair< std::vector< Set_Usage >, uint > union_usage(const std::pair< std::vector< Set_Usage >, uint >& lhs,
     const std::pair< std::vector< Set_Usage >, uint >& rhs);
+
+
+template< typename Evaluator_ >
+struct Operator_Stmt_Maker : public Generic_Statement_Maker< Evaluator_ >
+{
+  virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+  {
+    if (!Evaluator_::applicable_by_subtree_structure(tree_it))
+      return 0;
+    map< string, string > attributes;
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    Evaluator_::add_substatements(result, Evaluator_::stmt_operator(), tree_it, stmt_factory, error_output);
+    return result;
+  }
+  
+  Operator_Stmt_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
+  {
+    Statement::maker_by_token()[Evaluator_::stmt_operator()].push_back(this);
+  }
+};
 
 
 #endif

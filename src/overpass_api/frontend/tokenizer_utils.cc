@@ -323,9 +323,9 @@ void clear_until_after(Tokenizer_Wrapper& token, Error_Output* error_output,
 }
 
 
-Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, bool parenthesis_expected)
+int operator_priority(const std::string& operator_name, bool unary)
 {
-  static std::map< std::string, uint > priority;
+  static std::map< std::string, int > priority;
   if (priority.empty())
   {
     priority[","] = 1;
@@ -351,6 +351,19 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
     priority["::"] = 15;
   }
   
+  if (unary)
+    return 13;
+  
+  std::map< std::string, int >::const_iterator prio_it = priority.find(operator_name);
+  if (prio_it != priority.end())
+    return prio_it->second;
+  
+  return 0;
+}
+
+
+Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, bool parenthesis_expected)
+{
   tree.push_back(Token_Node("", std::make_pair(0u, 0u)));
   std::vector< uint > stack;
   stack.push_back(0);
@@ -382,10 +395,9 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
     }
     else
     {
-      std::map< std::string, uint >::const_iterator prio_it = priority.find(*token);
-      uint prio = prio_it != priority.end() ? prio_it->second : 0;
+      int prio = operator_priority(*token, false);
       bool unary_minus = false;
-      if ((*token).size() > 1 && (*token)[0] == '-')
+      if ((*token).size() >= 2 && (*token)[0] == '-' && tree[stack.back()].rhs)
       {
         prio = 10;
         unary_minus = true;
@@ -398,9 +410,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
           uint stack_pos = stack.size()-1;
           while (stack_pos > 0)
           {
-            std::map< std::string, uint >::const_iterator stack_prio_it
-                = priority.find(tree[stack[stack_pos]].token);
-            if (stack_prio_it == priority.end() || stack_prio_it->second < prio)
+            if (operator_priority(tree[stack[stack_pos]].token, false) < prio)
               break;
             --stack_pos;
           }
@@ -417,7 +427,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
           tree[stack.back()].rhs = tree.size()-1;
         }
       }
-      else if (tree[stack.back()].rhs == 0)
+      else if (!tree[stack.back()].rhs)
       {
         tree.push_back(Token_Node(*token, token.line_col()));
         tree[stack.back()].rhs = tree.size()-1;
