@@ -147,7 +147,7 @@ class Evaluator_Number : public Evaluator_Prefix_Operator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Number >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-number")
     { Statement::maker_by_func_name()["number"].push_back(this); }
@@ -173,7 +173,7 @@ class Evaluator_Is_Num : public Evaluator_Prefix_Operator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Is_Num >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-is-num")
     { Statement::maker_by_func_name()["is_num"].push_back(this); }

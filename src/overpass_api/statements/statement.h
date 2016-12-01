@@ -87,6 +87,8 @@ class Query_Constraint
 class Statement
 {
   public:
+    enum QL_Context { generic, evaluator_expected };
+    
     struct Factory
     {
       Factory(Parsed_Query& global_settings_) : error_output_(error_output), global_settings(global_settings_) {}
@@ -94,21 +96,20 @@ class Statement
       
       Statement* create_statement(string element, int line_number,
 				  const map< string, string >& attributes);
-      Statement* create_statement(const Token_Node_Ptr& tree_it);
+      Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context);
       
       vector< Statement* > created_statements;
       Error_Output* error_output_;
       Parsed_Query& global_settings;
     };
     
-    class Statement_Maker
+    struct Statement_Maker
     {
-      public:
-	virtual Statement* create_statement
-	    (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings) = 0;
-        virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
-            Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output) = 0;
-	virtual ~Statement_Maker() {}
+      virtual Statement* create_statement
+          (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings) = 0;
+      virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output) = 0;
+      virtual ~Statement_Maker() {}
     };
     
     static map< string, Statement_Maker* >& maker_by_name();
@@ -191,7 +192,7 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
       return new TStatement(line_number, attributes, global_settings);
     }
     
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
     {
       return 0;

@@ -158,10 +158,10 @@ std::pair< std::vector< Set_Usage >, uint > union_usage(const std::pair< std::ve
 template< typename Evaluator_ >
 struct Operator_Stmt_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
-  virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+  virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
-    if (!Evaluator_::applicable_by_subtree_structure(tree_it))
+    if (tree_context != Statement::evaluator_expected || !Evaluator_::applicable_by_subtree_structure(tree_it))
       return 0;
     map< string, string > attributes;
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);

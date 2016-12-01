@@ -25,7 +25,8 @@
 Evaluator_Fixed::Statement_Maker Evaluator_Fixed::statement_maker;
 
 
-Statement* Evaluator_Fixed::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Fixed::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->lhs || tree_it->rhs)
@@ -70,7 +71,8 @@ std::string Evaluator_Fixed::dump_compact_ql(const std::string&) const
 Evaluator_Id::Statement_Maker Evaluator_Id::statement_maker;
 
 
-Statement* Evaluator_Id::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Id::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->token != "(")
@@ -106,7 +108,8 @@ Evaluator_Id::Evaluator_Id
 Evaluator_Type::Statement_Maker Evaluator_Type::statement_maker;
 
 
-Statement* Evaluator_Type::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Type::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->token != "(")
@@ -158,7 +161,8 @@ std::string find_value(const std::vector< std::pair< std::string, std::string > 
 Evaluator_Value::Statement_Maker Evaluator_Value::statement_maker;
 
 
-Statement* Evaluator_Value::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Value::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->lhs)
@@ -211,7 +215,8 @@ std::string exists_value(const std::vector< std::pair< std::string, std::string 
 Evaluator_Is_Tag::Statement_Maker Evaluator_Is_Tag::statement_maker;
 
 
-Statement* Evaluator_Is_Tag::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Is_Tag::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->token != "(")
@@ -258,7 +263,8 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
 Evaluator_Generic::Statement_Maker Evaluator_Generic::statement_maker;
 
 
-Statement* Evaluator_Generic::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Generic::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->lhs || tree_it->rhs)
@@ -284,7 +290,8 @@ Evaluator_Generic::Evaluator_Generic
 Evaluator_Count::Statement_Maker Evaluator_Count::statement_maker;
 
 
-Statement* Evaluator_Count::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Count::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   map< string, string > attributes;

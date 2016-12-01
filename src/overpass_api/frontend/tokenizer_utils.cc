@@ -405,7 +405,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
       
       if (prio > 0)
       {
-        if (stack.back() < tree.size()-1)
+        if (stack.back() < tree.size())
         {
           uint stack_pos = stack.size()-1;
           while (stack_pos > 0)

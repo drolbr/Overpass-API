@@ -967,9 +967,10 @@ Statement_Dump* Statement_Dump::Factory::create_statement
 }
 
 
-Statement_Dump* Statement_Dump::Factory::create_statement(const Token_Node_Ptr& tree_it)
+Statement_Dump* Statement_Dump::Factory::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context)
 {
-  Statement* stmt = stmt_factory->create_statement(tree_it);
+  Statement* stmt = stmt_factory->create_statement(tree_it, tree_context);
   if (stmt)
   {
     std::map< std::string, std::string > attributes;

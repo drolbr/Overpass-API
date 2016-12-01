@@ -60,7 +60,7 @@ class Evaluator_Union_Value : public Evaluator_Aggregator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Union_Value >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-union")
     { Statement::maker_by_func_name()["u"].push_back(this); }
@@ -89,7 +89,7 @@ class Evaluator_Min_Value : public Evaluator_Aggregator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Min_Value >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-min")
     { Statement::maker_by_func_name()["min"].push_back(this); }
@@ -118,7 +118,7 @@ class Evaluator_Max_Value : public Evaluator_Aggregator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Max_Value >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-max")
     { Statement::maker_by_func_name()["max"].push_back(this); }
@@ -147,7 +147,7 @@ class Evaluator_Sum_Value : public Evaluator_Aggregator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Sum_Value >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-sum")
     { Statement::maker_by_func_name()["sum"].push_back(this); }
@@ -176,7 +176,7 @@ class Evaluator_Set_Value : public Evaluator_Aggregator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Value >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-set")
     { Statement::maker_by_func_name()["set"].push_back(this); }

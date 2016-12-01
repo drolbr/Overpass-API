@@ -37,7 +37,7 @@ class Evaluator_Fixed : public Evaluator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Fixed >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-fixed") { Statement::maker_by_token()[""].push_back(this); }
   };
@@ -101,7 +101,7 @@ class Evaluator_Id : public Evaluator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Id >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-id") { Statement::maker_by_func_name()["id"].push_back(this); }
   };
@@ -162,7 +162,7 @@ class Evaluator_Type : public Evaluator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Id >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-type") { Statement::maker_by_func_name()["type"].push_back(this); }
   };
@@ -230,7 +230,7 @@ class Evaluator_Value : public Evaluator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Value >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-value") { Statement::maker_by_token()["["].push_back(this); }
   };
@@ -308,7 +308,7 @@ class Evaluator_Is_Tag : public Evaluator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Is_Tag >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-is-tag")
     { Statement::maker_by_func_name()["is_tag"].push_back(this); }
@@ -380,7 +380,7 @@ class Evaluator_Generic : public Evaluator
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Generic >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-generic") { Statement::maker_by_token()["::"].push_back(this); }
   };
@@ -414,7 +414,7 @@ public:
   
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Count >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it,
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker("eval-count")
     { Statement::maker_by_func_name()["count"].push_back(this); }

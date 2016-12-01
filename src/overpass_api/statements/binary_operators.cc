@@ -44,14 +44,14 @@ void Evaluator_Pair_Operator::add_substatements(Statement* result, const std::st
 {    
   if (result)
   {
-    Statement* lhs = stmt_factory.create_statement(tree_it.lhs());
+    Statement* lhs = stmt_factory.create_statement(tree_it.lhs(), Statement::evaluator_expected);
     if (lhs)
       result->add_statement(lhs, "");
     else if (error_output)
       error_output->add_parse_error(std::string("Operator \"") + operator_name
           + "\" needs a left-hand-side argument", tree_it->line_col.first);
     
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

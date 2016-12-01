@@ -20,6 +20,8 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__SET_TAG_H
 
 
+#include "../../expat/escape_json.h"
+#include "../../expat/escape_xml.h"
 #include "../data/tag_store.h"
 #include "../data/utils.h"
 #include "evaluator.h"
@@ -74,6 +76,23 @@ private:
 class Set_Prop_Statement : public Statement
 {
 public:
+  struct Statement_Maker : public Generic_Statement_Maker< Set_Prop_Statement >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("set-prop")
+    {
+      Statement::maker_by_token()["="].push_back(this);
+      Statement::maker_by_token()["!"].push_back(this);
+    }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const;
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return escape_cstr(keys.empty() ? "" : keys.front()) + "=" + (tag_value ? tag_value->dump_compact_ql("") : ""); }
+  virtual std::string dump_pretty_ql(const std::string&) const { return dump_compact_ql(""); }
+  
   Set_Prop_Statement(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
   virtual string get_name() const { return "set-prop"; }
@@ -81,8 +100,6 @@ public:
   virtual void add_statement(Statement* statement, string text);
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Set_Prop_Statement() {}
-    
-  static Generic_Statement_Maker< Set_Prop_Statement > statement_maker;
   
   std::pair< std::vector< Set_Usage >, uint > used_sets() const;  
   std::vector< std::string > used_tags() const;

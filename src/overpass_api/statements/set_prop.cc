@@ -22,7 +22,53 @@
 #include "set_prop.h"
 
 
-Generic_Statement_Maker< Set_Prop_Statement > Set_Prop_Statement::statement_maker("set-prop");
+Set_Prop_Statement::Statement_Maker Set_Prop_Statement::statement_maker;
+
+
+Statement* Set_Prop_Statement::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_context == Statement::generic && tree_it->token == "!" && tree_it->rhs)
+  {
+    map< string, string > attributes;
+    attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
+    attributes["keytype"] = "tag";
+    return new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);
+  }
+  
+  if (tree_context != Statement::generic || !tree_it->lhs || !tree_it->rhs)
+    return 0;
+  
+  map< string, string > attributes;
+  if (tree_it.lhs()->token == "::")
+  {
+    if (tree_it.lhs()->rhs)
+    {
+      if (tree_it.lhs().rhs()->token == "id")
+        attributes["keytype"] = "id";
+      else
+        error_output->add_parse_error("The only allowed special property is \"id\"", tree_it->line_col.first);
+    }
+    else
+      attributes["keytype"] = "generic";
+  }
+  else
+  {
+    attributes["k"] = decode_json(tree_it.lhs()->token, error_output);
+    attributes["keytype"] = "tag";
+  }
+  Statement* result = new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);  
+  if (result)
+  {
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error("Property assignement needs a right-hand-side value", tree_it->line_col.first);
+  }
+  return result;
+}
 
 
 Set_Prop_Statement::Set_Prop_Statement
@@ -64,18 +110,30 @@ void Set_Prop_Statement::add_statement(Statement* statement, std::string text)
 }
 
 
+std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
+{
+  if (!tag_value)
+    return indent + "<set-prop keytype=\"tag\" k=\"" + keys.front() + "\"/>\n";
+  
+  std::string attributes;
+  if (set_id)
+    attributes = " keytype=\"id\"";
+  else if (keys.empty())
+    attributes = " keytype=\"generic\"";
+  else
+    attributes = std::string(" keytype=\"tag\" k=\"") + keys.front() + "\"";
+  return indent + "<set-prop" + attributes + ">\n"
+      + tag_value->dump_xml(indent + "  ")
+      + indent + "</set-prop>\n";
+}
+
+
 std::pair< std::vector< Set_Usage >, uint > Set_Prop_Statement::used_sets() const
 {
   if (tag_value)
   {
     std::pair< std::vector< Set_Usage >, uint > result = tag_value->used_sets();
     result.second |= Set_Usage::TAGS;
-//     std::vector< Set_Usage >::iterator it =
-//         std::lower_bound(result.first.begin(), result.first.end(), Set_Usage(input, 0u));
-//     if (it == result.first.end() || it->set_name != input)
-//       result.first.insert(it, Set_Usage(input, Set_Usage::TAGS));
-//     else
-//       it->usage |= Set_Usage::TAGS;
     return result;
   }
   

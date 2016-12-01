@@ -42,7 +42,7 @@ void Evaluator_Prefix_Operator::add_substatements(Statement* result, const std::
 {    
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
@@ -180,7 +180,8 @@ std::string Evaluator_Negate::process(const std::string& rhs_s) const
 Evaluator_Number::Statement_Maker Evaluator_Number::statement_maker;
 
 
-Statement* Evaluator_Number::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Number::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->token != "(")
@@ -199,7 +200,7 @@ Statement* Evaluator_Number::Statement_Maker::create_statement(const Token_Node_
   Statement* result = new Evaluator_Number(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
@@ -238,7 +239,8 @@ std::string Evaluator_Number::process(const std::string& rhs_s) const
 Evaluator_Is_Num::Statement_Maker Evaluator_Is_Num::statement_maker;
 
 
-Statement* Evaluator_Is_Num::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Is_Num::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   if (tree_it->token != "(")
@@ -257,7 +259,7 @@ Statement* Evaluator_Is_Num::Statement_Maker::create_statement(const Token_Node_
   Statement* result = new Evaluator_Is_Num(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

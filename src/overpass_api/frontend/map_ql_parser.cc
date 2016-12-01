@@ -208,23 +208,6 @@ TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory, 
 }
 
 
-enum Object_Type { tag, generic, id, object_type };
-
-template< class TStatement >
-TStatement* create_set_prop_statement(typename TStatement::Factory& stmt_factory,
-    string key, Object_Type key_type, uint line_nr)
-{
-  map< string, string > attr;
-  if (key_type == id)
-    attr["keytype"] = "id";
-  else if (key_type == generic)    
-    attr["keytype"] = "generic";
-  else
-    attr["k"] = key;
-  return stmt_factory.create_statement("set-prop", line_nr, attr);
-}
-
-
 template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
                                    string from, string mode, string order, string limit, string geometry,
@@ -668,13 +651,13 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
-    Error_Output* error_output, bool parenthesis_expected)
+    Error_Output* error_output, Statement::QL_Context tree_context, bool parenthesis_expected)
 {
   Token_Tree tree(token, error_output, parenthesis_expected);
   if (tree.tree.empty())
     return 0;
   
-  return stmt_factory.create_statement(Token_Node_Ptr(tree, tree.tree[0].rhs));
+  return stmt_factory.create_statement(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context);
 }
 
 
@@ -696,51 +679,12 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
       if (*token == ",")
         ++token;
       
-      if (token.good() && *token == "!")
+      if (token.good())
       {
-        ++token;
-        
-        std::string key = get_text_token(token, error_output, "Tag key");
-        evaluators.push_back(create_set_prop_statement< TStatement >(
-            stmt_factory, key, tag, token.line_col().first));
-        
-        clear_until_after(token, error_output, ",", ";", "->", false);
-        continue;
-      }
-      
-      std::string key;
-      Object_Type key_type = tag;
-      if (token.good() && *token == "::")
-      {
-        ++token;
-        
-        key = "_";
-        key_type = generic;
-        if (token.good())
-        {
-          if (*token == ".")
-          {
-            ++token;
-            key = get_identifier_token(token, error_output, "Input set");
-          }
-          else if (*token == "id")
-          {
-            ++token;
-            key_type = id;
-          }
-        }
-      }
-      else
-        key = get_text_token(token, error_output, "Tag key");
-      
-      clear_until_after(token, error_output, "=");
-      TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output, false);
-      if (stmt)
-      {
-        TStatement* key_stmt = create_set_prop_statement< TStatement >(
-            stmt_factory, key, key_type, token.line_col().first);
-        key_stmt->add_statement(stmt, "");
-        evaluators.push_back(key_stmt);
+        TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output,
+            Statement::generic, false);
+        if (stmt)
+          evaluators.push_back(stmt);
       }
     }
     string into = probe_into(token, error_output);
@@ -1257,7 +1201,8 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	if (*token == ":")
 	{
 	  ++token;
-          value_stmts.push_back(parse_value_tree< TStatement >(stmt_factory, token, error_output, true));
+          value_stmts.push_back(parse_value_tree< TStatement >(stmt_factory, token, error_output,
+              Statement::evaluator_expected, true));
 	}
         clear_until_after(token, error_output, ")");
         clauses.push_back(clause);

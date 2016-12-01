@@ -167,7 +167,8 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
 Evaluator_Union_Value::Statement_Maker Evaluator_Union_Value::statement_maker;
 
 
-Statement* Evaluator_Union_Value::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Union_Value::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   map< string, string > attributes;
@@ -178,7 +179,8 @@ Statement* Evaluator_Union_Value::Statement_Maker::create_statement(const Token_
   Statement* result = new Evaluator_Union_Value(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(input_set ? tree_it.rhs().rhs() : tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(
+        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
@@ -210,7 +212,8 @@ std::string Evaluator_Union_Value::update_value(const std::string& agg_value, co
 Evaluator_Min_Value::Statement_Maker Evaluator_Min_Value::statement_maker;
 
 
-Statement* Evaluator_Min_Value::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Min_Value::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   map< string, string > attributes;
@@ -221,7 +224,8 @@ Statement* Evaluator_Min_Value::Statement_Maker::create_statement(const Token_No
   Statement* result = new Evaluator_Min_Value(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(input_set ? tree_it.rhs().rhs() : tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(
+        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
@@ -263,7 +267,8 @@ std::string Evaluator_Min_Value::update_value(const std::string& agg_value, cons
 Evaluator_Max_Value::Statement_Maker Evaluator_Max_Value::statement_maker;
 
 
-Statement* Evaluator_Max_Value::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Max_Value::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   map< string, string > attributes;
@@ -274,7 +279,8 @@ Statement* Evaluator_Max_Value::Statement_Maker::create_statement(const Token_No
   Statement* result = new Evaluator_Max_Value(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(input_set ? tree_it.rhs().rhs() : tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(
+        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
@@ -311,7 +317,8 @@ std::string Evaluator_Max_Value::update_value(const std::string& agg_value, cons
 Evaluator_Sum_Value::Statement_Maker Evaluator_Sum_Value::statement_maker;
 
 
-Statement* Evaluator_Sum_Value::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Sum_Value::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   map< string, string > attributes;
@@ -322,7 +329,8 @@ Statement* Evaluator_Sum_Value::Statement_Maker::create_statement(const Token_No
   Statement* result = new Evaluator_Sum_Value(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(input_set ? tree_it.rhs().rhs() : tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(
+        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
@@ -359,7 +367,8 @@ std::string Evaluator_Sum_Value::update_value(const std::string& agg_value, cons
 Evaluator_Set_Value::Statement_Maker Evaluator_Set_Value::statement_maker;
 
 
-Statement* Evaluator_Set_Value::Statement_Maker::create_statement(const Token_Node_Ptr& tree_it,
+Statement* Evaluator_Set_Value::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   map< string, string > attributes;
@@ -370,7 +379,8 @@ Statement* Evaluator_Set_Value::Statement_Maker::create_statement(const Token_No
   Statement* result = new Evaluator_Set_Value(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(input_set ? tree_it.rhs().rhs() : tree_it.rhs());
+    Statement* rhs = stmt_factory.create_statement(
+        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

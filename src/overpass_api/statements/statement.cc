@@ -139,7 +139,7 @@ Statement* Statement::Factory::create_statement
 }
 
 
-Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it,
+Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     const std::vector< Statement::Statement_Maker* >& makers, Statement::Factory& stmt_factory,
     Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -149,12 +149,12 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it,
     
   while (!statement && maker_it != makers.end())
   {
-    statement = (*maker_it)->create_statement(tree_it, stmt_factory, global_settings, error_output);
+    statement = (*maker_it)->create_statement(tree_it, tree_context, stmt_factory, global_settings, error_output);
     ++maker_it;
   }
   while (maker_it != makers.end())
   {
-    Statement* bis = (*maker_it)->create_statement(tree_it, stmt_factory, global_settings, error_output);
+    Statement* bis = (*maker_it)->create_statement(tree_it, tree_context, stmt_factory, global_settings, error_output);
     if (bis)
     {
       if (error_output)
@@ -172,7 +172,7 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it,
 }
 
 
-Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
+Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context)
 {
   Statement* statement = 0;
   
@@ -183,13 +183,14 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
       map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
           Statement::maker_by_func_name().find(tree_it.lhs()->token);          
       if (all_it != Statement::maker_by_func_name().end())
-        statement = stmt_from_tree_node(tree_it, all_it->second, *this, global_settings, Statement::error_output);
+        statement = stmt_from_tree_node(tree_it, tree_context,
+            all_it->second, *this, global_settings, Statement::error_output);
       else
         error_output->add_parse_error(std::string("Function \"") + tree_it.lhs()->token + "\" not known",
             tree_it->line_col.first);
     }
     else if (tree_it->rhs)
-      return create_statement(tree_it.rhs());
+      return create_statement(tree_it.rhs(), tree_context);
     else
     {
       Statement::error_output->add_static_error("Empty parentheses cannot be evaluated.", tree_it->line_col.first);
@@ -203,7 +204,8 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
       map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
           Statement::maker_by_func_name().find(tree_it.lhs()->token);          
       if (all_it != Statement::maker_by_func_name().end())
-        statement = stmt_from_tree_node(tree_it, all_it->second, *this, global_settings, Statement::error_output);
+        statement = stmt_from_tree_node(tree_it, tree_context,
+            all_it->second, *this, global_settings, Statement::error_output);
       else
         error_output->add_parse_error(std::string("Function \"") + tree_it.lhs()->token + "\" not known",
             tree_it->line_col.first);
@@ -214,13 +216,15 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
     map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
         Statement::maker_by_token().find(tree_it->token);  
     if (all_it != Statement::maker_by_token().end())
-      statement = stmt_from_tree_node(tree_it, all_it->second, *this, global_settings, Statement::error_output);
+      statement = stmt_from_tree_node(tree_it, tree_context,
+          all_it->second, *this, global_settings, Statement::error_output);
   
     if (!statement)
     {
       all_it = Statement::maker_by_token().find("");
       if (all_it != Statement::maker_by_token().end())
-        statement = stmt_from_tree_node(tree_it, all_it->second, *this, global_settings, Statement::error_output);
+        statement = stmt_from_tree_node(tree_it, tree_context,
+            all_it->second, *this, global_settings, Statement::error_output);
       
       if (statement)
         ;
@@ -237,7 +241,7 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it)
       {
         error_output->add_parse_error(
             std::string("\"") + tree_it->token + "\" cannot be used as unary operator", tree_it->line_col.first);
-        return create_statement(tree_it.rhs());
+        return create_statement(tree_it.rhs(), tree_context);
       }
       else
         error_output->add_parse_error(std::string("Token \"") + tree_it->token
