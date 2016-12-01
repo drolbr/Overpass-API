@@ -37,6 +37,7 @@ void Statement_Dump::add_statement(Statement_Dump* statement, std::string text)
   substatements.push_back(statement);
 }
 
+
 std::string indent(const std::string& subresult)
 {
   std::string result;
@@ -54,6 +55,7 @@ std::string indent(const std::string& subresult)
   
   return result;
 }
+
 
 std::string Statement_Dump::dump_xml() const
 {
@@ -90,6 +92,7 @@ std::string Statement_Dump::dump_xml() const
 
   return result;
 }
+
 
 std::string dump_print_map_ql(const std::map< std::string, std::string >& attributes, bool pretty = false)
 {
@@ -170,6 +173,7 @@ std::string dump_print_map_ql(const std::map< std::string, std::string >& attrib
   return result;
 }
 
+
 std::string escape_quotation_marks(const std::string& input)
 {
   std::string result = input;
@@ -196,6 +200,7 @@ std::string escape_quotation_marks(const std::string& input)
   
   return result;
 }
+
 
 std::string dump_subquery_map_ql(const std::string& name, const std::map< std::string, std::string >& attributes,
     const std::vector< Statement_Dump* >* substatements = 0)
@@ -323,6 +328,7 @@ std::string dump_subquery_map_ql(const std::string& name, const std::map< std::s
   
   return result;
 }
+
 
 std::string Statement_Dump::dump_compact_map_ql() const
 {
@@ -460,6 +466,21 @@ std::string Statement_Dump::dump_compact_map_ql() const
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
+  else if (name_ == "make" || name_ == "convert")
+  {
+    result += name_ + " ";
+    if (attributes.find("type") != attributes.end())
+      result += attributes.find("type")->second;
+
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it != substatements.end())
+    {
+      result += " " + (*it)->attribute("compact_ql");
+      ++it;
+    }
+    for (; it != substatements.end(); ++it)
+      result += "," + (*it)->attribute("compact_ql");
+  }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";
@@ -525,6 +546,7 @@ std::string Statement_Dump::dump_compact_map_ql() const
     result += ";";
   return result;
 }
+
 
 std::string Statement_Dump::dump_bbox_map_ql() const
 {
@@ -672,6 +694,21 @@ std::string Statement_Dump::dump_bbox_map_ql() const
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
+  else if (name_ == "make" || name_ == "convert")
+  {
+    result += name_ + " ";
+    if (attributes.find("type") != attributes.end())
+      result += attributes.find("type")->second;
+
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it != substatements.end())
+    {
+      result += " " + (*it)->attribute("compact_ql");
+      ++it;
+    }
+    for (; it != substatements.end(); ++it)
+      result += "," + (*it)->attribute("compact_ql");
+  }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";
@@ -737,6 +774,7 @@ std::string Statement_Dump::dump_bbox_map_ql() const
     result += ";";
   return result;
 }
+
 
 std::string Statement_Dump::dump_pretty_map_ql() const
 {
@@ -893,6 +931,21 @@ std::string Statement_Dump::dump_pretty_map_ql() const
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, true) + ";";
+  else if (name_ == "make" || name_ == "convert")
+  {
+    result += name_ + " ";
+    if (attributes.find("type") != attributes.end())
+      result += attributes.find("type")->second;
+
+    std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
+    if (it != substatements.end())
+    {
+      result += " " + (*it)->attribute("compact_ql");
+      ++it;
+    }
+    for (; it != substatements.end(); ++it)
+      result += "," + (*it)->attribute("compact_ql");
+  }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";

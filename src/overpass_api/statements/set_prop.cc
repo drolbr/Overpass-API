@@ -128,6 +128,16 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
 }
 
 
+std::string Set_Prop_Statement::dump_compact_ql(const std::string&) const
+{
+  if (tag_value)
+    return escape_cstr(keys.empty() ? "" : keys.front()) + "=" + tag_value->dump_compact_ql("");
+  else
+    return std::string("!") + (keys.empty() ? "" : keys.front());
+}
+
+
+
 std::pair< std::vector< Set_Usage >, uint > Set_Prop_Statement::used_sets() const
 {
   if (tag_value)

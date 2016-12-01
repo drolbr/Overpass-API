@@ -89,8 +89,7 @@ public:
   static Statement_Maker statement_maker;
       
   virtual std::string dump_xml(const std::string& indent) const;
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return escape_cstr(keys.empty() ? "" : keys.front()) + "=" + (tag_value ? tag_value->dump_compact_ql("") : ""); }
+  virtual std::string dump_compact_ql(const std::string&) const;
   virtual std::string dump_pretty_ql(const std::string&) const { return dump_compact_ql(""); }
   
   Set_Prop_Statement(int line_number_, const map< string, string >& input_attributes,
