@@ -68,23 +68,19 @@ std::pair< std::vector< Set_Usage >, uint > Set_Prop_Statement::used_sets() cons
 {
   if (tag_value)
   {
-    if (input == "")
-      return tag_value->used_sets();
-    
     std::pair< std::vector< Set_Usage >, uint > result = tag_value->used_sets();
-    std::vector< Set_Usage >::iterator it =
-        std::lower_bound(result.first.begin(), result.first.end(), Set_Usage(input, 0u));
-    if (it == result.first.end() || it->set_name != input)
-      result.first.insert(it, Set_Usage(input, Set_Usage::TAGS));
-    else
-      it->usage |= Set_Usage::TAGS;
+    result.second |= Set_Usage::TAGS;
+//     std::vector< Set_Usage >::iterator it =
+//         std::lower_bound(result.first.begin(), result.first.end(), Set_Usage(input, 0u));
+//     if (it == result.first.end() || it->set_name != input)
+//       result.first.insert(it, Set_Usage(input, Set_Usage::TAGS));
+//     else
+//       it->usage |= Set_Usage::TAGS;
     return result;
   }
   
   std::vector< Set_Usage > result;
-  if (input != "")
-    result.push_back(Set_Usage(input, Set_Usage::TAGS));
-  return std::make_pair(result, 0u);
+  return std::make_pair(result, Set_Usage::TAGS);
 }
 
 
