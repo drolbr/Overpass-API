@@ -208,7 +208,7 @@ void process(const std::string& key, Set_Prop_Task::Mode mode, Eval_Task* rhs, c
   else if (!id_set)
   {
     int64 id = 0;
-    id_set |= try_int64(rhs->eval(0), id);
+    id_set |= try_int64(rhs->eval(elem, tags, 0), id);
     if (id_set)
       result.id = Uint64(id);
   }

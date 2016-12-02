@@ -175,6 +175,45 @@ struct Evaluator_Less : public Evaluator_Pair_Operator_Syntax< Evaluator_Less >
 };
 
 
+struct Evaluator_Less_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_Less_Equal >
+{
+  static Operator_Stmt_Maker< Evaluator_Less_Equal > statement_maker;
+  static std::string stmt_operator() { return "<="; }
+  static std::string stmt_name() { return "eval-less-equal"; }
+      
+  Evaluator_Less_Equal(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Less_Equal >(line_number_, input_attributes) {}
+  
+  virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
+};
+
+
+struct Evaluator_Greater : public Evaluator_Pair_Operator_Syntax< Evaluator_Greater >
+{
+  static Operator_Stmt_Maker< Evaluator_Greater > statement_maker;
+  static std::string stmt_operator() { return ">"; }
+  static std::string stmt_name() { return "eval-greater"; }
+      
+  Evaluator_Greater(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Greater >(line_number_, input_attributes) {}
+  
+  virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
+};
+
+
+struct Evaluator_Greater_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_Greater_Equal >
+{
+  static Operator_Stmt_Maker< Evaluator_Greater_Equal > statement_maker;
+  static std::string stmt_operator() { return ">="; }
+  static std::string stmt_name() { return "eval-greater-equal"; }
+      
+  Evaluator_Greater_Equal(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Greater_Equal >(line_number_, input_attributes) {}
+  
+  virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
+};
+
+
 struct Evaluator_Plus : public Evaluator_Pair_Operator_Syntax< Evaluator_Plus >
 {
   static Operator_Stmt_Maker< Evaluator_Plus > statement_maker;

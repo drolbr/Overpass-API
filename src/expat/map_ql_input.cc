@@ -493,9 +493,9 @@ inline void Tokenizer< In >::get(string& s)
   else if (buffer[0] == '&')
     probe(s, "&&");
   else if (buffer[0] == '<')
-    probe(s, "<<");
+    probe(s, "<<", "<=");
   else if (buffer[0] == '>')
-    probe(s, ">>");
+    probe(s, ">>", ">=");
   else if ((buffer[0] & 0x80) == 0)
   {
     s = buffer.substr(0, 1);

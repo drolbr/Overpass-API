@@ -913,60 +913,96 @@ int main(int argc, char* args[])
     if ((test_to_execute == "") || (test_to_execute == "33"))
       pair_test< Evaluator_Less >(global_settings, transaction, "test-less", "less", " ", "1");
     if ((test_to_execute == "") || (test_to_execute == "34"))
-      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "5.5", "3.5");
+      pair_test< Evaluator_Less_Equal >(global_settings, transaction, "test-less-equal", "less-equal", "a", "a.0");
     if ((test_to_execute == "") || (test_to_execute == "35"))
-      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "1", "0 ");
+      pair_test< Evaluator_Less_Equal >(global_settings, transaction, "test-less-equal", "less-equal", "a.0", "a");
     if ((test_to_execute == "") || (test_to_execute == "36"))
-      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "10");
+      pair_test< Evaluator_Less_Equal >(global_settings, transaction, "test-less-equal", "less-equal", "a", "a");
     if ((test_to_execute == "") || (test_to_execute == "37"))
-      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "2_");
+      pair_test< Evaluator_Less_Equal >(global_settings, transaction, "test-less-equal", "less-equal", "9.0", "9");
     if ((test_to_execute == "") || (test_to_execute == "38"))
-      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "100000000000000000", "1");
+      pair_test< Evaluator_Less_Equal >(global_settings, transaction, "test-less-equal", "less-equal", "9.1", "9");
     if ((test_to_execute == "") || (test_to_execute == "39"))
-      pair_test< Evaluator_Times >(global_settings, transaction, "test-times", "product", "2", "6.5");
+      pair_test< Evaluator_Less_Equal >(global_settings, transaction, "test-less-equal", "less-equal", "9", "10");
     if ((test_to_execute == "") || (test_to_execute == "40"))
-      pair_test< Evaluator_Times >(global_settings, transaction, "test-times", "product", "_2", "7");
+      pair_test< Evaluator_Greater >(global_settings, transaction, "test-greater", "greater", "a", "a.0");
     if ((test_to_execute == "") || (test_to_execute == "41"))
-      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "2", "5");
+      pair_test< Evaluator_Greater >(global_settings, transaction, "test-greater", "greater", "a.0", "a");
     if ((test_to_execute == "") || (test_to_execute == "42"))
-      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "_2", "5");
+      pair_test< Evaluator_Greater >(global_settings, transaction, "test-greater", "greater", "a", "a");
     if ((test_to_execute == "") || (test_to_execute == "43"))
-      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "100000000000000001", "100000000000000000");
+      pair_test< Evaluator_Greater >(global_settings, transaction, "test-greater", "greater", "9", "10");
     if ((test_to_execute == "") || (test_to_execute == "44"))
-      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "3.14");
+      pair_test< Evaluator_Greater >(global_settings, transaction, "test-greater", "greater", "9.0", "9");
     if ((test_to_execute == "") || (test_to_execute == "45"))
-      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "-3.");
+      pair_test< Evaluator_Greater >(global_settings, transaction, "test-greater", "greater", "10", "9");
     if ((test_to_execute == "") || (test_to_execute == "46"))
-      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "100000000000000000");
+      pair_test< Evaluator_Greater_Equal >(global_settings, transaction, "test-gr-equal", "greater-equal", "a", "a.0");
     if ((test_to_execute == "") || (test_to_execute == "47"))
-      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "one");
+      pair_test< Evaluator_Greater_Equal >(global_settings, transaction, "test-gr-equal", "greater-equal", "a.0", "a");
     if ((test_to_execute == "") || (test_to_execute == "48"))
-      pair_test< Evaluator_Divided >(global_settings, transaction, "test-divided", "quotient", "8", "9");
+      pair_test< Evaluator_Greater_Equal >(global_settings, transaction, "test-gr-equal", "greater-equal", "a", "a");
     if ((test_to_execute == "") || (test_to_execute == "49"))
-      pair_test< Evaluator_Divided >(global_settings, transaction, "test-divided", "quotient", "_8", "9");
+      pair_test< Evaluator_Greater_Equal >(global_settings, transaction, "test-gr-equal", "greater-equal", "9", "10");
     if ((test_to_execute == "") || (test_to_execute == "50"))
-      union_value_test(global_settings, transaction, "union-value", "_", 1, global_node_offset);
+      pair_test< Evaluator_Greater_Equal >(global_settings, transaction, "test-gr-equal", "greater-equal", "9.0", "9");
     if ((test_to_execute == "") || (test_to_execute == "51"))
-      union_value_test(global_settings, transaction, "union-value", "foo", 1, global_node_offset);
+      pair_test< Evaluator_Greater_Equal >(global_settings, transaction, "test-gr-equal", "greater-equal", "10", "9");
     if ((test_to_execute == "") || (test_to_execute == "52"))
-      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "5.5", "3.5");
     if ((test_to_execute == "") || (test_to_execute == "53"))
-      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "1", "0 ");
     if ((test_to_execute == "") || (test_to_execute == "54"))
-      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "10");
     if ((test_to_execute == "") || (test_to_execute == "55"))
-      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", " 1", "2_");
     if ((test_to_execute == "") || (test_to_execute == "56"))
-      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+      pair_test< Evaluator_Plus >(global_settings, transaction, "test-plus", "sum", "100000000000000000", "1");
     if ((test_to_execute == "") || (test_to_execute == "57"))
-      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+      pair_test< Evaluator_Times >(global_settings, transaction, "test-times", "product", "2", "6.5");
     if ((test_to_execute == "") || (test_to_execute == "58"))
-      value_id_type_test(global_settings, transaction, "id-and-type", "_", 1, global_node_offset);
+      pair_test< Evaluator_Times >(global_settings, transaction, "test-times", "product", "_2", "7");
     if ((test_to_execute == "") || (test_to_execute == "59"))
-      key_id_test(global_settings, transaction, "key-id", "_", 0, global_node_offset);
+      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "2", "5");
     if ((test_to_execute == "") || (test_to_execute == "60"))
-      key_id_test(global_settings, transaction, "key-id", "_", 1, global_node_offset);
+      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "_2", "5");
     if ((test_to_execute == "") || (test_to_execute == "61"))
+      pair_test< Evaluator_Minus >(global_settings, transaction, "test-minus", "difference", "100000000000000001", "100000000000000000");
+    if ((test_to_execute == "") || (test_to_execute == "62"))
+      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "3.14");
+    if ((test_to_execute == "") || (test_to_execute == "63"))
+      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "-3.");
+    if ((test_to_execute == "") || (test_to_execute == "64"))
+      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "100000000000000000");
+    if ((test_to_execute == "") || (test_to_execute == "65"))
+      prefix_test< Evaluator_Negate >(global_settings, transaction, "test-minus", "negation", "one");
+    if ((test_to_execute == "") || (test_to_execute == "66"))
+      pair_test< Evaluator_Divided >(global_settings, transaction, "test-divided", "quotient", "8", "9");
+    if ((test_to_execute == "") || (test_to_execute == "67"))
+      pair_test< Evaluator_Divided >(global_settings, transaction, "test-divided", "quotient", "_8", "9");
+    if ((test_to_execute == "") || (test_to_execute == "68"))
+      union_value_test(global_settings, transaction, "union-value", "_", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "69"))
+      union_value_test(global_settings, transaction, "union-value", "foo", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "70"))
+      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "71"))
+      min_value_test(global_settings, transaction, "min-value", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "72"))
+      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "73"))
+      max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "74"))
+      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "75"))
+      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "76"))
+      value_id_type_test(global_settings, transaction, "id-and-type", "_", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "77"))
+      key_id_test(global_settings, transaction, "key-id", "_", 0, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "78"))
+      key_id_test(global_settings, transaction, "key-id", "_", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "79"))
       number_test(global_settings, transaction, "test-number", global_node_offset);
 
     std::cout<<"</osm>\n";

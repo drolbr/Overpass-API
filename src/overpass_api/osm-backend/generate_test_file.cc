@@ -3838,85 +3838,175 @@ int main(int argc, char* args[])
       "  </test-less>\n";
     if (string(args[2]) == "make_34")
       cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"1\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_35")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"0\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_36")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"1\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_37")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"1\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_38")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"0\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_39")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"1\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_40")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"0\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_41")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"1\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_42")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"0\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_43")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"0\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_44")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"0\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_45")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"1\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_46")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"0\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_47")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"1\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_48")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"1\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_49")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"0\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_50")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"1\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_51")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"1\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_52")
+      cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"9\"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_35")
+    if (string(args[2]) == "make_53")
       cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"10 \"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_36")
+    if (string(args[2]) == "make_54")
       cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"11\"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_37")
+    if (string(args[2]) == "make_55")
       cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\" 12_\"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_38")
+    if (string(args[2]) == "make_56")
       cout<<
       "  <test-plus id=\"1\">\n"
       "    <tag k=\"sum\" v=\"100000000000000001\"/>\n"
       "  </test-plus>\n";
-    if (string(args[2]) == "make_39")
+    if (string(args[2]) == "make_57")
       cout<<
       "  <test-times id=\"1\">\n"
       "    <tag k=\"product\" v=\"13\"/>\n"
       "  </test-times>\n";
-    if (string(args[2]) == "make_40")
+    if (string(args[2]) == "make_58")
       cout<<
       "  <test-times id=\"1\">\n"
       "    <tag k=\"product\" v=\"NaN\"/>\n"
       "  </test-times>\n";
-    if (string(args[2]) == "make_41")
+    if (string(args[2]) == "make_59")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"difference\" v=\"-3\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_42")
+    if (string(args[2]) == "make_60")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"difference\" v=\"NaN\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_43")
+    if (string(args[2]) == "make_61")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"difference\" v=\"1\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_44")
+    if (string(args[2]) == "make_62")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"negation\" v=\"-3.14\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_45")
+    if (string(args[2]) == "make_63")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"negation\" v=\"3\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_46")
+    if (string(args[2]) == "make_64")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"negation\" v=\"-100000000000000000\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_47")
+    if (string(args[2]) == "make_65")
       cout<<
       "  <test-minus id=\"1\">\n"
       "    <tag k=\"negation\" v=\"NaN\"/>\n"
       "  </test-minus>\n";
-    if (string(args[2]) == "make_48")
+    if (string(args[2]) == "make_66")
       cout<<
       "  <test-divided id=\"1\">\n"
       "    <tag k=\"quotient\" v=\"0.88888888888889\"/>\n"
       "  </test-divided>\n";
-    if (string(args[2]) == "make_49")
+    if (string(args[2]) == "make_67")
       cout<<
       "  <test-divided id=\"1\">\n"
       "    <tag k=\"quotient\" v=\"NaN\"/>\n"
       "  </test-divided>\n";
-    if (string(args[2]) == "make_50" || string(args[2]) == "make_51")
+    if (string(args[2]) == "make_68" || string(args[2]) == "make_69")
       cout<<
       "  <union-value id=\"1\">\n"
       "    <tag k=\"node_key\" v=\"node_few\"/>\n"
@@ -3924,7 +4014,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
       "    <tag k=\"unused_key\" v=\"\"/>\n"
       "  </union-value>\n";
-    if (string(args[2]) == "make_52" || string(args[2]) == "make_53")
+    if (string(args[2]) == "make_70" || string(args[2]) == "make_71")
       cout<<
       "  <min-value id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
@@ -3932,7 +4022,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </min-value>\n";
-    if (string(args[2]) == "make_54" || string(args[2]) == "make_55")
+    if (string(args[2]) == "make_72" || string(args[2]) == "make_73")
       cout<<
       "  <max-value id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
@@ -3940,7 +4030,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </max-value>\n";
-    if (string(args[2]) == "make_56" || string(args[2]) == "make_57")
+    if (string(args[2]) == "make_74" || string(args[2]) == "make_75")
       cout<<
       "  <value-set id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
@@ -3948,19 +4038,19 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
       "  </value-set>\n";
-    if (string(args[2]) == "make_58")
+    if (string(args[2]) == "make_76")
       cout<<
       "  <id-and-type id=\"1\">\n"
       "    <tag k=\"id\" v=\"1;"<<global_node_offset + 1<<";"<<global_node_offset + 2<<"\"/>\n"
       "    <tag k=\"type\" v=\"node;relation;way\"/>\n"
       "  </id-and-type>\n";
-    if (string(args[2]) == "make_59")
+    if (string(args[2]) == "make_77")
       cout<<
       "  <key-id id=\"42\"/>\n";
-    if (string(args[2]) == "make_60")
+    if (string(args[2]) == "make_78")
       cout<<
       "  <key-id id=\""<<global_node_offset + 2<<"\"/>\n";
-    if (string(args[2]) == "make_61")
+    if (string(args[2]) == "make_79")
       cout<<
       "  <test-number id=\"1\">\n"
       "    <tag k=\"nan\" v=\"NaN\"/>\n"

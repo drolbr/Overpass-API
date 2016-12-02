@@ -240,6 +240,72 @@ std::string Evaluator_Less::process(const std::string& lhs_s, const std::string&
 //-----------------------------------------------------------------------------
 
 
+Operator_Stmt_Maker< Evaluator_Less_Equal > Evaluator_Less_Equal::statement_maker;
+
+
+std::string Evaluator_Less_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
+{
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return lhs_l <= rhs_l ? "1" : "0";
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return lhs_d <= rhs_d ? "1" : "0";
+  
+  return lhs_s <= rhs_s ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Operator_Stmt_Maker< Evaluator_Greater > Evaluator_Greater::statement_maker;
+
+
+std::string Evaluator_Greater::process(const std::string& lhs_s, const std::string& rhs_s) const
+{
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return lhs_l > rhs_l ? "1" : "0";
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return lhs_d > rhs_d ? "1" : "0";
+  
+  return lhs_s > rhs_s ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Operator_Stmt_Maker< Evaluator_Greater_Equal > Evaluator_Greater_Equal::statement_maker;
+
+
+std::string Evaluator_Greater_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
+{
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return lhs_l >= rhs_l ? "1" : "0";
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return lhs_d >= rhs_d ? "1" : "0";
+  
+  return lhs_s >= rhs_s ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Operator_Stmt_Maker< Evaluator_Plus > Evaluator_Plus::statement_maker;
 
 
