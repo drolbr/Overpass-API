@@ -142,25 +142,82 @@ public:
 };
 
 
-class Evaluator_Number : public Evaluator_Prefix_Operator
+template< typename Evaluator_ >
+struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
+{
+  virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+  {
+    if (tree_it->token != "(")
+    {
+      if (error_output)
+        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) cannot have an input set",
+            tree_it->line_col.first);
+      return 0;
+    }
+    if (!tree_it->rhs)
+    {
+      if (error_output)
+        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) needs an argument",
+            tree_it->line_col.first);
+      return 0;
+    }
+    map< string, string > attributes;
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    if (result)
+    {
+      Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
+      if (rhs)
+        result->add_statement(rhs, "");
+      else if (error_output)
+        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) needs an argument",
+            tree_it->line_col.first);
+    }
+    return result;
+  }
+  
+  String_Endom_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
+  {
+    Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this);
+  }
+};
+
+
+template< typename Evaluator_ >
+struct Evaluator_String_Endom_Syntax : public Evaluator_Prefix_Operator
+{
+  Evaluator_String_Endom_Syntax(int line_number_, const map< string, string >& input_attributes)
+    : Evaluator_Prefix_Operator(line_number_)
+  {
+    std::map< std::string, std::string > attributes;  
+    eval_attributes_array(Evaluator_::stmt_name(), attributes, input_attributes);    
+  }
+  
+  virtual std::string dump_xml(const std::string& indent) const
+  {
+    return indent + "<" + Evaluator_::stmt_name() + ">\n"
+        + rhs->dump_xml(indent + "  ")
+        + indent + "</" + Evaluator_::stmt_name() + ">\n";
+  }
+  
+  virtual std::string dump_compact_ql(const std::string&) const
+  {
+    return Evaluator_::stmt_func_name() + "(" + (rhs ? rhs->dump_compact_ql("") : "") + ")";
+  }
+  
+  virtual string get_name() const { return Evaluator_::stmt_name(); }
+};
+
+
+class Evaluator_Number : public Evaluator_String_Endom_Syntax< Evaluator_Number >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Number >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-number")
-    { Statement::maker_by_func_name()["number"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-number>\n" + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-number>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("number(\"") + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
+  static String_Endom_Statement_Maker< Evaluator_Number > statement_maker;
+  static std::string stmt_func_name() { return "number"; }
+  static std::string stmt_name() { return "eval-number"; }
 
-  Evaluator_Number(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Number(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_String_Endom_Syntax< Evaluator_Number >(line_number_, input_attributes) {}
   virtual string get_name() const { return "eval-number"; }
   virtual ~Evaluator_Number() {}
   
@@ -168,25 +225,15 @@ public:
 };
 
 
-class Evaluator_Is_Num : public Evaluator_Prefix_Operator
+class Evaluator_Is_Num : public Evaluator_String_Endom_Syntax< Evaluator_Is_Num >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Is_Num >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-is-num")
-    { Statement::maker_by_func_name()["is_num"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-is-num>\n" + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-is-num>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("is_num(\"") + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
+  static String_Endom_Statement_Maker< Evaluator_Is_Num > statement_maker;
+  static std::string stmt_func_name() { return "is_num"; }
+  static std::string stmt_name() { return "eval-is-num"; }
 
-  Evaluator_Is_Num(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
+  Evaluator_Is_Num(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_String_Endom_Syntax< Evaluator_Is_Num >(line_number_, input_attributes) {}
   virtual string get_name() const { return "eval-is-num"; }
   virtual ~Evaluator_Is_Num() {}
   

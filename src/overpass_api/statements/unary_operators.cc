@@ -177,46 +177,7 @@ std::string Evaluator_Negate::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Number::Statement_Maker Evaluator_Number::statement_maker;
-
-
-Statement* Evaluator_Number::Statement_Maker::create_statement(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (tree_it->token != "(")
-  {
-    if (error_output)
-      error_output->add_parse_error("number(...) cannot have an input set", tree_it->line_col.first);
-    return 0;
-  }
-  if (!tree_it->rhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("number(...) needs an argument", tree_it->line_col.first);
-    return 0;
-  }
-  map< string, string > attributes;
-  Statement* result = new Evaluator_Number(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("number(...) needs an argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Number::Evaluator_Number
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Prefix_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+String_Endom_Statement_Maker< Evaluator_Number > Evaluator_Number::statement_maker;
 
 
 std::string Evaluator_Number::process(const std::string& rhs_s) const
@@ -236,46 +197,7 @@ std::string Evaluator_Number::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Is_Num::Statement_Maker Evaluator_Is_Num::statement_maker;
-
-
-Statement* Evaluator_Is_Num::Statement_Maker::create_statement(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (tree_it->token != "(")
-  {
-    if (error_output)
-      error_output->add_parse_error("is_num(...) cannot have an input set", tree_it->line_col.first);
-    return 0;
-  }
-  if (!tree_it->rhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("is_num(...) needs an argument", tree_it->line_col.first);
-    return 0;
-  }
-  map< string, string > attributes;
-  Statement* result = new Evaluator_Is_Num(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("is_num(...) needs an argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Is_Num::Evaluator_Is_Num
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Prefix_Operator(line_number_)
-{
-  std::map< std::string, std::string > attributes;  
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
+String_Endom_Statement_Maker< Evaluator_Is_Num > Evaluator_Is_Num::statement_maker;
 
 
 std::string Evaluator_Is_Num::process(const std::string& rhs_s) const
