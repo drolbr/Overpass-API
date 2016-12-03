@@ -415,7 +415,7 @@ Eval_Task* Evaluator_Count::get_task(const Prepare_Task_Context& context)
   const Set_With_Context* set = context.get_set(input);
   
   unsigned int counter = 0;
-  if (set)
+  if (set && set->base)
   {
     if (to_count == nodes)
       counter = count(set->base->nodes) + count(set->base->attic_nodes);

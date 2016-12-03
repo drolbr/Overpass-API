@@ -83,7 +83,7 @@ Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
     return 0;
   
   const Set_With_Context* input_set = context.get_set(input);
-  if (!input_set)
+  if (!input_set || !input_set->base)
     return 0;
   
   value_set = false;
