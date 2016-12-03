@@ -218,8 +218,6 @@ public:
 
   Evaluator_Number(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_String_Endom_Syntax< Evaluator_Number >(line_number_, input_attributes) {}
-  virtual string get_name() const { return "eval-number"; }
-  virtual ~Evaluator_Number() {}
   
   virtual std::string process(const std::string& rhs_result) const;
 };
@@ -234,8 +232,34 @@ public:
 
   Evaluator_Is_Num(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_String_Endom_Syntax< Evaluator_Is_Num >(line_number_, input_attributes) {}
-  virtual string get_name() const { return "eval-is-num"; }
-  virtual ~Evaluator_Is_Num() {}
+  
+  virtual std::string process(const std::string& rhs_result) const;
+};
+
+
+class Evaluator_Date : public Evaluator_String_Endom_Syntax< Evaluator_Date >
+{
+public:
+  static String_Endom_Statement_Maker< Evaluator_Date > statement_maker;
+  static std::string stmt_func_name() { return "date"; }
+  static std::string stmt_name() { return "eval-date"; }
+
+  Evaluator_Date(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_String_Endom_Syntax< Evaluator_Date >(line_number_, input_attributes) {}
+  
+  virtual std::string process(const std::string& rhs_result) const;
+};
+
+
+class Evaluator_Is_Date : public Evaluator_String_Endom_Syntax< Evaluator_Is_Date >
+{
+public:
+  static String_Endom_Statement_Maker< Evaluator_Is_Date > statement_maker;
+  static std::string stmt_func_name() { return "is_date"; }
+  static std::string stmt_name() { return "eval-is-date"; }
+
+  Evaluator_Is_Date(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_String_Endom_Syntax< Evaluator_Is_Date >(line_number_, input_attributes) {}
   
   virtual std::string process(const std::string& rhs_result) const;
 };

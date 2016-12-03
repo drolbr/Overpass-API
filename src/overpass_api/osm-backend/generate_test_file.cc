@@ -4063,6 +4063,19 @@ int main(int argc, char* args[])
       "    <tag k=\"is_minus_fourty-two\" v=\"1\"/>\n"
       "    <tag k=\"empty_isnt_num\" v=\"0\"/>\n"
       "  </test-number>\n";
+    if (string(args[2]) == "make_80")
+      cout<<
+      "  <test-date id=\"1\">\n"
+      "    <tag k=\"year_only\" v=\"2006\"/>\n"
+      "    <tag k=\"year_month_day\" v=\"2012.587890625\"/>\n"
+      "    <tag k=\"full_iso\" v=\"2013.0671679527\"/>\n"
+      "    <tag k=\"nonsense\" v=\"NaD\"/>\n"
+      "    <tag k=\"is_year\" v=\"1\"/>\n"
+      "    <tag k=\"is_year_month_day\" v=\"1\"/>\n"
+      "    <tag k=\"is_full_iso\" v=\"1\"/>\n"
+      "    <tag k=\"is_nonsense\" v=\"0\"/>\n"
+      "    <tag k=\"empty_isnt_date\" v=\"0\"/>\n"
+      "  </test-date>\n";
 
     cout<<"</osm>\n";
   }

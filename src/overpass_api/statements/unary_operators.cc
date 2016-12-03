@@ -212,3 +212,148 @@ std::string Evaluator_Is_Num::process(const std::string& rhs_s) const
   
   return "0";
 }
+
+
+//-----------------------------------------------------------------------------
+
+
+String_Endom_Statement_Maker< Evaluator_Date > Evaluator_Date::statement_maker;
+
+
+std::string Evaluator_Date::process(const std::string& rhs_s) const
+{
+  //First run: try for year, month, day, hour, minute, second
+  std::string::size_type pos = 0;
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int year = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    year = 10*year + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int month = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    month = 10*month + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int day = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    day = 10*day + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int hour = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    hour = 10*hour + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int minute = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    minute = 10*minute + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int second = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    second = 10*second + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  if (year < 1000 || month > 12 || day > 31 || hour > 24 || minute > 60 || second > 60)
+    return "NaD";
+  
+  return to_string(year + month/16. + day/(16.*32)
+      + hour/(16.*32*32) + minute/(16.*32*32*64) + second/(16.*32*32*64*64));
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+String_Endom_Statement_Maker< Evaluator_Is_Date > Evaluator_Is_Date::statement_maker;
+
+
+std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
+{
+  //First run: try for year, month, day, hour, minute, second
+  std::string::size_type pos = 0;
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int year = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    year = 10*year + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int month = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    month = 10*month + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int day = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    day = 10*day + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int hour = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    hour = 10*hour + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int minute = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    minute = 10*minute + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
+    ++pos;
+  unsigned int second = 0;
+  while (pos < rhs_s.size() && isdigit(rhs_s[pos]))
+  {
+    second = 10*second + (rhs_s[pos] - '0');
+    ++pos;
+  }
+  
+  if (year < 1000 || month > 12 || day > 31 || hour > 24 || minute > 60 || second > 60)
+    return "0";
+  
+  return "1";
+}
