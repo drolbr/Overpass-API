@@ -20,7 +20,7 @@ cgi_bin_clone =
 cgi_bin_script_clone = cgi-bin/trigger_clone
 
 bin_augmented_diffs = bin/process_augmented_diffs bin/uncgi
-bin_script_augmented_diffs =
+bin_script_augmented_diffs = bin/augmented_diff_loop.sh
 cgi_bin_augmented_diffs =
 cgi_bin_script_augmented_diffs = cgi-bin/augmented_diff cgi-bin/augmented_diff_status cgi-bin/augmented_state_by_date
 
