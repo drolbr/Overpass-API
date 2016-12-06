@@ -432,7 +432,7 @@ Eval_Task* Evaluator_Count::get_task(const Prepare_Task_Context& context)
 std::string Count_Eval_Task::eval(const Node_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::tags)
+  if (to_count == Evaluator_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
@@ -441,7 +441,7 @@ std::string Count_Eval_Task::eval(const Node_Skeleton* elem,
 std::string Count_Eval_Task::eval(const Attic< Node_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::tags)
+  if (to_count == Evaluator_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
@@ -450,9 +450,9 @@ std::string Count_Eval_Task::eval(const Attic< Node_Skeleton >* elem,
 std::string Count_Eval_Task::eval(const Way_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::members)
+  if (to_count == Evaluator_Count::members && elem)
     return to_string(elem->nds.size());
-  else if (to_count == Evaluator_Count::tags)
+  else if (to_count == Evaluator_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
@@ -461,9 +461,9 @@ std::string Count_Eval_Task::eval(const Way_Skeleton* elem,
 std::string Count_Eval_Task::eval(const Attic< Way_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::members)
+  if (to_count == Evaluator_Count::members && elem)
     return to_string(elem->nds.size());
-  else if (to_count == Evaluator_Count::tags)
+  else if (to_count == Evaluator_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
@@ -472,9 +472,9 @@ std::string Count_Eval_Task::eval(const Attic< Way_Skeleton >* elem,
 std::string Count_Eval_Task::eval(const Relation_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::members)
+  if (to_count == Evaluator_Count::members && elem)
     return to_string(elem->members.size());
-  else if (to_count == Evaluator_Count::tags)
+  else if (to_count == Evaluator_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
@@ -483,9 +483,9 @@ std::string Count_Eval_Task::eval(const Relation_Skeleton* elem,
 std::string Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::members)
+  if (to_count == Evaluator_Count::members && elem)
     return to_string(elem->members.size());
-  else if (to_count == Evaluator_Count::tags)
+  else if (to_count == Evaluator_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
@@ -494,7 +494,7 @@ std::string Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
 std::string Count_Eval_Task::eval(const Area_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::tags)
+  if (to_count == Evaluator_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
@@ -503,7 +503,7 @@ std::string Count_Eval_Task::eval(const Area_Skeleton* elem,
 std::string Count_Eval_Task::eval(const Derived_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::tags)
+  if (to_count == Evaluator_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
