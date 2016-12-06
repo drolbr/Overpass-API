@@ -73,7 +73,7 @@ public:
       Derived_Structure::Id_Type lower_id_bound, Derived_Structure::Id_Type upper_id_bound) {}
   
   const std::vector< std::pair< std::string, std::string > >* get(
-      const Uint31_Index& index, const Derived_Structure& elem) const  { return &elem.tags; }
+      const Uint31_Index& index, const Derived_Structure& elem) const { return &elem.tags; }
 };
 
 

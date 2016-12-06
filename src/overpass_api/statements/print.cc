@@ -973,17 +973,22 @@ void Print_Statement::execute(Resource_Manager& rman)
     rman.area_updater()->flush();
 
   std::map< std::string, Set >::const_iterator mit(rman.sets().find(input));
-  if (mit == rman.sets().end())
-    return;
-    
-  const Set* output_items = &mit->second;
   
   Set count_set;
+  const Set* output_items = 0;
   if (mode & Output_Mode::COUNT)
   {
-    count_set.deriveds[Uint31_Index(0u)].push_back(
-        Derived_Structure("count", Uint64(0ull), make_count_tags(mit->second, rman.get_area_transaction())));
+    count_set.deriveds[Uint31_Index(0u)].push_back(Derived_Structure("count", Uint64(0ull),
+        make_count_tags(mit == rman.sets().end() ? Set() : mit->second, rman.get_area_transaction())));
     output_items = &count_set;
+    mode = mode | Output_Mode::TAGS;
+  }
+  else
+  {
+    if (mit == rman.sets().end())
+      return;
+    
+    output_items = &mit->second;
   }
   
   Extra_Data extra_data(rman, *this, *output_items, mode, south, north, west, east);  
@@ -1023,6 +1028,7 @@ void Print_Statement::execute(Resource_Manager& rman)
             output_handler, *rman.get_transaction(), extra_data, limit, element_count);      
       if (rman.get_area_transaction())
         by_id(output_items->areas, output_handler, *rman.get_area_transaction(), extra_data, limit, element_count);
+      by_id(output_items->deriveds, output_handler, *rman.get_transaction(), extra_data, limit, element_count);      
     }
   }
   else
@@ -1053,6 +1059,9 @@ void Print_Statement::execute(Resource_Manager& rman)
       if (rman.get_area_transaction())
         tags_quadtile_(extra_data, output_items->areas,
 		      output_handler, rman, *rman.get_area_transaction(), limit, element_count);
+        
+      tags_quadtile_(extra_data, output_items->deriveds,
+                    output_handler, rman, *rman.get_transaction(), limit, element_count);
     }
     else
     {
@@ -1067,6 +1076,8 @@ void Print_Statement::execute(Resource_Manager& rman)
       
       if (rman.get_area_transaction())
         quadtile_(output_items->areas, output_handler, *rman.get_area_transaction(), extra_data, limit, element_count);
+      
+      quadtile_(output_items->deriveds, output_handler, *rman.get_transaction(), extra_data, limit, element_count);
     }
   }
   
