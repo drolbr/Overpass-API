@@ -199,15 +199,15 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, S
   }
   else if (tree_it->token == ".")
   {
-    if (tree_it->lhs && tree_it->rhs && tree_it.rhs()->token == "(")
+    if (tree_it->lhs && tree_it->rhs && tree_it.rhs()->token == "(" && tree_it.rhs()->lhs)
     {
       map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
-          Statement::maker_by_func_name().find(tree_it.lhs()->token);          
+          Statement::maker_by_func_name().find(tree_it.rhs().lhs()->token);          
       if (all_it != Statement::maker_by_func_name().end())
         statement = stmt_from_tree_node(tree_it, tree_context,
             all_it->second, *this, global_settings, Statement::error_output);
       else
-        error_output->add_parse_error(std::string("Function \"") + tree_it.lhs()->token + "\" not known",
+        error_output->add_parse_error(std::string("Function \"") + tree_it.rhs().lhs()->token + "\" not known",
             tree_it->line_col.first);
     }
   }

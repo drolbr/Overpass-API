@@ -327,7 +327,7 @@ Statement* Evaluator_Count::Statement_Maker::create_statement(
       return 0;
     }
     
-    attributes["from"] = tree_it.rhs().lhs()->token;
+    attributes["from"] = tree_it.lhs()->token;
     attributes["type"] = tree_it.rhs().rhs()->token;
   }
   

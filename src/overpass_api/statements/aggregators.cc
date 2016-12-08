@@ -154,7 +154,7 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
       return false;
     }
     
-    input_set = tree_it.rhs().lhs()->token;
+    input_set = tree_it.lhs()->token;
     explicit_input_set = true;
   }
   return true;
