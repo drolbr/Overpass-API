@@ -28,11 +28,8 @@ Evaluator_Aggregator::Evaluator_Aggregator
     : Evaluator(line_number_), rhs(0), input_set(0), value_set(false)
 {
   std::map< std::string, std::string > attributes;
-  
   attributes["from"] = "_";
-  
-  eval_attributes_array(func_name, attributes, input_attributes);
-  
+  eval_attributes_array(func_name, attributes, input_attributes);  
   input = attributes["from"];
 }
 
@@ -78,7 +75,7 @@ Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
   if (!rhs)
     return 0;
   
-  Owner < Eval_Task > rhs_task(rhs->get_task(context));
+  Owner< Eval_Task > rhs_task(rhs->get_task(context));
   if (!rhs_task)
     return 0;
   
@@ -164,35 +161,7 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Union_Value::Statement_Maker Evaluator_Union_Value::statement_maker;
-
-
-Statement* Evaluator_Union_Value::Statement_Maker::create_statement(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  map< string, string > attributes;
-  bool input_set = false;
-  if (!try_parse_input_set(tree_it, error_output, "u(...) needs an argument", attributes["from"], input_set))
-    return 0;
-  
-  Statement* result = new Evaluator_Union_Value(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(
-        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("u(...) needs an argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Union_Value::Evaluator_Union_Value
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Aggregator("eval-union", line_number_, input_attributes, global_settings) {}
+Aggregator_Statement_Maker< Evaluator_Union_Value > Evaluator_Union_Value::statement_maker;
 
 
 std::string Evaluator_Union_Value::update_value(const std::string& agg_value, const std::string& new_value)
@@ -209,35 +178,7 @@ std::string Evaluator_Union_Value::update_value(const std::string& agg_value, co
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Min_Value::Statement_Maker Evaluator_Min_Value::statement_maker;
-
-
-Statement* Evaluator_Min_Value::Statement_Maker::create_statement(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  map< string, string > attributes;
-  bool input_set = false;
-  if (!try_parse_input_set(tree_it, error_output, "min(...) needs an argument", attributes["from"], input_set))
-    return 0;
-  
-  Statement* result = new Evaluator_Min_Value(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(
-        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("min(...) needs an argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Min_Value::Evaluator_Min_Value
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Aggregator("eval-min", line_number_, input_attributes, global_settings) {}
+Aggregator_Statement_Maker< Evaluator_Min_Value > Evaluator_Min_Value::statement_maker;
 
 
 std::string Evaluator_Min_Value::update_value(const std::string& agg_value, const std::string& new_value)
@@ -264,35 +205,7 @@ std::string Evaluator_Min_Value::update_value(const std::string& agg_value, cons
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Max_Value::Statement_Maker Evaluator_Max_Value::statement_maker;
-
-
-Statement* Evaluator_Max_Value::Statement_Maker::create_statement(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  map< string, string > attributes;
-  bool input_set = false;
-  if (!try_parse_input_set(tree_it, error_output, "max(...) needs an argument", attributes["from"], input_set))
-    return 0;
-  
-  Statement* result = new Evaluator_Max_Value(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(
-        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("max(...) needs an argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Max_Value::Evaluator_Max_Value
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Aggregator("eval-max", line_number_, input_attributes, global_settings) {}
+Aggregator_Statement_Maker< Evaluator_Max_Value > Evaluator_Max_Value::statement_maker;
 
 
 std::string Evaluator_Max_Value::update_value(const std::string& agg_value, const std::string& new_value)
@@ -314,35 +227,7 @@ std::string Evaluator_Max_Value::update_value(const std::string& agg_value, cons
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Sum_Value::Statement_Maker Evaluator_Sum_Value::statement_maker;
-
-
-Statement* Evaluator_Sum_Value::Statement_Maker::create_statement(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  map< string, string > attributes;
-  bool input_set = false;
-  if (!try_parse_input_set(tree_it, error_output, "sum(...) needs an argument", attributes["from"], input_set))
-    return 0;
-  
-  Statement* result = new Evaluator_Sum_Value(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(
-        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("sum(...) needs an argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Sum_Value::Evaluator_Sum_Value
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Aggregator("eval-sum", line_number_, input_attributes, global_settings) {}
+Aggregator_Statement_Maker< Evaluator_Sum_Value > Evaluator_Sum_Value::statement_maker;
 
 
 std::string Evaluator_Sum_Value::update_value(const std::string& agg_value, const std::string& new_value)
@@ -364,35 +249,7 @@ std::string Evaluator_Sum_Value::update_value(const std::string& agg_value, cons
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Set_Value::Statement_Maker Evaluator_Set_Value::statement_maker;
-
-
-Statement* Evaluator_Set_Value::Statement_Maker::create_statement(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  map< string, string > attributes;
-  bool input_set = false;
-  if (!try_parse_input_set(tree_it, error_output, "set(...) needs an argument", attributes["from"], input_set))
-    return 0;
-  
-  Statement* result = new Evaluator_Set_Value(tree_it->line_col.first, attributes, global_settings);
-  if (result)
-  {
-    Statement* rhs = stmt_factory.create_statement(
-        input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
-    if (rhs)
-      result->add_statement(rhs, "");
-    else if (error_output)
-      error_output->add_parse_error("set(...) needs an argument", tree_it->line_col.first);
-  }
-  return result;
-}
-
-
-Evaluator_Set_Value::Evaluator_Set_Value
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator_Aggregator("eval-set", line_number_, input_attributes, global_settings) {}
+Aggregator_Statement_Maker< Evaluator_Set_Value > Evaluator_Set_Value::statement_maker;
 
 
 std::string Evaluator_Set_Value::update_value(const std::string& agg_value, const std::string& new_value)

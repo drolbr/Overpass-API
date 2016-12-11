@@ -196,7 +196,7 @@ struct Evaluator_String_Endom_Syntax : public Evaluator_Prefix_Operator
   virtual std::string dump_xml(const std::string& indent) const
   {
     return indent + "<" + Evaluator_::stmt_name() + ">\n"
-        + rhs->dump_xml(indent + "  ")
+        + (rhs ? rhs->dump_xml(indent + "  ") : "")
         + indent + "</" + Evaluator_::stmt_name() + ">\n";
   }
   

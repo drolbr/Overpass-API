@@ -55,146 +55,142 @@ struct Evaluator_Aggregator : public Evaluator
 };
 
 
-class Evaluator_Union_Value : public Evaluator_Aggregator
+bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_output, const std::string& message,
+    std::string& input_set, bool& explicit_input_set);
+
+
+template< typename Evaluator_ >
+struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
+{
+  Statement* create_statement(
+      const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+  {
+    map< string, string > attributes;
+    bool input_set = false;
+    if (!try_parse_input_set(tree_it, error_output, Evaluator_::stmt_func_name() + "(...) needs an argument",
+        attributes["from"], input_set))
+      return 0;
+  
+    Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
+    if (result)
+    {
+      Statement* rhs = stmt_factory.create_statement(
+          input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
+      if (rhs)
+        result->add_statement(rhs, "");
+      else if (error_output)
+        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) needs an argument",
+            tree_it->line_col.first);
+    }
+    return result;
+  }
+
+  Aggregator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
+  {
+    Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this);
+  }
+};
+
+
+template< typename Evaluator_ >
+struct Evaluator_Aggregator_Syntax : public Evaluator_Aggregator
+{
+  Evaluator_Aggregator_Syntax(int line_number_, const map< string, string >& input_attributes,
+      Parsed_Query& global_settings)
+      : Evaluator_Aggregator(Evaluator_::stmt_name(), line_number_, input_attributes, global_settings) {}
+  
+  virtual std::string dump_xml(const std::string& indent) const
+  {
+    return indent + "<" + Evaluator_::stmt_name() + " from=\"" + input + "\">\n"
+        + (rhs ? rhs->dump_xml(indent + "  ") : "")
+        + indent + "</" + Evaluator_::stmt_name() + ">\n";
+  }
+  
+  virtual std::string dump_compact_ql(const std::string&) const
+  {
+    return (input != "_" ? input + "." : "")
+        + Evaluator_::stmt_func_name() + "("
+        + (rhs ? rhs->dump_compact_ql("") : "")
+        + ")";
+  }
+  
+  virtual string get_name() const { return Evaluator_::stmt_name(); }
+  
+  virtual string get_result_name() const { return ""; }
+};
+
+
+class Evaluator_Union_Value : public Evaluator_Aggregator_Syntax< Evaluator_Union_Value >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Union_Value >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-union")
-    { Statement::maker_by_func_name()["u"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
+  static Aggregator_Statement_Maker< Evaluator_Union_Value > statement_maker;
+  static std::string stmt_func_name() { return "u"; }
+  static std::string stmt_name() { return "eval-union"; }
       
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-union from=\"" + input + "\">\n"
-      + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-union>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("u") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
-
   Evaluator_Union_Value(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-union"; }
-  virtual string get_result_name() const { return ""; }
-  virtual ~Evaluator_Union_Value() {}
+      Parsed_Query& global_settings)
+      : Evaluator_Aggregator_Syntax< Evaluator_Union_Value >(line_number_, input_attributes, global_settings) {}
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
-class Evaluator_Min_Value : public Evaluator_Aggregator
+class Evaluator_Min_Value : public Evaluator_Aggregator_Syntax< Evaluator_Min_Value >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Min_Value >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-min")
-    { Statement::maker_by_func_name()["min"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-min from=\"" + input + "\">\n"
-      + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-min>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("min") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
+  static Aggregator_Statement_Maker< Evaluator_Min_Value > statement_maker;
+  static std::string stmt_func_name() { return "min"; }
+  static std::string stmt_name() { return "eval-min"; }
 
   Evaluator_Min_Value(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-min"; }
-  virtual string get_result_name() const { return ""; }
-  virtual ~Evaluator_Min_Value() {}
+      Parsed_Query& global_settings)
+      : Evaluator_Aggregator_Syntax< Evaluator_Min_Value >(line_number_, input_attributes, global_settings) {}
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
-class Evaluator_Max_Value : public Evaluator_Aggregator
+class Evaluator_Max_Value : public Evaluator_Aggregator_Syntax< Evaluator_Max_Value >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Max_Value >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-max")
-    { Statement::maker_by_func_name()["max"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-max from=\"" + input + "\">\n"
-      + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-max>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("max") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
+  static Aggregator_Statement_Maker< Evaluator_Max_Value > statement_maker;
+  static std::string stmt_func_name() { return "max"; }
+  static std::string stmt_name() { return "eval-umax"; }
 
   Evaluator_Max_Value(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-max"; }
-  virtual string get_result_name() const { return ""; }
-  virtual ~Evaluator_Max_Value() {}
+      Parsed_Query& global_settings)
+      : Evaluator_Aggregator_Syntax< Evaluator_Max_Value >(line_number_, input_attributes, global_settings) {}
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
-class Evaluator_Sum_Value : public Evaluator_Aggregator
+class Evaluator_Sum_Value : public Evaluator_Aggregator_Syntax< Evaluator_Sum_Value >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Sum_Value >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-sum")
-    { Statement::maker_by_func_name()["sum"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-sum from=\"" + input + "\">\n"
-      + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-sum>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("sum") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
+  static Aggregator_Statement_Maker< Evaluator_Sum_Value > statement_maker;
+  static std::string stmt_func_name() { return "sum"; }
+  static std::string stmt_name() { return "eval-sum"; }
 
   Evaluator_Sum_Value(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-sum"; }
-  virtual string get_result_name() const { return ""; }
-  virtual ~Evaluator_Sum_Value() {}
+      Parsed_Query& global_settings)
+      : Evaluator_Aggregator_Syntax< Evaluator_Sum_Value >(line_number_, input_attributes, global_settings) {}
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
 };
 
 
-class Evaluator_Set_Value : public Evaluator_Aggregator
+class Evaluator_Set_Value : public Evaluator_Aggregator_Syntax< Evaluator_Set_Value >
 {
 public:
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Value >
-  {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-set")
-    { Statement::maker_by_func_name()["set"].push_back(this); }
-  };
-  static Statement_Maker statement_maker;
-      
-  virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-set from=\"" + input + "\">\n"
-      + (rhs ? rhs->dump_xml(indent + "  ") : "") + indent + "</eval-set>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("set") + (input != "_" ? std::string(".") + input : "") + "(\""
-    + (rhs ? rhs->dump_compact_ql("") : "") + "\")"; }
+  static Aggregator_Statement_Maker< Evaluator_Set_Value > statement_maker;
+  static std::string stmt_func_name() { return "set"; }
+  static std::string stmt_name() { return "eval-set"; }
 
   Evaluator_Set_Value(int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-set"; }
-  virtual string get_result_name() const { return ""; }
-  virtual ~Evaluator_Set_Value() {}
+      Parsed_Query& global_settings)
+      : Evaluator_Aggregator_Syntax< Evaluator_Set_Value >(line_number_, input_attributes, global_settings) {}
   
   virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
   
