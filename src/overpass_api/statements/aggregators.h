@@ -30,6 +30,16 @@
 #include <vector>
 
 
+struct Value_Aggregator
+{
+  enum Type_Indicator { type_string, type_double, type_int64 };
+  
+  virtual void update_value(const std::string& value) = 0;
+  virtual std::string get_value() = 0;
+  virtual ~Value_Aggregator() {}
+};
+
+
 struct Evaluator_Aggregator : public Evaluator
 {
   enum Object_Type { tag, generic, id, type };
@@ -45,13 +55,11 @@ struct Evaluator_Aggregator : public Evaluator
   
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
   
-  virtual std::string update_value(const std::string& agg_value, const std::string& new_value) = 0;
+  virtual Value_Aggregator* get_aggregator() = 0;
   
   std::string input;
   Evaluator* rhs;
   const Set_With_Context* input_set;
-  bool value_set;
-  std::string value;
 };
 
 
@@ -132,7 +140,13 @@ public:
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Union_Value >(line_number_, input_attributes, global_settings) {}
   
-  virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
+  struct Aggregator : Value_Aggregator
+  {
+    virtual void update_value(const std::string& value);
+    virtual std::string get_value() { return agg_value; }
+    std::string agg_value;
+  };
+  virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
 };
 
 
@@ -147,7 +161,18 @@ public:
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Min_Value >(line_number_, input_attributes, global_settings) {}
   
-  virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
+  struct Aggregator : Value_Aggregator
+  {
+    Aggregator() : relevant_type(type_int64), result_l(std::numeric_limits< int64 >::max()),
+        result_d(std::numeric_limits< double >::max()) {}
+    virtual void update_value(const std::string& value);
+    virtual std::string get_value();
+    Type_Indicator relevant_type;
+    int64 result_l;
+    double result_d;
+    std::string result_s;
+  };
+  virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
 };
 
 
@@ -162,7 +187,18 @@ public:
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Max_Value >(line_number_, input_attributes, global_settings) {}
   
-  virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
+  struct Aggregator : Value_Aggregator
+  {
+    Aggregator() : relevant_type(type_int64), result_l(std::numeric_limits< int64 >::min()),
+        result_d(std::numeric_limits< double >::min()) {}
+    virtual void update_value(const std::string& value);
+    virtual std::string get_value();
+    Type_Indicator relevant_type;
+    int64 result_l;
+    double result_d;
+    std::string result_s;
+  };
+  virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
 };
 
 
@@ -177,7 +213,16 @@ public:
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Sum_Value >(line_number_, input_attributes, global_settings) {}
   
-  virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
+  struct Aggregator : Value_Aggregator
+  {
+    Aggregator() : relevant_type(type_int64), result_l(0), result_d(0) {}
+    virtual void update_value(const std::string& value);
+    virtual std::string get_value();
+    Type_Indicator relevant_type;
+    int64 result_l;
+    double result_d;
+  };
+  virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
 };
 
 
@@ -192,9 +237,13 @@ public:
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Set_Value >(line_number_, input_attributes, global_settings) {}
   
-  virtual std::string update_value(const std::string& agg_value, const std::string& new_value);
-  
-  std::set< std::string > values;
+  struct Aggregator : Value_Aggregator
+  {
+    virtual void update_value(const std::string& value);
+    virtual std::string get_value();
+    std::set< std::string > values;
+  };
+  virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
 };
 
 

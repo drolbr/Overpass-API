@@ -25,7 +25,7 @@
 Evaluator_Aggregator::Evaluator_Aggregator
     (const string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
-    : Evaluator(line_number_), rhs(0), input_set(0), value_set(false)
+    : Evaluator(line_number_), rhs(0), input_set(0)
 {
   std::map< std::string, std::string > attributes;
   attributes["from"] = "_";
@@ -47,7 +47,7 @@ void Evaluator_Aggregator::add_statement(Statement* statement, std::string text)
 
 
 template< typename Index, typename Maybe_Attic, typename Object >
-void eval_elems(Evaluator_Aggregator* aggregator, Eval_Task& task,
+void eval_elems(Value_Aggregator& aggregator, Eval_Task& task,
     const std::map< Index, std::vector< Maybe_Attic > >& elems, Tag_Store< Index, Object >* tag_store)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator idx_it = elems.begin();
@@ -55,17 +55,7 @@ void eval_elems(Evaluator_Aggregator* aggregator, Eval_Task& task,
   {
     for (typename std::vector< Maybe_Attic >::const_iterator elem_it = idx_it->second.begin();
         elem_it != idx_it->second.end(); ++elem_it)
-    {
-      std::string value = task.eval(&*elem_it, tag_store ? tag_store->get(idx_it->first, *elem_it) : 0, 0);
-      
-      if (aggregator->value_set)
-        aggregator->value = aggregator->update_value(aggregator->value, value);
-      else
-      {
-        aggregator->value = value;
-        aggregator->value_set = true;
-      }
-    }
+      aggregator.update_value(task.eval(&*elem_it, tag_store ? tag_store->get(idx_it->first, *elem_it) : 0, 0));
   }
 }
 
@@ -83,17 +73,20 @@ Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
   if (!input_set || !input_set->base)
     return 0;
   
-  value_set = false;
-  eval_elems(this, *rhs_task, input_set->base->nodes, input_set->tag_store_nodes);
-  eval_elems(this, *rhs_task, input_set->base->attic_nodes, input_set->tag_store_attic_nodes);
-  eval_elems(this, *rhs_task, input_set->base->ways, input_set->tag_store_ways);
-  eval_elems(this, *rhs_task, input_set->base->attic_ways, input_set->tag_store_attic_ways);
-  eval_elems(this, *rhs_task, input_set->base->relations, input_set->tag_store_relations);
-  eval_elems(this, *rhs_task, input_set->base->attic_relations, input_set->tag_store_attic_relations);
-  eval_elems(this, *rhs_task, input_set->base->areas, input_set->tag_store_areas);
-  eval_elems(this, *rhs_task, input_set->base->deriveds, input_set->tag_store_deriveds);
+  Owner< Value_Aggregator > value_agg(get_aggregator());
+  if (!value_agg)
+    return 0;
+  
+  eval_elems(*value_agg, *rhs_task, input_set->base->nodes, input_set->tag_store_nodes);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_nodes, input_set->tag_store_attic_nodes);
+  eval_elems(*value_agg, *rhs_task, input_set->base->ways, input_set->tag_store_ways);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_ways, input_set->tag_store_attic_ways);
+  eval_elems(*value_agg, *rhs_task, input_set->base->relations, input_set->tag_store_relations);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_relations, input_set->tag_store_attic_relations);
+  eval_elems(*value_agg, *rhs_task, input_set->base->areas, input_set->tag_store_areas);
+  eval_elems(*value_agg, *rhs_task, input_set->base->deriveds, input_set->tag_store_deriveds);
 
-  return new Const_Eval_Task(value);
+  return new Const_Eval_Task((*value_agg).get_value());
 }
 
   
@@ -164,14 +157,10 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
 Aggregator_Statement_Maker< Evaluator_Union_Value > Evaluator_Union_Value::statement_maker;
 
 
-std::string Evaluator_Union_Value::update_value(const std::string& agg_value, const std::string& new_value)
+void Evaluator_Union_Value::Aggregator::update_value(const std::string& value)
 {
-  if (new_value == "" || agg_value == new_value)
-    return agg_value;
-  else if (agg_value == "")
-    return new_value;
-  else
-    return "< multiple values found >";
+  if (value != "" && value != agg_value)
+    agg_value = (agg_value == "" ? value : "< multiple values found >");
 }
 
 
@@ -181,24 +170,39 @@ std::string Evaluator_Union_Value::update_value(const std::string& agg_value, co
 Aggregator_Statement_Maker< Evaluator_Min_Value > Evaluator_Min_Value::statement_maker;
 
 
-std::string Evaluator_Min_Value::update_value(const std::string& agg_value, const std::string& new_value)
+void Evaluator_Min_Value::Aggregator::update_value(const std::string& value)
 {  
-  int64 lhs_l = 0;
-  int64 rhs_l = 0;  
-  if (try_int64(agg_value, lhs_l) && try_int64(new_value, rhs_l))
-    return rhs_l < lhs_l ? new_value : agg_value;
+  if (relevant_type == type_int64)
+  {
+    int64 rhs_l = 0;
+    if (try_int64(value, rhs_l))
+      result_l = std::min(result_l, rhs_l);
+    else
+      relevant_type = type_double;
+  }
+
+  if (relevant_type == type_int64 || relevant_type == type_double)
+  {
+    double rhs_d = 0;
+    if (try_double(value, rhs_d))
+      result_d = std::min(result_d, rhs_d);
+    else
+      relevant_type = type_string;
+  }
   
-  double lhs_d = 0;
-  double rhs_d = 0;  
-  if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
-    return rhs_d < lhs_d ? new_value : agg_value;
+  if (value != "")
+    result_s = (result_s != "" ? std::min(result_s, value) : value);
+}
+
+
+std::string Evaluator_Min_Value::Aggregator::get_value()
+{
+  if (relevant_type == type_int64)
+    return to_string(result_l);
+  else if (relevant_type == type_double)
+    return to_string(result_d);
   
-  if (new_value == "")
-    return agg_value;
-  if (agg_value == "")
-    return new_value;
-    
-  return std::min(agg_value, new_value);
+  return result_s;
 }
 
 
@@ -208,19 +212,39 @@ std::string Evaluator_Min_Value::update_value(const std::string& agg_value, cons
 Aggregator_Statement_Maker< Evaluator_Max_Value > Evaluator_Max_Value::statement_maker;
 
 
-std::string Evaluator_Max_Value::update_value(const std::string& agg_value, const std::string& new_value)
+void Evaluator_Max_Value::Aggregator::update_value(const std::string& value)
 {
-  int64 lhs_l = 0;
-  int64 rhs_l = 0;  
-  if (try_int64(agg_value, lhs_l) && try_int64(new_value, rhs_l))
-    return rhs_l > lhs_l ? new_value : agg_value;
+  if (relevant_type == type_int64)
+  {
+    int64 rhs_l = 0;
+    if (try_int64(value, rhs_l))
+      result_l = std::max(result_l, rhs_l);
+    else
+      relevant_type = type_double;
+  }
+
+  if (relevant_type == type_int64 || relevant_type == type_double)
+  {
+    double rhs_d = 0;
+    if (try_double(value, rhs_d))
+      result_d = std::max(result_d, rhs_d);
+    else
+      relevant_type = type_string;
+  }
   
-  double lhs_d = 0;
-  double rhs_d = 0;  
-  if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
-    return rhs_d > lhs_d ? new_value : agg_value;
+  if (value != "")
+    result_s = (result_s != "" ? std::max(result_s, value) : value);
+}
+
+
+std::string Evaluator_Max_Value::Aggregator::get_value()
+{
+  if (relevant_type == type_int64)
+    return to_string(result_l);
+  else if (relevant_type == type_double)
+    return to_string(result_d);
   
-  return std::max(agg_value, new_value);
+  return result_s;
 }
 
 
@@ -230,17 +254,34 @@ std::string Evaluator_Max_Value::update_value(const std::string& agg_value, cons
 Aggregator_Statement_Maker< Evaluator_Sum_Value > Evaluator_Sum_Value::statement_maker;
 
 
-std::string Evaluator_Sum_Value::update_value(const std::string& agg_value, const std::string& new_value)
+void Evaluator_Sum_Value::Aggregator::update_value(const std::string& value)
 {
-  int64 lhs_l = 0;
-  int64 rhs_l = 0;  
-  if (try_int64(agg_value, lhs_l) && try_int64(new_value, rhs_l))
-    return to_string(lhs_l + rhs_l);
-  
-  double lhs_d = 0;
-  double rhs_d = 0;  
-  if (try_double(agg_value, lhs_d) && try_double(new_value, rhs_d))
-    return to_string(lhs_d + rhs_d);
+  if (relevant_type == type_int64)
+  {
+    int64 rhs_l = 0;
+    if (try_int64(value, rhs_l))
+      result_l += rhs_l;
+    else
+      relevant_type = type_double;
+  }
+
+  if (relevant_type == type_int64 || relevant_type == type_double)
+  {
+    double rhs_d = 0;
+    if (try_double(value, rhs_d))
+      result_d += rhs_d;
+    else
+      relevant_type = type_string;
+  }
+}
+
+
+std::string Evaluator_Sum_Value::Aggregator::get_value()
+{
+  if (relevant_type == type_int64)
+    return to_string(result_l);
+  else if (relevant_type == type_double)
+    return to_string(result_d);
   
   return "NaN";
 }
@@ -252,17 +293,17 @@ std::string Evaluator_Sum_Value::update_value(const std::string& agg_value, cons
 Aggregator_Statement_Maker< Evaluator_Set_Value > Evaluator_Set_Value::statement_maker;
 
 
-std::string Evaluator_Set_Value::update_value(const std::string& agg_value, const std::string& new_value)
+void Evaluator_Set_Value::Aggregator::update_value(const std::string& value)
 {
-  if (values.empty())
-    values.insert(agg_value);
-  
-  values.insert(new_value);
-  
+  if (value != "")
+    values.insert(value);  
+}
+
+
+std::string Evaluator_Set_Value::Aggregator::get_value()
+{
   std::string result;
   std::set< std::string >::const_iterator it = values.begin();
-  if (it != values.end() && *it == "")
-    ++it;
   if (it != values.end())
   {
     result = *it;
