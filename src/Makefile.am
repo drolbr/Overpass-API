@@ -274,6 +274,9 @@ EXTRA_DIST = \
   rules/areas.osm3s\
   rules/areas_delta.osm3s
 
-# Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-SUBDIRS = test-bin
-#SUBDIRS =
+if COND_TESTS
+       MAYBE_TESTS = test-bin
+endif
+
+SUBDIRS = $(MAYBE_TESTS)
+
