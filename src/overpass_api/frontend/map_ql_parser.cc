@@ -427,12 +427,25 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory,
-				      string type, string ref, string into, uint line_nr)
+				      string type, vector< string > ref, string into, uint line_nr)
 {
   map< string, string > attr;
+  int i;
+  std::vector< string >::iterator it;
+
   attr["type"] = type;
-  attr["ref"] = ref;
   attr["into"] = into;
+
+  for(it = ref.begin(), i = 0; it != ref.end(); ++it, ++i)
+  {
+    std::stringstream id;
+    if (i == 0)
+      id << "ref";
+    else
+      id << "ref_" << i;
+    attr[id.str()] = *it;
+  }
+
   return stmt_factory.create_statement("id-query", line_nr, attr);
 }
 
@@ -1042,7 +1055,7 @@ TStatement* create_query_substatement
   }
   else if (clause.statement == "id-query")
     return create_id_query_statement< TStatement >
-        (stmt_factory, type, clause.attributes[0], into, clause.line_col.first);
+        (stmt_factory, type, clause.attributes, into, clause.line_col.first);
   else if (clause.statement == "bbox-query")
     return create_bbox_statement< TStatement >
         (stmt_factory,
@@ -1323,6 +1336,24 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory,
       clear_until_after(token, error_output, ")");
     }
 	clauses.push_back(clause);
+      }
+      else if (*token == "id")
+      {
+        Statement_Text clause("id-query", token.line_col());
+        ++token;
+        clear_until_after(token, error_output, ":", false);
+        if (*token == ":")
+        {
+          do
+          {
+            ++token;
+            clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
+            clear_until_after(token, error_output, ",", ")", false);
+          } while (token.good() && *token == ",");
+
+          clear_until_after(token, error_output, ")");
+        }
+        clauses.push_back(clause);
       }
       else if (*token == "newer")
       {
