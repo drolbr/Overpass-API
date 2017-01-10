@@ -29,7 +29,8 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_context == Statement::generic && tree_it->token == "!" && tree_it->rhs)
+  if ((tree_context == Statement::generic || tree_context == Statement::in_convert)
+      && tree_it->token == "!" && tree_it->rhs)
   {
     map< string, string > attributes;
     attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
@@ -37,8 +38,29 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
     return new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);
   }
   
-  if (tree_context != Statement::generic || !tree_it->lhs || !tree_it->rhs)
+  if (tree_context != Statement::generic && tree_context != Statement::in_convert)
+  {
+    if (error_output)
+      error_output->add_parse_error("Properties can only be set in a convert or make statement",
+          tree_it->line_col.first);
     return 0;
+  }
+  
+  if (!tree_it->lhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("To set a property it must have a name to the left of the equal sign",
+          tree_it->line_col.first);
+    return 0;
+  }
+  
+  if (!tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("To set a property it must have a value to the right of the equal sign",
+          tree_it->line_col.first);
+    return 0;
+  }
   
   map< string, string > attributes;
   if (tree_it.lhs()->token == "::")
@@ -47,21 +69,33 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
     {
       if (tree_it.lhs().rhs()->token == "id")
         attributes["keytype"] = "id";
-      else
+      else if (error_output)
         error_output->add_parse_error("The only allowed special property is \"id\"", tree_it->line_col.first);
     }
-    else
+    else if (tree_context == Statement::in_convert)
       attributes["keytype"] = "generic";
+    else if (error_output)
+      error_output->add_parse_error("The generic tag set property can only be called from convert",
+          tree_it->line_col.first);
   }
   else
   {
+    if (tree_it.lhs()->lhs || tree_it.lhs()->rhs)
+    {
+      if (error_output)
+        error_output->add_parse_error(std::string("if special character \"") + tree_it.lhs()->token
+            + "\" is present in property name then the property name must be in quotes",
+            tree_it->line_col.first);
+      return 0;
+    }
     attributes["k"] = decode_json(tree_it.lhs()->token, error_output);
     attributes["keytype"] = "tag";
   }
   Statement* result = new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);  
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(),
+        tree_context == Statement::in_convert ? Statement::elem_eval_possible : Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

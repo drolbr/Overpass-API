@@ -178,17 +178,6 @@ TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
-TStatement* create_convert_statement(typename TStatement::Factory& stmt_factory,
-    string into, string type, uint line_nr)
-{
-  map< string, string > attr;
-  attr["into"] = into;
-  attr["type"] = type;
-  return stmt_factory.create_statement("convert", line_nr, attr);
-}
-
-
-template< class TStatement >
 TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
     string strategy, string from, string into, string type, uint line_nr)
 {
@@ -682,7 +671,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
       if (token.good())
       {
         TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output,
-            Statement::generic, false);
+            strategy == "convert" ? Statement::in_convert : Statement::generic, false);
         if (stmt)
           evaluators.push_back(stmt);
       }

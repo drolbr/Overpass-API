@@ -30,6 +30,29 @@
 class Set_Prop_Statement;
 
 
+/* == The statement <em>make</em> ==
+
+The statement <em>make</em> produces per execution one derived element.
+The content of this output element is controlled by the parameters of the statement.
+
+It is necessary to set a fixed type as type for the generated element.
+After that, an arbitrary number of tags can be set.
+As opposed to the <em>convert</em> statement, a generic key cannot be set.
+
+Finally, it is possible to explicitly set the id of the generated object.
+If you do not set an id then an unique id from a global ascending counter is assigned.
+
+The base syntax is
+
+  make <Type> <List of Tags>
+  
+where <List of Tags> is a comma separated list of items,
+each of which must be one the following
+
+  <Key> = <Evaluator>
+  ::id = <Evaluator>
+*/
+
 class Make_Statement : public Output_Statement
 {
 public:

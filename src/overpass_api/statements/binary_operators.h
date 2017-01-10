@@ -30,6 +30,43 @@
 #include <vector>
 
 
+/* == Binary Operators ==
+
+Binary operators need for execution two operands.
+They are always written in infix notation.
+The operators can be grouped with parentheses:
+The two variants
+
+  <Evaulator><Operator><Evaluator>
+  
+and
+
+  (<Evaulator><Operator><Evaluator>)
+  
+have as standalone expressions precisely the same semantics.
+The parenthesis variant exists to override operator precedence:
+
+  2 + 3 * 4
+  
+is evaluated to <em>2 + 12</em>, then finally <em>14</em>.
+
+  (2 + 3) * 4
+  
+is evaluated to <em>5 * 4</em>, then finally <em>20</em>.
+
+The order of precedence is as follows, ordered weak to strong binding:
+- logical disjunction
+- logical conjunction
+- equality, inequality
+- less, less-equal, greater, greater-equal
+- plus, binary minus
+- times, divided
+- logical negation
+- unary minus
+
+In the following, the operators are ordered by precedence, stronger binding last.
+*/
+
 class Evaluator_Pair_Operator : public Evaluator
 {
 public:
@@ -48,8 +85,9 @@ public:
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const = 0;
 
   static bool applicable_by_subtree_structure(const Token_Node_Ptr& tree_it) { return tree_it->lhs && tree_it->rhs; }
+  static bool needs_an_element_to_eval() { return false; }
   static void add_substatements(Statement* result, const std::string& operator_name, const Token_Node_Ptr& tree_it,
-      Statement::Factory& stmt_factory, Error_Output* error_output);
+      Statement::QL_Context tree_context, Statement::Factory& stmt_factory, Error_Output* error_output);
   
 protected:
   Evaluator* lhs;
@@ -106,16 +144,20 @@ struct Evaluator_Pair_Operator_Syntax : public Evaluator_Pair_Operator
   virtual std::string dump_xml(const std::string& indent) const
   {
     return indent + "<" + Evaluator_::stmt_name() + ">\n"
-        + lhs->dump_xml(indent + "  ") + rhs->dump_xml(indent + "  ")
+        + (lhs ? lhs->dump_xml(indent + "  ") : "")
+        + (rhs ? rhs->dump_xml(indent + "  ") : "")
         + indent + "</" + Evaluator_::stmt_name() + ">\n";
   }
   
   virtual std::string dump_compact_ql(const std::string&) const
   {
-    return (lhs->get_operator_priority() < get_operator_priority() ? std::string("(") + lhs->dump_compact_ql("") + ")"
-        : lhs->dump_compact_ql("")) + Evaluator_::stmt_operator()
-        + (rhs->get_operator_priority() < get_operator_priority() ? std::string("(") + rhs->dump_compact_ql("") + ")"
-        : rhs->dump_compact_ql(""));
+    return (lhs ?
+        (lhs->get_operator_priority() < get_operator_priority() ? std::string("(") + lhs->dump_compact_ql("") + ")"
+        : lhs->dump_compact_ql("")) : "")
+        + Evaluator_::stmt_operator()
+        + (rhs ?
+        (rhs->get_operator_priority() < get_operator_priority() ? std::string("(") + rhs->dump_compact_ql("") + ")"
+        : rhs->dump_compact_ql("")) : "");
   }
   
   virtual string get_name() const { return Evaluator_::stmt_name(); }
@@ -123,18 +165,21 @@ struct Evaluator_Pair_Operator_Syntax : public Evaluator_Pair_Operator
 };
 
 
-struct Evaluator_And : public Evaluator_Pair_Operator_Syntax< Evaluator_And >
-{
-  static Operator_Stmt_Maker< Evaluator_And > statement_maker;
-  static std::string stmt_operator() { return "&&"; }
-  static std::string stmt_name() { return "eval-and"; }
+/* === Boolean Disjunction ===
 
-  Evaluator_And(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
-      : Evaluator_Pair_Operator_Syntax< Evaluator_And >(line_number_, input_attributes) {}
+The boolean disjunction evaluates to "1" if one or both of its arguments evaluate to a representation of boolean true.
+Otherwise it evaluates to "0".
+Representations of boolean false are the empty string and every string that is a numerical representation of zero.
+Every other string represents boolean true.
+Currently, both arguments are always evaluated.
+This may change in future versions.
+
+Its syntax is
+
+  <Evaluator> || <Evaluator>
   
-  virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
-};
-
+The whitespace is optional.
+*/
 
 struct Evaluator_Or : public Evaluator_Pair_Operator_Syntax< Evaluator_Or >
 {
@@ -149,6 +194,52 @@ struct Evaluator_Or : public Evaluator_Pair_Operator_Syntax< Evaluator_Or >
 };
 
 
+/* === Boolean Conjunction ===
+
+The boolean conjunction evaluates to "1" if both of its arguments evaluate to a representation of boolean true.
+Otherwise it evaluates to "0".
+Representations of boolean false are the empty string and every string that is a numerical representation of zero.
+Every other string represents boolean true.
+Currently, both arguments are always evaluated.
+This may change in future versions.
+
+Its syntax is
+
+  <Evaluator> && <Evaluator>
+  
+The whitespace is optional.
+*/
+
+struct Evaluator_And : public Evaluator_Pair_Operator_Syntax< Evaluator_And >
+{
+  static Operator_Stmt_Maker< Evaluator_And > statement_maker;
+  static std::string stmt_operator() { return "&&"; }
+  static std::string stmt_name() { return "eval-and"; }
+
+  Evaluator_And(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_And >(line_number_, input_attributes) {}
+  
+  virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
+};
+
+
+/* === Equality and Inequality ===
+
+The equaliy operator evaluates to "1" if both of its arguments are equal.
+Otherwise it evaluates to "0".
+The inequality operator evaluates to "0" if both of its arguments are equal.
+Otherwise it evaluates to "1".
+If both arguments can be interpreted as integers then the represented values are compared.
+Otherwise, if both arguments can be interpreted as floating point numbers then the represented values are compared.
+In all other cases the arguments are treated as strings.
+
+Its syntax is
+
+  <Evaluator> == <Evaluator>
+  
+The whitespace is optional.
+*/
+
 struct Evaluator_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_Equal >
 {
   static Operator_Stmt_Maker< Evaluator_Equal > statement_maker;
@@ -161,6 +252,40 @@ struct Evaluator_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_Equal 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
+
+struct Evaluator_Not_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_Not_Equal >
+{
+  static Operator_Stmt_Maker< Evaluator_Not_Equal > statement_maker;
+  static std::string stmt_operator() { return "!="; }
+  static std::string stmt_name() { return "eval-not-equal"; }
+      
+  Evaluator_Not_Equal(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Pair_Operator_Syntax< Evaluator_Not_Equal >(line_number_, input_attributes) {}
+  
+  virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
+};
+
+
+/* === Less, Less-Equal, Greater, and Greater-Equal ===
+
+These operators evaluate to "1" if their arguments compare respectively.
+Otherwise they evaluate to "0".
+If both arguments can be interpreted as integers then the represented values are compared.
+Otherwise, if both arguments can be interpreted as floating point numbers then the represented values are compared.
+In all other cases the arguments are treated as strings.
+
+The syntaxes for less, less-equal, greater, and greater-equal in this order are
+
+  <Evaluator> < <Evaluator>
+
+  <Evaluator> <= <Evaluator>
+
+  <Evaluator> > <Evaluator>
+
+  <Evaluator> >= <Evaluator>
+  
+The whitespace is optional.
+*/
 
 struct Evaluator_Less : public Evaluator_Pair_Operator_Syntax< Evaluator_Less >
 {
@@ -214,6 +339,26 @@ struct Evaluator_Greater_Equal : public Evaluator_Pair_Operator_Syntax< Evaluato
 };
 
 
+/* === Plus and Minus ===
+
+While both operators have the same priority, they accept different kinds of arguments.
+If the arguments are both integers then they are added resp. subtracted as integers.
+If the arguments are both floating point numbers then they are added resp. subtracted as floating point numbers.
+Otherwise the plus operator concatenates the arguments as strings.
+Opposed to this, the minus operator returns "NaN".
+
+The unary minus is an operator distinct from the binary minus operator defined here.
+It has a higher priority.
+
+The syntaxes for plus and minus in this order are
+
+  <Evaluator> + <Evaluator>
+
+  <Evaluator> - <Evaluator>
+
+The whitespace is optional.
+*/
+
 struct Evaluator_Plus : public Evaluator_Pair_Operator_Syntax< Evaluator_Plus >
 {
   static Operator_Stmt_Maker< Evaluator_Plus > statement_maker;
@@ -239,6 +384,23 @@ struct Evaluator_Minus : public Evaluator_Pair_Operator_Syntax< Evaluator_Minus 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const;
 };
 
+
+/* === Times and Divided ===
+
+The times operator and the divided operator perform the respective arithmetic operations.
+If the arguments are both integers then they are multiplied as integers.
+Otherwise, if the arguments are both floating point numbers then they are multiplied resp. divided as floating point numbers.
+Division does treat integers like floating point numbers.
+If one or both arguments are no numbers then both the operators return "NaN".
+
+The syntaxes for plus and minus in this order are
+
+  <Evaluator> * <Evaluator>
+
+  <Evaluator> / <Evaluator>
+
+The whitespace is optional.
+*/
 
 struct Evaluator_Times : public Evaluator_Pair_Operator_Syntax< Evaluator_Times >
 {

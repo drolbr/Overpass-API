@@ -40,6 +40,12 @@ struct Value_Aggregator
 };
 
 
+/* == Aggregators ==
+
+Aggregators need for execution both a set to operate on and an evaluator as argument.
+That evaulator will loop over each element of the set, and the aggregator will combine its results.
+*/
+
 struct Evaluator_Aggregator : public Evaluator
 {
   enum Object_Type { tag, generic, id, type };
@@ -70,7 +76,7 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
 template< typename Evaluator_ >
 struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
-  Statement* create_statement(
+  virtual Statement* create_statement(
       const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
@@ -84,7 +90,7 @@ struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
     if (result)
     {
       Statement* rhs = stmt_factory.create_statement(
-          input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::evaluator_expected);
+          input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::elem_eval_possible);
       if (rhs)
         result->add_statement(rhs, "");
       else if (error_output)
@@ -129,6 +135,31 @@ struct Evaluator_Aggregator_Syntax : public Evaluator_Aggregator
 };
 
 
+/* === Union and Set ===
+
+The basic syntax is
+
+  <Set>.u(<Evaluator>)
+  
+resp.
+
+  <Set>.set(<Evaluator>)
+  
+If the set is the default set <em>_</em> then you can drop the set parameter:
+
+  u(<Evaluator>)
+  
+resp.
+
+  set(<Evaluator>)
+  
+These two evaluators execute their right hand side evulators on each element of the specified set.
+<em>set</em> makes a semi-colon separated list of all distinct values that appear.
+<em>u</em> returns the single found value if only one value is found.
+If no value is found then <em>u</em> returns an empty string.
+If multiple different values are found then <em>set</em> returns the text "< multiple values found >".
+*/
+
 class Evaluator_Union_Value : public Evaluator_Aggregator_Syntax< Evaluator_Union_Value >
 {
 public:
@@ -149,6 +180,53 @@ public:
   virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
 };
 
+
+class Evaluator_Set_Value : public Evaluator_Aggregator_Syntax< Evaluator_Set_Value >
+{
+public:
+  static Aggregator_Statement_Maker< Evaluator_Set_Value > statement_maker;
+  static std::string stmt_func_name() { return "set"; }
+  static std::string stmt_name() { return "eval-set"; }
+
+  Evaluator_Set_Value(int line_number_, const map< string, string >& input_attributes,
+      Parsed_Query& global_settings)
+      : Evaluator_Aggregator_Syntax< Evaluator_Set_Value >(line_number_, input_attributes, global_settings) {}
+  
+  struct Aggregator : Value_Aggregator
+  {
+    virtual void update_value(const std::string& value);
+    virtual std::string get_value();
+    std::set< std::string > values;
+  };
+  virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
+};
+
+
+/* === Min and Max ===
+
+The basic syntax is
+
+  <Set>.min(<Evaluator>)
+  
+resp.
+
+  <Set>.max(<Evaluator>)
+  
+If the set is the default set <em>_</em> then you can drop the set parameter:
+
+  min(<Evaluator>)
+  
+resp.
+
+  max(<Evaluator>)
+  
+These two evaluators execute their right hand side evaluators on each element of the specified set.
+If all return values are valid numbers then <em>min</em> returns the minimal amongst the numbers.
+Likewise, if all return values are valid numbers then <em>max</em> returns the maximal amongst the numbers.
+If not all return values are valid numbers then <em>min</em> returns the lexicographically first string.
+Likewise, if not all return values are valid numbers then <em>max</em> returns the lexicographically last string.
+If no value is found then each <em>min</em> and <em>max </em> return an empty string.
+*/
 
 class Evaluator_Min_Value : public Evaluator_Aggregator_Syntax< Evaluator_Min_Value >
 {
@@ -202,6 +280,21 @@ public:
 };
 
 
+/* === Sum ===
+
+The basic syntax is
+
+  <Set>.sum(<Evaluator>)
+  
+If the set is the default set <em>_</em> then you can drop the set parameter:
+
+  sum(<Evaluator>)
+
+This evaluator executes its right hand side evaluators on each element of the specified set.
+If all return values are valid numbers then <em>sum</em> returns their sum.
+If not all return values are valid numbers then <em>sum</em> returns "NaN".
+*/
+
 class Evaluator_Sum_Value : public Evaluator_Aggregator_Syntax< Evaluator_Sum_Value >
 {
 public:
@@ -221,27 +314,6 @@ public:
     Type_Indicator relevant_type;
     int64 result_l;
     double result_d;
-  };
-  virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
-};
-
-
-class Evaluator_Set_Value : public Evaluator_Aggregator_Syntax< Evaluator_Set_Value >
-{
-public:
-  static Aggregator_Statement_Maker< Evaluator_Set_Value > statement_maker;
-  static std::string stmt_func_name() { return "set"; }
-  static std::string stmt_name() { return "eval-set"; }
-
-  Evaluator_Set_Value(int line_number_, const map< string, string >& input_attributes,
-      Parsed_Query& global_settings)
-      : Evaluator_Aggregator_Syntax< Evaluator_Set_Value >(line_number_, input_attributes, global_settings) {}
-  
-  struct Aggregator : Value_Aggregator
-  {
-    virtual void update_value(const std::string& value);
-    virtual std::string get_value();
-    std::set< std::string > values;
   };
   virtual Value_Aggregator* get_aggregator() { return new Aggregator(); }
 };

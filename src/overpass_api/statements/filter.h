@@ -26,6 +26,27 @@
 #include "tag_value.h"
 
 
+/* == The Query Filter ==
+
+The query filter can be added as condition to a query statement.
+It has an evaluator as argument
+and it lets pass only those elements for which the expression returns boolean true.
+
+At the moment, the query filter cannot be the only condition in a query.
+This is due to implementation reasons and will change in future versions.
+
+It is technically possible to have multiple query filters in a single query.
+But it does not make sense:
+Their evaulators can be combined with a conjunction in a single query filter.
+This has the same semantics and is faster.
+
+Its syntax is
+
+  (if: <Evaluator>)
+  
+The whitespace is optional.
+*/
+
 class Filter_Statement : public Output_Statement
 {
   public:

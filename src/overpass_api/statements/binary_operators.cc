@@ -40,18 +40,19 @@ void Evaluator_Pair_Operator::add_statement(Statement* statement, std::string te
 
 
 void Evaluator_Pair_Operator::add_substatements(Statement* result, const std::string& operator_name,
-    const Token_Node_Ptr& tree_it, Statement::Factory& stmt_factory, Error_Output* error_output)
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Error_Output* error_output)
 {    
   if (result)
   {
-    Statement* lhs = stmt_factory.create_statement(tree_it.lhs(), Statement::evaluator_expected);
+    Statement* lhs = stmt_factory.create_statement(tree_it.lhs(), tree_context);
     if (lhs)
       result->add_statement(lhs, "");
     else if (error_output)
       error_output->add_parse_error(std::string("Operator \"") + operator_name
           + "\" needs a left-hand-side argument", tree_it->line_col.first);
     
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), tree_context);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
@@ -212,6 +213,28 @@ std::string Evaluator_Equal::process(const std::string& lhs_s, const std::string
     return lhs_d == rhs_d ? "1" : "0";
   
   return lhs_s == rhs_s ? "1" : "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Operator_Stmt_Maker< Evaluator_Not_Equal > Evaluator_Not_Equal::statement_maker;
+
+
+std::string Evaluator_Not_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
+{
+  int64 lhs_l = 0;
+  int64 rhs_l = 0;  
+  if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
+    return lhs_l == rhs_l ? "0" : "1";
+  
+  double lhs_d = 0;
+  double rhs_d = 0;  
+  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
+    return lhs_d == rhs_d ? "0" : "1";
+  
+  return lhs_s == rhs_s ? "0" : "1";
 }
 
 

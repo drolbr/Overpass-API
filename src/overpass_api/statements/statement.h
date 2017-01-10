@@ -87,7 +87,7 @@ class Query_Constraint
 class Statement
 {
   public:
-    enum QL_Context { generic, evaluator_expected };
+    enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible };
     
     struct Factory
     {

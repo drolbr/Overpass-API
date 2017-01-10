@@ -30,6 +30,32 @@
 class Set_Prop_Statement;
 
 
+/* == The statement <em>convert</em> ==
+
+The statement <em>convert</em> produces per element in its input set one derived element.
+The content of this output element is controlled by the parameters of the statement.
+
+It is necessary to set a fixed type as type for all the generated elements.
+After that, an arbitrary number of tags can be set.
+In addition, it can be specified to copy all keys from the originating object.
+In this case, tt is also possible to selectively suppress some tags.
+
+Finally, it is possible to explicitly set the id of the generated objects.
+If you do not set an id then an unique id from a global ascending counter is assigned.
+
+The base syntax is
+
+  convert <Type> <List of Tags>
+  
+where <List of Tags> is a comma separated list of items,
+each of which must be one the following
+
+  <Key> = <Evaluator>
+  ::id = <Evaluator>
+  :: = <Evaluator>
+  !<Key>
+*/
+
 class Convert_Statement : public Output_Statement
 {
 public:

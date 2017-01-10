@@ -32,6 +32,16 @@
 #include <vector>
 
 
+/* == Fixed Value evaluator ==
+
+This operator always returns a fixed value.
+It does not take any argument.
+
+Its syntax is
+
+  <Value>
+*/
+
 class Evaluator_Fixed : public Evaluator
 {
 public:
@@ -64,6 +74,32 @@ private:
   std::string value;
 };
 
+
+/* == Element Dependend Operators ==
+
+Element dependend operators depend on one or no parameter.
+Their syntax varies,
+but most have the apppearance of a function name plus parentheses.
+
+They can only be called in a context where elements are processed.
+This applies to convert, to filter, or to arguments of aggregate functions.
+They cannot be called directly from make.
+
+
+=== Id and Type of the Element ===
+
+The operator <em>id</em> returns the id of the element.
+The operator <em>type</em> returns the type of the element.
+Both operators take no parameters.
+
+The syntax is
+
+  id()
+  
+resp.
+
+  type()  
+*/
 
 struct Id_Eval_Task : public Eval_Task
 {
@@ -185,6 +221,31 @@ public:
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Type_Eval_Task(); }
 };
 
+
+/* === Tag Value and Generic Value Operators ===
+
+The tag operator returns the value of the tag of the given key.
+The <em>is_tag</em> operator returns "1" if the given element has a tag with this key and "0" otherwise.
+They only can be called in the context of an element.
+
+Their syntax is
+
+  [<Key name>]
+  
+resp.
+
+  is_tag(<Key name >)
+
+The <Key name> must be in quotation marks if it contains special characters.
+  
+The generic tag operator returns the value of the tag of the key it is called for.
+It only can be called in the context of an element.
+In addition, it must be part of the value of a generic property to have its key specified.
+
+Its syntax is
+
+  ::
+*/
 
 std::string find_value(const std::vector< std::pair< std::string, std::string > >* tags, const std::string& key);
 
@@ -405,6 +466,43 @@ public:
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Generic_Eval_Task(); }
 };
 
+
+/* === Element Properties Count ===
+
+This variant of the <em>count</em> operator counts tags or members
+of the given element.
+Opposed to the statistical variant of the count operator,
+they cannot take an input set as extra argument.
+
+The syntax for tags is
+
+  count(tags)
+  
+The syntax for members is
+
+  count(members)
+
+  
+== Statistical Count ==
+
+This variant of the <em>count</em> operator counts elements of a given type in a set.
+
+The syntax variants
+
+  count(nodes)
+  count(ways)
+  count(relations)
+  count(deriveds)
+  
+counts elements in the default set <em>_</em>, and the syntax variant
+
+  <Set>.count(nodes)
+  <Set>.count(ways)
+  <Set>.count(relations)
+  <Set>.count(deriveds)
+  
+counts elements in the set &lt;Set&gt;. 
+*/
 
 class Evaluator_Count : public Evaluator
 {

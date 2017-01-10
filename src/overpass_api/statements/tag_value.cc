@@ -75,6 +75,14 @@ Statement* Evaluator_Id::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
+  if (tree_context != Statement::elem_eval_possible)
+  {
+    if (error_output)
+      error_output->add_parse_error("id() must be called in a context where it can evaluate an element",
+          tree_it->line_col.first);
+    return 0;
+  }
+  
   if (tree_it->token != "(")
   {
     if (error_output)
@@ -112,6 +120,14 @@ Statement* Evaluator_Type::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
+  if (tree_context != Statement::elem_eval_possible)
+  {
+    if (error_output)
+      error_output->add_parse_error("type() must be called in a context where it can evaluate an element",
+          tree_it->line_col.first);
+    return 0;
+  }
+  
   if (tree_it->token != "(")
   {
     if (error_output)
@@ -165,12 +181,30 @@ Statement* Evaluator_Value::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_it->lhs)
+  if (tree_context != Statement::elem_eval_possible)
+  {
+    if (error_output)
+      error_output->add_parse_error("Operator \"[\" must be called in a context where it can evaluate an element",
+          tree_it->line_col.first);
     return 0;
+  }
+  
+  if (tree_it->lhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("No function name before a bracket allowed", tree_it->line_col.first);
+    return 0;
+  }
   if (!tree_it->rhs)
   {
     if (error_output)
       error_output->add_parse_error("Operator \"[\" needs a tag key as argument", tree_it->line_col.first);
+    return 0;
+  }
+  if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("Operator \"[\" needs a single string (the tag key) as argument", tree_it->line_col.first);
     return 0;
   }
   map< string, string > attributes;
@@ -219,6 +253,14 @@ Statement* Evaluator_Is_Tag::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
+  if (tree_context != Statement::elem_eval_possible)
+  {
+    if (error_output)
+      error_output->add_parse_error("is_tag(...) must be called in a context where it can evaluate an element",
+          tree_it->line_col.first);
+    return 0;
+  }
+  
   if (tree_it->token != "(")
   {
     if (error_output)

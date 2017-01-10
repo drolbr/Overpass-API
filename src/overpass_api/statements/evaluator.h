@@ -83,6 +83,27 @@ public:
 };
 
 
+/* == Evaluators ==
+
+Evaluators are building blocks that yield on execution a value.
+The use of which of the evulators makes sense depends on the context.
+
+Evaluators help to filter for elements within a query statement.
+They allow to get statistical information about query results.
+And they allow to remove or add tags from elements.
+
+Currently only tag evaulators are supported.
+Geometry evaulators are planned but not implemented in this version.
+
+The following types of evaluators exist and are explained further down:
+- Const evaulators deliver always the same value independend of context.
+- Element dependend evaluators deliver information about an individual object.
+They only make sense in the context of a single element.
+- Statistical evaulators deliver information about a set as a whole.
+- Aggregators let an element dependend evaluator loop over all elements of a set and combine its results.
+- Operators and endomorphisms combine the result of one or two evaluator executions into a new result.
+*/
+
 struct Prepare_Task_Context
 {
   Prepare_Task_Context(std::pair< std::vector< Set_Usage >, uint > set_usage, Resource_Manager& rman);
@@ -161,11 +182,15 @@ struct Operator_Stmt_Maker : public Generic_Statement_Maker< Evaluator_ >
   virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
-    if (tree_context != Statement::evaluator_expected || !Evaluator_::applicable_by_subtree_structure(tree_it))
+    if (tree_context != Statement::evaluator_expected && tree_context != Statement::elem_eval_possible)
       return 0;
+    if (!Evaluator_::applicable_by_subtree_structure(tree_it))
+      return 0;
+    
     map< string, string > attributes;
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
-    Evaluator_::add_substatements(result, Evaluator_::stmt_operator(), tree_it, stmt_factory, error_output);
+    Evaluator_::add_substatements(result, Evaluator_::stmt_operator(), tree_it, tree_context,
+        stmt_factory, error_output);
     return result;
   }
   

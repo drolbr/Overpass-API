@@ -33,16 +33,17 @@ void Evaluator_Prefix_Operator::add_statement(Statement* statement, std::string 
   else if (!rhs)
     rhs = tag_value_;
   else
-    add_static_error(get_name() + " must have exactly one evaluator substatements.");
+    add_static_error(get_name() + " must have exactly one evaluator substatement.");
 }
 
 
 void Evaluator_Prefix_Operator::add_substatements(Statement* result, const std::string& operator_name,
-    const Token_Node_Ptr& tree_it, Statement::Factory& stmt_factory, Error_Output* error_output)
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Error_Output* error_output)
 {    
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
+    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), tree_context);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

@@ -30,6 +30,35 @@
 #include <vector>
 
 
+/* == Unary Operators ==
+
+Unary operators need for execution an operand.
+They are always written in prefix notation.
+The operators can be grouped with parentheses:
+The two variants
+
+  <Operator><Evaluator>
+  
+and
+
+  (<Operator><Evaluator>)
+  
+have as standalone expressions precisely the same semantics.
+The parenthesis variant exists to override operator precedence.
+
+The order of precedence is as follows, ordered weak to strong binding:
+- logical disjunction
+- logical conjunction
+- equality, inequality
+- less, less-equal, greater, greater-equal
+- plus, binary minus
+- times, divided
+- logical negation
+- unary minus
+
+In the following, the operators are ordered by precedence, stronger binding last.
+*/
+
 class Evaluator_Prefix_Operator : public Evaluator
 {
 public:
@@ -47,8 +76,9 @@ public:
   virtual std::string process(const std::string& rhs_result) const = 0;
 
   static bool applicable_by_subtree_structure(const Token_Node_Ptr& tree_it) { return !tree_it->lhs && tree_it->rhs; }
+  static bool needs_an_element_to_eval() { return false; }
   static void add_substatements(Statement* result, const std::string& operator_name, const Token_Node_Ptr& tree_it,
-      Statement::Factory& stmt_factory, Error_Output* error_output);
+      Statement::QL_Context tree_context, Statement::Factory& stmt_factory, Error_Output* error_output);
     
 protected:
   Evaluator* rhs;
@@ -98,12 +128,14 @@ struct Evaluator_Prefix_Operator_Syntax : public Evaluator_Prefix_Operator
   virtual std::string dump_xml(const std::string& indent) const
   {
     return indent + "<" + Evaluator_::stmt_name() + ">\n"
-        + rhs->dump_xml(indent + "  ")
+        + (rhs ? rhs->dump_xml(indent + "  ") : "")
         + indent + "</" + Evaluator_::stmt_name() + ">\n";
   }
   
   virtual std::string dump_compact_ql(const std::string&) const
   {
+    if (!rhs)
+      return Evaluator_::stmt_operator();
     if (rhs->get_operator_priority() < get_operator_priority())
       return Evaluator_::stmt_operator() + "(" + rhs->dump_compact_ql("") + ")";
     return Evaluator_::stmt_operator() + rhs->dump_compact_ql("");
@@ -113,6 +145,20 @@ struct Evaluator_Prefix_Operator_Syntax : public Evaluator_Prefix_Operator
   virtual int get_operator_priority() const { return operator_priority(Evaluator_::stmt_operator(), true); }  
 };
 
+
+/* === Boolean Negation ===
+
+The boolean negation evaluates to "1" if its argument evaluates to a representation of boolean false.
+Otherwise it evaluates to "1".
+Representations of boolean false are the empty string and every string that is a numerical representation of zero.
+Every other string represents boolean true.
+
+Its syntax is
+
+  ! <Evaluator>
+  
+The whitespace is optional.
+*/
 
 class Evaluator_Not : public Evaluator_Prefix_Operator_Syntax< Evaluator_Not >
 {
@@ -128,6 +174,19 @@ public:
 };
 
 
+/* === Unary Minus ===
+
+The unary minus operator negates its argument.
+If the argument is an integer or a floating point number then it is negated as integer resp. floating point number.
+Otherwise the unary minus operator returns "NaN".
+
+The syntax for unary minus is:
+
+  - <Evaluator>
+
+The whitespace is optional.
+*/
+
 class Evaluator_Negate : public Evaluator_Prefix_Operator_Syntax< Evaluator_Negate >
 {
 public:
@@ -141,6 +200,16 @@ public:
   virtual std::string process(const std::string& rhs_result) const;
 };
 
+
+/* == String Endomorphisms ==
+
+String endomorphisms are functions with one argument.
+Many of them help to normalize or check the value of its argument.
+The always first let their argument be evaluated.
+Their syntax is always
+
+  <Function Name>(<Evaluator>)
+*/
 
 template< typename Evaluator_ >
 struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
@@ -209,6 +278,23 @@ struct Evaluator_String_Endom_Syntax : public Evaluator_Prefix_Operator
 };
 
 
+/* === Number Check and Normalizer ===
+
+The function <em>number</em> turns its argument into a number.
+If its argument is a number then <em>number</em> returns its argument in a normalized format.
+Otherwise it returns "NaN".
+The function <em>is_number</em> checks whether its argument is a number.
+It returns "1" if its argument can be parsed as a number and "0" otherwise.
+
+Their syntaxes are
+
+  number(<Evaluator>)
+  
+resp.
+
+  is_number(<Evaluator>)
+*/
+
 class Evaluator_Number : public Evaluator_String_Endom_Syntax< Evaluator_Number >
 {
 public:
@@ -227,8 +313,8 @@ class Evaluator_Is_Num : public Evaluator_String_Endom_Syntax< Evaluator_Is_Num 
 {
 public:
   static String_Endom_Statement_Maker< Evaluator_Is_Num > statement_maker;
-  static std::string stmt_func_name() { return "is_num"; }
-  static std::string stmt_name() { return "eval-is-num"; }
+  static std::string stmt_func_name() { return "is_number"; }
+  static std::string stmt_name() { return "eval-is-number"; }
 
   Evaluator_Is_Num(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_String_Endom_Syntax< Evaluator_Is_Num >(line_number_, input_attributes) {}
@@ -236,6 +322,36 @@ public:
   virtual std::string process(const std::string& rhs_result) const;
 };
 
+
+/* === Date Check and Normalizer ===
+
+The function <em>date</em> turns its argument into a number representing a date.
+If its argument is a date then <em>date</em> returns the number representing its argument's value.
+Otherwise it returns "NaD".
+The function <em>is_date</em> checks whether its argument represents a date.
+It returns "1" if its argument can be parsed as a date and "0" otherwise.
+
+A string is parsed for a date as follows:
+- the first group of digits is understood as year
+- the next group of digits if present is understood as month
+- then the next group if present is understood as day
+- if more groups of digits are present then they are understood as hour, minute, second
+To be a date the year must be bigger than 1000,
+the month if present less or equal 12,
+the day if present less or equal 31,
+the hour if present less or equal 60,
+and the minute and second if present less or equal 60.
+
+The date parser may get more liberal in future versions and accept more representations of dates.
+
+The functions' syntaxes are
+
+  date(<Evaluator>)
+  
+resp.
+
+  is_date(<Evaluator>)
+*/
 
 class Evaluator_Date : public Evaluator_String_Endom_Syntax< Evaluator_Date >
 {
