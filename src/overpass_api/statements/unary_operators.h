@@ -235,7 +235,7 @@ struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     if (result)
     {
-      Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), Statement::evaluator_expected);
+      Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), tree_context);
       if (rhs)
         result->add_statement(rhs, "");
       else if (error_output)

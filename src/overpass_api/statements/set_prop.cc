@@ -39,12 +39,7 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
   }
   
   if (tree_context != Statement::generic && tree_context != Statement::in_convert)
-  {
-    if (error_output)
-      error_output->add_parse_error("Properties can only be set in a convert or make statement",
-          tree_it->line_col.first);
     return 0;
-  }
   
   if (!tree_it->lhs)
   {

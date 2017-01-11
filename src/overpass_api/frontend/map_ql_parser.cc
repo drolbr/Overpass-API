@@ -1191,7 +1191,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	{
 	  ++token;
           value_stmts.push_back(parse_value_tree< TStatement >(stmt_factory, token, error_output,
-              Statement::evaluator_expected, true));
+              Statement::elem_eval_possible, true));
 	}
         clear_until_after(token, error_output, ")");
         clauses.push_back(clause);
