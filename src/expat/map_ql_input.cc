@@ -361,6 +361,7 @@ inline void Tokenizer< In >::probe
   }
 }
 
+
 template< class In >
 inline void Tokenizer< In >::clear_space()
 {
@@ -372,6 +373,14 @@ inline void Tokenizer< In >::clear_space()
     grow_buffer(1);
   }
 }
+
+
+void pop_front(string& s, string& buffer, unsigned int num_bytes)
+{
+  s = buffer.substr(0, num_bytes);
+  buffer = buffer.substr(num_bytes);
+}
+
   
 template< class In >
 inline void Tokenizer< In >::get(string& s)
@@ -496,42 +505,38 @@ inline void Tokenizer< In >::get(string& s)
     probe(s, "<<", "<=");
   else if (buffer[0] == '>')
     probe(s, ">>", ">=");
-  else if ((buffer[0] & 0x80) == 0)
+  else
   {
-    s = buffer.substr(0, 1);
+    if ((buffer[0] & 0x80) == 0)
+      pop_front(s, buffer, 1);
+    else if ((buffer[0] & 0xe0) == 0xc0)
+    {
+      grow_buffer(2);
+      if (buffer.size() >= 2)
+        pop_front(s, buffer, 2);
+      else // The input is invalid UTF-8. 
+        pop_front(s, buffer, 1);
+    }
+    else if ((buffer[0] & 0xf0) == 0xe0)
+    {
+      grow_buffer(3);
+      if (buffer.size() >= 3)
+        pop_front(s, buffer, 3);
+      else // The input is invalid UTF-8. 
+        pop_front(s, buffer, 1);
+    }
+    else if ((buffer[0] & 0xf8) == 0xf0)
+    {
+      grow_buffer(4);
+      if (buffer.size() >= 4)
+        pop_front(s, buffer, 4);
+      else // The input is invalid UTF-8. 
+        pop_front(s, buffer, 1);
+    }
+    else // The input is invalid UTF-8. 
+      pop_front(s, buffer, 1);
+    
     line_cols.pop();
-    buffer = buffer.substr(1);
-    clear_space();
-  }
-  else if ((buffer[0] & 0xe0) == 0xc0)
-  {
-    grow_buffer(2);
-    s = buffer.substr(0, 2);
-    line_cols.pop();
-    buffer = buffer.substr(2);
-    clear_space();
-  }
-  else if ((buffer[0] & 0xf0) == 0xe0)
-  {
-    grow_buffer(3);
-    s = buffer.substr(0, 3);
-    line_cols.pop();
-    buffer = buffer.substr(3);
-    clear_space();
-  }
-  else if ((buffer[0] & 0xf8) == 0xf0)
-  {
-    grow_buffer(4);
-    s = buffer.substr(0, 4);
-    line_cols.pop();
-    buffer = buffer.substr(4);
-    clear_space();
-  }
-  else // The input is invalid UTF-8. 
-  {
-    s = buffer.substr(0, 1);
-    line_cols.pop();
-    buffer = buffer.substr(1);
     clear_space();
   }
 }
