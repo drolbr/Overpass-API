@@ -22,6 +22,10 @@
 #include "evaluator.h"
 
 
+const uint Set_Usage::SKELETON = 1;
+const uint Set_Usage::TAGS = 2;
+
+
 void Set_With_Context::prefetch(const Set_Usage& usage, const Set& set, Transaction& transaction)
 {
   base = &set;

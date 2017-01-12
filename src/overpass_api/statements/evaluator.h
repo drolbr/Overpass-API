@@ -36,8 +36,8 @@ struct Set_Usage
   std::string set_name;
   uint usage;
     
-  const static uint SKELETON = 1;
-  const static uint TAGS = 2;
+  static const uint SKELETON;
+  static const uint TAGS;
   
   bool operator<(const Set_Usage& rhs) const { return this->set_name < rhs.set_name; }
 };

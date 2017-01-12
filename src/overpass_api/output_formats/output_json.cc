@@ -165,25 +165,24 @@ void Output_JSON::print_item(const Way_Skeleton& skel,
     std::cout<<"\n  ]";
   }
 
-//   if ((mode.mode & Output_Mode::GEOMETRY) != 0 && !skel.nds.empty())
-//   {
-//     std::cout<<",\n  \"geometry\": [";
-//     for (uint i = 0; i < skel.nds.size(); ++i) 
-//     {
-//       if (geometry && !((*geometry)[i] == Quad_Coord(0u, 0u)))
-//       {
-//         std::cout<<"\n    { \"lat\": "<<std::fixed<<std::setprecision(7)
-//             <<::lat((*geometry)[i].ll_upper, (*geometry)[i].ll_lower)
-//             <<", \"lon\": "<<std::fixed<<std::setprecision(7)
-//             <<::lon((*geometry)[i].ll_upper, (*geometry)[i].ll_lower)<<" }";
-//       }
-//       else
-//         std::cout<<"\n    null";
-//       if (i < skel.nds.size() - 1)
-//         std::cout << ",";
-//     }
-//     std::cout<<"\n  ]";
-//   }  
+  if ((mode.mode & Output_Mode::GEOMETRY) != 0 && geometry.has_line_geometry())
+  {
+    std::cout<<",\n  \"geometry\": [";
+    for (uint i = 0; i < geometry.way_size(); ++i) 
+    {
+      if (geometry.way_pos_is_valid(i))
+        std::cout<<"\n    { \"lat\": "<<std::fixed<<std::setprecision(7)
+            <<geometry.way_pos_lat(i)
+            <<", \"lon\": "<<std::fixed<<std::setprecision(7)
+            <<geometry.way_pos_lon(i)<<" }";
+      else
+        std::cout<<"\n    null";
+      
+      if (i < geometry.way_size() - 1)
+        std::cout << ",";
+    }
+    std::cout<<"\n  ]";
+  }  
 
   print_tags(tags);  
   std::cout<<"\n}";
@@ -226,33 +225,31 @@ void Output_JSON::print_item(const Relation_Skeleton& skel,
             "\",\n      \"ref\": "<<skel.members[i].ref.val()<<
             ",\n      \"role\": \""<<escape_cstr(rit != roles->end() ? rit->second : "???") << "\"";
 
-//       if (geometry && skel.members[i].type == Relation_Entry::NODE &&
-//          !((*geometry)[i][0] == Quad_Coord(0u, 0u)))
-//       {
-//         std::cout<<",\n      \"lat\": "<<std::fixed<<std::setprecision(7)
-//             <<::lat((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower)
-//             <<",\n      \"lon\": "<<std::fixed<<std::setprecision(7)
-//             <<::lon((*geometry)[i][0].ll_upper, (*geometry)[i][0].ll_lower);
-//       }
-//       if (geometry && skel.members[i].type == Relation_Entry::WAY && !(*geometry)[i].empty())
-//       {
-//         std::cout<<",\n      \"geometry\": [";
-//         for (std::std::vector< Quad_Coord >::const_iterator it = (*geometry)[i].begin();
-//              it != (*geometry)[i].end(); ++it)
-//         {
-//            if (!(*it == Quad_Coord(0u, 0u)))
-//            {
-//              std::cout<<"\n         { \"lat\": "<<std::fixed<<std::setprecision(7)
-//                  <<::lat(it->ll_upper, it->ll_lower)
-//                  <<", \"lon\": "<<std::fixed<<std::setprecision(7)
-//                  <<::lon(it->ll_upper, it->ll_lower)<<" }";
-//            } else
-//              std::cout<<"\n         null";
-//            if (it + 1 != (*geometry)[i].end())
-//              std::cout << ",";
-//         }
-//         std::cout<<"\n      ]";
-//       }
+      if (skel.members[i].type == Relation_Entry::NODE &&
+          geometry.has_faithful_relation_geometry() && geometry.relation_pos_is_valid(i))
+        std::cout<<",\n      \"lat\": "<<std::fixed<<std::setprecision(7)<<geometry.relation_pos_lat(i)
+            <<",\n      \"lon\": "<<std::fixed<<std::setprecision(7)<<geometry.relation_pos_lon(i);
+              
+      if (skel.members[i].type == Relation_Entry::WAY && geometry.has_faithful_relation_geometry())
+      {
+        std::cout<<",\n      \"geometry\": [";
+        for (uint j = 0; j < geometry.relation_way_size(i); ++j)
+        {
+          if (geometry.relation_pos_is_valid(i, j))
+          {
+            std::cout<<"\n         { \"lat\": "<<std::fixed<<std::setprecision(7)
+                <<geometry.relation_pos_lat(i, j)
+                <<", \"lon\": "<<std::fixed<<std::setprecision(7)
+                <<geometry.relation_pos_lon(i, j)<<" }";
+          }
+          else
+            std::cout<<"\n         null";
+          if (j < geometry.relation_way_size(i) - 1)
+            std::cout << ",";
+        }
+        std::cout<<"\n      ]";
+      }
+      
       std::cout<<"\n    }";
     }
     std::cout<<"\n  ]";
