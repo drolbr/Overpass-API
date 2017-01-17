@@ -32,7 +32,8 @@
 
 struct Value_Aggregator
 {
-  enum Type_Indicator { type_string, type_double, type_int64 };
+  // The code of min and max relies on the relative order to gracefully degrade the type
+  enum Type_Indicator { type_void = 0, type_int64 = 1, type_double = 2, type_string = 3 };
   
   virtual void update_value(const std::string& value) = 0;
   virtual std::string get_value() = 0;
@@ -241,7 +242,7 @@ public:
   
   struct Aggregator : Value_Aggregator
   {
-    Aggregator() : relevant_type(type_int64), result_l(std::numeric_limits< int64 >::max()),
+    Aggregator() : relevant_type(type_void), result_l(std::numeric_limits< int64 >::max()),
         result_d(std::numeric_limits< double >::max()) {}
     virtual void update_value(const std::string& value);
     virtual std::string get_value();
@@ -267,8 +268,8 @@ public:
   
   struct Aggregator : Value_Aggregator
   {
-    Aggregator() : relevant_type(type_int64), result_l(std::numeric_limits< int64 >::min()),
-        result_d(std::numeric_limits< double >::min()) {}
+    Aggregator() : relevant_type(type_void), result_l(std::numeric_limits< int64 >::min()),
+        result_d(-std::numeric_limits< double >::max()) {}
     virtual void update_value(const std::string& value);
     virtual std::string get_value();
     Type_Indicator relevant_type;

@@ -172,7 +172,10 @@ Aggregator_Statement_Maker< Evaluator_Min_Value > Evaluator_Min_Value::statement
 
 void Evaluator_Min_Value::Aggregator::update_value(const std::string& value)
 {  
-  if (relevant_type == type_int64)
+  if (relevant_type == type_void)
+    relevant_type = type_int64;
+  
+  if (relevant_type <= type_int64)
   {
     int64 rhs_l = 0;
     if (try_int64(value, rhs_l))
@@ -181,7 +184,7 @@ void Evaluator_Min_Value::Aggregator::update_value(const std::string& value)
       relevant_type = type_double;
   }
 
-  if (relevant_type == type_int64 || relevant_type == type_double)
+  if (relevant_type <= type_double)
   {
     double rhs_d = 0;
     if (try_double(value, rhs_d))
@@ -197,7 +200,9 @@ void Evaluator_Min_Value::Aggregator::update_value(const std::string& value)
 
 std::string Evaluator_Min_Value::Aggregator::get_value()
 {
-  if (relevant_type == type_int64)
+  if (relevant_type == type_void)
+    return "";
+  else if (relevant_type == type_int64)
     return to_string(result_l);
   else if (relevant_type == type_double)
     return to_string(result_d);
@@ -214,7 +219,10 @@ Aggregator_Statement_Maker< Evaluator_Max_Value > Evaluator_Max_Value::statement
 
 void Evaluator_Max_Value::Aggregator::update_value(const std::string& value)
 {
-  if (relevant_type == type_int64)
+  if (relevant_type == type_void)
+    relevant_type = type_int64;
+  
+  if (relevant_type <= type_int64)
   {
     int64 rhs_l = 0;
     if (try_int64(value, rhs_l))
@@ -223,7 +231,7 @@ void Evaluator_Max_Value::Aggregator::update_value(const std::string& value)
       relevant_type = type_double;
   }
 
-  if (relevant_type == type_int64 || relevant_type == type_double)
+  if (relevant_type <= type_double)
   {
     double rhs_d = 0;
     if (try_double(value, rhs_d))
@@ -239,7 +247,9 @@ void Evaluator_Max_Value::Aggregator::update_value(const std::string& value)
 
 std::string Evaluator_Max_Value::Aggregator::get_value()
 {
-  if (relevant_type == type_int64)
+  if (relevant_type == type_void)
+    return "";
+  else if (relevant_type == type_int64)
     return to_string(result_l);
   else if (relevant_type == type_double)
     return to_string(result_d);
