@@ -438,4 +438,12 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
     }
     ++token;
   }
+  
+  int stack_pos = stack.size()-1;
+  while (stack_pos >= 0 && tree[stack[stack_pos]].token != "("
+      && tree[stack[stack_pos]].token != "[" && tree[stack[stack_pos]].token != "{")
+    --stack_pos;
+  if (stack_pos > 0)
+    error_output->add_parse_error(std::string("Left ") + tree[stack[stack_pos]].token
+        + " not closed.", token.line_col().first);
 }
