@@ -35,57 +35,56 @@
 #include "type_tags.h"
 #include "type_area.h"
 
-using namespace std;
 
 struct String_Object
 {
   typedef uint32 Id_Type;
-  
-  String_Object(string s) : value(s) {}
+
+  String_Object(std::string s) : value(s) {}
   String_Object(void* data) : value()
   {
-    value = string(((int8*)data + 2), *(uint16*)data);
+    value = std::string(((int8*)data + 2), *(uint16*)data);
   }
-  
+
   uint32 size_of() const
   {
     return value.length() + 2;
   }
-  
+
   static uint32 size_of(void* data)
   {
     return *(uint16*)data + 2;
   }
-  
+
   void to_data(void* data) const
   {
     *(uint16*)data = value.length();
     memcpy(((uint8*)data + 2), value.data(), value.length());
   }
-  
+
   bool operator<(const String_Object& index) const
   {
     return this->value < index.value;
   }
-  
+
   bool operator==(const String_Object& index) const
   {
     return this->value == index.value;
   }
-  
-  string val() const
+
+  std::string val() const
   {
     return value;
   }
-  
+
   protected:
-    string value;
+    std::string value;
 };
 
 
 template< typename First, typename Second >
 struct Pair_Comparator_By_Id {
-  bool operator() (const pair< First, Second >& a, const pair< First, Second >& b)
+  bool operator() (const std::pair< First, Second >& a, const std::pair< First, Second >& b)
   {
     return (a.first < b.first);
   }
@@ -94,7 +93,7 @@ struct Pair_Comparator_By_Id {
 
 template< typename First, typename Second >
 struct Pair_Equal_Id {
-  bool operator() (const pair< First, Second >& a, const pair< First, Second >& b)
+  bool operator() (const std::pair< First, Second >& a, const std::pair< First, Second >& b)
   {
     return (a.first == b.first);
   }
@@ -102,11 +101,11 @@ struct Pair_Equal_Id {
 
 
 template < class T >
-const T* binary_search_for_id(const vector< T >& vect, typename T::Id_Type id)
+const T* binary_search_for_id(const std::vector< T >& vect, typename T::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
-  
+
   while (upper > lower)
   {
     uint32 pos((upper + lower)/2);
@@ -122,11 +121,11 @@ const T* binary_search_for_id(const vector< T >& vect, typename T::Id_Type id)
 
 
 template < class TObject >
-TObject* binary_ptr_search_for_id(const vector< TObject* >& vect, typename TObject::Id_Type id)
+TObject* binary_ptr_search_for_id(const std::vector< TObject* >& vect, typename TObject::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
-  
+
   while (upper > lower)
   {
     uint32 pos((upper + lower)/2);
@@ -142,11 +141,11 @@ TObject* binary_ptr_search_for_id(const vector< TObject* >& vect, typename TObje
 
 
 template < class Id_Type, class TObject >
-const TObject* binary_pair_search(const vector< pair< Id_Type, TObject> >& vect, Id_Type id)
+const TObject* binary_pair_search(const std::vector< std::pair< Id_Type, TObject> >& vect, Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
-  
+
   while (upper > lower)
   {
     uint32 pos((upper + lower)/2);
@@ -166,16 +165,16 @@ const TObject* binary_pair_search(const vector< pair< Id_Type, TObject> >& vect,
   */
 struct Set
 {
-  map< Uint32_Index, vector< Node_Skeleton > > nodes;
-  map< Uint31_Index, vector< Way_Skeleton > > ways;
-  map< Uint31_Index, vector< Relation_Skeleton > > relations;
-  
-  map< Uint32_Index, vector< Attic< Node_Skeleton > > > attic_nodes;
-  map< Uint31_Index, vector< Attic< Way_Skeleton > > > attic_ways;
-  map< Uint31_Index, vector< Attic< Relation_Skeleton > > > attic_relations;
-  
-  map< Uint31_Index, vector< Area_Skeleton > > areas;
-  
+  std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes;
+  std::map< Uint31_Index, std::vector< Way_Skeleton > > ways;
+  std::map< Uint31_Index, std::vector< Relation_Skeleton > > relations;
+
+  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic_nodes;
+  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_ways;
+  std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic_relations;
+
+  std::map< Uint31_Index, std::vector< Area_Skeleton > > areas;
+
   void swap(Set& rhs)
   {
     nodes.swap(rhs.nodes);
@@ -186,7 +185,7 @@ struct Set
     attic_relations.swap(rhs.attic_relations);
     areas.swap(rhs.areas);
   }
-  
+
   void clear()
   {
     nodes.clear();
@@ -202,29 +201,29 @@ struct Set
 
 struct Error_Output
 {
-  virtual void add_encoding_error(const string& error) = 0;
-  virtual void add_parse_error(const string& error, int line_number) = 0;
-  virtual void add_static_error(const string& error, int line_number) = 0;
-  // void add_sanity_error(const string& error);
-  
-  virtual void add_encoding_remark(const string& error) = 0;
-  virtual void add_parse_remark(const string& error, int line_number) = 0;
-  virtual void add_static_remark(const string& error, int line_number) = 0;
-  // void add_sanity_remark(const string& error);
-  
-  virtual void runtime_error(const string& error) = 0;
-  virtual void runtime_remark(const string& error) = 0;
-  
+  virtual void add_encoding_error(const std::string& error) = 0;
+  virtual void add_parse_error(const std::string& error, int line_number) = 0;
+  virtual void add_static_error(const std::string& error, int line_number) = 0;
+  // void add_sanity_error(const std::string& error);
+
+  virtual void add_encoding_remark(const std::string& error) = 0;
+  virtual void add_parse_remark(const std::string& error, int line_number) = 0;
+  virtual void add_static_remark(const std::string& error, int line_number) = 0;
+  // void add_sanity_remark(const std::string& error);
+
+  virtual void runtime_error(const std::string& error) = 0;
+  virtual void runtime_remark(const std::string& error) = 0;
+
   virtual void display_statement_progress
-    (uint timer, const string& name, int progress, int line_number,
-     const vector< pair< uint, uint > >& stack) = 0;
-  
+    (uint timer, const std::string& name, int progress, int line_number,
+     const std::vector< std::pair< uint, uint > >& stack) = 0;
+
   virtual bool display_encoding_errors() = 0;
   virtual bool display_parse_errors() = 0;
   virtual bool display_static_errors() = 0;
-  
-  virtual void add_padding(const string& padding) = 0;
-  
+
+  virtual void add_padding(const std::string& padding) = 0;
+
   static const uint QUIET = 1;
   static const uint CONCISE = 2;
   static const uint PROGRESS = 3;
@@ -255,7 +254,7 @@ class Osm_Backend_Callback
     virtual void update_finished() = 0;
     virtual void partial_started() = 0;
     virtual void partial_finished() = 0;
-    
+
     virtual void parser_started() = 0;
     virtual void node_elapsed(Node::Id_Type id) = 0;
     virtual void nodes_finished() = 0;
@@ -270,40 +269,40 @@ class Osm_Backend_Callback
 struct User_Data
 {
   typedef uint32 Id_Type;
-  
+
   Id_Type id;
-  string name;
-  
+  std::string name;
+
   User_Data() : id(0) {}
-  
+
   User_Data(void* data)
   {
     id = *(uint32*)data;
-    name = string(((int8*)data + 6), *(uint16*)((int8*)data + 4));
+    name = std::string(((int8*)data + 6), *(uint16*)((int8*)data + 4));
   }
-  
+
   uint32 size_of() const
   {
     return 6 + name.length();
   }
-  
+
   static uint32 size_of(void* data)
   {
     return 6 + *(uint16*)((int8*)data + 4);
   }
-  
+
   void to_data(void* data) const
   {
     *(uint32*)data = id;
     *(uint16*)((int8*)data + 4) = name.length();
     memcpy(((int8*)data + 6), name.data(), name.length());
   }
-  
+
   bool operator<(const User_Data& a) const
   {
     return (id < a.id);
   }
-  
+
   bool operator==(const User_Data& a) const
   {
     return (id == a.id);
@@ -314,13 +313,13 @@ struct User_Data
 struct OSM_Element_Metadata
 {
   OSM_Element_Metadata() : user_id(0) {}
-  
+
   uint32 version;
   uint64 timestamp;
   uint32 changeset;
   uint32 user_id;
-  string user_name;
-  
+  std::string user_name;
+
   bool operator<(const OSM_Element_Metadata&) const { return false; }
 };
 
@@ -329,27 +328,27 @@ template< typename Id_Type_ >
 struct OSM_Element_Metadata_Skeleton
 {
   typedef Id_Type_ Id_Type;
-  
+
   Id_Type ref;
   uint32 version;
   uint64 timestamp;
   uint32 changeset;
   uint32 user_id;
-  
+
   OSM_Element_Metadata_Skeleton() : version(0), timestamp(0), changeset(0), user_id(0) {}
-  
+
   OSM_Element_Metadata_Skeleton(Id_Type ref_)
     : ref(ref_), version(0), timestamp(0), changeset(0), user_id(0) {}
-  
+
   OSM_Element_Metadata_Skeleton(Id_Type ref_, const OSM_Element_Metadata& meta)
     : ref(ref_),
       version(meta.version), timestamp(meta.timestamp),
       changeset(meta.changeset), user_id(meta.user_id) {}
-  
+
   OSM_Element_Metadata_Skeleton(Id_Type ref_, uint64 timestamp_)
     : ref(ref_), version(0), timestamp(timestamp_),
       changeset(0), user_id(0) {}
-  
+
   OSM_Element_Metadata_Skeleton(void* data)
     : ref(*(Id_Type*)data)
   {
@@ -358,17 +357,17 @@ struct OSM_Element_Metadata_Skeleton
     changeset = *(uint32*)((int8*)data + sizeof(Id_Type) + 9);
     user_id = *(uint32*)((int8*)data + sizeof(Id_Type) + 13);
   }
-  
+
   uint32 size_of() const
   {
     return 17 + sizeof(Id_Type);
   }
-  
+
   static uint32 size_of(void* data)
   {
     return 17 + sizeof(Id_Type);
   }
-  
+
   void to_data(void* data) const
   {
     *(Id_Type*)data = ref;
@@ -377,7 +376,7 @@ struct OSM_Element_Metadata_Skeleton
     *(uint32*)((int8*)data + sizeof(Id_Type) + 9) = changeset;
     *(uint32*)((int8*)data + sizeof(Id_Type) + 13) = user_id;
   }
-  
+
   bool operator<(const OSM_Element_Metadata_Skeleton& a) const
   {
     if (ref < a.ref)
@@ -386,7 +385,7 @@ struct OSM_Element_Metadata_Skeleton
       return false;
     return (timestamp < a.timestamp);
   }
-  
+
   bool operator==(const OSM_Element_Metadata_Skeleton& a) const
   {
     return (ref == a.ref);
@@ -395,12 +394,12 @@ struct OSM_Element_Metadata_Skeleton
 
 
 template< class TIndex, class TObject >
-const pair< TIndex, const TObject* >* binary_search_for_pair_id
-    (const vector< pair< TIndex, const TObject* > >& vect, typename TObject::Id_Type id)
+const std::pair< TIndex, const TObject* >* binary_search_for_pair_id
+    (const std::vector< std::pair< TIndex, const TObject* > >& vect, typename TObject::Id_Type id)
 {
   uint32 lower(0);
   uint32 upper(vect.size());
-  
+
   while (upper > lower)
   {
     uint32 pos((upper + lower)/2);
@@ -419,34 +418,34 @@ template< typename Id_Type_ >
 struct Change_Entry
 {
   typedef Id_Type_ Id_Type;
-  
+
   Change_Entry(const Id_Type& elem_id_, const Uint31_Index& old_idx_, const Uint31_Index& new_idx_)
       : old_idx(old_idx_), new_idx(new_idx_), elem_id(elem_id_) {}
 
   Uint31_Index old_idx;
   Uint31_Index new_idx;
   Id_Type elem_id;
-  
+
   Change_Entry(void* data)
     : old_idx((uint8*)data), new_idx((uint8*)data + 4), elem_id(Id_Type((uint8*)data + 8)) {}
-  
+
   uint32 size_of() const
   {
     return elem_id.size_of() + 8;
   }
-  
+
   static uint32 size_of(void* data)
   {
     return Id_Type::size_of((uint8*)data + 8) + 8;
   }
-  
+
   void to_data(void* data) const
   {
     old_idx.to_data((uint8*)data);
     new_idx.to_data((uint8*)data + 4);
     elem_id.to_data((uint8*)data + 8);
   }
-  
+
   bool operator<(const Change_Entry& rhs) const
   {
     if (old_idx < rhs.old_idx)
@@ -459,7 +458,7 @@ struct Change_Entry
       return true;
     return (elem_id < rhs.elem_id);
   }
-  
+
   bool operator==(const Change_Entry& rhs) const
   {
     return (old_idx == rhs.old_idx && new_idx == rhs.new_idx && elem_id == rhs.elem_id);
@@ -470,12 +469,12 @@ struct Change_Entry
 struct Timestamp
 {
   Timestamp(uint64 timestamp_) : timestamp(timestamp_) {}
-  
+
   uint64 timestamp;
-  
+
   Timestamp(void* data)
     : timestamp((*(uint64*)(uint8*)data) & 0xffffffffffull) {}
-  
+
   Timestamp(int year, int month, int day, int hour, int minute, int second)
     : timestamp(0)
   {
@@ -486,26 +485,26 @@ struct Timestamp
     timestamp |= ((minute & 0x3f)<<6); //minute
     timestamp |= (second & 0x3f); //second
   }
-  
+
   static int year(uint64 timestamp) { return ((timestamp>>26) & 0x3fff); }
   static int month(uint64 timestamp) { return ((timestamp>>22) & 0xf); }
   static int day(uint64 timestamp) { return ((timestamp>>17) & 0x1f); }
   static int hour(uint64 timestamp) { return ((timestamp>>12) & 0x1f); }
   static int minute(uint64 timestamp) { return ((timestamp>>6) & 0x3f); }
   static int second(uint64 timestamp) { return (timestamp & 0x3f); }
-  
+
   int year() const { return year(timestamp); }
   int month() const { return month(timestamp); }
   int day() const { return day(timestamp); }
   int hour() const { return hour(timestamp); }
   int minute() const { return minute(timestamp); }
   int second() const { return second(timestamp); }
-  
+
   std::string str() const
   {
     if (timestamp == std::numeric_limits< unsigned long long >::max())
       return "NOW";
-    
+
     std::ostringstream out;
     out<<std::setw(4)<<std::setfill('0')<<year()<<"-"
         <<std::setw(2)<<std::setfill('0')<<month()<<"-"
@@ -515,34 +514,34 @@ struct Timestamp
 	<<std::setw(2)<<std::setfill('0')<<second()<<"Z";
     return out.str();
   }
-  
+
   uint32 size_of() const
   {
     return 5;
   }
-  
+
   static uint32 size_of(void* data)
   {
     return 5;
   }
-  
+
   void to_data(void* data) const
   {
     void* pos = (uint8*)data;
     *(uint32*)(pos) = (timestamp & 0xffffffffull);
     *(uint8*)((uint8*)pos+4) = ((timestamp & 0xff00000000ull)>>32);
   }
-  
+
   bool operator<(const Timestamp& rhs) const
   {
     return (timestamp < rhs.timestamp);
   }
-  
+
   bool operator==(const Timestamp& rhs) const
   {
     return (timestamp == rhs.timestamp);
   }
-  
+
   static uint32 max_size_of()
   {
     throw Unsupported_Error("static uint32 Timestamp::max_size_of()");
