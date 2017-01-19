@@ -1215,11 +1215,14 @@ uint32 determine_role_id(Transaction& transaction, const string& role)
 //-----------------------------------------------------------------------------
 
 
-void add_way_to_area_blocks(const std::vector< Quad_Coord >& coords,
+bool add_way_to_area_blocks(const std::vector< Quad_Coord >& coords,
                             uint32 id, std::map< Uint31_Index, std::vector< Area_Block > >& areas)
 {
+  bool wraps_around_date_line = false;
+  
   if (coords.size() < 2)
-    return;
+    return false;
+  
   uint32 cur_idx = 0;
   std::vector< uint64 > cur_polyline;
   for (std::vector< Quad_Coord >::const_iterator it = coords.begin(); it != coords.end(); ++it)
@@ -1232,7 +1235,7 @@ void add_way_to_area_blocks(const std::vector< Quad_Coord >& coords,
           areas[cur_idx].push_back(Area_Block(id, cur_polyline));
             
         std::vector< Aligned_Segment > aligned_segments;
-        Area::calc_aligned_segments
+        wraps_around_date_line ^= Area::calc_aligned_segments
             (aligned_segments, cur_polyline.back(),
              ((uint64)it->ll_upper<<32) | it->ll_lower);
         cur_polyline.clear();
@@ -1251,6 +1254,8 @@ void add_way_to_area_blocks(const std::vector< Quad_Coord >& coords,
   }
   if ((cur_idx != 0) && (cur_polyline.size() > 1))
     areas[cur_idx].push_back(Area_Block(id, cur_polyline));
+  
+  return wraps_around_date_line;
 }
 
 

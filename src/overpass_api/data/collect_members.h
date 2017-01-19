@@ -28,7 +28,6 @@
 #include <set>
 #include <vector>
 
-using namespace std;
 
 class Resource_Manager;
 class Statement;
@@ -149,7 +148,7 @@ const map< uint32, string >& relation_member_roles(Transaction& transaction);
 uint32 determine_role_id(Transaction& transaction, const string& role);
 
 
-void add_way_to_area_blocks(const vector< Quad_Coord >& coords,
+bool add_way_to_area_blocks(const vector< Quad_Coord >& coords,
                             uint32 id, map< Uint31_Index, vector< Area_Block > >& areas);
 
 
