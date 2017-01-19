@@ -35,6 +35,7 @@
 #include "type_tags.h"
 #include "type_area.h"
 
+using namespace std;
 
 struct String_Object
 {
