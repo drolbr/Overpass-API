@@ -151,6 +151,7 @@ class Statement
       error_output = error_output_;
     }
 
+    void runtime_error(string error) const;
     void runtime_remark(string error) const;
 
     const static int NODE = 1;

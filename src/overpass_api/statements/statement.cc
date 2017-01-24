@@ -273,6 +273,13 @@ void Statement::add_static_remark(string remark)
 }
 
 
+void Statement::runtime_error(string error) const
+{
+  if (error_output)
+    error_output->runtime_error(error);
+}
+
+
 void Statement::runtime_remark(string error) const
 {
   if (error_output)

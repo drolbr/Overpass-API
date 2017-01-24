@@ -1478,6 +1478,9 @@ void Query_Statement::execute(Resource_Manager& rman)
     set_progress(4);
     rman.health_check(*this);
     
+    if (answer_state == nothing)
+      runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+    
 //     std::cout<<"progress 4\n";
 //     for (vector< Relation::Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
 //       std::cout<<it->val()<<'\n';
