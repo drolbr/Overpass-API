@@ -31,6 +31,19 @@ Statement* Evaluator_Fixed::Statement_Maker::create_statement(
 {
   if (tree_it->lhs || tree_it->rhs)
     return 0;
+  
+  int64 value_l = 0;
+  double value_d = 0;
+  if (tree_it->token.empty() ||
+      (tree_it->token[0] != '\'' && tree_it->token[0] != '\"'
+      && !try_int64(tree_it->token, value_l) && !try_double(tree_it->token, value_d)))
+  {
+    if (error_output)
+      error_output->add_parse_error(std::string("Put quotation marks around \"") + tree_it->token
+          + "\" if it should be a constant and not a tag evaluation.", tree_it->line_col.first);
+    return 0;
+  }
+  
   map< string, string > attributes;
   attributes["v"] = decode_json(tree_it->token, error_output);
   return new Evaluator_Fixed(tree_it->line_col.first, attributes, global_settings);
@@ -189,10 +202,11 @@ Statement* Evaluator_Value::Statement_Maker::create_statement(
     return 0;
   }
   
-  if (tree_it->lhs)
+  if (!tree_it->lhs || tree_it.lhs()->lhs || tree_it.lhs()->rhs || tree_it.lhs()->token != "t")
   {
     if (error_output)
-      error_output->add_parse_error("No function name before a bracket allowed", tree_it->line_col.first);
+      error_output->add_parse_error("Tag evaulation needs function name \"t\" before the left bracket",
+          tree_it->line_col.first);
     return 0;
   }
   if (!tree_it->rhs)
