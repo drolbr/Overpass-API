@@ -231,7 +231,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "nodes";
   if (from != "_")
     attributes["from"] = from;
-  Evaluator_Count stmt10(0, attributes, global_settings);
+  Evaluator_Set_Count stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   attributes.clear();
@@ -242,7 +242,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "ways";
   if (from != "_")
     attributes["from"] = from;
-  Evaluator_Count stmt20(0, attributes, global_settings);
+  Evaluator_Set_Count stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   
   attributes.clear();
@@ -253,7 +253,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "relations";
   if (from != "_")
     attributes["from"] = from;
-  Evaluator_Count stmt30(0, attributes, global_settings);
+  Evaluator_Set_Count stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   
   attributes.clear();
@@ -264,7 +264,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "tags";
   if (from != "_")
     attributes["from"] = from;
-  Evaluator_Count stmt40(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
   
   attributes.clear();
@@ -275,7 +275,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "members";
   if (from != "_")
     attributes["from"] = from;
-  Evaluator_Count stmt50(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt50(0, attributes, global_settings);
   stmt5.add_statement(&stmt50, "");
   
   stmt.execute(rman);

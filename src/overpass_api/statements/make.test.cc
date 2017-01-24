@@ -121,6 +121,11 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
     attributes["ref"] = to_string(ref);
     Id_Query_Statement stmt3(0, attributes, global_settings);
     union_.add_statement(&stmt3, "");
+
+    attributes.clear();
+    attributes["type"] = "foo";
+    Make_Statement stmt4(0, attributes, global_settings);
+    union_.add_statement(&stmt4, "");
     
     union_.execute(rman);
   }
@@ -137,7 +142,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   if (from != "_")
     attributes["from"] = from;
   attributes["type"] = "nodes";
-  Evaluator_Count stmt10(0, attributes, global_settings);
+  Evaluator_Set_Count stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
   
   attributes.clear();
@@ -148,7 +153,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "ways";
   if (from != "_")
     attributes["from"] = from;
-  Evaluator_Count stmt20(0, attributes, global_settings);
+  Evaluator_Set_Count stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
   
   attributes.clear();
@@ -159,25 +164,22 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["type"] = "relations";
   if (from != "_")
     attributes["from"] = from;
-  Evaluator_Count stmt30(0, attributes, global_settings);
+  Evaluator_Set_Count stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
   
   attributes.clear();
-  attributes["k"] = "tags";
+  attributes["k"] = "deriveds";
   Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
   attributes.clear();
+  attributes["type"] = "deriveds";
   if (from != "_")
     attributes["from"] = from;
-  Evaluator_Sum_Value stmt40(0, attributes, global_settings);
+  Evaluator_Set_Count stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
-  attributes.clear();
-  attributes["type"] = "tags";
-  Evaluator_Count stmt400(0, attributes, global_settings);
-  stmt40.add_statement(&stmt400, "");
   
   attributes.clear();
-  attributes["k"] = "members";
+  attributes["k"] = "tags";
   Set_Prop_Statement stmt5(0, attributes, global_settings);
   stmt.add_statement(&stmt5, "");
   attributes.clear();
@@ -186,9 +188,23 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Evaluator_Sum_Value stmt50(0, attributes, global_settings);
   stmt5.add_statement(&stmt50, "");
   attributes.clear();
-  attributes["type"] = "members";
-  Evaluator_Count stmt500(0, attributes, global_settings);
+  attributes["type"] = "tags";
+  Evaluator_Properties_Count stmt500(0, attributes, global_settings);
   stmt50.add_statement(&stmt500, "");
+  
+  attributes.clear();
+  attributes["k"] = "members";
+  Set_Prop_Statement stmt6(0, attributes, global_settings);
+  stmt.add_statement(&stmt6, "");
+  attributes.clear();
+  if (from != "_")
+    attributes["from"] = from;
+  Evaluator_Sum_Value stmt60(0, attributes, global_settings);
+  stmt6.add_statement(&stmt60, "");
+  attributes.clear();
+  attributes["type"] = "members";
+  Evaluator_Properties_Count stmt600(0, attributes, global_settings);
+  stmt60.add_statement(&stmt600, "");
   
   stmt.execute(rman);
   

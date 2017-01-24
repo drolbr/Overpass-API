@@ -343,10 +343,185 @@ Evaluator_Generic::Evaluator_Generic
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Count::Statement_Maker Evaluator_Count::statement_maker;
+Evaluator_Properties_Count::Statement_Maker Evaluator_Properties_Count::statement_maker;
 
 
-Statement* Evaluator_Count::Statement_Maker::create_statement(
+Statement* Evaluator_Properties_Count::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  map< string, string > attributes;
+  
+  if (tree_it->token != "(")
+  {
+    if (error_output && tree_it->rhs && tree_it.rhs()->lhs)
+      error_output->add_parse_error(tree_it.rhs().lhs()->token + "(...) cannot have an input set",
+          tree_it->line_col.first);
+    return 0;
+  }
+  
+  if (!tree_it->lhs)
+    return 0;
+  if (tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error(tree_it.rhs().lhs()->token +  "() cannot have an argument", tree_it->line_col.first);
+    return 0;
+  }
+    
+  attributes["type"] = tree_it.lhs()->token.size() > 6 ? tree_it.lhs()->token.substr(6) : "";
+  
+  return new Evaluator_Properties_Count(tree_it->line_col.first, attributes, global_settings);
+}
+
+
+std::string Evaluator_Properties_Count::to_string(Evaluator_Properties_Count::Objects objects)
+{
+  if (objects == tags)
+    return "tags";
+  if (objects == members)
+    return "members";
+  
+  return "nothing";
+}
+
+
+Evaluator_Properties_Count::Evaluator_Properties_Count
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  
+  attributes["type"] = "";
+  
+  eval_attributes_array(get_name(), attributes, input_attributes);
+  
+  if (attributes["type"] == "tags")
+    to_count = tags;
+  else if (attributes["type"] == "members")
+    to_count = members;
+  else
+  {
+    ostringstream temp("");
+    temp<<"For the attribute \"type\" of the element \"eval-set-count\""
+        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", \"deriveds\", \"tags\", "
+          "or \"members\" strings.";
+    add_static_error(temp.str());
+  }
+}
+
+
+std::pair< std::vector< Set_Usage >, uint > Evaluator_Properties_Count::used_sets() const
+{
+  if (to_count == Evaluator_Properties_Count::tags)
+    return std::make_pair(std::vector< Set_Usage >(), 2u);
+  else if (to_count == Evaluator_Properties_Count::members)
+    return std::make_pair(std::vector< Set_Usage >(), 1u);
+  
+  return std::make_pair(std::vector< Set_Usage >(), 0u);
+}
+
+  
+std::vector< std::string > Evaluator_Properties_Count::used_tags() const
+{
+  std::vector< std::string > result;
+  return result;
+}
+
+
+Eval_Task* Evaluator_Properties_Count::get_task(const Prepare_Task_Context& context)
+{
+  return new Prop_Count_Eval_Task(to_count);
+}
+
+
+std::string Prop_Count_Eval_Task::eval(const Node_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+{
+  if (to_count == Evaluator_Properties_Count::tags && tags)
+    return to_string(tags->size());
+  return "0";
+}
+
+
+std::string Prop_Count_Eval_Task::eval(const Attic< Node_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+{
+  if (to_count == Evaluator_Properties_Count::tags && tags)
+    return to_string(tags->size());
+  return "0";
+}
+
+
+std::string Prop_Count_Eval_Task::eval(const Way_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+{
+  if (to_count == Evaluator_Properties_Count::members && elem)
+    return to_string(elem->nds.size());
+  else if (to_count == Evaluator_Properties_Count::tags && tags)
+    return to_string(tags->size());
+  return "0";
+}
+
+
+std::string Prop_Count_Eval_Task::eval(const Attic< Way_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+{
+  if (to_count == Evaluator_Properties_Count::members && elem)
+    return to_string(elem->nds.size());
+  else if (to_count == Evaluator_Properties_Count::tags && tags)
+    return to_string(tags->size());
+  return "0";
+}
+
+
+std::string Prop_Count_Eval_Task::eval(const Relation_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+{
+  if (to_count == Evaluator_Properties_Count::members && elem)
+    return to_string(elem->members.size());
+  else if (to_count == Evaluator_Properties_Count::tags && tags)
+    return to_string(tags->size());
+  return "0";
+}
+
+
+std::string Prop_Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+{
+  if (to_count == Evaluator_Properties_Count::members && elem)
+    return to_string(elem->members.size());
+  else if (to_count == Evaluator_Properties_Count::tags && tags)
+    return to_string(tags->size());
+  return "0";
+}
+
+
+std::string Prop_Count_Eval_Task::eval(const Area_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+{
+  if (to_count == Evaluator_Properties_Count::tags && tags)
+    return to_string(tags->size());
+  return "0";
+}
+
+
+std::string Prop_Count_Eval_Task::eval(const Derived_Skeleton* elem,
+    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+{
+  if (to_count == Evaluator_Properties_Count::tags && tags)
+    return to_string(tags->size());
+  return "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Evaluator_Set_Count::Statement_Maker Evaluator_Set_Count::statement_maker;
+
+
+Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -387,11 +562,11 @@ Statement* Evaluator_Count::Statement_Maker::create_statement(
     attributes["type"] = tree_it.rhs().rhs()->token;
   }
   
-  return new Evaluator_Count(tree_it->line_col.first, attributes, global_settings);
+  return new Evaluator_Set_Count(tree_it->line_col.first, attributes, global_settings);
 }
 
 
-std::string Evaluator_Count::to_string(Evaluator_Count::Objects objects)
+std::string Evaluator_Set_Count::to_string(Evaluator_Set_Count::Objects objects)
 {
   if (objects == nodes)
     return "node";
@@ -401,13 +576,11 @@ std::string Evaluator_Count::to_string(Evaluator_Count::Objects objects)
     return "relations";
   if (objects == deriveds)
     return "deriveds";
-  if (objects == tags)
-    return "tags";
-  return "members";
+  return "nothing";
 }
 
 
-Evaluator_Count::Evaluator_Count
+Evaluator_Set_Count::Evaluator_Set_Count
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Evaluator(line_number_)
 {
@@ -428,46 +601,35 @@ Evaluator_Count::Evaluator_Count
     to_count = relations;
   else if (attributes["type"] == "deriveds")
     to_count = deriveds;
-  else if (attributes["type"] == "tags")
-    to_count = tags;
-  else if (attributes["type"] == "members")
-    to_count = members;
   else
   {
     ostringstream temp("");
-    temp<<"For the attribute \"type\" of the element \"eval-count\""
-        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", \"deriveds\", \"tags\", "
-          "or \"members\" strings.";
+    temp<<"For the attribute \"type\" of the element \"eval-set-count\""
+        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", or \"deriveds\" strings.";
     add_static_error(temp.str());
   }
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > Evaluator_Count::used_sets() const
+std::pair< std::vector< Set_Usage >, uint > Evaluator_Set_Count::used_sets() const
 {
   std::vector< Set_Usage > result;
-  if (to_count == Evaluator_Count::nodes || to_count == Evaluator_Count::ways || to_count == Evaluator_Count::relations)
+  if (to_count == Evaluator_Set_Count::nodes || to_count == Evaluator_Set_Count::ways
+        || to_count == Evaluator_Set_Count::relations || to_count == Evaluator_Set_Count::deriveds)
     result.push_back(Set_Usage(input, 1u));
-  if (to_count == Evaluator_Count::tags)
-    return std::make_pair(result, 2u);
-  else if (to_count == Evaluator_Count::members)
-    return std::make_pair(result, 1u);
   return std::make_pair(result, 0u);
 }
 
   
-std::vector< std::string > Evaluator_Count::used_tags() const
+std::vector< std::string > Evaluator_Set_Count::used_tags() const
 {
   std::vector< std::string > result;
   return result;
 }
 
 
-Eval_Task* Evaluator_Count::get_task(const Prepare_Task_Context& context)
+Eval_Task* Evaluator_Set_Count::get_task(const Prepare_Task_Context& context)
 {
-  if (to_count == tags || to_count == members)
-    return new Count_Eval_Task(to_count);
-  
   const Set_With_Context* set = context.get_set(input);
   
   unsigned int counter = 0;
@@ -479,87 +641,65 @@ Eval_Task* Evaluator_Count::get_task(const Prepare_Task_Context& context)
       counter = count(set->base->ways) + count(set->base->attic_ways);
     if (to_count == relations)
       counter = count(set->base->relations) + count(set->base->attic_relations);
+    if (to_count == deriveds)
+      counter = count(set->base->areas) + count(set->base->deriveds);
   }
   
   return new Const_Eval_Task(::to_string(counter));
 }
 
 
-std::string Count_Eval_Task::eval(const Node_Skeleton* elem,
+std::string Set_Count_Eval_Task::eval(const Node_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::tags && tags)
-    return to_string(tags->size());
   return "0";
 }
 
 
-std::string Count_Eval_Task::eval(const Attic< Node_Skeleton >* elem,
+std::string Set_Count_Eval_Task::eval(const Attic< Node_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::tags && tags)
-    return to_string(tags->size());
   return "0";
 }
 
 
-std::string Count_Eval_Task::eval(const Way_Skeleton* elem,
+std::string Set_Count_Eval_Task::eval(const Way_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::members && elem)
-    return to_string(elem->nds.size());
-  else if (to_count == Evaluator_Count::tags && tags)
-    return to_string(tags->size());
   return "0";
 }
 
 
-std::string Count_Eval_Task::eval(const Attic< Way_Skeleton >* elem,
+std::string Set_Count_Eval_Task::eval(const Attic< Way_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::members && elem)
-    return to_string(elem->nds.size());
-  else if (to_count == Evaluator_Count::tags && tags)
-    return to_string(tags->size());
   return "0";
 }
 
 
-std::string Count_Eval_Task::eval(const Relation_Skeleton* elem,
+std::string Set_Count_Eval_Task::eval(const Relation_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::members && elem)
-    return to_string(elem->members.size());
-  else if (to_count == Evaluator_Count::tags && tags)
-    return to_string(tags->size());
   return "0";
 }
 
 
-std::string Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
+std::string Set_Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::members && elem)
-    return to_string(elem->members.size());
-  else if (to_count == Evaluator_Count::tags && tags)
-    return to_string(tags->size());
   return "0";
 }
 
 
-std::string Count_Eval_Task::eval(const Area_Skeleton* elem,
+std::string Set_Count_Eval_Task::eval(const Area_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::tags && tags)
-    return to_string(tags->size());
   return "0";
 }
 
 
-std::string Count_Eval_Task::eval(const Derived_Skeleton* elem,
+std::string Set_Count_Eval_Task::eval(const Derived_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
 {
-  if (to_count == Evaluator_Count::tags && tags)
-    return to_string(tags->size());
   return "0";
 }

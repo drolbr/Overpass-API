@@ -3686,28 +3686,31 @@ int main(int argc, char* args[])
       "  </with-tags>\n";
     if (string(args[2]) == "make_6")
       cout<<
-      "  <count-from-default id=\"1\">\n"
+      "  <count-from-default id=\"2\">\n"
       "    <tag k=\"nodes\" v=\"1\"/>\n"
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"deriveds\" v=\"1\"/>\n"
       "    <tag k=\"tags\" v=\"5\"/>\n"
       "    <tag k=\"members\" v=\"4\"/>\n"
       "  </count-from-default>\n";
     if (string(args[2]) == "make_7")
       cout<<
-      "  <count-from-default id=\"1\">\n"
+      "  <count-from-default id=\"2\">\n"
       "    <tag k=\"nodes\" v=\"0\"/>\n"
       "    <tag k=\"ways\" v=\"0\"/>\n"
       "    <tag k=\"relations\" v=\"0\"/>\n"
+      "    <tag k=\"deriveds\" v=\"1\"/>\n"
       "    <tag k=\"tags\" v=\"0\"/>\n"
       "    <tag k=\"members\" v=\"0\"/>\n"
       "  </count-from-default>\n";
     if (string(args[2]) == "make_8")
       cout<<
-      "  <count-from-foo id=\"1\">\n"
+      "  <count-from-foo id=\"2\">\n"
       "    <tag k=\"nodes\" v=\"1\"/>\n"
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"deriveds\" v=\"1\"/>\n"
       "    <tag k=\"tags\" v=\"5\"/>\n"
       "    <tag k=\"members\" v=\"4\"/>\n"
       "  </count-from-foo>\n";

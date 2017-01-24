@@ -481,55 +481,37 @@ The syntax for tags is
 The syntax for members is
 
   count(members)
-
-  
-== Statistical Count ==
-
-This variant of the <em>count</em> operator counts elements of a given type in a set.
-
-The syntax variants
-
-  count(nodes)
-  count(ways)
-  count(relations)
-  count(deriveds)
-  
-counts elements in the default set <em>_</em>, and the syntax variant
-
-  <Set>.count(nodes)
-  <Set>.count(ways)
-  <Set>.count(relations)
-  <Set>.count(deriveds)
-  
-counts elements in the set &lt;Set&gt;. 
 */
 
-class Evaluator_Count : public Evaluator
+class Evaluator_Properties_Count : public Evaluator
 {
 public:
-  enum Objects { nothing, nodes, ways, relations, deriveds, tags, members };
+  enum Objects { nothing, tags, members };
   static std::string to_string(Objects objects);
   
-  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Count >
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Properties_Count >
   {
     virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-count")
-    { Statement::maker_by_func_name()["count"].push_back(this); }
+    Statement_Maker() : Generic_Statement_Maker("eval-prop-count")
+    {
+      Statement::maker_by_func_name()["count_members"].push_back(this);
+      Statement::maker_by_func_name()["count_tags"].push_back(this);
+    }
   };
   static Statement_Maker statement_maker;
       
   virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-count from=\"" + input + "\" type=\"" + to_string(to_count) + "\"/>\n"; }
+  { return indent + "<eval-prop-count type=\"" + to_string(to_count) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("count") + (input != "_" ? std::string(".") + input : "") + "(" + to_string(to_count) + ")"; }
+  { return std::string(to_count == members ? "count_members" : "count_tags") + "()"; }
 
-  Evaluator_Count(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Properties_Count(int line_number_, const map< string, string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-count"; }
+  virtual string get_name() const { return "eval-prop-count"; }
   virtual string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Evaluator_Count() {}
+  virtual ~Evaluator_Properties_Count() {}
   
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;  
   virtual std::vector< std::string > used_tags() const;
@@ -537,14 +519,13 @@ public:
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
   
 private:
-  std::string input;
   Objects to_count;
 };
 
 
-struct Count_Eval_Task : public Eval_Task
+struct Prop_Count_Eval_Task : public Eval_Task
 {
-  Count_Eval_Task(Evaluator_Count::Objects to_count_) : to_count(to_count_) {}
+  Prop_Count_Eval_Task(Evaluator_Properties_Count::Objects to_count_) : to_count(to_count_) {}
   
   virtual std::string eval(const std::string* key) const { return "0"; }
   
@@ -566,7 +547,94 @@ struct Count_Eval_Task : public Eval_Task
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
       
 private:
-  Evaluator_Count::Objects to_count;
+  Evaluator_Properties_Count::Objects to_count;
+};
+
+
+/* == Statistical Count ==
+
+This variant of the <em>count</em> operator counts elements of a given type in a set.
+
+The syntax variants
+
+  count(nodes)
+  count(ways)
+  count(relations)
+  count(deriveds)
+  
+counts elements in the default set <em>_</em>, and the syntax variant
+
+  <Set>.count(nodes)
+  <Set>.count(ways)
+  <Set>.count(relations)
+  <Set>.count(deriveds)
+  
+counts elements in the set &lt;Set&gt;. 
+*/
+
+class Evaluator_Set_Count : public Evaluator
+{
+public:
+  enum Objects { nothing, nodes, ways, relations, deriveds };
+  static std::string to_string(Objects objects);
+  
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Count >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker("eval-set-count")
+    { Statement::maker_by_func_name()["count"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+      
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-set-count from=\"" + input + "\" type=\"" + to_string(to_count) + "\"/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return (input != "_" ? input + "." : "") + "count(" + to_string(to_count) + ")"; }
+
+  Evaluator_Set_Count(int line_number_, const map< string, string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual string get_name() const { return "eval-set-count"; }
+  virtual string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Set_Count() {}
+  
+  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;  
+  virtual std::vector< std::string > used_tags() const;
+  
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context);
+  
+private:
+  std::string input;
+  Objects to_count;
+};
+
+
+struct Set_Count_Eval_Task : public Eval_Task
+{
+  Set_Count_Eval_Task(Evaluator_Set_Count::Objects to_count_) : to_count(to_count_) {}
+  
+  virtual std::string eval(const std::string* key) const { return "0"; }
+  
+  virtual std::string eval(const Node_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Attic< Node_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Way_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Attic< Way_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Relation_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Attic< Relation_Skeleton >* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Area_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+  virtual std::string eval(const Derived_Skeleton* elem,
+      const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
+      
+private:
+  Evaluator_Set_Count::Objects to_count;
 };
 
 
