@@ -4,7 +4,7 @@ for i in \
   filter.h \
   convert.h \
   make.h \
-  evaluators.h \
+  evaluator.h \
   tag_value.h \
   aggregators.h \
   binary_operators.h \

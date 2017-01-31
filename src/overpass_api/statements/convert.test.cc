@@ -18,6 +18,7 @@
 
 
 #include "../data/utils.h"
+#include "aggregators.h"
 #include "id_query.h"
 #include "convert.h"
 #include "make.h"
