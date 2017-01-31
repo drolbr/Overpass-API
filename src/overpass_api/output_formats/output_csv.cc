@@ -31,6 +31,35 @@ bool Output_CSV::write_http_headers()
 }
 
 
+// Escape CSV output according to RFC 4180
+std::string escape_csv(const std::string& input)
+{
+  std::string result;
+  bool quotes_needed = false;
+  
+  for (int i = input.size() - 1; i >= 0; --i)
+  {
+    if (input[i] == '\n' || input[i] == ',')
+      quotes_needed = true;
+    else if (input[i] == '\"')
+    {
+      quotes_needed = true;
+      if (result.empty())
+        result = input.substr(0, i) + "\"" + input.substr(i);
+      else
+        result = result.substr(0, i) + "\"" + result.substr(i);
+    }
+  }
+  
+  if (!quotes_needed)
+    return input;
+  else if (result.empty())
+    return std::string("\"") + input + "\"";
+  else
+    return std::string("\"") + result + "\"";
+}
+
+
 void Output_CSV::write_payload_header
     (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
 {
@@ -39,7 +68,7 @@ void Output_CSV::write_payload_header
     for (std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
         it != csv_settings.keyfields.end(); ++it)
     {
-      std::cout<< (it->second ? "@" : "") << it->first;
+      std::cout<<(it->second ? "@" : "")<<escape_csv(it->first);
       if (it + 1 != csv_settings.keyfields.end())
         std::cout<<csv_settings.separator;
     }
@@ -86,7 +115,7 @@ void process_csv_line(Object_Type::_ otype, Id_Type id, const Opaque_Geometry& g
 	{
 	  if (it_tags->first == it->first)
 	  {
-	    std::cout<<it_tags->second;
+	    std::cout<<escape_csv(it_tags->second);
 	    break;
 	  }
 	}
