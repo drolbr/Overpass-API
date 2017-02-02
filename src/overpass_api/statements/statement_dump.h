@@ -45,25 +45,28 @@ class Statement_Dump
       Statement::Factory* stmt_factory;
     };
     
-    Statement_Dump(std::string name, const std::map< std::string, std::string >& attributes_)
-        : name_(name), attributes(attributes_) {}
+    Statement_Dump(std::string name, const std::map< std::string, std::string >& attributes_, int line_number_)
+        : name_(name), attributes(attributes_), line_number(line_number_) {}
     ~Statement_Dump();
     
     void add_statement(Statement_Dump* statement, std::string text);
     std::string dump_xml() const;
-    std::string dump_pretty_map_ql() const;
-    std::string dump_compact_map_ql() const;
-    std::string dump_bbox_map_ql() const;
+    std::string dump_pretty_map_ql(Statement::Factory& stmt_factory) const;
+    std::string dump_compact_map_ql(Statement::Factory& stmt_factory) const;
+    std::string dump_bbox_map_ql(Statement::Factory& stmt_factory) const;
     
     const std::string& name() const { return name_; }
     std::string attribute(const std::string& key) const;
     
     void add_final_text(std::string text) {}
 
+    Statement* create_non_dump_stmt(Statement::Factory& stmt_factory) const;
+    
   private:
     std::string name_;
     std::map< std::string, std::string > attributes;
     std::vector< Statement_Dump* > substatements;
+    int line_number;
 };
 
 #endif

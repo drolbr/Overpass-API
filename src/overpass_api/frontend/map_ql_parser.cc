@@ -1489,7 +1489,7 @@ void parse_and_dump_compact_from_map_ql
   generic_parse_and_validate_map_ql< Statement_Dump >(stmt_factory, xml_raw, error_output, stmt_seq, parsed_query);
   for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();
       it != stmt_seq.end(); ++it)
-    cout<<(*it)->dump_compact_map_ql()<<'\n';
+    cout<<(*it)->dump_compact_map_ql(stmt_factory_)<<'\n';
   for (vector< Statement_Dump* >::iterator it = stmt_seq.begin();
       it != stmt_seq.end(); ++it)
     delete *it;
@@ -1503,7 +1503,7 @@ void parse_and_dump_bbox_from_map_ql
   generic_parse_and_validate_map_ql< Statement_Dump >(stmt_factory, xml_raw, error_output, stmt_seq, parsed_query);
   for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();
       it != stmt_seq.end(); ++it)
-    cout<<(*it)->dump_bbox_map_ql()<<'\n';
+    cout<<(*it)->dump_bbox_map_ql(stmt_factory_)<<'\n';
   for (vector< Statement_Dump* >::iterator it = stmt_seq.begin();
       it != stmt_seq.end(); ++it)
     delete *it;
@@ -1517,7 +1517,7 @@ void parse_and_dump_pretty_from_map_ql
   generic_parse_and_validate_map_ql< Statement_Dump >(stmt_factory, xml_raw, error_output, stmt_seq, parsed_query);
   for (vector< Statement_Dump* >::const_iterator it = stmt_seq.begin();
       it != stmt_seq.end(); ++it)
-    cout<<(*it)->dump_pretty_map_ql();
+    cout<<(*it)->dump_pretty_map_ql(stmt_factory_);
   for (vector< Statement_Dump* >::iterator it = stmt_seq.begin();
       it != stmt_seq.end(); ++it)
     delete *it;

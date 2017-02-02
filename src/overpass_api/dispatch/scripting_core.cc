@@ -169,11 +169,11 @@ bool parse_and_validate
 	  if (debug_level == parser_dump_xml)
             cout<<(*it)->dump_xml();
 	  else if (debug_level == parser_dump_compact_map_ql)
-	    cout<<(*it)->dump_compact_map_ql();
+	    cout<<(*it)->dump_compact_map_ql(stmt_factory);
 	  else if (debug_level == parser_dump_bbox_map_ql)
-	    cout<<(*it)->dump_bbox_map_ql();
+	    cout<<(*it)->dump_bbox_map_ql(stmt_factory);
 	  else if (debug_level == parser_dump_pretty_map_ql)
-	    cout<<(*it)->dump_pretty_map_ql();
+	    cout<<(*it)->dump_pretty_map_ql(stmt_factory);
 	}
         for (vector< Statement_Dump* >::iterator it = statement_stack< Statement_Dump >().begin();
             it != statement_stack< Statement_Dump >().end(); ++it)
