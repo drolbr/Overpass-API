@@ -32,27 +32,31 @@ Statement_Dump::~Statement_Dump()
     delete *it;
 }
 
+
 void Statement_Dump::add_statement(Statement_Dump* statement, std::string text)
 {
   substatements.push_back(statement);
 }
 
 
-Statement* Statement_Dump::create_non_dump_stmt(Statement::Factory& stmt_factory) const
+Statement* Statement_Dump::create_non_dump_stmt(Statement::Factory& stmt_factory)
 {
-  Statement* stmt = stmt_factory.create_statement(name_, line_number, attributes);
+  if (non_dump_stmt)
+    return non_dump_stmt;
   
-  if (stmt)
+  non_dump_stmt = stmt_factory.create_statement(name_, line_number, attributes);
+  
+  if (non_dump_stmt)
   {
     for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
     {
       Statement* substmt = (*it)->create_non_dump_stmt(stmt_factory);
       if (substmt)
-        stmt->add_statement(substmt, "");
+        non_dump_stmt->add_statement(substmt, "");
     }
   }
   
-  return stmt;
+  return non_dump_stmt;
 }
 
 
@@ -77,15 +81,12 @@ std::string indent(const std::string& subresult)
 
 std::string Statement_Dump::dump_xml() const
 {
+  if (non_dump_stmt)
+    return non_dump_stmt->dump_xml("");
+  
   std::string result;
   
-  if (name_ == "universal_dump")
-  {
-    std::map< std::string, std::string >::const_iterator it = attributes.find("xml");
-    if (it != attributes.end())
-      result += it->second;
-  }
-  else if (substatements.empty())
+  if (substatements.empty())
   {
     result = std::string("<") + name_;
     for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
@@ -259,14 +260,9 @@ std::string dump_subquery_map_ql(const std::string& name, const std::map< std::s
     result += "(if:";
     if (substatements && !substatements->empty())
     {
-      if (substatements->front()->name() == "universal_dump")
-        result += substatements->front()->attribute("compact_ql");
-      else
-      {
-        Statement* stmt = substatements->front()->create_non_dump_stmt(stmt_factory);
-        if (stmt)
-          result += stmt->dump_compact_ql("");
-      }
+      Statement* stmt = substatements->front()->create_non_dump_stmt(stmt_factory);
+      if (stmt)
+        result += stmt->dump_compact_ql("");
     }
     result += ")";
   }
@@ -503,27 +499,17 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
     if (it != substatements.end())
     {
       result += " ";
-      if ((*it)->name() == "universal_dump")
-        result += (*it)->attribute("compact_ql");
-      else
-      {
-        Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
-        if (stmt)
-          result += stmt->dump_compact_ql("");
-      }
+      Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
+      if (stmt)
+        result += stmt->dump_compact_ql("");
       ++it;
     }
     for (; it != substatements.end(); ++it)
     {
       result += ",";
-      if ((*it)->name() == "universal_dump")
-        result += (*it)->attribute("compact_ql");
-      else
-      {
-        Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
-        if (stmt)
-          result += stmt->dump_compact_ql("");
-      }
+      Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
+      if (stmt)
+        result += stmt->dump_compact_ql("");
     }
   }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
@@ -749,27 +735,17 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory) c
     if (it != substatements.end())
     {
       result += " ";
-      if ((*it)->name() == "universal_dump")
-        result += (*it)->attribute("compact_ql");
-      else
-      {
-        Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
-        if (stmt)
-          result += stmt->dump_compact_ql("");
-      }
+      Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
+      if (stmt)
+        result += stmt->dump_compact_ql("");
       ++it;
     }
     for (; it != substatements.end(); ++it)
     {
       result += ",";
-      if ((*it)->name() == "universal_dump")
-        result += (*it)->attribute("compact_ql");
-      else
-      {
-        Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
-        if (stmt)
-          result += stmt->dump_compact_ql("");
-      }
+      Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
+      if (stmt)
+        result += stmt->dump_compact_ql("");
     }
   }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
@@ -1004,27 +980,17 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
     if (it != substatements.end())
     {
       result += " ";
-      if ((*it)->name() == "universal_dump")
-        result += (*it)->attribute("pretty_ql");
-      else
-      {
-        Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
-        if (stmt)
-          result += stmt->dump_pretty_ql("");
-      }
+      Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
+      if (stmt)
+        result += stmt->dump_pretty_ql("");
       ++it;
     }
     for (; it != substatements.end(); ++it)
     {
       result += ",";
-      if ((*it)->name() == "universal_dump")
-        result += (*it)->attribute("pretty_ql");
-      else
-      {
-        Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
-        if (stmt)
-          result += stmt->dump_pretty_ql("");
-      }
+      Statement* stmt = (*it)->create_non_dump_stmt(stmt_factory);
+      if (stmt)
+        result += stmt->dump_pretty_ql("");
     }
   }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
@@ -1106,13 +1072,7 @@ Statement_Dump* Statement_Dump::Factory::create_statement(
 {
   Statement* stmt = stmt_factory->create_statement(tree_it, tree_context);
   if (stmt)
-  {
-    std::map< std::string, std::string > attributes;
-    attributes["xml"] = stmt->dump_xml("");
-    attributes["pretty_ql"] = stmt->dump_pretty_ql("");
-    attributes["compact_ql"] = stmt->dump_compact_ql("");
-    return new Statement_Dump("universal_dump", attributes, tree_it->line_col.first);
-  }
+    return new Statement_Dump("universal_dump", std::map< std::string, std::string >(), tree_it->line_col.first, stmt);
   
   return 0;
 }

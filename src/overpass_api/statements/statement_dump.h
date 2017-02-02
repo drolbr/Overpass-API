@@ -45,8 +45,9 @@ class Statement_Dump
       Statement::Factory* stmt_factory;
     };
     
-    Statement_Dump(std::string name, const std::map< std::string, std::string >& attributes_, int line_number_)
-        : name_(name), attributes(attributes_), line_number(line_number_) {}
+    Statement_Dump(std::string name, const std::map< std::string, std::string >& attributes_, int line_number_,
+        Statement* stmt = 0)
+        : name_(name), attributes(attributes_), line_number(line_number_), non_dump_stmt(stmt) {}
     ~Statement_Dump();
     
     void add_statement(Statement_Dump* statement, std::string text);
@@ -60,13 +61,14 @@ class Statement_Dump
     
     void add_final_text(std::string text) {}
 
-    Statement* create_non_dump_stmt(Statement::Factory& stmt_factory) const;
+    Statement* create_non_dump_stmt(Statement::Factory& stmt_factory);
     
   private:
     std::string name_;
     std::map< std::string, std::string > attributes;
     std::vector< Statement_Dump* > substatements;
     int line_number;
+    Statement* non_dump_stmt;
 };
 
 #endif
