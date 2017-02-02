@@ -20,14 +20,12 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__MAKE_H
 
 
+#include "set_prop.h"
 #include "statement.h"
 
 #include <map>
 #include <string>
 #include <vector>
-
-
-class Set_Prop_Statement;
 
 
 /* == The statement <em>make</em> ==
@@ -63,7 +61,47 @@ public:
   virtual void execute(Resource_Manager& rman);
   virtual ~Make_Statement();
   static Generic_Statement_Maker< Make_Statement > statement_maker;
+  
+  virtual std::string dump_xml(const std::string& indent) const
+  {
+    std::string result = indent + "<make" + dump_xml_result_name() + " type=\"" + type;
+    if (evaluators.empty())
+      return result + "\"/>\n";
+    result += "\">\n";
+    
+    for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+      result += *it ? (*it)->dump_xml(indent + "  ") : "";
+    return result + "</make>\n";
+  }
+  
+  virtual std::string dump_compact_ql(const std::string& indent) const
+  {
+    std::string result = indent + "make " + type;
+    std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin();
+    if (it != evaluators.end())
+    {
+      result += " " + (*it ? (*it)->dump_compact_ql(indent + "  ") : "");
+      ++it;
+    }
+    for (; it != evaluators.end(); ++it)
+      result += "," + (*it ? (*it)->dump_compact_ql(indent + "  ") : "");
+    return result + dump_ql_result_name();
+  }
 
+  virtual std::string dump_pretty_ql(const std::string& indent) const
+  {
+    std::string result = indent + "make " + type;
+    std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin();
+    if (it != evaluators.end())
+    {
+      result += "\n  " + indent + (*it ? (*it)->dump_pretty_ql(indent + "  ") : "");
+      ++it;
+    }
+    for (; it != evaluators.end(); ++it)
+      result += ",\n  " + indent + (*it ? (*it)->dump_pretty_ql(indent + "  ") : "");
+    return result + dump_ql_result_name();
+  }
+  
 private:
   std::string type;
   std::vector< Set_Prop_Statement* > evaluators;

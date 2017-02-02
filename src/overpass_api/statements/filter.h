@@ -61,6 +61,19 @@ class Filter_Statement : public Output_Statement
     virtual Query_Constraint* get_query_constraint();
     
     Evaluator* get_criterion() { return criterion; }
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<filter>\n"
+          + (criterion ? criterion->dump_xml(indent + "  ") : "")
+          + indent + "</filter>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("(if:") + (criterion ? criterion->dump_compact_ql("") : "") + ")";
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
 
   private:
     vector< Query_Constraint* > constraints;

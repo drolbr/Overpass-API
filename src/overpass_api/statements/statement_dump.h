@@ -52,9 +52,9 @@ class Statement_Dump
     
     void add_statement(Statement_Dump* statement, std::string text);
     std::string dump_xml() const;
-    std::string dump_pretty_map_ql(Statement::Factory& stmt_factory) const;
-    std::string dump_compact_map_ql(Statement::Factory& stmt_factory) const;
-    std::string dump_bbox_map_ql(Statement::Factory& stmt_factory) const;
+    std::string dump_pretty_map_ql(Statement::Factory& stmt_factory);
+    std::string dump_compact_map_ql(Statement::Factory& stmt_factory);
+    std::string dump_bbox_map_ql(Statement::Factory& stmt_factory);
     
     const std::string& name() const { return name_; }
     std::string attribute(const std::string& key) const;

@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__CONVERT_H
 
 
+#include "set_prop.h"
 #include "statement.h"
 
 #include <map>
@@ -68,6 +69,46 @@ public:
   static Generic_Statement_Maker< Convert_Statement > statement_maker;
     
   std::string get_source_name() const { return input; }
+  
+  virtual std::string dump_xml(const std::string& indent) const
+  {
+    std::string result = indent + "<convert" + dump_xml_result_name() + " type=\"" + type;
+    if (evaluators.empty())
+      return result + "\"/>\n";
+    result += "\">\n";
+    
+    for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+      result += *it ? (*it)->dump_xml(indent + "  ") : "";
+    return result + "</convert>\n";
+  }
+  
+  virtual std::string dump_compact_ql(const std::string& indent) const
+  {
+    std::string result = indent + "convert " + type;
+    std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin();
+    if (it != evaluators.end())
+    {
+      result += " " + (*it ? (*it)->dump_compact_ql(indent + "  ") : "");
+      ++it;
+    }
+    for (; it != evaluators.end(); ++it)
+      result += "," + (*it ? (*it)->dump_compact_ql(indent + "  ") : "");
+    return result + dump_ql_result_name();
+  }
+
+  virtual std::string dump_pretty_ql(const std::string& indent) const
+  {
+    std::string result = indent + "convert " + type;
+    std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin();
+    if (it != evaluators.end())
+    {
+      result += "\n  " + indent + (*it ? (*it)->dump_pretty_ql(indent + "  ") : "");
+      ++it;
+    }
+    for (; it != evaluators.end(); ++it)
+      result += ",\n  " + indent + (*it ? (*it)->dump_pretty_ql(indent + "  ") : "");
+    return result + dump_ql_result_name();
+  }
 
 private:
   std::string input;

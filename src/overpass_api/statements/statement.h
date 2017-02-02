@@ -210,6 +210,9 @@ class Output_Statement : public Statement
     Output_Statement(int line_number) : Statement(line_number), output("_") {}
     
     virtual string get_result_name() const { return output; }
+  
+    std::string dump_ql_result_name() const { return output != "_" ? std::string("->.") + output : ""; }
+    std::string dump_xml_result_name() const { return output != "_" ? std::string("into=\"") + output + "\"" : ""; }
     
   protected:
     void set_output(std::string output_) { output = output_; }
