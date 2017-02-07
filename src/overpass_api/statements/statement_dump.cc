@@ -437,7 +437,7 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
-  else if (name_ == "make" || name_ == "convert")
+  else if (name_ == "make" || name_ == "convert" || name_ == "coord-query")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -654,7 +654,7 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
-  else if (name_ == "make" || name_ == "convert")
+  else if (name_ == "make" || name_ == "convert" || name_ == "coord-query")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -880,7 +880,7 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, true) + ";";
-  else if (name_ == "make" || name_ == "convert")
+  else if (name_ == "make" || name_ == "convert" || name_ == "coord-query")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)

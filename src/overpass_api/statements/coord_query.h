@@ -22,9 +22,9 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
 #include "statement.h"
 
-using namespace std;
 
 class Coord_Query_Statement : public Output_Statement
 {
@@ -52,7 +52,26 @@ class Coord_Query_Statement : public Output_Statement
     const static int INTERSECT = 8;
     
     static bool is_used() { return is_used_; }
+   
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<coord-query"
+          + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+          + (lat != 100. ? std::string(" lat=\"") + to_string(lat) + "\"" : "")
+          + (lon != 200. ? std::string(" lon=\"") + to_string(lon) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
   
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return (input != "_" ? std::string(".") + input + " " : "")
+          + "is_in"
+          + (lat != 100. ? std::string("(") + to_string(lat) : "")
+          + (lon != 200. ? std::string(",") + to_string(lon) : "")
+          + (lat != 100. ? ")" : "") + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+ 
   private:
     string input;
     double lat, lon;
