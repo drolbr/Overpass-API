@@ -22,9 +22,9 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
 #include "statement.h"
 
-using namespace std;
 
 class Pivot_Statement : public Output_Statement
 {
@@ -39,6 +39,21 @@ class Pivot_Statement : public Output_Statement
     
     virtual Query_Constraint* get_query_constraint();
     string get_input() const { return input; }
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<pivot"
+          + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("(pivot")
+          + (input != "_" ? std::string(".") + input : "")
+          + ")" + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   
   private:
     string input;

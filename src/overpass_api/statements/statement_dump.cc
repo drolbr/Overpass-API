@@ -241,7 +241,7 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
     result += "]";
   }
   else if (name == "area-query" || name == "around" || name == "bbox-query" || name == "changed"
-      || name == "filter" || name == "id-query" || name == "newer")
+      || name == "filter" || name == "id-query" || name == "newer" || name == "pivot")
   {
     Statement* non_dump_stmt = stmt.create_non_dump_stmt(stmt_factory);
     if (non_dump_stmt)
@@ -432,7 +432,8 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
     if (stmt)
       result += stmt->dump_compact_ql("");
   }
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer"
+      || name_ == "pivot")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
@@ -650,7 +651,8 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
     if (stmt)
       result += stmt->dump_compact_ql("");
   }
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer"
+      || name_ == "pivot")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
@@ -877,7 +879,8 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
     if (stmt)
       result += stmt->dump_pretty_ql("");
   }
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer"
+      || name_ == "pivot")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
