@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__AREA_QUERY_H
 
 #include "../data/collect_members.h"
+#include "../data/utils.h"
 #include "../data/way_geometry_store.h"
 #include "statement.h"
 
@@ -75,6 +76,23 @@ class Area_Query_Statement : public Output_Statement
     string get_input() const { return input; }
     
     static bool is_used() { return is_used_; }
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<area-query"
+          + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+          + (submitted_id > 0 ? std::string(" ref=\"") + to_string(submitted_id) + "\"" : "") + "/>\n"
+          + dump_ql_result_name();
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return "(area"
+          + (input != "_" ? std::string(".") + input : "")
+          + (submitted_id > 0 ? std::string(":") + to_string(submitted_id) : "") + ")"
+          + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   
   private:
     string input;

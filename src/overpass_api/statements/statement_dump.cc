@@ -256,7 +256,7 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
       result += "~\"" + escape_quotation_marks(attributes.find("regv")->second) + "\"";
     result += "]";
   }
-  else if (name == "filter")
+  else if (name == "area-query" || name == "filter")
   {
     Statement* non_dump_stmt = stmt.create_non_dump_stmt(stmt_factory);
     if (non_dump_stmt)
@@ -331,15 +331,6 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
       result += "\"" + escape_quotation_marks(attributes.find("since")->second) + "\"";
     if (attributes.find("until") != attributes.end() && attributes.find("until")->second != "")
       result += ",\"" + escape_quotation_marks(attributes.find("until")->second) + "\"";
-    result += ")";
-  }
-  else if (name == "area-query")
-  {
-    result += "(area";
-    if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
-      result += "." + attributes.find("from")->second;
-    if (attributes.find("ref") != attributes.end() && attributes.find("ref")->second != "")
-      result += ":" + attributes.find("ref")->second;
     result += ")";
   }
   else
@@ -491,6 +482,11 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
     if (stmt)
       result += stmt->dump_compact_ql("");
   }
+  else if (name_ == "area-query")
+  {
+    result += "node";
+    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
+  }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";
@@ -538,13 +534,6 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
       else if (rel_type == "up-rel")
 	result += "<<";
     }
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
-  }
-  else if (name_ == "area-query")
-  {
-    result += "node" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
@@ -710,6 +699,11 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
     if (stmt)
       result += stmt->dump_compact_ql("");
   }
+  else if (name_ == "area-query")
+  {
+    result += "node";
+    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
+  }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";
@@ -757,13 +751,6 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
       else if (rel_type == "up-rel")
 	result += "<<";
     }
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
-  }
-  else if (name_ == "area-query")
-  {
-    result += "node" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory) + "(bbox)";
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
@@ -938,6 +925,11 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
     if (stmt)
       result += stmt->dump_pretty_ql("");
   }
+  else if (name_ == "area-query")
+  {
+    result += "node";
+    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
+  }
   else if (name_ == "bbox-query" || name_ == "around" || name_ == "id_query")
   {
     result += "node";
@@ -985,13 +977,6 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
       else if (rel_type == "up-rel")
 	result += "<<";
     }
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
-  }
-  else if (name_ == "area-query")
-  {
-    result += "node" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
     
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
