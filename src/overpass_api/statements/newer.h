@@ -23,9 +23,10 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
+#include "../frontend/basic_formats.h"
 #include "statement.h"
 
-using namespace std;
 
 class Newer_Statement : public Statement
 {
@@ -42,6 +43,21 @@ class Newer_Statement : public Statement
     virtual Query_Constraint* get_query_constraint();
     
     uint64 get_timestamp() const { return than_timestamp; }
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<newer"
+          + (than_timestamp != NOW ? std::string(" than=\"") + iso_string(than_timestamp) + "\"" : "")
+          + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("(newer:")
+          + (than_timestamp != NOW ? std::string("\"") + iso_string(than_timestamp) + "\"" : "")
+          + ")";
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
 
   private:
     uint64 than_timestamp;
