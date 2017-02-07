@@ -1294,7 +1294,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
       statement = create_query_statement< TStatement >
           (stmt_factory, type, into, query_line_col.first);
       TStatement* substatement = create_query_substatement< TStatement >
-          (stmt_factory, token, error_output, clauses.front(), type, from, into);
+          (stmt_factory, token, error_output, clauses.front(), type, from, "_");
       if (substatement)
 	statement->add_statement(substatement, "");
     }

@@ -227,23 +227,7 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
   std::string result;
   const std::string& name = stmt.name();
 
-  if (name == "bbox-query")
-  {
-    result += "(";
-    if (attributes.find("s") != attributes.end())
-      result += attributes.find("s")->second;
-    result += ",";
-    if (attributes.find("w") != attributes.end())
-      result += attributes.find("w")->second;
-    result += ",";
-    if (attributes.find("n") != attributes.end())
-      result += attributes.find("n")->second;
-    result += ",";
-    if (attributes.find("e") != attributes.end())
-      result += attributes.find("e")->second;
-    result += ")";
-  }
-  else if (name == "has-kv")
+  if (name == "has-kv")
   {
     result += "[";
     if (attributes.find("k") != attributes.end())
@@ -256,7 +240,7 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
       result += "~\"" + escape_quotation_marks(attributes.find("regv")->second) + "\"";
     result += "]";
   }
-  else if (name == "area-query" || name == "around" || name == "filter")
+  else if (name == "area-query" || name == "around" || name == "bbox-query" || name == "changed" || name == "filter")
   {
     Statement* non_dump_stmt = stmt.create_non_dump_stmt(stmt_factory);
     if (non_dump_stmt)
@@ -309,15 +293,6 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
   {
     if (attributes.find("than") != attributes.end() && attributes.find("than")->second != "")
       result += "(newer:\"" + escape_quotation_marks(attributes.find("than")->second) + "\")";
-  }
-  else if (name == "changed")
-  {
-    result += "(changed:";
-    if (attributes.find("since") != attributes.end() && attributes.find("since")->second != "")
-      result += "\"" + escape_quotation_marks(attributes.find("since")->second) + "\"";
-    if (attributes.find("until") != attributes.end() && attributes.find("until")->second != "")
-      result += ",\"" + escape_quotation_marks(attributes.find("until")->second) + "\"";
-    result += ")";
   }
   else
     result += "(" + name + ":)";
@@ -468,12 +443,12 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
     if (stmt)
       result += stmt->dump_compact_ql("");
   }
-  else if (name_ == "area-query" || name_ == "around")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "bbox-query" || name_ == "id_query")
+  else if (name_ == "id_query")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
@@ -685,12 +660,12 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
     if (stmt)
       result += stmt->dump_compact_ql("");
   }
-  else if (name_ == "area-query" || name_ == "around")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "bbox-query" || name_ == "id_query")
+  else if (name_ == "id_query")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
@@ -911,12 +886,12 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
     if (stmt)
       result += stmt->dump_pretty_ql("");
   }
-  else if (name_ == "area-query" || name_ == "around")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "bbox-query" || name_ == "id_query")
+  else if (name_ == "id_query")
   {
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);

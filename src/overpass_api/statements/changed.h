@@ -22,6 +22,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
+#include "../frontend/basic_formats.h"
 #include "statement.h"
 
 
@@ -42,6 +44,23 @@ class Changed_Statement : public Output_Statement
     
     static bool area_query_exists() { return area_query_exists_; }
     bool trivial() const { return behave_trivial; }
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<changed"
+          + (since != NOW ? std::string(" since=\"") + iso_string(since) + "\"" : "")
+          + (until != NOW ? std::string(" until=\"") + iso_string(until) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("(changed:")
+          + (since != NOW ? std::string("\"") + iso_string(since) + "\"" : "")
+          + (until != NOW ? std::string(",\"") + iso_string(until) + "\"" : "")
+          + ")" + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
     
   private:
     uint64 since, until;

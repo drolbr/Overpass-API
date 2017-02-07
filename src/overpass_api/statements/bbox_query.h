@@ -22,6 +22,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
 #include "statement.h"
     
 
@@ -46,6 +47,27 @@ class Bbox_Query_Statement : public Output_Statement
     double get_west() const { return west; }
     double get_east() const { return east; }
     bool matches_bbox(double lat, double lon) const;
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<bbox-query"
+          + " south=\"" + to_string(south) + "\""
+          + " west=\"" + to_string(west) + "\""
+          + " north=\"" + to_string(north) + "\""
+          + " east=\"" + to_string(east) + "\""
+          + dump_xml_result_name() + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("(")
+          + to_string(south)
+          + "," + to_string(west)
+          + "," + to_string(north)
+          + "," + to_string(east)
+          + ")" + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
 
   private:
     double south, north, west, east;
