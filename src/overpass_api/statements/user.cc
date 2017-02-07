@@ -152,8 +152,7 @@ User_Statement::User_Statement
   for (map<string, string>::const_iterator it = input_attributes.begin();
       it != input_attributes.end(); ++it)
   {
-    if (it->first.find("name_") == 0 ||
-        it->first.find("uid_")  == 0)
+    if (it->first.find("name_") == 0 || it->first.find("uid_") == 0)
       attributes[it->first] = "";
   }
 

@@ -242,7 +242,7 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
   }
   else if (name == "area-query" || name == "around" || name == "bbox-query" || name == "changed"
       || name == "filter" || name == "id-query" || name == "newer" || name == "pivot"
-      || name == "polygon-query")
+      || name == "polygon-query" || name == "user")
   {
     Statement* non_dump_stmt = stmt.create_non_dump_stmt(stmt_factory);
     if (non_dump_stmt)
@@ -276,13 +276,6 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
     if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
       result += "." + attributes.find("from")->second;
     result += ")";
-  }
-  else if (name == "user")
-  {
-    if (attributes.find("name") != attributes.end() && attributes.find("name")->second != "")
-      result += "(user:\"" + escape_quotation_marks(attributes.find("name")->second) + "\")";
-    else if (attributes.find("uid") != attributes.end() && attributes.find("uid")->second != "")
-      result += "(uid:" + attributes.find("uid")->second + ")";
   }
   else
     result += "(" + name + ":)";
@@ -439,7 +432,7 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id-query")
+  else if (name_ == "id-query" || name_ == "user")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
@@ -447,18 +440,6 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
       result += attributes.find("type")->second;
     
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-  }
-  else if (name_ == "user")
-  {
-    if (attributes.find("type") == attributes.end())
-      result += "all";
-    else
-      result += attributes.find("type")->second;
-    
-    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
   }
   else if (name_ == "recurse")
   {
@@ -658,7 +639,7 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id-query")
+  else if (name_ == "id-query" || name_ == "user")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
@@ -666,18 +647,6 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
       result += attributes.find("type")->second;
     
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-  }
-  else if (name_ == "user")
-  {
-    if (attributes.find("type") == attributes.end())
-      result += "all";
-    else
-      result += attributes.find("type")->second;
-    
-    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
   }
   else if (name_ == "recurse")
   {
@@ -886,7 +855,7 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id-query")
+  else if (name_ == "id-query" || name_ == "user")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
@@ -894,18 +863,6 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
       result += attributes.find("type")->second;
     
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-  }
-  else if (name_ == "user")
-  {
-    if (attributes.find("type") == attributes.end())
-      result += "all";
-    else
-      result += attributes.find("type")->second;
-    
-    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
   }
   else if (name_ == "recurse")
   {
