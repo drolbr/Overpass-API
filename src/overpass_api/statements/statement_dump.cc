@@ -240,7 +240,8 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
       result += "~\"" + escape_quotation_marks(attributes.find("regv")->second) + "\"";
     result += "]";
   }
-  else if (name == "area-query" || name == "around" || name == "bbox-query" || name == "changed" || name == "filter")
+  else if (name == "area-query" || name == "around" || name == "bbox-query" || name == "changed"
+      || name == "filter" || name == "id-query")
   {
     Statement* non_dump_stmt = stmt.create_non_dump_stmt(stmt_factory);
     if (non_dump_stmt)
@@ -273,13 +274,6 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
     }
     if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
       result += "." + attributes.find("from")->second;
-    result += ")";
-  }
-  else if (name == "id-query")
-  {
-    result += "(";
-    if (attributes.find("ref") != attributes.end())
-      result += attributes.find("ref")->second;
     result += ")";
   }
   else if (name == "user")
@@ -448,15 +442,16 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id_query")
+  else if (name_ == "id-query")
   {
-    result += "node";
-    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
+    if (attributes.find("type") == attributes.end())
+      result += "all";
+    else
+      result += attributes.find("type")->second;
     
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
+    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id-query" || name_ == "user" || name_ == "newer")
+  else if (name_ == "user" || name_ == "newer")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
@@ -665,15 +660,16 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id_query")
+  else if (name_ == "id-query")
   {
-    result += "node";
-    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
+    if (attributes.find("type") == attributes.end())
+      result += "all";
+    else
+      result += attributes.find("type")->second;
     
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
+    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id-query" || name_ == "user" || name_ == "newer")
+  else if (name_ == "user" || name_ == "newer")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
@@ -891,15 +887,16 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
     result += "node";
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id_query")
+  else if (name_ == "id-query")
   {
-    result += "node";
-    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
+    if (attributes.find("type") == attributes.end())
+      result += "all";
+    else
+      result += attributes.find("type")->second;
     
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
+    result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
   }
-  else if (name_ == "id-query" || name_ == "user" || name_ == "newer")
+  else if (name_ == "user" || name_ == "newer")
   {
     if (attributes.find("type") == attributes.end())
       result += "all";
