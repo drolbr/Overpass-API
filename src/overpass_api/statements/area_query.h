@@ -81,16 +81,16 @@ class Area_Query_Statement : public Output_Statement
     {
       return indent + "<area-query"
           + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
-          + (submitted_id > 0 ? std::string(" ref=\"") + to_string(submitted_id) + "\"" : "") + "/>\n"
-          + dump_ql_result_name();
+          + (submitted_id > 0 ? std::string(" ref=\"") + to_string(submitted_id) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
     }
   
     virtual std::string dump_compact_ql(const std::string&) const
     {
-      return "(area"
+      return std::string("(area")
           + (input != "_" ? std::string(".") + input : "")
-          + (submitted_id > 0 ? std::string(":") + to_string(submitted_id) : "") + ")"
-          + dump_ql_result_name();
+          + (submitted_id > 0 ? std::string(":") + to_string(submitted_id) : "")
+          + ")" + dump_ql_result_name();
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   

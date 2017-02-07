@@ -24,10 +24,9 @@
 #include <string>
 #include <vector>
 #include "../data/collect_members.h"
+#include "../data/utils.h"
 #include "../data/way_geometry_store.h"
 #include "statement.h"
-
-using namespace std;
 
 
 struct Prepared_Segment
@@ -85,6 +84,28 @@ class Around_Statement : public Output_Statement
     template< typename Way_Skeleton >
     void add_ways(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
 		  const Way_Geometry_Store& way_geometries);
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<around"
+          + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+          + std::string(" radius=\"") + to_string(radius) + "\""
+          + (lat != 100. ? std::string(" lat=\"") + to_string(lat) + "\"" : "")
+          + (lon != 200. ? std::string(" lon=\"") + to_string(lon) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("(around")
+          + (input != "_" ? std::string(".") + input : "")
+          + std::string(":") + to_string(radius)
+          + (lat != 100. ? std::string(",") + to_string(lat) : "")
+          + (lon != 200. ? std::string(",") + to_string(lon) : "")
+          + ")" + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+    
   private:
     string input;
     double radius;
