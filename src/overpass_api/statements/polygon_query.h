@@ -20,14 +20,13 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__POLYGON_QUERY_H
 
 #include "../data/collect_members.h"
+#include "../data/utils.h"
 #include "../data/way_geometry_store.h"
 #include "statement.h"
 
 #include <map>
 #include <string>
 #include <vector>
-
-using namespace std;
 
 
 class Polygon_Query_Statement : public Output_Statement
@@ -55,8 +54,36 @@ class Polygon_Query_Statement : public Output_Statement
        bool add_border, const Statement& query, Resource_Manager& rman);
       
     bool covers_large_area() const { return covers_large_area_; }
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<polygon-query bounds=\"";
+      std::vector< std::pair< double, double > >::const_iterator it = edges.begin();
+      if (it != edges.end())
+      {
+        result += to_string(it->first) + " " + to_string(it->second);
+        for (++it; it != edges.end(); ++it)
+          result += "  " + to_string(it->first) + " " + to_string(it->second);
+      }
+      return result + "\"" + dump_xml_result_name() + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      std::string result = "(poly:\"";
+      std::vector< std::pair< double, double > >::const_iterator it = edges.begin();
+      if (it != edges.end())
+      {
+        result += to_string(it->first) + " " + to_string(it->second);
+        for (++it; it != edges.end(); ++it)
+          result += "  " + to_string(it->first) + " " + to_string(it->second);
+      }
+      return result + "\")" + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
 
   private:
+    std::vector< std::pair< double, double > > edges;
     vector< Aligned_Segment > segments;
     bool covers_large_area_;
     vector< Query_Constraint* > constraints;

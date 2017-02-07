@@ -261,7 +261,6 @@ Polygon_Query_Statement::Polygon_Query_Statement
   set_output(attributes["into"]);
   
   //convert bounds
-  std::vector< std::pair< double, double > > edges;
   std::istringstream in(attributes["bounds"]);
   while (in.good())
   {
