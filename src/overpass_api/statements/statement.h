@@ -145,6 +145,7 @@ class Statement
     virtual std::string dump_xml(const std::string&) const { return ""; }
     virtual std::string dump_compact_ql(const std::string&) const { return ""; }
     virtual std::string dump_pretty_ql(const std::string&) const { return ""; }
+    virtual std::string dump_ql_in_query(const std::string& indent) const { return dump_compact_ql(indent); }
     
     static void set_error_output(Error_Output* error_output_)
     {

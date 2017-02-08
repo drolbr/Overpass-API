@@ -19,6 +19,8 @@
 #ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__RECURSE_H
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__RECURSE_H
 
+#include "../../expat/escape_json.h"
+#include "../../expat/escape_xml.h"
 #include "query.h"
 #include "statement.h"
 
@@ -26,7 +28,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 class Recurse_Statement : public Output_Statement
 {
@@ -43,6 +44,42 @@ class Recurse_Statement : public Output_Statement
     string get_input() const { return input; }
     
     const string* get_role() const { return (restrict_to_role ? &role : 0); }
+    
+    static std::string to_target_type(int type);
+    static std::string to_xml_representation(int type);
+    static std::string to_ql_representation(int type);
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<recurse"
+          + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+          + " type=\"" + to_xml_representation(type) + "\""
+          + (role != "" ? std::string(" role=\"") + escape_xml(role) + "\"" : "")
+          + (restrict_to_role ? " role-restricted=\"yes\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+    
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
+      return std::string("(") + to_ql_representation(type)
+          + (input != "_" ? std::string(".") + input : "")
+          + (restrict_to_role ? std::string(":\"") + escape_cstr(role) + "\"" : "")
+          + ")";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      std::string target_type = to_target_type(type);
+      if (target_type != "")
+        return target_type + "(" + to_ql_representation(type)
+            + (input != "_" ? std::string(".") + input : "")
+            + (restrict_to_role ? std::string(":\"") + escape_cstr(role) + "\"" : "")
+            + ")" + dump_ql_result_name();
+      else
+        return (input != "_" ? std::string(".") + input + " " : "")
+            + to_ql_representation(type) + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
     
   private:
     string input;

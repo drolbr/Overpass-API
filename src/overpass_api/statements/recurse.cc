@@ -48,6 +48,7 @@ const unsigned int RECURSE_UP_REL = 12;
 
 Generic_Statement_Maker< Recurse_Statement > Recurse_Statement::statement_maker("recurse");
 
+
 //-----------------------------------------------------------------------------
 
 
@@ -2324,6 +2325,82 @@ Recurse_Statement::Recurse_Statement
       restrict_to_role = true;
     }
   }
+}
+
+
+std::string Recurse_Statement::to_target_type(int type)
+{
+  if (type == RECURSE_RELATION_RELATION || type == RECURSE_RELATION_BACKWARDS
+      || type == RECURSE_WAY_RELATION || type == RECURSE_NODE_RELATION)
+    return "relation";
+  else if (type == RECURSE_RELATION_WAY || type == RECURSE_NODE_WAY)
+    return "way";
+  else if (type == RECURSE_RELATION_NODE || type == RECURSE_WAY_NODE)
+    return "node";
+  
+  return "";
+}
+
+
+std::string Recurse_Statement::to_xml_representation(int type)
+{
+  if (type == RECURSE_RELATION_RELATION)
+    return "relation-relation";
+  else if (type == RECURSE_RELATION_BACKWARDS)
+    return "relation-backwards";
+  else if (type == RECURSE_RELATION_WAY)
+    return "relation-way";
+  else if (type == RECURSE_RELATION_NODE)
+    return "relation-node";
+  else if (type == RECURSE_WAY_NODE)
+    return "way-node";
+  else if (type == RECURSE_WAY_RELATION)
+    return "way-relation";
+  else if (type == RECURSE_NODE_RELATION)
+    return "node-relation";
+  else if (type == RECURSE_NODE_WAY)
+    return "node-way";
+  else if (type == RECURSE_DOWN)
+    return "down";
+  else if (type == RECURSE_DOWN_REL)
+    return "down-rel";
+  else if (type == RECURSE_UP)
+    return "up";
+  else if (type == RECURSE_UP_REL)
+    return "up-rel";
+  
+  return "void";
+}
+
+
+std::string Recurse_Statement::to_ql_representation(int type)
+{
+  if (type == RECURSE_RELATION_RELATION)
+    return "r";
+  else if (type == RECURSE_RELATION_BACKWARDS)
+    return "br";
+  else if (type == RECURSE_RELATION_WAY)
+    return "r";
+  else if (type == RECURSE_RELATION_NODE)
+    return "r";
+  else if (type == RECURSE_WAY_NODE)
+    return "w";
+  else if (type == RECURSE_WAY_RELATION)
+    return "bw";
+  else if (type == RECURSE_NODE_RELATION)
+    return "bn";
+  else if (type == RECURSE_NODE_WAY)
+    return "bn";
+  else if (type == RECURSE_DOWN)
+    return ">";
+  else if (type == RECURSE_DOWN_REL)
+    return ">>";
+  else if (type == RECURSE_UP)
+    return "<";
+  else if (type == RECURSE_UP_REL)
+    return "<<";
+  
+  return "";
 }
 
 

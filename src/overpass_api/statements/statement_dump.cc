@@ -242,40 +242,11 @@ std::string dump_subquery_map_ql(Statement_Dump& stmt, const std::map< std::stri
   }
   else if (name == "area-query" || name == "around" || name == "bbox-query" || name == "changed"
       || name == "filter" || name == "id-query" || name == "newer" || name == "pivot"
-      || name == "polygon-query" || name == "user")
+      || name == "polygon-query" || name == "recurse" || name == "user")
   {
     Statement* non_dump_stmt = stmt.create_non_dump_stmt(stmt_factory);
     if (non_dump_stmt)
-      result += non_dump_stmt->dump_compact_ql("");
-  }
-  else if (name == "recurse")
-  {
-    result += "(";
-    if (attributes.find("type") != attributes.end())
-    {
-      std::string type = attributes.find("type")->second;
-      if (type == "way-node")
-	result += "w";
-      else if (type == "relation-node" || type == "relation-way" || type == "relation-relation")
-	result += "r";
-      else if (type == "node-way" || type == "node-relation")
-	result += "bn";
-      else if (type == "way-relation")
-	result += "bw";
-      else if (type == "relation-backwards")
-	result += "br";
-      else if (type == "down")
-	result += ">";
-      else if (type == "down-rel")
-	result += ">>";
-      else if (type == "up")
-	result += "<";
-      else if (type == "up-rel")
-	result += "<<";
-    }
-    if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
-      result += "." + attributes.find("from")->second;
-    result += ")";
+      result += non_dump_stmt->dump_ql_in_query("");
   }
   else
     result += "(" + name + ":)";
@@ -420,7 +391,7 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
-  else if (name_ == "make" || name_ == "convert" || name_ == "coord-query")
+  else if (name_ == "convert" || name_ == "coord-query" || name_ == "make" || name_ == "recurse")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -440,37 +411,6 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
       result += attributes.find("type")->second;
     
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-  }
-  else if (name_ == "recurse")
-  {
-    if (attributes.find("type") != attributes.end())
-    {
-      std::string rel_type = attributes.find("type")->second;
-      if (rel_type == "down" || rel_type == "down-rel" ||
-          rel_type == "up"   || rel_type == "up-rel")
-      {
-        if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
-          result += "." + attributes.find("from")->second;
-      }
-      if (rel_type == "way-node" || rel_type == "relation-node")
-	result += "node" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "relation-way" || rel_type == "node-way")
-	result += "way" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
-	  || rel_type == "node-relation" || rel_type == "way-relation")
-	result += "rel" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "down")
-	result += ">";
-      else if (rel_type == "down-rel")
-	result += ">>";
-      else if (rel_type == "up")
-	result += "<";
-      else if (rel_type == "up-rel")
-	result += "<<";
-    }
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
   }
   else
     result += "(" + name_ + ":)";
@@ -627,7 +567,7 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
-  else if (name_ == "make" || name_ == "convert" || name_ == "coord-query")
+  else if (name_ == "convert" || name_ == "coord-query" || name_ == "make" || name_ == "recurse")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -647,37 +587,6 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
       result += attributes.find("type")->second;
     
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-  }
-  else if (name_ == "recurse")
-  {
-    if (attributes.find("type") != attributes.end())
-    {
-      std::string rel_type = attributes.find("type")->second;
-      if (rel_type == "down" || rel_type == "down-rel" ||
-          rel_type == "up"   || rel_type == "up-rel")
-      {
-        if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
-          result += "." + attributes.find("from")->second;
-      }
-      if (rel_type == "way-node" || rel_type == "relation-node")
-	result += "node" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "relation-way" || rel_type == "node-way")
-	result += "way" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
-	  || rel_type == "node-relation" || rel_type == "way-relation")
-	result += "rel" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "down")
-	result += ">";
-      else if (rel_type == "down-rel")
-	result += ">>";
-      else if (rel_type == "up")
-	result += "<";
-      else if (rel_type == "up-rel")
-	result += "<<";
-    }
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
   }
   else
     result += "(" + name_ + ":)";
@@ -843,7 +752,7 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
   }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, true) + ";";
-  else if (name_ == "make" || name_ == "convert" || name_ == "coord-query")
+  else if (name_ == "convert" || name_ == "coord-query" || name_ == "make" || name_ == "recurse")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -863,37 +772,6 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
       result += attributes.find("type")->second;
     
     result += dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-  }
-  else if (name_ == "recurse")
-  {
-    if (attributes.find("type") != attributes.end())
-    {
-      std::string rel_type = attributes.find("type")->second;
-      if (rel_type == "down" || rel_type == "down-rel" ||
-          rel_type == "up"   || rel_type == "up-rel")
-      {
-        if (attributes.find("from") != attributes.end() && attributes.find("from")->second != "_")
-          result += "." + attributes.find("from")->second + " ";
-      }
-      if (rel_type == "way-node" || rel_type == "relation-node")
-	result += "node" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "relation-way" || rel_type == "node-way")
-	result += "way" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "relation-relation" || rel_type == "relation-backwards"
-	  || rel_type == "node-relation" || rel_type == "way-relation")
-	result += "rel" + dump_subquery_map_ql(*this, attributes, 0, stmt_factory);
-      else if (rel_type == "down")
-	result += ">";
-      else if (rel_type == "down-rel")
-	result += ">>";
-      else if (rel_type == "up")
-	result += "<";
-      else if (rel_type == "up-rel")
-	result += "<<";
-    }
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
   }
   else
     result += "(" + name_ + ":)";
