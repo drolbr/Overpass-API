@@ -22,6 +22,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../../expat/escape_json.h"
+#include "../../expat/escape_xml.h"
 #include "statement.h"
 
 using namespace std;
@@ -142,17 +144,38 @@ class Has_Kv_Statement : public Statement
     
     static Generic_Statement_Maker< Has_Kv_Statement > statement_maker;
     
-    string get_key() const { return key; }
+    string get_key() const { return key_regex ? "" : key; }
     Regular_Expression* get_key_regex() { return key_regex; }
-    string get_value() const { return value; }
+    string get_value() const { return regex ? "" : value; }
     Regular_Expression* get_regex() { return regex; }
     bool get_straight() const { return straight; }
+   
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<has-kv"
+          + (key != "" ? (key_regex ? std::string(" regk=\"") : std::string(" k=\"")) + escape_xml(key) + "\"" : "")
+          + (value != "" ? (regex ? std::string(" regv=\"") : std::string(" v=\"")) + escape_xml(value) + "\"" : "")
+          + (straight ? "" : " modv=\"not\"")
+          + (case_sensitive ? "" : " case=\"ignore\"")
+          + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("[")
+          + (key_regex ? "~\"" : "\"") + escape_cstr(key) + "\""
+          + (value != "" ? std::string(straight ? "" : "!") + (regex ? "~\"" : "=\"") + escape_cstr(value) + "\"" : "")
+          + (case_sensitive ? "" : ",i")
+          + "]";
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
     
   private:
     string key, value;
     Regular_Expression* regex;
     Regular_Expression* key_regex;
     bool straight;
+    bool case_sensitive;
 };
 
 #endif

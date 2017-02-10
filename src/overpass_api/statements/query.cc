@@ -1638,7 +1638,7 @@ Generic_Statement_Maker< Has_Kv_Statement > Has_Kv_Statement::statement_maker("h
 
 Has_Kv_Statement::Has_Kv_Statement
     (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
-    : Statement(line_number_), regex(0), key_regex(0), straight(true)
+    : Statement(line_number_), regex(0), key_regex(0), straight(true), case_sensitive(false)
 {
   map< string, string > attributes;
   
@@ -1662,7 +1662,6 @@ Has_Kv_Statement::Has_Kv_Statement
     add_static_error(temp.str());
   }
   
-  bool case_sensitive = false;
   if (attributes["case"] != "ignore")
   {
     if (attributes["case"] != "sensitive")
@@ -1690,6 +1689,7 @@ Has_Kv_Statement::Has_Kv_Statement
     try
     {
       key_regex = new Regular_Expression(attributes["regk"], case_sensitive);
+      key = attributes["regk"];
     }
     catch (Regular_Expression_Error e)
     {
@@ -1710,6 +1710,7 @@ Has_Kv_Statement::Has_Kv_Statement
     try
     {
       regex = new Regular_Expression(attributes["regv"], case_sensitive);
+      value = attributes["regv"];
     }
     catch (Regular_Expression_Error e)
     {

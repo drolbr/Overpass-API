@@ -30,7 +30,6 @@
 #include "../frontend/tokenizer_utils.h"
 #include "../osm-backend/area_updater.h"
 
-using namespace std;
 
 class Query_Constraint
 {
