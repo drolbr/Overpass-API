@@ -37,7 +37,6 @@ class Union_Statement : public Output_Statement
     virtual ~Union_Statement() {}
     
     static Generic_Statement_Maker< Union_Statement > statement_maker;
-
     
     virtual std::string dump_xml(const std::string& indent) const
     {
