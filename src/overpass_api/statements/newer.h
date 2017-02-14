@@ -61,7 +61,7 @@ class Newer_Statement : public Statement
           + (than_timestamp != NOW ? std::string("\"") + iso_string(than_timestamp) + "\"" : "")
           + ")";
     }
-    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
 
   private:
     uint64 than_timestamp;

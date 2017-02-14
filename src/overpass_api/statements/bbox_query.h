@@ -71,7 +71,7 @@ class Bbox_Query_Statement : public Output_Statement
           + "," + to_string(east)
           + ")";
     }
-    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
 
   private:
     double south, north, west, east;

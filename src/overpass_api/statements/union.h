@@ -38,6 +38,39 @@ class Union_Statement : public Output_Statement
     
     static Generic_Statement_Maker< Union_Statement > statement_maker;
 
+    
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<union" + dump_xml_result_name() + ">\n";
+      
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += *it ? (*it)->dump_xml(indent + "  ") : "";
+      
+      return result + indent + "</union>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string& indent) const
+    {
+      std::string result = "(";
+  
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += (*it)->dump_compact_ql(indent) + ";";
+      result += ")";
+  
+      return result + dump_ql_result_name();
+    }
+    
+    virtual std::string dump_pretty_ql(const std::string& indent) const
+    {
+      std::string result = "(";
+    
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
+      result += "\n)";
+  
+      return result + dump_ql_result_name();
+    }
+    
   private:
     std::vector< Statement* > substatements;
 };

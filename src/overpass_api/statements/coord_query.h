@@ -70,7 +70,7 @@ class Coord_Query_Statement : public Output_Statement
           + (lon != 200. ? std::string(",") + to_string(lon) : "")
           + (lat != 100. ? ")" : "") + dump_ql_result_name();
     }
-    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
  
   private:
     string input;

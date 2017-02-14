@@ -84,7 +84,7 @@ class Polygon_Query_Statement : public Output_Statement
       }
       return result + "\")";
     }
-    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
 
   private:
     std::vector< std::pair< double, double > > edges;

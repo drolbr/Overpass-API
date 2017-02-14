@@ -96,7 +96,7 @@ class Area_Query_Statement : public Output_Statement
           + (submitted_id > 0 ? std::string(":") + to_string(submitted_id) : "")
           + ")";
     }
-    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
   
   private:
     string input;
