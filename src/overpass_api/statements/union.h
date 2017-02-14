@@ -50,7 +50,7 @@ class Union_Statement : public Output_Statement
   
     virtual std::string dump_compact_ql(const std::string& indent) const
     {
-      std::string result = "(";
+      std::string result = indent + "(";
   
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
         result += (*it)->dump_compact_ql(indent) + ";";
@@ -61,7 +61,7 @@ class Union_Statement : public Output_Statement
     
     virtual std::string dump_pretty_ql(const std::string& indent) const
     {
-      std::string result = "(";
+      std::string result = indent + "(";
     
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
         result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
