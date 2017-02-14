@@ -86,6 +86,8 @@ void Query_Statement::add_statement(Statement* statement, string text)
   Has_Kv_Statement* has_kv(dynamic_cast<Has_Kv_Statement*>(statement));
   if (has_kv)
   {
+    substatements.push_back(statement);
+    
     if (has_kv->get_value() != "")
     {
       if (has_kv->get_straight())
@@ -120,7 +122,10 @@ void Query_Statement::add_statement(Statement* statement, string text)
   
   Query_Constraint* constraint = statement->get_query_constraint();
   if (constraint)
+  {
     constraints.push_back(constraint);
+    substatements.push_back(statement);
+  }
   else
     substatement_error(get_name(), statement);
 }

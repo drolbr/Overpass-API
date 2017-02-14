@@ -80,6 +80,11 @@ class User_Statement : public Output_Statement
   
     virtual std::string dump_compact_ql(const std::string&) const
     {
+      return result_type + dump_ql_in_query("") + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
       std::string result = user_ids.empty() ? "(user:" : "(uid:";
       
       if (!user_ids.empty())
@@ -98,9 +103,8 @@ class User_Statement : public Output_Statement
           result += ",\"" + escape_cstr(*it) + "\"";
       }
       
-      return result + ")" + dump_ql_result_name();
+      return result + ")";
     }
-    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
     
   private:
     string input;

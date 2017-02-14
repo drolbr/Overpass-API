@@ -53,6 +53,10 @@ class Newer_Statement : public Statement
   
     virtual std::string dump_compact_ql(const std::string&) const
     {
+      return "node" + dump_ql_in_query("");
+    }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
       return std::string("(newer:")
           + (than_timestamp != NOW ? std::string("\"") + iso_string(than_timestamp) + "\"" : "")
           + ")";

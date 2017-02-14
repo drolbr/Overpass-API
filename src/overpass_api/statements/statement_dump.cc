@@ -221,21 +221,40 @@ std::string escape_quotation_marks(const std::string& input)
 }
 
 
-std::string dump_subquery_map_ql(Statement_Dump& stmt, Statement::Factory& stmt_factory)
+std::string dump_subquery_map_ql(std::vector< Statement_Dump* >& substatements, Statement::Factory& stmt_factory,
+    bool pretty)
 {
   std::string result;
-  const std::string& name = stmt.name();
-
-  if (name == "area-query" || name == "around" || name == "bbox-query" || name == "changed"
-      || name == "filter" || name == "has-kv" || name == "id-query" || name == "newer"
-      || name == "pivot" || name == "polygon-query" || name == "recurse" || name == "user")
+  
+  uint proper_substatement_count = 0;
+  for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
   {
-    Statement* non_dump_stmt = stmt.create_non_dump_stmt(stmt_factory);
-    if (non_dump_stmt)
-      result += non_dump_stmt->dump_ql_in_query("");
+    if ((*it)->name() == "item")
+    {
+      if ((*it)->attribute("set") != "")
+        result += "." + (*it)->attribute("set");
+      else
+        result += "._";
+    }
+    else
+      ++proper_substatement_count;
   }
-  else
-    result += "(" + name + ":)";
+  
+  std::string prefix = (proper_substatement_count > 1 && pretty ? "\n  " : "");
+
+  for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+  {
+    if ((*it)->name() != "item")
+    {
+      Statement* non_dump_stmt = (*it)->create_non_dump_stmt(stmt_factory);
+      if (non_dump_stmt)
+        result += prefix + non_dump_stmt->dump_ql_in_query("");
+      else
+        result += prefix + result + "(" + (*it)->name() + ":)";
+    }
+  }
   
   return result;
 }
@@ -348,55 +367,16 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
       result += (*it)->dump_compact_map_ql(stmt_factory);
     result += ")";
   }
-  else if (name_ == "query")
-  {
-    if (attributes.find("type") != attributes.end())
-      result += attributes.find("type")->second;
-
-    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-        it != substatements.end(); ++it)
-    {
-      if ((*it)->name_ == "item")
-      {
-	if ((*it)->attributes.find("set") != (*it)->attributes.end())
-	  result += "." + (*it)->attributes.find("set")->second;
-	else
-	  result += "._";
-      }
-    }
-
-    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-        it != substatements.end(); ++it)
-    {
-      if ((*it)->name_ != "item")
-        result += dump_subquery_map_ql(**it, stmt_factory);
-    }
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
-  }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
-  else if (name_ == "convert" || name_ == "coord-query" || name_ == "make" || name_ == "recurse")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
+      || name_ == "coord-query" || name_ == "id-query" || name_ == "make" || name_ == "newer"
+      || name_ == "pivot" || name_ == "polygon-query" || name_ == "query" || name_ == "recurse"
+      || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
       result += stmt->dump_compact_ql("");
-  }
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer"
-      || name_ == "pivot" || name_ == "polygon-query")
-  {
-    result += "node";
-    result += dump_subquery_map_ql(*this, stmt_factory);
-  }
-  else if (name_ == "id-query" || name_ == "user")
-  {
-    if (attributes.find("type") == attributes.end())
-      result += "all";
-    else
-      result += attributes.find("type")->second;
-    
-    result += dump_subquery_map_ql(*this, stmt_factory);
   }
   else
     result += "(" + name_ + ":)";
@@ -519,60 +499,16 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
       result += (*it)->dump_bbox_map_ql(stmt_factory);
     result += ")";
   }
-  else if (name_ == "query")
-  {
-    if (attributes.find("type") != attributes.end())
-      result += attributes.find("type")->second;
-
-    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-        it != substatements.end(); ++it)
-    {
-      if ((*it)->name_ == "item")
-      {
-	if ((*it)->attributes.find("set") != (*it)->attributes.end())
-	  result += "." + (*it)->attributes.find("set")->second;
-	else
-	  result += "._";
-      }
-    }
-
-    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-        it != substatements.end(); ++it)
-    {
-      if ((*it)->name_ != "item")
-        result += dump_subquery_map_ql(**it, stmt_factory);
-    }
-    
-    if (attributes.find("type")->second =="node"
-        || attributes.find("type")->second == "way"
-        || attributes.find("type")->second == "relation")
-      result += "(bbox)";
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-      result += "->." + attributes.find("into")->second;
-  }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
-  else if (name_ == "convert" || name_ == "coord-query" || name_ == "make" || name_ == "recurse")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
+      || name_ == "coord-query" || name_ == "id-query" || name_ == "make" || name_ == "newer"
+      || name_ == "pivot" || name_ == "polygon-query" || name_ == "query" || name_ == "recurse"
+      || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
-      result += stmt->dump_compact_ql("");
-  }
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer"
-      || name_ == "pivot" || name_ == "polygon-query")
-  {
-    result += "node";
-    result += dump_subquery_map_ql(*this, stmt_factory);
-  }
-  else if (name_ == "id-query" || name_ == "user")
-  {
-    if (attributes.find("type") == attributes.end())
-      result += "all";
-    else
-      result += attributes.find("type")->second;
-    
-    result += dump_subquery_map_ql(*this, stmt_factory);
+      result += stmt->dump_compact_ql(name_ == "query" ? "(bbox)" : "");
   }
   else
     result += "(" + name_ + ":)";
@@ -690,74 +626,16 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
       result += "\n" + indent((*it)->dump_pretty_map_ql(stmt_factory));
     result += "\n)";
   }
-  else if (name_ == "query")
-  {
-    if (attributes.find("type") != attributes.end())
-      result += attributes.find("type")->second;
-
-    uint proper_substatement_count = 0;
-    for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-        it != substatements.end(); ++it)
-    {
-      if ((*it)->name_ == "item")
-      {
-	if ((*it)->attributes.find("set") != (*it)->attributes.end())
-	  result += "." + (*it)->attributes.find("set")->second;
-	else
-	  result += "._";
-      }
-      else
-	++proper_substatement_count;
-    }
-
-    if (proper_substatement_count > 1)
-    {
-      for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-          it != substatements.end(); ++it)
-      {
-	if ((*it)->name_ != "item")
-	  result += "\n  " + dump_subquery_map_ql(**it, stmt_factory);
-      }
-    }
-    else
-    {
-      for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-          it != substatements.end(); ++it)
-      {
-	if ((*it)->name_ != "item")
-	  result += dump_subquery_map_ql(**it, stmt_factory);
-      }
-    }
-    
-    if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
-    {
-      if (proper_substatement_count > 1)
-	result += "\n";
-      result += "->." + attributes.find("into")->second;
-    }
-  }
   else if (name_ == "print")
     return dump_print_map_ql(attributes, true) + ";";
-  else if (name_ == "convert" || name_ == "coord-query" || name_ == "make" || name_ == "recurse")
+  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
+      || name_ == "coord-query" || name_ == "id-query" || name_ == "make" || name_ == "newer"
+      || name_ == "pivot" || name_ == "polygon-query" || name_ == "query" || name_ == "recurse"
+      || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
       result += stmt->dump_pretty_ql("");
-  }
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "newer"
-      || name_ == "pivot" || name_ == "polygon-query")
-  {
-    result += "node";
-    result += dump_subquery_map_ql(*this, stmt_factory);
-  }
-  else if (name_ == "id-query" || name_ == "user")
-  {
-    if (attributes.find("type") == attributes.end())
-      result += "all";
-    else
-      result += attributes.find("type")->second;
-    
-    result += dump_subquery_map_ql(*this, stmt_factory);
   }
   else
     result += "(" + name_ + ":)";

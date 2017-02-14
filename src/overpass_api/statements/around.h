@@ -97,12 +97,16 @@ class Around_Statement : public Output_Statement
   
     virtual std::string dump_compact_ql(const std::string&) const
     {
+      return "node" + dump_ql_in_query("") + dump_ql_result_name();
+    }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
       return std::string("(around")
           + (input != "_" ? std::string(".") + input : "")
           + std::string(":") + to_string(radius)
           + (lat != 100. ? std::string(",") + to_string(lat) : "")
           + (lon != 200. ? std::string(",") + to_string(lon) : "")
-          + ")" + dump_ql_result_name();
+          + ")";
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
     

@@ -70,6 +70,10 @@ class Polygon_Query_Statement : public Output_Statement
   
     virtual std::string dump_compact_ql(const std::string&) const
     {
+      return "node" + dump_ql_in_query("") + dump_ql_result_name();
+    }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
       std::string result = "(poly:\"";
       std::vector< std::pair< double, double > >::const_iterator it = edges.begin();
       if (it != edges.end())
@@ -78,7 +82,7 @@ class Polygon_Query_Statement : public Output_Statement
         for (++it; it != edges.end(); ++it)
           result += "  " + to_string(it->first) + " " + to_string(it->second);
       }
-      return result + "\")" + dump_ql_result_name();
+      return result + "\")";
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
 

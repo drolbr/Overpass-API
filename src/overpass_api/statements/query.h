@@ -26,7 +26,6 @@
 #include "../../expat/escape_xml.h"
 #include "statement.h"
 
-using namespace std;
 
 const int QUERY_NODE = 1;
 const int QUERY_WAY = 2;
@@ -55,6 +54,61 @@ class Query_Statement : public Output_Statement
     
     static bool area_query_exists() { return area_query_exists_; }
     
+    static std::string to_string(int type)
+    {
+      if (type == QUERY_NODE)
+        return "node";
+      else if (type == QUERY_WAY)
+        return "way";
+      else if (type == QUERY_RELATION)
+        return "relation";
+      
+      return "area";
+    }
+    
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<query" + dump_xml_result_name() + " type=\"" + to_string(type) + "\">\n";
+      
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += *it ? (*it)->dump_xml(indent + "  ") : "";
+      
+      return result + indent + "</query>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string& indent) const { return dump_subquery_map_ql(indent, false); }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_subquery_map_ql(indent, true); }
+    
+    std::string dump_subquery_map_ql(const std::string& indent, bool pretty) const
+    {
+      std::string result = (pretty ? indent :  "") + to_string(type);
+  
+      uint proper_substatement_count = 0;
+      for (std::vector< Statement* >::const_iterator it = substatements.begin();
+          it != substatements.end(); ++it)
+      {
+        if ((*it)->get_name() == "item")
+          result += "." + (*it)->get_result_name();
+        else
+          ++proper_substatement_count;
+      }
+  
+      std::string prefix = (pretty && proper_substatement_count > 1 ? "\n  " + indent : "");
+
+      for (std::vector< Statement* >::const_iterator it = substatements.begin();
+          it != substatements.end(); ++it)
+      {
+        if ((*it)->get_name() != "item")
+          result += prefix + (*it)->dump_ql_in_query("");
+      }
+      
+      if (indent == "(bbox)" && type != QUERY_AREA)
+        result += "(bbox)";
+  
+      return result + (pretty && proper_substatement_count > 1 && dump_ql_result_name() != "" ? "\n  " + indent : "")
+          + dump_ql_result_name();
+    }
+    
   private:
     int type;
     vector< string > keys;    
@@ -65,6 +119,7 @@ class Query_Statement : public Output_Statement
     vector< pair< string, Regular_Expression* > > key_nregexes;    
     vector< pair< Regular_Expression*, Regular_Expression* > > regkey_nregexes;    
     vector< Query_Constraint* > constraints;
+    vector< Statement* > substatements;
     Bbox_Query_Statement* global_bbox_statement;
     
     static bool area_query_exists_;
