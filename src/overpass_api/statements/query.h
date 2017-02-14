@@ -88,7 +88,7 @@ class Query_Statement : public Output_Statement
           it != substatements.end(); ++it)
       {
         if ((*it)->get_name() == "item")
-          result += "." + (*it)->get_result_name();
+          result += (*it)->dump_ql_in_query("");
         else
           ++proper_substatement_count;
       }

@@ -221,45 +221,6 @@ std::string escape_quotation_marks(const std::string& input)
 }
 
 
-std::string dump_subquery_map_ql(std::vector< Statement_Dump* >& substatements, Statement::Factory& stmt_factory,
-    bool pretty)
-{
-  std::string result;
-  
-  uint proper_substatement_count = 0;
-  for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-      it != substatements.end(); ++it)
-  {
-    if ((*it)->name() == "item")
-    {
-      if ((*it)->attribute("set") != "")
-        result += "." + (*it)->attribute("set");
-      else
-        result += "._";
-    }
-    else
-      ++proper_substatement_count;
-  }
-  
-  std::string prefix = (proper_substatement_count > 1 && pretty ? "\n  " : "");
-
-  for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
-      it != substatements.end(); ++it)
-  {
-    if ((*it)->name() != "item")
-    {
-      Statement* non_dump_stmt = (*it)->create_non_dump_stmt(stmt_factory);
-      if (non_dump_stmt)
-        result += prefix + non_dump_stmt->dump_ql_in_query("");
-      else
-        result += prefix + result + "(" + (*it)->name() + ":)";
-    }
-  }
-  
-  return result;
-}
-
-
 std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory)
 {
   std::string result;
@@ -340,13 +301,6 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name_ == "item")
-  {
-    if (attributes.find("set") != attributes.end())
-      result += "." + attributes.find("set")->second;
-    else
-      result += "._";
-  }
   else if (name_ == "foreach")
   {
     result += name_;
@@ -370,9 +324,9 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
   else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
-      || name_ == "coord-query" || name_ == "id-query" || name_ == "make" || name_ == "newer"
-      || name_ == "pivot" || name_ == "polygon-query" || name_ == "query" || name_ == "recurse"
-      || name_ == "user")
+      || name_ == "coord-query" || name_ == "id-query" || name_ == "item" || name_ == "make"
+      || name_ == "newer" || name_ == "pivot" || name_ == "polygon-query" || name_ == "query"
+      || name_ == "recurse" || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -472,13 +426,6 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name_ == "item")
-  {
-    if (attributes.find("set") != attributes.end())
-      result += "." + attributes.find("set")->second;
-    else
-      result += "._";
-  }
   else if (name_ == "foreach")
   {
     result += name_;
@@ -502,9 +449,9 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
   else if (name_ == "print")
     return dump_print_map_ql(attributes, false) + ";";
   else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
-      || name_ == "coord-query" || name_ == "id-query" || name_ == "make" || name_ == "newer"
-      || name_ == "pivot" || name_ == "polygon-query" || name_ == "query" || name_ == "recurse"
-      || name_ == "user")
+      || name_ == "coord-query" || name_ == "id-query" || name_ == "item" || name_ == "make"
+      || name_ == "newer" || name_ == "pivot" || name_ == "polygon-query" || name_ == "query"
+      || name_ == "recurse" || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -599,13 +546,6 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
     if (attributes.find("into") != attributes.end() && attributes.find("into")->second != "_")
       result += "->." + attributes.find("into")->second;
   }
-  else if (name_ == "item")
-  {
-    if (attributes.find("set") != attributes.end())
-      result += "." + attributes.find("set")->second;
-    else
-      result += "._";
-  }
   else if (name_ == "foreach")
   {
     result += name_;
@@ -629,9 +569,9 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
   else if (name_ == "print")
     return dump_print_map_ql(attributes, true) + ";";
   else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
-      || name_ == "coord-query" || name_ == "id-query" || name_ == "make" || name_ == "newer"
-      || name_ == "pivot" || name_ == "polygon-query" || name_ == "query" || name_ == "recurse"
-      || name_ == "user")
+      || name_ == "coord-query" || name_ == "id-query" || name_ == "item" || name_ == "make"
+      || name_ == "newer" || name_ == "pivot" || name_ == "polygon-query" || name_ == "query"
+      || name_ == "recurse" || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
