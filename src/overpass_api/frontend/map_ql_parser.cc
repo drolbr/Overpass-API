@@ -461,7 +461,14 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
 	error_output->add_parse_error("Unknown output format: " + result.back(), token.line_col().first);
     }
     else
+    {
       parsed_query.set_output_handler(format_parser, &token, error_output);
+      if (parsed_query.get_output_handler())
+      {
+        result.push_back("output-config");
+        result.push_back(parsed_query.get_output_handler()->dump_config());
+      }
+    }
     
     clear_until_after(token, error_output, "]", true);
   }
@@ -1439,6 +1446,8 @@ void generic_parse_and_validate_map_ql
       kv[0] = "from";
     }
     attr[kv[0]] = kv[1];
+    if (kv.size() == 4)
+      attr[kv[2]] = kv[3];
   }
   
   TStatement* base_statement = stmt_factory.create_statement

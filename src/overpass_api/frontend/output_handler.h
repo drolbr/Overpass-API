@@ -87,6 +87,8 @@ public:
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode) = 0;
+      
+  virtual std::string dump_config() const { return ""; }
 
   virtual ~Output_Handler() {}
 };

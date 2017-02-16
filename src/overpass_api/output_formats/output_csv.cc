@@ -1,4 +1,5 @@
 
+#include "../../expat/escape_json.h"
 #include "output_csv.h"
 
 
@@ -92,6 +93,32 @@ void Output_CSV::display_remark(const std::string& text)
 void Output_CSV::display_error(const std::string& text)
 {
   // Intentionally empty
+}
+
+
+std::string Output_CSV::dump_config() const
+{
+  std::string result = "(";
+  
+  for (std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
+      it != csv_settings.keyfields.end(); ++it)
+  {
+    if (it != csv_settings.keyfields.begin())
+      result += ",";
+      
+    if (it->second)
+      result += "::" + it->first;
+    else
+      result += "\"" + escape_cstr(it->first) + "\"";
+  }
+  
+  if (csv_settings.separator != "\t")
+    result += std::string(";") + (csv_settings.with_headerline ? "true" : "false") + ";\""
+        + escape_cstr(csv_settings.separator) + "\"";
+  else if (!csv_settings.with_headerline)
+    result += ";false";
+    
+  return result + ")";
 }
 
 

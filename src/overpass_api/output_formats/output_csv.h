@@ -32,6 +32,8 @@ public:
 
   virtual void print_global_bbox(const Bbox_Double& bbox) {}
   
+  virtual std::string dump_config() const;
+  
   virtual void print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,

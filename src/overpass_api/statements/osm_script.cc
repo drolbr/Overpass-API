@@ -43,6 +43,7 @@ Osm_Script_Statement::Osm_Script_Statement
   attributes["timeout"] = "180";
   attributes["element-limit"] = "536870912";
   attributes["output"] = "xml";
+  attributes["output-config"] = "";
   attributes["date"] = "";
   attributes["from"] = "";
   attributes["augmented"] = "";
@@ -76,7 +77,16 @@ Osm_Script_Statement::Osm_Script_Statement
     if (!format_parser)
       add_static_error("Unknown output format: " + attributes["output"]);
     else
-      global_settings.set_output_handler(format_parser, 0, 0);
+    {
+      if (attributes["output-config"] == "")
+        global_settings.set_output_handler(format_parser, 0, 0);
+      else
+      {
+        istringstream in(attributes["output-config"]);
+        Tokenizer_Wrapper token(in);
+        global_settings.set_output_handler(format_parser, &token, 0);
+      }
+    }
   }
   
   

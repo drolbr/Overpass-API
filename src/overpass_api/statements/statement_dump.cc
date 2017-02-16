@@ -198,6 +198,8 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
   std::string result;
   if (name_ == "osm-script")
   {
+    std::string output_val;
+    std::string output_config;
     for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
     {
@@ -206,10 +208,19 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
       else if (it->first == "element-limit")
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
-	result += "[out:" + it->second + "]";
+      {
+        if (stmt_factory.global_settings.get_output_handler())
+          result += "[out:" + it->second + stmt_factory.global_settings.get_output_handler()->dump_config() + "]";
+        else
+          output_val = it->second;
+      }
+      else if (it->first == "output-config")
+        output_config = it->second;
       else if (it->first == "bbox")
 	result += "[bbox:" + it->second + "]";
     }
+    if (output_val != "")
+      result += "[out:" + output_val + output_config + "]";
 
     if (attributes.find("augmented") != attributes.end() && 
         attributes.find("augmented")->second == "deletions" &&
@@ -263,6 +274,8 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
   bool auto_timeout = true;
   if (name_ == "osm-script")
   {
+    std::string output_val;
+    std::string output_config;
     for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
     {
@@ -274,10 +287,19 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
       else if (it->first == "element-limit")
 	result += "[maxsize:" + it->second + "]";
       else if (it->first == "output")
-	result += "[out:" + it->second + "]";
+      {
+        if (stmt_factory.global_settings.get_output_handler())
+          result += "[out:" + it->second + stmt_factory.global_settings.get_output_handler()->dump_config() + "]";
+        else
+          output_val = it->second;
+      }
+      else if (it->first == "output-config")
+        output_config = it->second;
       else if (it->first == "bbox")
 	result += "[bbox:" + it->second + "]";
     }
+    if (output_val != "")
+      result += "[out:" + output_val + output_config + "]";
 
     if (attributes.find("augmented") != attributes.end() && 
         attributes.find("augmented")->second == "deletions" &&
@@ -331,6 +353,8 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
   std::string result;
   if (name_ == "osm-script")
   {
+    std::string output_val;
+    std::string output_config;
     for (std::map< std::string, std::string >::const_iterator it = attributes.begin();
         it != attributes.end(); ++it)
     {
@@ -339,10 +363,19 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
       else if (it->first == "element-limit")
 	result += "[maxsize:" + it->second + "]\n";
       else if (it->first == "output")
-	result += "[out:" + it->second + "]\n";
+      {
+        if (stmt_factory.global_settings.get_output_handler())
+          result += "[out:" + it->second + stmt_factory.global_settings.get_output_handler()->dump_config() + "]\n";
+        else
+          output_val = it->second;
+      }
+      else if (it->first == "output-config")
+        output_config = it->second;
       else if (it->first == "bbox")
 	result += "[bbox:" + it->second + "]\n";
     }
+    if (output_val != "")
+      result += "[out:" + output_val + output_config + "]\n";
 
     if (attributes.find("augmented") != attributes.end() && 
         attributes.find("augmented")->second == "deletions" &&
