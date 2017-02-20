@@ -69,7 +69,7 @@ struct Reader_Entry
     : client_pid(client_pid_), max_space(max_space_), max_time(max_time_), start_time(start_time_),
       client_token(client_token_) {}
   
-  uint32 client_pid;
+  pid_t client_pid;
   uint64 max_space;
   uint32 max_time;
   uint32 start_time;
@@ -87,6 +87,15 @@ struct Quota_Entry
 };
 
 
+struct Pending_Client
+{
+  Pending_Client(pid_t pid_, uint32 first_seen_) : pid(pid_), first_seen(first_seen_) {}
+  
+  pid_t pid;
+  uint32 first_seen;
+};
+
+
 class Global_Resource_Planner
 {
 public:
@@ -99,10 +108,10 @@ public:
   
   // Returns true if the process is acceptable in terms of server load and quotas
   // In this case it is registered as running
-  int probe(uint32 pid, uint32 client_token, uint32 time_units, uint64 max_space);
+  int probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space);
 
   // Unregisters the process
-  void remove(uint32 pid);
+  void remove(pid_t pid);
 
   // Unregister all processes that don't have a connection anymore
   void purge(Connection_Per_Pid_Map& connection_per_pid);
@@ -122,6 +131,7 @@ public:
   uint64 get_average_claimed_space() const { return average_used_space; }
 
 private:
+  std::map< uint32, std::vector< Pending_Client > > pending;
   std::vector< Reader_Entry > active;
   std::vector< Quota_Entry > afterwards;
   uint32 global_used_time;

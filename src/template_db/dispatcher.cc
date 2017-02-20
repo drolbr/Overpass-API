@@ -106,10 +106,32 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
 }
 
 
-int Global_Resource_Planner::probe(uint32 pid, uint32 client_token, uint32 time_units, uint64 max_space)
+int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space)
 {
+  std::map< uint32, std::vector< Pending_Client > >::iterator pending_it = pending.find(client_token);
+  Pending_Client* handle = 0;
+  uint32 cur_time = time(0);
+  
   if (rate_limit > 0 && client_token > 0)
   {
+    if (pending_it == pending.end())
+      pending_it = pending.insert(std::make_pair(client_token, std::vector< Pending_Client >())).first;
+    
+    for (std::vector< Pending_Client >::iterator handle_it = pending_it->second.begin();
+        handle_it != pending_it->second.end(); ++handle_it)
+    {
+      if (handle_it->pid == pid)
+        handle = &*handle_it;
+    }
+    if (!handle)
+    {
+      if (pending_it->second.size() > 2*rate_limit)
+        return Dispatcher::RATE_LIMITED;
+      
+      pending_it->second.push_back(Pending_Client(pid, cur_time));
+      handle = &pending_it->second.back();
+    }
+    
     uint32 token_count = 0;
     for (std::vector< Reader_Entry >::const_iterator it = active.begin(); it != active.end(); ++it)
     {
@@ -117,7 +139,18 @@ int Global_Resource_Planner::probe(uint32 pid, uint32 client_token, uint32 time_
 	++token_count;
     }
     if (token_count >= rate_limit)
-      return Dispatcher::RATE_LIMITED;
+    {
+      if (cur_time - handle->first_seen < 15)
+        return 0;
+      else
+      {
+        *handle = pending_it->second.back();
+        pending_it->second.pop_back();
+        if (pending_it->second.empty())
+          pending.erase(pending_it);
+        return Dispatcher::RATE_LIMITED;
+      }
+    }
     
     uint32 current_time = time(0);    
     for (std::vector< Quota_Entry >::iterator it = afterwards.begin(); it != afterwards.end(); )
@@ -135,13 +168,37 @@ int Global_Resource_Planner::probe(uint32 pid, uint32 client_token, uint32 time_
       }
     }
     if (token_count >= rate_limit)
-      return Dispatcher::RATE_LIMITED;    
+    {
+      if (cur_time - handle->first_seen < 15)
+        return 0;
+      else
+      {
+        *handle = pending_it->second.back();
+        pending_it->second.pop_back();
+        if (pending_it->second.empty())
+          pending.erase(pending_it);
+        return Dispatcher::RATE_LIMITED;
+      }
+    }
   }
   
   // Simple checks: is the query acceptable from a global point of view?
   if (time_units > (global_available_time - global_used_time)/2 ||
       max_space > (global_available_space - global_used_space)/2)
-    return 0;
+  {
+    if (!handle || cur_time - handle->first_seen < 15)
+      return 0;
+    else
+      return Dispatcher::QUERY_REJECTED;
+  }
+  
+  if (handle)
+  {
+    *handle = pending_it->second.back();
+    pending_it->second.pop_back();
+    if (pending_it->second.empty())
+      pending.erase(pending_it);
+  }
   
   active.push_back(Reader_Entry(pid, max_space, time_units, client_token, time(0)));
   
@@ -214,14 +271,48 @@ void Global_Resource_Planner::remove_entry(std::vector< Reader_Entry >::iterator
 }
 
 
-void Global_Resource_Planner::remove(uint32 pid)
+void Global_Resource_Planner::remove(pid_t pid)
 {
+  bool was_active = false;
+  
   for (std::vector< Reader_Entry >::iterator it = active.begin(); it != active.end(); ++it)
   {
     if (it->client_pid == pid)
     {
       remove_entry(it);
+      was_active = true;
       break;
+    }
+  }
+  
+  if (!was_active)
+  {
+    for (std::map< uint32, std::vector< Pending_Client > >::iterator pending_it = pending.begin();
+        pending_it != pending.end(); )
+    {
+      bool found = false;
+      for (std::vector< Pending_Client >::iterator handle_it = pending_it->second.begin();
+          handle_it != pending_it->second.end(); )
+      {
+        if (handle_it->pid == pid)
+        {
+          *handle_it = pending_it->second.back();
+          pending_it->second.pop_back();
+          found = true;
+          break;
+        }
+        else
+          ++handle_it;
+      }
+    
+      if (found && pending_it->second.empty())
+      {
+        uint32 client = pending_it->first;
+        pending.erase(pending_it);
+        pending_it = pending.lower_bound(client);
+      }
+      else
+        ++pending_it;
     }
   }
 }
@@ -235,6 +326,31 @@ void Global_Resource_Planner::purge(Connection_Per_Pid_Map& connection_per_pid)
       remove_entry(it);
     else
       ++it;
+  }
+  
+  for (std::map< uint32, std::vector< Pending_Client > >::iterator pending_it = pending.begin();
+      pending_it != pending.end(); )
+  {
+    for (std::vector< Pending_Client >::iterator handle_it = pending_it->second.begin();
+        handle_it != pending_it->second.end(); )
+    {
+      if (connection_per_pid.get(handle_it->pid) == 0)
+      {
+        *handle_it = pending_it->second.back();
+        pending_it->second.pop_back();
+      }
+      else
+        ++handle_it;
+    }
+    
+    if (pending_it->second.empty())
+    {
+      uint32 client = pending_it->first;
+      pending.erase(pending_it);
+      pending_it = pending.lower_bound(client);
+    }
+    else
+      ++pending_it;
   }
 }
 
