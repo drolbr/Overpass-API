@@ -183,7 +183,9 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
   }
   
   // Simple checks: is the query acceptable from a global point of view?
-  if (time_units > (global_available_time - global_used_time)/2 ||
+  if (global_available_time < global_used_time ||
+      time_units > (global_available_time - global_used_time)/2 ||
+      global_available_space - global_used_space ||
       max_space > (global_available_space - global_used_space)/2)
   {
     if (!handle || cur_time - handle->first_seen < 15)
