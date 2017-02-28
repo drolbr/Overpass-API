@@ -144,7 +144,7 @@ bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_
 bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
 bin_osm3s_query_SOURCES = ${statements_cc} overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_osm3s_query_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
-bin_dispatcher_SOURCES = template_db/dispatcher.cc template_db/file_tools.cc template_db/types.cc overpass_api/dispatch/dispatcher_server.cc
+bin_dispatcher_SOURCES = template_db/dispatcher.cc template_db/file_tools.cc template_db/quota.cc template_db/types.cc overpass_api/dispatch/dispatcher_server.cc
 bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
 
@@ -250,6 +250,7 @@ nobase_dist_HEADERS = \
   template_db/file_blocks_index.h\
   template_db/file_tools.h\
   template_db/lz4_wrapper.h\
+  template_db/quota.h\
   template_db/random_file.h\
   template_db/random_file_index.h\
   template_db/transaction.h\

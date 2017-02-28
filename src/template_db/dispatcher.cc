@@ -63,7 +63,7 @@ Dispatcher_Socket::~Dispatcher_Socket()
 }
 
 
-void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid)
+void Dispatcher_Socket::look_for_a_new_connection(Global_Status& global)
 {    
   struct sockaddr_un sockaddr_un_dummy;
   uint sockaddr_un_dummy_size = sizeof(sockaddr_un_dummy);
@@ -94,7 +94,7 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
     else
     {
       if (bytes_read != 0)
-	connection_per_pid.set(pid, new Blocking_Client_Socket(*it));
+	global.add_connection(*it, pid);
       else
 	close(*it);
 	
@@ -512,8 +512,7 @@ void Dispatcher::write_commit(pid_t pid)
 }
 
 
-void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
-				      uint32 client_token)
+void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
 { 
   if (logger)
     logger->request_read_and_idx(pid, max_allowed_time, max_allowed_space);
@@ -768,13 +767,20 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 {
   uint32 counter = 0;
   uint32 idle_counter = 0;
+  Global_Status global(global_resource_planner.get_total_available_time(),
+      global_resource_planner.get_total_available_space(), global_resource_planner.get_rate_limit());
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
-    socket.look_for_a_new_connection(connection_per_pid);
+    socket.look_for_a_new_connection(global);
     
     uint32 command = 0;
-    uint32 client_pid = 0;    
-    connection_per_pid.poll_command_round_robin(command, client_pid);
+    uint32 client_pid = 0;
+    Connection* connection = global.poll_round_robin(command, client_pid);
+    if (connection)
+    {
+      client_pid = connection->pid_();
+      connection_per_pid.set(connection->pid_(), connection->socket_());
+    }
     
     if (command == HANGUP)
       command = READ_ABORTED;
@@ -801,7 +807,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	if (command == OUTPUT_STATUS)
 	  output_status();
 	  
-	connection_per_pid.get(client_pid)->send_result(command);
+	connection->socket_()->send_result(command);
 	connection_per_pid.set(client_pid, 0);
 
 	if (command == TERMINATE)
@@ -817,57 +823,26 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	else if (command == WRITE_COMMIT)
 	{
 	  check_and_purge();
-	  write_commit(client_pid);
+          if (global.obtain_idx_lock())
+          {
+            write_commit(client_pid);
+            global.release_idx_lock();
+          }
 	}
 	else if (command == WRITE_ROLLBACK)
 	  write_rollback(client_pid);
 	
-	connection_per_pid.get(client_pid)->send_result(command);
+	connection->socket_()->send_result(command);
       }
       else if (command == HANGUP || command == READ_ABORTED || command == READ_FINISHED)
-      {
-	if (command == READ_ABORTED)
-	  read_aborted(client_pid);
-	else if (command == READ_FINISHED)
-	{
-	  read_finished(client_pid);	
-	  connection_per_pid.get(client_pid)->send_result(command);
-	}
-	connection_per_pid.set(client_pid, 0);
-      }
+        read_finished(client_pid);
       else if (command == READ_IDX_FINISHED)
-      {
-	read_idx_finished(client_pid);
-        if (connection_per_pid.get(client_pid) != 0)
-	  connection_per_pid.get(client_pid)->send_result(command);
-      }
+        read_idx_finished(connection->pid_());
       else if (command == REQUEST_READ_AND_IDX)
-      {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(4);
-	if (arguments.size() < 4)
-	{
-	  connection_per_pid.get(client_pid)->send_result(0);
-	  continue;
-	}	
-	uint32 max_allowed_time = arguments[0];
-	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
-	uint32 client_token = arguments[3];
-	
-	if (pending_commit)
-	{
-	  connection_per_pid.get(client_pid)->send_result(0);
-	  continue;
-	}
-	
-	command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
-	if (command == REQUEST_READ_AND_IDX)
-	  request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
-	
-	connection_per_pid.get(client_pid)->send_result(command);
-      }
+        request_read_and_idx(connection->pid_(), connection->maxtime_(), connection->maxspace_());
       else if (command == PURGE)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
+	std::vector< uint32 > arguments = connection->socket_()->get_arguments(1);
 	if (arguments.size() < 1)
 	  continue;
 	uint32 target_pid = arguments[0];
@@ -879,11 +854,11 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  connection_per_pid.set(target_pid, 0);
         }
         
-	connection_per_pid.get(client_pid)->send_result(command);
+	connection->socket_()->send_result(command);
       }
       else if (command == QUERY_BY_TOKEN)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
+	std::vector< uint32 > arguments = connection->socket_()->get_arguments(1);
 	if (arguments.size() < 1)
 	  continue;
 	uint32 target_token = arguments[0];
@@ -896,7 +871,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	    target_pid = it->client_pid;
 	}
 	
-	connection_per_pid.get(client_pid)->send_result(target_pid);
+	connection->socket_()->send_result(target_pid);
       }
       else if (command == QUERY_MY_STATUS)
       {
@@ -942,7 +917,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == SET_GLOBAL_LIMITS)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(5);
+	std::vector< uint32 > arguments = connection->socket_()->get_arguments(5);
 	if (arguments.size() < 5)
 	  continue;
 	
@@ -957,7 +932,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         if (rate_limit_ > -1)
           global_resource_planner.set_rate_limit(rate_limit_);
 	
-	connection_per_pid.get(client_pid)->send_result(command);
+	connection->socket_()->send_result(command);
       }
     }
     catch (File_Error e)

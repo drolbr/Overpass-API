@@ -20,6 +20,7 @@
 #define DE__OSM3S___TEMPLATE_DB__DISPATCHER_H
 
 #include "file_tools.h"
+#include "quota.h"
 #include "types.h"
 
 #include <map>
@@ -163,7 +164,7 @@ public:
 		    uint max_num_reading_processes_);
   ~Dispatcher_Socket();
   
-  void look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid);
+  void look_for_a_new_connection(Global_Status& global);
   std::vector< int >::size_type num_started_connections() { return started_connections.size(); }
     
 private:
@@ -242,8 +243,7 @@ class Dispatcher
     /** Request the index for a read operation and registers the reading process.
         Reading the index files should be taking a quick copy, because if any process
 	is in this state, write_commits are blocked. */
-    void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
-			      uint32 client_token);
+    void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
     
     /** Changes the registered state from reading the index to reading the
         database. Can be safely called multiple times for the same process. */
