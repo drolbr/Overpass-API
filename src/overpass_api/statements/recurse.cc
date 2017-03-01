@@ -831,7 +831,7 @@ void collect_ways(const Statement& query, Resource_Manager& rman,
 		  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
 		  const vector< Way::Id_Type >& ids, bool invert_ids,
 		  map< Uint31_Index, vector< Way_Skeleton > >& ways)
-{
+{  
   if (ranges.empty())
   {
     if (ids.empty())
@@ -1154,6 +1154,12 @@ class Recurse_Constraint : public Query_Constraint
 {
   public:
     Recurse_Constraint(Recurse_Statement& stmt_) : stmt(&stmt_) {}
+			 
+    virtual bool get_ranges
+        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+    virtual bool get_ranges
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+      { return false; }
 
     bool delivers_data(Resource_Manager& rman) { return true; }
     
@@ -1173,6 +1179,92 @@ class Recurse_Constraint : public Query_Constraint
   private:
     Recurse_Statement* stmt;
 };
+
+
+bool Recurse_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  ranges.clear();
+  
+  map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
+  if (mit == rman.sets().end())
+  {
+    return true;
+  }
+
+  uint64 timestamp = rman.get_desired_timestamp();
+  if (timestamp == 0)
+    timestamp = NOW;
+  
+  if (timestamp == NOW)
+  {
+    if (stmt->get_type() == RECURSE_RELATION_WAY)
+    {
+      std::vector< Uint31_Index > req = relation_way_member_indices< Relation_Skeleton >(
+          stmt, rman, mit->second.relations.begin(), mit->second.relations.end());
+      for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+        ranges.insert(std::make_pair(*it, inc(*it)));
+      
+      return true;
+    }
+    else if (stmt->get_type() == RECURSE_RELATION_RELATION)
+      return false;
+    else if (stmt->get_type() == RECURSE_DOWN)
+      return false;
+    else if (stmt->get_type() == RECURSE_DOWN_REL)
+      return false;
+    else if (stmt->get_type() == RECURSE_NODE_WAY)
+      return false;
+    else if (stmt->get_type() == RECURSE_NODE_RELATION)
+      return false;
+    else if (stmt->get_type() == RECURSE_WAY_RELATION)
+      return false;
+    else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
+      return false;
+    else if (stmt->get_type() == RECURSE_UP)
+      return false;
+    else if (stmt->get_type() == RECURSE_UP_REL)
+      return false;
+    else
+      return false;
+  }
+  else
+  {
+    if (stmt->get_type() == RECURSE_RELATION_WAY)
+    {
+      std::vector< Uint31_Index > req = relation_way_member_indices< Relation_Skeleton >(
+          stmt, rman, mit->second.relations.begin(), mit->second.relations.end(),
+          mit->second.attic_relations.begin(), mit->second.attic_relations.end());
+      for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+        ranges.insert(std::make_pair(*it, inc(*it)));
+      
+      return true;
+    }
+    else if (stmt->get_type() == RECURSE_RELATION_RELATION)
+      return false;
+    else if (stmt->get_type() == RECURSE_DOWN)
+      return false;
+    else if (stmt->get_type() == RECURSE_DOWN_REL)
+      return false;
+    else if (stmt->get_type() == RECURSE_NODE_WAY)
+      return false;
+    else if (stmt->get_type() == RECURSE_NODE_RELATION)
+      return false;
+    else if (stmt->get_type() == RECURSE_WAY_RELATION)
+      return false;
+    else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
+      return false;
+    else if (stmt->get_type() == RECURSE_UP)
+      return false;
+    else if (stmt->get_type() == RECURSE_UP_REL)
+      return false;
+    else
+      return false;
+  }
+  
+  return false;
+}
+
+
 
 bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
@@ -1337,7 +1429,7 @@ bool Recurse_Constraint::get_data
       
       return true;
     }
-  
+    
     if (stmt->get_type() == RECURSE_RELATION_WAY)
       collect_ways(query, rman, mit->second.relations, ranges, ids, invert_ids, into.ways);
     else if (stmt->get_type() == RECURSE_RELATION_RELATION)

@@ -315,97 +315,6 @@ std::vector< Uint31_Index > relation_relation_member_indices
 
 
 template< typename Relation_Skeleton >
-std::vector< Uint31_Index > relation_way_member_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
-{
-  std::vector< uint32 > parents;
-  std::vector< Uint31_Index > children_idxs;
-    
-  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-      it = rels_begin; it != rels_end; ++it)
-  {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
-    {
-      // Treat relations with really large indices: get the ways indexes explicitly
-      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
-      {
-	for (std::vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
-	    it3 != it2->way_idxs.end(); ++it3)
-	  children_idxs.push_back(*it3);
-      }
-    }
-    else
-      parents.push_back(it->first.val());
-  }    
-  if (stmt)
-    rman.health_check(*stmt);
-  std::sort(children_idxs.begin(), children_idxs.end());
-  children_idxs.erase(std::unique(children_idxs.begin(), children_idxs.end()), children_idxs.end());
-    
-  return collect_way_req(stmt, rman, parents, std::vector< uint32 >(), children_idxs);
-}
-
-
-template< typename Relation_Skeleton >
-std::vector< Uint31_Index > relation_way_member_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
-     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-         attic_rels_begin,
-     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-         attic_rels_end)
-{
-  std::vector< uint32 > parents;
-  std::vector< Uint31_Index > children_idxs;
-    
-  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-      it = rels_begin; it != rels_end; ++it)
-  {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
-    {
-      // Treat relations with really large indices: get the ways indexes explicitly
-      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
-      {
-        for (std::vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
-            it3 != it2->way_idxs.end(); ++it3)
-          children_idxs.push_back(*it3);
-      }
-    }
-    else
-      parents.push_back(it->first.val());
-  }    
-  for (typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-      it = attic_rels_begin; it != attic_rels_end; ++it)
-  {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
-    {
-      // Treat relations with really large indices: get the ways indexes explicitly
-      for (typename std::vector< Attic< Relation_Skeleton > >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
-      {
-        for (std::vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
-            it3 != it2->way_idxs.end(); ++it3)
-          children_idxs.push_back(*it3);
-      }
-    }
-    else
-      parents.push_back(it->first.val());
-  }    
-  if (stmt)
-    rman.health_check(*stmt);
-  std::sort(children_idxs.begin(), children_idxs.end());
-  children_idxs.erase(std::unique(children_idxs.begin(), children_idxs.end()), children_idxs.end());
-    
-  return collect_way_req(stmt, rman, parents, std::vector< uint32 >(), children_idxs);
-}
-
-
-template< typename Relation_Skeleton >
 std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
@@ -827,6 +736,7 @@ std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
     collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req,
 			Id_Predicate< Way_Skeleton >(intersect_ids), result);
   }
+  
   return result;
 }
 
