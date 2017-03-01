@@ -70,5 +70,5 @@ union_SOURCES = ../overpass_api/statements/union.test.cc ${statements_cc} ${test
 union_LDADD = @COMPRESS_LIBS@
 #benchmark_SOURCES = ../overpass_api/statements/benchmark.cc ${statements_cc} ${testenv_cc}
 #benchmark_LDADD = 
-test_dispatcher_SOURCES = ../template_db/dispatcher.test.cc ../template_db/dispatcher_client.cc ../template_db/dispatcher.cc ../template_db/file_tools.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+test_dispatcher_SOURCES = ../template_db/dispatcher.test.cc ../template_db/dispatcher_client.cc ../template_db/dispatcher.cc ../template_db/file_tools.cc ../template_db/transaction_insulator.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 test_dispatcher_LDADD = @COMPRESS_LIBS@

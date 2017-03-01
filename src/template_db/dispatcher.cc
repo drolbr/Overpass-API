@@ -368,8 +368,8 @@ Dispatcher::Dispatcher
      const std::vector< File_Properties* >& controlled_files_,
      Dispatcher_Logger* logger_)
     : socket(dispatcher_share_name_, shadow_name_, db_dir_, max_num_reading_processes_),
-      transaction_insulator(controlled_files_),
-      shadow_name(shadow_name_), db_dir(db_dir_),
+      transaction_insulator(db_dir_, controlled_files_),
+      shadow_name(shadow_name_),
       dispatcher_share_name(dispatcher_share_name_),
       logger(logger_),
       pending_commit(false),
@@ -377,11 +377,8 @@ Dispatcher::Dispatcher
       requests_finished_counter(0),
       global_resource_planner(total_available_time_units_, total_available_space_, 0)
 {
-  signal(SIGPIPE, SIG_IGN);
+  signal(SIGPIPE, SIG_IGN);  
   
-  // get the absolute pathname of the current directory
-  if (db_dir.substr(0, 1) != "/")
-    db_dir = getcwd() + db_dir_;
   if (shadow_name.substr(0, 1) != "/")
     shadow_name = getcwd() + shadow_name_;
   
@@ -401,6 +398,7 @@ Dispatcher::Dispatcher
   fchmod(dispatcher_shm_fd, S_666);
 #endif
   
+  std::string db_dir = transaction_insulator.db_dir();
   int foo = ftruncate(dispatcher_shm_fd,
 		      SHM_SIZE + db_dir.size() + shadow_name.size()); foo = foo;
   dispatcher_shm_ptr = (uint8*)mmap
@@ -420,18 +418,18 @@ Dispatcher::Dispatcher
   
   if (file_exists(shadow_name))
   {
-    copy_shadows_to_mains();
+    transaction_insulator.copy_shadows_to_mains();
     remove(shadow_name.c_str());
   }    
-  remove_shadows();
+  transaction_insulator.remove_shadows();
   remove((shadow_name + ".lock").c_str());
-  set_current_footprints();
+  transaction_insulator.set_current_footprints();
 }
 
 
 Dispatcher::~Dispatcher()
 {
-  munmap((void*)dispatcher_shm_ptr, SHM_SIZE + db_dir.size() + shadow_name.size());
+  munmap((void*)dispatcher_shm_ptr, SHM_SIZE + transaction_insulator.db_dir().size() + shadow_name.size());
   shm_unlink(dispatcher_share_name.c_str());
 }
 
@@ -443,10 +441,15 @@ void Dispatcher::write_start(pid_t pid)
   {
     Raw_File shadow_file(shadow_name + ".lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start:1");
  
-    copy_mains_to_shadows();
-    std::vector< pid_t > registered = write_index_of_empty_blocks();
+    transaction_insulator.copy_mains_to_shadows();
+    transaction_insulator.write_index_of_empty_blocks();
     if (logger)
-      logger->write_start(pid, registered);
+    {
+      std::set< ::pid_t > registered = transaction_insulator.registered_pids();
+      std::vector< Dispatcher_Logger::pid_t > registered_v;
+      registered_v.assign(registered.begin(), registered.end());
+      logger->write_start(pid, registered_v);
+    }
   }
   catch (File_Error e)
   {
@@ -475,7 +478,7 @@ void Dispatcher::write_rollback(pid_t pid)
 {
   if (logger)
     logger->write_rollback(pid);
-  remove_shadows();
+  transaction_insulator.remove_shadows();
   remove((shadow_name + ".lock").c_str());
 }
 
@@ -495,7 +498,7 @@ void Dispatcher::write_commit(pid_t pid)
   {
     Raw_File shadow_file(shadow_name, O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
     
-    copy_shadows_to_mains();
+    transaction_insulator.copy_shadows_to_mains();
   }
   catch (File_Error e)
   {
@@ -504,20 +507,9 @@ void Dispatcher::write_commit(pid_t pid)
   }
   
   remove(shadow_name.c_str());
-  remove_shadows();
+  transaction_insulator.remove_shadows();
   remove((shadow_name + ".lock").c_str());
-  set_current_footprints();
-}
-
-
-void Transaction_Insulator::request_read_and_idx(pid_t pid)
-{ 
-  for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
-      it != data_footprints.end(); ++it)
-    it->register_pid(pid);
-  for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
-      it != map_footprints.end(); ++it)
-    it->register_pid(pid);
+  transaction_insulator.set_current_footprints();
 }
 
 
@@ -539,17 +531,6 @@ void Dispatcher::read_idx_finished(pid_t pid)
   if (logger)
     logger->read_idx_finished(pid);
   processes_reading_idx.erase(pid);
-}
-
-
-void Transaction_Insulator::read_finished(pid_t pid)
-{
-  for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
-      it != data_footprints.end(); ++it)
-    it->unregister_pid(pid);
-  for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
-      it != map_footprints.end(); ++it)
-    it->unregister_pid(pid);
 }
 
 
@@ -577,237 +558,6 @@ void Dispatcher::read_aborted(pid_t pid)
   processes_reading_idx.erase(pid);
   disconnected.erase(pid);
   global_resource_planner.remove(pid);
-}
-
-
-void Dispatcher::copy_shadows_to_mains()
-{
-  transaction_insulator.copy_shadows_to_mains(db_dir);
-}
-
-
-void Transaction_Insulator::copy_shadows_to_mains(const std::string& db_dir)
-{
-  for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
-      it != controlled_files.end(); ++it)
-  {
-      copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-                + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
-		db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-		+ (*it)->get_index_suffix());
-      copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-                + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
-		db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-		+ (*it)->get_index_suffix());
-  }
-}
-
-
-void Dispatcher::copy_mains_to_shadows()
-{
-  transaction_insulator.copy_mains_to_shadows(db_dir);
-}
-
-
-void Transaction_Insulator::copy_mains_to_shadows(const std::string& db_dir)
-{
-  for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
-      it != controlled_files.end(); ++it)
-  {
-      copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-                + (*it)->get_index_suffix(),
-		db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
-      copy_file(db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-                + (*it)->get_index_suffix(),
-		db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
-  }
-}
-
-
-void Dispatcher::remove_shadows()
-{
-  transaction_insulator.remove_shadows(db_dir);
-}
-
-
-void Transaction_Insulator::remove_shadows(const std::string& db_dir)
-{
-  for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
-      it != controlled_files.end(); ++it)
-  {
-    remove((db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-            + (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str());
-    remove((db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-            + (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str());
-    remove((db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-            + (*it)->get_shadow_suffix()).c_str());
-    remove((db_dir + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-            + (*it)->get_shadow_suffix()).c_str());
-  }
-}
-
-
-void Dispatcher::set_current_footprints()
-{
-  transaction_insulator.set_current_footprints(db_dir);
-}
-
-
-void Transaction_Insulator::set_current_footprints(const std::string& db_dir)
-{
-  for (std::vector< File_Properties* >::size_type i = 0;
-      i < controlled_files.size(); ++i)
-  {
-    try
-    {
-      data_footprints[i].set_current_footprint
-          (controlled_files[i]->get_data_footprint(db_dir));
-    }
-    catch (File_Error e)
-    {
-      std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
-    catch (...) {}
-    
-    try
-    {
-      map_footprints[i].set_current_footprint
-          (controlled_files[i]->get_map_footprint(db_dir));
-    }
-    catch (File_Error e)
-    {
-      std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
-    catch (...) {}
-  }
-}
-
-
-void write_to_index_empty_file_data(const std::vector< bool >& footprint, const std::string& filename)
-{
-  Void_Pointer< std::pair< uint32, uint32 > > buffer(footprint.size() * 8);  
-  std::pair< uint32, uint32 >* pos = buffer.ptr;
-  uint32 last_start = 0;
-  for (uint32 i = 0; i < footprint.size(); ++i)
-  {
-    if (footprint[i])
-    {
-      if (last_start < i)
-      {
-	*pos = std::make_pair(i - last_start, last_start);
-	++pos;
-      }
-      last_start = i+1;
-    }
-  }
-  if (last_start < footprint.size())
-  {
-    *pos = std::make_pair(footprint.size() - last_start, last_start);
-    ++pos;
-  }
-  
-  Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
-		S_666, "write_to_index_empty_file_data:1");
-  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:26");
-}
-
-
-void write_to_index_empty_file_ids(const std::vector< bool >& footprint, const std::string& filename)
-{
-  Void_Pointer< std::pair< uint32, uint32 > > buffer(footprint.size() * 8);
-  std::pair< uint32, uint32 >* pos = buffer.ptr;
-  uint32 last_start = 0;
-  for (uint32 i = 0; i < footprint.size(); ++i)
-  {
-    if (footprint[i])
-    {
-      if (last_start < i)
-      {
-	*pos = std::make_pair(i - last_start, last_start);
-	++pos;
-      }
-      last_start = i+1;
-    }
-  }
-  if (last_start < footprint.size())
-  {
-    *pos = std::make_pair(footprint.size() - last_start, last_start);
-    ++pos;
-  }
-  
-  Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
-		S_666, "write_to_index_empty_file_ids:1");
-  file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:36");
-}
-
-
-std::set< pid_t > Transaction_Insulator::registered_pids() const
-{
-  std::set< pid_t > registered;
-  
-  for (std::vector< Idx_Footprints >::const_iterator it(data_footprints.begin());
-      it != data_footprints.end(); ++it)
-  {
-    std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
-    for (std::vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
-        it != registered_processes.end(); ++it)
-      registered.insert(*it);
-  }
-  for (std::vector< Idx_Footprints >::const_iterator it(map_footprints.begin());
-      it != map_footprints.end(); ++it)
-  {
-    std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
-    for (std::vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
-        it != registered_processes.end(); ++it)
-      registered.insert(*it);
-  }
-  
-  return registered;
-}
-
-
-std::vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
-{
-  return transaction_insulator.write_index_of_empty_blocks(db_dir);
-}
-
-
-std::vector< uint > Transaction_Insulator::write_index_of_empty_blocks(const std::string& db_dir)
-{
-  for (std::vector< File_Properties* >::size_type i = 0;
-      i < controlled_files.size(); ++i)
-  {
-    if (file_exists(db_dir + controlled_files[i]->get_file_name_trunk()
-        + controlled_files[i]->get_data_suffix()
-	+ controlled_files[i]->get_index_suffix()
-	+ controlled_files[i]->get_shadow_suffix()))
-    {
-      write_to_index_empty_file_data
-          (data_footprints[i].total_footprint(),
-	   db_dir + controlled_files[i]->get_file_name_trunk()
-	   + controlled_files[i]->get_data_suffix()
-	   + controlled_files[i]->get_shadow_suffix());
-    }
-    if (file_exists(db_dir + controlled_files[i]->get_file_name_trunk()
-        + controlled_files[i]->get_id_suffix()
-	+ controlled_files[i]->get_index_suffix()
-	+ controlled_files[i]->get_shadow_suffix()))
-    {
-      write_to_index_empty_file_ids
-          (map_footprints[i].total_footprint(),
-	   db_dir + controlled_files[i]->get_file_name_trunk()
-	   + controlled_files[i]->get_id_suffix()
-	   + controlled_files[i]->get_shadow_suffix());
-    }
-  }
-  
-  std::set< ::pid_t > registered = registered_pids();
-  
-  std::vector< Dispatcher::pid_t > registered_v;
-  registered_v.assign(registered.begin(), registered.end());
-  return registered_v;
 }
 
 
@@ -858,12 +608,12 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	if (command == WRITE_START)
 	{
-	  check_and_purge();
+	  global_resource_planner.purge(connection_per_pid);
 	  write_start(client_pid);
 	}
 	else if (command == WRITE_COMMIT)
 	{
-	  check_and_purge();
+	  global_resource_planner.purge(connection_per_pid);
 	  write_commit(client_pid);
 	}
 	else if (command == WRITE_ROLLBACK)
@@ -1069,52 +819,4 @@ void Dispatcher::output_status()
     }
   }
   catch (...) {}
-}
-
-
-void Idx_Footprints::set_current_footprint(const std::vector< bool >& footprint)
-{
-  current_footprint = footprint;
-}
-
-
-void Idx_Footprints::register_pid(pid_t pid)
-{
-  footprint_per_pid[pid] = current_footprint;
-}
-
-
-void Idx_Footprints::unregister_pid(pid_t pid)
-{
-  footprint_per_pid.erase(pid);
-}
-
-
-std::vector< Idx_Footprints::pid_t > Idx_Footprints::registered_processes() const
-{
-  std::vector< pid_t > result;
-  for (std::map< pid_t, std::vector< bool > >::const_iterator
-      it(footprint_per_pid.begin()); it != footprint_per_pid.end(); ++it)
-    result.push_back(it->first);
-  return result;
-}
-
-
-std::vector< bool > Idx_Footprints::total_footprint() const
-{
-  std::vector< bool > result = current_footprint;
-  for (std::map< pid_t, std::vector< bool > >::const_iterator
-      it(footprint_per_pid.begin()); it != footprint_per_pid.end(); ++it)
-  {
-    // By construction, it->second.size() <= result.size()
-    for (std::vector< bool >::size_type i = 0; i < it->second.size(); ++i)
-      result[i] = result[i] | (it->second)[i];
-  }
-  return result;
-}
-
-
-void Dispatcher::check_and_purge()
-{
-  global_resource_planner.purge(connection_per_pid);
 }

@@ -21,50 +21,11 @@
 
 #include "file_tools.h"
 #include "types.h"
+#include "transaction_insulator.h"
 
 #include <map>
 #include <set>
 #include <vector>
-
-
-class Idx_Footprints
-{
-  public:
-    typedef uint pid_t;
-    
-    void set_current_footprint(const std::vector< bool >& footprint);
-    void register_pid(pid_t pid); 
-    void unregister_pid(pid_t pid); 
-    std::vector< pid_t > registered_processes() const;
-    std::vector< bool > total_footprint() const;
-    
-  private:
-    std::vector< bool > current_footprint;
-    std::map< pid_t, std::vector< bool > > footprint_per_pid;
-};
-
-
-class Transaction_Insulator
-{
-public:
-  Transaction_Insulator(const std::vector< File_Properties* >& controlled_files_)
-      : controlled_files(controlled_files_),
-      data_footprints(controlled_files_.size()), map_footprints(controlled_files_.size()) {}
-  void request_read_and_idx(pid_t pid);
-  void read_finished(pid_t pid);
-  std::set< pid_t > registered_pids() const;
-
-  void copy_shadows_to_mains(const std::string& db_dir);
-  void copy_mains_to_shadows(const std::string& db_dir);
-  void remove_shadows(const std::string& db_dir);
-  void set_current_footprints(const std::string& db_dir);
-  std::vector< uint > write_index_of_empty_blocks(const std::string& db_dir);
-  
-private:
-  std::vector< File_Properties* > controlled_files;
-  std::vector< Idx_Footprints > data_footprints;
-  std::vector< Idx_Footprints > map_footprints;
-};
 
 
 /** Is called to log all operations of the dispatcher */
@@ -296,7 +257,7 @@ class Dispatcher
     Connection_Per_Pid_Map connection_per_pid;
     Transaction_Insulator transaction_insulator;
     std::set< pid_t > processes_reading_idx;
-    std::string shadow_name, db_dir;
+    std::string shadow_name;
     std::string dispatcher_share_name;
     int dispatcher_shm_fd;
     volatile uint8* dispatcher_shm_ptr;
@@ -307,12 +268,6 @@ class Dispatcher
     uint32 requests_finished_counter;
     Global_Resource_Planner global_resource_planner;
     
-    void copy_shadows_to_mains();
-    void copy_mains_to_shadows();
-    void remove_shadows();
-    void set_current_footprints();
-    std::vector< pid_t > write_index_of_empty_blocks();
-    void check_and_purge();
     uint64 total_claimed_space() const;
     uint64 total_claimed_time_units() const;
 };
