@@ -170,7 +170,10 @@ namespace
       if (meta && (!strcmp(attr[i], "uid")))
 	meta->user_id = atoi(attr[i+1]);
     }
-    current_node = Node(id, lat, lon);
+    if (lat >= -90. && lat <= 90. && lon >= -180. && lon <= 180.)
+      current_node = Node(id, lat, lon);
+    else
+      current_node = Node(id, 100., 200.);
   }
   
   
