@@ -185,7 +185,7 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
   // Simple checks: is the query acceptable from a global point of view?
   if (global_available_time < global_used_time ||
       time_units > (global_available_time - global_used_time)/2 ||
-      global_available_space - global_used_space ||
+      global_available_space < global_used_space ||
       max_space > (global_available_space - global_used_space)/2)
   {
     if (!handle || cur_time - handle->first_seen < 15)
@@ -368,9 +368,7 @@ Dispatcher::Dispatcher
      const std::vector< File_Properties* >& controlled_files_,
      Dispatcher_Logger* logger_)
     : socket(dispatcher_share_name_, shadow_name_, db_dir_, max_num_reading_processes_),
-      controlled_files(controlled_files_),
-      data_footprints(controlled_files_.size()),
-      map_footprints(controlled_files_.size()),
+      transaction_insulator(controlled_files_),
       shadow_name(shadow_name_), db_dir(db_dir_),
       dispatcher_share_name(dispatcher_share_name_),
       logger(logger_),
@@ -512,6 +510,17 @@ void Dispatcher::write_commit(pid_t pid)
 }
 
 
+void Transaction_Insulator::request_read_and_idx(pid_t pid)
+{ 
+  for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
+      it != data_footprints.end(); ++it)
+    it->register_pid(pid);
+  for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
+      it != map_footprints.end(); ++it)
+    it->register_pid(pid);
+}
+
+
 void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
 				      uint32 client_token)
 { 
@@ -519,12 +528,7 @@ void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64
     logger->request_read_and_idx(pid, max_allowed_time, max_allowed_space);
   ++requests_started_counter;
   
-  for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
-      it != data_footprints.end(); ++it)
-    it->register_pid(pid);
-  for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
-      it != map_footprints.end(); ++it)
-    it->register_pid(pid);
+  transaction_insulator.request_read_and_idx(pid);
   
   processes_reading_idx.insert(pid);
 }
@@ -538,18 +542,25 @@ void Dispatcher::read_idx_finished(pid_t pid)
 }
 
 
-void Dispatcher::read_finished(pid_t pid)
+void Transaction_Insulator::read_finished(pid_t pid)
 {
-  if (logger)
-    logger->read_finished(pid);
-  ++requests_finished_counter;
-  
   for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
     it->unregister_pid(pid);
   for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
       it != map_footprints.end(); ++it)
     it->unregister_pid(pid);
+}
+
+
+void Dispatcher::read_finished(pid_t pid)
+{
+  if (logger)
+    logger->read_finished(pid);
+  ++requests_finished_counter;
+  
+  transaction_insulator.read_finished(pid);
+  
   processes_reading_idx.erase(pid);
   disconnected.erase(pid);
   global_resource_planner.remove(pid);
@@ -560,12 +571,9 @@ void Dispatcher::read_aborted(pid_t pid)
 {
   if (logger)
     logger->read_aborted(pid);
-  for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
-      it != data_footprints.end(); ++it)
-    it->unregister_pid(pid);
-  for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
-      it != map_footprints.end(); ++it)
-    it->unregister_pid(pid);
+  
+  transaction_insulator.read_finished(pid);
+  
   processes_reading_idx.erase(pid);
   disconnected.erase(pid);
   global_resource_planner.remove(pid);
@@ -573,6 +581,12 @@ void Dispatcher::read_aborted(pid_t pid)
 
 
 void Dispatcher::copy_shadows_to_mains()
+{
+  transaction_insulator.copy_shadows_to_mains(db_dir);
+}
+
+
+void Transaction_Insulator::copy_shadows_to_mains(const std::string& db_dir)
 {
   for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
       it != controlled_files.end(); ++it)
@@ -591,6 +605,12 @@ void Dispatcher::copy_shadows_to_mains()
 
 void Dispatcher::copy_mains_to_shadows()
 {
+  transaction_insulator.copy_mains_to_shadows(db_dir);
+}
+
+
+void Transaction_Insulator::copy_mains_to_shadows(const std::string& db_dir)
+{
   for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
       it != controlled_files.end(); ++it)
   {
@@ -608,6 +628,12 @@ void Dispatcher::copy_mains_to_shadows()
 
 void Dispatcher::remove_shadows()
 {
+  transaction_insulator.remove_shadows(db_dir);
+}
+
+
+void Transaction_Insulator::remove_shadows(const std::string& db_dir)
+{
   for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
       it != controlled_files.end(); ++it)
   {
@@ -624,6 +650,12 @@ void Dispatcher::remove_shadows()
 
 
 void Dispatcher::set_current_footprints()
+{
+  transaction_insulator.set_current_footprints(db_dir);
+}
+
+
+void Transaction_Insulator::set_current_footprints(const std::string& db_dir)
 {
   for (std::vector< File_Properties* >::size_type i = 0;
       i < controlled_files.size(); ++i)
@@ -711,10 +743,11 @@ void write_to_index_empty_file_ids(const std::vector< bool >& footprint, const s
 }
 
 
-std::vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
+std::set< pid_t > Transaction_Insulator::registered_pids() const
 {
   std::set< pid_t > registered;
-  for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
+  
+  for (std::vector< Idx_Footprints >::const_iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
   {
     std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
@@ -722,7 +755,7 @@ std::vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
         it != registered_processes.end(); ++it)
       registered.insert(*it);
   }
-  for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
+  for (std::vector< Idx_Footprints >::const_iterator it(map_footprints.begin());
       it != map_footprints.end(); ++it)
   {
     std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
@@ -731,6 +764,18 @@ std::vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
       registered.insert(*it);
   }
   
+  return registered;
+}
+
+
+std::vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
+{
+  return transaction_insulator.write_index_of_empty_blocks(db_dir);
+}
+
+
+std::vector< uint > Transaction_Insulator::write_index_of_empty_blocks(const std::string& db_dir)
+{
   for (std::vector< File_Properties* >::size_type i = 0;
       i < controlled_files.size(); ++i)
   {
@@ -758,7 +803,9 @@ std::vector< Dispatcher::pid_t > Dispatcher::write_index_of_empty_blocks()
     }
   }
   
-  std::vector< pid_t > registered_v;
+  std::set< ::pid_t > registered = registered_pids();
+  
+  std::vector< Dispatcher::pid_t > registered_v;
   registered_v.assign(registered.begin(), registered.end());
   return registered_v;
 }
@@ -992,7 +1039,7 @@ void Dispatcher::output_status()
         <<"Counter of started requests: "<<requests_started_counter<<'\n'
         <<"Counter of finished requests: "<<requests_finished_counter<<'\n';
 
-    std::set< pid_t > collected_pids;
+    std::set< ::pid_t > collected_pids = transaction_insulator.registered_pids();
     
     for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
 	 it != global_resource_planner.get_active().end(); ++it)
@@ -1005,23 +1052,6 @@ void Dispatcher::output_status()
           <<it->max_space<<' '<<it->max_time<<' '<<it->start_time<<'\n';
         
       collected_pids.insert(it->client_pid);
-    }
-        
-    for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
-        it != data_footprints.end(); ++it)
-    {
-      std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
-      for (std::vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
-          it != registered_processes.end(); ++it)
-	collected_pids.insert(*it);
-    }
-    for (std::vector< Idx_Footprints >::iterator it(map_footprints.begin());
-        it != map_footprints.end(); ++it)
-    {
-      std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
-      for (std::vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
-          it != registered_processes.end(); ++it)
-	collected_pids.insert(*it);
     }
 
     for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();

@@ -44,6 +44,29 @@ class Idx_Footprints
 };
 
 
+class Transaction_Insulator
+{
+public:
+  Transaction_Insulator(const std::vector< File_Properties* >& controlled_files_)
+      : controlled_files(controlled_files_),
+      data_footprints(controlled_files_.size()), map_footprints(controlled_files_.size()) {}
+  void request_read_and_idx(pid_t pid);
+  void read_finished(pid_t pid);
+  std::set< pid_t > registered_pids() const;
+
+  void copy_shadows_to_mains(const std::string& db_dir);
+  void copy_mains_to_shadows(const std::string& db_dir);
+  void remove_shadows(const std::string& db_dir);
+  void set_current_footprints(const std::string& db_dir);
+  std::vector< uint > write_index_of_empty_blocks(const std::string& db_dir);
+  
+private:
+  std::vector< File_Properties* > controlled_files;
+  std::vector< Idx_Footprints > data_footprints;
+  std::vector< Idx_Footprints > map_footprints;
+};
+
+
 /** Is called to log all operations of the dispatcher */
 struct Dispatcher_Logger
 {
@@ -271,9 +294,7 @@ class Dispatcher
   private:
     Dispatcher_Socket socket;
     Connection_Per_Pid_Map connection_per_pid;
-    std::vector< File_Properties* > controlled_files;
-    std::vector< Idx_Footprints > data_footprints;
-    std::vector< Idx_Footprints > map_footprints;
+    Transaction_Insulator transaction_insulator;
     std::set< pid_t > processes_reading_idx;
     std::string shadow_name, db_dir;
     std::string dispatcher_share_name;
