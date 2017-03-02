@@ -298,7 +298,7 @@ bool Area_Constraint::delivers_data(Resource_Manager& rman)
         it(area_locations_db.flat_begin());
         !(it == area_locations_db.flat_end()); ++it)
     {
-      if (area->get_submitted_id() == it.object().id.val())
+      if (area->get_submitted_id() == it.handle().id().val())
         counter += it.object().used_indices.size();
     }
   }
@@ -314,8 +314,8 @@ bool Area_Constraint::delivers_data(Resource_Manager& rman)
       for (vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
         counter += it2->used_indices.size();
     }
-  
   }
+  
   return (counter <= 12);
 }
 
