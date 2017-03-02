@@ -289,6 +289,7 @@ bool Area_Constraint::delivers_data(Resource_Manager& rman)
 {
   int counter = 0;
 
+  // Count the indicies of the input areas
   if (!area->areas_from_input())
   {
     Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
@@ -306,9 +307,6 @@ bool Area_Constraint::delivers_data(Resource_Manager& rman)
     map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
     if (mit == rman.sets().end())
       return true;
-    
-    // Count the indicies of the input areas
-    int counter = 0;
     
     for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = mit->second.areas.begin();
          it != mit->second.areas.end(); ++it)
