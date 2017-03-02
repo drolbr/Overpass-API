@@ -852,4 +852,122 @@ std::vector< Uint31_Index > relation_way_member_indices
 }
 
 
+std::vector< Uint31_Index > relation_relation_member_indices
+    (const Statement& stmt, Resource_Manager& rman,
+     std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
+     std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end);
+
+
+std::vector< Uint31_Index > relation_relation_member_indices
+    (const Statement& stmt, Resource_Manager& rman,
+     std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
+     std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
+     std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator attic_rels_begin,
+     std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator attic_rels_end);
+
+
+std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
+    (const Statement* stmt, Resource_Manager& rman,
+     const std::vector< Node::Id_Type >& map_ids, const std::vector< uint32 >& parents);
+    
+    
+template< typename Relation_Skeleton >
+std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
+     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
+{
+  std::vector< uint32 > parents;
+  
+  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
+      it = rels_begin; it != rels_end; ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+    {
+      // Treat relations with really large indices: get the node indexes from the segement indexes
+      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+      {
+	for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
+	    it3 != it2->node_idxs.end(); ++it3)
+	  parents.push_back(it3->val());
+      }
+    }
+    else
+      parents.push_back(it->first.val());
+  }    
+  if (stmt)
+    rman.health_check(*stmt);
+  
+  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+}
+
+
+template< typename Relation_Skeleton >
+std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
+     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
+     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
+         attic_rels_begin,
+     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
+         attic_rels_end)
+{
+  std::vector< uint32 > parents;
+  
+  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
+      it = rels_begin; it != rels_end; ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+    {
+      // Treat relations with really large indices: get the node indexes from the segement indexes
+      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+      {
+        for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
+            it3 != it2->node_idxs.end(); ++it3)
+          parents.push_back(it3->val());
+      }
+    }
+    else
+      parents.push_back(it->first.val());
+  }    
+  for (typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
+      it = attic_rels_begin; it != attic_rels_end; ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+    {
+      // Treat relations with really large indices: get the node indexes from the segement indexes
+      for (typename std::vector< Attic< Relation_Skeleton > >::const_iterator it2 = it->second.begin();
+          it2 != it->second.end(); ++it2)
+      {
+        for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
+            it3 != it2->node_idxs.end(); ++it3)
+          parents.push_back(it3->val());
+      }
+    }
+    else
+      parents.push_back(it->first.val());
+  }    
+  if (stmt)
+    rman.health_check(*stmt);
+  
+  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+}
+
+
+std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end);
+
+
+std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
+     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_begin,
+     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end);
+
+
 #endif

@@ -1158,8 +1158,7 @@ class Recurse_Constraint : public Query_Constraint
     virtual bool get_ranges
         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
     virtual bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
-      { return false; }
+        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
 
     bool delivers_data(Resource_Manager& rman) { return true; }
     
@@ -1179,6 +1178,67 @@ class Recurse_Constraint : public Query_Constraint
   private:
     Recurse_Statement* stmt;
 };
+
+
+bool Recurse_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+{
+  ranges.clear();
+  
+  map< string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
+  if (mit == rman.sets().end())
+  {
+    return true;
+  }
+
+  uint64 timestamp = rman.get_desired_timestamp();
+  if (timestamp == 0)
+    timestamp = NOW;
+  
+  if (timestamp == NOW)
+  {
+    if (stmt->get_type() == RECURSE_RELATION_NODE)
+    {
+      relation_node_member_indices< Relation_Skeleton >(
+          stmt, rman, mit->second.relations.begin(), mit->second.relations.end()).swap(ranges);
+      
+      return true;
+    }
+    else if (stmt->get_type() == RECURSE_WAY_NODE)
+    {
+      way_nd_indices(stmt, rman, mit->second.ways.begin(), mit->second.ways.end()).swap(ranges);
+      
+      return true;
+    }
+    else if (stmt->get_type() == RECURSE_DOWN)
+      return false;
+    else if (stmt->get_type() == RECURSE_DOWN_REL)
+      return false;
+  }
+  else
+  {
+    if (stmt->get_type() == RECURSE_RELATION_NODE)
+    {
+      relation_node_member_indices< Relation_Skeleton >(
+          stmt, rman, mit->second.relations.begin(), mit->second.relations.end(),
+          mit->second.attic_relations.begin(), mit->second.attic_relations.end()).swap(ranges);
+      
+      return true;
+    }
+    else if (stmt->get_type() == RECURSE_WAY_NODE)
+    {
+      way_nd_indices(stmt, rman, mit->second.ways.begin(), mit->second.ways.end(),
+          mit->second.attic_ways.begin(), mit->second.attic_ways.end()).swap(ranges);
+      
+      return true;
+    }
+    else if (stmt->get_type() == RECURSE_DOWN)
+      return false;
+    else if (stmt->get_type() == RECURSE_DOWN_REL)
+      return false;
+  }
+  
+  return false;
+}
 
 
 bool Recurse_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
@@ -1212,12 +1272,22 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_In
       return false;
     else if (stmt->get_type() == RECURSE_DOWN_REL)
       return false;
-    else if (stmt->get_type() == RECURSE_NODE_WAY)
-      return false;
-    else if (stmt->get_type() == RECURSE_NODE_RELATION)
-      return false;
+    else if (stmt->get_type() == RECURSE_NODE_WAY || stmt->get_type() == RECURSE_NODE_RELATION)
+    {
+      std::set< Uint31_Index > req = extract_parent_indices(mit->second.nodes);
+      for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+        ranges.insert(std::make_pair(*it, inc(*it)));
+      
+      return true;
+    }
     else if (stmt->get_type() == RECURSE_WAY_RELATION)
-      return false;
+    {
+      std::set< Uint31_Index > req = extract_parent_indices(mit->second.ways);
+      for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+        ranges.insert(std::make_pair(*it, inc(*it)));
+      
+      return true;
+    }
     else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
       return false;
     else if (stmt->get_type() == RECURSE_UP)
@@ -1245,12 +1315,28 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_In
       return false;
     else if (stmt->get_type() == RECURSE_DOWN_REL)
       return false;
-    else if (stmt->get_type() == RECURSE_NODE_WAY)
-      return false;
-    else if (stmt->get_type() == RECURSE_NODE_RELATION)
-      return false;
+    else if (stmt->get_type() == RECURSE_NODE_WAY || stmt->get_type() == RECURSE_NODE_RELATION)
+    {
+      std::set< Uint31_Index > req = extract_parent_indices(mit->second.nodes);
+      for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+        ranges.insert(std::make_pair(*it, inc(*it)));
+      std::set< Uint31_Index > attic_req = extract_parent_indices(mit->second.attic_nodes);
+      for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
+        ranges.insert(std::make_pair(*it, inc(*it)));
+      
+      return true;
+    }
     else if (stmt->get_type() == RECURSE_WAY_RELATION)
-      return false;
+    {
+      std::set< Uint31_Index > req = extract_parent_indices(mit->second.ways);
+      for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+        ranges.insert(std::make_pair(*it, inc(*it)));
+      std::set< Uint31_Index > attic_req = extract_parent_indices(mit->second.attic_ways);
+      for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
+        ranges.insert(std::make_pair(*it, inc(*it)));
+      
+      return true;
+    }
     else if (stmt->get_type() == RECURSE_RELATION_BACKWARDS)
       return false;
     else if (stmt->get_type() == RECURSE_UP)
