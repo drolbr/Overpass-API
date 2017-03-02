@@ -60,9 +60,6 @@ class Dispatcher_Stub : public Watchdog_Callback
     string get_timestamp() { return timestamp; }
     string get_area_timestamp() { return area_timestamp; }
     Resource_Manager& resource_manager() { return *rman; }
-    
-    void start_cpu_timer();
-    void stop_cpu_timer();
 
   private:
     string db_dir, timestamp, area_timestamp;
@@ -74,8 +71,6 @@ class Dispatcher_Stub : public Watchdog_Callback
     Nonsynced_Transaction* area_transaction;
     Resource_Manager* rman;
     meta_modes meta;
-    clock_t start_time;
-    uint64 cpu_runtime;
 };
 
 

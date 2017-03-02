@@ -92,7 +92,7 @@ Dispatcher_Stub::Dispatcher_Stub
      uint32 max_allowed_time, uint64 max_allowed_space)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
-      transaction(0), area_transaction(0), rman(0), meta(meta_), start_time(0), cpu_runtime(0)
+      transaction(0), area_transaction(0), rman(0), meta(meta_)
 {
   if (max_allowed_time > 0)
     set_limits(2*max_allowed_time + 60, 2*max_allowed_space + 1024*1024*1024);
@@ -320,18 +320,6 @@ void Dispatcher_Stub::ping() const
 }
 
 
-void Dispatcher_Stub::start_cpu_timer()
-{
-  start_time = clock()/1000;
-}
-
-
-void Dispatcher_Stub::stop_cpu_timer()
-{
-  cpu_runtime += clock()/1000 - start_time;
-}
-
-
 Dispatcher_Stub::~Dispatcher_Stub()
 {
   bool areas_written = (rman->area_updater() != 0);
@@ -346,7 +334,10 @@ Dispatcher_Stub::~Dispatcher_Stub()
     try
     {
       ostringstream out;
-      out<<"read_finished() start "<<global_read_counter()<<' '<<cpu_runtime;
+      out<<"read_finished() start "<<global_read_counter();
+      if (rman)
+        for (std::vector< uint64 >::const_iterator it = rman->cpu_time().begin(); it != rman->cpu_time().end(); ++it)
+            out<<' '<<*it;
       logger.annotated_log(out.str());
       dispatcher_client->read_finished();
       logger.annotated_log("read_finished() end");

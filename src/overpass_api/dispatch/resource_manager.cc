@@ -251,3 +251,20 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
     throw *error;
   }  
 }
+
+
+void Resource_Manager::start_cpu_timer(uint index)
+{
+  if (cpu_start_time.size() <= index)
+    cpu_start_time.resize(index+1, 0);
+  cpu_start_time[index] = clock()/1000;
+}
+
+
+void Resource_Manager::stop_cpu_timer(uint index)
+{
+  if (cpu_runtime.size() <= index)
+    cpu_runtime.resize(index+1, 0);
+  if (index < cpu_start_time.size())
+    cpu_runtime[index] += clock()/1000 - cpu_start_time[index];
+}

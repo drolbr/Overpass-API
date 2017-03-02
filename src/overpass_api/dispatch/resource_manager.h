@@ -100,6 +100,10 @@ public:
   void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
   
   const std::map< uint32, std::string >& users() { return user_data_cache.users(*transaction); }
+    
+  void start_cpu_timer(uint index);
+  void stop_cpu_timer(uint index);
+  const std::vector< uint64 >& cpu_time() const { return cpu_runtime; }
 
 private:
   map< string, Set > sets_;
@@ -121,6 +125,9 @@ private:
   uint64 desired_timestamp;
   uint64 diff_from_timestamp;
   uint64 diff_to_timestamp;
+  
+  std::vector< clock_t > cpu_start_time;
+  std::vector< uint64 > cpu_runtime;
 };
 
 
