@@ -1,1 +1,2 @@
 encoding remark: Please enter your query and terminate it with CTRL+D.
+line 1: static error: For the attribute "mode" of the element "print" the only allowed values are "ids_only", "skeleton", "body", "tags",  "count", or "meta".

@@ -1294,7 +1294,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
        || (clauses.front().statement == "polygon" && type != "node")
        || (clauses.front().statement == "bbox-query" && type != "node")
        || clauses.front().statement == "changed"
-       || clauses.front().statement == "newer"
+       || (clauses.front().statement == "newer" && type != "all")
        || (clauses.front().statement == "recurse" &&
            (clauses.front().attributes[0] == "<" || clauses.front().attributes[0] == "<<"
 	   || clauses.front().attributes[0] == ">" || clauses.front().attributes[0] == ">>")))

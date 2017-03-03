@@ -247,13 +247,11 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
         it != substatements.end(); ++it)
       result += (*it)->dump_compact_map_ql(stmt_factory);
   }
-  else if (name_ == "print")
-    return dump_print_map_ql(attributes, false) + ";";
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
+  else if (name_ == "area-query" || name_ == "around"|| name_ == "bbox-query" || name_ == "convert"
       || name_ == "coord-query" || name_ == "difference" || name_ == "foreach" || name_ == "id-query"
       || name_ == "item" || name_ == "make" || name_ == "newer" || name_ == "pivot"
-      || name_ == "polygon-query" || name_ == "query" || name_ == "recurse" || name_ == "union"
-      || name_ == "user")
+      || name_ == "polygon-query" || name_ == "print" || name_ == "query" || name_ == "recurse"
+      || name_ == "union" || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -327,13 +325,11 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
         it != substatements.end(); ++it)
       result += (*it)->dump_bbox_map_ql(stmt_factory);
   }
-  else if (name_ == "print")
-    return dump_print_map_ql(attributes, false) + ";";
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
+  else if (name_ == "area-query" || name_ == "around"|| name_ == "bbox-query" || name_ == "convert"
       || name_ == "coord-query" || name_ == "difference" || name_ == "foreach" || name_ == "id-query"
       || name_ == "item" || name_ == "make" || name_ == "newer" || name_ == "pivot"
-      || name_ == "polygon-query" || name_ == "query" || name_ == "recurse" || name_ == "union"
-      || name_ == "user")
+      || name_ == "polygon-query" || name_ == "print" || name_ == "query" || name_ == "recurse"
+      || name_ == "union" || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
@@ -402,13 +398,11 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
         it != substatements.end(); ++it)
       result += (*it)->dump_pretty_map_ql(stmt_factory) + "\n";
   }
-  else if (name_ == "print")
-    return dump_print_map_ql(attributes, true) + ";";
-  else if (name_ == "area-query" || name_ == "around" || name_ == "bbox-query" || name_ == "convert"
+  else if (name_ == "area-query" || name_ == "around"|| name_ == "bbox-query" || name_ == "convert"
       || name_ == "coord-query" || name_ == "difference" || name_ == "foreach" || name_ == "id-query"
       || name_ == "item" || name_ == "make" || name_ == "newer" || name_ == "pivot"
-      || name_ == "polygon-query" || name_ == "query" || name_ == "recurse" || name_ == "union"
-      || name_ == "user")
+      || name_ == "polygon-query" || name_ == "print" || name_ == "query" || name_ == "recurse"
+      || name_ == "union" || name_ == "user")
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
