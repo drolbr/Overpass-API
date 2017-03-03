@@ -22,15 +22,15 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
 #include "statement.h"
 
-using namespace std;
 
 class Id_Query_Statement : public Output_Statement
 {
   public:
     Id_Query_Statement(int line_number_, const map< string, string >& attributes,
-                       Query_Constraint* bbox_limitation = 0);
+                       Parsed_Query& global_settings);
     virtual string get_name() const { return "id-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Id_Query_Statement();
@@ -43,6 +43,40 @@ class Id_Query_Statement : public Output_Statement
     int get_type() const { return type; }
     
     static bool area_query_exists() { return area_query_exists_; }
+    
+    static std::string to_string(int type)
+    {
+      if (type == Statement::NODE)
+        return "node";
+      else if (type == Statement::WAY)
+        return "way";
+      else if (type == Statement::RELATION)
+        return "relation";
+      
+      return "area";
+    }
+   
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<id-query"
+          + std::string(" type=\"") + to_string(type) + "\""
+          + (lower.val() == upper.val()-1 ? std::string(" ref=\"") + ::to_string(lower.val()) + "\"" : "")
+          + (lower.val() != upper.val()-1 ? std::string(" lower=\"") + ::to_string(lower.val()) + "\"" : "")
+          + (lower.val() != upper.val()-1 ? std::string(" upper=\"") + ::to_string(upper.val()-1) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return to_string(type) + dump_ql_in_query("") + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
+    virtual std::string dump_ql_in_query(const std::string& indent) const
+    {
+      return std::string("(")
+          + (lower.val() == upper.val()-1 ? ::to_string(lower.val()) : "")
+          + ")";
+    }
     
   private:
     int type;

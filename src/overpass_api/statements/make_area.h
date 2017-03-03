@@ -38,7 +38,7 @@ class Make_Area_Statement : public Output_Statement
 {
   public:
     Make_Area_Statement(int line_number_, const map< string, string >& attributes,
-                        Query_Constraint* bbox_limitation = 0);
+                        Parsed_Query& global_settings);
     virtual string get_name() const { return "make-area"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Make_Area_Statement() {}    

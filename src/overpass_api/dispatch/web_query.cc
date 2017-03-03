@@ -46,23 +46,25 @@
 
 int main(int argc, char *argv[])
 {
+  Parsed_Query global_settings;
   Web_Output error_output(Error_Output::ASSISTING);
   Statement::set_error_output(&error_output);
   
   try
   {
-    string url = "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}";
-    string template_name = "default.wiki";
-    bool redirect = true;
-    string xml_raw(get_xml_cgi(&error_output, 16*1024*1024, url, redirect, template_name,
+    global_settings.set_input_params(
+	get_xml_cgi(&error_output, 16*1024*1024,
 	error_output.http_method, error_output.allow_headers, error_output.has_origin));
     
     if (error_output.display_encoding_errors())
       return 0;
     
-    Statement::Factory stmt_factory;
-    if (!parse_and_validate(stmt_factory, xml_raw, &error_output, parser_execute))
+    Statement::Factory stmt_factory(global_settings);
+    if (!parse_and_validate(stmt_factory, global_settings, global_settings.get_input_params().find("data")->second,
+        &error_output, parser_execute))
       return 0;
+    
+    error_output.set_output_handler(global_settings.get_output_handler());
     
     Osm_Script_Statement* osm_script = 0;
     if (!get_statement_stack()->empty())
@@ -77,46 +79,26 @@ int main(int argc, char *argv[])
     }
     else
     {
-      Osm_Script_Statement temp(0, map< string, string >(), 0);
+      Osm_Script_Statement temp(0, map< string, string >(), global_settings);
       max_allowed_time = temp.get_max_allowed_time();
       max_allowed_space = temp.get_max_allowed_space();
     }
 
-    if (error_output.http_method == error_output.http_options
-        || error_output.http_method == error_output.http_head)
-    {
-      if (!osm_script || osm_script->get_type() == "xml")
-        error_output.write_xml_header("", "");
-      else if (osm_script->get_type() == "json")
-        error_output.write_json_header("", "");
-      else if (osm_script->get_type() == "csv")
-        error_output.write_csv_header("", "");
-      else
-        osm_script->set_template_name(template_name);
-    }
+    if (error_output.http_method == http_options
+        || error_output.http_method == http_head)
+      error_output.write_payload_header("", "", "", true);
     else
     {
       // open read transaction and log this.
       int area_level = determine_area_level(&error_output, 0);
-      Dispatcher_Stub dispatcher("", &error_output, xml_raw,
-			         get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space);
+      Dispatcher_Stub dispatcher("", &error_output, global_settings.get_input_params().find("data")->second,
+			         get_uses_meta_data(), area_level,
+				 max_allowed_time, max_allowed_space, global_settings);
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
     
-      if (!osm_script || osm_script->get_type() == "xml")
-        error_output.write_xml_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-      else if (osm_script->get_type() == "json")
-        error_output.write_json_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-      else if (osm_script->get_type() == "csv")
-        error_output.write_csv_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "");
-      else
-        osm_script->set_template_name(template_name);
+      error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(),
+ 	  area_level > 0 ? dispatcher.get_area_timestamp() : "", true);
       
       dispatcher.resource_manager().start_cpu_timer(0);
       for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
@@ -124,45 +106,18 @@ int main(int argc, char *argv[])
         (*it)->execute(dispatcher.resource_manager());
       dispatcher.resource_manager().stop_cpu_timer(0);
 
-      if (osm_script && osm_script->get_type() == "custom")
-      {
-        uint32 count = osm_script->get_written_elements_count();
-        if (count == 0 && redirect)
-        {
-          error_output.write_html_header
-              (dispatcher.get_timestamp(),
-	       area_level > 0 ? dispatcher.get_area_timestamp() : "");
-	  cout<<"<p>No results found.</p>\n";
-	  error_output.write_footer();
-        }
-        else if (count == 1 && redirect)
-        {
-	  cout<<"Status: 302 Moved\n";
-	  cout<<"Location: "
-	      <<osm_script->adapt_url(url)
-	      <<"\n\n";
-        }
-        else
-        {
-          error_output.write_html_header
-              (dispatcher.get_timestamp(),
-	       area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
-	       osm_script->template_contains_js());
-	  osm_script->write_output();
-	  error_output.write_footer();
-        }
-      }
-      else if (osm_script && osm_script->get_type() == "popup")
-      {
-        error_output.write_html_header
-            (dispatcher.get_timestamp(),
-	     area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
-	     osm_script->template_contains_js(), false);
-        osm_script->write_output();
-        error_output.write_footer();
-      }
-      else
-        error_output.write_footer();
+    //TODO
+//       if (osm_script && osm_script->get_type() == "popup")
+//       {
+//         error_output.write_html_header
+//             (dispatcher.get_timestamp(),
+// 	     area_level > 0 ? dispatcher.get_area_timestamp() : "", 200,
+// 	     osm_script->template_contains_js(), false);
+//         osm_script->write_output();
+//         error_output.write_footer();
+//       }
+//       else
+//         error_output.write_footer();
     }
   }
   catch(File_Error e)
@@ -171,16 +126,16 @@ int main(int argc, char *argv[])
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
-      if (error_output.http_method == error_output.http_get
-          || error_output.http_method == error_output.http_post)
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". The server is probably too busy to handle your request.\n";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
-      if (error_output.http_method == error_output.http_get
-          || error_output.http_method == error_output.http_post)
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Please check /api/status for the quota of your IP address.\n";
     }

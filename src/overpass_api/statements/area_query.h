@@ -20,6 +20,8 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__AREA_QUERY_H
 
 #include "../data/collect_members.h"
+#include "../data/utils.h"
+#include "../data/way_geometry_store.h"
 #include "statement.h"
 
 #include <map>
@@ -31,7 +33,7 @@ class Area_Query_Statement : public Output_Statement
 {
   public:
     Area_Query_Statement(int line_number_, const map< string, string >& attributes,
-                         Query_Constraint* bbox_limitation = 0);
+                         Parsed_Query& global_settings);
     virtual string get_name() const { return "area-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Area_Query_Statement();    
@@ -74,6 +76,27 @@ class Area_Query_Statement : public Output_Statement
     string get_input() const { return input; }
     
     static bool is_used() { return is_used_; }
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<area-query"
+          + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+          + (submitted_id > 0 ? std::string(" ref=\"") + to_string(submitted_id) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return "node" + dump_ql_in_query("") + dump_ql_result_name();
+    }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
+      return std::string("(area")
+          + (input != "_" ? std::string(".") + input : "")
+          + (submitted_id > 0 ? std::string(":") + to_string(submitted_id) : "")
+          + ")";
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
   
   private:
     string input;

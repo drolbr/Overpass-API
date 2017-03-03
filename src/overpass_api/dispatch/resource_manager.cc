@@ -21,7 +21,24 @@
 
 #include <sstream>
 
-using namespace std;
+
+Resource_Manager::Resource_Manager(
+    Transaction& transaction_, Parsed_Query* global_settings_, Watchdog_Callback* watchdog_,
+    Error_Output* error_output_)
+      : transaction(&transaction_), error_output(error_output_),
+        area_transaction(0), area_updater_(0),
+        watchdog(watchdog_), global_settings(global_settings_), global_settings_owned(false),
+	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
+	max_allowed_time(0), max_allowed_space(0),
+	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW)
+{
+  if (!global_settings)
+  {
+    global_settings = new Parsed_Query();
+    global_settings_owned = true;
+  }
+}
+  
 
 uint count_set(const Set& set_)
 {

@@ -31,7 +31,7 @@
 Generic_Statement_Maker< Foreach_Statement > Foreach_Statement::statement_maker("foreach");
 
 Foreach_Statement::Foreach_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -104,7 +104,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       rman.sets()[output].clear();
-
+      
       rman.sets()[output].ways[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
@@ -136,7 +136,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       rman.sets()[output].clear();
-
+      
       rman.sets()[output].relations[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)

@@ -24,170 +24,89 @@ using namespace std;
 
 double way_1_south(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 50.99685124;
-  else if (pattern_size > 80)
-    return 51.0034048;
-  else if (pattern_size > 40)
-    return 51.0165120;
-  else
-    return 51.02961924;
+  return 51. + 1.5/pattern_size;
 }
 
 double way_1_north(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 51.00340474;
-  else if (pattern_size > 258)
-    return 51.0099583;
-  else if (pattern_size > 80)
-    return 51.0296191;
-  else if (pattern_size > 40)
-    return 51.0427263;
-  else
-    return 51.05583354;
+  return 51. + 1.5/pattern_size;
 }
 
 double way_1_west(unsigned int pattern_size)
 {
-  if (pattern_size > 40)
-    return 6.9992448;
-  else
-    return 7.0123520;
+  return 7. + .5/pattern_size;
 }
 
 double way_1_east(unsigned int pattern_size)
 {
-  if (pattern_size > 258)
-    return 7.0057983;
-  else if (pattern_size > 40)
-    return 7.0254591;
-  else
-    return 7.0385663;
+  return 7. + 1.5/pattern_size;
 }
 
 unsigned int way_1_zoom(unsigned int pattern_size)
 {
-  if (pattern_size > 258)
-    return 14;
-  else
+  if (pattern_size < 80)
     return 13;
+  else if (pattern_size < 120)
+    return 14;
+  return 15;
 }
 
 double way_2_south(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 50.99685124;
-  else if (pattern_size > 80)
-    return 51.0034048;
-  else if (pattern_size > 60)
-    return 51.0165120;
-  else if (pattern_size > 40)
-    return 50.9771904;
-  else
-    return 51.0296192;
+  return 51. + 1.5/pattern_size;
 }
 
 double way_2_north(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 51.00340474;
-  else if (pattern_size > 80)
-    return 51.0296191;
-  else if (pattern_size > 60)
-    return 51.0427263;
-  else if (pattern_size > 40)
-    return 51.0820479;
-  else
-    return 51.1344767;
+  return 51. + 1.5/pattern_size;
 }
 
 double way_2_west(unsigned int pattern_size)
 {
-  if (pattern_size > 120)
-    return 6.9992448;
-  else if (pattern_size > 60)
-    return 7.0123520;
-  else if (pattern_size > 40)
-    return 6.9730304;
-  else
-    return 7.0254592;
+  return 7. + 1.5/pattern_size;
 }
 
 double way_2_east(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 7.0057983;
-  else if (pattern_size > 120)
-    return 7.0254591;
-  else if (pattern_size > 60)
-    return 7.0385663;
-  else if (pattern_size > 40)
-    return 7.0778879;
-  else
-    return 7.1303167;
+  return 7. + 2.5/pattern_size;
 }
 
 unsigned int way_2_zoom(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 14;
-  else if (pattern_size > 60)
+  if (pattern_size < 80)
     return 13;
-  else
-    return 11;
+  else if (pattern_size < 120)
+    return 14;
+  return 15;
 }
 
 double relation_1_south(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 50.99685124;
-  else if (pattern_size > 120)
-    return 50.99029756;
-  else if (pattern_size > 40)
-    return 51.0034048;
-  else
-    return 50.9771904;
+  return 51. + .5 / pattern_size;
 }
 
 double relation_1_north(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 51.00340474;
-  else if (pattern_size > 120)
-    return 51.01651186;
-  else if (pattern_size > 40)
-    return 51.0296191;
-  else
-    return 51.0820479;
+  return 51. + 1.5 / pattern_size;
 }
 
 double relation_1_west(unsigned int pattern_size)
 {
-  if (pattern_size > 40)
-    return 6.9992448;
-  else
-    return 6.9730304;
+  return 7. + .5 / pattern_size;
 }
 
 double relation_1_east(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 7.0057983;
-  else if (pattern_size > 40)
-    return 7.0254591;
-  else
-    return 7.0778879;
+  return 7. + 1.5 / pattern_size;
 }
 
 unsigned int relation_1_zoom(unsigned int pattern_size)
 {
-  if (pattern_size > 440)
-    return 14;
-  else if (pattern_size > 40)
+  if (pattern_size < 80)
     return 13;
-  else
-    return 11;
+  else if (pattern_size < 120)
+    return 14;
+  return 15;
 }
 
 double way_meta_south(unsigned int pattern_size)
@@ -774,8 +693,7 @@ int main(int argc, char* args[])
         "</div>\n";
       if (string(args[2]) == "interpreter_27" || string(args[2]) == "interpreter_28"
 	   || string(args[2]) == "interpreter_31" || string(args[2]) == "interpreter_33"
-	   || string(args[2]) == "interpreter_34" || string(args[2]) == "interpreter_36"
-	   || string(args[2]) == "interpreter_37")
+	   || string(args[2]) == "interpreter_34")
       {
 	cout<<
 	"\n"
@@ -806,8 +724,30 @@ int main(int argc, char* args[])
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
 	"\n"
-        "<p>Way <strong>1</strong>,<br/>\n"
+        "<p>Way <strong>1</strong>, no geographic reference<br/>\n"
         "<br/>\n"
+        "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
+        "</div>\n";
+      if (string(args[2]) == "interpreter_36")
+	cout<<
+	"\n"
+	"<div style=\"min-height:300px;\">\n"
+	"\n"
+	"\n"
+        "<p>Way <strong>1</strong>, no geographic reference<br/>\n"
+	" members: "<<pattern_size+1<<", "<<pattern_size+2<<"<br/>\n"
+        "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
+        "</div>\n";
+      if (string(args[2]) == "interpreter_37")
+	cout<<
+	"\n"
+	"<div style=\"min-height:300px;\">\n"
+	"\n"
+	"\n"
+        "<p>Way <strong>1</strong>, no geographic reference<br/>\n"
+        "way_key = way_few<br/>\n"
+        "way_key_2/4 = way_value_1<br/>\n"
+	" members: "<<pattern_size+1<<", "<<pattern_size+2<<"<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
       if (string(args[2]) == "interpreter_28")
@@ -830,10 +770,9 @@ int main(int argc, char* args[])
 	" members: "<<pattern_size + 2<<", "<<pattern_size + 3<<"<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/way/2\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_29" || string(args[2]) == "interpreter_30"
+      if (string(args[2]) == "interpreter_30"
 	   || string(args[2]) == "interpreter_32" || string(args[2]) == "interpreter_33"
-	   || string(args[2]) == "interpreter_34" || string(args[2]) == "interpreter_36"
-	   || string(args[2]) == "interpreter_37")
+	   || string(args[2]) == "interpreter_34")
       {
 	cout<<
 	"\n"
@@ -864,8 +803,30 @@ int main(int argc, char* args[])
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
 	"\n"
-        "<p>Relation <strong>1</strong>,<br/>\n"
+        "<p>Relation <strong>1</strong>, no geographic reference<br/>\n"
         "<br/>\n"
+        "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
+        "</div>\n";
+      if (string(args[2]) == "interpreter_36")
+	cout<<
+	"\n"
+	"<div style=\"min-height:300px;\">\n"
+	"\n"
+	"\n"
+        "<p>Relation <strong>1</strong>, no geographic reference<br/>\n"
+	" members: node <strong>1</strong> &quot;one&quot;, node <strong>"<<pattern_size+2<<"</strong> &quot;two&quot;<br/>\n"
+        "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
+        "</div>\n";
+      if (string(args[2]) == "interpreter_29" || string(args[2]) == "interpreter_37")
+	cout<<
+	"\n"
+	"<div style=\"min-height:300px;\">\n"
+	"\n"
+	"\n"
+        "<p>Relation <strong>1</strong>, no geographic reference<br/>\n"
+        "relation_key = relation_few<br/>\n"
+        "relation_key_2/4 = relation_value_1<br/>\n"
+	" members: node <strong>1</strong> &quot;one&quot;, node <strong>"<<pattern_size+2<<"</strong> &quot;two&quot;<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
       if (string(args[2]) == "interpreter_30")
@@ -1146,33 +1107,17 @@ int main(int argc, char* args[])
     "</div>\n"
     "\n"
     "<div style=\"min-height:300px;\">\n"
-    "<div id=\"map_way_1\" style=\"width:300px;height:300px;float:right;\">\n"
-    "<div id=\"map_way_1_progressbar\">Loading data ...</div>\n"
-    "<form class=\"map_descriptor\" action=\"map_way_1\">\n"
-    "  <input type=\"hidden\" name=\"url\" value=\"interpreter?data=%28way%281%29%3Bnode%28w%29%29%3Bout+skel%3B\"/>\n"
-    "  <input type=\"hidden\" name=\"lat\" value=\""<<setprecision(7)<<fixed<<(way_meta_south(pattern_size) + way_meta_north(pattern_size))/2.0<<"\"/>\n"
-    "  <input type=\"hidden\" name=\"lon\" value=\""<<setprecision(7)<<fixed<<(way_meta_west(pattern_size) + way_meta_east(pattern_size))/2.0<<"\"/>\n"
-    "  <input type=\"hidden\" name=\"zoom\" value=\""<<way_meta_zoom(pattern_size)<<"\"/>\n"
-    "</form>\n"
-    "</div>\n"
     "\n"
-    "<p>Way <strong>1</strong>, bounding box south: "<<setprecision(7)<<fixed<<way_meta_south(pattern_size)<<", west: "<<setprecision(7)<<fixed<<way_meta_west(pattern_size)<<", north: "<<setprecision(7)<<fixed<<way_meta_north(pattern_size)<<", east: "<<setprecision(7)<<fixed<<way_meta_east(pattern_size)<<",<br/>\n"
+    "\n"
+    "<p>Way <strong>1</strong>, no geographic reference<br/>\n"
     " members: 1, 2<br/>\n"
     "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
     "</div>\n"
     "\n"
     "<div style=\"min-height:300px;\">\n"
-    "<div id=\"map_relation_1\" style=\"width:300px;height:300px;float:right;\">\n"
-    "<div id=\"map_relation_1_progressbar\">Loading data ...</div>\n"
-    "<form class=\"map_descriptor\" action=\"map_relation_1\">\n"
-    "  <input type=\"hidden\" name=\"url\" value=\"interpreter?data=%28relation%281%29%3Bnode%28r%29%2D%3E%2Ex%3Bway%28r%29%3Bnode%28w%29%3B%29%3Bout+skel%3B\"/>\n"
-    "  <input type=\"hidden\" name=\"lat\" value=\""<<setprecision(7)<<fixed<<(relation_meta_south(pattern_size) + relation_meta_north(pattern_size))/2.0<<"\"/>\n"
-    "  <input type=\"hidden\" name=\"lon\" value=\""<<setprecision(7)<<fixed<<(relation_meta_west(pattern_size) + relation_meta_east(pattern_size))/2.0<<"\"/>\n"
-    "  <input type=\"hidden\" name=\"zoom\" value=\""<<relation_meta_zoom(pattern_size)<<"\"/>\n"
-    "</form>\n"
-    "</div>\n"
     "\n"
-    "<p>Relation <strong>1</strong>, bounding box south: "<<setprecision(7)<<fixed<<relation_meta_south(pattern_size)<<", west: "<<setprecision(7)<<fixed<<relation_meta_west(pattern_size)<<", north: "<<setprecision(7)<<fixed<<relation_meta_north(pattern_size)<<", east: "<<setprecision(7)<<fixed<<relation_meta_east(pattern_size)<<",<br/>\n"
+    "\n"
+    "<p>Relation <strong>1</strong>, no geographic reference<br/>\n"
     " members: node <strong>1</strong> &quot;one&quot;, node <strong>2</strong> &quot;two&quot;<br/>\n"
     "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
     "</div>\n"

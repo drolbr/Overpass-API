@@ -21,25 +21,21 @@
 #include <sstream>
 
 #include "../core/settings.h"
-#include "../frontend/print_target.h"
+#include "../frontend/output_handler_parser.h"
 #include "bbox_query.h"
 #include "osm_script.h"
 #include "print.h"
-// #include "area_query.h"
 
-using namespace std;
-
-//-----------------------------------------------------------------------------
 
 Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_maker("osm-script");
 
+
 Osm_Script_Statement::Osm_Script_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation_)
-    : Statement(line_number_), bbox_limitation(bbox_limitation_), bbox_statement(0),
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Statement(line_number_),
        desired_timestamp(NOW), comparison_timestamp(0), add_deletion_information(false),
        max_allowed_time(0), max_allowed_space(0),
-       type("xml"), output_handle(0), factory(0),
-       template_name("default.wiki"), template_contains_js_(false)
+       factory(0)
 {
   map< string, string > attributes;
   
@@ -47,6 +43,7 @@ Osm_Script_Statement::Osm_Script_Statement
   attributes["timeout"] = "180";
   attributes["element-limit"] = "536870912";
   attributes["output"] = "xml";
+  attributes["output-config"] = "";
   attributes["date"] = "";
   attributes["from"] = "";
   attributes["augmented"] = "";
@@ -73,16 +70,25 @@ Osm_Script_Statement::Osm_Script_Statement
   }
   max_allowed_space = max_space;
 
-  if (attributes["output"] == "xml" || attributes["output"] == "json" || attributes["output"] == "csv" 
-      || attributes["output"] == "custom" || attributes["output"] == "popup")
-    type = attributes["output"];
-  else
+  
+  if (!global_settings.get_output_handler())
   {
-    ostringstream temp;
-    temp<<"For the attribute \"output\" of the element \"osm-script\""
-        <<" the only allowed values are \"xml\", \"json\", \"csv\", \"custom\", or \"popup\".";
-    add_static_error(temp.str());
+    Output_Handler_Parser* format_parser = Output_Handler_Parser::get_format_parser(attributes["output"]);	
+    if (!format_parser)
+      add_static_error("Unknown output format: " + attributes["output"]);
+    else
+    {
+      if (attributes["output-config"] == "")
+        global_settings.set_output_handler(format_parser, 0, 0);
+      else
+      {
+        istringstream in(attributes["output-config"]);
+        Tokenizer_Wrapper token(in);
+        global_settings.set_output_handler(format_parser, &token, 0);
+      }
+    }
   }
+  
   
   if (attributes["bbox"] != "")
   {
@@ -148,10 +154,7 @@ Osm_Script_Statement::Osm_Script_Statement
     
     if (south >= -90.0 && south <= 90.0 && north >= -90.0 && north <= 90.0
         && west >= -180.0 && west <= 180.0 && east >= -180.0 && east <= 180.0)
-    {
-      bbox_statement = new Bbox_Query_Statement(line_number_, bbox_attributes, 0);
-      bbox_limitation = bbox_statement->get_query_constraint();
-    }
+      global_settings.set_global_bbox(Bbox_Double(south, west, north, east));
   }
   
   if (attributes["date"] != "")
@@ -228,140 +231,11 @@ void Osm_Script_Statement::add_statement(Statement* statement, string text)
 }
 
 
-bool set_output_templates
-    (Output_Handle& output, string& header, const string& name, Transaction& transaction)
-{
-  string data;
-  
-  ifstream in((transaction.get_db_dir() + "/templates/" + name).c_str());
-  while (in.good())
-  {
-    string buf;
-    getline(in, buf);
-    data += buf + '\n';
-  }
-  
-  if (data.find("<includeonly>") != string::npos)
-  {
-    string::size_type start = data.find("<includeonly>") + 13;
-    string::size_type end = data.find("</includeonly>");
-    data = data.substr(start, end - start);
-  }
-
-  bool template_contains_js = (data.find("<script") != string::npos);
-
-  if (data == "")
-    data = "\n<p>Template not found.</p>\n";
-
-  string node_template = "\n<p>No {{node:..}} found in template.</p>\n";
-  string way_template = "\n<p>No {{way:..}} found in template.</p>\n";
-  string relation_template = "\n<p>No {{relation:..}} found in template.</p>\n";
-  
-  bool header_written = false;
-  string::size_type pos = 0;
-  while (pos < data.size())
-  {
-    if (data[pos] == '{')
-    {
-      if (data.substr(pos, 7) == "{{node:")
-      {
-	string::size_type end_pos = find_block_end(data, pos);
-	
-	if (!header_written)
-	{
-	  header = data.substr(0, pos);
-	  header_written = true;
-	}
-	
-	if (end_pos != string::npos)
-	{
-	  node_template = data.substr(pos + 7, end_pos - pos - 9);
-	  pos = end_pos;
-	}
-	else
-	  pos = data.size();
-      }
-      else if (data.substr(pos, 6) == "{{way:")
-      {
-	string::size_type end_pos = find_block_end(data, pos);
-
-	if (!header_written)
-	{
-	  header = data.substr(0, pos);
-	  header_written = true;
-	}
-	
-	if (end_pos != string::npos)
-	{
-	  way_template = data.substr(pos + 6, end_pos - pos - 8);
-	  pos = end_pos;
-	}
-	else
-	  pos = data.size();
-      }
-      else if (data.substr(pos, 11) == "{{relation:")
-      {
-	string::size_type end_pos = find_block_end(data, pos);
-	
-	if (!header_written)
-	{
-	  header = data.substr(0, pos);
-	  header_written = true;
-	}
-	
-	if (end_pos != string::npos)
-	{
-	  relation_template = data.substr(pos + 11, end_pos - pos - 13);
-	  pos = end_pos;
-	}
-	else
-	  pos = data.size();
-      }
-      else
-	++pos;
-    }
-    else
-      ++pos;
-  }
-  
-  if (!header_written)
-    header = data.substr(0, pos);
-  
-  output.set_templates(node_template, way_template, relation_template);
-  
-  return template_contains_js;
-}
-
 void Osm_Script_Statement::execute(Resource_Manager& rman)
 {
   rman.set_limits(max_allowed_time, max_allowed_space);
+  rman.get_global_settings().trigger_print_bounds();
 
-  if (factory)
-  {
-    if (!output_handle)
-      output_handle = new Output_Handle(type);
-    if (type == "csv")
-      output_handle->set_csv_settings(csv_settings);
-    if (type == "custom")
-      template_contains_js_ =
-          set_output_templates(*output_handle, header, template_name, *rman.get_transaction());
-    else if (type == "popup")
-      output_handle->set_categories(categories);
-    for (vector< Statement* >::iterator it = factory->created_statements.begin();
-        it != factory->created_statements.end(); ++it)
-    {
-      Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
-      if (print)
-	print->set_output_handle(output_handle);
-    }
-    
-    if (bbox_statement)
-      output_handle->print_bounds(bbox_statement->get_south(), bbox_statement->get_west(),
-                                  bbox_statement->get_north(), bbox_statement->get_east());
-
-    output_handle->print_elements_header();
-  }
-  
   if (comparison_timestamp > 0)
   {
     for (vector< Statement* >::iterator it = factory->created_statements.begin();
@@ -399,62 +273,4 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   if (rman.area_updater())
     rman.area_updater()->flush();
   rman.health_check(*this);
-}
-
-string Osm_Script_Statement::adapt_url(const string& url) const
-{
-  if (output_handle)
-    return output_handle->adapt_url(url);
-  return 0;
-}
-
-string process_template(const string& raw_template, uint32 count)
-{
-  ostringstream result;
-  string::size_type old_pos = 0;
-  string::size_type new_pos = 0;
-  
-  new_pos = raw_template.find("{{{", old_pos);
-  while (new_pos != string::npos)
-  {
-    result<<raw_template.substr(old_pos, new_pos - old_pos);
-    
-    if (raw_template.substr(new_pos + 3, 8) == "count}}}")
-    {
-      result<<count;
-      old_pos = new_pos + 11;
-    }
-    else
-    {
-      result<<"{{{";
-      old_pos = new_pos + 3;
-    }
-    new_pos = raw_template.find("{{{", old_pos);
-  }
-  result<<raw_template.substr(old_pos);
-  
-  return result.str();
-}
-
-void Osm_Script_Statement::write_output() const
-{
-  if (output_handle)
-  {
-    if (output_handle->get_written_elements_count() > 0)
-      cout<<process_template(header, output_handle->get_written_elements_count());
-    cout<<'\n'<<output_handle->get_output();
-  }
-}
-
-uint32 Osm_Script_Statement::get_written_elements_count() const
-{
-  if (output_handle)
-    return output_handle->get_written_elements_count();
-  return 0;
-}
-
-Osm_Script_Statement::~Osm_Script_Statement()
-{
-  if (output_handle)
-    delete output_handle;
 }

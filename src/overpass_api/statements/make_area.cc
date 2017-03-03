@@ -40,7 +40,7 @@ bool Make_Area_Statement::is_used_ = false;
 Generic_Statement_Maker< Make_Area_Statement > Make_Area_Statement::statement_maker("make-area");
 
 Make_Area_Statement::Make_Area_Statement
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   is_used_ = true;

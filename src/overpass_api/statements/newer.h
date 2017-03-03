@@ -23,15 +23,16 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
+#include "../frontend/basic_formats.h"
 #include "statement.h"
 
-using namespace std;
 
 class Newer_Statement : public Statement
 {
   public:
     Newer_Statement(int line_number_, const map< string, string >& input_attributes,
-                    Query_Constraint* bbox_limitation = 0);
+                    Parsed_Query& global_settings);
     virtual string get_name() const { return "newer"; }
     virtual string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);
@@ -42,6 +43,25 @@ class Newer_Statement : public Statement
     virtual Query_Constraint* get_query_constraint();
     
     uint64 get_timestamp() const { return than_timestamp; }
+  
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<newer"
+          + (than_timestamp != NOW ? std::string(" than=\"") + iso_string(than_timestamp) + "\"" : "")
+          + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return "node" + dump_ql_in_query("");
+    }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
+      return std::string("(newer:")
+          + (than_timestamp != NOW ? std::string("\"") + iso_string(than_timestamp) + "\"" : "")
+          + ")";
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
 
   private:
     uint64 than_timestamp;

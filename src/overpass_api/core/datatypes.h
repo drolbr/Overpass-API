@@ -41,6 +41,7 @@ struct String_Object
   typedef uint32 Id_Type;
 
   String_Object(std::string s) : value(s) {}
+  
   String_Object(void* data) : value()
   {
     value = std::string(((int8*)data + 2), *(uint16*)data);
@@ -160,6 +161,39 @@ const TObject* binary_pair_search(const std::vector< std::pair< Id_Type, TObject
 }
 
 
+struct Derived_Skeleton
+{
+  typedef Uint64 Id_Type;
+  
+  Derived_Skeleton(const std::string& type_name_, Id_Type id_) : type_name(type_name_), id(id_) {}
+  
+  std::string type_name;
+  Id_Type id;
+};
+
+
+struct Derived_Structure : public Derived_Skeleton
+{
+  Derived_Structure(const std::string& type_name_, Id_Type id_)
+      : Derived_Skeleton(type_name_, id_) {}
+  Derived_Structure(const std::string& type_name_, Id_Type id_,
+		    const std::vector< std::pair< std::string, std::string > >& tags_)
+      : Derived_Skeleton(type_name_, id_), tags(tags_) {}
+  
+  std::vector< std::pair< std::string, std::string > > tags;
+  
+  bool operator<(const Derived_Structure& a) const
+  {
+    return this->id.val() < a.id.val();
+  }
+  
+  bool operator==(const Derived_Structure& a) const
+  {
+    return this->id.val() == a.id.val();
+  }
+};
+
+
 /**
   * A dataset that is referred in the scripts by a variable.
   */
@@ -174,7 +208,8 @@ struct Set
   std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic_relations;
 
   std::map< Uint31_Index, std::vector< Area_Skeleton > > areas;
-
+  std::map< Uint31_Index, std::vector< Derived_Structure > > deriveds;
+  
   void swap(Set& rhs)
   {
     nodes.swap(rhs.nodes);
@@ -184,6 +219,7 @@ struct Set
     attic_ways.swap(rhs.attic_ways);
     attic_relations.swap(rhs.attic_relations);
     areas.swap(rhs.areas);
+    deriveds.swap(rhs.deriveds);
   }
 
   void clear()
@@ -195,6 +231,7 @@ struct Set
     attic_ways.clear();
     attic_relations.clear();
     areas.clear();
+    deriveds.clear();
   }
 };
 
@@ -221,8 +258,6 @@ struct Error_Output
   virtual bool display_encoding_errors() = 0;
   virtual bool display_parse_errors() = 0;
   virtual bool display_static_errors() = 0;
-
-  virtual void add_padding(const std::string& padding) = 0;
 
   static const uint QUIET = 1;
   static const uint CONCISE = 2;

@@ -20,6 +20,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "id_query.h"
 #include "item.h"
 #include "print.h"
@@ -27,7 +28,6 @@
 #include "recurse.h"
 #include "difference.h"
 
-using namespace std;
 
 string to_string_(uint64 val)
 {
@@ -46,6 +46,8 @@ int main(int argc, char* args[])
   string test_to_execute = args[1];
   uint64 size = atoll(args[2]);
   uint64 global_node_offset = atoll(args[3]);
+  Parsed_Query global_settings;
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -58,25 +60,25 @@ int main(int argc, char* args[])
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[2], "");
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	
 	const char* attributes[] = { 0 };
-	Difference_Statement stmt(0, convert_c_pairs(attributes));
+	Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
 	string buf = to_string_(size * size);
 	const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
-	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
+	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
 	stmt.add_statement(&stmt1, "");
 	
         buf = to_string_(2 + global_node_offset);
         const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
         stmt.add_statement(&stmt2, "");
 	
 	stmt.execute(rman);
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(0, convert_c_pairs(attributes));
+	  Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
@@ -94,25 +96,25 @@ int main(int argc, char* args[])
     {
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes));
+        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
         string buf = to_string_(2 + global_node_offset);
         const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
         stmt.add_statement(&stmt1, "");
         
         buf = to_string_(size * size);
         const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
         stmt.add_statement(&stmt2, "");
         
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes));
+          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
           stmt.execute(rman);
         }
       }
@@ -130,25 +132,25 @@ int main(int argc, char* args[])
     {
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes));
+        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
         string buf = to_string_(2 + global_node_offset);
         const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
         stmt.add_statement(&stmt1, "");
         
         buf = to_string_(2 + global_node_offset);
         const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
         stmt.add_statement(&stmt2, "");
         
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes));
+          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
           stmt.execute(rman);
         }
       }
@@ -166,45 +168,45 @@ int main(int argc, char* args[])
     {
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes));
+        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
         const char* attributes1[] = { "type", "way", "lower", "1", "upper", "4", 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
         stmt.add_statement(&stmt1, "");
         
         const char* attributes2[] = { "type", "way", "lower", "2", "upper", "3", 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
         stmt.add_statement(&stmt2, "");
         
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes));
+          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
           stmt.execute(rman);
         }
       }
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes));
+        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
         const char* attributes1[] = { "type", "relation", "lower", "1", "upper", "4", 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
         stmt.add_statement(&stmt1, "");
         
         const char* attributes2[] = { "type", "relation", "lower", "2", "upper", "3", 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
         stmt.add_statement(&stmt2, "");
         
         stmt.execute(rman);
         {
           const char* attributes[] = { 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes));
+          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
           stmt.execute(rman);
         }
       }
@@ -222,23 +224,23 @@ int main(int argc, char* args[])
     {
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         
         const char* attributes[] = { "into", "A", 0 };
-        Difference_Statement stmt(0, convert_c_pairs(attributes));
+        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
         const char* attributes1[] = { "type", "way", "lower", "1", "upper", "4", "into", "B", 0 };
-        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1));
+        Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
         stmt.add_statement(&stmt1, "");
         
         const char* attributes2[] = { "type", "way", "lower", "2", "upper", "3", "into", "C", 0 };
-        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2));
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
         stmt.add_statement(&stmt2, "");
         
         stmt.execute(rman);
         {
           const char* attributes[] = { "from", "A", 0 };
-          Print_Statement stmt(0, convert_c_pairs(attributes));
+          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
           stmt.execute(rman);
         }
       }

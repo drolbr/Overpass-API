@@ -20,6 +20,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "id_query.h"
 #include "print.h"
 
@@ -30,6 +31,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 i
   ostringstream buf("");
   buf<<id;
   string id_ = buf.str();
+  Parsed_Query global_settings;
   
   const char* attributes[5];
   attributes[0] = "type";
@@ -38,7 +40,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 i
   attributes[3] = id_.c_str();
   attributes[4] = 0;
 
-  Id_Query_Statement stmt(1, convert_c_pairs(attributes));
+  Id_Query_Statement stmt(1, convert_c_pairs(attributes), global_settings);
   stmt.execute(rman);
   
   return rman;
@@ -55,6 +57,8 @@ int main(int argc, char* args[])
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
+  Parsed_Query global_settings;
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   
   uint32 node_id_upper_limit = 5*pattern_size*pattern_size;
   uint32 way_id_upper_limit = 5*pattern_size*pattern_size;
@@ -74,33 +78,33 @@ int main(int argc, char* args[])
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	// Print nodes:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	// Print ways:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	// Print relations:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
 	{
 	  const char* attributes[] = { 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
@@ -119,33 +123,33 @@ int main(int argc, char* args[])
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	// Print nodes:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { "mode", "skeleton", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	// Print ways:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
 	{
 	  const char* attributes[] = { "mode", "skeleton", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	// Print relations:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
 	{
 	  const char* attributes[] = { "mode", "skeleton", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
@@ -164,33 +168,33 @@ int main(int argc, char* args[])
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	// Print nodes:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
 	{
 	  const char* attributes[] = { "mode", "ids_only", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	// Print ways:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
 	{
 	  const char* attributes[] = { "mode", "ids_only", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	// Print relations:
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
 	{
 	  const char* attributes[] = { "mode", "ids_only", 0 };
-	  Print_Statement stmt(2, convert_c_pairs(attributes));
+	  Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	  stmt.execute(rman);
 	}
       }
@@ -206,31 +210,31 @@ int main(int argc, char* args[])
     try
     {
       // Print all items sorted by id:
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
 	if (!rman.sets()["_"].nodes.empty())
 	  total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
 	if (!rman.sets()["_"].ways.empty())
 	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
 	if (!rman.sets()["_"].relations.empty())
 	  total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
       }
       {
 	const char* attributes[] = { "order", "id", 0 };
-	Print_Statement stmt(2, convert_c_pairs(attributes));
+	Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -245,31 +249,31 @@ int main(int argc, char* args[])
     try
     {
       cout<<"Print all items sorted by quadtile:\n";
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
 	if (!rman.sets()["_"].nodes.empty())
 	  total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
 	if (!rman.sets()["_"].ways.empty())
 	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
 	if (!rman.sets()["_"].relations.empty())
 	  total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
       }
       {
 	const char* attributes[] = { "order", "quadtile", 0 };
-	Print_Statement stmt(2, convert_c_pairs(attributes));
+	Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }

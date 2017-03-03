@@ -10,7 +10,7 @@
     else
       inner_line = 1;
 
-    gsub("\\${testdir}",testdir);
+    gsub("\\$\\{testdir\\}",testdir);
     printf $0;
   }
 }

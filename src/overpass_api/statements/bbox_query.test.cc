@@ -21,29 +21,31 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "bbox_query.h"
 #include "print.h"
 
-using namespace std;
 
 void perform_bbox_print(string south, string north, string west, string east,
 			Transaction& transaction)
 {
+  Parsed_Query global_settings;
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   try
   {
     // Select a bbox from the testset that contains one quarter
     // of only one bbox.
-    Resource_Manager rman(transaction);
+    Resource_Manager rman(transaction, &global_settings);
     {
       const char* attributes[] =
           { "s", south.c_str(), "n", north.c_str(),
             "w", west.c_str(), "e", east.c_str(), 0 };
-      Bbox_Query_Statement* stmt1 = new Bbox_Query_Statement(0, convert_c_pairs(attributes));
+      Bbox_Query_Statement* stmt1 = new Bbox_Query_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
     {
       const char* attributes[] = { "mode", "body", "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes));
+      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
       stmt1->execute(rman);
     }
   }
@@ -54,8 +56,10 @@ void perform_bbox_print(string south, string north, string west, string east,
   }
 }
 
+
 int main(int argc, char* args[])
 {
+  Parsed_Query global_settings;
   if (argc < 4)
   {
     cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";

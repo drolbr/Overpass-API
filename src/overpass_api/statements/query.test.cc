@@ -21,16 +21,20 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
+#include "aggregators.h"
 #include "around.h"
 #include "bbox_query.h"
+#include "binary_operators.h"
+#include "filter.h"
 #include "id_query.h"
 #include "item.h"
 #include "query.h"
 #include "print.h"
 #include "recurse.h"
+#include "unary_operators.h"
 #include "union.h"
 
-using namespace std;
 
 template < class TStatement >
 class SProxy
@@ -52,8 +56,10 @@ class SProxy
     
     TStatement& stmt()
     {
+      Parsed_Query global_settings;
+      global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
       if (!stmt_)
-        stmt_ = new TStatement(0, attributes);
+        stmt_ = new TStatement(0, attributes, global_settings);
       
       return *stmt_;
     }
@@ -73,7 +79,9 @@ void perform_query(string type, string key, string value, string db_dir)
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -118,7 +126,9 @@ void perform_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -190,7 +200,9 @@ void perform_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -252,7 +264,9 @@ void perform_regex_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -295,7 +309,9 @@ void perform_key_regex_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -319,24 +335,6 @@ void perform_key_regex_query
     cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
-}
-
-
-template< class T >
-string to_string(T d)
-{
-  ostringstream out;
-  out<<d;
-  return out.str();
-}
-
-
-template< >
-string to_string< double >(double d)
-{
-  ostringstream out;
-  out<<setprecision(14)<<d;
-  return out.str();
 }
 
 
@@ -385,7 +383,9 @@ void perform_query_with_around
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       ostringstream buf;
       if (id_type == "node" && type == "node")
@@ -506,7 +506,9 @@ void perform_query_with_around
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       string lat, lon;
       if (type == "node")
@@ -566,7 +568,9 @@ void perform_query_with_bbox
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -609,6 +613,155 @@ void perform_query_with_bbox
 }
 
 
+void perform_filter_with_bbox
+    (string type, string key1, string value1,
+     string south, string north, string west, string east, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Bbox_Query_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("n", north)("s", south)("e", east)("w", west).stmt(), "");
+//       SProxy< Has_Kv_Statement > stmt3;
+//       stmt1.stmt().add_statement(&stmt3("k", key1)("v", value1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Fixed > stmt6;      
+      stmt4.stmt().add_statement(&stmt6("v", value1).stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_filter_with_key
+    (string type, string key1, string value1, string key2, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key2).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Fixed > stmt6;      
+      stmt4.stmt().add_statement(&stmt6("v", value1).stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_filter_from_previous_element
+    (string type, uint64 start_id, string key1, string key2, string from_set, string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("ref", to_string(start_id));
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Union_Value > stmt6;
+      SProxy< Evaluator_Value > stmt7;
+      stmt6.stmt().add_statement(&stmt7("k", key2).stmt(), "");
+      stmt4.stmt().add_statement(&stmt6.stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+    
+    std::string from_set = "foo";
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("ref", to_string(start_id));
+      stmt1("into", from_set);        
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("into", "b");
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Union_Value > stmt6;
+      SProxy< Evaluator_Value > stmt7;
+      stmt6("from", from_set).stmt().add_statement(&stmt7("k", key2).stmt(), "");
+      stmt4.stmt().add_statement(&stmt6.stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    
+    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
+      (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
+      (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    {
+      cout<<"Sets \"_\" and \"b\" differ:\n";
+      perform_print(rman, "b");
+    }
+  }
+  catch (File_Error e)
+  {
+    cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
 void perform_multi_query_with_bbox
     (string type, string key1, string value1, string key2, string value2, string key3, string value3,
      int regex, bool straight2,
@@ -617,7 +770,9 @@ void perform_multi_query_with_bbox
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -690,7 +845,9 @@ void perform_query_with_recurse
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Id_Query_Statement > stmt1;
       if (recurse_type == "way-node")
@@ -799,7 +956,9 @@ void perform_query_with_role_recurse
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Id_Query_Statement > stmt1;
       if (recurse_type == "relation-node")
@@ -847,7 +1006,9 @@ void perform_query_with_id_query
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", query_type);
@@ -1513,6 +1674,40 @@ int main(int argc, char* args[])
     // Test a single regex on keys with bounding box
     perform_multi_query_with_bbox("way", "way_key_2/4", "",
 	"^way_key_11$", "^way_value_..$", "^way_key_5", "^way", 0x66, true, 51, 51.5, 7, 8, args[3]);
+    
+  if ((test_to_execute == "") || (test_to_execute == "151"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_filter_with_bbox("node", "node_key_5", "node_value_5",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "152"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_filter_with_bbox("way", "way_key_5", "way_value_5",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "153"))
+    // Test a bbox combined with a key-value pair via a filter
+    perform_filter_with_bbox("relation", "relation_key_2/4", "relation_value_0",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+    
+  if ((test_to_execute == "") || (test_to_execute == "154"))
+    // Test a key combined with a key-value pair via a filter
+    perform_filter_with_key("node", "node_key_5", "node_value_5", "node_key", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "155"))
+    // Test a key combined with a key-value pair via a filter
+    perform_filter_with_key("way", "way_key_5", "way_value_5", "way_key", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "156"))
+    // Test a key combined with a key-value pair via a filter
+    perform_filter_with_key("relation", "relation_key_5", "relation_value_5",
+                            "relation_key_2/4", args[3]);
+    
+  if ((test_to_execute == "") || (test_to_execute == "157"))
+    // Test a key-value pair via a filter set by a previous element
+    perform_filter_from_previous_element("node", 14 + global_node_offset, "node_key_11", "node_key_7", "_", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "158"))
+    // Test a key-value pair via a filter set by a previous element
+    perform_filter_from_previous_element("way", 14, "way_key_11", "way_key_7", "_", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "159"))
+    // Test a key-value pair via a filter set by a previous element
+    perform_filter_from_previous_element("relation", 14, "relation_key_11", "relation_key_7", "_", args[3]);
   
   cout<<"</osm>\n";
   return 0;

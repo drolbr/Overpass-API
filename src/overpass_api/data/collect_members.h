@@ -184,22 +184,6 @@ void filter_relations_by_ranges(map< Uint31_Index, vector< Relation_Skeleton > >
 }
 
 
-class Way_Geometry_Store
-{
-public:
-  Way_Geometry_Store(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
-                     const Statement& query, Resource_Manager& rman);
-  Way_Geometry_Store(const map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
-                     const Statement& query, Resource_Manager& rman);
-  
-  // return the empty vector if the way is not found
-  vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
-  
-private:
-  vector< Node > nodes;
-};
-
-
 //-----------------------------------------------------------------------------
 
 
@@ -638,6 +622,13 @@ void keep_matching_skeletons
 }
 
 
+void keep_matching_skeletons
+    (std::vector< Node >& result,
+     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& current,
+     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic,
+     uint64 timestamp);
+
+
 template< typename TIndex, typename TObject >
 void item_filter_map
     (map< TIndex, vector< TObject > >& modify,
@@ -969,5 +960,24 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_begin,
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end);
 
+
+struct Order_By_Node_Id
+{
+  bool operator() (const pair< Uint32_Index, const Node_Skeleton* >& a,
+		   const pair< Uint32_Index, const Node_Skeleton* >& b)
+  {
+    return (a.second->id < b.second->id);
+  }
+};
+
+
+struct Order_By_Way_Id
+{
+  bool operator() (const pair< Uint31_Index, const Way_Skeleton* >& a,
+		   const pair< Uint31_Index, const Way_Skeleton* >& b)
+  {
+    return (a.second->id < b.second->id);
+  }
+};
 
 #endif

@@ -24,11 +24,12 @@
 #include <vector>
 
 #include "../core/datatypes.h"
+#include "../core/parsed_query.h"
 #include "../core/settings.h"
 #include "../dispatch/resource_manager.h"
+#include "../frontend/tokenizer_utils.h"
 #include "../osm-backend/area_updater.h"
 
-using namespace std;
 
 class Query_Constraint
 {
@@ -85,28 +86,34 @@ class Query_Constraint
 class Statement
 {
   public:
+    enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible };
+    
     struct Factory
     {
-      Factory() : error_output_(error_output), bbox_limitation(0) {}
+      Factory(Parsed_Query& global_settings_) : error_output_(error_output), global_settings(global_settings_) {}
       ~Factory();
       
       Statement* create_statement(string element, int line_number,
 				  const map< string, string >& attributes);
+      Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context);
       
       vector< Statement* > created_statements;
       Error_Output* error_output_;
-      Query_Constraint* bbox_limitation;
+      Parsed_Query& global_settings;
     };
     
-    class Statement_Maker
+    struct Statement_Maker
     {
-      public:
-	virtual Statement* create_statement
-	    (int line_number, const map< string, string >& attributes, Query_Constraint* bbox_limitation) = 0;
-	virtual ~Statement_Maker() {}
+      virtual Statement* create_statement
+          (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings) = 0;
+      virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output) = 0;
+      virtual ~Statement_Maker() {}
     };
     
     static map< string, Statement_Maker* >& maker_by_name();
+    static map< string, std::vector< Statement_Maker* > >& maker_by_token();
+    static map< string, std::vector< Statement_Maker* > >& maker_by_func_name();
     
     Statement(int line_number_) : line_number(line_number_), progress(0) {}
     
@@ -133,12 +140,18 @@ class Statement
     
     void display_full();
     void display_starttag();
-        
+    
+    virtual std::string dump_xml(const std::string&) const { return ""; }
+    virtual std::string dump_compact_ql(const std::string&) const { return ""; }
+    virtual std::string dump_pretty_ql(const std::string&) const { return ""; }
+    virtual std::string dump_ql_in_query(const std::string& indent) const { return dump_compact_ql(indent); }
+    
     static void set_error_output(Error_Output* error_output_)
     {
       error_output = error_output_;
     }
 
+    void runtime_error(string error) const;
     void runtime_remark(string error) const;
 
     const static int NODE = 1;
@@ -175,9 +188,15 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
 {
   public:
     virtual Statement* create_statement
-        (int line_number, const map< string, string >& attributes, Query_Constraint* bbox_limitation)
+        (int line_number, const map< string, string >& attributes, Parsed_Query& global_settings)
     {
-      return new TStatement(line_number, attributes, bbox_limitation);
+      return new TStatement(line_number, attributes, global_settings);
+    }
+    
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    {
+      return 0;
     }
     
     Generic_Statement_Maker(const string& name) { Statement::maker_by_name()[name] = this; }
@@ -191,6 +210,9 @@ class Output_Statement : public Statement
     Output_Statement(int line_number) : Statement(line_number), output("_") {}
     
     virtual string get_result_name() const { return output; }
+  
+    std::string dump_ql_result_name() const { return output != "_" ? std::string("->.") + output : ""; }
+    std::string dump_xml_result_name() const { return output != "_" ? std::string("into=\"") + output + "\"" : ""; }
     
   protected:
     void set_output(std::string output_) { output = output_; }
