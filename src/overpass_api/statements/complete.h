@@ -27,18 +27,58 @@
 
 using namespace std;
 
-class Complete_Statement : public Output_Statement
+class Complete_Statement : public Statement
 {
   public:
   Complete_Statement(int line_number_, const map< string, string >& attributes,
-                     Query_Constraint* bbox_limitation = 0);
+                     Parsed_Query& global_settings);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "complete"; }
+    virtual string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Complete_Statement() {}
     
     static Generic_Statement_Maker< Complete_Statement > statement_maker;
     
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<complete"
+          + (input != "_" ? " from=\"" + input + "\"" : "")
+          + (output_iteration != "_" ? " into=\"" + output_iteration + "\"" : "") + ">\n";
+
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += *it ? (*it)->dump_xml(indent + "  ") : "";
+
+      // TODO: "-> .output_complete" is still missing
+      return result + indent + "</complete>\n";
+    }
+
+    virtual std::string dump_compact_ql(const std::string& indent) const
+    {
+      std::string result = indent + "complete"
+          + (input != "_" ? "." + input : "") + (output_iteration != "_" ? "->." + output_iteration : "") + "(";
+
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += (*it)->dump_compact_ql(indent) + ";";
+      result += ")";
+      // TODO: "-> .output_complete" is still missing
+
+      return result;
+    }
+
+    virtual std::string dump_pretty_ql(const std::string& indent) const
+    {
+      std::string result = indent + "complete"
+          + (input != "_" ? "." + input : "") + (output_iteration != "_" ? "->." + output_iteration : "") + "(";
+
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
+      result += "\n)";
+      // TODO: "-> .output_complete" is still missing
+
+      return result;
+    }
+
   private:
     string input, output_iteration, output_complete;
     vector< Statement* > substatements;

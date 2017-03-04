@@ -394,7 +394,6 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
 
     if (result != "")
       result += ";\n";
-
     for (std::vector< Statement_Dump* >::const_iterator it = substatements.begin();
         it != substatements.end(); ++it)
       result += (*it)->dump_pretty_map_ql(stmt_factory) + "\n";

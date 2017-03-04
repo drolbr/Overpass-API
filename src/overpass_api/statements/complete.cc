@@ -30,13 +30,12 @@
 #include "../data/abstract_processing.h"
 #include "complete.h"
 
-using namespace std;
 
 Generic_Statement_Maker< Complete_Statement > Complete_Statement::statement_maker("complete");
 
 Complete_Statement::Complete_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
-    : Output_Statement(line_number_)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Statement(line_number_)
 {
   map< string, string > attributes;
   
@@ -50,7 +49,7 @@ Complete_Statement::Complete_Statement
   output_complete = attributes["into_complete"];
 }
 
-void Complete_Statement::add_statement(Statement* statement, string text)
+void Complete_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
   
