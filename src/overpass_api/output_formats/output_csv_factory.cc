@@ -9,10 +9,10 @@ class Output_CSV_Generator : public Output_Handler_Parser
 {
 public:
   Output_CSV_Generator() : Output_Handler_Parser("csv") {}
-  
+
   Output_Handler* new_output_handler(const std::map< std::string, std::string >& input_params,
-      Tokenizer_Wrapper* token, Error_Output* error_output);  
-  
+      Tokenizer_Wrapper* token, Error_Output* error_output);
+
   static Output_CSV_Generator singleton;
 };
 
@@ -26,10 +26,10 @@ Output_Handler* Output_CSV_Generator::new_output_handler(const std::map< std::st
   if (token)
   {
     Csv_Settings csv_settings;
-    
-    string csv_format_string_field;
-    string csv_headerline;
-    string csv_separator("\t");
+
+    std::string csv_format_string_field;
+    std::string csv_headerline;
+    std::string csv_separator("\t");
 
     clear_until_after(*token, error_output, "(", false);
 
@@ -62,9 +62,9 @@ Output_Handler* Output_CSV_Generator::new_output_handler(const std::map< std::st
 
     csv_settings.with_headerline = (csv_headerline == "false" ? false : true);
     csv_settings.separator = csv_separator;
-    
+
     return new Output_CSV(csv_settings);
   }
-  
+
   return 0;
 }

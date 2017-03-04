@@ -32,30 +32,30 @@
 struct Set_Usage
 {
   Set_Usage(const std::string& set_name_, uint usage_) : set_name(set_name_), usage(usage_) {}
-  
+
   std::string set_name;
   uint usage;
-    
+
   static const uint SKELETON;
   static const uint TAGS;
-  
+
   bool operator<(const Set_Usage& rhs) const { return this->set_name < rhs.set_name; }
 };
 
-  
+
 struct Set_With_Context
 {
 private:
   Set_With_Context(const Set_With_Context&);
   Set_With_Context& operator=(const Set_With_Context&);
-  
+
 public:
   Set_With_Context() : base(0),
       tag_store_nodes(0), tag_store_attic_nodes(0),
       tag_store_ways(0), tag_store_attic_ways(0),
       tag_store_relations(0), tag_store_attic_relations(0),
       tag_store_areas(0), tag_store_deriveds(0) {}
-      
+
   ~Set_With_Context()
   {
     delete tag_store_nodes;
@@ -67,9 +67,9 @@ public:
     delete tag_store_areas;
     delete tag_store_deriveds;
   }
-  
+
   void prefetch(const Set_Usage& usage, const Set& set, Transaction& transaction);
-  
+
   std::string name;
   const Set* base;
   Tag_Store< Uint32_Index, Node_Skeleton >* tag_store_nodes;
@@ -99,8 +99,8 @@ The following types of evaluators exist and are explained further down:
 - Const evaulators deliver always the same value independend of context.
 - Element dependend evaluators deliver information about an individual object.
 They only make sense in the context of a single element.
-- Statistical evaulators deliver information about a set as a whole.
-- Aggregators let an element dependend evaluator loop over all elements of a set and combine its results.
+- Statistical evaulators deliver information about a std::set as a whole.
+- Aggregators let an element dependend evaluator loop over all elements of a std::set and combine its results.
 - Operators and endomorphisms combine the result of one or two evaluator executions into a new result.
 */
 
@@ -108,7 +108,7 @@ struct Prepare_Task_Context
 {
   Prepare_Task_Context(std::pair< std::vector< Set_Usage >, uint > set_usage, Resource_Manager& rman);
   const Set_With_Context* get_set(const std::string& set_name) const;
-  
+
 private:
   Array< Set_With_Context > contexts;
 };
@@ -117,9 +117,9 @@ private:
 struct Eval_Task
 {
   virtual ~Eval_Task() {}
-  
+
   virtual std::string eval(const std::string* key) const = 0;
-  
+
   virtual std::string eval(const Node_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
       { return eval(key); }
@@ -150,7 +150,7 @@ struct Eval_Task
 struct Const_Eval_Task : public Eval_Task
 {
   Const_Eval_Task(const std::string& value_) : value(value_) {}
-  
+
   virtual std::string eval(const std::string* key) const { return value; }
 
 private:
@@ -161,12 +161,12 @@ private:
 struct Evaluator : public Statement
 {
   Evaluator(int line_number) : Statement(line_number) {}
-  
+
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const = 0;
   virtual std::vector< std::string > used_tags() const = 0;
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) = 0;
-  
+
   virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   virtual int get_operator_priority() const { return std::numeric_limits< int >::max(); }
 };
@@ -186,14 +186,14 @@ struct Operator_Stmt_Maker : public Generic_Statement_Maker< Evaluator_ >
       return 0;
     if (!Evaluator_::applicable_by_subtree_structure(tree_it))
       return 0;
-    
-    map< string, string > attributes;
+
+    std::map< std::string, std::string > attributes;
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     Evaluator_::add_substatements(result, Evaluator_::stmt_operator(), tree_it, tree_context,
         stmt_factory, error_output);
     return result;
   }
-  
+
   Operator_Stmt_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
   {
     Statement::maker_by_token()[Evaluator_::stmt_operator()].push_back(this);

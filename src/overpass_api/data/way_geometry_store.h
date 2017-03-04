@@ -35,10 +35,10 @@ public:
                      const Statement& query, Resource_Manager& rman);
   Way_Geometry_Store(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
                      const Statement& query, Resource_Manager& rman);
-  
+
   // return the empty std::vector if the way is not found
   std::vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
-  
+
 private:
   std::vector< Node > nodes;
 };
@@ -47,22 +47,22 @@ private:
 class Way_Bbox_Geometry_Store : public Way_Geometry_Store
 {
 public:
-  Way_Bbox_Geometry_Store(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+  Way_Bbox_Geometry_Store(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
                      const Statement& query, Resource_Manager& rman,
                      double south_, double north_, double west_, double east_);
-  Way_Bbox_Geometry_Store(const map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+  Way_Bbox_Geometry_Store(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
                      const Statement& query, Resource_Manager& rman,
                      double south_, double north_, double west_, double east_);
-  
-  // return the empty vector if the way is not found
+
+  // return the empty std::vector if the way is not found
   std::vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
-  
+
 private:
   uint32 south;
   uint32 north;
   int32 west;
   int32 east;
-  
+
   bool matches_bbox(uint32 ll_upper, uint32 ll_lower) const;
 };
 

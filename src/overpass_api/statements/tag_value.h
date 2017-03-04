@@ -52,24 +52,24 @@ public:
     Statement_Maker() : Generic_Statement_Maker("eval-fixed") { Statement::maker_by_token()[""].push_back(this); }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-fixed v=\"" + escape_xml(value) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const;
 
-  Evaluator_Fixed(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Fixed(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-fixed"; }
-  virtual string get_result_name() const { return ""; }
+  virtual std::string get_name() const { return "eval-fixed"; }
+  virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Fixed() {}
-  
+
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
-  { return std::pair< std::vector< Set_Usage >, uint >(); }  
+  { return std::pair< std::vector< Set_Usage >, uint >(); }
   virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Const_Eval_Task(value); }
-  
+
 private:
   std::string value;
 };
@@ -95,16 +95,16 @@ Both operators take no parameters.
 The syntax is
 
   id()
-  
+
 resp.
 
-  type()  
+  type()
 */
 
 struct Id_Eval_Task : public Eval_Task
 {
   virtual std::string eval(const std::string* key) const { return ""; }
-  
+
   virtual std::string eval(const Node_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
       { return elem ? to_string(elem->id.val()) : ""; }
@@ -142,22 +142,22 @@ public:
     Statement_Maker() : Generic_Statement_Maker("eval-id") { Statement::maker_by_func_name()["id"].push_back(this); }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-id/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "id()"; }
 
-  Evaluator_Id(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Id(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-id"; }
-  virtual string get_result_name() const { return ""; }
+  virtual std::string get_name() const { return "eval-id"; }
+  virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Id() {}
 
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
-  { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::SKELETON); }  
+  { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::SKELETON); }
   virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Id_Eval_Task(); }
 };
 
@@ -165,7 +165,7 @@ public:
 struct Type_Eval_Task : public Eval_Task
 {
   virtual std::string eval(const std::string* key) const { return ""; }
-  
+
   virtual std::string eval(const Node_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
       { return "node"; }
@@ -203,21 +203,21 @@ public:
     Statement_Maker() : Generic_Statement_Maker("eval-type") { Statement::maker_by_func_name()["type"].push_back(this); }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const { return indent + "<eval-type/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "type()"; }
 
-  Evaluator_Type(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Type(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-type"; }
-  virtual string get_result_name() const { return ""; }
+  virtual std::string get_name() const { return "eval-type"; }
+  virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Type() {}
 
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::SKELETON); }
   virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Type_Eval_Task(); }
 };
 
@@ -231,13 +231,13 @@ They only can be called in the context of an element.
 Their syntax is
 
   [<Key name>]
-  
+
 resp.
 
   is_tag(<Key name >)
 
 The <Key name> must be in quotation marks if it contains special characters.
-  
+
 The generic tag operator returns the value of the tag of the key it is called for.
 It only can be called in the context of an element.
 In addition, it must be part of the value of a generic property to have its key specified.
@@ -253,9 +253,9 @@ std::string find_value(const std::vector< std::pair< std::string, std::string > 
 struct Value_Eval_Task : public Eval_Task
 {
   Value_Eval_Task(const std::string& key_) : key(key_) {}
-  
+
   virtual std::string eval(const std::string* key) const { return ""; }
-  
+
   virtual std::string eval(const Node_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
       { return find_value(tags, this->key); }
@@ -280,7 +280,7 @@ struct Value_Eval_Task : public Eval_Task
   virtual std::string eval(const Derived_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
       { return find_value(tags, this->key); }
-      
+
 private:
   std::string key;
 };
@@ -296,30 +296,30 @@ public:
     Statement_Maker() : Generic_Statement_Maker("eval-value") { Statement::maker_by_token()["["].push_back(this); }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-value k=\"" + escape_xml(key) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return std::string("[\"") + escape_cstr(key) + "\"]"; }
 
-  Evaluator_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-value"; }
-  virtual string get_result_name() const { return ""; }
+  virtual std::string get_name() const { return "eval-value"; }
+  virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Value() {}
-  
+
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }
-  
+
   virtual std::vector< std::string > used_tags() const
   {
     std::vector< std::string > result;
     result.push_back(key);
     return result;
   }
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Value_Eval_Task(key); }
-  
+
 private:
   std::string key;
 };
@@ -331,9 +331,9 @@ std::string exists_value(const std::vector< std::pair< std::string, std::string 
 struct Is_Tag_Eval_Task : public Eval_Task
 {
   Is_Tag_Eval_Task(const std::string& key_) : key(key_) {}
-  
+
   virtual std::string eval(const std::string* key) const { return ""; }
-  
+
   virtual std::string eval(const Node_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
       { return exists_value(tags, this->key); }
@@ -358,7 +358,7 @@ struct Is_Tag_Eval_Task : public Eval_Task
   virtual std::string eval(const Derived_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
       { return exists_value(tags, this->key); }
-      
+
 private:
   std::string key;
 };
@@ -375,31 +375,31 @@ public:
     { Statement::maker_by_func_name()["is_tag"].push_back(this); }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-is-tag k=\"" + escape_xml(key) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string("is_tag(\"") + escape_cstr(key) + "\")"; }
 
-  Evaluator_Is_Tag(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Is_Tag(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-is-tag"; }
-  virtual string get_result_name() const { return ""; }
+  virtual std::string get_name() const { return "eval-is-tag"; }
+  virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Is_Tag() {}
-  
+
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }
-  
+
   virtual std::vector< std::string > used_tags() const
   {
     std::vector< std::string > result;
     result.push_back(key);
     return result;
   }
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Is_Tag_Eval_Task(key); }
-  
+
 private:
   std::string key;
 };
@@ -408,7 +408,7 @@ private:
 struct Generic_Eval_Task : public Eval_Task
 {
   virtual std::string eval(const std::string* key) const { return ""; }
-  
+
   virtual std::string eval(const Node_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
       { return key ? find_value(tags, *key) : ""; }
@@ -446,23 +446,23 @@ public:
     Statement_Maker() : Generic_Statement_Maker("eval-generic") { Statement::maker_by_token()["::"].push_back(this); }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-generic/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "::"; }
 
-  Evaluator_Generic(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Generic(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-generic"; }
-  virtual string get_result_name() const { return ""; }
+  virtual std::string get_name() const { return "eval-generic"; }
+  virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Generic() {}
-  
+
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
   { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }
-  
+
   virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Generic_Eval_Task(); }
 };
 
@@ -472,12 +472,12 @@ public:
 This variant of the <em>count</em> operator counts tags or members
 of the given element.
 Opposed to the statistical variant of the count operator,
-they cannot take an input set as extra argument.
+they cannot take an input std::set as extra argument.
 
 The syntax for tags is
 
   count(tags)
-  
+
 The syntax for members is
 
   count(members)
@@ -488,7 +488,7 @@ class Evaluator_Properties_Count : public Evaluator
 public:
   enum Objects { nothing, tags, members };
   static std::string to_string(Objects objects);
-  
+
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Properties_Count >
   {
     virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
@@ -500,24 +500,24 @@ public:
     }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-prop-count type=\"" + to_string(to_count) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return std::string(to_count == members ? "count_members" : "count_tags") + "()"; }
 
-  Evaluator_Properties_Count(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Properties_Count(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-prop-count"; }
-  virtual string get_result_name() const { return ""; }
+  virtual std::string get_name() const { return "eval-prop-count"; }
+  virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Properties_Count() {}
-  
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;  
+
+  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;
   virtual std::vector< std::string > used_tags() const;
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
-  
+
 private:
   Objects to_count;
 };
@@ -526,9 +526,9 @@ private:
 struct Prop_Count_Eval_Task : public Eval_Task
 {
   Prop_Count_Eval_Task(Evaluator_Properties_Count::Objects to_count_) : to_count(to_count_) {}
-  
+
   virtual std::string eval(const std::string* key) const { return "0"; }
-  
+
   virtual std::string eval(const Node_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
   virtual std::string eval(const Attic< Node_Skeleton >* elem,
@@ -545,7 +545,7 @@ struct Prop_Count_Eval_Task : public Eval_Task
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
   virtual std::string eval(const Derived_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
-      
+
 private:
   Evaluator_Properties_Count::Objects to_count;
 };

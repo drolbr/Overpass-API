@@ -40,7 +40,7 @@ bool Make_Area_Statement::is_used_ = false;
 Generic_Statement_Maker< Make_Area_Statement > Make_Area_Statement::statement_maker("make-area");
 
 Make_Area_Statement::Make_Area_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   is_used_ = true;
@@ -97,7 +97,7 @@ std::pair< uint32, Uint64 > Make_Area_Statement::detect_pivot(const Set& pivot)
     ++rit;
   }
 
-  return make_pair(pivot_type, pivot_id);
+  return std::make_pair(pivot_type, pivot_id);
 }
 
 Node::Id_Type Make_Area_Statement::check_node_parity(const Set& pivot)
@@ -149,7 +149,7 @@ std::pair< Node::Id_Type, Uint32_Index > Make_Area_Statement::create_area_blocks
       wraps_around_date_line ^= add_way_to_area_blocks(make_geometry(*it2, nodes), id, areas);
   }
 
-  return make_pair< uint32, uint32 >(0, 0);
+  return std::make_pair< uint32, uint32 >(0, 0);
 }
 
 
@@ -334,7 +334,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   for (; !(tag_it == items_db.range_end()); ++tag_it)
   {
     if (tag_it.object().val() == pivot_id)
-      new_tags.push_back(make_pair(tag_it.index().key, tag_it.index().value));
+      new_tags.push_back(std::make_pair(tag_it.index().key, tag_it.index().value));
   }
 
   if (pivot_type == WAY)
@@ -369,7 +369,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     std::ostringstream temp;
     temp<<"make-area: Node "<<odd_pair.first.val()
         <<" referred by way "<<odd_pair.second.val()
-        <<" is not contained in set \""<<input<<"\".\n";
+        <<" is not contained in std::set \""<<input<<"\".\n";
     runtime_remark(temp.str());
   }
 

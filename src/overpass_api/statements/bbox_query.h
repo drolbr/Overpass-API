@@ -24,30 +24,30 @@
 #include <vector>
 #include "../data/utils.h"
 #include "statement.h"
-    
+
 
 class Bbox_Query_Statement : public Output_Statement
 {
   public:
-    Bbox_Query_Statement(int line_number_, const map< string, string >& attributes,
+    Bbox_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                          Parsed_Query& global_settings);
     Bbox_Query_Statement(const Bbox_Double& bbox);
-    virtual string get_name() const { return "bbox-query"; }
+    virtual std::string get_name() const { return "bbox-query"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Bbox_Query_Statement();    
+    virtual ~Bbox_Query_Statement();
     static Generic_Statement_Maker< Bbox_Query_Statement > statement_maker;
-    
+
     virtual Query_Constraint* get_query_constraint();
-    
-    const set< pair< Uint32_Index, Uint32_Index > >& get_ranges_32();
-    const set< pair< Uint31_Index, Uint31_Index > >& get_ranges_31();
-    
+
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >& get_ranges_32();
+    const std::set< std::pair< Uint31_Index, Uint31_Index > >& get_ranges_31();
+
     double get_south() const { return south; }
     double get_north() const { return north; }
     double get_west() const { return west; }
     double get_east() const { return east; }
     bool matches_bbox(double lat, double lon) const;
-  
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<bbox-query"
@@ -57,7 +57,7 @@ class Bbox_Query_Statement : public Output_Statement
           + " east=\"" + to_string(east) + "\""
           + dump_xml_result_name() + "/>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       return "node" + dump_ql_in_query("") + dump_ql_result_name();
@@ -75,9 +75,9 @@ class Bbox_Query_Statement : public Output_Statement
 
   private:
     double south, north, west, east;
-    set< pair< Uint32_Index, Uint32_Index > > ranges_32;
-    set< pair< Uint31_Index, Uint31_Index > > ranges_31;
-    vector< Query_Constraint* > constraints;
+    std::set< std::pair< Uint32_Index, Uint32_Index > > ranges_32;
+    std::set< std::pair< Uint31_Index, Uint31_Index > > ranges_31;
+    std::vector< Query_Constraint* > constraints;
 };
 
 

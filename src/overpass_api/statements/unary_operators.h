@@ -38,11 +38,11 @@ The operators can be grouped with parentheses:
 The two variants
 
   <Operator><Evaluator>
-  
+
 and
 
   (<Operator><Evaluator>)
-  
+
 have as standalone expressions precisely the same semantics.
 The parenthesis variant exists to override operator precedence.
 
@@ -63,23 +63,23 @@ class Evaluator_Prefix_Operator : public Evaluator
 {
 public:
   Evaluator_Prefix_Operator(int line_number_);
-  virtual void add_statement(Statement* statement, string text);
+  virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman) {}
-  
-  virtual string get_result_name() const { return ""; }
-  
+
+  virtual std::string get_result_name() const { return ""; }
+
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;
   virtual std::vector< std::string > used_tags() const;
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
-  
+
   virtual std::string process(const std::string& rhs_result) const = 0;
 
   static bool applicable_by_subtree_structure(const Token_Node_Ptr& tree_it) { return !tree_it->lhs && tree_it->rhs; }
   static bool needs_an_element_to_eval() { return false; }
   static void add_substatements(Statement* result, const std::string& operator_name, const Token_Node_Ptr& tree_it,
       Statement::QL_Context tree_context, Statement::Factory& stmt_factory, Error_Output* error_output);
-    
+
 protected:
   Evaluator* rhs;
 };
@@ -89,9 +89,9 @@ struct Unary_Eval_Task : public Eval_Task
 {
   Unary_Eval_Task(Eval_Task* rhs_, Evaluator_Prefix_Operator* evaluator_) : rhs(rhs_), evaluator(evaluator_) {}
   ~Unary_Eval_Task() { delete rhs; }
-  
+
   virtual std::string eval(const std::string* key) const;
-  
+
   virtual std::string eval(const Node_Skeleton* elem,
       const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const;
   virtual std::string eval(const Attic< Node_Skeleton >* elem,
@@ -118,20 +118,20 @@ private:
 template< typename Evaluator_ >
 struct Evaluator_Prefix_Operator_Syntax : public Evaluator_Prefix_Operator
 {
-  Evaluator_Prefix_Operator_Syntax(int line_number_, const map< string, string >& input_attributes)
+  Evaluator_Prefix_Operator_Syntax(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator_Prefix_Operator(line_number_)
   {
-    std::map< std::string, std::string > attributes;  
-    eval_attributes_array(Evaluator_::stmt_name(), attributes, input_attributes);    
+    std::map< std::string, std::string > attributes;
+    eval_attributes_array(Evaluator_::stmt_name(), attributes, input_attributes);
   }
-  
+
   virtual std::string dump_xml(const std::string& indent) const
   {
     return indent + "<" + Evaluator_::stmt_name() + ">\n"
         + (rhs ? rhs->dump_xml(indent + "  ") : "")
         + indent + "</" + Evaluator_::stmt_name() + ">\n";
   }
-  
+
   virtual std::string dump_compact_ql(const std::string&) const
   {
     if (!rhs)
@@ -140,9 +140,9 @@ struct Evaluator_Prefix_Operator_Syntax : public Evaluator_Prefix_Operator
       return Evaluator_::stmt_operator() + "(" + rhs->dump_compact_ql("") + ")";
     return Evaluator_::stmt_operator() + rhs->dump_compact_ql("");
   }
-  
-  virtual string get_name() const { return Evaluator_::stmt_name(); }
-  virtual int get_operator_priority() const { return operator_priority(Evaluator_::stmt_operator(), true); }  
+
+  virtual std::string get_name() const { return Evaluator_::stmt_name(); }
+  virtual int get_operator_priority() const { return operator_priority(Evaluator_::stmt_operator(), true); }
 };
 
 
@@ -150,13 +150,13 @@ struct Evaluator_Prefix_Operator_Syntax : public Evaluator_Prefix_Operator
 
 The boolean negation evaluates to "1" if its argument evaluates to a representation of boolean false.
 Otherwise it evaluates to "1".
-Representations of boolean false are the empty string and every string that is a numerical representation of zero.
-Every other string represents boolean true.
+Representations of boolean false are the empty std::string and every std::string that is a numerical representation of zero.
+Every other std::string represents boolean true.
 
 Its syntax is
 
   ! <Evaluator>
-  
+
 The whitespace is optional.
 */
 
@@ -167,9 +167,9 @@ public:
   static std::string stmt_operator() { return "!"; }
   static std::string stmt_name() { return "eval-not"; }
 
-  Evaluator_Not(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Not(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_Prefix_Operator_Syntax< Evaluator_Not >(line_number_, input_attributes) {}
-  
+
   virtual std::string process(const std::string& rhs_result) const;
 };
 
@@ -193,10 +193,10 @@ public:
   static Operator_Stmt_Maker< Evaluator_Negate > statement_maker;
   static std::string stmt_operator() { return "-"; }
   static std::string stmt_name() { return "eval-negate"; }
-      
-  Evaluator_Negate(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+
+  Evaluator_Negate(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_Prefix_Operator_Syntax< Evaluator_Negate >(line_number_, input_attributes) {}
-  
+
   virtual std::string process(const std::string& rhs_result) const;
 };
 
@@ -220,7 +220,7 @@ struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_
     if (tree_it->token != "(")
     {
       if (error_output)
-        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) cannot have an input set",
+        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) cannot have an input std::set",
             tree_it->line_col.first);
       return 0;
     }
@@ -231,7 +231,7 @@ struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_
             tree_it->line_col.first);
       return 0;
     }
-    map< string, string > attributes;
+    std::map< std::string, std::string > attributes;
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     if (result)
     {
@@ -244,7 +244,7 @@ struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_
     }
     return result;
   }
-  
+
   String_Endom_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
   {
     Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this);
@@ -255,26 +255,26 @@ struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_
 template< typename Evaluator_ >
 struct Evaluator_String_Endom_Syntax : public Evaluator_Prefix_Operator
 {
-  Evaluator_String_Endom_Syntax(int line_number_, const map< string, string >& input_attributes)
+  Evaluator_String_Endom_Syntax(int line_number_, const std::map< std::string, std::string >& input_attributes)
     : Evaluator_Prefix_Operator(line_number_)
   {
-    std::map< std::string, std::string > attributes;  
-    eval_attributes_array(Evaluator_::stmt_name(), attributes, input_attributes);    
+    std::map< std::string, std::string > attributes;
+    eval_attributes_array(Evaluator_::stmt_name(), attributes, input_attributes);
   }
-  
+
   virtual std::string dump_xml(const std::string& indent) const
   {
     return indent + "<" + Evaluator_::stmt_name() + ">\n"
         + (rhs ? rhs->dump_xml(indent + "  ") : "")
         + indent + "</" + Evaluator_::stmt_name() + ">\n";
   }
-  
+
   virtual std::string dump_compact_ql(const std::string&) const
   {
     return Evaluator_::stmt_func_name() + "(" + (rhs ? rhs->dump_compact_ql("") : "") + ")";
   }
-  
-  virtual string get_name() const { return Evaluator_::stmt_name(); }
+
+  virtual std::string get_name() const { return Evaluator_::stmt_name(); }
 };
 
 
@@ -289,7 +289,7 @@ It returns "1" if its argument can be parsed as a number and "0" otherwise.
 Their syntaxes are
 
   number(<Evaluator>)
-  
+
 resp.
 
   is_number(<Evaluator>)
@@ -302,9 +302,9 @@ public:
   static std::string stmt_func_name() { return "number"; }
   static std::string stmt_name() { return "eval-number"; }
 
-  Evaluator_Number(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Number(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_String_Endom_Syntax< Evaluator_Number >(line_number_, input_attributes) {}
-  
+
   virtual std::string process(const std::string& rhs_result) const;
 };
 
@@ -316,9 +316,9 @@ public:
   static std::string stmt_func_name() { return "is_number"; }
   static std::string stmt_name() { return "eval-is-number"; }
 
-  Evaluator_Is_Num(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Is_Num(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_String_Endom_Syntax< Evaluator_Is_Num >(line_number_, input_attributes) {}
-  
+
   virtual std::string process(const std::string& rhs_result) const;
 };
 
@@ -331,7 +331,7 @@ Otherwise it returns "NaD".
 The function <em>is_date</em> checks whether its argument represents a date.
 It returns "1" if its argument can be parsed as a date and "0" otherwise.
 
-A string is parsed for a date as follows:
+A std::string is parsed for a date as follows:
 - the first group of digits is understood as year
 - the next group of digits if present is understood as month
 - then the next group if present is understood as day
@@ -347,7 +347,7 @@ The date parser may get more liberal in future versions and accept more represen
 The functions' syntaxes are
 
   date(<Evaluator>)
-  
+
 resp.
 
   is_date(<Evaluator>)
@@ -360,9 +360,9 @@ public:
   static std::string stmt_func_name() { return "date"; }
   static std::string stmt_name() { return "eval-date"; }
 
-  Evaluator_Date(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Date(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_String_Endom_Syntax< Evaluator_Date >(line_number_, input_attributes) {}
-  
+
   virtual std::string process(const std::string& rhs_result) const;
 };
 
@@ -374,9 +374,9 @@ public:
   static std::string stmt_func_name() { return "is_date"; }
   static std::string stmt_name() { return "eval-is-date"; }
 
-  Evaluator_Is_Date(int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+  Evaluator_Is_Date(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_String_Endom_Syntax< Evaluator_Is_Date >(line_number_, input_attributes) {}
-  
+
   virtual std::string process(const std::string& rhs_result) const;
 };
 

@@ -29,13 +29,13 @@
 class Coord_Query_Statement : public Output_Statement
 {
   public:
-    Coord_Query_Statement(int line_number_, const map< string, string >& attributes,
+    Coord_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                           Parsed_Query& global_settings);
-    virtual string get_name() const { return "coord-query"; }
+    virtual std::string get_name() const { return "coord-query"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Coord_Query_Statement() {}    
+    virtual ~Coord_Query_Statement() {}
     static Generic_Statement_Maker< Coord_Query_Statement > statement_maker;
-    
+
     static int check_segment
         (uint32 a_lat, int32 a_lon, uint32 b_lat, int32 b_lon,
          uint32 coord_lat, int32 coord_lon);
@@ -44,15 +44,15 @@ class Coord_Query_Statement : public Output_Statement
     static int check_area_block
         (uint32 ll_index, const Area_Block& area_block,
 	 uint32 coord_lat, int32 coord_lon);
-    
+
     // Used as bitmasks.
     const static int HIT = 1;
     const static int TOGGLE_EAST = 2;
     const static int TOGGLE_WEST = 4;
     const static int INTERSECT = 8;
-    
+
     static bool is_used() { return is_used_; }
-   
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<coord-query"
@@ -61,7 +61,7 @@ class Coord_Query_Statement : public Output_Statement
           + (lon != 200. ? std::string(" lon=\"") + to_string(lon) + "\"" : "")
           + dump_xml_result_name() + "/>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       return (input != "_" ? std::string(".") + input + " " : "")
@@ -71,11 +71,11 @@ class Coord_Query_Statement : public Output_Statement
           + (lat != 100. ? ")" : "") + dump_ql_result_name();
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
- 
+
   private:
-    string input;
+    std::string input;
     double lat, lon;
-    
+
     static bool is_used_;
 };
 

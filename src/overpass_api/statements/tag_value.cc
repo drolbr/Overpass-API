@@ -31,7 +31,7 @@ Statement* Evaluator_Fixed::Statement_Maker::create_statement(
 {
   if (tree_it->lhs || tree_it->rhs)
     return 0;
-  
+
   int64 value_l = 0;
   double value_d = 0;
   if (tree_it->token.empty() ||
@@ -43,8 +43,8 @@ Statement* Evaluator_Fixed::Statement_Maker::create_statement(
           + "\" if it should be a constant and not a tag evaluation.", tree_it->line_col.first);
     return 0;
   }
-  
-  map< string, string > attributes;
+
+  std::map< std::string, std::string > attributes;
   attributes["v"] = decode_json(tree_it->token, error_output);
   return new Evaluator_Fixed(tree_it->line_col.first, attributes, global_settings);
 }
@@ -55,25 +55,25 @@ Evaluator_Fixed::Evaluator_Fixed
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["v"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   value = attributes["v"];
 }
 
 
 std::string Evaluator_Fixed::dump_compact_ql(const std::string&) const
 {
-  int64 value_l = 0;  
+  int64 value_l = 0;
   if (try_int64(value, value_l))
     return to_string(value_l);
-  
-  double value_d = 0;  
+
+  double value_d = 0;
   if (try_double(value, value_d))
     return to_string(value_d);
-  
+
   return std::string("\"") + escape_cstr(value) + "\"";
 }
 
@@ -95,11 +95,11 @@ Statement* Evaluator_Id::Statement_Maker::create_statement(
           tree_it->line_col.first);
     return 0;
   }
-  
+
   if (tree_it->token != "(")
   {
     if (error_output)
-      error_output->add_parse_error("id() cannot have an input set", tree_it->line_col.first);
+      error_output->add_parse_error("id() cannot have an input std::set", tree_it->line_col.first);
     return 0;
   }
   if (tree_it->rhs)
@@ -108,7 +108,7 @@ Statement* Evaluator_Id::Statement_Maker::create_statement(
       error_output->add_parse_error("id() cannot have an argument", tree_it->line_col.first);
     return 0;
   }
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   return new Evaluator_Id(tree_it->line_col.first, attributes, global_settings);
 }
 
@@ -118,7 +118,7 @@ Evaluator_Id::Evaluator_Id
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
@@ -140,11 +140,11 @@ Statement* Evaluator_Type::Statement_Maker::create_statement(
           tree_it->line_col.first);
     return 0;
   }
-  
+
   if (tree_it->token != "(")
   {
     if (error_output)
-      error_output->add_parse_error("type() cannot have an input set", tree_it->line_col.first);
+      error_output->add_parse_error("type() cannot have an input std::set", tree_it->line_col.first);
     return 0;
   }
   if (tree_it->rhs)
@@ -153,7 +153,7 @@ Statement* Evaluator_Type::Statement_Maker::create_statement(
       error_output->add_parse_error("type() cannot have an argument", tree_it->line_col.first);
     return 0;
   }
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   return new Evaluator_Type(tree_it->line_col.first, attributes, global_settings);
 }
 
@@ -163,7 +163,7 @@ Evaluator_Type::Evaluator_Type
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
@@ -175,14 +175,14 @@ std::string find_value(const std::vector< std::pair< std::string, std::string > 
 {
   if (!tags)
     return "";
-  
+
   for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
       it != tags->end(); ++it)
   {
     if (it->first == key)
       return it->second;
   }
-  
+
   return "";
 }
 
@@ -201,7 +201,7 @@ Statement* Evaluator_Value::Statement_Maker::create_statement(
           tree_it->line_col.first);
     return 0;
   }
-  
+
   if (!tree_it->lhs || tree_it.lhs()->lhs || tree_it.lhs()->rhs || tree_it.lhs()->token != "t")
   {
     if (error_output)
@@ -218,10 +218,10 @@ Statement* Evaluator_Value::Statement_Maker::create_statement(
   if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
   {
     if (error_output)
-      error_output->add_parse_error("Operator \"[\" needs a single string (the tag key) as argument", tree_it->line_col.first);
+      error_output->add_parse_error("Operator \"[\" needs a single std::string (the tag key) as argument", tree_it->line_col.first);
     return 0;
   }
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
   return new Evaluator_Value(tree_it->line_col.first, attributes, global_settings);
 }
@@ -232,11 +232,11 @@ Evaluator_Value::Evaluator_Value
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["k"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   key = attributes["k"];
 }
 
@@ -248,14 +248,14 @@ std::string exists_value(const std::vector< std::pair< std::string, std::string 
 {
   if (!tags)
     return "0";
-  
+
   for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
       it != tags->end(); ++it)
   {
     if (it->first == key)
       return "1";
   }
-  
+
   return "0";
 }
 
@@ -274,26 +274,26 @@ Statement* Evaluator_Is_Tag::Statement_Maker::create_statement(
           tree_it->line_col.first);
     return 0;
   }
-  
+
   if (tree_it->token != "(")
   {
     if (error_output)
-      error_output->add_parse_error("is_tag(...) cannot have an input set", tree_it->line_col.first);
+      error_output->add_parse_error("is_tag(...) cannot have an input std::set", tree_it->line_col.first);
     return 0;
   }
   if (!tree_it->rhs)
   {
     if (error_output)
-      error_output->add_parse_error("is_tag(key) needs a string as argument", tree_it->line_col.first);
+      error_output->add_parse_error("is_tag(key) needs a std::string as argument", tree_it->line_col.first);
     return 0;
   }
   if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
   {
     if (error_output)
-      error_output->add_parse_error("is_tag(key) needs a simple string as argument", tree_it->line_col.first);
+      error_output->add_parse_error("is_tag(key) needs a simple std::string as argument", tree_it->line_col.first);
     return 0;
   }
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
   return new Evaluator_Is_Tag(tree_it->line_col.first, attributes, global_settings);
 }
@@ -304,11 +304,11 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["k"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   key = attributes["k"];
 }
 
@@ -325,7 +325,7 @@ Statement* Evaluator_Generic::Statement_Maker::create_statement(
 {
   if (tree_it->lhs || tree_it->rhs)
     return 0;
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   return new Evaluator_Generic(tree_it->line_col.first, attributes, global_settings);
 }
 
@@ -335,7 +335,7 @@ Evaluator_Generic::Evaluator_Generic
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
@@ -350,16 +350,16 @@ Statement* Evaluator_Properties_Count::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   if (tree_it->token != "(")
   {
     if (error_output && tree_it->rhs && tree_it.rhs()->lhs)
-      error_output->add_parse_error(tree_it.rhs().lhs()->token + "(...) cannot have an input set",
+      error_output->add_parse_error(tree_it.rhs().lhs()->token + "(...) cannot have an input std::set",
           tree_it->line_col.first);
     return 0;
   }
-  
+
   if (!tree_it->lhs)
     return 0;
   if (tree_it->rhs)
@@ -368,9 +368,9 @@ Statement* Evaluator_Properties_Count::Statement_Maker::create_statement(
       error_output->add_parse_error(tree_it.rhs().lhs()->token +  "() cannot have an argument", tree_it->line_col.first);
     return 0;
   }
-    
+
   attributes["type"] = tree_it.lhs()->token.size() > 6 ? tree_it.lhs()->token.substr(6) : "";
-  
+
   return new Evaluator_Properties_Count(tree_it->line_col.first, attributes, global_settings);
 }
 
@@ -381,7 +381,7 @@ std::string Evaluator_Properties_Count::to_string(Evaluator_Properties_Count::Ob
     return "tags";
   if (objects == members)
     return "members";
-  
+
   return "nothing";
 }
 
@@ -391,19 +391,19 @@ Evaluator_Properties_Count::Evaluator_Properties_Count
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["type"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   if (attributes["type"] == "tags")
     to_count = tags;
   else if (attributes["type"] == "members")
     to_count = members;
   else
   {
-    ostringstream temp("");
-    temp<<"For the attribute \"type\" of the element \"eval-set-count\""
+    std::ostringstream temp("");
+    temp<<"For the attribute \"type\" of the element \"eval-std::set-count\""
         <<" the only allowed values are \"nodes\", \"ways\", \"relations\", \"deriveds\", \"tags\", "
           "or \"members\" strings.";
     add_static_error(temp.str());
@@ -417,11 +417,11 @@ std::pair< std::vector< Set_Usage >, uint > Evaluator_Properties_Count::used_set
     return std::make_pair(std::vector< Set_Usage >(), 2u);
   else if (to_count == Evaluator_Properties_Count::members)
     return std::make_pair(std::vector< Set_Usage >(), 1u);
-  
+
   return std::make_pair(std::vector< Set_Usage >(), 0u);
 }
 
-  
+
 std::vector< std::string > Evaluator_Properties_Count::used_tags() const
 {
   std::vector< std::string > result;

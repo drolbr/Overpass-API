@@ -25,51 +25,51 @@
 #include "statement.h"
 
 
-map< string, Statement::Statement_Maker* >& Statement::maker_by_name()
+std::map< std::string, Statement::Statement_Maker* >& Statement::maker_by_name()
 {
-  static map< string, Statement::Statement_Maker* > makers;
+  static std::map< std::string, Statement::Statement_Maker* > makers;
   return makers;
 }
 
 
-map< string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_token()
+std::map< std::string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_token()
 {
-  static map< string, std::vector< Statement::Statement_Maker* > > makers;
+  static std::map< std::string, std::vector< Statement::Statement_Maker* > > makers;
   return makers;
 }
 
 
-map< string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_func_name()
+std::map< std::string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_func_name()
 {
-  static map< string, std::vector< Statement::Statement_Maker* > > makers;
+  static std::map< std::string, std::vector< Statement::Statement_Maker* > > makers;
   return makers;
 }
 
 
-void Statement::eval_attributes_array(string element, map< string, string >& attributes,
-				      const map< string, string >& input)
+void Statement::eval_attributes_array(std::string element, std::map< std::string, std::string >& attributes,
+				      const std::map< std::string, std::string >& input)
 {
-  for (map< string, string >::const_iterator it = input.begin(); it != input.end(); ++it)
+  for (std::map< std::string, std::string >::const_iterator it = input.begin(); it != input.end(); ++it)
   {
-    map< string, string >::iterator ait(attributes.find(it->first));
+    std::map< std::string, std::string >::iterator ait(attributes.find(it->first));
     if (ait != attributes.end())
       ait->second = it->second;
     else
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"Unknown attribute \""<<it->first<<"\" in element \""<<element<<"\".";
       add_static_error(temp.str());
     }
   }
 }
 
-void Statement::assure_no_text(string text, string name)
+void Statement::assure_no_text(std::string text, std::string name)
 {
   for (unsigned int i(0); i < text.size(); ++i)
   {
     if (!isspace(text[i]))
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"Element \""<<name<<"\" must not contain text.";
       add_static_error(temp.str());
       break;
@@ -77,20 +77,20 @@ void Statement::assure_no_text(string text, string name)
   }
 }
 
-void Statement::substatement_error(string parent, Statement* child)
+void Statement::substatement_error(std::string parent, Statement* child)
 {
-  ostringstream temp;
+  std::ostringstream temp;
   temp<<"Element \""<<child->get_name()<<"\" cannot be subelement of element \""<<parent<<"\".";
   add_static_error(temp.str());
 }
 
-void Statement::add_statement(Statement* statement, string text)
+void Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
   substatement_error(get_name(), statement);
 }
 
-void Statement::add_final_text(string text)
+void Statement::add_final_text(std::string text)
 {
   assure_no_text(text, this->get_name());
 }
@@ -108,33 +108,33 @@ void Statement::display_starttag()
 
 Statement::Factory::~Factory()
 {
-  for (vector< Statement* >::const_iterator it = created_statements.begin();
+  for (std::vector< Statement* >::const_iterator it = created_statements.begin();
       it != created_statements.end(); ++it)
     delete *it;
 }
 
 
 Statement* Statement::Factory::create_statement
-    (string element, int line_number, const map< string, string >& attributes)
+    (std::string element, int line_number, const std::map< std::string, std::string >& attributes)
 {
   Statement* statement = 0;
 
-  map< string, Statement::Statement_Maker* >::iterator maker_it =
+  std::map< std::string, Statement::Statement_Maker* >::iterator maker_it =
       Statement::maker_by_name().find(element);
-  
+
   if (maker_it != Statement::maker_by_name().end())
     statement = maker_it->second->create_statement(line_number, attributes, global_settings);
-  
+
   if (statement)
     created_statements.push_back(statement);
   else
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"Unknown tag \""<<element<<"\" in line "<<line_number<<'.';
     if (error_output_)
       error_output_->add_static_error(temp.str(), line_number);
   }
-  
+
   return statement;
 }
 
@@ -144,9 +144,9 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it, Statement::QL_Cont
     Parsed_Query& global_settings, Error_Output* error_output)
 {
   Statement* statement = 0;
-  
+
   std::vector< Statement::Statement_Maker* >::const_iterator maker_it = makers.begin();
-    
+
   while (!statement && maker_it != makers.end())
   {
     statement = (*maker_it)->create_statement(tree_it, tree_context, stmt_factory, global_settings, error_output);
@@ -167,7 +167,7 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it, Statement::QL_Cont
     }
     ++maker_it;
   }
-  
+
   return statement;
 }
 
@@ -175,13 +175,13 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it, Statement::QL_Cont
 Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context)
 {
   Statement* statement = 0;
-  
+
   if (tree_it->token == "(")
   {
     if (tree_it->lhs)
     {
-      map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
-          Statement::maker_by_func_name().find(tree_it.lhs()->token);          
+      std::map< std::string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+          Statement::maker_by_func_name().find(tree_it.lhs()->token);
       if (all_it != Statement::maker_by_func_name().end())
         statement = stmt_from_tree_node(tree_it, tree_context,
             all_it->second, *this, global_settings, Statement::error_output);
@@ -201,8 +201,8 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, S
   {
     if (tree_it->lhs && tree_it->rhs && tree_it.rhs()->token == "(" && tree_it.rhs()->lhs)
     {
-      map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
-          Statement::maker_by_func_name().find(tree_it.rhs().lhs()->token);          
+      std::map< std::string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+          Statement::maker_by_func_name().find(tree_it.rhs().lhs()->token);
       if (all_it != Statement::maker_by_func_name().end())
         statement = stmt_from_tree_node(tree_it, tree_context,
             all_it->second, *this, global_settings, Statement::error_output);
@@ -213,19 +213,19 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, S
   }
   else
   {
-    map< string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
-        Statement::maker_by_token().find(tree_it->token);  
+    std::map< std::string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+        Statement::maker_by_token().find(tree_it->token);
     if (all_it != Statement::maker_by_token().end())
       statement = stmt_from_tree_node(tree_it, tree_context,
           all_it->second, *this, global_settings, Statement::error_output);
-  
+
     if (!statement)
     {
       all_it = Statement::maker_by_token().find("");
       if (all_it != Statement::maker_by_token().end())
         statement = stmt_from_tree_node(tree_it, tree_context,
             all_it->second, *this, global_settings, Statement::error_output);
-      
+
       if (statement)
         ;
       else if (tree_it->lhs)
@@ -235,8 +235,8 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, S
               std::string("\"") + tree_it->token + "\" cannot be used as binary operator", tree_it->line_col.first);
         else
           error_output->add_parse_error(
-              std::string("\"") + tree_it->token + "\" needs a right hand side argument", tree_it->line_col.first);        
-      }  
+              std::string("\"") + tree_it->token + "\" needs a right hand side argument", tree_it->line_col.first);
+      }
       else if (tree_it->rhs)
       {
         error_output->add_parse_error(
@@ -248,10 +248,10 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, S
             + "\" has not been recognized as statement", tree_it->line_col.first);
     }
   }
-  
+
   if (statement)
     created_statements.push_back(statement);
-    
+
   return statement;
 }
 
@@ -259,37 +259,37 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, S
 Error_Output* Statement::error_output = 0;
 
 
-void Statement::add_static_error(string error)
+void Statement::add_static_error(std::string error)
 {
   if (error_output)
     error_output->add_static_error(error, line_number);
 }
 
 
-void Statement::add_static_remark(string remark)
+void Statement::add_static_remark(std::string remark)
 {
   if (error_output)
     error_output->add_static_remark(remark, line_number);
 }
 
 
-void Statement::runtime_error(string error) const
+void Statement::runtime_error(std::string error) const
 {
   if (error_output)
     error_output->runtime_error(error);
 }
 
 
-void Statement::runtime_remark(string error) const
+void Statement::runtime_remark(std::string error) const
 {
   if (error_output)
     error_output->runtime_remark(error);
 }
 
 
-map< string, string > convert_c_pairs(const char** attr)
+std::map< std::string, std::string > convert_c_pairs(const char** attr)
 {
-  map< string, string > result;
+  std::map< std::string, std::string > result;
   for (int i = 0; attr[i]; i+=2)
     result[attr[i]] = attr[i+1];
   return result;
@@ -298,6 +298,6 @@ map< string, string > convert_c_pairs(const char** attr)
 
 void Output_Statement::transfer_output(Resource_Manager& rman, Set& into) const
 {
-  rman.sets()[output].swap(into);  
+  rman.sets()[output].swap(into);
   into.clear();
 }

@@ -64,15 +64,15 @@ namespace
   const int DELETE = 1;
   uint flush_limit = 4*1024*1024;
   OSM_Element_Metadata* meta;
-  
+
   uint32 osm_element_count;
   Osm_Backend_Callback* callback;
 
-  string data_version;
-  
+  std::string data_version;
+
   inline void tag_start(const char **attr)
   {
-    string key(""), value("");
+    std::string key(""), value("");
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "k"))
@@ -81,11 +81,11 @@ namespace
 	value = attr[i+1];
     }
     if (current_node.id.val() > 0)
-      current_node.tags.push_back(make_pair(key, value));
+      current_node.tags.push_back(std::make_pair(key, value));
     else if (current_way.id.val() > 0)
-      current_way.tags.push_back(make_pair(key, value));
+      current_way.tags.push_back(std::make_pair(key, value));
     else if (current_relation.id.val() > 0)
-      current_relation.tags.push_back(make_pair(key, value));
+      current_relation.tags.push_back(std::make_pair(key, value));
   }
 
 
@@ -109,7 +109,7 @@ namespace
     if (current_relation.id.val() > 0)
     {
       Uint64 ref;
-      string type, role;
+      std::string type, role;
       for (unsigned int i(0); attr[i]; i += 2)
       {
 	if (!strcmp(attr[i], "ref"))
@@ -139,7 +139,7 @@ namespace
       state = IN_NODES;
     if (meta)
       *meta = OSM_Element_Metadata();
-    
+
     Node::Id_Type id;
     double lat(100.0), lon(200.0);
     for (unsigned int i(0); attr[i]; i += 2)
@@ -175,8 +175,8 @@ namespace
     else
       current_node = Node(id, 100., 200.);
   }
-  
-  
+
+
   inline void node_end()
   {
     if (modify_mode == DELETE)
@@ -192,8 +192,8 @@ namespace
     }
     current_node.id = Node::Id_Type();
   }
-  
-  
+
+
   inline void way_start(const char **attr)
   {
     if (state == IN_NODES)
@@ -209,7 +209,7 @@ namespace
       state = IN_WAYS;
     if (meta)
       *meta = OSM_Element_Metadata();
-    
+
     Way::Id_Type id;
     for (unsigned int i(0); attr[i]; i += 2)
     {
@@ -236,7 +236,7 @@ namespace
     }
     current_way = Way(id.val());
   }
-  
+
 
   inline void way_end()
   {
@@ -255,8 +255,8 @@ namespace
     }
     current_way.id = 0u;
   }
-  
-  
+
+
   inline void relation_end()
   {
     if (modify_mode == DELETE)
@@ -275,7 +275,7 @@ namespace
       osm_element_count = 0;
     }
     current_relation.id = 0u;
-  }  
+  }
 
 
   inline void relation_start(const char **attr)
@@ -306,7 +306,7 @@ namespace
       state = IN_RELATIONS;
     if (meta)
       *meta = OSM_Element_Metadata();
-    
+
     Relation::Id_Type id;
     for (unsigned int i(0); attr[i]; i += 2)
     {
@@ -447,7 +447,7 @@ void Osm_Updater::finish_updater()
     callback->ways_finished();
   else if (state == IN_RELATIONS)
     callback->relations_finished();
-  
+
   if (state == IN_NODES)
   {
     node_updater->update(callback, false);
@@ -455,7 +455,7 @@ void Osm_Updater::finish_updater()
     state = IN_WAYS;
   }
   if (state == IN_WAYS)
-  {  
+  {
     way_updater->update(callback, false,
                         node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                         node_updater->get_new_attic_skeletons());
@@ -469,16 +469,16 @@ void Osm_Updater::finish_updater()
                           node_updater->get_new_attic_skeletons(),
                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
                           way_updater->get_new_attic_skeletons());
-  
+
   flush();
   callback->parser_succeeded();
 }
 
 void Osm_Updater::parse_file_completely(FILE* in)
 {
-  callback->parser_started();  
+  callback->parser_started();
   parse(stdin, start, end);
-  
+
   finish_updater();
 }
 
@@ -497,7 +497,7 @@ void parse_relations_only(FILE* in)
   parse(in, relation_start, relation_end);
 }
 
-Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version_,
+Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& data_version_,
 			 meta_modes meta_, unsigned int flush_limit_)
   : dispatcher_client(0), meta(meta_)
 {
@@ -509,7 +509,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   transaction = new Nonsynced_Transaction
       (true, true, dispatcher_client->get_db_dir(), "");
   {
-    ofstream version((dispatcher_client->get_db_dir()
+    std::ofstream version((dispatcher_client->get_db_dir()
         + "osm_base_version.shadow").c_str());
     version<<data_version_<<'\n';
   }
@@ -518,7 +518,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
   way_updater_ = new Way_Updater(*transaction, meta);
   relation_updater_ = new Relation_Updater(*transaction, meta);
   flush_limit = flush_limit_;
-  
+
   data_version = data_version_;
 
   state = 0;
@@ -532,19 +532,19 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const string& data_ver
 }
 
 Osm_Updater::Osm_Updater
-    (Osm_Backend_Callback* callback_, string db_dir, const string& data_version_,
+    (Osm_Backend_Callback* callback_, std::string db_dir, const std::string& data_version_,
      meta_modes meta_, unsigned int flush_limit_)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
   if (file_present(db_dir + osm_base_settings().shared_name))
     throw Context_Error("File " + db_dir + osm_base_settings().shared_name + " present, "
         "which indicates a running dispatcher. Delete file if no dispatcher is running.");
-    
+
   {
-    ofstream version((db_dir + "osm_base_version").c_str());
+    std::ofstream version((db_dir + "osm_base_version").c_str());
     version<<data_version_<<'\n';
   }
-  
+
   node_updater_ = new Node_Updater(db_dir, meta);
   way_updater_ = new Way_Updater(db_dir, meta);
   relation_updater_ = new Relation_Updater(db_dir, meta);
@@ -570,7 +570,7 @@ void Osm_Updater::flush()
   way_updater_ = new Way_Updater(db_dir_, meta);
   delete relation_updater_;
   relation_updater_ = new Relation_Updater(db_dir_, meta);
-  
+
   if (dispatcher_client)
   {
     delete transaction;
@@ -593,7 +593,7 @@ Osm_Updater::~Osm_Updater()
   delete relation_updater_;
   if (::meta)
     delete ::meta;
-  
+
   if (dispatcher_client)
   {
     if (transaction)
