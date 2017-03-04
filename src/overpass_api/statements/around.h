@@ -100,7 +100,7 @@ class Around_Statement : public Output_Statement
     void add_ways(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
 		  const Way_Geometry_Store& way_geometries);
     bool matches_bboxes(double lat, double lon) const;
-    bool matches_bboxes(const BBox &) const;
+    bool matches_bboxes(const Prepared_BBox&) const;
   
     virtual std::string dump_xml(const std::string& indent) const
     {
