@@ -36,9 +36,9 @@
 struct Relation_Updater
 {
   Relation_Updater(Transaction& transaction, meta_modes meta);
-  
-  Relation_Updater(string db_dir, meta_modes meta);
-  
+
+  Relation_Updater(std::string db_dir, meta_modes meta);
+
   void set_id_deleted(Relation::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
     if (meta)
@@ -49,11 +49,11 @@ struct Relation_Updater
       new_data.data.push_back(Data_By_Id< Relation_Skeleton >::Entry
           (Uint31_Index(0u), Relation_Skeleton(id),
            OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(id)));
-    
+
     if (meta)
       user_by_id[meta->user_id] = meta->user_name;
   }
-  
+
   void set_relation(const Relation& rel,
 		    const OSM_Element_Metadata* meta = 0)
   {
@@ -67,14 +67,14 @@ struct Relation_Updater
           (Uint31_Index(0xff), Relation_Skeleton(rel),
            OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(rel.id),
            rel.tags));
-    
+
     if (meta)
       user_by_id[meta->user_id] = meta->user_name;
   }
-  
-  uint32 get_role_id(const string& s);
-  vector< string > get_roles();
-  
+
+  uint32 get_role_id(const std::string& s);
+  std::vector< std::string > get_roles();
+
   void update(Osm_Backend_Callback* callback,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
@@ -82,28 +82,28 @@ struct Relation_Updater
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& new_way_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_way_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons);
-  
+
 private:
   uint32 update_counter;
   Transaction* transaction;
   bool external_transaction;
-  map< string, uint32 > role_ids;
+  std::map< std::string, uint32 > role_ids;
   uint32 max_role_id;
   uint32 max_written_role_id;
-  vector< pair< Relation::Id_Type, Uint31_Index > > moved_relations;
-  string db_dir;
+  std::vector< std::pair< Relation::Id_Type, Uint31_Index > > moved_relations;
+  std::string db_dir;
 
   Data_By_Id< Relation_Skeleton > new_data;
 
   meta_modes meta;
-  map< uint32, string > user_by_id;
-  
+  std::map< uint32, std::string > user_by_id;
+
   std::map< Uint31_Index, std::set< Relation_Skeleton > > new_skeletons;
   std::map< Uint31_Index, std::set< Relation_Skeleton > > attic_skeletons;
   std::map< Uint31_Index, std::set< Attic< Relation_Delta > > > new_attic_skeletons;
-  
+
   Key_Storage keys;
-  
+
   void flush_roles();
   void load_roles();
 };
