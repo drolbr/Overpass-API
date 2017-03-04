@@ -37,7 +37,6 @@
 
 #define BUFFSIZE        8192
 
-using namespace std;
 
 void (*working_start)(const char*, const char**);
 void (*working_end)(const char*);
@@ -76,7 +75,7 @@ void parse(FILE* in,
   working_start = start;
   working_end = end;
   working_text_handler = text_handler;
-  
+
   XML_Parser p = XML_ParserCreate(NULL);
   if (! p) {
     fprintf(stderr, "Couldn't allocate memory for parser\n");
@@ -84,7 +83,7 @@ void parse(FILE* in,
   }
 
   XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
-  
+
   XML_SetCharacterDataHandler(p, expat_wrapper_text_handler);
 
   for (;;) {
