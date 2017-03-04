@@ -24,15 +24,14 @@
 #include "id_query.h"
 #include "print.h"
 
-using namespace std;
 
-Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 id)
+Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uint64 id)
 {
-  ostringstream buf("");
+  std::ostringstream buf("");
   buf<<id;
-  string id_ = buf.str();
+  std::string id_ = buf.str();
   Parsed_Query global_settings;
-  
+
   const char* attributes[5];
   attributes[0] = "type";
   attributes[1] = type.c_str();
@@ -42,7 +41,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 i
 
   Id_Query_Statement stmt(1, convert_c_pairs(attributes), global_settings);
   stmt.execute(rman);
-  
+
   return rman;
 }
 
@@ -50,26 +49,26 @@ int main(int argc, char* args[])
 {
   if (argc < 5)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir global_node_offset\n";
+    std::cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir global_node_offset\n";
     return 0;
   }
-  string test_to_execute = args[1];
+  std::string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
   Parsed_Query global_settings;
   global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
-  
+
   uint32 node_id_upper_limit = 5*pattern_size*pattern_size;
   uint32 way_id_upper_limit = 5*pattern_size*pattern_size;
   uint32 relation_id_upper_limit = 1000;
 
   Nonsynced_Transaction transaction(false, false, args[3], "");
-  
-  cout<<
+
+  std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm>\n";
-  
+
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
     try
@@ -111,7 +110,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
           <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -156,7 +155,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -201,7 +200,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -240,7 +239,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -248,7 +247,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      cout<<"Print all items sorted by quadtile:\n";
+      std::cout<<"Print all items sorted by quadtile:\n";
       Resource_Manager total_rman(transaction, &global_settings);
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
@@ -279,11 +278,11 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
-  
-  cout<<"</osm>\n";
+
+  std::cout<<"</osm>\n";
   return 0;
 }

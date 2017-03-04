@@ -19,7 +19,6 @@
 #include "../data/collect_members.h"
 #include "item.h"
 
-using namespace std;
 
 class Item_Constraint : public Query_Constraint
 {
@@ -27,36 +26,36 @@ class Item_Constraint : public Query_Constraint
     Item_Constraint(Item_Statement& item_) : item(&item_) {}
 
     bool delivers_data(Resource_Manager& rman) { return true; }
-    
+
     bool collect_nodes(Resource_Manager& rman, Set& into,
-		 const vector< Uint64 >& ids, bool invert_ids);
+		 const std::vector< Uint64 >& ids, bool invert_ids);
     bool collect(Resource_Manager& rman, Set& into, int type,
-		 const vector< Uint32_Index >& ids, bool invert_ids);
+		 const std::vector< Uint32_Index >& ids, bool invert_ids);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Item_Constraint() {}
-    
+
   private:
     Item_Statement* item;
 };
 
 template< typename TIndex, typename TObject >
-void collect_elements(const map< TIndex, vector< TObject > >& from,
-		      map< TIndex, vector< TObject > >& into,
-		      const vector< typename TObject::Id_Type >& ids, bool invert_ids)
+void collect_elements(const std::map< TIndex, std::vector< TObject > >& from,
+		      std::map< TIndex, std::vector< TObject > >& into,
+		      const std::vector< typename TObject::Id_Type >& ids, bool invert_ids)
 {
   into.clear();
-  for (typename map< TIndex, vector< TObject > >::const_iterator iit = from.begin();
+  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator iit = from.begin();
       iit != from.end(); ++iit)
   {
     if (ids.empty())
     {
-      for (typename vector< TObject >::const_iterator cit = iit->second.begin();
+      for (typename std::vector< TObject >::const_iterator cit = iit->second.begin();
           cit != iit->second.end(); ++cit)
 	into[iit->first].push_back(*cit);
     }
     else if (!invert_ids)
     {
-      for (typename vector< TObject >::const_iterator cit = iit->second.begin();
+      for (typename std::vector< TObject >::const_iterator cit = iit->second.begin();
           cit != iit->second.end(); ++cit)
       {
         if (binary_search(ids.begin(), ids.end(), cit->id))
@@ -65,7 +64,7 @@ void collect_elements(const map< TIndex, vector< TObject > >& from,
     }
     else
     {
-      for (typename vector< TObject >::const_iterator cit = iit->second.begin();
+      for (typename std::vector< TObject >::const_iterator cit = iit->second.begin();
           cit != iit->second.end(); ++cit)
       {
         if (!binary_search(ids.begin(), ids.end(), cit->id))
@@ -77,7 +76,7 @@ void collect_elements(const map< TIndex, vector< TObject > >& from,
 
 
 bool Item_Constraint::collect_nodes(Resource_Manager& rman, Set& into,
-				    const vector< Uint64 >& ids, bool invert_ids)
+				    const std::vector< Uint64 >& ids, bool invert_ids)
 {
   collect_elements(rman.sets()[item->get_result_name()].nodes, into.nodes,
 		   ids, invert_ids);
@@ -88,7 +87,7 @@ bool Item_Constraint::collect_nodes(Resource_Manager& rman, Set& into,
 
 
 bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
-			      int type, const vector< Uint32_Index >& ids, bool invert_ids)
+			      int type, const std::vector< Uint32_Index >& ids, bool invert_ids)
 {
   if (type == QUERY_WAY)
   {
@@ -126,22 +125,22 @@ void Item_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp
 
 Generic_Statement_Maker< Item_Statement > Item_Statement::statement_maker("item");
 
-Item_Statement::Item_Statement(int line_number_, const map< string, string >& input_attributes,
+Item_Statement::Item_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                                Parsed_Query& global_settings)
     : Statement(line_number_)
 {
-  map< string, string > attributes;
-  
-  attributes["set"] = "_";
-  
+  std::map< std::string, std::string > attributes;
+
+  attributes["std::set"] = "_";
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
-  output = attributes["set"];
+
+  output = attributes["std::set"];
 }
 
 Item_Statement::~Item_Statement()
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+  for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }

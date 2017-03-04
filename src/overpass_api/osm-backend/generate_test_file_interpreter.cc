@@ -20,7 +20,6 @@
 #include <iomanip>
 #include <iostream>
 
-using namespace std;
 
 double way_1_south(unsigned int pattern_size)
 {
@@ -211,16 +210,16 @@ int main(int argc, char* args[])
 {
   if (argc < 3)
   {
-    cout<<"Usage: "<<args[0]<<" Data_Size Test_Case\n";
+    std::cout<<"Usage: "<<args[0]<<" Data_Size Test_Case\n";
     return 0;
   }
-  
+
   unsigned int pattern_size = 2;
   if (argc > 1)
     pattern_size = atoi(args[1]);
-  
-  if (string(args[2]) == "interpreter_1" || string(args[2]) == "interpreter_2")
-    cout<<
+
+  if (std::string(args[2]) == "interpreter_1" || std::string(args[2]) == "interpreter_2")
+    std::cout<<
     "Content-type: application/osm3s+xml\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -231,12 +230,12 @@ int main(int argc, char* args[])
     "\n"
     "\n"
     "</osm>\n";
-  else if (string(args[2]) == "interpreter_3" || string(args[2]) == "interpreter_4"
-      || string(args[2]) == "interpreter_5" || string(args[2]) == "interpreter_6"
-      || string(args[2]) == "interpreter_7" || string(args[2]) == "interpreter_8"
-      || string(args[2]) == "interpreter_9" || string(args[2]) == "interpreter_10")
+  else if (std::string(args[2]) == "interpreter_3" || std::string(args[2]) == "interpreter_4"
+      || std::string(args[2]) == "interpreter_5" || std::string(args[2]) == "interpreter_6"
+      || std::string(args[2]) == "interpreter_7" || std::string(args[2]) == "interpreter_8"
+      || std::string(args[2]) == "interpreter_9" || std::string(args[2]) == "interpreter_10")
   {
-    cout<<
+    std::cout<<
     "Status: 400 Bad Request\n"
     "Content-type: text/html; charset=utf-8\n"
     "\n"
@@ -252,29 +251,29 @@ int main(int argc, char* args[])
     "\n"
     "<p>The data included in this document is from www.openstreetmap.org. "
     "The data is made available under ODbL.</p>\n";
-    if (string(args[2]) == "interpreter_3")
-      cout<<
+    if (std::string(args[2]) == "interpreter_3")
+      std::cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \"foo\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: An empty query is not allowed </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \";\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: An empty query is not allowed </p>\n";
-    else if (string(args[2]) == "interpreter_4")
-      cout<<
+    else if (std::string(args[2]) == "interpreter_4")
+      std::cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag \"foo\" in line 3. </p>\n";
-    else if (string(args[2]) == "interpreter_5")
-      cout<<
+    else if (std::string(args[2]) == "interpreter_5")
+      std::cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \"foo\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: An empty query is not allowed </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \";\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: An empty query is not allowed </p>\n";
-    else if (string(args[2]) == "interpreter_6")
-      cout<<
+    else if (std::string(args[2]) == "interpreter_6")
+      std::cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: Unknown type \"foo\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: An empty query is not allowed </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: Unknown type \";\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: An empty query is not allowed </p>\n";
-    else if (string(args[2]) == "interpreter_7")
-      cout<<
+    else if (std::string(args[2]) == "interpreter_7")
+      std::cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \"foo\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: An empty query is not allowed </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \";\" </p>\n"
@@ -283,35 +282,35 @@ int main(int argc, char* args[])
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: An empty query is not allowed </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: Unknown type \";\" </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: An empty query is not allowed </p>\n";
-    else if (string(args[2]) == "interpreter_8")
-      cout<<
+    else if (std::string(args[2]) == "interpreter_8")
+      std::cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag \"foo\" in line 3. </p>\n";
-    else if (string(args[2]) == "interpreter_9")
-      cout<<
+    else if (std::string(args[2]) == "interpreter_9")
+      std::cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 4: static error: Unknown tag \"foo\" in line 4. </p>\n";
-    else if (string(args[2]) == "interpreter_10")
-      cout<<
+    else if (std::string(args[2]) == "interpreter_10")
+      std::cout<<
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag \"foo\" in line 3. </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 4: static error: Unknown tag \"foo\" in line 4. </p>\n";
-    cout<<
+    std::cout<<
     "\n"
     "</body>\n"
     "</html>\n";
   }
-  else if (string(args[2]) == "interpreter_11" || string(args[2]) == "interpreter_12"
-      || string(args[2]) == "interpreter_13" || string(args[2]) == "interpreter_14"
-      || string(args[2]) == "interpreter_15" || string(args[2]) == "interpreter_16"
-      || string(args[2]) == "interpreter_17" || string(args[2]) == "interpreter_18"
-      || string(args[2]) == "interpreter_19" || string(args[2]) == "interpreter_20"
-      || string(args[2]) == "interpreter_21" || string(args[2]) == "interpreter_22"
-      || string(args[2]) == "interpreter_23" || string(args[2]) == "interpreter_38")
+  else if (std::string(args[2]) == "interpreter_11" || std::string(args[2]) == "interpreter_12"
+      || std::string(args[2]) == "interpreter_13" || std::string(args[2]) == "interpreter_14"
+      || std::string(args[2]) == "interpreter_15" || std::string(args[2]) == "interpreter_16"
+      || std::string(args[2]) == "interpreter_17" || std::string(args[2]) == "interpreter_18"
+      || std::string(args[2]) == "interpreter_19" || std::string(args[2]) == "interpreter_20"
+      || std::string(args[2]) == "interpreter_21" || std::string(args[2]) == "interpreter_22"
+      || std::string(args[2]) == "interpreter_23" || std::string(args[2]) == "interpreter_38")
   {
-    cout<<
+    std::cout<<
     "Content-type: application/json\n"
     "\n";
-    if (string(args[2]) == "interpreter_38")
-      cout<<"foo(";
-    cout<<
+    if (std::string(args[2]) == "interpreter_38")
+      std::cout<<"foo(";
+    std::cout<<
     "{\n"
     "  \"version\": 0.6,\n"
     "  \"generator\": \"Overpass API\",\n"
@@ -322,36 +321,36 @@ int main(int argc, char* args[])
     "  },\n"
     "  \"elements\": [\n"
     "\n";
-    if (string(args[2]) == "interpreter_11" || string(args[2]) == "interpreter_12"
-        || string(args[2]) == "interpreter_17" || string(args[2]) == "interpreter_18"
-	|| string(args[2]) == "interpreter_20" || string(args[2]) == "interpreter_23"
-	|| string(args[2]) == "interpreter_38")
-      cout<<
+    if (std::string(args[2]) == "interpreter_11" || std::string(args[2]) == "interpreter_12"
+        || std::string(args[2]) == "interpreter_17" || std::string(args[2]) == "interpreter_18"
+	|| std::string(args[2]) == "interpreter_20" || std::string(args[2]) == "interpreter_23"
+	|| std::string(args[2]) == "interpreter_38")
+      std::cout<<
       "{\n"
       "  \"type\": \"node\",\n"
       "  \"id\": 1,\n"
-      "  \"lat\": "<<setprecision(7)<<fixed<<51 + 0.5/pattern_size<<",\n"
-      "  \"lon\": "<<setprecision(7)<<fixed<<7 + 0.5/pattern_size<<",\n"
+      "  \"lat\": "<<std::setprecision(7)<<std::fixed<<51 + 0.5/pattern_size<<",\n"
+      "  \"lon\": "<<std::setprecision(7)<<std::fixed<<7 + 0.5/pattern_size<<",\n"
       "  \"tags\": {\n"
       "    \"node_key\": \"node_few\"\n"
       "  }\n"
       "}";
-    if (string(args[2]) == "interpreter_12")
-      cout<<
+    if (std::string(args[2]) == "interpreter_12")
+      std::cout<<
       ",\n"
       "{\n"
       "  \"type\": \"node\",\n"
       "  \"id\": "<<3*pattern_size + 3<<",\n"
-      "  \"lat\": "<<setprecision(7)<<fixed<<51 + 3.5/pattern_size<<",\n"
-      "  \"lon\": "<<setprecision(7)<<fixed<<7 + 2.5/pattern_size<<"\n"
+      "  \"lat\": "<<std::setprecision(7)<<std::fixed<<51 + 3.5/pattern_size<<",\n"
+      "  \"lon\": "<<std::setprecision(7)<<std::fixed<<7 + 2.5/pattern_size<<"\n"
       "}";
-    if (string(args[2]) == "interpreter_17" || string(args[2]) == "interpreter_20"
-        || string(args[2]) == "interpreter_23")
-      cout<<",\n";
-    if (string(args[2]) == "interpreter_13" || string(args[2]) == "interpreter_14"
-        || string(args[2]) == "interpreter_17" || string(args[2]) == "interpreter_19"
-	|| string(args[2]) == "interpreter_20" || string(args[2]) == "interpreter_23")
-      cout<<
+    if (std::string(args[2]) == "interpreter_17" || std::string(args[2]) == "interpreter_20"
+        || std::string(args[2]) == "interpreter_23")
+      std::cout<<",\n";
+    if (std::string(args[2]) == "interpreter_13" || std::string(args[2]) == "interpreter_14"
+        || std::string(args[2]) == "interpreter_17" || std::string(args[2]) == "interpreter_19"
+	|| std::string(args[2]) == "interpreter_20" || std::string(args[2]) == "interpreter_23")
+      std::cout<<
       "{\n"
       "  \"type\": \"way\",\n"
       "  \"id\": 1,\n"
@@ -364,8 +363,8 @@ int main(int argc, char* args[])
       "    \"way_key_2/4\": \"way_value_1\"\n"
       "  }\n"
       "}";
-    if (string(args[2]) == "interpreter_14")
-      cout<<
+    if (std::string(args[2]) == "interpreter_14")
+      std::cout<<
       ",\n"
       "{\n"
       "  \"type\": \"way\",\n"
@@ -379,13 +378,13 @@ int main(int argc, char* args[])
       "    \"way_key_2/4\": \"way_value_0\"\n"
       "  }\n"
       "}";
-    if (string(args[2]) == "interpreter_18" || string(args[2]) == "interpreter_19"
-        || string(args[2]) == "interpreter_20" || string(args[2]) == "interpreter_23")
-      cout<<",\n";
-    if (string(args[2]) == "interpreter_15" || string(args[2]) == "interpreter_16"
-        || string(args[2]) == "interpreter_18" || string(args[2]) == "interpreter_19"
-	|| string(args[2]) == "interpreter_20" || string(args[2]) == "interpreter_23")
-      cout<<
+    if (std::string(args[2]) == "interpreter_18" || std::string(args[2]) == "interpreter_19"
+        || std::string(args[2]) == "interpreter_20" || std::string(args[2]) == "interpreter_23")
+      std::cout<<",\n";
+    if (std::string(args[2]) == "interpreter_15" || std::string(args[2]) == "interpreter_16"
+        || std::string(args[2]) == "interpreter_18" || std::string(args[2]) == "interpreter_19"
+	|| std::string(args[2]) == "interpreter_20" || std::string(args[2]) == "interpreter_23")
+      std::cout<<
       "{\n"
       "  \"type\": \"relation\",\n"
       "  \"id\": 1,\n"
@@ -406,8 +405,8 @@ int main(int argc, char* args[])
       "    \"relation_key_2/4\": \"relation_value_1\"\n"
       "  }\n"
       "}";
-    if (string(args[2]) == "interpreter_16")
-      cout<<
+    if (std::string(args[2]) == "interpreter_16")
+      std::cout<<
       ",\n"
       "{\n"
       "  \"type\": \"relation\",\n"
@@ -449,8 +448,8 @@ int main(int argc, char* args[])
       "    \"relation_key_2/4\": \"relation_value_1\"\n"
       "  }\n"
       "}";
-    if (string(args[2]) == "interpreter_21")
-      cout<<
+    if (std::string(args[2]) == "interpreter_21")
+      std::cout<<
       "{\n"
       "  \"type\": \"node\",\n"
       "  \"id\": 1\n"
@@ -463,13 +462,13 @@ int main(int argc, char* args[])
       "  \"type\": \"relation\",\n"
       "  \"id\": 1\n"
       "}";
-    if (string(args[2]) == "interpreter_22")
-      cout<<
+    if (std::string(args[2]) == "interpreter_22")
+      std::cout<<
       "{\n"
       "  \"type\": \"node\",\n"
       "  \"id\": 1,\n"
-      "  \"lat\": "<<setprecision(7)<<fixed<<51 + 0.5/pattern_size<<",\n"
-      "  \"lon\": "<<setprecision(7)<<fixed<<7 + 0.5/pattern_size<<"\n"
+      "  \"lat\": "<<std::setprecision(7)<<std::fixed<<51 + 0.5/pattern_size<<",\n"
+      "  \"lon\": "<<std::setprecision(7)<<std::fixed<<7 + 0.5/pattern_size<<"\n"
       "},\n"
       "{\n"
       "  \"type\": \"way\",\n"
@@ -495,34 +494,34 @@ int main(int argc, char* args[])
       "    }\n"
       "  ]\n"
       "}";
-    cout<<
+    std::cout<<
     "\n"
     "\n"
     "  ]\n"
     "}";
-    if (string(args[2]) == "interpreter_38")
-      cout<<");\n";
+    if (std::string(args[2]) == "interpreter_38")
+      std::cout<<");\n";
     else
-      cout<<"\n";
+      std::cout<<"\n";
   }
-  else if (string(args[2]) == "interpreter_39" || string(args[2]) == "interpreter_40"
-       || string(args[2]) == "interpreter_41")
+  else if (std::string(args[2]) == "interpreter_39" || std::string(args[2]) == "interpreter_40"
+       || std::string(args[2]) == "interpreter_41")
   {
-    cout<<"Status: 302 Moved\n";
-    if (string(args[2]) == "interpreter_39")
-      cout<<"Location: http://www.openstreetmap.org/browse/way/1\n\n";
-    else if (string(args[2]) == "interpreter_40" || string(args[2]) == "interpreter_41")
-      cout<<"Location: http://www.openstreetmap.org/?way=1\n\n";
+    std::cout<<"Status: 302 Moved\n";
+    if (std::string(args[2]) == "interpreter_39")
+      std::cout<<"Location: http://www.openstreetmap.org/browse/way/1\n\n";
+    else if (std::string(args[2]) == "interpreter_40" || std::string(args[2]) == "interpreter_41")
+      std::cout<<"Location: http://www.openstreetmap.org/?way=1\n\n";
   }
-  else if (string(args[2]) == "interpreter_24" || string(args[2]) == "interpreter_25"
-    || string(args[2]) == "interpreter_26" || string(args[2]) == "interpreter_27"
-    || string(args[2]) == "interpreter_28" || string(args[2]) == "interpreter_29"
-    || string(args[2]) == "interpreter_30" || string(args[2]) == "interpreter_31"
-    || string(args[2]) == "interpreter_32" || string(args[2]) == "interpreter_33"
-    || string(args[2]) == "interpreter_34" || string(args[2]) == "interpreter_35"
-    || string(args[2]) == "interpreter_36" || string(args[2]) == "interpreter_37")
+  else if (std::string(args[2]) == "interpreter_24" || std::string(args[2]) == "interpreter_25"
+    || std::string(args[2]) == "interpreter_26" || std::string(args[2]) == "interpreter_27"
+    || std::string(args[2]) == "interpreter_28" || std::string(args[2]) == "interpreter_29"
+    || std::string(args[2]) == "interpreter_30" || std::string(args[2]) == "interpreter_31"
+    || std::string(args[2]) == "interpreter_32" || std::string(args[2]) == "interpreter_33"
+    || std::string(args[2]) == "interpreter_34" || std::string(args[2]) == "interpreter_35"
+    || std::string(args[2]) == "interpreter_36" || std::string(args[2]) == "interpreter_37")
   {
-    cout<<
+    std::cout<<
     "Content-type: text/html; charset=utf-8\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -533,20 +532,20 @@ int main(int argc, char* args[])
     "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
     "  <title>OSM3S Response</title>\n"
     "</head>\n";
-    if (string(args[2]) == "interpreter_24")
-      cout<<"<body>\n";
+    if (std::string(args[2]) == "interpreter_24")
+      std::cout<<"<body>\n";
     else
-      cout<<"<body onload=\"init()\">\n";
-    cout<<
+      std::cout<<"<body onload=\"init()\">\n";
+    std::cout<<
     "\n"
     "<p>The data included in this document is from www.openstreetmap.org. "
     "The data is made available under ODbL.</p>\n"
     "<p>Data included until: mock-up-init</p>\n";
-    if (string(args[2]) == "interpreter_24")
-      cout<<"<p>No results found.</p>\n";
+    if (std::string(args[2]) == "interpreter_24")
+      std::cout<<"<p>No results found.</p>\n";
     else
     {
-      cout<<
+      std::cout<<
       "  <script src=\"http://openlayers.org/api/OpenLayers.js\"></script>\n"
       "  <script src=\"http://openstreetmap.org/openlayers/OpenStreetMap.js\"></script>\n"
       "  <script type=\"text/javascript\">\n"
@@ -560,7 +559,7 @@ int main(int argc, char* args[])
       "\n"
       "      function display_map(div_id, query_url, lat, lon, zoom) {\n"
       "\n"
-      "          map = new OpenLayers.Map(div_id, {\n"
+      "          std::map = new OpenLayers.Map(div_id, {\n"
       "          controls:[\n"
       "              new OpenLayers.Control.Navigation(),\n"
       "              new OpenLayers.Control.PanZoomBar(),\n"
@@ -575,13 +574,13 @@ int main(int argc, char* args[])
       "          } );\n"
       "\n"
       "          layerMapnik = new OpenLayers.Layer.OSM.Mapnik(\"Mapnik\");\n"
-      "          map.addLayer(layerMapnik);\n"
+      "          std::map.addLayer(layerMapnik);\n"
       "\n"
       "          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n"
       "\n"
-      "          map.setCenter (lonLat, zoom);\n"
+      "          std::map.setCenter (lonLat, zoom);\n"
       "\n"
-      "          //Initialise the vector layer using OpenLayers.Format.OSM\n"
+      "          //Initialise the std::vector layer using OpenLayers.Format.OSM\n"
       "          var styleMap = new OpenLayers.StyleMap({\n"
       "              strokeColor: \"blue\",\n"
       "              strokeWidth: 10,\n"
@@ -601,9 +600,9 @@ int main(int argc, char* args[])
       "          layer.events.register(\"featuresadded\", layer,\n"
       "              make_remove_closure(div_id + \"_progressbar\"));\n"
       "\n"
-      "          map.addLayers([layer]);\n"
+      "          std::map.addLayers([layer]);\n"
       "\n"
-      "          return map;\n"
+      "          return std::map;\n"
       "      }\n"
       "\n"
       "      var maps = new Array();\n"
@@ -624,47 +623,47 @@ int main(int argc, char* args[])
       "      }\n"
       "  </script>\n"
       "\n";
-      if (string(args[2]) == "interpreter_25" || string(args[2]) == "interpreter_27"
-	  || string(args[2]) == "interpreter_29")
-        cout<<"<h1>1 results found</h1>\n";
-      else if (string(args[2]) == "interpreter_26" || string(args[2]) == "interpreter_28"
-	  || string(args[2]) == "interpreter_30" || string(args[2]) == "interpreter_31"
-	  || string(args[2]) == "interpreter_32" || string(args[2]) == "interpreter_33")
-        cout<<"<h1>2 results found</h1>\n";
+      if (std::string(args[2]) == "interpreter_25" || std::string(args[2]) == "interpreter_27"
+	  || std::string(args[2]) == "interpreter_29")
+        std::cout<<"<h1>1 results found</h1>\n";
+      else if (std::string(args[2]) == "interpreter_26" || std::string(args[2]) == "interpreter_28"
+	  || std::string(args[2]) == "interpreter_30" || std::string(args[2]) == "interpreter_31"
+	  || std::string(args[2]) == "interpreter_32" || std::string(args[2]) == "interpreter_33")
+        std::cout<<"<h1>2 results found</h1>\n";
       else
-	cout<<"<h1>3 results found</h1>\n";
-      cout<<
+	std::cout<<"<h1>3 results found</h1>\n";
+      std::cout<<
       "\n"
       "\n";
-      if (string(args[2]) == "interpreter_25" || string(args[2]) == "interpreter_26"
-	  || string(args[2]) == "interpreter_31" || string(args[2]) == "interpreter_32"
-	  || string(args[2]) == "interpreter_34" || string(args[2]) == "interpreter_36"
-	  || string(args[2]) == "interpreter_37")
+      if (std::string(args[2]) == "interpreter_25" || std::string(args[2]) == "interpreter_26"
+	  || std::string(args[2]) == "interpreter_31" || std::string(args[2]) == "interpreter_32"
+	  || std::string(args[2]) == "interpreter_34" || std::string(args[2]) == "interpreter_36"
+	  || std::string(args[2]) == "interpreter_37")
       {
-        cout<<
+        std::cout<<
         "\n"
         "<div style=\"min-height:300px;\">\n"
         "<div id=\"map_node_1\" style=\"width:300px;height:300px;float:right;\">\n"
         "<div id=\"map_node_1_progressbar\">Loading data ...</div>\n"
         "<form class=\"map_descriptor\" action=\"map_node_1\">\n"
         "  <input type=\"hidden\" name=\"url\" value=\"interpreter?data=node%281%29%3Bout+skel%3B\"/>\n"
-	"  <input type=\"hidden\" name=\"lat\" value=\""<<setprecision(7)<<fixed<<51 + 0.5/pattern_size<<"\"/>\n"
-	"  <input type=\"hidden\" name=\"lon\" value=\""<<setprecision(7)<<fixed<<7 + 0.5/pattern_size<<"\"/>\n"
+	"  <input type=\"hidden\" name=\"lat\" value=\""<<std::setprecision(7)<<std::fixed<<51 + 0.5/pattern_size<<"\"/>\n"
+	"  <input type=\"hidden\" name=\"lon\" value=\""<<std::setprecision(7)<<std::fixed<<7 + 0.5/pattern_size<<"\"/>\n"
         "  <input type=\"hidden\" name=\"zoom\" value=\"17\"/>\n"
         "</form>\n"
         "</div>\n"
         "\n"
-	"<p>Node <strong>1</strong>, lat: "<<setprecision(7)<<fixed<<51 + 0.5/pattern_size<<", lon: "<<setprecision(7)<<fixed<<7 + 0.5/pattern_size<<",<br/>\n";
-	if (string(args[2]) != "interpreter_36")
-	  cout<<
+	"<p>Node <strong>1</strong>, lat: "<<std::setprecision(7)<<std::fixed<<51 + 0.5/pattern_size<<", lon: "<<std::setprecision(7)<<std::fixed<<7 + 0.5/pattern_size<<",<br/>\n";
+	if (std::string(args[2]) != "interpreter_36")
+	  std::cout<<
           "node_key = node_few<br/>\n";
-	cout<<
+	std::cout<<
         "\n"
         "<a href=\"http://www.openstreetmap.org/browse/node/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
       }
-      if (string(args[2]) == "interpreter_35")
-        cout<<
+      if (std::string(args[2]) == "interpreter_35")
+        std::cout<<
         "\n"
         "<div style=\"min-height:300px;\">\n"
         "\n"
@@ -673,53 +672,53 @@ int main(int argc, char* args[])
         "\n"
         "<a href=\"http://www.openstreetmap.org/browse/node/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_26")
-	cout<<
+      if (std::string(args[2]) == "interpreter_26")
+	std::cout<<
         "\n"
         "<div style=\"min-height:300px;\">\n"
         "<div id=\"map_node_"<<3*pattern_size + 3<<"\" style=\"width:300px;height:300px;float:right;\">\n"
         "<div id=\"map_node_"<<3*pattern_size + 3<<"_progressbar\">Loading data ...</div>\n"
         "<form class=\"map_descriptor\" action=\"map_node_"<<3*pattern_size + 3<<"\">\n"
         "  <input type=\"hidden\" name=\"url\" value=\"interpreter?data=node%28"<<3*pattern_size + 3<<"%29%3Bout+skel%3B\"/>\n"
-        "  <input type=\"hidden\" name=\"lat\" value=\""<<setprecision(7)<<fixed<<51 + 3.5/pattern_size<<"\"/>\n"
-        "  <input type=\"hidden\" name=\"lon\" value=\""<<setprecision(7)<<fixed<<7 + 2.5/pattern_size<<"\"/>\n"
+        "  <input type=\"hidden\" name=\"lat\" value=\""<<std::setprecision(7)<<std::fixed<<51 + 3.5/pattern_size<<"\"/>\n"
+        "  <input type=\"hidden\" name=\"lon\" value=\""<<std::setprecision(7)<<std::fixed<<7 + 2.5/pattern_size<<"\"/>\n"
         "  <input type=\"hidden\" name=\"zoom\" value=\"17\"/>\n"
         "</form>\n"
         "</div>\n"
         "\n"
-        "<p>Node <strong>"<<3*pattern_size + 3<<"</strong>, lat: "<<setprecision(7)<<fixed<<51 + 3.5/pattern_size<<", lon: "<<setprecision(7)<<fixed<<7 + 2.5/pattern_size<<",<br/>\n"
+        "<p>Node <strong>"<<3*pattern_size + 3<<"</strong>, lat: "<<std::setprecision(7)<<std::fixed<<51 + 3.5/pattern_size<<", lon: "<<std::setprecision(7)<<std::fixed<<7 + 2.5/pattern_size<<",<br/>\n"
         "\n"
         "<a href=\"http://www.openstreetmap.org/browse/node/"<<3*pattern_size + 3<<"\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_27" || string(args[2]) == "interpreter_28"
-	   || string(args[2]) == "interpreter_31" || string(args[2]) == "interpreter_33"
-	   || string(args[2]) == "interpreter_34")
+      if (std::string(args[2]) == "interpreter_27" || std::string(args[2]) == "interpreter_28"
+	   || std::string(args[2]) == "interpreter_31" || std::string(args[2]) == "interpreter_33"
+	   || std::string(args[2]) == "interpreter_34")
       {
-	cout<<
+	std::cout<<
 	"\n"
 	"<div style=\"min-height:300px;\">\n"
         "<div id=\"map_way_1\" style=\"width:300px;height:300px;float:right;\">\n"
         "<div id=\"map_way_1_progressbar\">Loading data ...</div>\n"
         "<form class=\"map_descriptor\" action=\"map_way_1\">\n"
         "  <input type=\"hidden\" name=\"url\" value=\"interpreter?data=%28way%281%29%3Bnode%28w%29%29%3Bout+skel%3B\"/>\n"
-        "  <input type=\"hidden\" name=\"lat\" value=\""<<setprecision(7)<<fixed<<(way_1_south(pattern_size) + way_1_north(pattern_size))/2.0<<"\"/>\n"
-	"  <input type=\"hidden\" name=\"lon\" value=\""<<setprecision(7)<<fixed<<(way_1_west(pattern_size) + way_1_east(pattern_size))/2.0<<"\"/>\n"
+        "  <input type=\"hidden\" name=\"lat\" value=\""<<std::setprecision(7)<<std::fixed<<(way_1_south(pattern_size) + way_1_north(pattern_size))/2.0<<"\"/>\n"
+	"  <input type=\"hidden\" name=\"lon\" value=\""<<std::setprecision(7)<<std::fixed<<(way_1_west(pattern_size) + way_1_east(pattern_size))/2.0<<"\"/>\n"
 	"  <input type=\"hidden\" name=\"zoom\" value=\""<<way_1_zoom(pattern_size)<<"\"/>\n"
         "</form>\n"
         "</div>\n"
         "\n"
-        "<p>Way <strong>1</strong>, bounding box south: "<<setprecision(7)<<fixed<<way_1_south(pattern_size)<<", west: "<<setprecision(7)<<fixed<<way_1_west(pattern_size)<<", north: "<<setprecision(7)<<fixed<<way_1_north(pattern_size)<<", east: "<<setprecision(7)<<fixed<<way_1_east(pattern_size)<<",<br/>\n";
-	if (string(args[2]) != "interpreter_36")
-	  cout<<
+        "<p>Way <strong>1</strong>, bounding box south: "<<std::setprecision(7)<<std::fixed<<way_1_south(pattern_size)<<", west: "<<std::setprecision(7)<<std::fixed<<way_1_west(pattern_size)<<", north: "<<std::setprecision(7)<<std::fixed<<way_1_north(pattern_size)<<", east: "<<std::setprecision(7)<<std::fixed<<way_1_east(pattern_size)<<",<br/>\n";
+	if (std::string(args[2]) != "interpreter_36")
+	  std::cout<<
           "way_key = way_few<br/>\n"
           "way_key_2/4 = way_value_1<br/>\n";
-	cout<<
+	std::cout<<
 	" members: "<<pattern_size + 1<<", "<<pattern_size + 2<<"<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
       }
-      if (string(args[2]) == "interpreter_35")
-	cout<<
+      if (std::string(args[2]) == "interpreter_35")
+	std::cout<<
 	"\n"
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
@@ -728,8 +727,8 @@ int main(int argc, char* args[])
         "<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_36")
-	cout<<
+      if (std::string(args[2]) == "interpreter_36")
+	std::cout<<
 	"\n"
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
@@ -738,8 +737,8 @@ int main(int argc, char* args[])
 	" members: "<<pattern_size+1<<", "<<pattern_size+2<<"<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_37")
-	cout<<
+      if (std::string(args[2]) == "interpreter_37")
+	std::cout<<
 	"\n"
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
@@ -750,55 +749,55 @@ int main(int argc, char* args[])
 	" members: "<<pattern_size+1<<", "<<pattern_size+2<<"<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_28")
-	cout<<
+      if (std::string(args[2]) == "interpreter_28")
+	std::cout<<
 	"\n"
         "<div style=\"min-height:300px;\">\n"
         "<div id=\"map_way_2\" style=\"width:300px;height:300px;float:right;\">\n"
         "<div id=\"map_way_2_progressbar\">Loading data ...</div>\n"
         "<form class=\"map_descriptor\" action=\"map_way_2\">\n"
         "  <input type=\"hidden\" name=\"url\" value=\"interpreter?data=%28way%282%29%3Bnode%28w%29%29%3Bout+skel%3B\"/>\n"
-	"  <input type=\"hidden\" name=\"lat\" value=\""<<setprecision(7)<<fixed<<(way_2_south(pattern_size) + way_2_north(pattern_size))/2.0<<"\"/>\n"
-	"  <input type=\"hidden\" name=\"lon\" value=\""<<setprecision(7)<<fixed<<(way_2_west(pattern_size) + way_2_east(pattern_size))/2.0<<"\"/>\n"
+	"  <input type=\"hidden\" name=\"lat\" value=\""<<std::setprecision(7)<<std::fixed<<(way_2_south(pattern_size) + way_2_north(pattern_size))/2.0<<"\"/>\n"
+	"  <input type=\"hidden\" name=\"lon\" value=\""<<std::setprecision(7)<<std::fixed<<(way_2_west(pattern_size) + way_2_east(pattern_size))/2.0<<"\"/>\n"
 	"  <input type=\"hidden\" name=\"zoom\" value=\""<<way_2_zoom(pattern_size)<<"\"/>\n"
         "</form>\n"
         "</div>\n"
         "\n"
-        "<p>Way <strong>2</strong>, bounding box south: "<<setprecision(7)<<fixed<<way_2_south(pattern_size)<<", west: "<<setprecision(7)<<fixed<<way_2_west(pattern_size)<<", north: "<<setprecision(7)<<fixed<<way_2_north(pattern_size)<<", east: "<<setprecision(7)<<fixed<<way_2_east(pattern_size)<<",<br/>\n"
+        "<p>Way <strong>2</strong>, bounding box south: "<<std::setprecision(7)<<std::fixed<<way_2_south(pattern_size)<<", west: "<<std::setprecision(7)<<std::fixed<<way_2_west(pattern_size)<<", north: "<<std::setprecision(7)<<std::fixed<<way_2_north(pattern_size)<<", east: "<<std::setprecision(7)<<std::fixed<<way_2_east(pattern_size)<<",<br/>\n"
         "way_key = way_few<br/>\n"
         "way_key_2/4 = way_value_0<br/>\n"
 	" members: "<<pattern_size + 2<<", "<<pattern_size + 3<<"<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/way/2\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_30"
-	   || string(args[2]) == "interpreter_32" || string(args[2]) == "interpreter_33"
-	   || string(args[2]) == "interpreter_34")
+      if (std::string(args[2]) == "interpreter_30"
+	   || std::string(args[2]) == "interpreter_32" || std::string(args[2]) == "interpreter_33"
+	   || std::string(args[2]) == "interpreter_34")
       {
-	cout<<
+	std::cout<<
 	"\n"
 	"<div style=\"min-height:300px;\">\n"
         "<div id=\"map_relation_1\" style=\"width:300px;height:300px;float:right;\">\n"
         "<div id=\"map_relation_1_progressbar\">Loading data ...</div>\n"
         "<form class=\"map_descriptor\" action=\"map_relation_1\">\n"
         "  <input type=\"hidden\" name=\"url\" value=\"interpreter?data=%28relation%281%29%3Bnode%28r%29%2D%3E%2Ex%3Bway%28r%29%3Bnode%28w%29%3B%29%3Bout+skel%3B\"/>\n"
-	"  <input type=\"hidden\" name=\"lat\" value=\""<<setprecision(7)<<fixed<<(relation_1_south(pattern_size) + relation_1_north(pattern_size))/2.0<<"\"/>\n"
-	"  <input type=\"hidden\" name=\"lon\" value=\""<<setprecision(7)<<fixed<<(relation_1_west(pattern_size) + relation_1_east(pattern_size))/2.0<<"\"/>\n"
+	"  <input type=\"hidden\" name=\"lat\" value=\""<<std::setprecision(7)<<std::fixed<<(relation_1_south(pattern_size) + relation_1_north(pattern_size))/2.0<<"\"/>\n"
+	"  <input type=\"hidden\" name=\"lon\" value=\""<<std::setprecision(7)<<std::fixed<<(relation_1_west(pattern_size) + relation_1_east(pattern_size))/2.0<<"\"/>\n"
 	"  <input type=\"hidden\" name=\"zoom\" value=\""<<relation_1_zoom(pattern_size)<<"\"/>\n"
         "</form>\n"
         "</div>\n"
 	"\n"
-	"<p>Relation <strong>1</strong>, bounding box south: "<<setprecision(7)<<fixed<<relation_1_south(pattern_size)<<", west: "<<setprecision(7)<<fixed<<relation_1_west(pattern_size)<<", north: "<<setprecision(7)<<fixed<<relation_1_north(pattern_size)<<", east: "<<setprecision(7)<<fixed<<relation_1_east(pattern_size)<<",<br/>\n";
-	if (string(args[2]) != "interpreter_36")
-	  cout<<
+	"<p>Relation <strong>1</strong>, bounding box south: "<<std::setprecision(7)<<std::fixed<<relation_1_south(pattern_size)<<", west: "<<std::setprecision(7)<<std::fixed<<relation_1_west(pattern_size)<<", north: "<<std::setprecision(7)<<std::fixed<<relation_1_north(pattern_size)<<", east: "<<std::setprecision(7)<<std::fixed<<relation_1_east(pattern_size)<<",<br/>\n";
+	if (std::string(args[2]) != "interpreter_36")
+	  std::cout<<
           "relation_key = relation_few<br/>\n"
           "relation_key_2/4 = relation_value_1<br/>\n";
-	cout<<
+	std::cout<<
 	" members: node <strong>1</strong> &quot;one&quot;, node <strong>"<<pattern_size + 2<<"</strong> &quot;two&quot;<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
       }
-      if (string(args[2]) == "interpreter_35")
-	cout<<
+      if (std::string(args[2]) == "interpreter_35")
+	std::cout<<
 	"\n"
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
@@ -807,8 +806,8 @@ int main(int argc, char* args[])
         "<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_36")
-	cout<<
+      if (std::string(args[2]) == "interpreter_36")
+	std::cout<<
 	"\n"
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
@@ -817,8 +816,8 @@ int main(int argc, char* args[])
 	" members: node <strong>1</strong> &quot;one&quot;, node <strong>"<<pattern_size+2<<"</strong> &quot;two&quot;<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_29" || string(args[2]) == "interpreter_37")
-	cout<<
+      if (std::string(args[2]) == "interpreter_29" || std::string(args[2]) == "interpreter_37")
+	std::cout<<
 	"\n"
 	"<div style=\"min-height:300px;\">\n"
 	"\n"
@@ -829,8 +828,8 @@ int main(int argc, char* args[])
 	" members: node <strong>1</strong> &quot;one&quot;, node <strong>"<<pattern_size+2<<"</strong> &quot;two&quot;<br/>\n"
         "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
-      if (string(args[2]) == "interpreter_30")
-	cout<<
+      if (std::string(args[2]) == "interpreter_30")
+	std::cout<<
 	"\n"
         "<div style=\"min-height:300px;\">\n"
 	"\n"
@@ -842,15 +841,15 @@ int main(int argc, char* args[])
         "<a href=\"http://www.openstreetmap.org/browse/relation/9\">Browse on openstreetmap.org</a></p>\n"
         "</div>\n";
     }
-    cout<<
+    std::cout<<
     "\n"
     "</body>\n"
     "</html>\n";
   }
-  else if (string(args[2]) == "interpreter_42" || string(args[2]) == "interpreter_43"
-    || string(args[2]) == "interpreter_44")
+  else if (std::string(args[2]) == "interpreter_42" || std::string(args[2]) == "interpreter_43"
+    || std::string(args[2]) == "interpreter_44")
   {
-    cout<<
+    std::cout<<
     "Content-type: text/html; charset=utf-8\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -866,66 +865,66 @@ int main(int argc, char* args[])
     "<p>The data included in this document is from www.openstreetmap.org. "
     "The data is made available under ODbL.</p>\n"
     "<p>Data included until: mock-up-init</p>\n";
-    if (string(args[2]) == "interpreter_42")
-      cout<<"<h1>1 results found</h1>\n";
-    else if (string(args[2]) == "interpreter_43")
-      cout<<"<h1>3 results found</h1>\n";
-    if (string(args[2]) == "interpreter_44")
-      cout<<"<h1>6 results found</h1>\n";
-    cout<<
+    if (std::string(args[2]) == "interpreter_42")
+      std::cout<<"<h1>1 results found</h1>\n";
+    else if (std::string(args[2]) == "interpreter_43")
+      std::cout<<"<h1>3 results found</h1>\n";
+    if (std::string(args[2]) == "interpreter_44")
+      std::cout<<"<h1>6 results found</h1>\n";
+    std::cout<<
     "\n"
     "\n"
     "\n"
-    "<p>Node <strong>1</strong>, lat: "<<setprecision(7)<<fixed<<51 + 0.5/pattern_size<<", lon: "<<setprecision(7)<<fixed<<7 + 0.5/pattern_size<<",<br/>\n"
+    "<p>Node <strong>1</strong>, lat: "<<std::setprecision(7)<<std::fixed<<51 + 0.5/pattern_size<<", lon: "<<std::setprecision(7)<<std::fixed<<7 + 0.5/pattern_size<<",<br/>\n"
     "node_key = node_few<br/>\n"
     "\n"
     "<a href=\"http://www.openstreetmap.org/browse/node/1\">Browse on openstreetmap.org</a></p>\n"
     "\n";
-    if (string(args[2]) == "interpreter_44")
-      cout<<
-      "<p>Node <strong>"<<3*pattern_size + 3<<"</strong>, lat: "<<setprecision(7)<<fixed<<51 + 3.5/pattern_size<<", lon: "<<setprecision(7)<<fixed<<7 + 2.5/pattern_size<<",<br/>\n"
+    if (std::string(args[2]) == "interpreter_44")
+      std::cout<<
+      "<p>Node <strong>"<<3*pattern_size + 3<<"</strong>, lat: "<<std::setprecision(7)<<std::fixed<<51 + 3.5/pattern_size<<", lon: "<<std::setprecision(7)<<std::fixed<<7 + 2.5/pattern_size<<",<br/>\n"
       "\n"
       "<a href=\"http://www.openstreetmap.org/browse/node/"<<3*pattern_size + 3<<"\">Browse on openstreetmap.org</a></p>\n"
       "\n";
-    if (string(args[2]) == "interpreter_43" || string(args[2]) == "interpreter_44")
-      cout<<
-      "<p>Way <strong>1</strong>, bounding box south: "<<setprecision(7)<<fixed<<way_1_south(pattern_size)<<", west: "<<setprecision(7)<<fixed<<way_1_west(pattern_size)<<", north: "<<setprecision(7)<<fixed<<way_1_north(pattern_size)<<", east: "<<setprecision(7)<<fixed<<way_1_east(pattern_size)<<",<br/>\n"
+    if (std::string(args[2]) == "interpreter_43" || std::string(args[2]) == "interpreter_44")
+      std::cout<<
+      "<p>Way <strong>1</strong>, bounding box south: "<<std::setprecision(7)<<std::fixed<<way_1_south(pattern_size)<<", west: "<<std::setprecision(7)<<std::fixed<<way_1_west(pattern_size)<<", north: "<<std::setprecision(7)<<std::fixed<<way_1_north(pattern_size)<<", east: "<<std::setprecision(7)<<std::fixed<<way_1_east(pattern_size)<<",<br/>\n"
       "way_key = way_few<br/>\n"
       "way_key_2/4 = way_value_1<br/>\n"
       " members: "<<pattern_size + 1<<", "<<pattern_size + 2<<"<br/>\n"
       "<a href=\"http://www.openstreetmap.org/browse/way/1\">Browse on openstreetmap.org</a></p>\n"
       "\n";
-    if (string(args[2]) == "interpreter_44")
-      cout<<
-      "<p>Way <strong>2</strong>, bounding box south: "<<setprecision(7)<<fixed<<way_2_south(pattern_size)<<", west: "<<setprecision(7)<<fixed<<way_2_west(pattern_size)<<", north: "<<setprecision(7)<<fixed<<way_2_north(pattern_size)<<", east: "<<setprecision(7)<<fixed<<way_2_east(pattern_size)<<",<br/>\n"
+    if (std::string(args[2]) == "interpreter_44")
+      std::cout<<
+      "<p>Way <strong>2</strong>, bounding box south: "<<std::setprecision(7)<<std::fixed<<way_2_south(pattern_size)<<", west: "<<std::setprecision(7)<<std::fixed<<way_2_west(pattern_size)<<", north: "<<std::setprecision(7)<<std::fixed<<way_2_north(pattern_size)<<", east: "<<std::setprecision(7)<<std::fixed<<way_2_east(pattern_size)<<",<br/>\n"
       "way_key = way_few<br/>\n"
       "way_key_2/4 = way_value_0<br/>\n"
       " members: "<<pattern_size + 2<<", "<<pattern_size + 3<<"<br/>\n"
       "<a href=\"http://www.openstreetmap.org/browse/way/2\">Browse on openstreetmap.org</a></p>\n"
       "\n";
-    if (string(args[2]) == "interpreter_43" || string(args[2]) == "interpreter_44")
-      cout<<
-      "<p>Relation <strong>1</strong>, bounding box south: "<<setprecision(7)<<fixed<<relation_1_south(pattern_size)<<", west: "<<setprecision(7)<<fixed<<relation_1_west(pattern_size)<<", north: "<<setprecision(7)<<fixed<<relation_1_north(pattern_size)<<", east: "<<setprecision(7)<<fixed<<relation_1_east(pattern_size)<<",<br/>\n"
+    if (std::string(args[2]) == "interpreter_43" || std::string(args[2]) == "interpreter_44")
+      std::cout<<
+      "<p>Relation <strong>1</strong>, bounding box south: "<<std::setprecision(7)<<std::fixed<<relation_1_south(pattern_size)<<", west: "<<std::setprecision(7)<<std::fixed<<relation_1_west(pattern_size)<<", north: "<<std::setprecision(7)<<std::fixed<<relation_1_north(pattern_size)<<", east: "<<std::setprecision(7)<<std::fixed<<relation_1_east(pattern_size)<<",<br/>\n"
       "relation_key = relation_few<br/>\n"
       "relation_key_2/4 = relation_value_1<br/>\n"
       " members: node <strong>1</strong> &quot;one&quot;, node <strong>"<<pattern_size + 2<<"</strong> &quot;two&quot;<br/>\n"
       "<a href=\"http://www.openstreetmap.org/browse/relation/1\">Browse on openstreetmap.org</a></p>\n"
       "\n";
-    if (string(args[2]) == "interpreter_44")
-      cout<<
+    if (std::string(args[2]) == "interpreter_44")
+      std::cout<<
       "<p>Relation <strong>9</strong>, no geographic reference<br/>\n"
       "relation_key = relation_few<br/>\n"
       "relation_key_2/4 = relation_value_1<br/>\n"
       " members: relation <strong>1</strong> &quot;three&quot;, relation <strong>2</strong> &quot;zero&quot;, relation <strong>3</strong> &quot;one&quot;, relation <strong>4</strong> &quot;two&quot;, relation <strong>5</strong> &quot;three&quot;, relation <strong>6</strong> &quot;zero&quot;<br/>\n"
       "<a href=\"http://www.openstreetmap.org/browse/relation/9\">Browse on openstreetmap.org</a></p>\n"
       "\n";
-    cout<<
+    std::cout<<
     "</body>\n"
     "</html>\n";
   }
-  else if (string(args[2]) == "interpreter_45")
+  else if (std::string(args[2]) == "interpreter_45")
   {
-    cout<<
+    std::cout<<
     "Content-type: application/json\n"
     "\n"
     "{\n"
@@ -941,8 +940,8 @@ int main(int argc, char* args[])
     "{\n"
     "  \"type\": \"node\",\n"
     "  \"id\": 7,\n"
-    "  \"lat\": "<<setprecision(7)<<fixed<<10 + 0.5/pattern_size<<",\n"
-    "  \"lon\": "<<setprecision(7)<<fixed<<1 + 6.5/pattern_size<<",\n"
+    "  \"lat\": "<<std::setprecision(7)<<std::fixed<<10 + 0.5/pattern_size<<",\n"
+    "  \"lon\": "<<std::setprecision(7)<<std::fixed<<1 + 6.5/pattern_size<<",\n"
     "  \"timestamp\": \"2001-01-01T00:00:07Z\",\n"
     "  \"version\": 9,\n"
     "  \"changeset\": 18,\n"
@@ -990,9 +989,9 @@ int main(int argc, char* args[])
     "  ]\n"
     "}\n";
   }
-  else if (string(args[2]) == "interpreter_46")
+  else if (std::string(args[2]) == "interpreter_46")
   {
-    cout<<
+    std::cout<<
     "Content-type: text/html; charset=utf-8\n"
     "\n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -1021,7 +1020,7 @@ int main(int argc, char* args[])
     "\n"
     "      function display_map(div_id, query_url, lat, lon, zoom) {\n"
     "\n"
-    "          map = new OpenLayers.Map(div_id, {\n"
+    "          std::map = new OpenLayers.Map(div_id, {\n"
     "          controls:[\n"
     "              new OpenLayers.Control.Navigation(),\n"
     "              new OpenLayers.Control.PanZoomBar(),\n"
@@ -1036,13 +1035,13 @@ int main(int argc, char* args[])
     "          } );\n"
     "\n"
     "          layerMapnik = new OpenLayers.Layer.OSM.Mapnik(\"Mapnik\");\n"
-    "          map.addLayer(layerMapnik);\n"
+    "          std::map.addLayer(layerMapnik);\n"
     "\n"
     "          var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection(\"EPSG:4326\"), new OpenLayers.Projection(\"EPSG:900913\"));\n"
     "\n"
-    "          map.setCenter (lonLat, zoom);\n"
+    "          std::map.setCenter (lonLat, zoom);\n"
     "\n"
-    "          //Initialise the vector layer using OpenLayers.Format.OSM\n"
+    "          //Initialise the std::vector layer using OpenLayers.Format.OSM\n"
     "          var styleMap = new OpenLayers.StyleMap({\n"
     "              strokeColor: \"blue\",\n"
     "              strokeWidth: 10,\n"
@@ -1062,9 +1061,9 @@ int main(int argc, char* args[])
     "          layer.events.register(\"featuresadded\", layer,\n"
     "              make_remove_closure(div_id + \"_progressbar\"));\n"
     "\n"
-    "          map.addLayers([layer]);\n"
+    "          std::map.addLayers([layer]);\n"
     "\n"
-    "          return map;\n"
+    "          return std::map;\n"
     "      }\n"
     "\n"
     "      var maps = new Array();\n"
@@ -1094,13 +1093,13 @@ int main(int argc, char* args[])
     "<div id=\"map_node_7_progressbar\">Loading data ...</div>\n"
     "<form class=\"map_descriptor\" action=\"map_node_7\">\n"
     "  <input type=\"hidden\" name=\"url\" value=\"interpreter?data=node%287%29%3Bout+skel%3B\"/>\n"
-    "  <input type=\"hidden\" name=\"lat\" value=\""<<setprecision(7)<<fixed<<10 + 0.5/pattern_size<<"\"/>\n"
-    "  <input type=\"hidden\" name=\"lon\" value=\""<<setprecision(7)<<fixed<<1 + 6.5/pattern_size<<"\"/>\n"
+    "  <input type=\"hidden\" name=\"lat\" value=\""<<std::setprecision(7)<<std::fixed<<10 + 0.5/pattern_size<<"\"/>\n"
+    "  <input type=\"hidden\" name=\"lon\" value=\""<<std::setprecision(7)<<std::fixed<<1 + 6.5/pattern_size<<"\"/>\n"
     "  <input type=\"hidden\" name=\"zoom\" value=\"17\"/>\n"
     "</form>\n"
     "</div>\n"
     "\n"
-    "<p>Node <strong>7</strong>, lat: "<<setprecision(7)<<fixed<<10 + 0.5/pattern_size<<", lon: "<<setprecision(7)<<fixed<<1 + 6.5/pattern_size<<",<br/>\n"
+    "<p>Node <strong>7</strong>, lat: "<<std::setprecision(7)<<std::fixed<<10 + 0.5/pattern_size<<", lon: "<<std::setprecision(7)<<std::fixed<<1 + 6.5/pattern_size<<",<br/>\n"
     "foo = bar<br/>\n"
     "\n"
     "<a href=\"http://www.openstreetmap.org/browse/node/7\">Browse on openstreetmap.org</a></p>\n"

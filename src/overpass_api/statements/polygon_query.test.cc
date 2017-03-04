@@ -27,10 +27,9 @@
 #include "query.h"
 
 
-using namespace std;
 
 
-void perform_polygon_print(string bounds, Transaction& transaction)
+void perform_polygon_print(std::string bounds, Transaction& transaction)
 {
   try
   {
@@ -52,13 +51,13 @@ void perform_polygon_print(string bounds, Transaction& transaction)
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
-void perform_query_polygon_print(string bounds, string type, Transaction& transaction)
+void perform_query_polygon_print(std::string bounds, std::string type, Transaction& transaction)
 {
   try
   {
@@ -91,7 +90,7 @@ void perform_query_polygon_print(string bounds, string type, Transaction& transa
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
@@ -101,99 +100,99 @@ int main(int argc, char* args[])
 {
   if (argc < 4)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    std::cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
     return 0;
   }
-  string test_to_execute = args[1];
+  std::string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
 
   Nonsynced_Transaction transaction(false, false, args[3], "");
-  
-  cout<<
+
+  std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm>\n";
-    
+
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
-    ostringstream bounds;
-    bounds<<fixed<<setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 14.9*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 19*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 14.9*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 19*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 19.1*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 15*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 19.1*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 15*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' ';
+    std::ostringstream bounds;
+    bounds<<std::fixed<<std::setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 14.9*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 19*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 14.9*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 19*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 19.1*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 15*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 19.1*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 15*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' ';
     perform_polygon_print(bounds.str(), transaction);
   }
   if ((test_to_execute == "") || (test_to_execute == "2"))
   {
-    ostringstream bounds;
-    bounds<<fixed<<setprecision(7)<<50.0 - (20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + (60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<80.0 - (90.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<105.0 - (120.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<80.0<<' '
-          <<fixed<<setprecision(7)<<-120<<' ';
+    std::ostringstream bounds;
+    bounds<<std::fixed<<std::setprecision(7)<<50.0 - (20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + (60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<80.0 - (90.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<105.0 - (120.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<80.0<<' '
+          <<std::fixed<<std::setprecision(7)<<-120<<' ';
     perform_polygon_print(bounds.str(), transaction);
   }
   if ((test_to_execute == "") || (test_to_execute == "3"))
   {
-    ostringstream bounds;
-    bounds<<fixed<<setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 14.9*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 19*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 14.9*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 19*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 19.1*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 15*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 19.1*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<30.0 + 15*(20.0/2.0/pattern_size)<<' '
-          <<fixed<<setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' ';
+    std::ostringstream bounds;
+    bounds<<std::fixed<<std::setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 14.9*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 11*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 19*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 14.9*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 19*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 23*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 19.1*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 23*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 15*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 19.1*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<30.0 + 15*(20.0/2.0/pattern_size)<<' '
+          <<std::fixed<<std::setprecision(7)<<-120 + 11*(60.0/2.0/pattern_size)<<' ';
     perform_query_polygon_print(bounds.str(), "node", transaction);
   }
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
-    ostringstream bounds;
-    bounds<<fixed<<setprecision(7)<<-10.0<<' '
-          <<fixed<<setprecision(7)<<45.0<<' '
-          <<fixed<<setprecision(7)<<-10.0<<' '
-          <<fixed<<setprecision(7)<<75.0<<' '
-          <<fixed<<setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
-          <<fixed<<setprecision(7)<<75.0 + 120.0/2.0/pattern_size<<' '
-          <<fixed<<setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
-          <<fixed<<setprecision(7)<<45.0<<' ';
+    std::ostringstream bounds;
+    bounds<<std::fixed<<std::setprecision(7)<<-10.0<<' '
+          <<std::fixed<<std::setprecision(7)<<45.0<<' '
+          <<std::fixed<<std::setprecision(7)<<-10.0<<' '
+          <<std::fixed<<std::setprecision(7)<<75.0<<' '
+          <<std::fixed<<std::setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
+          <<std::fixed<<std::setprecision(7)<<75.0 + 120.0/2.0/pattern_size<<' '
+          <<std::fixed<<std::setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
+          <<std::fixed<<std::setprecision(7)<<45.0<<' ';
     perform_query_polygon_print(bounds.str(), "way", transaction);
   }
   if ((test_to_execute == "") || (test_to_execute == "5"))
   {
-    ostringstream bounds;
-    bounds<<fixed<<setprecision(7)<<-10.0<<' '
-          <<fixed<<setprecision(7)<<45.0<<' '
-          <<fixed<<setprecision(7)<<-10.0<<' '
-          <<fixed<<setprecision(7)<<75.0<<' '
-          <<fixed<<setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
-          <<fixed<<setprecision(7)<<75.0 + 120.0/2.0/pattern_size<<' '
-          <<fixed<<setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
-          <<fixed<<setprecision(7)<<45.0<<' ';
+    std::ostringstream bounds;
+    bounds<<std::fixed<<std::setprecision(7)<<-10.0<<' '
+          <<std::fixed<<std::setprecision(7)<<45.0<<' '
+          <<std::fixed<<std::setprecision(7)<<-10.0<<' '
+          <<std::fixed<<std::setprecision(7)<<75.0<<' '
+          <<std::fixed<<std::setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
+          <<std::fixed<<std::setprecision(7)<<75.0 + 120.0/2.0/pattern_size<<' '
+          <<std::fixed<<std::setprecision(7)<<-10.0 + 90.0/pattern_size<<' '
+          <<std::fixed<<std::setprecision(7)<<45.0<<' ';
     perform_query_polygon_print(bounds.str(), "relation", transaction);
   }
-  
-  cout<<"</osm>\n";
+
+  std::cout<<"</osm>\n";
   return 0;
 }
