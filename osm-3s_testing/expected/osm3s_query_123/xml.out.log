@@ -1,4 +1,4 @@
-<osm-script output="custom">
+<osm-script output="custom" output-config="">
   <query into="_" type="node">
     <has-kv k="key" modv="" v="value"/>
   </query>

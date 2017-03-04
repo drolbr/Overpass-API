@@ -30,14 +30,46 @@ class Union_Statement : public Output_Statement
 {
   public:
     Union_Statement(int line_number_, const map< string, string >& input_attributes,
-                    Query_Constraint* bbox_limitation = 0);
+                    Parsed_Query& global_settings);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "union"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Union_Statement() {}
     
     static Generic_Statement_Maker< Union_Statement > statement_maker;
-
+    
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<union" + dump_xml_result_name() + ">\n";
+      
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += *it ? (*it)->dump_xml(indent + "  ") : "";
+      
+      return result + indent + "</union>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string& indent) const
+    {
+      std::string result = indent + "(";
+  
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += (*it)->dump_compact_ql(indent) + ";";
+      result += ")";
+  
+      return result + dump_ql_result_name();
+    }
+    
+    virtual std::string dump_pretty_ql(const std::string& indent) const
+    {
+      std::string result = indent + "(";
+    
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
+      result += "\n)";
+  
+      return result + dump_ql_result_name();
+    }
+    
   private:
     std::vector< Statement* > substatements;
 };

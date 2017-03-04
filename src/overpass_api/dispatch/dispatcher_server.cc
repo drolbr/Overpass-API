@@ -328,8 +328,10 @@ int main(int argc, char* argv[])
   {
     try
     {
+      time_t now = time(0); 
       uint32 client_token = probe_client_token();
       cout<<"Connected as: "<<client_token<<'\n';
+      cout<<"Current time: "<<to_date(now)<<'\n';
       
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
@@ -339,7 +341,7 @@ int main(int argc, char* argv[])
         cout<<(status.rate_limit - status.slot_starts.size() - status.queries.size())<<" slots available now.\n";
       for (std::vector< time_t >::const_iterator it = status.slot_starts.begin(); it != status.slot_starts.end();
           ++it)
-        cout<<"Slot available after: "<<to_date(*it)<<'\n';
+        cout<<"Slot available after: "<<to_date(*it)<<", in "<<*it - now<<" seconds.\n";
       cout<<"Currently running queries (pid, space limit, time limit, start time):\n";
       for (std::vector< Running_Query >::const_iterator it = status.queries.begin(); it != status.queries.end(); ++it)
         cout<<it->pid<<'\t'<<it->max_space<<'\t'<<it->max_time<<'\t'<<to_date(it->start_time)<<'\n';
@@ -350,7 +352,7 @@ int main(int argc, char* argv[])
     }
     return 0;
   }
-  else if (max_allowed_space > 0 || max_allowed_time_units > 0 || rate_limit > -1)
+  else if (db_dir == "" && (max_allowed_space > 0 || max_allowed_time_units > 0 || rate_limit > -1))
   {
     try
     {
@@ -453,13 +455,18 @@ int main(int argc, char* argv[])
   {
     Logger logger(db_dir);
     Default_Dispatcher_Logger disp_logger(logger);
+    if (max_allowed_space <= 0)
+      max_allowed_space = areas ? area_settings().total_available_space : osm_base_settings().total_available_space;
+    if (max_allowed_time_units <= 0)
+      max_allowed_time_units = areas ? area_settings().total_available_time_units
+          : osm_base_settings().total_available_time_units;
     Dispatcher dispatcher
         (areas ? area_settings().shared_name : osm_base_settings().shared_name,
          "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
 	 areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
 	 areas ? area_settings().purge_timeout : osm_base_settings().purge_timeout,
-	 areas ? area_settings().total_available_space : osm_base_settings().total_available_space,
-	 areas ? area_settings().total_available_time_units : osm_base_settings().total_available_time_units,
+	 max_allowed_space,
+	 max_allowed_time_units,
 	 files_to_manage, &disp_logger);
     if (rate_limit > -1)
       dispatcher.set_rate_limit(rate_limit);

@@ -89,7 +89,7 @@ void set_limits(uint32 time, uint64 space)
 
 Dispatcher_Stub::Dispatcher_Stub
     (string db_dir_, Error_Output* error_output_, string xml_raw, meta_modes meta_, int area_level,
-     uint32 max_allowed_time, uint64 max_allowed_space)
+     uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
       transaction(0), area_transaction(0), rman(0), meta(meta_)
@@ -268,11 +268,11 @@ Dispatcher_Stub::Dispatcher_Stub
 	}
       }
 
-      rman = new Resource_Manager(*transaction, area_level == 2 ? error_output : 0,
+      rman = new Resource_Manager(*transaction, global_settings, area_level == 2 ? error_output : 0,
 	  *area_transaction, this, area_level == 2 ? new Area_Updater(*area_transaction) : 0);
     }
     else
-      rman = new Resource_Manager(*transaction, this, error_output);
+      rman = new Resource_Manager(*transaction, &global_settings, this, error_output);
   }
   else
   {
@@ -284,11 +284,11 @@ Dispatcher_Stub::Dispatcher_Stub
     if (area_level > 0)
     {
       area_transaction = new Nonsynced_Transaction(area_level == 2, false, db_dir, "");
-      rman = new Resource_Manager(*transaction, area_level == 2 ? error_output : 0,
+      rman = new Resource_Manager(*transaction, global_settings, area_level == 2 ? error_output : 0,
 	  *area_transaction, this, area_level == 2 ? new Area_Updater(*area_transaction) : 0);
     }
     else
-      rman = new Resource_Manager(*transaction, this, error_output);
+      rman = new Resource_Manager(*transaction, &global_settings, this, error_output);
     
     {
       ifstream version((db_dir + "osm_base_version").c_str());
@@ -335,6 +335,9 @@ Dispatcher_Stub::~Dispatcher_Stub()
     {
       ostringstream out;
       out<<"read_finished() start "<<global_read_counter();
+      if (rman)
+        for (std::vector< uint64 >::const_iterator it = rman->cpu_time().begin(); it != rman->cpu_time().end(); ++it)
+            out<<' '<<*it;
       logger.annotated_log(out.str());
       dispatcher_client->read_finished();
       logger.annotated_log("read_finished() end");

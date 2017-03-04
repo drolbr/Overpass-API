@@ -321,12 +321,17 @@ void indexed_set_union(map< TIndex, vector< TObject > >& result,
   for (typename map< TIndex, vector< TObject > >::iterator
       it = summand.begin(); it != summand.end(); ++it)
   {
-    sort(it->second.begin(), it->second.end());
+    vector< TObject >& target = result[it->first];
+    if (target.empty())
+    {
+      target = it->second;
+      continue;
+    }
+    
     vector< TObject > other;
-    other.swap(result[it->first]);
-    sort(other.begin(), other.end());
+    other.swap(target);
     set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-	      back_inserter(result[it->first]));
+	      back_inserter(target));
   }
 }
 

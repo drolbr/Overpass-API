@@ -77,12 +77,12 @@ bool Print_Control::print_allowed(uint id, int variant) const
   {
     if (variant == 1 || variant == 4)
     {
-      if (id > pattern_size*pattern_size || (id-1) % pattern_size >= pattern_size/2)
+      if (id > pattern_size*pattern_size/2 || (id-1) % pattern_size >= pattern_size/2)
         return false;
     }
     else if (variant == 2 || variant == 5)
     {
-      if (id > pattern_size*pattern_size || id % pattern_size > pattern_size/2)
+      if (id > pattern_size*pattern_size/2 || id % pattern_size > pattern_size/2)
         return false;
     }
     else if (variant == 3 || variant == 6)
@@ -316,7 +316,7 @@ int main(int argc, char* args[])
   "<meta osm_base=\"mock-up-init\"/>\n\n";
     
   if (bbox_limited)
-    std::cout<<"  <bounds minlat=\"10\" minlon=\"1\" maxlat=\"10.5\" maxlon=\"1.5\"/>\n\n";
+    std::cout<<"  <bounds minlat=\"10.0000000\" minlon=\"1.0000000\" maxlat=\"10.5000000\" maxlon=\"1.5000000\"/>\n\n";
 
   if (pattern == before)
   {

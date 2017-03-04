@@ -24,7 +24,6 @@
 #include <vector>
 #include "statement.h"
 
-using namespace std;
 
 // Tries to make an area from the ways in the "from"-set.
 // It assumes that
@@ -39,7 +38,7 @@ class Make_Area_Statement : public Output_Statement
 {
   public:
     Make_Area_Statement(int line_number_, const map< string, string >& attributes,
-                        Query_Constraint* bbox_limitation = 0);
+                        Parsed_Query& global_settings);
     virtual string get_name() const { return "make-area"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Make_Area_Statement() {}    
@@ -53,7 +52,7 @@ class Make_Area_Statement : public Output_Statement
     static pair< uint32, Uint64 > detect_pivot(const Set& pivot);
     static Node::Id_Type check_node_parity(const Set& pivot);
     static pair< Node::Id_Type, Way::Id_Type > create_area_blocks
-        (map< Uint31_Index, vector< Area_Block > >& areas,
+        (map< Uint31_Index, vector< Area_Block > >& areas, bool& wraps_around_date_line,
 	 uint32 id, const Set& pivot);
     static uint32 shifted_lat(uint32 ll_index, uint64 coord);
     static int32 lon_(uint32 ll_index, uint64 coord);

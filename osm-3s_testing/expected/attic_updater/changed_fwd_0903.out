@@ -1108,25 +1108,15 @@
     <member type="relation" ref="1171" role="initial"/>
     <tag k="purpose" v="meta"/>
   </relation>
-  <relation id="16412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="16412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18412" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
 
 </osm>

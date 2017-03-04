@@ -71,7 +71,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
       dest_file.insert_block(dest_it, buf, src_it.block_it->max_keysize);
       ++src_it;
       dest_it = dest_file.discrete_end();
-    }    
+    }
   }
   catch (File_Error e)
   {
@@ -91,9 +91,9 @@ void clone_map_file(const File_Properties& file_prop, Transaction& transaction, 
     Random_File_Index dest_idx(file_prop, true, false, dest_db_dir, "");
     Random_File< Key, TIndex > dest_file(&dest_idx);
     
-    for (vector< uint32 >::size_type i = 0; i < src_idx.blocks.size(); ++i)
+    for (vector< uint32 >::size_type i = 0; i < src_idx.get_blocks().size(); ++i)
     {
-      if (src_idx.blocks[i].pos != src_idx.npos)
+      if (src_idx.get_blocks()[i].pos != src_idx.npos)
       {
 	for (uint32 j = 0; j < src_idx.get_block_size()*src_idx.get_compression_factor()/TIndex::max_size_of(); ++j)
 	{

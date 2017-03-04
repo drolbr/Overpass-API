@@ -186,8 +186,9 @@ int main(int argc, char *argv[])
   try
   {
     // open read transaction and log this.
+    Parsed_Query global_settings;
     Dispatcher_Stub dispatcher(db_dir, error_output, "-- consistency check --\n", keep_meta, area_level,
-			       24*60*60, 1024*1024*1024);
+			       24*60*60, 1024*1024*1024, global_settings);
     Resource_Manager& rman = dispatcher.resource_manager();
     
     // perform check
@@ -219,8 +220,8 @@ int main(int argc, char *argv[])
       cout<<"ways_meta address "<<index_base<<'\n';
       File_Blocks_Index< Uint31_Index >* index = (File_Blocks_Index< Uint31_Index >*)index_base;
       cout<<"ways_meta";
-      for (int i = 0; i < (int)index->void_blocks.size(); ++i)
-	cout<<' '<<index->void_blocks[i].first<<' '<<index->void_blocks[i].second;
+      for (int i = 0; i < (int)index->get_void_blocks().size(); ++i)
+	cout<<' '<<index->get_void_blocks()[i].first<<' '<<index->get_void_blocks()[i].second;
       cout<<'\n';
       Flat_Meta_Collector< Uint31_Index, Way::Id_Type > meta_collector
           (*rman.get_transaction(), props);

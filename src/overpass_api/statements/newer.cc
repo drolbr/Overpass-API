@@ -27,7 +27,6 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
 
 //-----------------------------------------------------------------------------
 
@@ -54,7 +53,7 @@ void newer_filter_map
   if (modify.empty())
     return;
   Meta_Collector< TIndex, typename TObject::Id_Type > meta_collector
-      (modify, *rman.get_transaction(), file_properties, false);
+      (modify, *rman.get_transaction(), file_properties);
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
   {
@@ -82,9 +81,9 @@ void newer_filter_map_attic
     return;
   
   Meta_Collector< TIndex, typename TObject::Id_Type > current_meta_collector
-      (modify, *rman.get_transaction(), current_file_properties, false);
+      (modify, *rman.get_transaction(), current_file_properties);
   Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
-      (modify, *rman.get_transaction(), attic_file_properties, false);
+      (modify, *rman.get_transaction(), attic_file_properties);
       
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
@@ -129,7 +128,7 @@ void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Se
 Generic_Statement_Maker< Newer_Statement > Newer_Statement::statement_maker("newer");
 
 Newer_Statement::Newer_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_), than_timestamp(0)
 {
   map< string, string > attributes;

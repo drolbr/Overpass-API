@@ -39,7 +39,7 @@ bool Coord_Query_Statement::is_used_ = false;
 Generic_Statement_Maker< Coord_Query_Statement > Coord_Query_Statement::statement_maker("coord-query");
 
 Coord_Query_Statement::Coord_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   is_used_ = true;

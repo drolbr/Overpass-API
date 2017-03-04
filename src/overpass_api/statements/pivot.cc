@@ -233,7 +233,7 @@ void Pivot_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestam
 //-----------------------------------------------------------------------------
 
 Pivot_Statement::Pivot_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   map< string, string > attributes;

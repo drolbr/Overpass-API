@@ -144,48 +144,79 @@ void formulate_range_query
 }
 
 
-template< class TIndex, class TObject >
-void generate_ids_by_coarse
-  (std::set< TIndex >& coarse_indices,
-   std::map< uint32, std::vector< typename TObject::Id_Type > >& ids_by_coarse,
-   const std::map< TIndex, std::vector< TObject > >& items)
+template< class Value >
+void formulate_range_query
+    (std::set< std::pair< Tag_Index_Local, Tag_Index_Local > >& range_set,
+     const std::map< uint32, Value >& coarse_indices)
 {
-  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
-    it(items.begin()); it != items.end(); ++it)
+  for (typename std::map< uint32, Value >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
   {
-    coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
-    std::vector< typename TObject::Id_Type >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
-    
-    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      ids_by_coarse_.push_back(it2->id);
-    
-    std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
-    ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
+    Tag_Index_Local lower, upper;
+    lower.index = it->first;
+    lower.key = "";
+    lower.value = "";
+    upper.index = it->first + 1;
+    upper.key = "";
+    upper.value = "";
+    range_set.insert(std::make_pair(lower, upper));
   }
 }
 
 
 template< class TIndex, class TObject >
 void generate_ids_by_coarse
-  (std::set< TIndex >& coarse_indices,
-   std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >& ids_by_coarse,
+  (std::map< uint32, std::vector< typename TObject::Id_Type > >& ids_by_coarse,
    const std::map< TIndex, std::vector< TObject > >& items)
 {
   for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
     it(items.begin()); it != items.end(); ++it)
   {
-    coarse_indices.insert(TIndex(it->first.val() & 0x7fffff00));
+    std::vector< typename TObject::Id_Type >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
+    
+    for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
+        it2 != it->second.end(); ++it2)
+      ids_by_coarse_.push_back(it2->id);
+  }
+  
+  for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+  {
+    std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
+    std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
+    ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
+  }
+  for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    std::sort(it->second.begin(), it->second.end());
+}
+
+
+template< class TIndex, class TObject >
+void generate_ids_by_coarse
+  (std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >& ids_by_coarse,
+   const std::map< TIndex, std::vector< TObject > >& items)
+{
+  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
+    it(items.begin()); it != items.end(); ++it)
+  {
     std::vector< Attic< typename TObject::Id_Type > >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
     
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       ids_by_coarse_.push_back
           (Attic< typename TObject::Id_Type >(it2->id, it2->timestamp));
-    
+  }
+  
+  for (typename std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >::iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+  {
+    std::vector< Attic< typename TObject::Id_Type > >& ids_by_coarse_ = it->second;
     std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
     ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
   }
+  for (typename std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >::iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    std::sort(it->second.begin(), it->second.end());
 }
 
 

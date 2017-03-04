@@ -21,7 +21,24 @@
 
 #include <sstream>
 
-using namespace std;
+
+Resource_Manager::Resource_Manager(
+    Transaction& transaction_, Parsed_Query* global_settings_, Watchdog_Callback* watchdog_,
+    Error_Output* error_output_)
+      : transaction(&transaction_), error_output(error_output_),
+        area_transaction(0), area_updater_(0),
+        watchdog(watchdog_), global_settings(global_settings_), global_settings_owned(false),
+	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
+	max_allowed_time(0), max_allowed_space(0),
+	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW)
+{
+  if (!global_settings)
+  {
+    global_settings = new Parsed_Query();
+    global_settings_owned = true;
+  }
+}
+  
 
 uint count_set(const Set& set_)
 {
@@ -250,4 +267,21 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
     
     throw *error;
   }  
+}
+
+
+void Resource_Manager::start_cpu_timer(uint index)
+{
+  if (cpu_start_time.size() <= index)
+    cpu_start_time.resize(index+1, 0);
+  cpu_start_time[index] = clock()/1000;
+}
+
+
+void Resource_Manager::stop_cpu_timer(uint index)
+{
+  if (cpu_runtime.size() <= index)
+    cpu_runtime.resize(index+1, 0);
+  if (index < cpu_start_time.size())
+    cpu_runtime[index] += clock()/1000 - cpu_start_time[index];
 }

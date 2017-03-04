@@ -19,6 +19,7 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../data/bbox_filter.h"
 #include "../data/collect_members.h"
 #include "../data/meta_collector.h"
 #include "user.h"
@@ -58,7 +59,7 @@ void user_filter_map
     return;
   
   Meta_Collector< TIndex, typename TObject::Id_Type > meta_collector
-      (modify, *rman.get_transaction(), file_properties, false);
+      (modify, *rman.get_transaction(), file_properties);
       
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
@@ -87,9 +88,9 @@ void user_filter_map_attic
     return;
   
   Meta_Collector< TIndex, typename TObject::Id_Type > current_meta_collector
-      (modify, *rman.get_transaction(), current_file_properties, false);
+      (modify, *rman.get_transaction(), current_file_properties);
   Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
-      (modify, *rman.get_transaction(), attic_file_properties, false);
+      (modify, *rman.get_transaction(), attic_file_properties);
       
   for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
@@ -138,8 +139,8 @@ Generic_Statement_Maker< User_Statement > User_Statement::statement_maker("user"
 
 
 User_Statement::User_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation_)
-    : Output_Statement(line_number_), bbox_limitation(bbox_limitation_)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    : Output_Statement(line_number_), bbox_limitation(&global_settings.get_global_bbox_limitation())
 {
   map< string, string > attributes;
   
@@ -151,8 +152,7 @@ User_Statement::User_Statement
   for (map<string, string>::const_iterator it = input_attributes.begin();
       it != input_attributes.end(); ++it)
   {
-    if (it->first.find("name_") == 0 ||
-        it->first.find("uid_")  == 0)
+    if (it->first.find("name_") == 0 || it->first.find("uid_") == 0)
       attributes[it->first] = "";
   }
 
@@ -327,10 +327,14 @@ void User_Statement::execute(Resource_Manager& rman)
   }
   
   if (bbox_limitation)
-    bbox_limitation->filter(rman, into, rman.get_desired_timestamp());
-  constraint.filter(*this, rman, into, rman.get_desired_timestamp());
-  if (bbox_limitation)
-    bbox_limitation->filter(*this, rman, into, rman.get_desired_timestamp());
+  {
+    Bbox_Filter filter(*bbox_limitation);
+    filter.filter(into, rman.get_desired_timestamp());
+    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
+    filter.filter(*this, rman, into, rman.get_desired_timestamp());
+  }
+  else
+    constraint.filter(*this, rman, into, rman.get_desired_timestamp());  
 
   transfer_output(rman, into);
   rman.health_check(*this);

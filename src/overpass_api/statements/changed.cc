@@ -202,7 +202,7 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
 //-----------------------------------------------------------------------------
 
 Changed_Statement::Changed_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_), since(NOW), until(NOW), behave_trivial(false)
 {
   map< string, string > attributes;

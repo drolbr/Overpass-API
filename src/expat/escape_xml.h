@@ -21,8 +21,8 @@
 
 #include <string>
 
-using namespace std;
 
-string escape_xml(const string& s);
+std::string escape_xml(const std::string& s);
+
 
 #endif

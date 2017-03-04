@@ -2398,6 +2398,106 @@ struct Accept_Query_150 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_151 : public Accept_All_Tags
+{
+  Accept_Query_151(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const
+  { 
+    return id % 5 == 0 && pattern_size*pattern_size/4*5 < id && id < pattern_size*pattern_size/2*3
+      && id % pattern_size <= pattern_size/2 && id % pattern_size > 0;
+  }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_153 : public Accept_All_Tags
+{
+  Accept_Query_153(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return id == 18 || (id == 22 && pattern_size <= 362); }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_154 : public Accept_All_Tags
+{
+  Accept_Query_154(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return id % 5 == 0 && id < 100; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_155 : public Accept_All_Tags
+{
+  Accept_Query_155(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return id % 5 == 0 && id < 100; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_156 : public Accept_All_Tags
+{
+  Accept_Query_156(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return id % 5 == 0 && id % 4 != 3; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_157 : public Accept_All_Tags
+{
+  Accept_Query_157(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return id == 11; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_158 : public Accept_All_Tags
+{
+  Accept_Query_158(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return id == 11; }
+  virtual bool admit_relation(uint id) const { return false; }
+  
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_159 : public Accept_All_Tags
+{
+  Accept_Query_159(uint pattern_size_) : pattern_size(pattern_size_) {}
+  
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return id == 11; }
+  
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -3389,6 +3489,24 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_149(pattern_size);
     else if (string(args[2]) == "query_150")
       modifier = new Accept_Query_150(pattern_size);
+    else if (string(args[2]) == "query_151")
+      modifier = new Accept_Query_151(pattern_size);
+    else if (string(args[2]) == "query_152")
+      modifier = new Accept_Query_28(pattern_size);
+    else if (string(args[2]) == "query_153")
+      modifier = new Accept_Query_153(pattern_size);
+    else if (string(args[2]) == "query_154")
+      modifier = new Accept_Query_154(pattern_size);
+    else if (string(args[2]) == "query_155")
+      modifier = new Accept_Query_155(pattern_size);
+    else if (string(args[2]) == "query_156")
+      modifier = new Accept_Query_156(pattern_size);
+    else if (string(args[2]) == "query_157")
+      modifier = new Accept_Query_157(pattern_size);
+    else if (string(args[2]) == "query_158")
+      modifier = new Accept_Query_158(pattern_size);
+    else if (string(args[2]) == "query_159")
+      modifier = new Accept_Query_159(pattern_size);
     else if (string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);
     else if (string(args[2]) == "union_2")
@@ -3541,6 +3659,556 @@ int main(int argc, char* args[])
     "    <tag k=\"relation_key_5\" v=\"relation_value_5\"/>\n"
     "  </relation>\n";
     
+    cout<<"</osm>\n";
+  }
+  else if ((argc > 2) && (string(args[2]).substr(0, 5) == "make_"))
+  {
+    cout<<
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<osm>\n";
+    
+    if (string(args[2]) == "make_1")
+      cout<<"  <one id=\"1\"/>\n";
+    if (string(args[2]) == "make_2")
+      cout<<"  <two id=\"1\"/>\n";
+    if (string(args[2]) == "make_3")
+      cout<<"  <into_target id=\"1\"/>\n";
+    if (string(args[2]) == "make_4")
+      cout<<
+      "  <with-tags id=\"1\">\n"
+      "    <tag k=\"single\" v=\"value\"/>\n"
+      "  </with-tags>\n";
+    if (string(args[2]) == "make_5")
+      cout<<
+      "  <with-tags id=\"1\">\n"
+      "    <tag k=\"not\" v=\"in\"/>\n"
+      "    <tag k=\"alphabetic\" v=\"order\"/>\n"
+      "  </with-tags>\n";
+    if (string(args[2]) == "make_6")
+      cout<<
+      "  <count-from-default id=\"2\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"5\"/>\n"
+      "    <tag k=\"members\" v=\"4\"/>\n"
+      "  </count-from-default>\n";
+    if (string(args[2]) == "make_7")
+      cout<<
+      "  <count-from-default id=\"2\">\n"
+      "    <tag k=\"nodes\" v=\"0\"/>\n"
+      "    <tag k=\"ways\" v=\"0\"/>\n"
+      "    <tag k=\"relations\" v=\"0\"/>\n"
+      "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"0\"/>\n"
+      "    <tag k=\"members\" v=\"0\"/>\n"
+      "  </count-from-default>\n";
+    if (string(args[2]) == "make_8")
+      cout<<
+      "  <count-from-foo id=\"2\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"5\"/>\n"
+      "    <tag k=\"members\" v=\"4\"/>\n"
+      "  </count-from-foo>\n";
+    if (string(args[2]) == "make_9")
+      cout<<
+      "  <test-and id=\"1\">\n"
+      "    <tag k=\"and\" v=\"0\"/>\n"
+      "  </test-and>\n";
+    if (string(args[2]) == "make_10")
+      cout<<
+      "  <test-and id=\"1\">\n"
+      "    <tag k=\"and\" v=\"0\"/>\n"
+      "  </test-and>\n";
+    if (string(args[2]) == "make_11")
+      cout<<
+      "  <test-and id=\"1\">\n"
+      "    <tag k=\"and\" v=\"1\"/>\n"
+      "  </test-and>\n";
+    if (string(args[2]) == "make_12")
+      cout<<
+      "  <test-and id=\"1\">\n"
+      "    <tag k=\"and\" v=\"0\"/>\n"
+      "  </test-and>\n";
+    if (string(args[2]) == "make_13")
+      cout<<
+      "  <test-or id=\"1\">\n"
+      "    <tag k=\"or\" v=\"1\"/>\n"
+      "  </test-or>\n";
+    if (string(args[2]) == "make_14")
+      cout<<
+      "  <test-or id=\"1\">\n"
+      "    <tag k=\"or\" v=\"1\"/>\n"
+      "  </test-or>\n";
+    if (string(args[2]) == "make_15")
+      cout<<
+      "  <test-or id=\"1\">\n"
+      "    <tag k=\"or\" v=\"1\"/>\n"
+      "  </test-or>\n";
+    if (string(args[2]) == "make_16")
+      cout<<
+      "  <test-or id=\"1\">\n"
+      "    <tag k=\"or\" v=\"0\"/>\n"
+      "  </test-or>\n";
+    if (string(args[2]) == "make_17")
+      cout<<
+      "  <test-not id=\"1\">\n"
+      "    <tag k=\"not\" v=\"1\"/>\n"
+      "  </test-not>\n";
+    if (string(args[2]) == "make_18")
+      cout<<
+      "  <test-not id=\"1\">\n"
+      "    <tag k=\"not\" v=\"0\"/>\n"
+      "  </test-not>\n";
+    if (string(args[2]) == "make_19")
+      cout<<
+      "  <test-not id=\"1\">\n"
+      "    <tag k=\"not\" v=\"0\"/>\n"
+      "  </test-not>\n";
+    if (string(args[2]) == "make_20")
+      cout<<
+      "  <test-not id=\"1\">\n"
+      "    <tag k=\"not\" v=\"1\"/>\n"
+      "  </test-not>\n";
+    if (string(args[2]) == "make_21")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"1\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_22")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"1\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_23")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"1\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_24")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"0\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_25")
+      cout<<
+      "  <test-equal id=\"1\">\n"
+      "    <tag k=\"equal\" v=\"0\"/>\n"
+      "  </test-equal>\n";
+    if (string(args[2]) == "make_26")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_27")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_28")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_29")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"0\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_30")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_31")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"0\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_32")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_33")
+      cout<<
+      "  <test-less id=\"1\">\n"
+      "    <tag k=\"less\" v=\"1\"/>\n"
+      "  </test-less>\n";
+    if (string(args[2]) == "make_34")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"1\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_35")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"0\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_36")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"1\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_37")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"1\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_38")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"0\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_39")
+      cout<<
+      "  <test-less-equal id=\"1\">\n"
+      "    <tag k=\"less-equal\" v=\"1\"/>\n"
+      "  </test-less-equal>\n";
+    if (string(args[2]) == "make_40")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"0\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_41")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"1\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_42")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"0\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_43")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"0\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_44")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"0\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_45")
+      cout<<
+      "  <test-greater id=\"1\">\n"
+      "    <tag k=\"greater\" v=\"1\"/>\n"
+      "  </test-greater>\n";
+    if (string(args[2]) == "make_46")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"0\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_47")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"1\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_48")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"1\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_49")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"0\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_50")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"1\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_51")
+      cout<<
+      "  <test-gr-equal id=\"1\">\n"
+      "    <tag k=\"greater-equal\" v=\"1\"/>\n"
+      "  </test-gr-equal>\n";
+    if (string(args[2]) == "make_52")
+      cout<<
+      "  <test-plus id=\"1\">\n"
+      "    <tag k=\"sum\" v=\"9\"/>\n"
+      "  </test-plus>\n";
+    if (string(args[2]) == "make_53")
+      cout<<
+      "  <test-plus id=\"1\">\n"
+      "    <tag k=\"sum\" v=\"10 \"/>\n"
+      "  </test-plus>\n";
+    if (string(args[2]) == "make_54")
+      cout<<
+      "  <test-plus id=\"1\">\n"
+      "    <tag k=\"sum\" v=\"11\"/>\n"
+      "  </test-plus>\n";
+    if (string(args[2]) == "make_55")
+      cout<<
+      "  <test-plus id=\"1\">\n"
+      "    <tag k=\"sum\" v=\" 12_\"/>\n"
+      "  </test-plus>\n";
+    if (string(args[2]) == "make_56")
+      cout<<
+      "  <test-plus id=\"1\">\n"
+      "    <tag k=\"sum\" v=\"100000000000000001\"/>\n"
+      "  </test-plus>\n";
+    if (string(args[2]) == "make_57")
+      cout<<
+      "  <test-times id=\"1\">\n"
+      "    <tag k=\"product\" v=\"13\"/>\n"
+      "  </test-times>\n";
+    if (string(args[2]) == "make_58")
+      cout<<
+      "  <test-times id=\"1\">\n"
+      "    <tag k=\"product\" v=\"NaN\"/>\n"
+      "  </test-times>\n";
+    if (string(args[2]) == "make_59")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"difference\" v=\"-3\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_60")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"difference\" v=\"NaN\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_61")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"difference\" v=\"1\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_62")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"negation\" v=\"-3.14\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_63")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"negation\" v=\"3\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_64")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"negation\" v=\"-100000000000000000\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_65")
+      cout<<
+      "  <test-minus id=\"1\">\n"
+      "    <tag k=\"negation\" v=\"NaN\"/>\n"
+      "  </test-minus>\n";
+    if (string(args[2]) == "make_66")
+      cout<<
+      "  <test-divided id=\"1\">\n"
+      "    <tag k=\"quotient\" v=\"0.88888888888889\"/>\n"
+      "  </test-divided>\n";
+    if (string(args[2]) == "make_67")
+      cout<<
+      "  <test-divided id=\"1\">\n"
+      "    <tag k=\"quotient\" v=\"NaN\"/>\n"
+      "  </test-divided>\n";
+    if (string(args[2]) == "make_68" || string(args[2]) == "make_69")
+      cout<<
+      "  <union-value id=\"1\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"unused_key\" v=\"\"/>\n"
+      "  </union-value>\n";
+    if (string(args[2]) == "make_70" || string(args[2]) == "make_71")
+      cout<<
+      "  <min-value id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"unused_key_7\" v=\"\"/>\n"
+      "  </min-value>\n";
+    if (string(args[2]) == "make_72" || string(args[2]) == "make_73")
+      cout<<
+      "  <max-value id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"unused_key_7\" v=\"\"/>\n"
+      "  </max-value>\n";
+    if (string(args[2]) == "make_74" || string(args[2]) == "make_75")
+      cout<<
+      "  <value-set id=\"1\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"unused_key_7\" v=\"\"/>\n"
+      "  </value-set>\n";
+    if (string(args[2]) == "make_76")
+      cout<<
+      "  <id-and-type id=\"1\">\n"
+      "    <tag k=\"id\" v=\"1;"<<global_node_offset + 1<<";"<<global_node_offset + 2<<"\"/>\n"
+      "    <tag k=\"type\" v=\"node;relation;way\"/>\n"
+      "  </id-and-type>\n";
+    if (string(args[2]) == "make_77")
+      cout<<
+      "  <key-id id=\"42\"/>\n";
+    if (string(args[2]) == "make_78")
+      cout<<
+      "  <key-id id=\""<<global_node_offset + 2<<"\"/>\n";
+    if (string(args[2]) == "make_79")
+      cout<<
+      "  <test-number id=\"1\">\n"
+      "    <tag k=\"nan\" v=\"NaN\"/>\n"
+      "    <tag k=\"three\" v=\"3\"/>\n"
+      "    <tag k=\"one_trillion\" v=\"1000000000000\"/>\n"
+      "    <tag k=\"minus_fourty-two\" v=\"-42\"/>\n"
+      "    <tag k=\"is_nan\" v=\"0\"/>\n"
+      "    <tag k=\"is_three\" v=\"1\"/>\n"
+      "    <tag k=\"is_one_trillion\" v=\"1\"/>\n"
+      "    <tag k=\"is_minus_fourty-two\" v=\"1\"/>\n"
+      "    <tag k=\"empty_isnt_num\" v=\"0\"/>\n"
+      "  </test-number>\n";
+    if (string(args[2]) == "make_80")
+      cout<<
+      "  <test-date id=\"1\">\n"
+      "    <tag k=\"year_only\" v=\"2006\"/>\n"
+      "    <tag k=\"year_month_day\" v=\"2012.587890625\"/>\n"
+      "    <tag k=\"full_iso\" v=\"2013.0671679527\"/>\n"
+      "    <tag k=\"nonsense\" v=\"NaD\"/>\n"
+      "    <tag k=\"is_year\" v=\"1\"/>\n"
+      "    <tag k=\"is_year_month_day\" v=\"1\"/>\n"
+      "    <tag k=\"is_full_iso\" v=\"1\"/>\n"
+      "    <tag k=\"is_nonsense\" v=\"0\"/>\n"
+      "    <tag k=\"empty_isnt_date\" v=\"0\"/>\n"
+      "  </test-date>\n";
+
+    cout<<"</osm>\n";
+  }
+  else if ((argc > 2) && (string(args[2]).substr(0, 8) == "convert_"))
+  {
+    cout<<
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<osm>\n";
+    
+    if (string(args[2]) == "convert_1" || string(args[2]) == "convert_3")
+      cout<<
+      "  <just-copy id=\"2\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "  </just-copy>\n"
+      "  <just-copy id=\"3\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "  </just-copy>\n"
+      "  <just-copy id=\"4\">\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </just-copy>\n"
+      "  <just-copy id=\"5\">\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "  </just-copy>\n"
+      "  <just-copy id=\"6\">\n"
+      "    <tag k=\"number\" v=\"1000\"/>\n"
+      "  </just-copy>\n";
+    if (string(args[2]) == "convert_4" || string(args[2]) == "convert_5")
+      cout<<
+      "  <into id=\"2\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "  </into>\n"
+      "  <into id=\"3\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "  </into>\n"
+      "  <into id=\"4\">\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </into>\n"
+      "  <into id=\"5\">\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "  </into>\n"
+      "  <into id=\"6\">\n"
+      "    <tag k=\"number\" v=\"1000\"/>\n"
+      "  </into>\n";
+    if (string(args[2]) == "convert_6")
+      cout<<
+      "  <rewrite id=\"2\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1\"/>\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n"
+      "  <rewrite id=\"3\">\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_2\"/>\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n"
+      "  <rewrite id=\"4\">\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n"
+      "  <rewrite id=\"5\">\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n"
+      "  <rewrite id=\"6\">\n"
+      "    <tag k=\"extra_key\" v=\"extra_value\"/>\n"
+      "  </rewrite>\n";
+    if (string(args[2]) == "convert_7")
+      cout<<
+      "  <count-from-default id=\"1\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"1\"/>\n"
+      "    <tag k=\"members\" v=\"0\"/>\n"
+      "  </count-from-default>\n"
+      "  <count-from-default id=\"2\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"2\"/>\n"
+      "    <tag k=\"members\" v=\"2\"/>\n"
+      "  </count-from-default>\n"
+      "  <count-from-default id=\"3\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"2\"/>\n"
+      "    <tag k=\"members\" v=\"2\"/>\n"
+      "  </count-from-default>\n";
+    if (string(args[2]) == "convert_8")
+      cout<<
+      "  <is-tag id=\"2\">\n"
+      "    <tag k=\"node_key\" v=\"1\"/>\n"
+      "    <tag k=\"way_key\" v=\"0\"/>\n"
+      "    <tag k=\"relation_key\" v=\"0\"/>\n"
+      "    <tag k=\"number\" v=\"0\"/>\n"
+      "  </is-tag>\n"
+      "  <is-tag id=\"3\">\n"
+      "    <tag k=\"node_key\" v=\"1\"/>\n"
+      "    <tag k=\"way_key\" v=\"0\"/>\n"
+      "    <tag k=\"relation_key\" v=\"0\"/>\n"
+      "    <tag k=\"number\" v=\"0\"/>\n"
+      "  </is-tag>\n"
+      "  <is-tag id=\"4\">\n"
+      "    <tag k=\"node_key\" v=\"0\"/>\n"
+      "    <tag k=\"way_key\" v=\"1\"/>\n"
+      "    <tag k=\"relation_key\" v=\"0\"/>\n"
+      "    <tag k=\"number\" v=\"0\"/>\n"
+      "  </is-tag>\n"
+      "  <is-tag id=\"5\">\n"
+      "    <tag k=\"node_key\" v=\"0\"/>\n"
+      "    <tag k=\"way_key\" v=\"0\"/>\n"
+      "    <tag k=\"relation_key\" v=\"1\"/>\n"
+      "    <tag k=\"number\" v=\"0\"/>\n"
+      "  </is-tag>\n"
+      "  <is-tag id=\"6\">\n"
+      "    <tag k=\"node_key\" v=\"0\"/>\n"
+      "    <tag k=\"way_key\" v=\"0\"/>\n"
+      "    <tag k=\"relation_key\" v=\"0\"/>\n"
+      "    <tag k=\"number\" v=\"1\"/>\n"
+      "  </is-tag>\n";
+
     cout<<"</osm>\n";
   }
   else

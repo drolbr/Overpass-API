@@ -121,12 +121,13 @@ int main(int argc, char *argv[])
   // connect to dispatcher and get database dir
   try
   {
+    Parsed_Query global_settings;
     if (clone_db_dir != "")
     {
       // open read transaction and log this.
       area_level = determine_area_level(error_output, area_level);
       Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --",
-				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024);
+				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024, global_settings);
       copy_file(dispatcher.resource_manager().get_transaction()->get_db_dir() + "/replicate_id",
 		clone_db_dir + "/replicate_id");
       
@@ -139,8 +140,8 @@ int main(int argc, char *argv[])
     if ((error_output) && (error_output->display_encoding_errors()))
       return 0;
     
-    Statement::Factory stmt_factory;
-    if (!parse_and_validate(stmt_factory, xml_raw, error_output, debug_level))
+    Statement::Factory stmt_factory(global_settings);
+    if (!parse_and_validate(stmt_factory, global_settings, xml_raw, error_output, debug_level))
       return 0;
     if (debug_level != parser_execute)
       return 0;
@@ -158,7 +159,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      Osm_Script_Statement temp(0, map< string, string >(), 0);
+      Osm_Script_Statement temp(0, map< string, string >(), global_settings);
       max_allowed_time = temp.get_max_allowed_time();
       max_allowed_space = temp.get_max_allowed_space();
     }
@@ -170,36 +171,24 @@ int main(int argc, char *argv[])
     // open read transaction and log this.
     area_level = determine_area_level(error_output, area_level);
     Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw,
-			       get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space);
+			       get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space,
+			       global_settings);
     if (osm_script && osm_script->get_desired_timestamp())
       dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
  
     Web_Output web_output(log_level);
-    if (!osm_script || osm_script->get_type() == "xml")
-      web_output.write_xml_header
-          (dispatcher.get_timestamp(),
-	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
-    else if (osm_script->get_type() == "json")
-      web_output.write_json_header
-          (dispatcher.get_timestamp(),
-	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
-    else
-      ;
+    web_output.set_output_handler(global_settings.get_output_handler());
+    web_output.write_payload_header("", dispatcher.get_timestamp(),
+ 	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
     
-//   double timecounter = 0;
-//   timeval tv;
-//   gettimeofday(&tv, 0);
-//   timecounter -= tv.tv_sec + double(tv.tv_usec)/1000000;
-  
+    dispatcher.resource_manager().start_cpu_timer(0);
     for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
+    dispatcher.resource_manager().stop_cpu_timer(0);
     
-//   gettimeofday(&tv, 0);
-//   timecounter += tv.tv_sec + double(tv.tv_usec)/1000000;
-//   std::cerr<<timecounter<<'\n';
-    
-    if (osm_script && osm_script->get_type() == "custom")
+    //TODO
+    /*if (osm_script && osm_script->get_type() == "custom")
     {
       uint32 count = osm_script->get_written_elements_count();
       if (count == 0)
@@ -235,7 +224,7 @@ int main(int argc, char *argv[])
       osm_script->write_output();
       web_output.write_footer();
     }
-    else
+    else*/
       web_output.write_footer();
     
     return 0;

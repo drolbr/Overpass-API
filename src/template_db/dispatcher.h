@@ -21,27 +21,11 @@
 
 #include "file_tools.h"
 #include "types.h"
+#include "transaction_insulator.h"
 
 #include <map>
 #include <set>
 #include <vector>
-
-
-class Idx_Footprints
-{
-  public:
-    typedef uint pid_t;
-    
-    void set_current_footprint(const std::vector< bool >& footprint);
-    void register_pid(pid_t pid); 
-    void unregister_pid(pid_t pid); 
-    std::vector< pid_t > registered_processes() const;
-    std::vector< bool > total_footprint() const;
-    
-  private:
-    std::vector< bool > current_footprint;
-    std::map< pid_t, std::vector< bool > > footprint_per_pid;
-};
 
 
 /** Is called to log all operations of the dispatcher */
@@ -69,7 +53,7 @@ struct Reader_Entry
     : client_pid(client_pid_), max_space(max_space_), max_time(max_time_), start_time(start_time_),
       client_token(client_token_) {}
   
-  uint32 client_pid;
+  pid_t client_pid;
   uint64 max_space;
   uint32 max_time;
   uint32 start_time;
@@ -87,6 +71,15 @@ struct Quota_Entry
 };
 
 
+struct Pending_Client
+{
+  Pending_Client(pid_t pid_, uint32 first_seen_) : pid(pid_), first_seen(first_seen_) {}
+  
+  pid_t pid;
+  uint32 first_seen;
+};
+
+
 class Global_Resource_Planner
 {
 public:
@@ -99,10 +92,10 @@ public:
   
   // Returns true if the process is acceptable in terms of server load and quotas
   // In this case it is registered as running
-  int probe(uint32 pid, uint32 client_token, uint32 time_units, uint64 max_space);
+  int probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space);
 
   // Unregisters the process
-  void remove(uint32 pid);
+  void remove(pid_t pid);
 
   // Unregister all processes that don't have a connection anymore
   void purge(Connection_Per_Pid_Map& connection_per_pid);
@@ -122,6 +115,7 @@ public:
   uint64 get_average_claimed_space() const { return average_used_space; }
 
 private:
+  std::map< uint32, std::vector< Pending_Client > > pending;
   std::vector< Reader_Entry > active;
   std::vector< Quota_Entry > afterwards;
   uint32 global_used_time;
@@ -261,11 +255,9 @@ class Dispatcher
   private:
     Dispatcher_Socket socket;
     Connection_Per_Pid_Map connection_per_pid;
-    std::vector< File_Properties* > controlled_files;
-    std::vector< Idx_Footprints > data_footprints;
-    std::vector< Idx_Footprints > map_footprints;
+    Transaction_Insulator transaction_insulator;
     std::set< pid_t > processes_reading_idx;
-    std::string shadow_name, db_dir;
+    std::string shadow_name;
     std::string dispatcher_share_name;
     int dispatcher_shm_fd;
     volatile uint8* dispatcher_shm_ptr;
@@ -276,12 +268,6 @@ class Dispatcher
     uint32 requests_finished_counter;
     Global_Resource_Planner global_resource_planner;
     
-    void copy_shadows_to_mains();
-    void copy_mains_to_shadows();
-    void remove_shadows();
-    void set_current_footprints();
-    std::vector< pid_t > write_index_of_empty_blocks();
-    void check_and_purge();
     uint64 total_claimed_space() const;
     uint64 total_claimed_time_units() const;
 };

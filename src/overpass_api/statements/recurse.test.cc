@@ -20,17 +20,18 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
 #include "id_query.h"
 #include "print.h"
 #include "recurse.h"
 
-using namespace std;
 
 Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 id)
 {
   ostringstream buf("");
   buf<<id;
   string id_ = buf.str();
+  Parsed_Query global_settings;
   
   const char* attributes[5];
   attributes[0] = "type";
@@ -39,7 +40,7 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, string type, uint64 i
   attributes[3] = id_.c_str();
   attributes[4] = 0;
   
-  Id_Query_Statement stmt(1, convert_c_pairs(attributes));
+  Id_Query_Statement stmt(1, convert_c_pairs(attributes), global_settings);
   stmt.execute(rman);
   
   return rman;
@@ -56,6 +57,8 @@ int main(int argc, char* args[])
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
+  Parsed_Query global_settings;
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   
   cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -67,22 +70,22 @@ int main(int argc, char* args[])
     {
       // Collect the nodes of some small ways
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       for (uint32 i = 1; i <= pattern_size/2; ++i)
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
 	if (!rman.sets()["_"].ways.empty())
 	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
       }
       {
 	const char* attributes[] = { "type", "way-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -98,12 +101,12 @@ int main(int argc, char* args[])
     {
       // Collect the nodes of some large ways
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       uint way_id_offset = 2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2
           + pattern_size*(pattern_size/2-1);
       perform_id_query(total_rman, "way", way_id_offset + 1);
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	way_id_offset = pattern_size*(pattern_size/2-1);
 	perform_id_query(rman, "way", way_id_offset + 1);
 	if (!rman.sets()["_"].ways.empty())
@@ -111,12 +114,12 @@ int main(int argc, char* args[])
       }
       {
 	const char* attributes[] = { "type", "way-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -132,16 +135,16 @@ int main(int argc, char* args[])
     {
       // Recurse node-way: try a node without ways
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager rman(transaction);
+      Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", 1 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -157,16 +160,16 @@ int main(int argc, char* args[])
     {
       // Recurse node-way: try a node with a long way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager rman(transaction);
+      Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", pattern_size*pattern_size + pattern_size*3/2 + 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -182,12 +185,12 @@ int main(int argc, char* args[])
     {
       // Recurse node-way: try an entire bbox of nodes (without using bbox)
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       for (uint i = 0; i < pattern_size/2; ++i)
       {
 	for (uint j = 1; j <= pattern_size/2; ++j)
 	{
-	  Resource_Manager rman(transaction);
+	  Resource_Manager rman(transaction, &global_settings);
 	  perform_id_query(rman, "node", pattern_size*i + j + global_node_offset);
 	  if (!rman.sets()["_"].nodes.empty())
 	    total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
@@ -195,12 +198,12 @@ int main(int argc, char* args[])
       }
       {
 	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -216,22 +219,22 @@ int main(int argc, char* args[])
     {
       // Collect the nodes of some relations
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 2);
       {
-	Resource_Manager rman(transaction);
+	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", 3);
 	if (!rman.sets()["_"].relations.empty())
 	  total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
       }
       {
 	const char* attributes[] = { "type", "relation-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -247,16 +250,16 @@ int main(int argc, char* args[])
     {
       // Recurse node-relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager rman(transaction);
+      Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "node-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -272,16 +275,16 @@ int main(int argc, char* args[])
     {
       // Recurse relation-way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 8);
       {
 	const char* attributes[] = { "type", "relation-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -297,16 +300,16 @@ int main(int argc, char* args[])
     {
       // Recurse way-relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager rman(transaction);
+      Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "way", 1);
       {
 	const char* attributes[] = { "type", "way-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
     }
@@ -322,16 +325,16 @@ int main(int argc, char* args[])
     {
       // Recurse relation-way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 10);
       {
 	const char* attributes[] = { "type", "relation-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -347,16 +350,16 @@ int main(int argc, char* args[])
     {
       // Recurse relation-way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 2);
       {
 	const char* attributes[] = { "type", "relation-backwards", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -372,16 +375,16 @@ int main(int argc, char* args[])
     {
       // Recurse relation-way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
       {
 	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -397,16 +400,16 @@ int main(int argc, char* args[])
     {
       // Recurse down
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 6);
       {
 	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -422,16 +425,16 @@ int main(int argc, char* args[])
     {
       // Recurse down-rel with a recursive relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
       {
 	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -447,16 +450,16 @@ int main(int argc, char* args[])
     {
       // Recurse down-rel with a mixed relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 10);
       {
 	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -472,16 +475,16 @@ int main(int argc, char* args[])
     {
       // Recurse up
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", pattern_size + 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "up", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -497,16 +500,16 @@ int main(int argc, char* args[])
     {
       // Recurse up
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
       {
 	const char* attributes[] = { "type", "up", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -522,16 +525,16 @@ int main(int argc, char* args[])
     {
       // Recurse up-rel with a node
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", 2 + global_node_offset);
       {
 	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -547,16 +550,16 @@ int main(int argc, char* args[])
     {
       // Recurse up-rel with a way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 2);
       {
 	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -572,16 +575,16 @@ int main(int argc, char* args[])
     {
       // Recurse up-rel with a relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
       {
 	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -597,16 +600,16 @@ int main(int argc, char* args[])
     {
       // Recurse down with a way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
       {
 	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -622,16 +625,16 @@ int main(int argc, char* args[])
     {
       // Recurse down-rel with a way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
       {
 	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes));
+	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
       {
 	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes));
+	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
 	stmt.execute(total_rman);
       }
     }
@@ -647,16 +650,16 @@ int main(int argc, char* args[])
     {
       // Collect the nodes of some relations
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
       {
         const char* attributes[] = { "type", "relation-node", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -672,22 +675,22 @@ int main(int argc, char* args[])
     {
       // Recurse node-relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", 1 + global_node_offset);
       {
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         perform_id_query(rman, "node", 4 + global_node_offset);
         if (!rman.sets()["_"].nodes.empty())
           total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
       }
       {
         const char* attributes[] = { "type", "node-relation", "role", "zero", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -703,16 +706,16 @@ int main(int argc, char* args[])
     {
       // Recurse relation-way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 7);
       {
         const char* attributes[] = { "type", "relation-way", "role", "two", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -728,16 +731,16 @@ int main(int argc, char* args[])
     {
       // Recurse way-relation
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
       {
         const char* attributes[] = { "type", "way-relation", "role", "two", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -753,16 +756,16 @@ int main(int argc, char* args[])
     {
       // Recurse relation-way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
       {
         const char* attributes[] = { "type", "relation-relation", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }
@@ -778,22 +781,22 @@ int main(int argc, char* args[])
     {
       // Recurse relation-way
       Nonsynced_Transaction transaction(false, false, args[3], "");
-      Resource_Manager total_rman(transaction);
+      Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
       {
-        Resource_Manager rman(transaction);
+        Resource_Manager rman(transaction, &global_settings);
         perform_id_query(rman, "relation", 3);
         if (!rman.sets()["_"].relations.empty())
           total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
       }
       {
         const char* attributes[] = { "type", "relation-backwards", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes));
+        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
       {
         const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes));
+        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
         stmt.execute(total_rman);
       }
     }

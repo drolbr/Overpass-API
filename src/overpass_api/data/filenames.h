@@ -90,6 +90,9 @@ template< > inline File_Properties* current_local_tags_file_properties< Way_Skel
 template< > inline File_Properties* current_local_tags_file_properties< Relation_Skeleton >()
 { return osm_base_settings().RELATION_TAGS_LOCAL; }
 
+template< > inline File_Properties* current_local_tags_file_properties< Area_Skeleton >()
+{ return area_settings().AREA_TAGS_LOCAL; }
+
 
 
 template< typename Skeleton >

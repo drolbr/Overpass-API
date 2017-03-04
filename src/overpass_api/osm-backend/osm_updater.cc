@@ -170,7 +170,10 @@ namespace
       if (meta && (!strcmp(attr[i], "uid")))
 	meta->user_id = atoi(attr[i+1]);
     }
-    current_node = Node(id, lat, lon);
+    if (lat >= -90. && lat <= 90. && lon >= -180. && lon <= 180.)
+      current_node = Node(id, lat, lon);
+    else
+      current_node = Node(id, 100., 200.);
   }
   
   
@@ -434,26 +437,6 @@ const int WAY_MEMBERSHIP = 8;
 const int RELATION_MEMBERSHIP = 16;
 const int INDIRECT_MEMBERSHIP = 32;
 const int MEMBER_PROPERTIES = 64;
-
-
-int detect_changes(const Node& old_node, const Node& new_node,
-		   const vector< Node::Id_Type >& nodes_used_by_ways,
-		   const vector< Node::Id_Type >& nodes_used_by_relations,
-		   const vector< Node::Id_Type >& nodes_used_indirectly)
-{
-  int changes = 0;
-  if (old_node.index != new_node.index || old_node.ll_lower_ != new_node.ll_lower_)
-    changes |= GEOMETRY;
-  if (old_node.tags != new_node.tags)
-    changes |= TAGS;
-  if (binary_search(nodes_used_by_ways.begin(), nodes_used_by_ways.end(), old_node.id))
-    changes |= WAY_MEMBERSHIP;
-  if (binary_search(nodes_used_by_relations.begin(), nodes_used_by_relations.end(), old_node.id))
-    changes |= RELATION_MEMBERSHIP;
-  if (binary_search(nodes_used_indirectly.begin(), nodes_used_indirectly.end(), old_node.id))
-    changes |= INDIRECT_MEMBERSHIP;
-  return changes;
-}
 
 
 void Osm_Updater::finish_updater()

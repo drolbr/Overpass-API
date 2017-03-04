@@ -23,15 +23,17 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "../../expat/escape_json.h"
+#include "../../expat/escape_xml.h"
+#include "../data/utils.h"
 #include "statement.h"
 
-using namespace std;
 
 class User_Statement : public Output_Statement
 {
   public:
     User_Statement(int line_number_, const map< string, string >& input_attributes,
-                   Query_Constraint* bbox_limitation = 0);
+                   Parsed_Query& global_settings);
     virtual string get_name() const { return "user"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~User_Statement();
@@ -50,6 +52,59 @@ class User_Statement : public Output_Statement
     
     // Works only if get_id(Transaction&) has been called before.
     set< Uint32_Index > get_ids() const { return user_ids; }
+   
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<user" + std::string(" type=\"") + result_type + "\"";
+      
+      if (user_ids.size() == 1)
+        result += " uid=\"" + to_string(user_ids.begin()->val()) + "\"";
+      else
+      {
+        uint counter = 0;
+        for (std::set< Uint32_Index >::const_iterator it = user_ids.begin(); it != user_ids.end(); ++it)
+          result += " uid_" + to_string(++counter) + "=\"" + to_string(it->val()) + "\"";
+      }
+      
+      if (user_names.size() == 1)
+        result += " name=\"" + escape_xml(*user_names.begin()) + "\"";
+      else
+      {
+        uint counter = 0;
+        for (std::set< std::string >::const_iterator it = user_names.begin(); it != user_names.end(); ++it)
+          result += " name_" + to_string(++counter) + "=\"" + escape_xml(*it) + "\"";
+      }
+      
+      return result + dump_xml_result_name() + "/>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return result_type + dump_ql_in_query("") + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
+      std::string result = user_ids.empty() ? "(user:" : "(uid:";
+      
+      if (!user_ids.empty())
+      {
+        std::set< Uint32_Index >::const_iterator it = user_ids.begin();
+        result += to_string(it->val());
+        for (++it; it != user_ids.end(); ++it)
+          result += "," + to_string(it->val());
+      }
+      
+      if (!user_names.empty())
+      {
+        std::set< std::string >::const_iterator it = user_names.begin();
+        result += "\"" + escape_cstr(*it) + "\"";
+        for (++it; it != user_names.end(); ++it)
+          result += ",\"" + escape_cstr(*it) + "\"";
+      }
+      
+      return result + ")";
+    }
     
   private:
     string input;
@@ -57,7 +112,7 @@ class User_Statement : public Output_Statement
     set< string > user_names;
     string result_type;
     vector< Query_Constraint* > constraints;
-    Query_Constraint* bbox_limitation;
+    const Bbox_Double* bbox_limitation;
 };
 
 #endif

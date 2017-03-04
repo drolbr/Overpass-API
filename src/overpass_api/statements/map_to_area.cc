@@ -26,7 +26,7 @@ Generic_Statement_Maker< Map_To_Area_Statement > Map_To_Area_Statement::statemen
 bool Map_To_Area_Statement::is_used_ = false;
 
 Map_To_Area_Statement::Map_To_Area_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   is_used_ = true;

@@ -204,7 +204,7 @@ void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max
   
   uint counter = 0;
   uint32 ack = 0;
-  while (++counter <= 50)
+  while (ack == 0 && ++counter <= 100)
   {
     send_message(Dispatcher::REQUEST_READ_AND_IDX,
 		 "Dispatcher_Client::request_read_and_idx::socket::1");
@@ -213,7 +213,7 @@ void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max
     send_message(client_token, "Dispatcher_Client::request_read_and_idx::socket::4");
     
     ack = ack_arrived();
-    if (ack != 0 && ack != Dispatcher::RATE_LIMITED)
+    if (ack == Dispatcher::REQUEST_READ_AND_IDX)
       return;
     
     millisleep(300);

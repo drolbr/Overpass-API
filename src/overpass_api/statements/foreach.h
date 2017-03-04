@@ -31,7 +31,7 @@ class Foreach_Statement : public Statement
 {
   public:
     Foreach_Statement(int line_number_, const map< string, string >& attributes,
-                      Query_Constraint* bbox_limitation = 0);
+                      Parsed_Query& global_settings);
     virtual void add_statement(Statement* statement, string text);
     virtual string get_name() const { return "foreach"; }
     virtual string get_result_name() const { return ""; }
@@ -39,6 +39,42 @@ class Foreach_Statement : public Statement
     virtual ~Foreach_Statement() {}
     
     static Generic_Statement_Maker< Foreach_Statement > statement_maker;
+    
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<foreach"
+          + (input != "_" ? " from=\"" + input + "\"" : "")
+          + (output != "_" ? " into=\"" + output + "\"" : "") + ">\n";
+      
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += *it ? (*it)->dump_xml(indent + "  ") : "";
+      
+      return result + indent + "</foreach>\n";
+    }
+  
+    virtual std::string dump_compact_ql(const std::string& indent) const
+    {
+      std::string result = indent + "foreach"
+          + (input != "_" ? "." + input : "") + (output != "_" ? "->." + output : "") + "(";
+  
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += (*it)->dump_compact_ql(indent) + ";";
+      result += ")";
+  
+      return result;
+    }
+    
+    virtual std::string dump_pretty_ql(const std::string& indent) const
+    {
+      std::string result = indent + "foreach"
+          + (input != "_" ? "." + input : "") + (output != "_" ? "->." + output : "") + "(";
+    
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
+      result += "\n)";
+  
+      return result;
+    }
     
   private:
     string input, output;

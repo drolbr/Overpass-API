@@ -25,7 +25,6 @@
 #include "../core/settings.h"
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
-#include "../data/geometry.h"
 #include "area_query.h"
 #include "coord_query.h"
 #include "make_area.h"
@@ -249,7 +248,7 @@ bool covers_large_area(const std::vector< std::pair< double, double > >& edges)
 
 
 Polygon_Query_Statement::Polygon_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   map< string, string > attributes;
@@ -262,7 +261,6 @@ Polygon_Query_Statement::Polygon_Query_Statement
   set_output(attributes["into"]);
   
   //convert bounds
-  std::vector< std::pair< double, double > > edges;
   std::istringstream in(attributes["bounds"]);
   while (in.good())
   {
