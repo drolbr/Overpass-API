@@ -476,11 +476,11 @@ they cannot take an input set as extra argument.
 
 The syntax for tags is
 
-  count(tags)
+  count_tags()
 
 The syntax for members is
 
-  count(members)
+  count_members()
 */
 
 class Evaluator_Properties_Count : public Evaluator
