@@ -132,6 +132,8 @@ output_formats_cc = \
   overpass_api/output_formats/output_custom_factory.cc \
   overpass_api/output_formats/output_json.cc \
   overpass_api/output_formats/output_json_factory.cc \
+  overpass_api/output_formats/output_osmium.cc \
+  overpass_api/output_formats/output_osmium_factory.cc \
   overpass_api/output_formats/output_xml.cc \
   overpass_api/output_formats/output_xml_factory.cc \
   overpass_api/output_formats/output_popup_factory.cc
