@@ -44,7 +44,7 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
   if (!tree_it->lhs)
   {
     if (error_output)
-      error_output->add_parse_error("To std::set a property it must have a name to the left of the equal sign",
+      error_output->add_parse_error("To set a property it must have a name to the left of the equal sign",
           tree_it->line_col.first);
     return 0;
   }
@@ -52,7 +52,7 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
   if (!tree_it->rhs)
   {
     if (error_output)
-      error_output->add_parse_error("To std::set a property it must have a value to the right of the equal sign",
+      error_output->add_parse_error("To set a property it must have a value to the right of the equal sign",
           tree_it->line_col.first);
     return 0;
   }
@@ -70,7 +70,7 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
     else if (tree_context == Statement::in_convert)
       attributes["keytype"] = "generic";
     else if (error_output)
-      error_output->add_parse_error("The generic tag std::set property can only be called from convert",
+      error_output->add_parse_error("The generic tag set property can only be called from convert",
           tree_it->line_col.first);
   }
   else
@@ -116,13 +116,13 @@ Set_Prop_Statement::Set_Prop_Statement
     if (attributes["k"] != "")
       keys.push_back(attributes["k"]);
     else
-      add_static_error("For the statement \"std::set-prop\" in mode \"keytype\"=\"tag\", "
+      add_static_error("For the statement \"set-prop\" in mode \"keytype\"=\"tag\", "
           "the attribute \"k\" must be nonempty.");
   }
   else if (attributes["keytype"] == "id")
     set_id = true;
   else if (attributes["keytype"] != "generic")
-    add_static_error("For the attribute \"keytype\" of the element \"std::set-prop\""
+    add_static_error("For the attribute \"keytype\" of the element \"set-prop\""
         " the only allowed values are \"tag\", \"id\", or \"generic\".");
 }
 
@@ -133,7 +133,7 @@ void Set_Prop_Statement::add_statement(Statement* statement, std::string text)
   if (tag_value_ && !tag_value)
     tag_value = tag_value_;
   else if (tag_value)
-    add_static_error("std::set-prop must have exactly one evaluator substatement.");
+    add_static_error("set-prop must have exactly one evaluator substatement.");
   else
     substatement_error(get_name(), statement);
 }
@@ -142,7 +142,7 @@ void Set_Prop_Statement::add_statement(Statement* statement, std::string text)
 std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
 {
   if (!tag_value)
-    return indent + "<std::set-prop keytype=\"tag\" k=\"" + keys.front() + "\"/>\n";
+    return indent + "<set-prop keytype=\"tag\" k=\"" + keys.front() + "\"/>\n";
 
   std::string attributes;
   if (set_id)
@@ -151,9 +151,9 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
     attributes = " keytype=\"generic\"";
   else
     attributes = std::string(" keytype=\"tag\" k=\"") + keys.front() + "\"";
-  return indent + "<std::set-prop" + attributes + ">\n"
+  return indent + "<set-prop" + attributes + ">\n"
       + tag_value->dump_xml(indent + "  ")
-      + indent + "</std::set-prop>\n";
+      + indent + "</set-prop>\n";
 }
 
 

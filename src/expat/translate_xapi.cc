@@ -345,7 +345,7 @@ int main(int argc, char* argv[])
       return 1;
     }
   }
-  else if (input.substr(0, 9) == "std::map?bbox=")
+  else if (input.substr(0, 9) == "map?bbox=")
   {
     std::string south, north, east, west;
     input = input.substr(9);

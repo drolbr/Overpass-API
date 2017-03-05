@@ -211,7 +211,7 @@ Osm_Script_Statement::Osm_Script_Statement
     if (attributes["from"] == "")
     {
       std::ostringstream temp;
-      temp<<"The attribute \"augmented\" can only be std::set if the attribute \"from\" is std::set.";
+      temp<<"The attribute \"augmented\" can only be set if the attribute \"from\" is set.";
       add_static_error(temp.str());
     }
   }

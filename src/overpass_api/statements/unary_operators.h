@@ -220,7 +220,7 @@ struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_
     if (tree_it->token != "(")
     {
       if (error_output)
-        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) cannot have an input std::set",
+        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) cannot have an input set",
             tree_it->line_col.first);
       return 0;
     }

@@ -369,7 +369,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     std::ostringstream temp;
     temp<<"make-area: Node "<<odd_pair.first.val()
         <<" referred by way "<<odd_pair.second.val()
-        <<" is not contained in std::set \""<<input<<"\".\n";
+        <<" is not contained in set \""<<input<<"\".\n";
     runtime_remark(temp.str());
   }
 

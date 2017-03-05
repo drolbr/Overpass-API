@@ -70,7 +70,7 @@ struct IntIndex
 
 /* We use our own test settings */
 std::string BASE_DIRECTORY("./");
-std::string ID_SUFFIX(".std::map");
+std::string ID_SUFFIX(".map");
 
 
 struct Test_File : File_Properties

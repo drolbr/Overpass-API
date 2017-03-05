@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
         abort = true;
       }
     }
-    else if (!(strncmp(argv[argpos], "--std::map-compression-method=", 25)))
+    else if (!(strncmp(argv[argpos], "--map-compression-method=", 25)))
     {
       if (std::string(argv[argpos]).substr(25) == "no")
         basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
@@ -95,9 +95,9 @@ int main(int argc, char* argv[])
       else
       {
 #ifdef HAVE_LZ4
-        std::cerr<<"For --std::map-compression-method, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+        std::cerr<<"For --map-compression-method, please use \"no\", \"gz\", or \"lz4\" as value.\n";
 #else
-        std::cerr<<"For --std::map-compression-method, please use \"no\" or \"gz\" as value.\n";
+        std::cerr<<"For --map-compression-method, please use \"no\" or \"gz\" as value.\n";
 #endif
         abort = true;
       }

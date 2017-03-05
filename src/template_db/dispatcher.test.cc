@@ -117,7 +117,7 @@ struct IntObject
 
 /* We use our own test settings */
 std::string BASE_DIRECTORY("./");
-std::string ID_SUFFIX(".std::map");
+std::string ID_SUFFIX(".map");
 
 
 struct Test_File : File_Properties
@@ -240,10 +240,10 @@ void create_dummy_files
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
           + test_file_2.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file std::map 2\n";
+      test_bin_out<<"This is test file map 2\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
           + test_file_2.get_id_suffix() + test_file_2.get_index_suffix()).c_str());
-      test_idx_out<<"This is test file std::map idx 2\n";
+      test_idx_out<<"This is test file map idx 2\n";
     }
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
@@ -256,10 +256,10 @@ void create_dummy_files
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file std::map 3\n";
+      test_bin_out<<"This is test file map 3\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_id_suffix()+ test_file_3.get_index_suffix()).c_str());
-      test_idx_out<<"This is test file std::map idx 3\n";
+      test_idx_out<<"This is test file map idx 3\n";
     }
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
@@ -272,10 +272,10 @@ void create_dummy_files
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file std::map 4\n";
+      test_bin_out<<"This is test file map 4\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_id_suffix()+ test_file_4.get_index_suffix()).c_str());
-      test_idx_out<<"This is test file std::map idx 4\n";
+      test_idx_out<<"This is test file map idx 4\n";
     }
   }
   else
@@ -292,11 +292,11 @@ void create_dummy_files
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
           + test_file_2.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file std::map 2\n";
+      test_bin_out<<"This is test file map 2\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
           + test_file_2.get_id_suffix() + test_file_2.get_index_suffix()
 	  + test_file_2.get_shadow_suffix()).c_str());
-      test_idx_out<<"This is test file std::map idx shadow 2\n";
+      test_idx_out<<"This is test file map idx shadow 2\n";
     }
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
@@ -310,11 +310,11 @@ void create_dummy_files
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file std::map 3\n";
+      test_bin_out<<"This is test file map 3\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_id_suffix() + test_file_3.get_index_suffix()
 	  + test_file_3.get_shadow_suffix()).c_str());
-      test_idx_out<<"This is test file std::map idx shadow 3\n";
+      test_idx_out<<"This is test file map idx shadow 3\n";
     }
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
@@ -328,11 +328,11 @@ void create_dummy_files
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_id_suffix()).c_str());
-      test_bin_out<<"This is test file std::map 4\n";
+      test_bin_out<<"This is test file map 4\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_id_suffix()+ test_file_4.get_index_suffix()
 	  + test_file_4.get_shadow_suffix()).c_str());
-      test_idx_out<<"This is test file std::map idx shadow 4\n";
+      test_idx_out<<"This is test file map idx shadow 4\n";
     }
   }
 }
@@ -530,8 +530,8 @@ int main(int argc, char* args[])
       blocks.put(0u, 1);
     }
     map_read_test(true);
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx.shadow");
+    remove("Test_File.map");
+    remove("Test_File.map.idx.shadow");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "5"))
@@ -560,8 +560,8 @@ int main(int argc, char* args[])
       blocks.put(0u, 1);
     }
     map_read_test(true);
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx.shadow");
+    remove("Test_File.map");
+    remove("Test_File.map.idx.shadow");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "6"))
@@ -582,8 +582,8 @@ int main(int argc, char* args[])
     }
     dispatcher.write_commit(0);
     map_read_test();
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx");
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "7"))
@@ -612,8 +612,8 @@ int main(int argc, char* args[])
     }
     dispatcher.write_commit(0);
     map_read_test();
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx");
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "8"))
@@ -650,8 +650,8 @@ int main(int argc, char* args[])
     }
     dispatcher.write_commit(0);
     map_read_test();
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx");
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "9"))
@@ -734,14 +734,14 @@ int main(int argc, char* args[])
     dispatcher.output_status();
     dispatcher.write_commit(0);
     std::cout<<"Write lock is "
-        <<(file_exists("test-shadow.lock") ? "still std::set.\n" : "released.\n");
+        <<(file_exists("test-shadow.lock") ? "still set.\n" : "released.\n");
     dispatcher.read_idx_finished(640);
     dispatcher.write_commit(0);
     std::cout<<"Write lock is "
-        <<(file_exists("test-shadow.lock") ? "still std::set.\n" : "released.\n");
+        <<(file_exists("test-shadow.lock") ? "still set.\n" : "released.\n");
     map_read_test();
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx");
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "13"))
@@ -788,8 +788,8 @@ int main(int argc, char* args[])
     dispatcher.read_finished(642);
     dispatcher.write_commit(0);
     map_read_test();
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx");
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "14"))
@@ -862,8 +862,8 @@ int main(int argc, char* args[])
     }
     dispatcher.write_commit(0);
     map_read_test();
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx");
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "16"))
@@ -937,8 +937,8 @@ int main(int argc, char* args[])
     }
     dispatcher.write_commit(0);
     map_read_test();
-    remove("Test_File.std::map");
-    remove("Test_File.std::map.idx");
+    remove("Test_File.map");
+    remove("Test_File.map.idx");
   }
 
   if ((test_to_execute == "") || (test_to_execute == "18"))

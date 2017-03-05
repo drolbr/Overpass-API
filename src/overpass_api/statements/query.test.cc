@@ -101,7 +101,7 @@ void perform_query(std::string type, std::string key, std::string value, std::st
       SProxy< Query_Statement > stmt1;
       stmt1("type", type)("into", "b");
       SProxy< Item_Statement > stmt2;
-      stmt1.stmt().add_statement(&stmt2("std::set", "a").stmt(), "");
+      stmt1.stmt().add_statement(&stmt2("set", "a").stmt(), "");
       stmt1.stmt().execute(rman);
     }
     if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
@@ -150,7 +150,7 @@ void perform_query
       SProxy< Query_Statement > stmt1;
       stmt1("type", type)("into", "b");
       SProxy< Item_Statement > stmt2;
-      stmt1.stmt().add_statement(&stmt2("std::set", "a").stmt(), "");
+      stmt1.stmt().add_statement(&stmt2("set", "a").stmt(), "");
       SProxy< Has_Kv_Statement > stmt3;
       stmt1.stmt().add_statement(&stmt3("k", key2)("v", value2).stmt(), "");
       stmt1.stmt().execute(rman);
@@ -173,9 +173,9 @@ void perform_query
       SProxy< Query_Statement > stmt1;
       stmt1("type", type)("into", "d");
       SProxy< Item_Statement > stmt2;
-      stmt1.stmt().add_statement(&stmt2("std::set", "a").stmt(), "");
+      stmt1.stmt().add_statement(&stmt2("set", "a").stmt(), "");
       SProxy< Item_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("std::set", "c").stmt(), "");
+      stmt1.stmt().add_statement(&stmt3("set", "c").stmt(), "");
       stmt1.stmt().execute(rman);
     }
     if ((rman.sets()["_"].nodes != rman.sets()["d"].nodes) ||
@@ -233,9 +233,9 @@ void perform_query
       SProxy< Query_Statement > stmt1;
       stmt1("type", type)("into", "c");
       SProxy< Item_Statement > stmt2;
-      stmt1.stmt().add_statement(&stmt2("std::set", "a").stmt(), "");
+      stmt1.stmt().add_statement(&stmt2("set", "a").stmt(), "");
       SProxy< Item_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("std::set", "b").stmt(), "");
+      stmt1.stmt().add_statement(&stmt3("set", "b").stmt(), "");
       SProxy< Has_Kv_Statement > stmt4;
       stmt1.stmt().add_statement(&stmt4("k", key3)("v", value3).stmt(), "");
       stmt1.stmt().execute(rman);
@@ -459,7 +459,7 @@ void perform_query_with_around
       SProxy< Query_Statement > stmt1;
       stmt1("type", type)("into", "c");
       SProxy< Item_Statement > stmt2;
-      stmt1.stmt().add_statement(&stmt2("std::set", "b").stmt(), "");
+      stmt1.stmt().add_statement(&stmt2("set", "b").stmt(), "");
       SProxy< Around_Statement > stmt3;
       stmt1.stmt().add_statement(&stmt3("radius", radius)("from", "a").stmt(), "");
       stmt1.stmt().execute(rman);
@@ -592,7 +592,7 @@ void perform_query_with_bbox
       SProxy< Query_Statement > stmt1;
       stmt1("type", type)("into", "b");
       SProxy< Item_Statement > stmt2;
-      stmt1.stmt().add_statement(&stmt2("std::set", "a").stmt(), "");
+      stmt1.stmt().add_statement(&stmt2("set", "a").stmt(), "");
       SProxy< Bbox_Query_Statement > stmt3;
       stmt1.stmt().add_statement(&stmt3("n", north)("s", south)("e", east)("w", west).stmt(), "");
       stmt1.stmt().execute(rman);
@@ -1700,13 +1700,13 @@ int main(int argc, char* args[])
                             "relation_key_2/4", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "157"))
-    // Test a key-value std::pair via a filter std::set by a previous element
+    // Test a key-value std::pair via a filter set by a previous element
     perform_filter_from_previous_element("node", 14 + global_node_offset, "node_key_11", "node_key_7", "_", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "158"))
-    // Test a key-value std::pair via a filter std::set by a previous element
+    // Test a key-value std::pair via a filter set by a previous element
     perform_filter_from_previous_element("way", 14, "way_key_11", "way_key_7", "_", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "159"))
-    // Test a key-value std::pair via a filter std::set by a previous element
+    // Test a key-value std::pair via a filter set by a previous element
     perform_filter_from_previous_element("relation", 14, "relation_key_11", "relation_key_7", "_", args[3]);
 
   std::cout<<"</osm>\n";

@@ -30,7 +30,7 @@ class Map_To_Area_Statement : public Output_Statement
   public:
     Map_To_Area_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                           Parsed_Query& global_settings);
-    virtual std::string get_name() const { return "std::map-to-area"; }
+    virtual std::string get_name() const { return "map-to-area"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Map_To_Area_Statement() {}
     static Generic_Statement_Maker< Map_To_Area_Statement > statement_maker;

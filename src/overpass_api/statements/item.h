@@ -43,7 +43,7 @@ class Item_Statement : public Statement
 
     virtual std::string dump_xml(const std::string& indent) const
     {
-      return indent + "<item std::set=\"" + output + "\"/>\n";
+      return indent + "<item set=\"" + output + "\"/>\n";
     }
 
     virtual std::string dump_compact_ql(const std::string&) const { return "." + output; }

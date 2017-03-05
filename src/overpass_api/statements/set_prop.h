@@ -80,7 +80,7 @@ public:
   {
     virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("std::set-prop")
+    Statement_Maker() : Generic_Statement_Maker("set-prop")
     {
       Statement::maker_by_token()["="].push_back(this);
       Statement::maker_by_token()["!"].push_back(this);
@@ -94,7 +94,7 @@ public:
 
   Set_Prop_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual std::string get_name() const { return "std::set-prop"; }
+  virtual std::string get_name() const { return "set-prop"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman) {}

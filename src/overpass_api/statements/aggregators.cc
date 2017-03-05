@@ -140,7 +140,7 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
     if (!tree_it.rhs()->lhs)
     {
       if (error_output)
-        error_output->add_parse_error("Input std::set required if dot is present", tree_it->line_col.first);
+        error_output->add_parse_error("Input set required if dot is present", tree_it->line_col.first);
       return false;
     }
 
@@ -364,7 +364,7 @@ Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
     if (!tree_it.rhs()->lhs)
     {
       if (error_output)
-        error_output->add_parse_error("Input std::set required if dot is present", tree_it->line_col.first);
+        error_output->add_parse_error("Input set required if dot is present", tree_it->line_col.first);
       return 0;
     }
 

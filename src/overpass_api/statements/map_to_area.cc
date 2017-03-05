@@ -20,7 +20,7 @@
 #include "map_to_area.h"
 
 
-Generic_Statement_Maker< Map_To_Area_Statement > Map_To_Area_Statement::statement_maker("std::map-to-area");
+Generic_Statement_Maker< Map_To_Area_Statement > Map_To_Area_Statement::statement_maker("map-to-area");
 
 bool Map_To_Area_Statement::is_used_ = false;
 

@@ -131,11 +131,11 @@ Item_Statement::Item_Statement(int line_number_, const std::map< std::string, st
 {
   std::map< std::string, std::string > attributes;
 
-  attributes["std::set"] = "_";
+  attributes["set"] = "_";
 
   eval_attributes_array(get_name(), attributes, input_attributes);
 
-  output = attributes["std::set"];
+  output = attributes["set"];
 }
 
 Item_Statement::~Item_Statement()

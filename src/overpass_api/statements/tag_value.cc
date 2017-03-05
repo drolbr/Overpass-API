@@ -99,7 +99,7 @@ Statement* Evaluator_Id::Statement_Maker::create_statement(
   if (tree_it->token != "(")
   {
     if (error_output)
-      error_output->add_parse_error("id() cannot have an input std::set", tree_it->line_col.first);
+      error_output->add_parse_error("id() cannot have an input set", tree_it->line_col.first);
     return 0;
   }
   if (tree_it->rhs)
@@ -144,7 +144,7 @@ Statement* Evaluator_Type::Statement_Maker::create_statement(
   if (tree_it->token != "(")
   {
     if (error_output)
-      error_output->add_parse_error("type() cannot have an input std::set", tree_it->line_col.first);
+      error_output->add_parse_error("type() cannot have an input set", tree_it->line_col.first);
     return 0;
   }
   if (tree_it->rhs)
@@ -218,7 +218,7 @@ Statement* Evaluator_Value::Statement_Maker::create_statement(
   if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
   {
     if (error_output)
-      error_output->add_parse_error("Operator \"[\" needs a single std::string (the tag key) as argument", tree_it->line_col.first);
+      error_output->add_parse_error("Operator \"[\" needs a single string (the tag key) as argument", tree_it->line_col.first);
     return 0;
   }
   std::map< std::string, std::string > attributes;
@@ -278,19 +278,19 @@ Statement* Evaluator_Is_Tag::Statement_Maker::create_statement(
   if (tree_it->token != "(")
   {
     if (error_output)
-      error_output->add_parse_error("is_tag(...) cannot have an input std::set", tree_it->line_col.first);
+      error_output->add_parse_error("is_tag(...) cannot have an input set", tree_it->line_col.first);
     return 0;
   }
   if (!tree_it->rhs)
   {
     if (error_output)
-      error_output->add_parse_error("is_tag(key) needs a std::string as argument", tree_it->line_col.first);
+      error_output->add_parse_error("is_tag(key) needs a string as argument", tree_it->line_col.first);
     return 0;
   }
   if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
   {
     if (error_output)
-      error_output->add_parse_error("is_tag(key) needs a simple std::string as argument", tree_it->line_col.first);
+      error_output->add_parse_error("is_tag(key) needs a simple string as argument", tree_it->line_col.first);
     return 0;
   }
   std::map< std::string, std::string > attributes;
@@ -355,7 +355,7 @@ Statement* Evaluator_Properties_Count::Statement_Maker::create_statement(
   if (tree_it->token != "(")
   {
     if (error_output && tree_it->rhs && tree_it.rhs()->lhs)
-      error_output->add_parse_error(tree_it.rhs().lhs()->token + "(...) cannot have an input std::set",
+      error_output->add_parse_error(tree_it.rhs().lhs()->token + "(...) cannot have an input set",
           tree_it->line_col.first);
     return 0;
   }

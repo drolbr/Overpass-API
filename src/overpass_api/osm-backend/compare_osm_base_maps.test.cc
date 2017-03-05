@@ -58,7 +58,7 @@ void clear_nodes_to_map(std::vector< std::pair< uint32, Uint32_Index > >& id_to_
 
   if (!deviations_exist)
     std::cout<<"For "<<id_to_idx.size()
-        <<" nodes their idx in bin matches their idx in std::map.\n";
+        <<" nodes their idx in bin matches their idx in map.\n";
 
   id_to_idx.clear();
 }
@@ -104,7 +104,7 @@ void clear_ways_to_map(std::vector< std::pair< uint32, Uint31_Index > >& id_to_i
 
   if (!deviations_exist)
     std::cout<<"For "<<id_to_idx.size()
-        <<" ways their idx in bin matches their idx in std::map.\n";
+        <<" ways their idx in bin matches their idx in map.\n";
 
   id_to_idx.clear();
 }
@@ -150,7 +150,7 @@ void clear_relations_to_map(std::vector< std::pair< uint32, Uint31_Index > >& id
 
   if (!deviations_exist)
     std::cout<<"For "<<id_to_idx.size()
-        <<" relations their idx in bin matches their idx in std::map.\n";
+        <<" relations their idx in bin matches their idx in map.\n";
 
   id_to_idx.clear();
 }

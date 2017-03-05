@@ -143,7 +143,7 @@ int main(int argc, char* args[])
           stmt2->add_statement(stmt3, "");
         }
         {
-	  const char* attributes[] = { "std::set", "way", 0 };
+	  const char* attributes[] = { "set", "way", 0 };
 	  Item_Statement* stmt3 = new Item_Statement(0, convert_c_pairs(attributes), global_settings);
           stmt2->add_statement(stmt3, "");
         }

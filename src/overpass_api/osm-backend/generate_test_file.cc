@@ -4034,12 +4034,12 @@ int main(int argc, char* args[])
       "  </max-value>\n";
     if (std::string(args[2]) == "make_74" || std::string(args[2]) == "make_75")
       std::cout<<
-      "  <value-std::set id=\"1\">\n"
+      "  <value-set id=\"1\">\n"
       "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
       "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
       "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
       "    <tag k=\"unused_key_7\" v=\"\"/>\n"
-      "  </value-std::set>\n";
+      "  </value-set>\n";
     if (std::string(args[2]) == "make_76")
       std::cout<<
       "  <id-and-type id=\"1\">\n"

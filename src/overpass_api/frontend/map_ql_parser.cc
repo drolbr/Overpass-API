@@ -270,7 +270,7 @@ TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
 				  std::string from, uint line_nr)
 {
   std::map< std::string, std::string > attr;
-  attr["std::set"] = from;
+  attr["set"] = from;
   return stmt_factory.create_statement("item", line_nr, attr);
 }
 
@@ -416,7 +416,7 @@ TStatement* create_map_to_area_statement(typename TStatement::Factory& stmt_fact
   std::map< std::string, std::string > attr;
   attr["from"] = (from == "" ? "_" : from);
   attr["into"] = into;
-  return stmt_factory.create_statement("std::map-to-area", line_nr, attr);
+  return stmt_factory.create_statement("map-to-area", line_nr, attr);
 }
 
 template< class TStatement >

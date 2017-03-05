@@ -1136,9 +1136,9 @@ int main(int argc, char* args[])
     if ((test_to_execute == "") || (test_to_execute == "73"))
       max_value_test(global_settings, transaction, "max-value", "_", 7, 14, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "74"))
-      set_value_test(global_settings, transaction, "value-std::set", "_", 7, 14, global_node_offset);
+      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "75"))
-      set_value_test(global_settings, transaction, "value-std::set", "_", 7, 14, global_node_offset);
+      set_value_test(global_settings, transaction, "value-set", "_", 7, 14, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "76"))
       value_id_type_test(global_settings, transaction, "id-and-type", "_", 1, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "77"))
