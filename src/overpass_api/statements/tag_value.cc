@@ -403,7 +403,7 @@ Evaluator_Properties_Count::Evaluator_Properties_Count
   else
   {
     std::ostringstream temp("");
-    temp<<"For the attribute \"type\" of the element \"eval-std::set-count\""
+    temp<<"For the attribute \"type\" of the element \"eval-set-count\""
         <<" the only allowed values are \"nodes\", \"ways\", \"relations\", \"deriveds\", \"tags\", "
           "or \"members\" strings.";
     add_static_error(temp.str());

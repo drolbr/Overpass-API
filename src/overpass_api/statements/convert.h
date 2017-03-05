@@ -33,16 +33,16 @@ class Set_Prop_Statement;
 
 /* == The statement <em>convert</em> ==
 
-The statement <em>convert</em> produces per element in its input std::set one derived element.
+The statement <em>convert</em> produces per element in its input set one derived element.
 The content of this output element is controlled by the parameters of the statement.
 
-It is necessary to std::set a fixed type as type for all the generated elements.
-After that, an arbitrary number of tags can be std::set.
+It is necessary to set a fixed type as type for all the generated elements.
+After that, an arbitrary number of tags can be set.
 In addition, it can be specified to copy all keys from the originating object.
-In this case, tt is also possible to selectively suppress some tags.
+In this case, it is also possible to selectively suppress some tags.
 
-Finally, it is possible to explicitly std::set the id of the generated objects.
-If you do not std::set an id then an unique id from a global ascending counter is assigned.
+Finally, it is possible to explicitly set the id of the generated objects.
+If you do not set an id then an unique id from a global ascending counter is assigned.
 
 The base syntax is
 
@@ -84,7 +84,8 @@ public:
 
   virtual std::string dump_compact_ql(const std::string& indent) const
   {
-    std::string result = indent + "convert " + type;
+    std::string result = indent + (input == "_" ? "" : "." + input + " ")
+        + "convert " + type;
     std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin();
     if (it != evaluators.end())
     {
@@ -98,7 +99,8 @@ public:
 
   virtual std::string dump_pretty_ql(const std::string& indent) const
   {
-    std::string result = indent + "convert " + type;
+    std::string result = indent + (input == "_" ? "" : "." + input + " ")
+        + "convert " + type;
     std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin();
     if (it != evaluators.end())
     {

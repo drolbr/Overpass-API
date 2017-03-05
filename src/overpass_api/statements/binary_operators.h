@@ -55,14 +55,14 @@ is evaluated to <em>2 + 12</em>, then finally <em>14</em>.
 is evaluated to <em>5 * 4</em>, then finally <em>20</em>.
 
 The order of precedence is as follows, ordered weak to strong binding:
-- logical disjunction
-- logical conjunction
-- equality, inequality
-- less, less-equal, greater, greater-equal
-- plus, binary minus
-- times, divided
-- logical negation
-- unary minus
+* logical disjunction
+* logical conjunction
+* equality, inequality
+* less, less-equal, greater, greater-equal
+* plus, binary minus
+* times, divided
+* logical negation
+* unary minus
 
 In the following, the operators are ordered by precedence, stronger binding last.
 */
@@ -169,8 +169,8 @@ struct Evaluator_Pair_Operator_Syntax : public Evaluator_Pair_Operator
 
 The boolean disjunction evaluates to "1" if one or both of its arguments evaluate to a representation of boolean true.
 Otherwise it evaluates to "0".
-Representations of boolean false are the empty std::string and every std::string that is a numerical representation of zero.
-Every other std::string represents boolean true.
+Representations of boolean false are the empty string and every string that is a numerical representation of zero.
+Every other string represents boolean true.
 Currently, both arguments are always evaluated.
 This may change in future versions.
 
@@ -198,8 +198,8 @@ struct Evaluator_Or : public Evaluator_Pair_Operator_Syntax< Evaluator_Or >
 
 The boolean conjunction evaluates to "1" if both of its arguments evaluate to a representation of boolean true.
 Otherwise it evaluates to "0".
-Representations of boolean false are the empty std::string and every std::string that is a numerical representation of zero.
-Every other std::string represents boolean true.
+Representations of boolean false are the empty string and every string that is a numerical representation of zero.
+Every other string represents boolean true.
 Currently, both arguments are always evaluated.
 This may change in future versions.
 
@@ -233,9 +233,13 @@ If both arguments can be interpreted as integers then the represented values are
 Otherwise, if both arguments can be interpreted as floating point numbers then the represented values are compared.
 In all other cases the arguments are treated as strings.
 
-Its syntax is
+Its syntax is for equality
 
   <Evaluator> == <Evaluator>
+
+and for inequality
+
+  <Evaluator> != <Evaluator>
 
 The whitespace is optional.
 */

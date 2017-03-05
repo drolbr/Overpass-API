@@ -33,12 +33,12 @@
 The statement <em>make</em> produces per execution one derived element.
 The content of this output element is controlled by the parameters of the statement.
 
-It is necessary to std::set a fixed type as type for the generated element.
-After that, an arbitrary number of tags can be std::set.
-As opposed to the <em>convert</em> statement, a generic key cannot be std::set.
+It is necessary to set a fixed type as type for the generated element.
+After that, an arbitrary number of tags can be set.
+As opposed to the <em>convert</em> statement, a generic key cannot be set.
 
-Finally, it is possible to explicitly std::set the id of the generated object.
-If you do not std::set an id then an unique id from a global ascending counter is assigned.
+Finally, it is possible to explicitly set the id of the generated object.
+If you do not set an id then an unique id from a global ascending counter is assigned.
 
 The base syntax is
 

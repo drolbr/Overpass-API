@@ -43,8 +43,8 @@ struct Value_Aggregator
 
 /* == Aggregators ==
 
-Aggregators need for execution both a std::set to operate on and an evaluator as argument.
-That evaulator will loop over each element of the std::set, and the aggregator will combine its results.
+Aggregators need for execution both a set to operate on and an evaluator as argument.
+That evaulator will loop over each element of the set, and the aggregator will combine its results.
 */
 
 struct Evaluator_Aggregator : public Evaluator
@@ -144,21 +144,21 @@ The basic syntax is
 
 resp.
 
-  <Set>.std::set(<Evaluator>)
+  <Set>.set(<Evaluator>)
 
-If the std::set is the default std::set <em>_</em> then you can drop the std::set parameter:
+If the set is the default set <em>_</em> then you can drop the set parameter:
 
   u(<Evaluator>)
 
 resp.
 
-  std::set(<Evaluator>)
+  set(<Evaluator>)
 
-These two evaluators execute their right hand side evulators on each element of the specified std::set.
-<em>std::set</em> makes a semi-colon separated list of all distinct values that appear.
+These two evaluators execute their right hand side evulators on each element of the specified set.
+<em>set</em> makes a semi-colon separated list of all distinct values that appear.
 <em>u</em> returns the single found value if only one value is found.
-If no value is found then <em>u</em> returns an empty std::string.
-If multiple different values are found then <em>std::set</em> returns the text "< multiple values found >".
+If no value is found then <em>u</em> returns an empty string.
+If multiple different values are found then <em>set</em> returns the text "< multiple values found >".
 */
 
 class Evaluator_Union_Value : public Evaluator_Aggregator_Syntax< Evaluator_Union_Value >
@@ -186,8 +186,8 @@ class Evaluator_Set_Value : public Evaluator_Aggregator_Syntax< Evaluator_Set_Va
 {
 public:
   static Aggregator_Statement_Maker< Evaluator_Set_Value > statement_maker;
-  static std::string stmt_func_name() { return "std::set"; }
-  static std::string stmt_name() { return "eval-std::set"; }
+  static std::string stmt_func_name() { return "set"; }
+  static std::string stmt_name() { return "eval-set"; }
 
   Evaluator_Set_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
@@ -213,7 +213,7 @@ resp.
 
   <Set>.max(<Evaluator>)
 
-If the std::set is the default std::set <em>_</em> then you can drop the std::set parameter:
+If the set is the default set <em>_</em> then you can drop the set parameter:
 
   min(<Evaluator>)
 
@@ -221,12 +221,12 @@ resp.
 
   max(<Evaluator>)
 
-These two evaluators execute their right hand side evaluators on each element of the specified std::set.
+These two evaluators execute their right hand side evaluators on each element of the specified set.
 If all return values are valid numbers then <em>min</em> returns the minimal amongst the numbers.
 Likewise, if all return values are valid numbers then <em>max</em> returns the maximal amongst the numbers.
-If not all return values are valid numbers then <em>min</em> returns the lexicographically first std::string.
-Likewise, if not all return values are valid numbers then <em>max</em> returns the lexicographically last std::string.
-If no value is found then each <em>min</em> and <em>max </em> return an empty std::string.
+If not all return values are valid numbers then <em>min</em> returns the lexicographically first string.
+Likewise, if not all return values are valid numbers then <em>max</em> returns the lexicographically last string.
+If no value is found then each <em>min</em> and <em>max </em> return an empty string.
 */
 
 class Evaluator_Min_Value : public Evaluator_Aggregator_Syntax< Evaluator_Min_Value >
@@ -287,11 +287,11 @@ The basic syntax is
 
   <Set>.sum(<Evaluator>)
 
-If the std::set is the default std::set <em>_</em> then you can drop the std::set parameter:
+If the set is the default set <em>_</em> then you can drop the set parameter:
 
   sum(<Evaluator>)
 
-This evaluator executes its right hand side evaluators on each element of the specified std::set.
+This evaluator executes its right hand side evaluators on each element of the specified set.
 If all return values are valid numbers then <em>sum</em> returns their sum.
 If not all return values are valid numbers then <em>sum</em> returns "NaN".
 */
@@ -322,7 +322,7 @@ public:
 
 /* == Statistical Count ==
 
-This variant of the <em>count</em> operator counts elements of a given type in a std::set.
+This variant of the <em>count</em> operator counts elements of a given type in a set.
 
 The syntax variants
 
@@ -331,14 +331,14 @@ The syntax variants
   count(relations)
   count(deriveds)
 
-counts elements in the default std::set <em>_</em>, and the syntax variant
+counts elements in the default set <em>_</em>, and the syntax variant
 
   <Set>.count(nodes)
   <Set>.count(ways)
   <Set>.count(relations)
   <Set>.count(deriveds)
 
-counts elements in the std::set &lt;Set&gt;.
+counts elements in the set &lt;Set&gt;.
 */
 
 class Evaluator_Set_Count : public Evaluator
@@ -351,19 +351,19 @@ public:
   {
     virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-std::set-count")
+    Statement_Maker() : Generic_Statement_Maker("eval-set-count")
     { Statement::maker_by_func_name()["count"].push_back(this); }
   };
   static Statement_Maker statement_maker;
 
   virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-std::set-count from=\"" + input + "\" type=\"" + to_string(to_count) + "\"/>\n"; }
+  { return indent + "<eval-set-count from=\"" + input + "\" type=\"" + to_string(to_count) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return (input != "_" ? input + "." : "") + "count(" + to_string(to_count) + ")"; }
 
   Evaluator_Set_Count(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual std::string get_name() const { return "eval-std::set-count"; }
+  virtual std::string get_name() const { return "eval-set-count"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Set_Count() {}

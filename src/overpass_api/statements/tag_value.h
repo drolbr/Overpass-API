@@ -230,7 +230,7 @@ They only can be called in the context of an element.
 
 Their syntax is
 
-  [<Key name>]
+  t[<Key name>]
 
 resp.
 
@@ -472,7 +472,7 @@ public:
 This variant of the <em>count</em> operator counts tags or members
 of the given element.
 Opposed to the statistical variant of the count operator,
-they cannot take an input std::set as extra argument.
+they cannot take an input set as extra argument.
 
 The syntax for tags is
 

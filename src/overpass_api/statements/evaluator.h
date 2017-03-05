@@ -86,22 +86,23 @@ public:
 /* == Evaluators ==
 
 Evaluators are building blocks that yield on execution a value.
-The use of which of the evulators makes sense depends on the context.
+The use of which of the evaluators makes sense depends on the context.
 
 Evaluators help to filter for elements within a query statement.
 They allow to get statistical information about query results.
 And they allow to remove or add tags from elements.
 
-Currently only tag evaulators are supported.
-Geometry evaulators are planned but not implemented in this version.
+Currently only tag evaluators are supported.
+Geometry evaluators are planned but not implemented in this version.
 
 The following types of evaluators exist and are explained further down:
-- Const evaulators deliver always the same value independend of context.
-- Element dependend evaluators deliver information about an individual object.
+* Const evaluators deliver always the same value independent of context.
+* Element dependent evaluators deliver information about an individual object.
 They only make sense in the context of a single element.
-- Statistical evaulators deliver information about a std::set as a whole.
-- Aggregators let an element dependend evaluator loop over all elements of a std::set and combine its results.
-- Operators and endomorphisms combine the result of one or two evaluator executions into a new result.
+* Statistical evaluators deliver information about a set as a whole.
+* Aggregators let an element dependent evaluator loop over all elements of a set and combine its results.
+* Operators and endomorphisms combine the result of one or two evaluator executions into a new result.
+
 */
 
 struct Prepare_Task_Context

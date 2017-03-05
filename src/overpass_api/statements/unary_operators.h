@@ -47,14 +47,14 @@ have as standalone expressions precisely the same semantics.
 The parenthesis variant exists to override operator precedence.
 
 The order of precedence is as follows, ordered weak to strong binding:
-- logical disjunction
-- logical conjunction
-- equality, inequality
-- less, less-equal, greater, greater-equal
-- plus, binary minus
-- times, divided
-- logical negation
-- unary minus
+* logical disjunction
+* logical conjunction
+* equality, inequality
+* less, less-equal, greater, greater-equal
+* plus, binary minus
+* times, divided
+* logical negation
+* unary minus
 
 In the following, the operators are ordered by precedence, stronger binding last.
 */
@@ -331,15 +331,15 @@ Otherwise it returns "NaD".
 The function <em>is_date</em> checks whether its argument represents a date.
 It returns "1" if its argument can be parsed as a date and "0" otherwise.
 
-A std::string is parsed for a date as follows:
-- the first group of digits is understood as year
-- the next group of digits if present is understood as month
-- then the next group if present is understood as day
-- if more groups of digits are present then they are understood as hour, minute, second
+A string is parsed for a date as follows:
+* the first group of digits is understood as year
+* the next group of digits if present is understood as month
+* then the next group if present is understood as day
+* if more groups of digits are present then they are understood as hour, minute, second
 To be a date the year must be bigger than 1000,
 the month if present less or equal 12,
 the day if present less or equal 31,
-the hour if present less or equal 60,
+the hour if present less or equal 24,
 and the minute and second if present less or equal 60.
 
 The date parser may get more liberal in future versions and accept more representations of dates.
