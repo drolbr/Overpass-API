@@ -26,7 +26,7 @@
 #include "print.h"
 
 
-void perform_bbox_print(string south, string north, string west, string east,
+void perform_bbox_print(std::string south, std::string north, std::string west, std::string east,
 			Transaction& transaction)
 {
   Parsed_Query global_settings;
@@ -51,7 +51,7 @@ void perform_bbox_print(string south, string north, string west, string east,
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
@@ -62,19 +62,19 @@ int main(int argc, char* args[])
   Parsed_Query global_settings;
   if (argc < 4)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    std::cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
     return 0;
   }
-  string test_to_execute = args[1];
+  std::string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
 
   Nonsynced_Transaction transaction(false, false, args[3], "");
-  
-  cout<<
+
+  std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm>\n";
-    
+
   if ((test_to_execute == "") || (test_to_execute == "1"))
     perform_bbox_print("-10.0", "8.0", "-15.0", "9.0", transaction);
   if ((test_to_execute == "") || (test_to_execute == "2"))
@@ -88,8 +88,8 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "6"))
   {
     double lon_offset = (105.0-(-15.0))/pattern_size/2;
-    ostringstream west_ss;
-    west_ss<<fixed<<setprecision(7)<<(-15.0 + lon_offset);
+    std::ostringstream west_ss;
+    west_ss<<std::fixed<<std::setprecision(7)<<(-15.0 + lon_offset);
     perform_bbox_print("-10.0", "-1.0", west_ss.str(), west_ss.str(), transaction);
   }
   if ((test_to_execute == "") || (test_to_execute == "7"))
@@ -97,12 +97,12 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "8"))
   {
     double lat_offset = (80.0-(-10.0))/pattern_size/2;
-    ostringstream south_ss;
-    south_ss<<fixed<<setprecision(7)<<(-10.0 + lat_offset);
+    std::ostringstream south_ss;
+    south_ss<<std::fixed<<std::setprecision(7)<<(-10.0 + lat_offset);
     perform_bbox_print(south_ss.str(), south_ss.str(), "-15.0", "-3.0", transaction);
   }
-  
-  cout<<"</osm>\n";
+
+  std::cout<<"</osm>\n";
   return 0;
 }
 

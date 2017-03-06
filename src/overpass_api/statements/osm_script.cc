@@ -31,14 +31,14 @@ Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_
 
 
 Osm_Script_Statement::Osm_Script_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_),
        desired_timestamp(NOW), comparison_timestamp(0), add_deletion_information(false),
        max_allowed_time(0), max_allowed_space(0),
        factory(0)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["bbox"] = "";
   attributes["timeout"] = "180";
   attributes["element-limit"] = "536870912";
@@ -47,30 +47,30 @@ Osm_Script_Statement::Osm_Script_Statement
   attributes["date"] = "";
   attributes["from"] = "";
   attributes["augmented"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   int32 timeout(atoi(attributes["timeout"].c_str()));
   if (timeout <= 0)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"For the attribute \"timeout\" of the element \"osm-script\""
         <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
   }
   max_allowed_time = timeout;
-  
+
   int64 max_space(atoll(attributes["element-limit"].c_str()));
   if (max_space <= 0)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"For the attribute \"element-limit\" of the element \"osm-script\""
         <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
   }
   max_allowed_space = max_space;
 
-  
+
   if (!global_settings.get_output_handler())
   {
     Output_Handler_Parser* format_parser = Output_Handler_Parser::get_format_parser(attributes["output"]);	
@@ -82,22 +82,22 @@ Osm_Script_Statement::Osm_Script_Statement
         global_settings.set_output_handler(format_parser, 0, 0);
       else
       {
-        istringstream in(attributes["output-config"]);
+        std::istringstream in(attributes["output-config"]);
         Tokenizer_Wrapper token(in);
         global_settings.set_output_handler(format_parser, &token, 0);
       }
     }
   }
-  
-  
+
+
   if (attributes["bbox"] != "")
   {
-    map< string, string > bbox_attributes;
-    
-    string& bbox_s = attributes["bbox"];
-    string::size_type pos = bbox_s.find(",");
-    string::size_type from = 0;
-    if (pos != string::npos)
+    std::map< std::string, std::string > bbox_attributes;
+
+    std::string& bbox_s = attributes["bbox"];
+    std::string::size_type pos = bbox_s.find(",");
+    std::string::size_type from = 0;
+    if (pos != std::string::npos)
     {
       bbox_attributes["s"] = bbox_s.substr(0, pos);
       from = pos + 1;
@@ -105,11 +105,11 @@ Osm_Script_Statement::Osm_Script_Statement
     }
     else
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"A bounding box needs four comma-separated values.";
       add_static_error(temp.str());
     }
-    if (pos != string::npos)
+    if (pos != std::string::npos)
     {
       bbox_attributes["w"] = bbox_s.substr(from, pos-from);
       from = pos + 1;
@@ -117,18 +117,18 @@ Osm_Script_Statement::Osm_Script_Statement
     }
     else
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"A bounding box needs four comma-separated values.";
       add_static_error(temp.str());
     }
-    if (pos != string::npos)
+    if (pos != std::string::npos)
     {
       bbox_attributes["n"] = bbox_s.substr(from, pos-from);
       from = pos + 1;
     }
     else
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"A bounding box needs four comma-separated values.";
       add_static_error(temp.str());
     }
@@ -138,29 +138,29 @@ Osm_Script_Statement::Osm_Script_Statement
     double north = atof(bbox_attributes["n"].c_str());
     if (south < -90.0 || south > 90.0 || north < -90.0 || north > 90.0)
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"Latitudes in bounding boxes must be between -90.0 and 90.0.";
       add_static_error(temp.str());
     }
-    
+
     double west = atof(bbox_attributes["w"].c_str());
     double east = atof(bbox_attributes["e"].c_str());
     if (west < -180.0 || west > 180.0 || east < -180.0 || east > 180.0)
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"Longitudes in bounding boxes must be between -180.0 and 180.0.";
       add_static_error(temp.str());
     }
-    
+
     if (south >= -90.0 && south <= 90.0 && north >= -90.0 && north <= 90.0
         && west >= -180.0 && west <= 180.0 && east >= -180.0 && east <= 180.0)
       global_settings.set_global_bbox(Bbox_Double(south, west, north, east));
   }
-  
+
   if (attributes["date"] != "")
   {
-    string timestamp = attributes["date"];
-  
+    std::string timestamp = attributes["date"];
+
     desired_timestamp = 0;
     desired_timestamp |= (atoll(timestamp.c_str())<<26); //year
     desired_timestamp |= (atoi(timestamp.c_str()+5)<<22); //month
@@ -168,19 +168,19 @@ Osm_Script_Statement::Osm_Script_Statement
     desired_timestamp |= (atoi(timestamp.c_str()+11)<<12); //hour
     desired_timestamp |= (atoi(timestamp.c_str()+14)<<6); //minute
     desired_timestamp |= atoi(timestamp.c_str()+17); //second
-  
+
     if (desired_timestamp == 0)
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"The attribute \"date\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
       add_static_error(temp.str());
     }
   }
-  
+
   if (attributes["from"] != "")
   {
-    string timestamp = attributes["from"];
-  
+    std::string timestamp = attributes["from"];
+
     comparison_timestamp = 0;
     comparison_timestamp |= (atoll(timestamp.c_str())<<26); //year
     comparison_timestamp |= (atoi(timestamp.c_str()+5)<<22); //month
@@ -188,39 +188,39 @@ Osm_Script_Statement::Osm_Script_Statement
     comparison_timestamp |= (atoi(timestamp.c_str()+11)<<12); //hour
     comparison_timestamp |= (atoi(timestamp.c_str()+14)<<6); //minute
     comparison_timestamp |= atoi(timestamp.c_str()+17); //second
-  
+
     if (comparison_timestamp == 0)
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"The attribute \"from\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
       add_static_error(temp.str());
     }
   }
-  
+
   if (attributes["augmented"] != "")
-  {    
-    if (attributes["augmented"] == "deletions" && attributes["from"] != "")      
+  {
+    if (attributes["augmented"] == "deletions" && attributes["from"] != "")
       add_deletion_information = true;
 
     if (attributes["augmented"] != "deletions")
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"The only allowed values for \"augmented\" are an empty value or \"deletions\".";
       add_static_error(temp.str());
-    }    
+    }
     if (attributes["from"] == "")
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"The attribute \"augmented\" can only be set if the attribute \"from\" is set.";
       add_static_error(temp.str());
-    }      
+    }
   }
 }
 
-void Osm_Script_Statement::add_statement(Statement* statement, string text)
+void Osm_Script_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
-  
+
   if (statement)
   {
     if (statement->get_name() != "newer")
@@ -238,38 +238,38 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
 
   if (comparison_timestamp > 0)
   {
-    for (vector< Statement* >::iterator it = factory->created_statements.begin();
+    for (std::vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
     {
       Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
       if (print)
         print->set_collect_lhs();
     }
-    
+
     rman.set_diff_from_timestamp(comparison_timestamp);
     rman.set_diff_to_timestamp(desired_timestamp);
     rman.set_desired_timestamp(comparison_timestamp);
-    
-    for (vector< Statement* >::iterator it(substatements.begin());
+
+    for (std::vector< Statement* >::iterator it(substatements.begin());
         it != substatements.end(); ++it)
       (*it)->execute(rman);
-    
-    for (vector< Statement* >::iterator it = factory->created_statements.begin();
+
+    for (std::vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
     {
       Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
       if (print)
         print->set_collect_rhs(add_deletion_information);
     }
-    
+
     rman.sets().clear();
     rman.set_desired_timestamp(desired_timestamp);
   }
-  
-  for (vector< Statement* >::iterator it(substatements.begin());
+
+  for (std::vector< Statement* >::iterator it(substatements.begin());
       it != substatements.end(); ++it)
     (*it)->execute(rman);
-  
+
   if (rman.area_updater())
     rman.area_updater()->flush();
   rman.health_check(*this);

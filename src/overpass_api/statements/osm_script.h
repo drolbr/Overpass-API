@@ -25,30 +25,29 @@
 #include "bbox_query.h"
 #include "statement.h"
 
-using namespace std;
 
 class Output_Handle;
 
 class Osm_Script_Statement : public Statement
 {
   public:
-    Osm_Script_Statement(int line_number_, const map< string, string >& input_attributes,
+    Osm_Script_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                          Parsed_Query& global_settings);
-    virtual void add_statement(Statement* statement, string text);
-    virtual string get_name() const { return "osm-script"; }
-    virtual string get_result_name() const { return ""; }
+    virtual void add_statement(Statement* statement, std::string text);
+    virtual std::string get_name() const { return "osm-script"; }
+    virtual std::string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);
-    
+
     static Generic_Statement_Maker< Osm_Script_Statement > statement_maker;
-    
+
     void set_factory(Statement::Factory* factory_) { factory = factory_; }
 
     uint32 get_max_allowed_time() const { return max_allowed_time; }
     uint64 get_max_allowed_space() const { return max_allowed_space; }
     uint64 get_desired_timestamp() const { return desired_timestamp; }
-    
+
   private:
-    vector< Statement* > substatements;
+    std::vector< Statement* > substatements;
     uint64 desired_timestamp;
     uint64 comparison_timestamp;
     bool add_deletion_information;

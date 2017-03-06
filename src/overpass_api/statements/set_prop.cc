@@ -32,15 +32,15 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
   if ((tree_context == Statement::generic || tree_context == Statement::in_convert)
       && tree_it->token == "!" && tree_it->rhs)
   {
-    map< string, string > attributes;
+    std::map< std::string, std::string > attributes;
     attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
     attributes["keytype"] = "tag";
     return new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);
   }
-  
+
   if (tree_context != Statement::generic && tree_context != Statement::in_convert)
     return 0;
-  
+
   if (!tree_it->lhs)
   {
     if (error_output)
@@ -48,7 +48,7 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
           tree_it->line_col.first);
     return 0;
   }
-  
+
   if (!tree_it->rhs)
   {
     if (error_output)
@@ -56,8 +56,8 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
           tree_it->line_col.first);
     return 0;
   }
-  
-  map< string, string > attributes;
+
+  std::map< std::string, std::string > attributes;
   if (tree_it.lhs()->token == "::")
   {
     if (tree_it.lhs()->rhs)
@@ -86,7 +86,7 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
     attributes["k"] = decode_json(tree_it.lhs()->token, error_output);
     attributes["keytype"] = "tag";
   }
-  Statement* result = new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);  
+  Statement* result = new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
     Statement* rhs = stmt_factory.create_statement(tree_it.rhs(),
@@ -105,12 +105,12 @@ Set_Prop_Statement::Set_Prop_Statement
     : Statement(line_number_), set_id(false), tag_value(0)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["k"] = "";
   attributes["keytype"] = "tag";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   if (attributes["keytype"] == "tag")
   {
     if (attributes["k"] != "")
@@ -143,7 +143,7 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
 {
   if (!tag_value)
     return indent + "<set-prop keytype=\"tag\" k=\"" + keys.front() + "\"/>\n";
-  
+
   std::string attributes;
   if (set_id)
     attributes = " keytype=\"id\"";
@@ -175,7 +175,7 @@ std::pair< std::vector< Set_Usage >, uint > Set_Prop_Statement::used_sets() cons
     result.second |= Set_Usage::TAGS;
     return result;
   }
-  
+
   std::vector< Set_Usage > result;
   return std::make_pair(result, Set_Usage::TAGS);
 }
@@ -193,7 +193,7 @@ void Set_Prop_Task::process(Derived_Structure& result, bool& id_set) const
 {
   if (!rhs)
     return;
-  
+
   if (mode == single_key)
     result.tags.push_back(std::make_pair(key, rhs->eval(0)));
   else if (mode == set_id && !id_set)
@@ -213,7 +213,7 @@ void process(const std::string& key, Set_Prop_Task::Mode mode, Eval_Task* rhs, c
 {
   if (!rhs)
     return;
-  
+
   if (mode == Set_Prop_Task::single_key)
     result.tags.push_back(std::make_pair(key, rhs->eval(elem, tags, 0)));
   else if (mode == Set_Prop_Task::generic)
@@ -228,7 +228,7 @@ void process(const std::string& key, Set_Prop_Task::Mode mode, Eval_Task* rhs, c
       found_keys.erase(std::unique(found_keys.begin(), found_keys.end()), found_keys.end());
       found_keys.erase(std::set_difference(found_keys.begin(), found_keys.end(),
           declared_keys.begin(), declared_keys.end(), found_keys.begin()), found_keys.end());
-        
+
       for (std::vector< std::string >::const_iterator it_keys = found_keys.begin();
           it_keys != found_keys.end(); ++it_keys)
         result.tags.push_back(std::make_pair(*it_keys, rhs->eval(elem, tags, &*it_keys)));
@@ -243,7 +243,7 @@ void process(const std::string& key, Set_Prop_Task::Mode mode, Eval_Task* rhs, c
   }
 }
 
-  
+
 void Set_Prop_Task::process(const Node_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
     Derived_Structure& result, bool& id_set) const

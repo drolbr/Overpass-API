@@ -34,7 +34,7 @@ struct Value_Aggregator
 {
   // The code of min and max relies on the relative order to gracefully degrade the type
   enum Type_Indicator { type_void = 0, type_int64 = 1, type_double = 2, type_string = 3 };
-  
+
   virtual void update_value(const std::string& value) = 0;
   virtual std::string get_value() = 0;
   virtual ~Value_Aggregator() {}
@@ -50,20 +50,20 @@ That evaulator will loop over each element of the set, and the aggregator will c
 struct Evaluator_Aggregator : public Evaluator
 {
   enum Object_Type { tag, generic, id, type };
-  
-  
-  Evaluator_Aggregator(const string& func_name, int line_number_, const map< string, string >& input_attributes,
-                   Parsed_Query& global_settings);  
-  virtual void add_statement(Statement* statement, string text);
+
+
+  Evaluator_Aggregator(const std::string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman) {}
-  
+
   virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;
-  virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }  
-  
+  virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
-  
+
   virtual Value_Aggregator* get_aggregator() = 0;
-  
+
   std::string input;
   Evaluator* rhs;
   const Set_With_Context* input_set;
@@ -81,12 +81,12 @@ struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
       const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
-    map< string, string > attributes;
+    std::map< std::string, std::string > attributes;
     bool input_set = false;
     if (!try_parse_input_set(tree_it, error_output, Evaluator_::stmt_func_name() + "(...) needs an argument",
         attributes["from"], input_set))
       return 0;
-  
+
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     if (result)
     {
@@ -111,17 +111,17 @@ struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 template< typename Evaluator_ >
 struct Evaluator_Aggregator_Syntax : public Evaluator_Aggregator
 {
-  Evaluator_Aggregator_Syntax(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Aggregator_Syntax(int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
       : Evaluator_Aggregator(Evaluator_::stmt_name(), line_number_, input_attributes, global_settings) {}
-  
+
   virtual std::string dump_xml(const std::string& indent) const
   {
     return indent + "<" + Evaluator_::stmt_name() + " from=\"" + input + "\">\n"
         + (rhs ? rhs->dump_xml(indent + "  ") : "")
         + indent + "</" + Evaluator_::stmt_name() + ">\n";
   }
-  
+
   virtual std::string dump_compact_ql(const std::string&) const
   {
     return (input != "_" ? input + "." : "")
@@ -129,10 +129,10 @@ struct Evaluator_Aggregator_Syntax : public Evaluator_Aggregator
         + (rhs ? rhs->dump_compact_ql("") : "")
         + ")";
   }
-  
-  virtual string get_name() const { return Evaluator_::stmt_name(); }
-  
-  virtual string get_result_name() const { return ""; }
+
+  virtual std::string get_name() const { return Evaluator_::stmt_name(); }
+
+  virtual std::string get_result_name() const { return ""; }
 };
 
 
@@ -141,19 +141,19 @@ struct Evaluator_Aggregator_Syntax : public Evaluator_Aggregator
 The basic syntax is
 
   <Set>.u(<Evaluator>)
-  
+
 resp.
 
   <Set>.set(<Evaluator>)
-  
+
 If the set is the default set <em>_</em> then you can drop the set parameter:
 
   u(<Evaluator>)
-  
+
 resp.
 
   set(<Evaluator>)
-  
+
 These two evaluators execute their right hand side evulators on each element of the specified set.
 <em>set</em> makes a semi-colon separated list of all distinct values that appear.
 <em>u</em> returns the single found value if only one value is found.
@@ -167,11 +167,11 @@ public:
   static Aggregator_Statement_Maker< Evaluator_Union_Value > statement_maker;
   static std::string stmt_func_name() { return "u"; }
   static std::string stmt_name() { return "eval-union"; }
-      
-  Evaluator_Union_Value(int line_number_, const map< string, string >& input_attributes,
+
+  Evaluator_Union_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Union_Value >(line_number_, input_attributes, global_settings) {}
-  
+
   struct Aggregator : Value_Aggregator
   {
     virtual void update_value(const std::string& value);
@@ -189,10 +189,10 @@ public:
   static std::string stmt_func_name() { return "set"; }
   static std::string stmt_name() { return "eval-set"; }
 
-  Evaluator_Set_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Set_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Set_Value >(line_number_, input_attributes, global_settings) {}
-  
+
   struct Aggregator : Value_Aggregator
   {
     virtual void update_value(const std::string& value);
@@ -208,19 +208,19 @@ public:
 The basic syntax is
 
   <Set>.min(<Evaluator>)
-  
+
 resp.
 
   <Set>.max(<Evaluator>)
-  
+
 If the set is the default set <em>_</em> then you can drop the set parameter:
 
   min(<Evaluator>)
-  
+
 resp.
 
   max(<Evaluator>)
-  
+
 These two evaluators execute their right hand side evaluators on each element of the specified set.
 If all return values are valid numbers then <em>min</em> returns the minimal amongst the numbers.
 Likewise, if all return values are valid numbers then <em>max</em> returns the maximal amongst the numbers.
@@ -236,10 +236,10 @@ public:
   static std::string stmt_func_name() { return "min"; }
   static std::string stmt_name() { return "eval-min"; }
 
-  Evaluator_Min_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Min_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Min_Value >(line_number_, input_attributes, global_settings) {}
-  
+
   struct Aggregator : Value_Aggregator
   {
     Aggregator() : relevant_type(type_void), result_l(std::numeric_limits< int64 >::max()),
@@ -262,10 +262,10 @@ public:
   static std::string stmt_func_name() { return "max"; }
   static std::string stmt_name() { return "eval-umax"; }
 
-  Evaluator_Max_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Max_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Max_Value >(line_number_, input_attributes, global_settings) {}
-  
+
   struct Aggregator : Value_Aggregator
   {
     Aggregator() : relevant_type(type_void), result_l(std::numeric_limits< int64 >::min()),
@@ -286,7 +286,7 @@ public:
 The basic syntax is
 
   <Set>.sum(<Evaluator>)
-  
+
 If the set is the default set <em>_</em> then you can drop the set parameter:
 
   sum(<Evaluator>)
@@ -303,10 +303,10 @@ public:
   static std::string stmt_func_name() { return "sum"; }
   static std::string stmt_name() { return "eval-sum"; }
 
-  Evaluator_Sum_Value(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Sum_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
       : Evaluator_Aggregator_Syntax< Evaluator_Sum_Value >(line_number_, input_attributes, global_settings) {}
-  
+
   struct Aggregator : Value_Aggregator
   {
     Aggregator() : relevant_type(type_int64), result_l(0), result_d(0) {}
@@ -330,15 +330,15 @@ The syntax variants
   count(ways)
   count(relations)
   count(deriveds)
-  
+
 counts elements in the default set <em>_</em>, and the syntax variant
 
   <Set>.count(nodes)
   <Set>.count(ways)
   <Set>.count(relations)
   <Set>.count(deriveds)
-  
-counts elements in the set &lt;Set&gt;. 
+
+counts elements in the set &lt;Set&gt;.
 */
 
 class Evaluator_Set_Count : public Evaluator
@@ -346,7 +346,7 @@ class Evaluator_Set_Count : public Evaluator
 public:
   enum Objects { nothing, nodes, ways, relations, deriveds };
   static std::string to_string(Objects objects);
-  
+
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Count >
   {
     virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
@@ -355,24 +355,24 @@ public:
     { Statement::maker_by_func_name()["count"].push_back(this); }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-set-count from=\"" + input + "\" type=\"" + to_string(to_count) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
   { return (input != "_" ? input + "." : "") + "count(" + to_string(to_count) + ")"; }
 
-  Evaluator_Set_Count(int line_number_, const map< string, string >& input_attributes,
+  Evaluator_Set_Count(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "eval-set-count"; }
-  virtual string get_result_name() const { return ""; }
+  virtual std::string get_name() const { return "eval-set-count"; }
+  virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Set_Count() {}
-  
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;  
+
+  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;
   virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
-  
+
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
-  
+
 private:
   std::string input;
   Objects to_count;
