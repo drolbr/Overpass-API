@@ -667,7 +667,7 @@ Prepared_Point::Prepared_Point
 
 double great_circle_line_dist(const Prepared_Segment& segment, const std::vector< double >& cartesian)
 {
-  double scalar_prod_ = abs(scalar_prod(cartesian, segment.norm))
+  double scalar_prod_ = std::abs(scalar_prod(cartesian, segment.norm))
       /sqrt(scalar_prod(segment.norm, segment.norm));
 
   if (scalar_prod_ > 1)
@@ -682,7 +682,7 @@ double great_circle_line_dist(double llat1, double llon1, double llat2, double l
 {
   std::vector< double > norm = cross_prod(cartesian(llat1, llon1), cartesian(llat2, llon2));
 
-  double scalar_prod_ = abs(scalar_prod(cartesian(plat, plon), norm))
+  double scalar_prod_ = std::abs(scalar_prod(cartesian(plat, plon), norm))
       /sqrt(scalar_prod(norm, norm));
 
   if (scalar_prod_ > 1)
@@ -701,8 +701,8 @@ bool intersect(const Prepared_Segment& segment_a,
   std::vector< double > asum = sum(segment_a.first_cartesian, segment_a.second_cartesian);
   std::vector< double > bsum = sum(segment_b.first_cartesian, segment_b.second_cartesian);
 
-  return (abs(scalar_prod(asum, intersection_pt)) >= scalar_prod(asum, segment_a.first_cartesian)
-      && abs(scalar_prod(bsum, intersection_pt)) >= scalar_prod(bsum, segment_b.first_cartesian));
+  return (std::abs(scalar_prod(asum, intersection_pt)) >= scalar_prod(asum, segment_a.first_cartesian)
+      && std::abs(scalar_prod(bsum, intersection_pt)) >= scalar_prod(bsum, segment_b.first_cartesian));
 }
 
 
@@ -722,8 +722,8 @@ bool intersect(double alat1, double alon1, double alat2, double alon2,
   std::vector< double > asum = sum(a1, a2);
   std::vector< double > bsum = sum(b1, b2);
 
-  return (abs(scalar_prod(asum, intersection_pt)) >= scalar_prod(asum, a1)
-      && abs(scalar_prod(bsum, intersection_pt)) >= scalar_prod(bsum, b1));
+  return (std::abs(scalar_prod(asum, intersection_pt)) >= scalar_prod(asum, a1)
+      && std::abs(scalar_prod(bsum, intersection_pt)) >= scalar_prod(bsum, b1));
 }
 
 
@@ -749,7 +749,7 @@ void add_coord(double lat, double lon, double radius,
   double south = lat - radius*(360.0/(40000.0*1000.0));
   double north = lat + radius*(360.0/(40000.0*1000.0));
   double scale_lat = lat > 0.0 ? north : south;
-  if (abs(scale_lat) >= 89.9)
+  if (std::abs(scale_lat) >= 89.9)
     scale_lat = 89.9;
   double west = lon - radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
   double east = lon + radius*(360.0/(40000.0*1000.0))/cos(scale_lat/90.0*acos(0));
