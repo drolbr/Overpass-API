@@ -25,16 +25,15 @@
 
 #include "statement.h"
 
-using namespace std;
 
 class Complete_Statement : public Statement
 {
   public:
-  Complete_Statement(int line_number_, const map< string, string >& attributes,
+  Complete_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                      Parsed_Query& global_settings);
-    virtual void add_statement(Statement* statement, string text);
-    virtual string get_name() const { return "complete"; }
-    virtual string get_result_name() const { return ""; }
+    virtual void add_statement(Statement* statement, std::string text);
+    virtual std::string get_name() const { return "complete"; }
+    virtual std::string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Complete_Statement() {}
     
@@ -80,8 +79,8 @@ class Complete_Statement : public Statement
     }
 
   private:
-    string input, output_iteration, output_complete;
-    vector< Statement* > substatements;
+    std::string input, output_iteration, output_complete;
+    std::vector< Statement* > substatements;
 };
 
 #endif

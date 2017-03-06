@@ -34,10 +34,10 @@
 Generic_Statement_Maker< Complete_Statement > Complete_Statement::statement_maker("complete");
 
 Complete_Statement::Complete_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_)
 {
-  map< string, string > attributes;
+  std::map< std::string, std::string > attributes;
   
   attributes["into"] = "_";
   attributes["into_complete"] = "_";
@@ -65,27 +65,27 @@ void Complete_Statement::add_statement(Statement* statement, std::string text)
 uint count_itemset_entries(const Set& set_)
 {
   uint size(0);
-  for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator
       it(set_.nodes.begin()); it != set_.nodes.end(); ++it)
     size += it->second.size();
-  for (map< Uint31_Index, vector< Way_Skeleton > >::const_iterator
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
       it(set_.ways.begin()); it != set_.ways.end(); ++it)
     size += it->second.size();
-  for (map< Uint31_Index, vector< Relation_Skeleton > >::const_iterator
+  for (std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
       it(set_.relations.begin()); it != set_.relations.end(); ++it)
     size += it->second.size();
 
-  for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator
+  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
       it(set_.attic_nodes.begin()); it != set_.attic_nodes.end(); ++it)
     size += it->second.size();
-  for (map< Uint31_Index, vector< Attic< Way_Skeleton > > >::const_iterator
+  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
       it(set_.attic_ways.begin()); it != set_.attic_ways.end(); ++it)
     size += it->second.size();
-  for (map< Uint31_Index, vector< Attic< Relation_Skeleton > > >::const_iterator
+  for (std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
       it(set_.attic_relations.begin()); it != set_.attic_relations.end(); ++it)
     size += it->second.size();
 
-  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
+  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
       it(set_.areas.begin()); it != set_.areas.end(); ++it)
     size += it->second.size();
 
@@ -104,7 +104,7 @@ void Complete_Statement::execute(Resource_Manager& rman)
     rman.sets()[output_iteration] = iteration_base_set;
 
     rman.push_reference(iteration_base_set);
-    for (vector< Statement* >::iterator it(substatements.begin());
+    for (std::vector< Statement* >::iterator it(substatements.begin());
         it != substatements.end(); ++it)
     {
       (*it)->execute(rman);
