@@ -19,69 +19,68 @@
 #ifndef DE__OSM3S___OVERPASS_API__FRONTEND__WEB_OUTPUT_H
 #define DE__OSM3S___OVERPASS_API__FRONTEND__WEB_OUTPUT_H
 
-#include "../core/datatypes.h"
 
-using namespace std;
+#include "../core/datatypes.h"
+#include "basic_formats.h"
+#include "output_handler.h"
+
 
 struct Web_Output : public Error_Output
 {
   Web_Output(uint log_level_) : http_method(http_get), has_origin(false), header_written(not_yet),
-      encoding_errors(false), parse_errors(false), static_errors(false), log_level(log_level_) {}
+      encoding_errors(false), parse_errors(false), static_errors(false), log_level(log_level_),
+      output_handler(0) {}
   
   ~Web_Output() { write_footer(); }
   
-  virtual void add_encoding_error(const string& error);
-  virtual void add_parse_error(const string& error, int line_number);
-  virtual void add_static_error(const string& error, int line_number);
+  virtual void add_encoding_error(const std::string& error);
+  virtual void add_parse_error(const std::string& error, int line_number);
+  virtual void add_static_error(const std::string& error, int line_number);
   
-  virtual void add_encoding_remark(const string& error);
-  virtual void add_parse_remark(const string& error, int line_number);
-  virtual void add_static_remark(const string& error, int line_number);
+  virtual void add_encoding_remark(const std::string& error);
+  virtual void add_parse_remark(const std::string& error, int line_number);
+  virtual void add_static_remark(const std::string& error, int line_number);
   
-  virtual void runtime_error(const string& error);
-  virtual void runtime_remark(const string& error);
+  virtual void runtime_error(const std::string& error);
+  virtual void runtime_remark(const std::string& error);
   
   virtual void display_statement_progress
-      (uint timer, const string& name, int progress, int line_number,
-       const vector< pair< uint, uint > >& stack) {}
+      (uint timer, const std::string& name, int progress, int line_number,
+       const std::vector< std::pair< uint, uint > >& stack) {}
        
   virtual bool display_encoding_errors() { return encoding_errors; }
   virtual bool display_parse_errors() { return parse_errors; }
   virtual bool display_static_errors() { return static_errors; }
   
-  virtual void add_padding(const string& padding_) { padding = padding_; }
-  
   void enforce_header(uint write_mime);
   void write_html_header
-      (const string& timestamp = "", const string& area_timestamp = "", uint write_mime = 200,
+      (const std::string& timestamp = "", const std::string& area_timestamp = "", uint write_mime = 200,
        bool write_js_init = false, bool write_remarks = true);
-  void write_xml_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-  void write_json_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-  void write_text_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
-  void write_csv_header
-      (const string& timestamp = "", const string& area_timestamp = "", bool write_mime = true);
+  void write_payload_header
+      (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp,
+       bool write_mime);
   void write_footer();
   
+  void set_output_handler(Output_Handler* output_handler_) { output_handler = output_handler_; }
+  
 public:
-  typedef enum { http_get, http_post, http_head, http_options } Http_Methods;
   Http_Methods http_method;
-  string allow_headers;
+  std::string allow_headers;
   bool has_origin;
   
 private:
-  enum { not_yet, xml, html, json, text, csv, final } header_written;
+  enum { not_yet, payload, html, final } header_written;
   bool encoding_errors;
   bool parse_errors;
   bool static_errors;
   uint log_level;
-  string padding;
-  string messages;
+  std::string messages;
   
-  void display_remark(const string& text);
-  void display_error(const string& text, uint write_mime);
+  Output_Handler* output_handler;
+  
+  void display_remark(const std::string& text);
+  void display_error(const std::string& text, uint write_mime);
 };
+
 
 #endif

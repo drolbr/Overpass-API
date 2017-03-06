@@ -22,9 +22,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../../expat/escape_json.h"
+#include "../../expat/escape_xml.h"
 #include "statement.h"
 
-using namespace std;
 
 const int QUERY_NODE = 1;
 const int QUERY_WAY = 2;
@@ -36,42 +37,100 @@ typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } An
 
 
 class Regular_Expression;
+class Bbox_Query_Statement;
 
 
 class Query_Statement : public Output_Statement
 {
   public:
-    Query_Statement(int line_number_, const map< string, string >& input_attributes, 
-                    Query_Constraint* bbox_limitation = 0);
+    Query_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                    Parsed_Query& global_settings);
     virtual ~Query_Statement() {}
-    virtual void add_statement(Statement* statement, string text);
-    virtual string get_name() const { return "query"; }
+    virtual void add_statement(Statement* statement, std::string text);
+    virtual std::string get_name() const { return "query"; }
     virtual void execute(Resource_Manager& rman);
-    
+
     static Generic_Statement_Maker< Query_Statement > statement_maker;
-    
+
     static bool area_query_exists() { return area_query_exists_; }
-    
+
+    static std::string to_string(int type)
+    {
+      if (type == QUERY_NODE)
+        return "node";
+      else if (type == QUERY_WAY)
+        return "way";
+      else if (type == QUERY_RELATION)
+        return "relation";
+
+      return "area";
+    }
+
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<query" + dump_xml_result_name() + " type=\"" + to_string(type) + "\">\n";
+
+      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+        result += *it ? (*it)->dump_xml(indent + "  ") : "";
+
+      return result + indent + "</query>\n";
+    }
+
+    virtual std::string dump_compact_ql(const std::string& indent) const { return dump_subquery_map_ql(indent, false); }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_subquery_map_ql(indent, true); }
+
+    std::string dump_subquery_map_ql(const std::string& indent, bool pretty) const
+    {
+      std::string result = (pretty ? indent :  "") + to_string(type);
+
+      uint proper_substatement_count = 0;
+      for (std::vector< Statement* >::const_iterator it = substatements.begin();
+          it != substatements.end(); ++it)
+      {
+        if ((*it)->get_name() == "item")
+          result += (*it)->dump_ql_in_query("");
+        else
+          ++proper_substatement_count;
+      }
+
+      std::string prefix = (pretty && proper_substatement_count > 1 ? "\n  " + indent : "");
+
+      for (std::vector< Statement* >::const_iterator it = substatements.begin();
+          it != substatements.end(); ++it)
+      {
+        if ((*it)->get_name() != "item")
+          result += prefix + (*it)->dump_ql_in_query("");
+      }
+
+      if (indent == "(bbox)" && type != QUERY_AREA)
+        result += "(bbox)";
+
+      return result + (pretty && proper_substatement_count > 1 && dump_ql_result_name() != "" ? "\n  " + indent : "")
+          + dump_ql_result_name();
+    }
+
   private:
     int type;
-    vector< string > keys;    
-    vector< pair< string, string > > key_values;    
-    vector< pair< string, Regular_Expression* > > key_regexes;    
-    vector< pair< Regular_Expression*, Regular_Expression* > > regkey_regexes;    
-    vector< pair< string, string > > key_nvalues;    
-    vector< pair< string, Regular_Expression* > > key_nregexes;    
-    vector< pair< Regular_Expression*, Regular_Expression* > > regkey_nregexes;    
-    vector< Query_Constraint* > constraints;
-    
+    std::vector< std::string > keys;
+    std::vector< std::pair< std::string, std::string > > key_values;
+    std::vector< std::pair< std::string, Regular_Expression* > > key_regexes;
+    std::vector< std::pair< Regular_Expression*, Regular_Expression* > > regkey_regexes;
+    std::vector< std::pair< std::string, std::string > > key_nvalues;
+    std::vector< std::pair< std::string, Regular_Expression* > > key_nregexes;
+    std::vector< std::pair< Regular_Expression*, Regular_Expression* > > regkey_nregexes;
+    std::vector< Query_Constraint* > constraints;
+    std::vector< Statement* > substatements;
+    Bbox_Query_Statement* global_bbox_statement;
+
     static bool area_query_exists_;
-    
+
     template< typename Skeleton, typename Id_Type >
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids
         (const File_Properties& file_prop, const File_Properties& attic_file_prop,
          Resource_Manager& rman, uint64 timestamp, bool check_keys_late, bool& result_valid);
-        
+
     template< class Id_Type >
-    vector< Id_Type > collect_ids
+    std::vector< Id_Type > collect_ids
         (const File_Properties& file_prop,
          Resource_Manager& rman, bool check_keys_late);
         	
@@ -79,14 +138,14 @@ class Query_Statement : public Output_Statement
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_non_ids
         (const File_Properties& file_prop, const File_Properties& attic_file_prop,
          Resource_Manager& rman, uint64 timestamp);
-                
+
     template< class Id_Type >
-    vector< Id_Type > collect_non_ids
+    std::vector< Id_Type > collect_non_ids
         (const File_Properties& file_prop, Resource_Manager& rman);
 
     void get_elements_by_id_from_db
-        (map< Uint31_Index, vector< Area_Skeleton > >& elements,
-	 const vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
+        (std::map< Uint31_Index, std::vector< Area_Skeleton > >& elements,
+	 const std::vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
          Resource_Manager& rman, File_Properties& file_prop);
 
     template< class TIndex, class TObject >
@@ -111,18 +170,18 @@ class Query_Statement : public Output_Statement
                     Resource_Manager& rman);
 
     template< class Id_Type >
-    void progress_1(vector< Id_Type >& ids, bool& invert_ids,
+    void progress_1(std::vector< Id_Type >& ids, bool& invert_ids,
                     Answer_State& answer_state, bool check_keys_late,
                     const File_Properties& file_prop,
                     Resource_Manager& rman);
 
     template< class Id_Type >
-    void collect_nodes(vector< Id_Type >& ids,
+    void collect_nodes(std::vector< Id_Type >& ids,
 				 bool& invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman);
 
     template< class Id_Type >
-    void collect_elems(vector< Id_Type >& ids,
+    void collect_elems(std::vector< Id_Type >& ids,
 				 bool& invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman);
 };
@@ -131,26 +190,47 @@ class Query_Statement : public Output_Statement
 class Has_Kv_Statement : public Statement
 {
   public:
-    Has_Kv_Statement(int line_number_, const map< string, string >& input_attributes,
-                     Query_Constraint* bbox_limitation = 0);
-    virtual string get_name() const { return "has-kv"; }
-    virtual string get_result_name() const { return ""; }
+    Has_Kv_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                     Parsed_Query& global_settings);
+    virtual std::string get_name() const { return "has-kv"; }
+    virtual std::string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman) {}
     virtual ~Has_Kv_Statement();
-    
+
     static Generic_Statement_Maker< Has_Kv_Statement > statement_maker;
-    
-    string get_key() const { return key; }
+
+    std::string get_key() const { return key_regex ? "" : key; }
     Regular_Expression* get_key_regex() { return key_regex; }
-    string get_value() const { return value; }
+    std::string get_value() const { return regex ? "" : value; }
     Regular_Expression* get_regex() { return regex; }
     bool get_straight() const { return straight; }
-    
+
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<has-kv"
+          + (key != "" ? (key_regex ? std::string(" regk=\"") : std::string(" k=\"")) + escape_xml(key) + "\"" : "")
+          + (value != "" ? (regex ? std::string(" regv=\"") : std::string(" v=\"")) + escape_xml(value) + "\"" : "")
+          + (straight ? "" : " modv=\"not\"")
+          + (case_sensitive ? "" : " case=\"ignore\"")
+          + "/>\n";
+    }
+
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("[")
+          + (key_regex ? "~\"" : "\"") + escape_cstr(key) + "\""
+          + (value != "" ? std::string(straight ? "" : "!") + (regex ? "~\"" : "=\"") + escape_cstr(value) + "\"" : "")
+          + (case_sensitive ? "" : ",i")
+          + "]";
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+
   private:
-    string key, value;
+    std::string key, value;
     Regular_Expression* regex;
     Regular_Expression* key_regex;
     bool straight;
+    bool case_sensitive;
 };
 
 #endif

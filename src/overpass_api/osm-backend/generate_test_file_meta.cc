@@ -23,14 +23,13 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
 
 typedef unsigned int uint;
 
 template < typename T >
-struct V : public vector< T >
+struct V : public std::vector< T >
 {
-  V(const T& t) : vector< T >(1, t) {}
+  V(const T& t) : std::vector< T >(1, t) {}
   V& operator()(const T& t)
   {
     this->push_back(t);
@@ -41,28 +40,28 @@ struct V : public vector< T >
 struct Print_Control
 {
   Print_Control() : uid(0), tags_allowed_only(false) {}
-  Print_Control(uint pattern_size_, uint uid_, const string& timestamp_, bool tags_allowed_only_, bool bbox_limited_)
+  Print_Control(uint pattern_size_, uint uid_, const std::string& timestamp_, bool tags_allowed_only_, bool bbox_limited_)
     : pattern_size(pattern_size_), uid(uid_), timestamp(timestamp_),
       tags_allowed_only(tags_allowed_only_), bbox_limited(bbox_limited_) {}
-  
+
   void meta_data(uint id, int variant) const;
   bool print_allowed(uint id, int variant) const;
-  
+
   private:
     uint pattern_size;
     uint uid;
-    string timestamp;
+    std::string timestamp;
     bool tags_allowed_only;
     bool bbox_limited;
 };
 
 void Print_Control::meta_data(uint id, int variant) const
 {
-  cout<<" version=\""<<((id + variant) % 256 + 1)<<"\""
-        " timestamp=\"20"<<setw(2)<<setfill('0')<<(variant % 10)
-      <<"-01-01T"<<setw(2)<<setfill('0')<<((id / 3600) % 24)
-      <<":"<<setw(2)<<setfill('0')<<((id / 60) % 60)
-      <<":"<<setw(2)<<setfill('0')<<(id % 60)<<"Z\""
+  std::cout<<" version=\""<<((id + variant) % 256 + 1)<<"\""
+        " timestamp=\"20"<<std::setw(2)<<std::setfill('0')<<(variant % 10)
+      <<"-01-01T"<<std::setw(2)<<std::setfill('0')<<((id / 3600) % 24)
+      <<":"<<std::setw(2)<<std::setfill('0')<<((id / 60) % 60)
+      <<":"<<std::setw(2)<<std::setfill('0')<<(id % 60)<<"Z\""
         " changeset=\""<<(id + variant + 10)<<"\""
 	" uid=\""<<((id/100 + variant) % 9990 + 10)<<"\""
 	" user=\"User_"<<((id/100 + variant) % 9990 + 10)<<"\"";
@@ -72,17 +71,17 @@ bool Print_Control::print_allowed(uint id, int variant) const
 {
   if (tags_allowed_only && (id % 7 != 0))
     return false;
-  
+
   if (bbox_limited)
   {
     if (variant == 1 || variant == 4)
     {
-      if (id > pattern_size*pattern_size || (id-1) % pattern_size >= pattern_size/2)
+      if (id > pattern_size*pattern_size/2 || (id-1) % pattern_size >= pattern_size/2)
         return false;
     }
     else if (variant == 2 || variant == 5)
     {
-      if (id > pattern_size*pattern_size || id % pattern_size > pattern_size/2)
+      if (id > pattern_size*pattern_size/2 || id % pattern_size > pattern_size/2)
         return false;
     }
     else if (variant == 3 || variant == 6)
@@ -91,17 +90,17 @@ bool Print_Control::print_allowed(uint id, int variant) const
         return false;
     }
   }
-  
+
   if (timestamp != "")
   {
-    ostringstream buf;
-    buf<<"20"<<setw(2)<<setfill('0')<<(variant % 10)
-      <<"-01-01T"<<setw(2)<<setfill('0')<<((id / 3600) % 24)
-      <<":"<<setw(2)<<setfill('0')<<((id / 60) % 60)
-      <<":"<<setw(2)<<setfill('0')<<(id % 60)<<"Z";
+    std::ostringstream buf;
+    buf<<"20"<<std::setw(2)<<std::setfill('0')<<(variant % 10)
+      <<"-01-01T"<<std::setw(2)<<std::setfill('0')<<((id / 3600) % 24)
+      <<":"<<std::setw(2)<<std::setfill('0')<<((id / 60) % 60)
+      <<":"<<std::setw(2)<<std::setfill('0')<<(id % 60)<<"Z";
     return (buf.str() >= timestamp);
   }
-  
+
   if (uid == 0)
     return true;
 
@@ -112,11 +111,11 @@ bool Print_Control::print_allowed(uint id, int variant) const
 void create_node(uint id, double lat, double lon,
 		 const Print_Control& print_control, bool after_altered = false, bool more_tags = false)
 {
-  cout<<"  <node id=\""<<id<<"\""
-        " lat=\""<<fixed<<setprecision(7)<<lat<<"\""
-        " lon=\""<<fixed<<setprecision(7)<<lon<<"\"";
+  std::cout<<"  <node id=\""<<id<<"\""
+        " lat=\""<<std::fixed<<std::setprecision(7)<<lat<<"\""
+        " lon=\""<<std::fixed<<std::setprecision(7)<<lon<<"\"";
   print_control.meta_data(id, after_altered ? 4 : 1);
-  
+
   std::string tags;
   if (id % 7 == 0)
     tags += "    <tag k=\"foo\" v=\"bar\"/>\n";
@@ -124,11 +123,11 @@ void create_node(uint id, double lat, double lon,
     tags += "    <tag k=\"even\" v=\"yes\"/>\n";
   if (more_tags && id % 100 == 0)
     tags += "    <tag k=\"@id\" v=\"some_value\"/>\n";
-  
+
   if (tags == "")
-    cout<<"/>\n";
+    std::cout<<"/>\n";
   else
-    cout<<">\n"<<tags<<"  </node>\n";
+    std::cout<<">\n"<<tags<<"  </node>\n";
 }
 
 
@@ -157,55 +156,55 @@ void create_way
 {
   if (!print_control.print_allowed(id, after_altered ? 5 : 2))
     return;
-  
-  cout<<"  <way id=\""<<id<<"\"";
+
+  std::cout<<"  <way id=\""<<id<<"\"";
   print_control.meta_data(id, after_altered ? 5 : 2);
-  cout<<">\n";
+  std::cout<<">\n";
   if (start_node_ref < end_node_ref)
   {
     for (uint ref = start_node_ref; ref <= end_node_ref; ref += stepping)
-      cout<<"    <nd ref=\""<<ref<<"\"/>\n";
+      std::cout<<"    <nd ref=\""<<ref<<"\"/>\n";
   }
   else
   {
     for (uint ref = start_node_ref; (int)ref >= (int)end_node_ref; ref -= stepping)
-      cout<<"    <nd ref=\""<<ref<<"\"/>\n";
+      std::cout<<"    <nd ref=\""<<ref<<"\"/>\n";
   }
   if (id % 7 == 0)
-    cout<<"    <tag k=\"foo\" v=\"bar\"/>\n";
+    std::cout<<"    <tag k=\"foo\" v=\"bar\"/>\n";
   if (more_tags && id % 2 == 0)
-    cout<<"    <tag k=\"even\" v=\"yes\"/>\n";
+    std::cout<<"    <tag k=\"even\" v=\"yes\"/>\n";
   if (more_tags && id % 100 == 0)
-    cout<<"    <tag k=\"@id\" v=\"some_value\"/>\n";
-  cout<<"  </way>\n";
+    std::cout<<"    <tag k=\"@id\" v=\"some_value\"/>\n";
+  std::cout<<"  </way>\n";
 }
 
 void create_relation
-    (uint id, const vector< uint >& refs, const vector< uint >& types,
+    (uint id, const std::vector< uint >& refs, const std::vector< uint >& types,
      const Print_Control& print_control, bool after_altered = false, bool more_tags = false)
 {
   if (!print_control.print_allowed(id, after_altered ? 6 : 3))
     return;
-  
-  vector< string > roles = V< string >("zero")("one")("two")("three");
-  vector< string > typenames = V< string >("node")("way")("relation");
-  
-  cout<<"  <relation id=\""<<id<<"\"";
+
+  std::vector< std::string > roles = V< std::string >("zero")("one")("two")("three");
+  std::vector< std::string > typenames = V< std::string >("node")("way")("relation");
+
+  std::cout<<"  <relation id=\""<<id<<"\"";
   print_control.meta_data(id, after_altered ? 6 : 3);
-  cout<<">\n";
+  std::cout<<">\n";
   for (uint i = 0; i < refs.size(); ++i)
   {
-    cout<<"    <member type=\""<<typenames[types[i]]<<
+    std::cout<<"    <member type=\""<<typenames[types[i]]<<
           "\" ref=\""<<refs[i]<<
           "\" role=\""<<roles[(refs[i] + types[i]) % 4]<<"\"/>\n";
   }
   if (id % 7 == 0)
-    cout<<"    <tag k=\"foo\" v=\"bar\"/>\n";
+    std::cout<<"    <tag k=\"foo\" v=\"bar\"/>\n";
   if (more_tags && id % 2 == 0)
-    cout<<"    <tag k=\"even\" v=\"yes\"/>\n";
+    std::cout<<"    <tag k=\"even\" v=\"yes\"/>\n";
   if (more_tags && id % 100 == 0)
-    cout<<"    <tag k=\"@id\" v=\"some_value\"/>\n";
-  cout<<"  </relation>\n";
+    std::cout<<"    <tag k=\"@id\" v=\"some_value\"/>\n";
+  std::cout<<"  </relation>\n";
 }
 
 void create_node_test_pattern
@@ -268,7 +267,7 @@ int main(int argc, char* args[])
 {
   uint pattern_size = 2;
   uint uid = 0;
-  string timestamp;
+  std::string timestamp;
   bool tags_allowed_only = false;
   bool bbox_limited = false;
   bool more_tags = false;
@@ -277,46 +276,46 @@ int main(int argc, char* args[])
   enum { before, diff, after, augmented } pattern = before;
   if (argc > 2)
   {
-    if (string(args[2]) == "diff")
+    if (std::string(args[2]) == "diff")
       pattern = diff;
-    else if (string(args[2]) == "after")
+    else if (std::string(args[2]) == "after")
       pattern = after;
-    else if (string(args[2]) == "augmented")
+    else if (std::string(args[2]) == "augmented")
       pattern = augmented;
-    else if (string(args[2]) == "more_tags")
+    else if (std::string(args[2]) == "more_tags")
       more_tags = true;
   }
   if (argc > 3)
   {
-    if (string(args[3]).substr(0, 4) == "uid=")
+    if (std::string(args[3]).substr(0, 4) == "uid=")
       uid = atoll(args[3] + 4);
-    else if (string(args[3]).substr(0, 10) == "timestamp=")
-      timestamp = string(args[3] + 10);
+    else if (std::string(args[3]).substr(0, 10) == "timestamp=")
+      timestamp = std::string(args[3] + 10);
   }
   if (argc > 4)
   {
-    if (string(args[4]) == "tags")
+    if (std::string(args[4]) == "tags")
       tags_allowed_only = true;
-    if (string(args[4]) == "bbox")
+    if (std::string(args[4]) == "bbox")
       bbox_limited = true;
-    if (string(args[4]) == "tags_bbox")
+    if (std::string(args[4]) == "tags_bbox")
     {
       bbox_limited = true;
       tags_allowed_only = true;
     }
   }
-  
+
   Print_Control print_control(pattern_size, uid, timestamp, tags_allowed_only, bbox_limited);
 
-  cout<<
+  std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm version=\"0.6\" generator=\"Overpass API\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
   "The data is made available under ODbL.</note>\n"
   "<meta osm_base=\"mock-up-init\"/>\n\n";
-    
+
   if (bbox_limited)
-    std::cout<<"  <bounds minlat=\"10\" minlon=\"1\" maxlat=\"10.5\" maxlon=\"1.5\"/>\n\n";
+    std::cout<<"  <bounds minlat=\"10.0000000\" minlon=\"1.0000000\" maxlat=\"10.5000000\" maxlon=\"1.5000000\"/>\n\n";
 
   if (pattern == before)
   {
@@ -329,14 +328,14 @@ int main(int argc, char* args[])
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 6, pattern_size, print_control, false, more_tags);
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 7, pattern_size, print_control, false, more_tags);
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 8, pattern_size, print_control, false, more_tags);
-    
+
     for (uint i = 0; i < 6; ++i)
       create_way_test_pattern(i, pattern_size, print_control, false, false, more_tags);
-    
+
     create_way(pattern_size*pattern_size*6,
 	       1, pattern_size*pattern_size*2 + 1, pattern_size*pattern_size*2, print_control,
 	       false, more_tags);
-    
+
     for (uint i = 0; i < 6; ++i)
       create_relation_test_pattern(i, pattern_size, print_control, false, false, more_tags);
   }
@@ -344,29 +343,29 @@ int main(int argc, char* args[])
   {
     create_node_test_pattern(10.0, 11.0, 2.0, 3.0, 1, pattern_size, print_control, true);
     create_node_test_pattern(11.0, 12.0, 3.0, 4.0, 2, pattern_size, print_control);
-    cout<<"<delete>\n";
+    std::cout<<"<delete>\n";
     create_node_test_pattern(10.0, 11.0, 4.0, 5.0, 3, pattern_size, print_control);
-    cout<<"</delete>\n";
+    std::cout<<"</delete>\n";
     create_node_test_pattern(10.0, 11.0, 5.0, 6.0, 4, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 5, pattern_size, print_control);
-    cout<<"<delete>\n";
+    std::cout<<"<delete>\n";
     create_node_test_pattern(10.0, 11.0, 7.0, 8.0, 6, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 8.0, 9.0, 7, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 9.0, 10.0, 8, pattern_size, print_control);
-    cout<<"</delete>\n";
-    
+    std::cout<<"</delete>\n";
+
     create_way_test_pattern(1, pattern_size, print_control, false, true);
-    cout<<"<delete>\n";
+    std::cout<<"<delete>\n";
     create_way_test_pattern(3, pattern_size, print_control);
-    cout<<"</delete>\n";
+    std::cout<<"</delete>\n";
     create_way_test_pattern(4, pattern_size, print_control, true, false);
-    
+
     create_relation_test_pattern(1, pattern_size, print_control, false, true);
-    cout<<"<delete>\n";
+    std::cout<<"<delete>\n";
     create_relation_test_pattern(3, pattern_size, print_control);
-    cout<<"</delete>\n";
+    std::cout<<"</delete>\n";
     create_relation_test_pattern(5, pattern_size, print_control, true, false);
-  }  
+  }
   else if (pattern == after)
   {
     create_node_test_pattern(10.0, 11.0, 1.0, 2.0, 0, pattern_size, print_control);
@@ -376,7 +375,7 @@ int main(int argc, char* args[])
     create_node_test_pattern(10.0, 11.0, 5.0, 6.0, 4, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 5, pattern_size, print_control);
     // nodes 6 to 8 deleted
-    
+
     create_way_test_pattern(0, pattern_size, print_control);
     create_way_test_pattern(1, pattern_size, print_control, false, true);
     create_way_test_pattern(2, pattern_size, print_control);
@@ -385,7 +384,7 @@ int main(int argc, char* args[])
 
     create_way(pattern_size*pattern_size*6,
 	       1, pattern_size*pattern_size*2 + 1, pattern_size*pattern_size*2, print_control);
-        
+
     create_relation_test_pattern(0, pattern_size, print_control);
     create_relation_test_pattern(1, pattern_size, print_control, false, true);
     create_relation_test_pattern(2, pattern_size, print_control);
@@ -394,7 +393,7 @@ int main(int argc, char* args[])
   }
   else if (pattern == augmented)
   {
-    cout<<"<delete>\n";
+    std::cout<<"<delete>\n";
     create_node_test_pattern(10.0, 11.0, 2.0, 3.0, 1, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 3.0, 4.0, 2, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 4.0, 5.0, 3, pattern_size, print_control);
@@ -403,47 +402,47 @@ int main(int argc, char* args[])
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 6, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 7, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 8, pattern_size, print_control);
-    cout<<"</delete>\n";
-    cout<<"<keep>\n";
+    std::cout<<"</delete>\n";
+    std::cout<<"<keep>\n";
     create_node(1, 10.0 + 0.5/pattern_size, 1.0 + 0.5/pattern_size, print_control);
-    cout<<"</keep>\n";
-    cout<<"<insert>\n";
+    std::cout<<"</keep>\n";
+    std::cout<<"<insert>\n";
     create_node_test_pattern(10.0, 11.0, 2.0, 3.0, 1, pattern_size, print_control, true);
     create_node_test_pattern(11.0, 12.0, 3.0, 4.0, 2, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 5.0, 6.0, 4, pattern_size, print_control);
     create_node_test_pattern(10.0, 11.0, 6.0, 7.0, 5, pattern_size, print_control);
-    cout<<"</insert>\n";
+    std::cout<<"</insert>\n";
 
-    cout<<"<delete>\n";
+    std::cout<<"<delete>\n";
     create_way_test_pattern(1, pattern_size, print_control);
     create_way_test_pattern(3, pattern_size, print_control);
     create_way_test_pattern(4, pattern_size, print_control);
-    cout<<"</delete>\n";
-    cout<<"<keep>\n";
+    std::cout<<"</delete>\n";
+    std::cout<<"<keep>\n";
     create_way_test_pattern(2, pattern_size, print_control);
     create_way_test_pattern(5, pattern_size, print_control);
     create_way(pattern_size*pattern_size*6,
 	       1, pattern_size*pattern_size*2 + 1, pattern_size*pattern_size*2, print_control);
-    cout<<"</keep>\n";
-    cout<<"<insert>\n";
+    std::cout<<"</keep>\n";
+    std::cout<<"<insert>\n";
     create_way_test_pattern(1, pattern_size, print_control, false, true);
     create_way_test_pattern(4, pattern_size, print_control, true, false);
-    cout<<"</insert>\n";
-    
-    cout<<"<delete>\n";
+    std::cout<<"</insert>\n";
+
+    std::cout<<"<delete>\n";
     create_relation_test_pattern(1, pattern_size, print_control);
     create_relation_test_pattern(3, pattern_size, print_control);
     create_relation_test_pattern(5, pattern_size, print_control);
-    cout<<"</delete>\n";
-    cout<<"<keep>\n";
+    std::cout<<"</delete>\n";
+    std::cout<<"<keep>\n";
     create_relation_test_pattern(2, pattern_size, print_control);
     create_relation_test_pattern(4, pattern_size, print_control);
-    cout<<"</keep>\n";
-    cout<<"<insert>\n";
+    std::cout<<"</keep>\n";
+    std::cout<<"<insert>\n";
     create_relation_test_pattern(1, pattern_size, print_control, false, true);
     create_relation_test_pattern(5, pattern_size, print_control, true, false);
-    cout<<"</insert>\n";
+    std::cout<<"</insert>\n";
   }
-  
-  cout<<"\n</osm>\n";
+
+  std::cout<<"\n</osm>\n";
 }

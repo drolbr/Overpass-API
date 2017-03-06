@@ -33,22 +33,22 @@
 class Osm_Updater
 {
   public:
-    Osm_Updater(Osm_Backend_Callback* callback_, const string& data_version,
+    Osm_Updater(Osm_Backend_Callback* callback_, const std::string& data_version,
 		meta_modes meta, unsigned int flush_limit);
-    Osm_Updater(Osm_Backend_Callback* callback_, string db_dir, const string& data_version,
+    Osm_Updater(Osm_Backend_Callback* callback_, std::string db_dir, const std::string& data_version,
 		meta_modes meta, unsigned int flush_limit);
     ~Osm_Updater();
 
     void finish_updater();
     void parse_file_completely(FILE* in);
-    
+
   private:
     Nonsynced_Transaction* transaction;
     Dispatcher_Client* dispatcher_client;
     Node_Updater* node_updater_;
     Way_Updater* way_updater_;
     Relation_Updater* relation_updater_;
-    string db_dir_;
+    std::string db_dir_;
     meta_modes meta;
 
     void flush();

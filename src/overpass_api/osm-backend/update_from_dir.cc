@@ -56,10 +56,10 @@ struct Relation_Caller
 };
 
 template < class Caller >
-void process_source_files(const string& source_dir,
-		          const vector< string >& source_file_names)
+void process_source_files(const std::string& source_dir,
+		          const std::vector< std::string >& source_file_names)
 {
-  vector< string >::const_iterator it(source_file_names.begin());
+  std::vector< std::string >::const_iterator it(source_file_names.begin());
   while (it != source_file_names.end())
   {
     if ((*it == ".") || (*it == ".."))
@@ -72,7 +72,7 @@ void process_source_files(const string& source_dir,
     {
       //reading the main document
       Caller::parse(osc_file);
-      
+
       fclose(osc_file);
     }
     else
@@ -84,57 +84,57 @@ void process_source_files(const string& source_dir,
 int main(int argc, char* argv[])
 {
   // read command line arguments
-  string source_dir, db_dir, data_version;
-  vector< string > source_file_names;
+  std::string source_dir, db_dir, data_version;
+  std::vector< std::string > source_file_names;
   meta_modes meta = only_data;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
-  
+
   int argpos(1);
   while (argpos < argc)
   {
     if (!(strncmp(argv[argpos], "--db-dir=", 9)))
     {
-      db_dir = ((string)argv[argpos]).substr(9);
+      db_dir = ((std::string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
     }
     else if (!(strncmp(argv[argpos], "--osc-dir=", 10)))
     {
-      source_dir = ((string)argv[argpos]).substr(10);
+      source_dir = ((std::string)argv[argpos]).substr(10);
       if ((source_dir.size() > 0) && (source_dir[source_dir.size()-1] != '/'))
 	source_dir += '/';
     }
     else if (!(strncmp(argv[argpos], "--version=", 10)))
-      data_version = ((string)argv[argpos]).substr(10);
+      data_version = ((std::string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
       meta = keep_meta;
     else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
       meta = keep_attic;
     else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
     {
-      flush_limit = atoll(string(argv[argpos]).substr(13).c_str()) *1024*1024;
+      flush_limit = atoll(std::string(argv[argpos]).substr(13).c_str()) *1024*1024;
       if (flush_limit == 0)
         flush_limit = std::numeric_limits< unsigned int >::max();
     }
     else
     {
-      cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
+      std::cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
       abort = true;
     }
     ++argpos;
   }
   if (abort)
   {
-    cerr<<"Usage: "<<argv[0]<<" --osc-dir=DIR"
+    std::cerr<<"Usage: "<<argv[0]<<" --osc-dir=DIR"
           " [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush-size=FLUSH_SIZE]\n";
     return -1;
   }
-  
+
   // read file names from source directory
   DIR *dp;
   struct dirent *ep;
-  
+
   dp = opendir(source_dir.c_str());
   if (dp != NULL)
   {
@@ -148,29 +148,29 @@ int main(int argc, char* argv[])
     return -1;
   }
   sort(source_file_names.begin(), source_file_names.end());
-  
+
   try
   {
     if (db_dir == "")
     {
       Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
       get_verbatim_callback()->parser_started();
-      
+
       process_source_files< Node_Caller >(source_dir, source_file_names);
       process_source_files< Way_Caller >(source_dir, source_file_names);
       process_source_files< Relation_Caller >(source_dir, source_file_names);
-      
+
       osm_updater.finish_updater();
     }
     else
     {
       Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
       get_verbatim_callback()->parser_started();
-      
+
       process_source_files< Node_Caller >(source_dir, source_file_names);
       process_source_files< Way_Caller >(source_dir, source_file_names);
       process_source_files< Relation_Caller >(source_dir, source_file_names);
-      
+
       osm_updater.finish_updater();
     }
   }
@@ -184,6 +184,6 @@ int main(int argc, char* argv[])
     report_file_error(e);
     return -1;
   }
-  
+
   return 0;
 }

@@ -84,8 +84,7 @@ void Unix_Socket::open(const std::string& socket_name)
   if (socket_name.size() < sizeof local.sun_path - 1)
     strcpy(local.sun_path, socket_name.c_str());
   else
-    throw File_Error
-        (0, socket_name, "Unix_Socket::3");
+    throw File_Error(0, socket_name, "Unix_Socket::3");
 #ifdef __APPLE__
   local.sun_len = socket_name.size() + 1;
 #endif

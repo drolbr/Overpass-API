@@ -22,20 +22,20 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
 #include "statement.h"
 
-using namespace std;
 
 class Coord_Query_Statement : public Output_Statement
 {
   public:
-    Coord_Query_Statement(int line_number_, const map< string, string >& attributes,
-                          Query_Constraint* bbox_limitation = 0);
-    virtual string get_name() const { return "coord-query"; }
+    Coord_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
+                          Parsed_Query& global_settings);
+    virtual std::string get_name() const { return "coord-query"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Coord_Query_Statement() {}    
+    virtual ~Coord_Query_Statement() {}
     static Generic_Statement_Maker< Coord_Query_Statement > statement_maker;
-    
+
     static int check_segment
         (uint32 a_lat, int32 a_lon, uint32 b_lat, int32 b_lon,
          uint32 coord_lat, int32 coord_lon);
@@ -44,19 +44,38 @@ class Coord_Query_Statement : public Output_Statement
     static int check_area_block
         (uint32 ll_index, const Area_Block& area_block,
 	 uint32 coord_lat, int32 coord_lon);
-    
+
     // Used as bitmasks.
     const static int HIT = 1;
     const static int TOGGLE_EAST = 2;
     const static int TOGGLE_WEST = 4;
     const static int INTERSECT = 8;
-    
+
     static bool is_used() { return is_used_; }
-  
+
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<coord-query"
+          + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+          + (lat != 100. ? std::string(" lat=\"") + to_string(lat) + "\"" : "")
+          + (lon != 200. ? std::string(" lon=\"") + to_string(lon) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return (input != "_" ? std::string(".") + input + " " : "")
+          + "is_in"
+          + (lat != 100. ? std::string("(") + to_string(lat) : "")
+          + (lon != 200. ? std::string(",") + to_string(lon) : "")
+          + (lat != 100. ? ")" : "") + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
+
   private:
-    string input;
+    std::string input;
     double lat, lon;
-    
+
     static bool is_used_;
 };
 

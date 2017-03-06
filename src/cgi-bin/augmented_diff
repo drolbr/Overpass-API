@@ -23,6 +23,7 @@ BBOX=
 INFO=
 DEBUG=
 EXECBASE="`dirname $0`/../"
+CACHE_DIR="/tmp/osm3s_augmented_diffs_cache/"
 
 IFS=$'&'
 for KEY_VAL in $QUERY_STRING; do
@@ -42,6 +43,16 @@ SINCE=`date --utc --date="@$EPOCHSECS" '+%FT%H:%M:%SZ'`
 UNTIL=`date --utc --date="@$(($EPOCHSECS + 60))" '+%FT%H:%M:%SZ'`
 
 if [[ -z $BBOX ]]; then
+
+  if [[ -r "$CACHE_DIR/$ID.osc.gz" ]]; then
+    # Do HTTP headers with respect to CORS
+    echo "Access-Control-Allow-Origin: *"
+    echo "Content-Type: application/osm3s+xml"
+    echo
+    gunzip <"$CACHE_DIR/$ID.osc.gz"
+    exit 0
+  fi
+
   QUERY_STRING='data=[adiff:"'$SINCE'","'$UNTIL'"];(node(changed:"'$SINCE'","'$UNTIL'");way(changed:"'$SINCE'","'$UNTIL'");rel(changed:"'$SINCE'","'$UNTIL'"););out meta geom;'
 else
   QUERY_STRING='data=[adiff:"'$SINCE'","'$UNTIL'"];(node(bbox)(changed:"'$SINCE'","'$UNTIL'");way(bbox)(changed:"'$SINCE'","'$UNTIL'");rel(bbox)(changed:"'$SINCE'","'$UNTIL'"););out meta geom;&bbox='$BBOX

@@ -142,10 +142,10 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
     uint32 disk_pos = allocate_block(data_size);
     
     // Save the found position to the index.
-    if (index->blocks.size() <= cache_pos)
-      index->blocks.resize(cache_pos+1, Random_File_Index_Entry(index->npos, 1));
+    if (index->get_blocks().size() <= cache_pos)
+      index->get_blocks().resize(cache_pos+1, Random_File_Index_Entry(index->npos, 1));
     Random_File_Index_Entry entry(disk_pos, data_size);
-    index->blocks[cache_pos] = entry;
+    index->get_blocks()[cache_pos] = entry;
     
     // Write the data at the found position.
     val_file.seek((int64)disk_pos*block_size, "Random_File:21");
@@ -156,7 +156,7 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
   if (pos == index->npos)
     return;
   
-  if ((index->blocks.size() <= pos) || (index->blocks[pos].pos == index->npos))
+  if ((index->get_blocks().size() <= pos) || (index->get_blocks()[pos].pos == index->npos))
   {
     // Reset the whole cache to zero.
     for (uint32 i = 0; i < block_size * compression_factor; ++i)
@@ -164,20 +164,20 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
   }
   else
   {
-    val_file.seek((int64)(index->blocks[pos].pos)*block_size, "Random_File:23");
+    val_file.seek((int64)(index->get_blocks()[pos].pos)*block_size, "Random_File:23");
     if (index->get_compression_method() == Random_File_Index::NO_COMPRESSION)
-      val_file.read(cache.ptr, block_size * index->blocks[pos].size, "Random_File:24");
+      val_file.read(cache.ptr, block_size * index->get_blocks()[pos].size, "Random_File:24");
     else if (index->get_compression_method() == Random_File_Index::ZLIB_COMPRESSION)
     {
-      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:25");
+      val_file.read(buffer.ptr, block_size * index->get_blocks()[pos].size, "Random_File:25");
       Zlib_Inflate().decompress
-          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->get_compression_factor());
+          (buffer.ptr, block_size * index->get_blocks()[pos].size, cache.ptr, block_size * index->get_compression_factor());
     }
     else if (index->get_compression_method() == Random_File_Index::LZ4_COMPRESSION)
     {
-      val_file.read(buffer.ptr, block_size * index->blocks[pos].size, "Random_File:26");
+      val_file.read(buffer.ptr, block_size * index->get_blocks()[pos].size, "Random_File:26");
       LZ4_Inflate().decompress
-          (buffer.ptr, block_size * index->blocks[pos].size, cache.ptr, block_size * index->get_compression_factor());
+          (buffer.ptr, block_size * index->get_blocks()[pos].size, cache.ptr, block_size * index->get_compression_factor());
     }
   }
   cache_pos = pos;
@@ -190,25 +190,25 @@ uint32 Random_File< Key, Value >::allocate_block(uint32 data_size)
 {
   uint32 result = this->index->block_count;
 
-  if (this->index->void_blocks.empty())
+  if (this->index->get_void_blocks().empty())
     this->index->block_count += data_size;
   else
   {
     std::vector< std::pair< uint32, uint32 > >::iterator pos_it
-    = std::lower_bound(this->index->void_blocks.begin(), this->index->void_blocks.end(),
+    = std::lower_bound(this->index->get_void_blocks().begin(), this->index->get_void_blocks().end(),
         std::make_pair(data_size, uint32(0)));
 
-    if (pos_it != this->index->void_blocks.end() && pos_it->first == data_size)
+    if (pos_it != this->index->get_void_blocks().end() && pos_it->first == data_size)
     {
       // We have a gap of exactly the needed size.
       result = pos_it->second;
-      this->index->void_blocks.erase(pos_it);
+      this->index->get_void_blocks().erase(pos_it);
     }
     else
     {
-      pos_it = --(this->index->void_blocks.end());
+      pos_it = --(this->index->get_void_blocks().end());
       uint32 last_size = pos_it->first;
-      while (pos_it != this->index->void_blocks.begin() && last_size > data_size)
+      while (pos_it != this->index->get_void_blocks().begin() && last_size > data_size)
       {
         --pos_it;
         if (last_size == pos_it->first)
@@ -218,20 +218,20 @@ uint32 Random_File< Key, Value >::allocate_block(uint32 data_size)
           result = pos_it->second;
           pos_it->first -= data_size;
           pos_it->second += data_size;
-          rearrange_block(this->index->void_blocks.begin(), pos_it, *pos_it);
+          rearrange_block(this->index->get_void_blocks().begin(), pos_it, *pos_it);
           return result;
         }
         last_size = pos_it->first;
       }
 
-      pos_it = --(this->index->void_blocks.end());
+      pos_it = --(this->index->get_void_blocks().end());
       if (pos_it->first >= data_size)
       {
         // If no really matching block exists then we choose the largest one.
         result = pos_it->second;
         pos_it->first -= data_size;
         pos_it->second += data_size;
-        rearrange_block(this->index->void_blocks.begin(), pos_it, *pos_it);
+        rearrange_block(this->index->get_void_blocks().begin(), pos_it, *pos_it);
       }
       else
         this->index->block_count += data_size;

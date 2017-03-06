@@ -18,6 +18,9 @@
 # along with PT_Diagrams.  If not, see <http://www.gnu.org/licenses/>.
 
 
+CACHE_DIR="/tmp/osm3s_augmented_diffs_cache/"
+
+
 # Do HTTP headers with respect to CORS
 echo "Content-Type: text/plain; charset=utf-8"
 if [[ -n $HTTP_ACCESS_CONTROL_REQUEST_HEADERS ]]; then
@@ -33,6 +36,11 @@ if [[ $REQUEST_METHOD == "OPTIONS" ]]; then {
   exit 0
 }; fi
 echo
+
+if [[ -r "$CACHE_DIR/newest" ]]; then
+  cat "$CACHE_DIR/newest"
+  exit 0
+fi
 
 TIMESTAMP=`./timestamp | tail -n 1`
 

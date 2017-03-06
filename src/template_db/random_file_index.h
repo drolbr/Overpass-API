@@ -46,41 +46,54 @@ struct Random_File_Index_Entry
 
 struct Random_File_Index
 {
-  public:
-    Random_File_Index(const File_Properties& file_prop,
-		      bool writeable, bool use_shadow,
-		      const std::string& db_dir, const std::string& file_name_extension);
-    ~Random_File_Index();
-    bool writeable() const { return (empty_index_file_name != ""); }
-    const std::string& file_name_extension() const { return file_name_extension_; }
+public:
+  Random_File_Index(const File_Properties& file_prop,
+	      bool writeable, bool use_shadow,
+	      const std::string& db_dir, const std::string& file_name_extension);
+  ~Random_File_Index();
+  bool writeable() const { return (empty_index_file_name != ""); }
+  const std::string& file_name_extension() const { return file_name_extension_; }
     
-    std::string get_map_file_name() const { return map_file_name; }
-    uint64 get_block_size() const { return block_size_; }
-    uint32 get_compression_factor() const { return compression_factor; }
-    uint32 get_compression_method() const { return compression_method; }
+  std::string get_map_file_name() const { return map_file_name; }
+  uint64 get_block_size() const { return block_size_; }
+  uint32 get_compression_factor() const { return compression_factor; }
+  uint32 get_compression_method() const { return compression_method; }
     
-    static const int FILE_FORMAT_VERSION = 7512;
-    static const int NO_COMPRESSION = 0;
-    static const int ZLIB_COMPRESSION = 1;
-    static const int LZ4_COMPRESSION = 2;
+  std::vector< Random_File_Index_Entry >& get_blocks()
+  {
+    return blocks;
+  }
+  std::vector< std::pair< uint32, uint32 > >& get_void_blocks()
+  {
+    if (!void_blocks_initialized)
+      init_void_blocks();
+    return void_blocks;
+  }
     
-  private:
-    std::string index_file_name;
-    std::string empty_index_file_name;
-    std::string map_file_name;
-    std::string file_name_extension_;
+  static const int FILE_FORMAT_VERSION = 1007053000;
+  static const int NO_COMPRESSION = 0;
+  static const int ZLIB_COMPRESSION = 1;
+  static const int LZ4_COMPRESSION = 2;
+  const uint32 npos;
     
-  public:
-    std::vector< Random_File_Index_Entry > blocks;
-    std::vector< std::pair< uint32, uint32 > > void_blocks;
-    uint32 block_count;
-    uint64 block_size_;
+private:
+  std::string index_file_name;
+  std::string empty_index_file_name;
+  std::string map_file_name;
+  std::string file_name_extension_;
     
-    const uint32 npos;
+  std::vector< Random_File_Index_Entry > blocks;
+  std::vector< std::pair< uint32, uint32 > > void_blocks;
+  bool void_blocks_initialized;
+  
+  uint64 block_size_;
+  uint32 compression_factor;
+  int compression_method;
+  
+  void init_void_blocks();
     
-  private:
-    uint32 compression_factor;
-    int compression_method;
+public:
+  uint32 block_count;
 };
 
 
@@ -97,6 +110,7 @@ inline Random_File_Index::Random_File_Index
     (const File_Properties& file_prop,
      bool writeable, bool use_shadow,
      const std::string& db_dir, const std::string& file_name_extension) :
+    npos(std::numeric_limits< uint32 >::max()),
     index_file_name(db_dir + file_prop.get_file_name_trunk()
         + file_prop.get_id_suffix()
         + file_prop.get_index_suffix()
@@ -107,11 +121,11 @@ inline Random_File_Index::Random_File_Index
     map_file_name(db_dir + file_prop.get_file_name_trunk()
         + file_prop.get_id_suffix()),
     file_name_extension_(file_name_extension),
-    block_count(0),
+    void_blocks_initialized(false),
     block_size_(file_prop.get_map_block_size()),
-    npos(std::numeric_limits< uint32 >::max()),
     compression_factor(file_prop.get_map_compression_factor()),
-    compression_method(file_prop.get_map_compression_method())
+    compression_method(file_prop.get_map_compression_method()),
+    block_count(0)
 {
   uint64 file_size = 0;
   try
@@ -125,8 +139,6 @@ inline Random_File_Index::Random_File_Index
       throw e;
   }
   
-  std::vector< bool > is_referred;
-
   try
   {
     Raw_File source_file
@@ -138,61 +150,75 @@ inline Random_File_Index::Random_File_Index
     Void_Pointer< uint8 > index_buf(index_size);
     source_file.read(index_buf.ptr, index_size, "Random_File:14");
     
-    if (file_name_extension == ".legacy")
+    bool read_old_format = (file_name_extension == ".legacy" ||
+      (index_size > 0 && *(int32*)index_buf.ptr != FILE_FORMAT_VERSION && *(int32*)index_buf.ptr != 7512));
       // We support this way the old format although it has no version marker.
+    
+    if (!read_old_format && index_size > 0)
+    {
+      uint8 block_exp = *(uint8*)(index_buf.ptr + 4);
+      uint8 compression_exp = *(uint8*)(index_buf.ptr + 5);
+      uint16 guessed_compression_method = *(uint16*)(index_buf.ptr + 6);
+      uint32 guessed_compression_factor = 1u<<compression_exp;
+      
+      if (block_exp < 32 && compression_exp < 32 && guessed_compression_method < 3)
+      {
+        block_count = file_size / (1ull<<block_exp);
+        
+        uint32 pos = 8;
+        while (pos < index_size)
+        {
+          Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
+              *(uint32*)(index_buf.ptr + pos + 4));
+
+          blocks.push_back(entry);
+          
+          if (entry.size > guessed_compression_factor)
+          {
+            read_old_format = true;
+            break;
+          }
+
+          if (entry.pos != npos && entry.pos >= block_count)
+          {
+            read_old_format = true;
+            break;
+          }
+        
+          pos += 8;
+        }
+      
+        if (read_old_format)
+          blocks.clear();
+        else
+        {
+          block_size_ = 1ull<<block_exp;
+          compression_factor = guessed_compression_factor;
+          compression_method = guessed_compression_method;
+        }
+      }
+      else
+        read_old_format = true;
+    }
+    
+    if (read_old_format)
     {
       block_count = file_size/block_size_;
-      is_referred.resize(block_count, false);
 
       uint32 pos = 0;
       while (pos < index_size)
       {
         Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
-            1); //block size is always 1 in the legacy format
-        blocks.push_back(entry);
+            compression_factor); //block size is always 1 in the legacy format
         if (entry.pos != npos)
-        {
-          if (entry.pos > block_count)
-            throw File_Error
-            (0, index_file_name, "Random_File: bad pos in index file");
-          else
-            is_referred[entry.pos] = true;
-        }
+          entry.pos *= compression_factor;
+        blocks.push_back(entry);
+        
+        if (entry.pos != npos && entry.pos >= block_count)
+          throw File_Error(0, index_file_name, "Random_File: bad pos in index file");
         pos += 4;
       }
     }
-    else if (index_size > 0)
-    {
-      if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
-        throw File_Error(0, index_file_name, "Random_File_Index: Unsupported index file format version");
-      block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
-      compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
-      compression_method = *(uint16*)(index_buf.ptr + 6);
-
-      block_count = file_size / block_size_;
-      is_referred.resize(block_count, false);
-
-      uint32 pos = 8;
-      while (pos < index_size)
-      {
-        Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
-            *(uint32*)(index_buf.ptr + pos + 4));
-
-        blocks.push_back(entry);
-
-        if (entry.pos != npos)
-        {
-          if (entry.pos > block_count)
-            throw File_Error
-            (0, index_file_name, "Random_File: bad pos in index file");
-          else
-            for (uint32 i = 0; i < entry.size; ++i)
-              is_referred[entry.pos + i] = true;
-        }
-        
-        pos += 8;
-      }
-    }  
   }
   catch (File_Error e)
   {
@@ -200,43 +226,58 @@ inline Random_File_Index::Random_File_Index
       throw e;
   }
   
-  //if (writeable)
+  if (empty_index_file_name != "")
+    init_void_blocks();
+}
+
+
+inline void Random_File_Index::init_void_blocks()
+{
+  std::vector< bool > is_referred(block_count, false);
+  for (std::vector< Random_File_Index_Entry >::const_iterator it = blocks.begin(); it != blocks.end(); ++it)
   {
-    bool empty_index_file_used = false;
-    if (empty_index_file_name != "")
+    if (it->pos != npos)
     {
-      try
-      {
-	Raw_File void_blocks_file(empty_index_file_name, O_RDONLY, S_666, "");
-	uint32 void_index_size = void_blocks_file.size("Random_File:11");
-	Void_Pointer< uint8 > index_buf(void_index_size);
-	void_blocks_file.read(index_buf.ptr, void_index_size, "Random_File:15");
-	for (uint32 i = 0; i < void_index_size/VOID_BLOCK_ENTRY_SIZE; ++i)
-	  void_blocks.push_back(*(std::pair< uint32, uint32 >*)(index_buf.ptr + 8*i));
-	empty_index_file_used = true;
-      }
-      catch (File_Error e) {}
-    }
-    
-    if (!empty_index_file_used)
-    {
-      // determine void_blocks
-      uint32 last_start = 0;
-      for (uint32 i(0); i < block_count; ++i)
-      {
-	if (is_referred[i])
-        {
-          if (last_start < i)
-            void_blocks.push_back(std::make_pair(i - last_start, last_start));
-          last_start = i+1;
-        }
-      }
-      if (last_start < block_count)
-        void_blocks.push_back(std::make_pair(block_count - last_start, last_start));
+      for (uint32 i = 0; i < it->size; ++i)
+        is_referred[it->pos + i] = true;
     }
   }
   
+  bool empty_index_file_used = false;
+  if (empty_index_file_name != "")
+  {
+    try
+    {
+      Raw_File void_blocks_file(empty_index_file_name, O_RDONLY, S_666, "");
+      uint32 void_index_size = void_blocks_file.size("Random_File:11");
+      Void_Pointer< uint8 > index_buf(void_index_size);
+      void_blocks_file.read(index_buf.ptr, void_index_size, "Random_File:15");
+      for (uint32 i = 0; i < void_index_size/VOID_BLOCK_ENTRY_SIZE; ++i)
+        void_blocks.push_back(*(std::pair< uint32, uint32 >*)(index_buf.ptr + 8*i));
+      empty_index_file_used = true;
+    }
+    catch (File_Error e) {}
+  }
+    
+  if (!empty_index_file_used)
+  {
+    // determine void_blocks
+    uint32 last_start = 0;
+    for (uint32 i(0); i < block_count; ++i)
+    {
+      if (is_referred[i])
+      {
+        if (last_start < i)
+          void_blocks.push_back(std::make_pair(i - last_start, last_start));
+        last_start = i+1;
+      }
+    }
+    if (last_start < block_count)
+      void_blocks.push_back(std::make_pair(block_count - last_start, last_start));
+  }
+  
   std::stable_sort(void_blocks.begin(), void_blocks.end());
+  void_blocks_initialized = true;
 }
 
 
@@ -296,7 +337,7 @@ inline std::vector< bool > get_map_index_footprint
   
   std::vector< bool > result(index.block_count, true);
   for (std::vector< std::pair< uint32, uint32 > >::const_iterator
-      it = index.void_blocks.begin(); it != index.void_blocks.end(); ++it)
+      it = index.get_void_blocks().begin(); it != index.get_void_blocks().end(); ++it)
   {
     for (uint32 i = 0; i < it->first; ++i)
       result[it->second + i] = false;

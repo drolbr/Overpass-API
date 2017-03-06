@@ -147,6 +147,7 @@ class Logger
 };
 
 
-const uint64 NOW = std::numeric_limits< unsigned long long >::max();
+extern const uint64 NOW;
+
 
 #endif

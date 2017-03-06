@@ -25,9 +25,9 @@ The comands are explained afterwards:</p>
 <pre>sudo apt-get install wget g++ make expat libexpat1-dev zlib1g-dev</pre>
 
 <p><a href="#install">Install the Overpass API software</a>:</p>
-<pre>wget http://dev.overpass-api.de/releases/osm-3s_v0.7.53.tar.gz
-gunzip &lt;osm-3s_v0.7.53.tar.gz | tar xvf -
-cd osm-3s_v0.7.53/
+<pre>wget http://dev.overpass-api.de/releases/osm-3s_v0.7.54.tar.gz
+gunzip &lt;osm-3s_v0.7.54.tar.gz | tar xvf -
+cd osm-3s_v0.7.54/
 ./configure --prefix=&quot;`pwd`&quot;
 make</pre>
 
@@ -36,12 +36,12 @@ make</pre>
 <pre>bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no</pre>
 <p>or</p>
 <pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet/planet-latest.osm.bz2&quot;
-../src/bin/init_osm3s.sh planet.osm.bz2 &quot;../db/&quot; &quot;../&quot; --meta</pre>
+bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta</pre>
 
 <p><a href="#minute_updates">Activate minutely updates</a>:</p>
 <pre>mkdir -p diffs</pre>
 <pre>nohup ./dispatcher --osm-base --meta --db-dir=&quot;db/&quot; &amp;
-chmod 666 &quot;db/osm3s_v0.7.53_osm_base&quot;
+chmod 666 &quot;db/osm3s_v0.7.54_osm_base&quot;
 nohup bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;
 nohup bin/apply_osc_to_db.sh &quot;minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 
@@ -66,10 +66,10 @@ nohup bin/apply_osc_to_db.sh &quot;minute-diffs/&quot; <em>id</em> --meta=yes &a
 
 <h2><a name="install">Software Installation</a></h2>
 
-<p>First, you need to download <a href="http://dev.overpass-api.de/releases/osm-3s_v0.7.53.tar.gz">the tarball of the latest version</a>:</p>
-<pre>wget http://dev.overpass-api.de/releases/osm-3s_v0.7.53.tar.gz
-gunzip &lt;osm-3s_v0.7.53.tar.gz | tar xvf -
-cd osm-3s_v0.7.53/</pre>
+<p>First, you need to download <a href="http://dev.overpass-api.de/releases/osm-3s_v0.7.54.tar.gz">the tarball of the latest version</a>:</p>
+<pre>wget http://dev.overpass-api.de/releases/osm-3s_v0.7.54.tar.gz
+gunzip &lt;osm-3s_v0.7.54.tar.gz | tar xvf -
+cd osm-3s_v0.7.54/</pre>
 
 <p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest subdirectories of the source code directory: this can be reached with &quot;`pwd`&quot;. To configure this output directory and detect necessary adaptions of your system, run in the <em>build</em> subdirectory:</p>
 <pre>../src/configure --prefix=&quot;`pwd`&quot;</pre>
@@ -85,9 +85,9 @@ cd osm-3s_v0.7.53/</pre>
 <p>Since version 0.6.98, the database can be cloned from an exisiting instance rather than created from scratch. This only takes 4 to 8 hours in comparison to 24 to 48 hours for an update from the planet file. Note that this feature is still rather experimental - please report any problems by eMail to me (roland at overpass-api.de). If you don't want the entire planet or prefer a manually planet import for some other reason, use the <a href="#startup">manual import</a> instead.</p>
 
 <p>Download a clone of the database at <em>overpass-api.de</em> with the command:</p>
-<pre>../src/bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no</pre>
+<pre>bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no</pre>
 <p>or</p>
-<pre><strong>nohup</strong> ../bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no <strong>&amp;</strong></pre>
+<pre><strong>nohup</strong> bin/download_clone.sh --source=http://dev.overpass-api.de/api_drolbr/ --db-dir=&quot;db/&quot; --meta=no <strong>&amp;</strong></pre>
 <p>If you want meta data, use <em>--meta=yes</em> instead of <em>--meta=no</em>. This downloads about 30 GB (50 GB with meta data) in several compressed files and uncompresses them to a ready-to-use database.</p>
 
 <p>Now you can proceed with <a href="#minute_updates">minute updates</a>.</p>
@@ -101,9 +101,9 @@ cd osm-3s_v0.7.53/</pre>
 <pre><strong>nohup</strong> wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet/planet-latest.osm.bz2&quot; <strong>&amp;</strong></pre>
 
 <p>Once you have the file, you can start the import. The import again may take up to 48 hours:</p>
-<pre>../bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta</pre>
+<pre>bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta</pre>
 <p>or</p>
-<pre>nohup ../bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta &amp;</pre>
+<pre>nohup bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta &amp;</pre>
 <p>You may need to adapt the parameters: The first parameter <em>planet.osm.bz2</em> is the osm file to process, the second parameter <em>&quot;db/&quot;</em> is the directory where the database should go to, and the third parameter <em>&quot;./&quot;</em> is the base directory of the executables, i.e. there must exist <em>update_database</em> in the subdirectory <em>bin</em> of the location where the third parameter points to.</p>
 
 <p>When this command is done, it writes <em>Update complete.</em> to the console (or to the file <em>nohup.out</em> if you have used <em>nohup</em>). At this point, the database can be used.</p>
@@ -113,7 +113,7 @@ cd osm-3s_v0.7.53/</pre>
 
 <p>But maybe you also want minutely updates. In this case, run the commands:</p>
 <pre>nohup bin/dispatcher --osm-base --meta --db-dir=&quot;db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;db/osm3s_v0.7.53_osm_base&quot;</pre>
+<pre>chmod 666 &quot;db/osm3s_v0.7.54_osm_base&quot;</pre>
 <pre>nohup bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;</pre>
 <pre>nohup bin/apply_osc_to_db.sh &quot;diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 <p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. Search on <a href="http://planet.openstreetmap.org/replication/minute/">http://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>

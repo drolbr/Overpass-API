@@ -19,16 +19,14 @@
 #ifndef DE__OSM3S___OVERPASS_API__FRONTEND__CGI_HELPER_H
 #define DE__OSM3S___OVERPASS_API__FRONTEND__CGI_HELPER_H
 
+#include <map>
 #include <string>
 
-using namespace std;
 
-string cgi_get_to_text();
+std::string cgi_get_to_text();
 
-string cgi_post_to_text();
+std::string cgi_post_to_text();
 
-string decode_cgi_to_plain
-    (const string& raw,
-     string& jsonp, string& url, bool& redirect, string& template_name);
+std::map< std::string, std::string > decode_cgi_to_plain(const std::string& raw);
 
 #endif

@@ -17,26 +17,44 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-if [[ -z $2  ]]; then
+if [[ -z $1  ]]; then
 {
-  echo "Usage: $0 database_dir clone_dir"
+  echo "Usage: $0 base_url"
   exit 0
 }; fi
 
-DB_DIR="$1"
+BASE_URL="$1"
+EXEC_DIR="`dirname $0`/"
+DB_DIR="`$EXEC_DIR/dispatcher --show-dir`"
+CLONE_BASE_DIR="/var/www/clone"
+CLONE_DIR="$CLONE_BASE_DIR/`date '+%F'`"
+
+# drop diffs that are older than one day
+for I in "$CLONE_BASE_DIR"/????-??-??; do
+{
+  BASEDATE=`basename $I`
+  YESTERDAY=$((`date '+%s'` - 86400))
+  if [[ $BASEDATE < `date -d@$YESTERDAY '+%F'` ]]; then
+  {
+    echo "drop $I"
+    rm -Rf $I
+  }; else
+  {
+    echo "keep $I"
+  }; fi
+}; done
+
 if [[ ! ${DB_DIR:0:1} == "/" ]]; then
 {
   DB_DIR="`pwd`/$DB_DIR"
 }; fi
 
-CLONE_DIR="$2"
-ABS_CLONE_DIR="$2"
+ABS_CLONE_DIR="$CLONE_DIR"
 if [[ ! ${ABS_CLONE_DIR:0:1} == "/" ]]; then
 {
   ABS_CLONE_DIR="`pwd`/$ABS_CLONE_DIR"
 }; fi
 
-EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
   EXEC_DIR="`pwd`/$EXEC_DIR"
@@ -48,8 +66,9 @@ mkdir -p "$ABS_CLONE_DIR"
 rm -f "$ABS_CLONE_DIR"/*.bin
 rm -f "$ABS_CLONE_DIR"/*.map
 rm -f "$ABS_CLONE_DIR"/*.idx
-cp "$DB_DIR/replicate_id" "$ABS_CLONE_DIR/replicate_id"
+#cp "$DB_DIR/replicate_id" "$ABS_CLONE_DIR/replicate_id"
 ./osm3s_query --clone="$ABS_CLONE_DIR"
 
-popd
+echo "$BASE_URL/`basename $CLONE_DIR`" >"$CLONE_BASE_DIR/latest_dir"
 
+popd

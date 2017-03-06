@@ -519,9 +519,9 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
   // cerr<<"  "<<index->get_data_file_name()<<'\n'; //Debug
   
   // prepare standard iterators
-  flat_end_it = new Flat_Iterator(index->blocks.end(), index->blocks.end());
-  discrete_end_it = new Discrete_Iterator(index->blocks.end());
-  range_end_it = new Range_Iterator(index->blocks.end());
+  flat_end_it = new Flat_Iterator(index->get_blocks().end(), index->get_blocks().end());
+  discrete_end_it = new Discrete_Iterator(index->get_blocks().end());
+  range_end_it = new Range_Iterator(index->get_blocks().end());
 }
 
 
@@ -540,7 +540,7 @@ template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Flat_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::flat_begin()
 {
-  return Flat_Iterator(index->blocks.begin(), index->blocks.end());
+  return Flat_Iterator(index->get_blocks().begin(), index->get_blocks().end());
 }
 
 
@@ -550,7 +550,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     (const TIterator& begin, const TIterator& end)
 {
   return File_Blocks_Discrete_Iterator< TIndex, TIterator >
-      (begin, end, index->blocks.begin(), index->blocks.end());
+      (begin, end, index->get_blocks().begin(), index->get_blocks().end());
 }
 
 
@@ -559,7 +559,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Range_Iterator
 File_Blocks< TIndex, TIterator, TRangeIterator >::range_begin(const TRangeIterator& begin, const TRangeIterator& end)
 {
   return File_Blocks_Range_Iterator< TIndex, TRangeIterator >
-      (index->blocks.begin(), index->blocks.end(), begin, end);
+      (index->get_blocks().begin(), index->get_blocks().end(), begin, end);
 }
 
 
@@ -646,25 +646,25 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::allocate_block(uint32 d
 {
   uint32 result = this->index->block_count;
   
-  if (this->index->void_blocks.empty())
+  if (this->index->get_void_blocks().empty())
     this->index->block_count += data_size;
   else
   {
     std::vector< std::pair< uint32, uint32 > >::iterator pos_it
-        = std::lower_bound(this->index->void_blocks.begin(), this->index->void_blocks.end(),
+        = std::lower_bound(this->index->get_void_blocks().begin(), this->index->get_void_blocks().end(),
 			   std::make_pair(data_size, uint32(0)));
       
-    if (pos_it != this->index->void_blocks.end() && pos_it->first == data_size)
+    if (pos_it != this->index->get_void_blocks().end() && pos_it->first == data_size)
     {
       // We have a gap of exactly the needed size.
       result = pos_it->second;
-      this->index->void_blocks.erase(pos_it);
+      this->index->get_void_blocks().erase(pos_it);
     }
     else
     {
-      pos_it = --(this->index->void_blocks.end());
+      pos_it = --(this->index->get_void_blocks().end());
       uint32 last_size = pos_it->first;
-      while (pos_it != this->index->void_blocks.begin() && last_size > data_size)
+      while (pos_it != this->index->get_void_blocks().begin() && last_size > data_size)
       {
 	--pos_it;
 	if (last_size == pos_it->first)
@@ -674,20 +674,20 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::allocate_block(uint32 d
 	  result = pos_it->second;
 	  pos_it->first -= data_size;
 	  pos_it->second += data_size;
-	  rearrange_block(this->index->void_blocks.begin(), pos_it, *pos_it);
+	  rearrange_block(this->index->get_void_blocks().begin(), pos_it, *pos_it);
 	  return result;
 	}
 	last_size = pos_it->first;
       }
       
-      pos_it = --(this->index->void_blocks.end());
+      pos_it = --(this->index->get_void_blocks().end());
       if (pos_it->first >= data_size)
       {
 	// If no really matching block exists then we choose the largest one.
 	result = pos_it->second;
 	pos_it->first -= data_size;
 	pos_it->second += data_size;
-	rearrange_block(this->index->void_blocks.begin(), pos_it, *pos_it);
+	rearrange_block(this->index->get_void_blocks().begin(), pos_it, *pos_it);
       }
       else
 	this->index->block_count += data_size;
@@ -740,11 +740,11 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   Discrete_Iterator return_it(it);
   if (return_it.block_it == return_it.block_begin)
   {
-    return_it.block_it = this->index->blocks.insert(return_it.block_it, entry);
+    return_it.block_it = this->index->get_blocks().insert(return_it.block_it, entry);
     return_it.block_begin = return_it.block_it;
   }
   else
-    return_it.block_it = this->index->blocks.insert(return_it.block_it, entry);
+    return_it.block_it = this->index->get_blocks().insert(return_it.block_it, entry);
   return_it.just_inserted = true;
   return_it.is_empty = it.is_empty;
   return return_it;
@@ -789,11 +789,11 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     ++return_it;
     if (it.block_it == it.block_begin)
     {
-      it.block_it = index->blocks.erase(it.block_it);
+      it.block_it = index->get_blocks().erase(it.block_it);
       it.block_begin = it.block_it;
     }
     else
-      it.block_it = index->blocks.erase(it.block_it);
+      it.block_it = index->get_blocks().erase(it.block_it);
     return return_it;
   }
 }

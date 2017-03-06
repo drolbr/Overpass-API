@@ -20,6 +20,8 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__AREA_QUERY_H
 
 #include "../data/collect_members.h"
+#include "../data/utils.h"
+#include "../data/way_geometry_store.h"
 #include "statement.h"
 
 #include <map>
@@ -30,57 +32,78 @@
 class Area_Query_Statement : public Output_Statement
 {
   public:
-    Area_Query_Statement(int line_number_, const map< string, string >& attributes,
-                         Query_Constraint* bbox_limitation = 0);
-    virtual string get_name() const { return "area-query"; }
+    Area_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
+                         Parsed_Query& global_settings);
+    virtual std::string get_name() const { return "area-query"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Area_Query_Statement();    
+    virtual ~Area_Query_Statement();
     static Generic_Statement_Maker< Area_Query_Statement > statement_maker;
-    
+
     virtual Query_Constraint* get_query_constraint();
-    
+
     void get_ranges
-      (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
-       set< Uint31_Index >& area_block_req,
+      (std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
+       std::set< Uint31_Index >& area_block_req,
        Resource_Manager& rman);
 
     void get_ranges
-      (const map< Uint31_Index, vector< Area_Skeleton > >& input_areas,
-       set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
-       set< Uint31_Index >& area_block_req,
+      (const std::map< Uint31_Index, std::vector< Area_Skeleton > >& input_areas,
+       std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
+       std::set< Uint31_Index >& area_block_req,
        Resource_Manager& rman);
 
     void collect_nodes
-      (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
-       const set< Uint31_Index >& req,
-       vector< Node::Id_Type >* ids,
-       map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+      (const std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
+       const std::set< Uint31_Index >& req,
+       std::vector< Node::Id_Type >* ids,
+       std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
        Resource_Manager& rman);
-       
+
     template< typename Node_Skeleton >
     void collect_nodes
-      (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-       const set< Uint31_Index >& req, bool add_border,
+      (std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+       const std::set< Uint31_Index >& req, bool add_border,
        Resource_Manager& rman);
-       
+
     template< typename Way_Skeleton >
     void collect_ways
       (const Way_Geometry_Store& way_geometries,
-       map< Uint31_Index, vector< Way_Skeleton > >& ways,
-       const set< Uint31_Index >& req, bool add_border,
+       std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+       const std::set< Uint31_Index >& req, bool add_border,
        const Statement& query, Resource_Manager& rman);
 
     bool areas_from_input() const { return (submitted_id == 0); }
-    string get_input() const { return input; }
-    
+    std::string get_input() const { return input; }
+
     static bool is_used() { return is_used_; }
-  
+
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<area-query"
+          + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+          + (submitted_id > 0 ? std::string(" ref=\"") + to_string(submitted_id) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return "node" + dump_ql_in_query("") + dump_ql_result_name();
+    }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
+      return std::string("(area")
+          + (input != "_" ? std::string(".") + input : "")
+          + (submitted_id > 0 ? std::string(":") + to_string(submitted_id) : "")
+          + ")";
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
+
   private:
-    string input;
+    std::string input;
     long long submitted_id;
-    vector< Area_Skeleton::Id_Type > area_id;    
+    std::vector< Area_Skeleton::Id_Type > area_id;
     static bool is_used_;
-    vector< Query_Constraint* > constraints;
+    std::vector< Query_Constraint* > constraints;
 };
 
 

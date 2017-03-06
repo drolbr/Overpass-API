@@ -32,32 +32,32 @@ Generic_Statement_Maker< Difference_Statement > Difference_Statement::statement_
 
 
 Difference_Statement::Difference_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["into"] = "_";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   set_output(attributes["into"]);
 }
 
 
-void Difference_Statement::add_statement(Statement* statement, string text)
+void Difference_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
 
   if (substatements.size() >= 2)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"A set difference always requires exactly two substatements: "
           "the set of elements to copy to the result minus "
           "the set of elements to leave out in the result.";
     add_static_error(temp.str());
   }
-  
+
   if (statement->get_result_name() != "")
     substatements.push_back(statement);
   else
@@ -68,38 +68,38 @@ void Difference_Statement::add_statement(Statement* statement, string text)
 void Difference_Statement::execute(Resource_Manager& rman)
 {
   Set base_set;
-  
+
   if (substatements.empty())
   {
     transfer_output(rman, base_set);
     return;
   }
-  vector< Statement* >::iterator it = substatements.begin();
-  
+  std::vector< Statement* >::iterator it = substatements.begin();
+
   rman.push_reference(base_set);
   (*it)->execute(rman);
   rman.pop_reference();
-  
+
   base_set = rman.sets()[(*it)->get_result_name()];
-  
+
   ++it;
   if (it != substatements.end())
   {
     rman.push_reference(base_set);
     (*it)->execute(rman);
     rman.pop_reference();
-    
+
     Set& summand = rman.sets()[(*it)->get_result_name()];
-    
+
     indexed_set_difference(base_set.nodes, summand.nodes);
     indexed_set_difference(base_set.ways, summand.ways);
     indexed_set_difference(base_set.relations, summand.relations);
-    
+
     indexed_set_difference(base_set.attic_nodes, summand.attic_nodes);
     indexed_set_difference(base_set.attic_ways, summand.attic_ways);
     indexed_set_difference(base_set.attic_relations, summand.attic_relations);
-    
-    indexed_set_difference(base_set.areas, summand.areas);    
+
+    indexed_set_difference(base_set.areas, summand.areas);
   }
 
   transfer_output(rman, base_set);

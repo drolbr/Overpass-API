@@ -33,13 +33,13 @@ Generic_Statement_Maker< Changed_Statement > Changed_Statement::statement_maker(
 
 
 template< class TIndex, class TObject >
-void filter_elems(const std::vector< typename TObject::Id_Type >& ids, map< TIndex, vector< TObject > >& elems)
+void filter_elems(const std::vector< typename TObject::Id_Type >& ids, std::map< TIndex, std::vector< TObject > >& elems)
 {
-  for (typename map< TIndex, vector< TObject > >::iterator it = elems.begin();
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = elems.begin();
       it != elems.end(); ++it)
   {
-    vector< TObject > local_into;
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+    std::vector< TObject > local_into;
+    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
       if (std::binary_search(ids.begin(), ids.end(), iit->id))
@@ -58,9 +58,9 @@ std::vector< typename Skeleton::Id_Type > collect_changed_elements
 {
   std::set< std::pair< Timestamp, Timestamp > > range;
   range.insert(std::make_pair(Timestamp(since), Timestamp(until)));
-  
+
   std::vector< typename Skeleton::Id_Type > ids;
-  
+
   Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > > changelog_db
       (rman.get_transaction()->data_index(changelog_file_properties< Skeleton >()));
   for (typename Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > >::Range_Iterator
@@ -68,7 +68,7 @@ std::vector< typename Skeleton::Id_Type > collect_changed_elements
             Default_Range_Iterator< Timestamp >(range.end()));
       !(it == changelog_db.range_end()); ++it)
     ids.push_back(it.object().elem_id);
-    
+
   std::sort(ids.begin(), ids.end());
   ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
   return ids;
@@ -81,30 +81,30 @@ class Changed_Constraint : public Query_Constraint
 {
   public:
     Changed_Constraint(Changed_Statement& stmt_) : stmt(&stmt_) {}
-    
+
     bool delivers_data(Resource_Manager& rman) { return true; }
-    
+
 //     bool get_ranges
-//         (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+//         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
 //     bool get_ranges
-//         (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+//         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
 	
     bool get_node_ids
-        (Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids);
+        (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids);
     bool get_way_ids
-        (Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids);
+        (Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids);
     bool get_relation_ids
-        (Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids);
+        (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids);
 	
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Changed_Constraint() {}
-    
+
   private:
     Changed_Statement* stmt;
 };
 
 
-bool Changed_Constraint::get_node_ids(Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
+bool Changed_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
 {
   ids = collect_changed_elements< Uint32_Index, Node_Skeleton >(
       stmt->get_since(rman), stmt->get_until(rman), rman);
@@ -112,7 +112,7 @@ bool Changed_Constraint::get_node_ids(Resource_Manager& rman, vector< Node_Skele
 }
 
 
-bool Changed_Constraint::get_way_ids(Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids)
+bool Changed_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids)
 {
   ids = collect_changed_elements< Uint31_Index, Way_Skeleton >(
       stmt->get_since(rman), stmt->get_until(rman), rman);
@@ -120,7 +120,7 @@ bool Changed_Constraint::get_way_ids(Resource_Manager& rman, vector< Way_Skeleto
 }
 
 
-bool Changed_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids)
+bool Changed_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
 {
   ids = collect_changed_elements< Uint31_Index, Relation_Skeleton >(
       stmt->get_since(rman), stmt->get_until(rman), rman);
@@ -128,38 +128,38 @@ bool Changed_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relati
 }
 
 
-// bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+// bool Changed_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
 // {
 //   std::vector< Node_Skeleton::Id_Type > ids
 //       = collect_changed_elements< Uint32_Index, Node_Skeleton >(stmt->get_since(rman), stmt->get_until(rman), rman);
-//       
+//
 //   std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
-//   
+//
 //   ranges.clear();
 //   for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
 //     ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
-//   
+//
 //   return true;
 // }
 
 
-// bool Changed_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+// bool Changed_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
 // {
 //   std::vector< Way_Skeleton::Id_Type > way_ids = collect_changed_elements< Uint31_Index, Way_Skeleton >
 //       (stmt->get_since(rman), stmt->get_until(rman), rman);
 //   std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
-//       
+//
 //   ranges.clear();
 //   for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
 //     ranges.insert(std::make_pair(*it, inc(*it)));
-// 
+//
 //   std::vector< Relation_Skeleton::Id_Type > rel_ids = collect_changed_elements< Uint31_Index, Relation_Skeleton >
 //       (stmt->get_since(rman), stmt->get_until(rman), rman);
 //   get_indexes_< Uint31_Index, Relation_Skeleton >(rel_ids, rman).swap(req);
-//   
+//
 //   for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
 //     ranges.insert(std::make_pair(*it, inc(*it)));
-// 
+//
 //   return true;
 // }
 
@@ -171,61 +171,61 @@ void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     std::vector< Node_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint32_Index, Node_Skeleton >
         (stmt->get_since(rman), stmt->get_until(rman), rman);
-      
+
     filter_elems(ids, into.nodes);
     filter_elems(ids, into.attic_nodes);
   }
-  
+
   if (!stmt->trivial())
   {
     std::vector< Way_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint31_Index, Way_Skeleton >
         (stmt->get_since(rman), stmt->get_until(rman), rman);
-      
+
     filter_elems(ids, into.ways);
     filter_elems(ids, into.attic_ways);
   }
-  
+
   if (!stmt->trivial())
   {
     std::vector< Relation_Skeleton::Id_Type > ids =
         collect_changed_elements< Uint31_Index, Relation_Skeleton >
         (stmt->get_since(rman), stmt->get_until(rman), rman);
-      
+
     filter_elems(ids, into.relations);
     filter_elems(ids, into.attic_relations);
   }
-  
+
   into.areas.clear();
 }
 
 //-----------------------------------------------------------------------------
 
 Changed_Statement::Changed_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_), since(NOW), until(NOW), behave_trivial(false)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["into"] = "_";
   attributes["since"] = "auto";
   attributes["until"] = "auto";
-  
+
   Statement::eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   set_output(attributes["into"]);
-  
+
   if (attributes["since"] == "init")
     behave_trivial = true;
-  
+
   if (!behave_trivial && ((attributes["since"] == "auto") ^ (attributes["until"] == "auto")))
   {
-    ostringstream temp;
-    temp<<"The attributes \"since\" and \"until\" must be set either both or none.";
+    std::ostringstream temp;
+    temp<<"The attributes \"since\" and \"until\" must be std::set either both or none.";
     add_static_error(temp.str());
   }
 
-  string timestamp = attributes["since"];
+  std::string timestamp = attributes["since"];
   if (timestamp.size() >= 19)
     since = Timestamp(
         atol(timestamp.c_str()), //year
@@ -238,7 +238,7 @@ Changed_Statement::Changed_Statement
 	
   if (!behave_trivial && timestamp != "auto" && (since == 0 || since == NOW))
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"The attribute \"since\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
     add_static_error(temp.str());
   }
@@ -256,7 +256,7 @@ Changed_Statement::Changed_Statement
 	
   if (!behave_trivial && timestamp != "auto" && (until == 0 || until == NOW))
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"The attribute \"until\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
     add_static_error(temp.str());
   }
@@ -355,7 +355,7 @@ void get_elements(Changed_Statement& stmt, Resource_Manager& rman,
   std::vector< typename Skeleton::Id_Type > ids =
       collect_changed_elements< Index, Skeleton >(stmt.get_since(rman), stmt.get_until(rman), rman);
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
-        
+
   if (rman.get_desired_timestamp() == NOW)
     collect_items_discrete(&stmt, rman, *current_skeleton_file_properties< Skeleton >(), req,
         Id_Predicate< Skeleton >(ids), current_result);
@@ -371,7 +371,7 @@ void get_elements(Changed_Statement& stmt, Resource_Manager& rman,
 void Changed_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-  
+
   get_elements(*this, rman, into.nodes, into.attic_nodes);
   get_elements(*this, rman, into.ways, into.attic_ways);
   get_elements(*this, rman, into.relations, into.attic_relations);
@@ -384,7 +384,7 @@ void Changed_Statement::execute(Resource_Manager& rman)
 
 Changed_Statement::~Changed_Statement()
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+  for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }
