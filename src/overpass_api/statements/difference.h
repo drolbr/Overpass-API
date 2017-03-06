@@ -28,29 +28,29 @@
 class Difference_Statement : public Output_Statement
 {
   public:
-    Difference_Statement(int line_number_, const map< string, string >& input_attributes,
+    Difference_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                          Parsed_Query& global_settings);
-    virtual void add_statement(Statement* statement, string text);
-    virtual string get_name() const { return "difference"; }
+    virtual void add_statement(Statement* statement, std::string text);
+    virtual std::string get_name() const { return "difference"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Difference_Statement() {}
-    
+
     static Generic_Statement_Maker< Difference_Statement > statement_maker;
-    
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       std::string result = indent + "<difference" + dump_xml_result_name() + ">\n";
-      
+
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
         result += *it ? (*it)->dump_xml(indent + "  ") : "";
-      
+
       return result + indent + "</difference>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string& indent) const
     {
       std::string result = "(";
-  
+
       std::vector< Statement* >::const_iterator it = substatements.begin();
       if (it != substatements.end())
       {
@@ -59,14 +59,14 @@ class Difference_Statement : public Output_Statement
           result += "-" + (*it)->dump_compact_ql(indent) + ";";
       }
       result += ")";
-  
+
       return result + dump_ql_result_name();
     }
-    
+
     virtual std::string dump_pretty_ql(const std::string& indent) const
     {
       std::string result = indent + "(";
-    
+
       std::vector< Statement* >::const_iterator it = substatements.begin();
       if (it != substatements.end())
       {
@@ -75,12 +75,12 @@ class Difference_Statement : public Output_Statement
           result += "\n" + indent + "  -\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
       }
       result += "\n)";
-  
+
       return result + dump_ql_result_name();
     }
 
   private:
-    vector< Statement* > substatements;
+    std::vector< Statement* > substatements;
 };
 
 

@@ -64,7 +64,7 @@ void prepare_value_test(Parsed_Query& global_settings, Resource_Manager& rman,
   attributes.clear();
   attributes["type"] = "derivee";
   Make_Statement stmt5(0, attributes, global_settings);
-  
+
   attributes.clear();
   attributes["k"] = "number";
   Set_Prop_Statement stmt50(0, attributes, global_settings);
@@ -73,25 +73,25 @@ void prepare_value_test(Parsed_Query& global_settings, Resource_Manager& rman,
   attributes["v"] = derived_num;
   Evaluator_Fixed stmt500(0, attributes, global_settings);
   stmt50.add_statement(&stmt500, "");
-  
+
   if (derived_num != "")
     union_.add_statement(&stmt5, "");
-    
+
   union_.execute(rman);
 }
-     
-      
+
+
 void just_copy_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string from, uint64 ref1, uint64 ref2, std::string derived_num, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, from, ref1, ref2, derived_num, global_node_offset);
-  
+
   std::map< std::string, std::string > attributes;
   attributes["from"] = from;
   attributes["type"] = type;
   Convert_Statement stmt(0, attributes, global_settings);
-  
+
   attributes.clear();
   attributes["keytype"] = "generic";
   Set_Prop_Statement stmt1(0, attributes, global_settings);
@@ -99,28 +99,28 @@ void just_copy_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   Evaluator_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
-  
+
   stmt.execute(rman);
-  
+
   {
     attributes.clear();
     Print_Statement stmt(0, attributes, global_settings);
     stmt.execute(rman);
   }
 }
-     
-      
+
+
 void into_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string into, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, "_", 7, 14, "1000", global_node_offset);
-  
+
   std::map< std::string, std::string > attributes;
   attributes["type"] = type;
   attributes["into"] = into;
   Convert_Statement stmt(0, attributes, global_settings);
-  
+
   attributes.clear();
   attributes["keytype"] = "generic";
   Set_Prop_Statement stmt1(0, attributes, global_settings);
@@ -128,9 +128,9 @@ void into_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes.clear();
   Evaluator_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
-  
+
   stmt.execute(rman);
-  
+
   {
     attributes.clear();
     attributes["from"] = into;
@@ -138,19 +138,19 @@ void into_test(Parsed_Query& global_settings, Transaction& transaction,
     stmt.execute(rman);
   }
 }
-     
-      
+
+
 void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string from, uint64 ref1, uint64 ref2, std::string derived_num, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, from, ref1, ref2, derived_num, global_node_offset);
-  
+
   std::map< std::string, std::string > attributes;
   attributes["from"] = from;
   attributes["type"] = type;
   Convert_Statement stmt(0, attributes, global_settings);
-  
+
   attributes.clear();
   attributes["keytype"] = "generic";
   Set_Prop_Statement stmt1(0, attributes, global_settings);
@@ -158,7 +158,7 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   attributes.clear();
   Evaluator_Generic stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
-  
+
   attributes.clear();
   attributes["k"] = "extra_key";
   Set_Prop_Statement stmt2(0, attributes, global_settings);
@@ -167,19 +167,19 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   attributes["v"] = "extra_value";
   Evaluator_Fixed stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
-  
+
   attributes.clear();
   attributes["k"] = "node_key";
   Set_Prop_Statement stmt3(0, attributes, global_settings);
   stmt.add_statement(&stmt3, "");
-  
+
   attributes.clear();
   attributes["k"] = "number";
   Set_Prop_Statement stmt4(0, attributes, global_settings);
   stmt.add_statement(&stmt4, "");
-  
+
   stmt.execute(rman);
-  
+
   {
     attributes.clear();
     Print_Statement stmt(0, attributes, global_settings);
@@ -216,14 +216,14 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
     attributes["ref"] = to_string(ref);
     Id_Query_Statement stmt3(0, attributes, global_settings);
     union_.add_statement(&stmt3, "");
-    
+
     union_.execute(rman);
   }
-  
+
   std::map< std::string, std::string > attributes;
   attributes["type"] = type;
   Convert_Statement stmt(0, attributes, global_settings);
-  
+
   attributes.clear();
   attributes["k"] = "nodes";
   Set_Prop_Statement stmt1(0, attributes, global_settings);
@@ -234,7 +234,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
     attributes["from"] = from;
   Evaluator_Set_Count stmt10(0, attributes, global_settings);
   stmt1.add_statement(&stmt10, "");
-  
+
   attributes.clear();
   attributes["k"] = "ways";
   Set_Prop_Statement stmt2(0, attributes, global_settings);
@@ -245,7 +245,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
     attributes["from"] = from;
   Evaluator_Set_Count stmt20(0, attributes, global_settings);
   stmt2.add_statement(&stmt20, "");
-  
+
   attributes.clear();
   attributes["k"] = "relations";
   Set_Prop_Statement stmt3(0, attributes, global_settings);
@@ -256,7 +256,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
     attributes["from"] = from;
   Evaluator_Set_Count stmt30(0, attributes, global_settings);
   stmt3.add_statement(&stmt30, "");
-  
+
   attributes.clear();
   attributes["k"] = "tags";
   Set_Prop_Statement stmt4(0, attributes, global_settings);
@@ -267,7 +267,7 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
     attributes["from"] = from;
   Evaluator_Properties_Count stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
-  
+
   attributes.clear();
   attributes["k"] = "members";
   Set_Prop_Statement stmt5(0, attributes, global_settings);
@@ -278,27 +278,27 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
     attributes["from"] = from;
   Evaluator_Properties_Count stmt50(0, attributes, global_settings);
   stmt5.add_statement(&stmt50, "");
-  
+
   stmt.execute(rman);
-  
+
   {
     const char* attributes[] = { 0 };
     Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
     stmt.execute(rman);
   }
 }
-     
-      
+
+
 void is_tag_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, "_", 7, 14, "1000", global_node_offset);
-  
+
   std::map< std::string, std::string > attributes;
   attributes["type"] = type;
   Convert_Statement stmt(0, attributes, global_settings);
-  
+
   attributes.clear();
   attributes["k"] = "node_key";
   Set_Prop_Statement stmt1(0, attributes, global_settings);
@@ -331,38 +331,38 @@ void is_tag_test(Parsed_Query& global_settings, Transaction& transaction,
   attributes["k"] = "number";
   Evaluator_Is_Tag stmt40(0, attributes, global_settings);
   stmt4.add_statement(&stmt40, "");
-  
+
   stmt.execute(rman);
-  
+
   {
     attributes.clear();
     Print_Statement stmt(0, attributes, global_settings);
     stmt.execute(rman);
   }
 }
-     
-      
+
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir node_id_offset\n";
+    std::cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir node_id_offset\n";
     return 0;
   }
-  string test_to_execute = args[1];
+  std::string test_to_execute = args[1];
   //uint pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
-  
+
   try
   {
     Nonsynced_Transaction transaction(false, false, args[3], "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
-    
+
     std::cout<<
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<osm>\n";
-    
+
     if ((test_to_execute == "") || (test_to_execute == "1"))
       just_copy_test(global_settings, transaction, "just-copy", "_", 7, 14, "1000", global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "2"))

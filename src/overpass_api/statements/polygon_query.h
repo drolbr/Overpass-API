@@ -32,29 +32,29 @@
 class Polygon_Query_Statement : public Output_Statement
 {
   public:
-    Polygon_Query_Statement(int line_number_, const map< string, string >& attributes,
+    Polygon_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                             Parsed_Query& global_settings);
-    virtual string get_name() const { return "polygon-query"; }
+    virtual std::string get_name() const { return "polygon-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Polygon_Query_Statement();
-    
+
     static Generic_Statement_Maker< Polygon_Query_Statement > statement_maker;
-    
+
     virtual Query_Constraint* get_query_constraint();
-    
-    set< pair< Uint32_Index, Uint32_Index > > calc_ranges();
+
+    std::set< std::pair< Uint32_Index, Uint32_Index > > calc_ranges();
 
     template< typename Node_Skeleton >
-    void collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes, bool add_border);
-       
+    void collect_nodes(std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes, bool add_border);
+
     template< typename Way_Skeleton >
     void collect_ways
-      (map< Uint31_Index, vector< Way_Skeleton > >& ways,
+      (std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
        const Way_Geometry_Store& way_geometries,
        bool add_border, const Statement& query, Resource_Manager& rman);
-      
+
     bool covers_large_area() const { return covers_large_area_; }
-  
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       std::string result = indent + "<polygon-query bounds=\"";
@@ -67,7 +67,7 @@ class Polygon_Query_Statement : public Output_Statement
       }
       return result + "\"" + dump_xml_result_name() + "/>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       return "node" + dump_ql_in_query("") + dump_ql_result_name();
@@ -88,9 +88,9 @@ class Polygon_Query_Statement : public Output_Statement
 
   private:
     std::vector< std::pair< double, double > > edges;
-    vector< Aligned_Segment > segments;
+    std::vector< Aligned_Segment > segments;
     bool covers_large_area_;
-    vector< Query_Constraint* > constraints;
+    std::vector< Query_Constraint* > constraints;
 };
 
 #endif

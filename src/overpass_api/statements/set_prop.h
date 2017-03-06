@@ -35,12 +35,12 @@
 struct Set_Prop_Task
 {
   enum Mode { single_key, set_id, generic };
-  
+
   Set_Prop_Task(Eval_Task* rhs_, const std::string& key_, Mode mode_) : rhs(rhs_), key(key_), mode(mode_) {}
   ~Set_Prop_Task() { delete rhs; }
-  
+
   void process(Derived_Structure& result, bool& id_set) const;
-  
+
   void process(const Node_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
     Derived_Structure& result, bool& id_set) const;
@@ -65,7 +65,7 @@ struct Set_Prop_Task
   void process(const Derived_Skeleton* elem,
     const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
     Derived_Structure& result, bool& id_set) const;
-    
+
 private:
   Eval_Task* rhs;
   std::string key;
@@ -87,28 +87,28 @@ public:
     }
   };
   static Statement_Maker statement_maker;
-      
+
   virtual std::string dump_xml(const std::string& indent) const;
   virtual std::string dump_compact_ql(const std::string&) const;
   virtual std::string dump_pretty_ql(const std::string&) const { return dump_compact_ql(""); }
-  
-  Set_Prop_Statement(int line_number_, const map< string, string >& input_attributes,
+
+  Set_Prop_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-  virtual string get_name() const { return "set-prop"; }
-  virtual string get_result_name() const { return ""; }
-  virtual void add_statement(Statement* statement, string text);
+  virtual std::string get_name() const { return "set-prop"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Set_Prop_Statement() {}
-  
-  std::pair< std::vector< Set_Usage >, uint > used_sets() const;  
+
+  std::pair< std::vector< Set_Usage >, uint > used_sets() const;
   std::vector< std::string > used_tags() const;
-  
+
   Set_Prop_Task* get_task(const Prepare_Task_Context& context);
-   
+
   const std::string* get_key() const { return input != "" ? 0 : &keys.front(); }
   bool has_value() const { return tag_value; }
   bool should_set_id() const { return set_id; }
-    
+
 private:
   std::string input;
   std::vector< std::string > keys;

@@ -24,23 +24,22 @@
 #include "pivot.h"
 #include "query.h"
 
-using namespace std;
 
 Generic_Statement_Maker< Pivot_Statement > Pivot_Statement::statement_maker("pivot");
 
 
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
-		   const vector< typename TObject::Id_Type >& ids,
-		   map< TIndex, vector< TObject > >& elems)
+		   const std::vector< typename TObject::Id_Type >& ids,
+		   std::map< TIndex, std::vector< TObject > >& elems)
 {
-  set< TIndex > req;
+  std::set< TIndex > req;
   {
     Random_File< typename TObject::Id_Type, TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (typename vector< typename TObject::Id_Type >::const_iterator
+    for (typename std::vector< typename TObject::Id_Type >::const_iterator
         it = ids.begin(); it != ids.end(); ++it)
       req.insert(random.get(it->val()));
-  }    
+  }
   Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
   for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
       it(elems_db.discrete_begin(req.begin(), req.end()));
@@ -53,14 +52,14 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 
 
 template< class TIndex, class TObject >
-void filter_elems(const vector< typename TObject::Id_Type >& ids,
-                  map< TIndex, vector< TObject > >& elems)
+void filter_elems(const std::vector< typename TObject::Id_Type >& ids,
+                  std::map< TIndex, std::vector< TObject > >& elems)
 {
-  for (typename map< TIndex, vector< TObject > >::iterator it = elems.begin();
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = elems.begin();
       it != elems.end(); ++it)
   {
-    vector< TObject > local_into;
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+    std::vector< TObject > local_into;
+    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
       if (binary_search(ids.begin(), ids.end(), iit->id))
@@ -71,13 +70,13 @@ void filter_elems(const vector< typename TObject::Id_Type >& ids,
 }
 
 
-vector< Node::Id_Type > get_node_pivot_ids(const map< Uint31_Index, vector< Area_Skeleton > >& areas)
+std::vector< Node::Id_Type > get_node_pivot_ids(const std::map< Uint31_Index, std::vector< Area_Skeleton > >& areas)
 {
-  vector< Node::Id_Type > pivot_ids;
-  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = areas.begin();
+  std::vector< Node::Id_Type > pivot_ids;
+  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = areas.begin();
       it != areas.end(); ++it)
   {
-    for (vector< Area_Skeleton >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+    for (std::vector< Area_Skeleton >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
     {
       if (sit->id.val() < 2400000000u)
         pivot_ids.push_back(sit->id.val());
@@ -88,13 +87,13 @@ vector< Node::Id_Type > get_node_pivot_ids(const map< Uint31_Index, vector< Area
 }
 
 
-vector< Way::Id_Type > get_way_pivot_ids(const map< Uint31_Index, vector< Area_Skeleton > >& areas)
+std::vector< Way::Id_Type > get_way_pivot_ids(const std::map< Uint31_Index, std::vector< Area_Skeleton > >& areas)
 {
-  vector< Way::Id_Type > pivot_ids;
-  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = areas.begin();
+  std::vector< Way::Id_Type > pivot_ids;
+  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = areas.begin();
       it != areas.end(); ++it)
   {
-    for (vector< Area_Skeleton >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+    for (std::vector< Area_Skeleton >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
     {
       if (sit->id.val() > 2400000000u && sit->id.val() < 3600000000u)
         pivot_ids.push_back(sit->id.val() - 2400000000u);
@@ -105,13 +104,13 @@ vector< Way::Id_Type > get_way_pivot_ids(const map< Uint31_Index, vector< Area_S
 }
 
 
-vector< Relation::Id_Type > get_relation_pivot_ids(const map< Uint31_Index, vector< Area_Skeleton > >& areas)
+std::vector< Relation::Id_Type > get_relation_pivot_ids(const std::map< Uint31_Index, std::vector< Area_Skeleton > >& areas)
 {
-  vector< Relation::Id_Type > pivot_ids;
-  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = areas.begin();
+  std::vector< Relation::Id_Type > pivot_ids;
+  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = areas.begin();
       it != areas.end(); ++it)
   {
-    for (vector< Area_Skeleton >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
+    for (std::vector< Area_Skeleton >::const_iterator sit = it->second.begin(); sit != it->second.end(); ++sit)
     {
       if (sit->id.val() > 3600000000u)
         pivot_ids.push_back(sit->id.val() - 3600000000u);
@@ -129,21 +128,21 @@ class Pivot_Constraint : public Query_Constraint
 {
   public:
     Pivot_Constraint(Pivot_Statement& stmt_) : stmt(&stmt_) {}
-    
+
     bool delivers_data(Resource_Manager& rman) { return true; }
-    
+
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-                          const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-                          const vector< Node::Id_Type >& ids,
+                          const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+                          const std::vector< Node::Id_Type >& ids,
                           bool invert_ids, uint64 timestamp);
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-                          const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+                          const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
                           int type,
-                          const vector< Uint32_Index >& ids,
+                          const std::vector< Uint32_Index >& ids,
                           bool invert_ids, uint64 timestamp);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Pivot_Constraint() {}
-    
+
   private:
     Pivot_Statement* stmt;
 };
@@ -151,12 +150,12 @@ class Pivot_Constraint : public Query_Constraint
 
 bool Pivot_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
-     const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-     const vector< Node_Skeleton::Id_Type >& ids,
+     const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+     const std::vector< Node_Skeleton::Id_Type >& ids,
      bool invert_ids, uint64 timestamp)
 {
-  vector< Node::Id_Type > pivot_ids = get_node_pivot_ids(rman.sets()[stmt->get_input()].areas);
-  vector< Node::Id_Type > intersect_ids(pivot_ids.size());
+  std::vector< Node::Id_Type > pivot_ids = get_node_pivot_ids(rman.sets()[stmt->get_input()].areas);
+  std::vector< Node::Id_Type > intersect_ids(pivot_ids.size());
   if (ids.empty())
     pivot_ids.swap(intersect_ids);
   else if (!invert_ids)
@@ -170,22 +169,22 @@ bool Pivot_Constraint::get_data
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
   collect_elems(rman, *osm_base_settings().NODES, intersect_ids, into.nodes);
-		    
+		
   return true;
 }
 
 
 bool Pivot_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
-     const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+     const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
      int type,
-     const vector< Uint32_Index >& ids,
+     const std::vector< Uint32_Index >& ids,
      bool invert_ids, uint64 timestamp)
 {
   if (type == QUERY_WAY)
   {
-    vector< Way::Id_Type > pivot_ids = get_way_pivot_ids(rman.sets()[stmt->get_input()].areas);
-    vector< Way::Id_Type > intersect_ids(pivot_ids.size());
+    std::vector< Way::Id_Type > pivot_ids = get_way_pivot_ids(rman.sets()[stmt->get_input()].areas);
+    std::vector< Way::Id_Type > intersect_ids(pivot_ids.size());
     if (ids.empty())
       pivot_ids.swap(intersect_ids);
     else if (!invert_ids)
@@ -202,8 +201,8 @@ bool Pivot_Constraint::get_data
   }
   else if (type == QUERY_RELATION)
   {
-    vector< Relation::Id_Type > pivot_ids = get_relation_pivot_ids(rman.sets()[stmt->get_input()].areas);
-    vector< Relation::Id_Type > intersect_ids(pivot_ids.size());
+    std::vector< Relation::Id_Type > pivot_ids = get_relation_pivot_ids(rman.sets()[stmt->get_input()].areas);
+    std::vector< Relation::Id_Type > intersect_ids(pivot_ids.size());
     if (ids.empty())
       pivot_ids.swap(intersect_ids);
     else if (!invert_ids)
@@ -218,7 +217,7 @@ bool Pivot_Constraint::get_data
           intersect_ids.begin()), intersect_ids.end());
     collect_elems(rman, *osm_base_settings().RELATIONS, intersect_ids, into.relations);
   }
-    
+
   return true;
 }
 
@@ -233,16 +232,16 @@ void Pivot_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestam
 //-----------------------------------------------------------------------------
 
 Pivot_Statement::Pivot_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["from"] = "_";
   attributes["into"] = "_";
-  
+
   Statement::eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   input = attributes["from"];
   set_output(attributes["into"]);
 }
@@ -264,7 +263,7 @@ void Pivot_Statement::execute(Resource_Manager& rman)
 
 Pivot_Statement::~Pivot_Statement()
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+  for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }

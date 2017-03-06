@@ -29,7 +29,6 @@
 #include "../data/way_geometry_store.h"
 #include "statement.h"
 
-using namespace std;
 
 struct Prepared_BBox
 {
@@ -41,7 +40,7 @@ struct Prepared_BBox
   Prepared_BBox();
   void merge(Prepared_BBox&);
   bool intersects(const Prepared_BBox &) const;
-  bool intersects(const vector < Prepared_BBox > &) const;
+  bool intersects(const std::vector < Prepared_BBox > &) const;
 };
 
 struct Prepared_Segment
@@ -50,10 +49,10 @@ struct Prepared_Segment
   double first_lon;
   double second_lat;
   double second_lon;
-  vector< double > first_cartesian;
-  vector< double > second_cartesian;
-  vector< double > norm;
-  
+  std::vector< double > first_cartesian;
+  std::vector< double > second_cartesian;
+  std::vector< double > norm;
+
   Prepared_Segment(double first_lat, double first_lon, double second_lat, double second_lon);
 };
 
@@ -62,8 +61,8 @@ struct Prepared_Point
 {
   double lat;
   double lon;
-  vector< double > cartesian;
-  
+  std::vector< double > cartesian;
+
   Prepared_Point(double lat, double lon);
 };
 
@@ -71,37 +70,38 @@ struct Prepared_Point
 class Around_Statement : public Output_Statement
 {
   public:
-    Around_Statement(int line_number_, const map< string, string >& attributes,
+    Around_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                      Parsed_Query& global_settings);
-    virtual string get_name() const { return "around"; }
+    virtual std::string get_name() const { return "around"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Around_Statement();    
+    virtual ~Around_Statement();
     static Generic_Statement_Maker< Around_Statement > statement_maker;
-    
-    virtual Query_Constraint* get_query_constraint();
-    
-    string get_source_name() const { return input; }
 
-    set< pair< Uint32_Index, Uint32_Index > > calc_ranges
+    virtual Query_Constraint* get_query_constraint();
+
+    std::string get_source_name() const { return input; }
+
+    std::set< std::pair< Uint32_Index, Uint32_Index > > calc_ranges
         (const Set& input_nodes, Resource_Manager& rman) const;
 
     void calc_lat_lons(const Set& input_nodes, Statement& query, Resource_Manager& rman);
 
     bool is_inside(double lat, double lon) const;
     bool is_inside(double first_lat, double first_lon, double second_lat, double second_lon) const;
-    bool is_inside(const vector< Quad_Coord >& way_geometry) const;
-    
+    bool is_inside(const std::vector< Quad_Coord >& way_geometry) const;
+
     double get_radius() const { return radius; }
-    
+
     template< typename Node_Skeleton >
-    void add_nodes(const map< Uint32_Index, vector< Node_Skeleton > >& nodes);
-    
+    void add_nodes(const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes);
+
     template< typename Way_Skeleton >
-    void add_ways(const map< Uint31_Index, vector< Way_Skeleton > >& ways,
+    void add_ways(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
 		  const Way_Geometry_Store& way_geometries);
+
     bool matches_bboxes(double lat, double lon) const;
     bool matches_bboxes(const Prepared_BBox&) const;
-  
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<around"
@@ -111,7 +111,7 @@ class Around_Statement : public Output_Statement
           + (lon != 200. ? std::string(" lon=\"") + to_string(lon) + "\"" : "")
           + dump_xml_result_name() + "/>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       return "node" + dump_ql_in_query("") + dump_ql_result_name();
@@ -126,18 +126,19 @@ class Around_Statement : public Output_Statement
           + ")";
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
-    
+
   private:
-    string input;
+    std::string input;
     double radius;
     double lat;
     double lon;
-    map< Uint32_Index, vector< pair< double, double > > > radius_lat_lons;
-    vector< pair< Prepared_BBox, Prepared_Point> > simple_lat_lons;
-    vector< pair< Prepared_BBox, Prepared_Segment> > simple_segments;
-    vector< Query_Constraint* > constraints;
-    vector< Prepared_BBox > node_bboxes;
-    vector< Prepared_BBox > way_bboxes;
+
+    std::map< Uint32_Index, std::vector< std::pair< double, double > > > radius_lat_lons;
+    std::vector< std::pair< Prepared_BBox, Prepared_Point> > simple_lat_lons;
+    std::vector< std::pair< Prepared_BBox, Prepared_Segment> > simple_segments;
+    std::vector< Query_Constraint* > constraints;
+    std::vector< Prepared_BBox > node_bboxes;
+    std::vector< Prepared_BBox > way_bboxes;
 };
 
 #endif

@@ -32,31 +32,31 @@
 class User_Statement : public Output_Statement
 {
   public:
-    User_Statement(int line_number_, const map< string, string >& input_attributes,
+    User_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
-    virtual string get_name() const { return "user"; }
+    virtual std::string get_name() const { return "user"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~User_Statement();
-    
+
     static Generic_Statement_Maker< User_Statement > statement_maker;
-    
+
     virtual Query_Constraint* get_query_constraint();
-    
+
     void calc_ranges
-        (set< pair< Uint32_Index, Uint32_Index > >& node_req,
-         set< pair< Uint31_Index, Uint31_Index > >& other_req,
+        (std::set< std::pair< Uint32_Index, Uint32_Index > >& node_req,
+         std::set< std::pair< Uint31_Index, Uint31_Index > >& other_req,
          Transaction& transaction);
-	 
+	
     // Reads the user id from the database.
-    set< Uint32_Index > get_ids(Transaction& transaction);
-    
+    std::set< Uint32_Index > get_ids(Transaction& transaction);
+
     // Works only if get_id(Transaction&) has been called before.
-    set< Uint32_Index > get_ids() const { return user_ids; }
-   
+    std::set< Uint32_Index > get_ids() const { return user_ids; }
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       std::string result = indent + "<user" + std::string(" type=\"") + result_type + "\"";
-      
+
       if (user_ids.size() == 1)
         result += " uid=\"" + to_string(user_ids.begin()->val()) + "\"";
       else
@@ -65,7 +65,7 @@ class User_Statement : public Output_Statement
         for (std::set< Uint32_Index >::const_iterator it = user_ids.begin(); it != user_ids.end(); ++it)
           result += " uid_" + to_string(++counter) + "=\"" + to_string(it->val()) + "\"";
       }
-      
+
       if (user_names.size() == 1)
         result += " name=\"" + escape_xml(*user_names.begin()) + "\"";
       else
@@ -74,10 +74,10 @@ class User_Statement : public Output_Statement
         for (std::set< std::string >::const_iterator it = user_names.begin(); it != user_names.end(); ++it)
           result += " name_" + to_string(++counter) + "=\"" + escape_xml(*it) + "\"";
       }
-      
+
       return result + dump_xml_result_name() + "/>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       return result_type + dump_ql_in_query("") + dump_ql_result_name();
@@ -86,7 +86,7 @@ class User_Statement : public Output_Statement
     virtual std::string dump_ql_in_query(const std::string&) const
     {
       std::string result = user_ids.empty() ? "(user:" : "(uid:";
-      
+
       if (!user_ids.empty())
       {
         std::set< Uint32_Index >::const_iterator it = user_ids.begin();
@@ -94,7 +94,7 @@ class User_Statement : public Output_Statement
         for (++it; it != user_ids.end(); ++it)
           result += "," + to_string(it->val());
       }
-      
+
       if (!user_names.empty())
       {
         std::set< std::string >::const_iterator it = user_names.begin();
@@ -102,16 +102,16 @@ class User_Statement : public Output_Statement
         for (++it; it != user_names.end(); ++it)
           result += ",\"" + escape_cstr(*it) + "\"";
       }
-      
+
       return result + ")";
     }
-    
+
   private:
-    string input;
-    set< Uint32_Index > user_ids;
-    set< string > user_names;
-    string result_type;
-    vector< Query_Constraint* > constraints;
+    std::string input;
+    std::set< Uint32_Index > user_ids;
+    std::set< std::string > user_names;
+    std::string result_type;
+    std::vector< Query_Constraint* > constraints;
     const Bbox_Double* bbox_limitation;
 };
 

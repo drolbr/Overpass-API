@@ -30,29 +30,29 @@
 class Item_Statement : public Statement
 {
   public:
-    Item_Statement(int line_number_, const map< string, string >& attributes,
+    Item_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                    Parsed_Query& global_settings);
-    virtual string get_name() const { return "item"; }
-    virtual string get_result_name() const { return output; }
+    virtual std::string get_name() const { return "item"; }
+    virtual std::string get_result_name() const { return output; }
     virtual void execute(Resource_Manager& rman) {}
     virtual ~Item_Statement();
-    
+
     static Generic_Statement_Maker< Item_Statement > statement_maker;
-    
+
     virtual Query_Constraint* get_query_constraint();
-    
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<item set=\"" + output + "\"/>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const { return "." + output; }
     virtual std::string dump_ql_in_query(const std::string&) const { return "." + output; }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
-    
+
   private:
-    string output;
-    vector< Query_Constraint* > constraints;
+    std::string output;
+    std::vector< Query_Constraint* > constraints;
 };
 
 #endif

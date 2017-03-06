@@ -28,9 +28,8 @@
 #include "query.h"
 #include "union.h"
 
-using namespace std;
 
-void draw_item(vector< string >& visual, uint32 index, const Node_Skeleton& node, char c)
+void draw_item(std::vector< std::string >& visual, uint32 index, const Node_Skeleton& node, char c)
 {
   uint i(::lat(index, node.ll_lower) * 2000 - 102315);
   uint j(::lon(index, node.ll_lower) * 2500 - 17495);
@@ -42,20 +41,20 @@ void draw_item(vector< string >& visual, uint32 index, const Node_Skeleton& node
 
 void comp_sets(Set& s1, Set& s2)
 {
-  map< Uint32_Index, vector< Node_Skeleton > >::iterator it1(s1.nodes.begin());
-  map< Uint32_Index, vector< Node_Skeleton > >::iterator it2(s2.nodes.begin());
-  vector< string > visual(600, string(1000, '.'));
-  
+  std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it1(s1.nodes.begin());
+  std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it2(s2.nodes.begin());
+  std::vector< std::string > visual(600, std::string(1000, '.'));
+
   while ((it1 != s1.nodes.end()) && (it2 != s2.nodes.end()))
   {
     if (it1->first == it2->first)
     {
       sort(it1->second.begin(), it1->second.end());
       sort(it2->second.begin(), it2->second.end());
-      
-      vector< Node_Skeleton >::const_iterator itn1(it1->second.begin());
-      vector< Node_Skeleton >::const_iterator itn2(it2->second.begin());
-      
+
+      std::vector< Node_Skeleton >::const_iterator itn1(it1->second.begin());
+      std::vector< Node_Skeleton >::const_iterator itn2(it2->second.begin());
+
       while ((itn1 != it1->second.end()) && (itn2 != it2->second.end()))
       {
 	if (itn1->id == itn2->id)
@@ -66,7 +65,7 @@ void comp_sets(Set& s1, Set& s2)
 	}
 	else if (itn1->id < itn2->id)
 	{
-          cout<<"a\t"<<itn1->id.val()<<'\t'
+          std::cout<<"a\t"<<itn1->id.val()<<'\t'
               <<::lat(it1->first.val(), itn1->ll_lower)<<'\t'
 	      <<::lon(it1->first.val(), itn1->ll_lower)<<'\n';
 	  draw_item(visual, it1->first.val(), *itn1, 'a');
@@ -74,7 +73,7 @@ void comp_sets(Set& s1, Set& s2)
 	}
 	else
 	{
-          cout<<"b\t"<<itn2->id.val()<<'\t'
+          std::cout<<"b\t"<<itn2->id.val()<<'\t'
               <<::lat(it2->first.val(), itn2->ll_lower)<<'\t'
 	      <<::lon(it2->first.val(), itn2->ll_lower)<<'\n';
 	  draw_item(visual, it2->first.val(), *itn2, 'b');
@@ -83,7 +82,7 @@ void comp_sets(Set& s1, Set& s2)
       }
       while (itn1 != it1->second.end())
       {
-        cout<<"a\t"<<itn1->id.val()<<'\t'
+        std::cout<<"a\t"<<itn1->id.val()<<'\t'
             <<::lat(it1->first.val(), itn1->ll_lower)<<'\t'
 	    <<::lon(it1->first.val(), itn1->ll_lower)<<'\n';
 	draw_item(visual, it1->first.val(), *itn1, 'a');
@@ -91,22 +90,22 @@ void comp_sets(Set& s1, Set& s2)
       }
       while (itn2 != it2->second.end())
       {
-        cout<<"b\t"<<itn2->id.val()<<'\t'
+        std::cout<<"b\t"<<itn2->id.val()<<'\t'
             <<::lat(it2->first.val(), itn2->ll_lower)<<'\t'
 	    <<::lon(it2->first.val(), itn2->ll_lower)<<'\n';
 	draw_item(visual, it2->first.val(), *itn2, 'b');
 	++itn2;
       }
-      
+
       ++it1;
       ++it2;
     }
     else if (it1->first < it2->first)
     {
-      for (vector< Node_Skeleton >::const_iterator it(it1->second.begin());
+      for (std::vector< Node_Skeleton >::const_iterator it(it1->second.begin());
           it != it1->second.end(); ++it)
       {
-        cout<<"a\t"<<it->id.val()<<'\t'
+        std::cout<<"a\t"<<it->id.val()<<'\t'
             <<::lat(it1->first.val(), it->ll_lower)<<'\t'
 	    <<::lon(it1->first.val(), it->ll_lower)<<'\n';
 	draw_item(visual, it1->first.val(), *it, 'a');
@@ -115,10 +114,10 @@ void comp_sets(Set& s1, Set& s2)
     }
     else
     {
-      for (vector< Node_Skeleton >::const_iterator it(it2->second.begin());
+      for (std::vector< Node_Skeleton >::const_iterator it(it2->second.begin());
           it != it2->second.end(); ++it)
       {
-        cout<<"b\t"<<it->id.val()<<'\t'
+        std::cout<<"b\t"<<it->id.val()<<'\t'
             <<::lat(it2->first.val(), it->ll_lower)<<'\t'
             <<::lon(it2->first.val(), it->ll_lower)<<'\n';
 	draw_item(visual, it2->first.val(), *it, 'b');
@@ -128,10 +127,10 @@ void comp_sets(Set& s1, Set& s2)
   }
   while (it1 != s1.nodes.end())
   {
-    for (vector< Node_Skeleton >::const_iterator it(it1->second.begin());
+    for (std::vector< Node_Skeleton >::const_iterator it(it1->second.begin());
         it != it1->second.end(); ++it)
     {
-      cout<<"a\t"<<it->id.val()<<'\t'
+      std::cout<<"a\t"<<it->id.val()<<'\t'
           <<::lat(it1->first.val(), it->ll_lower)<<'\t'
 	  <<::lon(it1->first.val(), it->ll_lower)<<'\n';
       draw_item(visual, it1->first.val(), *it, 'a');
@@ -140,33 +139,33 @@ void comp_sets(Set& s1, Set& s2)
   }
   while (it2 != s2.nodes.end())
   {
-    for (vector< Node_Skeleton >::const_iterator it(it2->second.begin());
+    for (std::vector< Node_Skeleton >::const_iterator it(it2->second.begin());
         it != it2->second.end(); ++it)
     {
-      cout<<"b\t"<<it->id.val()<<'\t'
+      std::cout<<"b\t"<<it->id.val()<<'\t'
           <<::lat(it2->first.val(), it->ll_lower)<<'\t'
 	  <<::lon(it2->first.val(), it->ll_lower)<<'\n';
       draw_item(visual, it2->first.val(), *it, 'b');
     }
     ++it2;
   }
-  
-  for (vector< string >::const_iterator it(visual.begin()); it != visual.end(); ++it)
-    cout<<*it<<'\n';
+
+  for (std::vector< std::string >::const_iterator it(visual.begin()); it != visual.end(); ++it)
+    std::cout<<*it<<'\n';
 }
 
 int main(int argc, char* args[])
 {
-  vector< Aligned_Segment > segs;
-    
+  std::vector< Aligned_Segment > segs;
+
   Error_Output* error_output(new Console_Output(false));
   Statement::set_error_output(error_output);
-  
+
   Nonsynced_Transaction transaction(false, false, "./", "");
   Resource_Manager rman(transaction);
-  
+
   Parsed_Query global_settings;
-  
+
   {
     const char* attributes[] = { "into", "comp", 0 };
     Union_Statement* stmt1 = new Union_Statement(0, convert_c_pairs(attributes), global_settings);
@@ -421,7 +420,7 @@ int main(int argc, char* args[])
     stmt1->execute(rman);
   }
   comp_sets(rman.sets()["comp"], rman.sets()["_"]);
-  
+
   {
     const char* attributes[] = { "type", "node", 0 };
     Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes), global_settings);
@@ -438,6 +437,6 @@ int main(int argc, char* args[])
     stmt1->execute(rman);
   }
   comp_sets(rman.sets()["comp"], rman.sets()["_"]);
-  
+
   return 0;
 }

@@ -24,22 +24,21 @@
 #include <vector>
 #include "statement.h"
 
-using namespace std;
 
 class Map_To_Area_Statement : public Output_Statement
 {
   public:
-    Map_To_Area_Statement(int line_number_, const map< string, string >& attributes,
+    Map_To_Area_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                           Parsed_Query& global_settings);
-    virtual string get_name() const { return "map-to-area"; }
+    virtual std::string get_name() const { return "map-to-area"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Map_To_Area_Statement() {}    
+    virtual ~Map_To_Area_Statement() {}
     static Generic_Statement_Maker< Map_To_Area_Statement > statement_maker;
-      
+
     static bool is_used() { return is_used_; }
-  
+
   private:
-    string input;
+    std::string input;
 
     static bool is_used_;
 };

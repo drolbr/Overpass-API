@@ -190,9 +190,10 @@ bin_bbox_brim_query_LDADD = libexpatwrapper.la
 bin_translate_xapi_SOURCES = expat/translate_xapi.cc expat/escape_xml.cc
 bin_translate_xapi_LDADD = 
 
-distdir = osm-3s_v0.7.53
+distdir = osm-3s_v0.7.54
 
 nobase_dist_HEADERS = \
+  expat/escape_json.h\
   expat/escape_xml.h\
   expat/expat_justparse_interface.h\
   expat/map_ql_input.h\
@@ -201,6 +202,7 @@ nobase_dist_HEADERS = \
   overpass_api/core/datatypes.h\
   overpass_api/core/geometry.h\
   overpass_api/core/index_computations.h\
+  overpass_api/core/parsed_query.h\
   overpass_api/core/settings.h\
   overpass_api/core/type_area.h\
   overpass_api/core/type_node.h\
@@ -208,6 +210,7 @@ nobase_dist_HEADERS = \
   overpass_api/core/type_tags.h\
   overpass_api/core/type_way.h\
   overpass_api/data/abstract_processing.h\
+  overpass_api/data/bbox_filter.h\
   overpass_api/data/collect_items.h\
   overpass_api/data/collect_members.h\
   overpass_api/data/filenames.h\
@@ -215,14 +218,22 @@ nobase_dist_HEADERS = \
   overpass_api/data/filter_ids_by_tags.h\
   overpass_api/data/meta_collector.h\
   overpass_api/data/regular_expression.h\
+  overpass_api/data/relation_geometry_store.h\
+  overpass_api/data/tag_store.h\
   overpass_api/data/user_data_cache.h\
+  overpass_api/data/utils.h\
+  overpass_api/data/way_geometry_store.h\
   overpass_api/dispatch/dispatcher_stub.h\
   overpass_api/dispatch/resource_manager.h\
   overpass_api/dispatch/scripting_core.h\
+  overpass_api/frontend/basic_formats.h\
   overpass_api/frontend/cgi-helper.h\
   overpass_api/frontend/console_output.h\
   overpass_api/frontend/map_ql_parser.h\
   overpass_api/frontend/output.h\
+  overpass_api/frontend/output_handler.h\
+  overpass_api/frontend/output_handler_parser.h\
+  overpass_api/frontend/tokenizer_utils.h\
   overpass_api/frontend/user_interface.h\
   overpass_api/frontend/web_output.h\
   overpass_api/osm-backend/area_updater.h\
@@ -234,6 +245,11 @@ nobase_dist_HEADERS = \
   overpass_api/osm-backend/relation_updater.h\
   overpass_api/osm-backend/tags_updater.h\
   overpass_api/osm-backend/way_updater.h\
+  overpass_api/output_formats/output_csv.h\
+  overpass_api/output_formats/output_custom.h\
+  overpass_api/output_formats/output_json.h\
+  overpass_api/output_formats/output_popup.h\
+  overpass_api/output_formats/output_xml.h\
   overpass_api/statements/aggregators.h\
   overpass_api/statements/area_query.h\
   overpass_api/statements/around.h\
@@ -301,5 +317,5 @@ EXTRA_DIST = \
   rules/areas_delta.osm3s
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-SUBDIRS = test-bin
-#SUBDIRS =
+#SUBDIRS = test-bin
+SUBDIRS =
