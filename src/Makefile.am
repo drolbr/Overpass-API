@@ -1,6 +1,11 @@
 
 bin_mandatory = bin/osm3s_query bin/dispatcher bin/update_database bin/update_from_dir
-bin_script_mandatory = bin/apply_osc_to_db.sh bin/fetch_osc.sh bin/rules_loop.sh bin/download_clone.sh
+bin_script_mandatory = \
+  bin/apply_osc_to_db.sh\
+  bin/download_clone.sh\
+  bin/fetch_osc.sh\
+  bin/rules_delta_loop.sh\
+  bin/rules_loop.sh
 cgi_bin_mandatory = cgi-bin/interpreter cgi-bin/timestamp
 cgi_bin_script_mandatory = cgi-bin/kill_my_queries cgi-bin/map cgi-bin/status
 
@@ -14,8 +19,6 @@ bin_script_clone = bin/compress_clone.sh bin/clone.sh
 cgi_bin_clone =
 cgi_bin_script_clone = cgi-bin/trigger_clone
 
-bin_augmented_diffs = bin/process_augmented_diffs bin/uncgi
-bin_script_augmented_diffs =
 cgi_bin_augmented_diffs =
 cgi_bin_script_augmented_diffs = cgi-bin/augmented_diff cgi-bin/augmented_diff_status cgi-bin/augmented_state_by_date
 
@@ -88,32 +91,54 @@ dist_templates_DATA = templates/default.wiki templates/base.wiki
 noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la libweboutput.la
 
 statements_cc = \
-overpass_api/statements/statement.cc \
-overpass_api/statements/area_query.cc \
-overpass_api/statements/around.cc \
-overpass_api/statements/bbox_query.cc \
-overpass_api/statements/changed.cc \
-overpass_api/statements/coord_query.cc \
-overpass_api/statements/difference.cc \
-overpass_api/statements/foreach.cc \
-overpass_api/statements/id_query.cc \
-overpass_api/statements/item.cc \
-overpass_api/statements/make_area.cc \
-overpass_api/statements/map_to_area.cc \
-overpass_api/statements/newer.cc \
-overpass_api/statements/osm_script.cc \
-overpass_api/statements/pivot.cc \
-overpass_api/statements/polygon_query.cc \
-overpass_api/statements/print.cc \
-overpass_api/statements/query.cc \
-overpass_api/statements/recurse.cc \
-overpass_api/statements/union.cc \
-overpass_api/statements/user.cc \
-overpass_api/frontend/print_target.cc expat/escape_xml.cc
+  overpass_api/data/bbox_filter.cc \
+  overpass_api/statements/aggregators.cc \
+  overpass_api/statements/area_query.cc \
+  overpass_api/statements/around.cc \
+  overpass_api/statements/bbox_query.cc \
+  overpass_api/statements/binary_operators.cc \
+  overpass_api/statements/changed.cc \
+  overpass_api/statements/convert.cc \
+  overpass_api/statements/coord_query.cc \
+  overpass_api/statements/difference.cc \
+  overpass_api/statements/evaluator.cc \
+  overpass_api/statements/filter.cc \
+  overpass_api/statements/foreach.cc \
+  overpass_api/statements/id_query.cc \
+  overpass_api/statements/item.cc \
+  overpass_api/statements/make_area.cc \
+  overpass_api/statements/make.cc \
+  overpass_api/statements/map_to_area.cc \
+  overpass_api/statements/newer.cc \
+  overpass_api/statements/osm_script.cc \
+  overpass_api/statements/pivot.cc \
+  overpass_api/statements/polygon_query.cc \
+  overpass_api/statements/print.cc \
+  overpass_api/statements/query.cc \
+  overpass_api/statements/recurse.cc \
+  overpass_api/statements/set_prop.cc \
+  overpass_api/statements/statement.cc \
+  overpass_api/statements/tag_value.cc \
+  overpass_api/statements/unary_operators.cc \
+  overpass_api/statements/union.cc \
+  overpass_api/statements/user.cc \
+  expat/escape_json.cc \
+  expat/escape_xml.cc
 
-libcore_la_SOURCES = overpass_api/frontend/map_ql_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
+output_formats_cc = \
+  overpass_api/output_formats/output_csv.cc \
+  overpass_api/output_formats/output_csv_factory.cc \
+  overpass_api/output_formats/output_custom.cc \
+  overpass_api/output_formats/output_custom_factory.cc \
+  overpass_api/output_formats/output_json.cc \
+  overpass_api/output_formats/output_json_factory.cc \
+  overpass_api/output_formats/output_xml.cc \
+  overpass_api/output_formats/output_xml_factory.cc \
+  overpass_api/output_formats/output_popup_factory.cc
+
+libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
-libdata_la_SOURCES = overpass_api/data/collect_members.cc
+libdata_la_SOURCES = overpass_api/data/collect_members.cc overpass_api/data/relation_geometry_store.cc overpass_api/data/way_geometry_store.cc
 libdata_la_LIBADD =
 libdispatcher_la_SOURCES = template_db/dispatcher_client.cc overpass_api/dispatch/resource_manager.cc overpass_api/osm-backend/area_updater.cc
 libdispatcher_la_LIBADD =
@@ -130,22 +155,21 @@ libsettings_la_LIBADD =
 libweboutput_la_SOURCES = overpass_api/frontend/web_output.cc
 libweboutput_la_LIBADD = libfrontend.la
 
-osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backend/basic_updater.cc overpass_api/osm-backend/node_updater.cc overpass_api/osm-backend/way_updater.cc overpass_api/osm-backend/relation_updater.cc overpass_api/osm-backend/osm_updater.cc expat/escape_xml.cc
+osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backend/basic_updater.cc overpass_api/osm-backend/node_updater.cc overpass_api/osm-backend/way_updater.cc overpass_api/osm-backend/relation_updater.cc overpass_api/osm-backend/osm_updater.cc overpass_api/core/geometry.cc expat/escape_xml.cc
 
 
 bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_database.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
 bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_from_dir.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
-bin_osm3s_query_SOURCES = ${statements_cc} overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+bin_osm3s_query_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/output_handler.cc overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_osm3s_query_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
-bin_dispatcher_SOURCES = template_db/dispatcher.cc template_db/file_tools.cc template_db/types.cc overpass_api/dispatch/dispatcher_server.cc
+bin_dispatcher_SOURCES = template_db/dispatcher.cc template_db/file_tools.cc template_db/transaction_insulator.cc template_db/types.cc overpass_api/dispatch/dispatcher_server.cc
 bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
-
-cgi_bin_interpreter_SOURCES = ${statements_cc} overpass_api/dispatch/web_query.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/output_handler.cc overpass_api/dispatch/web_query.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 cgi_bin_interpreter_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
-cgi_bin_timestamp_SOURCES = overpass_api/dispatch/db_timestamp.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+cgi_bin_timestamp_SOURCES = overpass_api/frontend/basic_formats.cc overpass_api/dispatch/db_timestamp.cc overpass_api/core/geometry.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 cgi_bin_timestamp_LDADD = libdispatcher.la libsettings.la libweboutput.la @COMPRESS_LIBS@
 
 
@@ -165,19 +189,20 @@ bin_bbox_brim_query_SOURCES = pt_diagrams/bbox-brim-query.cc
 bin_bbox_brim_query_LDADD = libexpatwrapper.la
 bin_translate_xapi_SOURCES = expat/translate_xapi.cc expat/escape_xml.cc
 bin_translate_xapi_LDADD = 
-bin_process_augmented_diffs_SOURCES = expat/process_augmented_diffs.cc expat/escape_xml.cc
-bin_process_augmented_diffs_LDADD = libexpatwrapper.la
 
-distdir = osm-3s_v0.7.53
+distdir = osm-3s_v0.7.54
 
 nobase_dist_HEADERS = \
+  expat/escape_json.h\
   expat/escape_xml.h\
   expat/expat_justparse_interface.h\
   expat/map_ql_input.h\
   lib/overpass.h\
   overpass_api/core/basic_types.h\
   overpass_api/core/datatypes.h\
+  overpass_api/core/geometry.h\
   overpass_api/core/index_computations.h\
+  overpass_api/core/parsed_query.h\
   overpass_api/core/settings.h\
   overpass_api/core/type_area.h\
   overpass_api/core/type_node.h\
@@ -185,23 +210,30 @@ nobase_dist_HEADERS = \
   overpass_api/core/type_tags.h\
   overpass_api/core/type_way.h\
   overpass_api/data/abstract_processing.h\
+  overpass_api/data/bbox_filter.h\
   overpass_api/data/collect_items.h\
   overpass_api/data/collect_members.h\
   overpass_api/data/filenames.h\
   overpass_api/data/filter_by_tags.h\
   overpass_api/data/filter_ids_by_tags.h\
-  overpass_api/data/geometry.h\
   overpass_api/data/meta_collector.h\
   overpass_api/data/regular_expression.h\
+  overpass_api/data/relation_geometry_store.h\
+  overpass_api/data/tag_store.h\
   overpass_api/data/user_data_cache.h\
+  overpass_api/data/utils.h\
+  overpass_api/data/way_geometry_store.h\
   overpass_api/dispatch/dispatcher_stub.h\
   overpass_api/dispatch/resource_manager.h\
   overpass_api/dispatch/scripting_core.h\
+  overpass_api/frontend/basic_formats.h\
   overpass_api/frontend/cgi-helper.h\
   overpass_api/frontend/console_output.h\
   overpass_api/frontend/map_ql_parser.h\
   overpass_api/frontend/output.h\
-  overpass_api/frontend/print_target.h\
+  overpass_api/frontend/output_handler.h\
+  overpass_api/frontend/output_handler_parser.h\
+  overpass_api/frontend/tokenizer_utils.h\
   overpass_api/frontend/user_interface.h\
   overpass_api/frontend/web_output.h\
   overpass_api/osm-backend/area_updater.h\
@@ -213,16 +245,27 @@ nobase_dist_HEADERS = \
   overpass_api/osm-backend/relation_updater.h\
   overpass_api/osm-backend/tags_updater.h\
   overpass_api/osm-backend/way_updater.h\
+  overpass_api/output_formats/output_csv.h\
+  overpass_api/output_formats/output_custom.h\
+  overpass_api/output_formats/output_json.h\
+  overpass_api/output_formats/output_popup.h\
+  overpass_api/output_formats/output_xml.h\
+  overpass_api/statements/aggregators.h\
   overpass_api/statements/area_query.h\
   overpass_api/statements/around.h\
   overpass_api/statements/bbox_query.h\
+  overpass_api/statements/binary_operators.h\
   overpass_api/statements/changed.h\
+  overpass_api/statements/convert.h\
   overpass_api/statements/coord_query.h\
   overpass_api/statements/difference.h\
+  overpass_api/statements/evaluator.h\
+  overpass_api/statements/filter.h\
   overpass_api/statements/foreach.h\
   overpass_api/statements/id_query.h\
   overpass_api/statements/item.h\
   overpass_api/statements/make_area.h\
+  overpass_api/statements/make.h\
   overpass_api/statements/map_to_area.h\
   overpass_api/statements/newer.h\
   overpass_api/statements/osm_script.h\
@@ -231,8 +274,11 @@ nobase_dist_HEADERS = \
   overpass_api/statements/print.h\
   overpass_api/statements/query.h\
   overpass_api/statements/recurse.h\
+  overpass_api/statements/set_prop.h\
   overpass_api/statements/statement_dump.h\
   overpass_api/statements/statement.h\
+  overpass_api/statements/tag_value.h\
+  overpass_api/statements/unary_operators.h\
   overpass_api/statements/union.h\
   overpass_api/statements/user.h\
   pt_diagrams/processed_input.h\
@@ -248,6 +294,7 @@ nobase_dist_HEADERS = \
   template_db/random_file.h\
   template_db/random_file_index.h\
   template_db/transaction.h\
+  template_db/transaction_insulator.h\
   template_db/types.h\
   template_db/zlib_wrapper.h
 
@@ -266,8 +313,9 @@ EXTRA_DIST = \
   html/public_transport.html\
   html/query_form.html\
   html/technical_overview.html\
-  rules/areas.osm3s
+  rules/areas.osm3s\
+  rules/areas_delta.osm3s
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-SUBDIRS = test-bin
-#SUBDIRS =
+#SUBDIRS = test-bin
+SUBDIRS =

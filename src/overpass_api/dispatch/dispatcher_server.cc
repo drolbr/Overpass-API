@@ -26,13 +26,12 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
 
 struct Default_Dispatcher_Logger : public Dispatcher_Logger
 {
   Default_Dispatcher_Logger(Logger& logger_) : logger(&logger_) {}
-  
-  virtual void write_start(pid_t pid, const vector< pid_t >& registered);
+
+  virtual void write_start(pid_t pid, const std::vector< pid_t >& registered);
   virtual void write_rollback(pid_t pid);
   virtual void write_commit(pid_t pid);
   virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
@@ -42,16 +41,16 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
   virtual void read_finished(pid_t pid);
   virtual void read_aborted(pid_t pid);
   virtual void purge(pid_t pid);
-  
+
   private:
     Logger* logger;
 };
 
-void Default_Dispatcher_Logger::write_start(pid_t pid, const vector< pid_t >& registered)
+void Default_Dispatcher_Logger::write_start(pid_t pid, const std::vector< pid_t >& registered)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"write_start of process "<<pid<<". Considered as reading:";
-  for (vector< pid_t >::const_iterator it = registered.begin(); it != registered.end(); ++it)
+  for (std::vector< pid_t >::const_iterator it = registered.begin(); it != registered.end(); ++it)
     out<<' '<<*it;
   out<<'.';
   logger->annotated_log(out.str());
@@ -59,14 +58,14 @@ void Default_Dispatcher_Logger::write_start(pid_t pid, const vector< pid_t >& re
 
 void Default_Dispatcher_Logger::write_rollback(pid_t pid)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"write_rollback of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
 
 void Default_Dispatcher_Logger::write_commit(pid_t pid)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"write_commit of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
@@ -74,7 +73,7 @@ void Default_Dispatcher_Logger::write_commit(pid_t pid)
 void Default_Dispatcher_Logger::request_read_and_idx
     (pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"request_read_and_idx of process "<<pid<<" timeout "<<max_allowed_time
       <<" space "<<max_allowed_space<<'.';
   logger->annotated_log(out.str());
@@ -82,42 +81,42 @@ void Default_Dispatcher_Logger::request_read_and_idx
 
 void Default_Dispatcher_Logger::read_idx_finished(pid_t pid)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"read_idx_finished "<<pid<<'.';
   logger->annotated_log(out.str());
 }
 
 void Default_Dispatcher_Logger::prolongate(pid_t pid)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"prolongate of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
 
 void Default_Dispatcher_Logger::idle_counter(uint32 idle_count)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"waited idle for "<<idle_count<<" cycles.";
   logger->annotated_log(out.str());
 }
 
 void Default_Dispatcher_Logger::read_finished(pid_t pid)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"read_finished of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
 
 void Default_Dispatcher_Logger::read_aborted(pid_t pid)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"read_aborted of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
 
 void Default_Dispatcher_Logger::purge(pid_t pid)
 {
-  ostringstream out;
+  std::ostringstream out;
   out<<"purge of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
@@ -125,7 +124,7 @@ void Default_Dispatcher_Logger::purge(pid_t pid)
 
 std::string to_date(time_t time)
 {
-  char result[21];  
+  char result[21];
   strftime(result, 21, "%FT%TZ", gmtime(&time));
   return result;
 }
@@ -135,7 +134,7 @@ bool assure_files_absent(const std::string& db_dir, const std::vector< File_Prop
     const std::string& parameter)
 {
   bool suspicious_files_present = false;
-  
+
   for (std::vector< File_Properties* >::const_iterator it = files_to_avoid.begin(); it != files_to_avoid.end(); ++it)
   {
     if (file_present(db_dir + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()))
@@ -151,7 +150,7 @@ bool assure_files_absent(const std::string& db_dir, const std::vector< File_Prop
       suspicious_files_present = true;
     }
   }
-  
+
   return suspicious_files_present;
 }
 
@@ -159,7 +158,7 @@ bool assure_files_absent(const std::string& db_dir, const std::vector< File_Prop
 int main(int argc, char* argv[])
 {
   // read command line arguments
-  string db_dir;
+  std::string db_dir;
   bool osm_base(false), areas(false), meta(false), attic(false),
       terminate(false), status(false), my_status(false), show_dir(false);
   uint32 purge_id = 0;
@@ -167,13 +166,13 @@ int main(int argc, char* argv[])
   uint64 max_allowed_space = 0;
   uint64 max_allowed_time_units = 0;
   int rate_limit = -1;
-  
+
   int argpos(1);
   while (argpos < argc)
   {
     if (!(strncmp(argv[argpos], "--db-dir=", 9)))
     {
-      db_dir = ((string)argv[argpos]).substr(9);
+      db_dir = ((std::string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
     }
@@ -186,7 +185,7 @@ int main(int argc, char* argv[])
     else if (std::string("--attic") == argv[argpos])
       attic = true;
     else if (std::string("--terminate") == argv[argpos])
-      terminate = true;  
+      terminate = true;
     else if (std::string("--status") == argv[argpos])
       status = true;
     else if (std::string("--my-status") == argv[argpos])
@@ -194,18 +193,18 @@ int main(int argc, char* argv[])
     else if (std::string("--show-dir") == argv[argpos])
       show_dir = true;
     else if (!(strncmp(argv[argpos], "--purge=", 8)))
-      purge_id = atoll(((string)argv[argpos]).substr(8).c_str());
+      purge_id = atoll(((std::string)argv[argpos]).substr(8).c_str());
     else if (std::string("--query_token") == argv[argpos])
       query_token = true;
     else if (!(strncmp(argv[argpos], "--space=", 8)))
-      max_allowed_space = atoll(((string)argv[argpos]).substr(8).c_str());
+      max_allowed_space = atoll(((std::string)argv[argpos]).substr(8).c_str());
     else if (!(strncmp(argv[argpos], "--time=", 7)))
-      max_allowed_time_units = atoll(((string)argv[argpos]).substr(7).c_str());
+      max_allowed_time_units = atoll(((std::string)argv[argpos]).substr(7).c_str());
     else if (!(strncmp(argv[argpos], "--rate-limit=", 13)))
-      rate_limit = atoll(((string)argv[argpos]).substr(13).c_str());
+      rate_limit = atoll(((std::string)argv[argpos]).substr(13).c_str());
     else
     {
-      cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
+      std::cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
       "Accepted arguments are:\n"
       "  --osm-base: Start or talk to the dispatcher for the osm data.\n"
       "  --areas: Start or talk to the dispatcher for the areas data.\n"
@@ -222,33 +221,33 @@ int main(int argc, char* argv[])
       "  --space=number: Set the memory limit for the total of all running processes to this value in bytes.\n"
       "  --time=number: Set the time unit  limit for the total of all running processes to this value in bytes.\n"
       "  --rate-limit=number: Set the maximum allowed number of concurrent accesses from a single IP.\n";
-      
+
       return 0;
     }
     ++argpos;
   }
-  
+
   if (osm_base && areas)
   {
-    cout<<"\"--areas\" and \"--osm-base\" need separate instances.\n";
+    std::cout<<"\"--areas\" and \"--osm-base\" need separate instances.\n";
     return 0;
   }
   if (meta && areas)
   {
-    cout<<"\"--areas\" and \"--meta\" cannot be combined.\n";
+    std::cout<<"\"--areas\" and \"--meta\" cannot be combined.\n";
     return 0;
   }
   if (attic && areas)
   {
-    cout<<"\"--areas\" and \"--attic\" cannot be combined.\n";
+    std::cout<<"\"--areas\" and \"--attic\" cannot be combined.\n";
     return 0;
   }
   if (meta && attic)
   {
-    cout<<"\"--attic\" and \"--meta\" cannot be combined.\n";
+    std::cout<<"\"--attic\" and \"--meta\" cannot be combined.\n";
     return 0;
   }
-  
+
   if (terminate)
   {
     try
@@ -259,7 +258,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -274,26 +273,26 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
-  
+
   if (show_dir)
   {
     try
     {
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
-      cout<<client.get_db_dir();
+      std::cout<<client.get_db_dir();
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
-  
+
   if (purge_id > 0)
   {
     try
@@ -304,7 +303,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -316,11 +315,11 @@ int main(int argc, char* argv[])
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
       pid_t pid = client.query_by_token(probe_client_token());
       if (pid > 0)
-        cout<<pid<<'\n';
+        std::cout<<pid<<'\n';
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -328,29 +327,31 @@ int main(int argc, char* argv[])
   {
     try
     {
+      time_t now = time(0);
       uint32 client_token = probe_client_token();
-      cout<<"Connected as: "<<client_token<<'\n';
-      
+      std::cout<<"Connected as: "<<client_token<<'\n';
+      std::cout<<"Current time: "<<to_date(now)<<'\n';
+
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
       Client_Status status = client.query_my_status(probe_client_token());
-      cout<<"Rate limit: "<<status.rate_limit<<'\n';
+      std::cout<<"Rate limit: "<<status.rate_limit<<'\n';
       if (status.slot_starts.size() + status.queries.size() < status.rate_limit)
-        cout<<(status.rate_limit - status.slot_starts.size() - status.queries.size())<<" slots available now.\n";
+        std::cout<<(status.rate_limit - status.slot_starts.size() - status.queries.size())<<" slots available now.\n";
       for (std::vector< time_t >::const_iterator it = status.slot_starts.begin(); it != status.slot_starts.end();
           ++it)
-        cout<<"Slot available after: "<<to_date(*it)<<'\n';
-      cout<<"Currently running queries (pid, space limit, time limit, start time):\n";
+        std::cout<<"Slot available after: "<<to_date(*it)<<", in "<<*it - now<<" seconds.\n";
+      std::cout<<"Currently running queries (pid, space limit, time limit, start time):\n";
       for (std::vector< Running_Query >::const_iterator it = status.queries.begin(); it != status.queries.end(); ++it)
-        cout<<it->pid<<'\t'<<it->max_space<<'\t'<<it->max_time<<'\t'<<to_date(it->start_time)<<'\n';
+        std::cout<<it->pid<<'\t'<<it->max_space<<'\t'<<it->max_time<<'\t'<<to_date(it->start_time)<<'\n';
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
-  else if (max_allowed_space > 0 || max_allowed_time_units > 0 || rate_limit > -1)
+  else if (db_dir == "" && (max_allowed_space > 0 || max_allowed_time_units > 0 || rate_limit > -1))
   {
     try
     {
@@ -360,7 +361,7 @@ int main(int argc, char* argv[])
     }
     catch (File_Error e)
     {
-      cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     return 0;
   }
@@ -368,7 +369,7 @@ int main(int argc, char* argv[])
   std::vector< File_Properties* > files_to_manage;
   std::vector< File_Properties* > files_to_avoid;
   bool suspicious_files_present = false;
-  
+
   if (osm_base)
   {
     files_to_manage.push_back(osm_base_settings().NODES);
@@ -384,9 +385,9 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_LOCAL);
     files_to_manage.push_back(osm_base_settings().RELATION_TAGS_GLOBAL);
     files_to_manage.push_back(osm_base_settings().RELATION_KEYS);
-    
+
     std::vector< File_Properties* >* file_target = (meta || attic) ? &files_to_manage : &files_to_avoid;
-    
+
     file_target->push_back(meta_settings().NODES_META);
     file_target->push_back(meta_settings().WAYS_META);
     file_target->push_back(meta_settings().RELATIONS_META);
@@ -394,9 +395,9 @@ int main(int argc, char* argv[])
     file_target->push_back(meta_settings().USER_INDICES);
 
     suspicious_files_present |= assure_files_absent(db_dir, files_to_avoid, "--meta");
-    files_to_avoid.clear();    
+    files_to_avoid.clear();
     file_target = attic ? &files_to_manage : &files_to_avoid;
-    
+
     file_target->push_back(attic_settings().NODES);
     file_target->push_back(attic_settings().NODES_UNDELETED);
     file_target->push_back(attic_settings().NODE_IDX_LIST);
@@ -428,13 +429,13 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(area_settings().AREA_TAGS_LOCAL);
     files_to_manage.push_back(area_settings().AREA_TAGS_GLOBAL);
   }
-  
+
   if (suspicious_files_present)
     return 3;
-  
+
   if (!osm_base && !areas && !terminate)
   {
-    cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas | --osm-base (--meta | --attic)) --db-dir=Directory)\n";
+    std::cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas | --osm-base (--meta | --attic)) --db-dir=Directory)\n";
     return 0;
   }
 
@@ -448,18 +449,23 @@ int main(int argc, char* argv[])
     Logger log(db_dir);
     log.annotated_log("Warning: chmod for logfile failed.");
   }
-  
+
   try
   {
     Logger logger(db_dir);
     Default_Dispatcher_Logger disp_logger(logger);
+    if (max_allowed_space <= 0)
+      max_allowed_space = areas ? area_settings().total_available_space : osm_base_settings().total_available_space;
+    if (max_allowed_time_units <= 0)
+      max_allowed_time_units = areas ? area_settings().total_available_time_units
+          : osm_base_settings().total_available_time_units;
     Dispatcher dispatcher
         (areas ? area_settings().shared_name : osm_base_settings().shared_name,
          "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
 	 areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
 	 areas ? area_settings().purge_timeout : osm_base_settings().purge_timeout,
-	 areas ? area_settings().total_available_space : osm_base_settings().total_available_space,
-	 areas ? area_settings().total_available_time_units : osm_base_settings().total_available_time_units,
+	 max_allowed_space,
+	 max_allowed_time_units,
 	 files_to_manage, &disp_logger);
     if (rate_limit > -1)
       dispatcher.set_rate_limit(rate_limit);
@@ -467,8 +473,8 @@ int main(int argc, char* argv[])
   }
   catch (File_Error e)
   {
-    cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
-  
+
   return 0;
 }

@@ -34,7 +34,6 @@
 #include "make_area.h"
 #include "recurse.h"
 
-using namespace std;
 
 class Area_Constraint : public Query_Constraint
 {
@@ -42,43 +41,43 @@ class Area_Constraint : public Query_Constraint
     Area_Constraint(Area_Query_Statement& area_) : area(&area_) {}
 
     bool delivers_data(Resource_Manager& rman);
-    
+
     bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Area_Constraint() {}
-    
+
   private:
     Area_Query_Statement* area;
-    set< Uint31_Index > area_blocks_req;
+    std::set< Uint31_Index > area_blocks_req;
 };
 
 
 bool Area_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+    (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
 {
   if (area->areas_from_input())
   {
-    map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
+    std::map< std::string, Set >::const_iterator mit = rman.sets().find(area->get_input());
     if (mit == rman.sets().end())
       return true;
-  
+
     area->get_ranges(mit->second.areas, ranges, area_blocks_req, rman);
   }
   else
     area->get_ranges(ranges, area_blocks_req, rman);
-  
+
   return true;
 }
 
 
 bool Area_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+    (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
 {
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
+  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   this->get_ranges(rman, node_ranges);
   ranges = calc_parents(node_ranges);
   return true;
@@ -87,64 +86,64 @@ bool Area_Constraint::get_ranges
 
 void Area_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  set< pair< Uint31_Index, Uint31_Index > > ranges;
+  std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
   get_ranges(rman, ranges);
-  
+
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
   if (timestamp != NOW)
     filter_ways_by_ranges(into.attic_ways, ranges);
-  
+
   // pre-filter relations
   filter_relations_by_ranges(into.relations, ranges);
   if (timestamp != NOW)
     filter_relations_by_ranges(into.attic_relations, ranges);
-  
+
   //TODO: filter areas
 }
 
 
 void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  set< Uint31_Index > area_blocks_req;
-  set< pair< Uint32_Index, Uint32_Index > > range_req;
+  std::set< Uint31_Index > area_blocks_req;
+  std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
   if (area->areas_from_input())
   {
-    map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
+    std::map< std::string, Set >::const_iterator mit = rman.sets().find(area->get_input());
     if (mit != rman.sets().end())
       area->get_ranges(mit->second.areas, range_req, area_blocks_req, rman);
   }
   else
     area->get_ranges(range_req, area_blocks_req, rman);
-  
+
   //Process nodes
   area->collect_nodes(into.nodes, area_blocks_req, true, rman);
-  
-  //Process ways  
+
+  //Process ways
   area->collect_ways(Way_Geometry_Store(into.ways, query, rman),
 		     into.ways, area_blocks_req, false, query, rman);
-    
+
   //Process relations
-    
+
   // Retrieve all nodes referred by the relations.
-  set< pair< Uint32_Index, Uint32_Index > > node_ranges;
+  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   get_ranges(rman, node_ranges);
-  std::map< Uint32_Index, vector< Node_Skeleton > > node_members
+  std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
       = relation_node_members(&query, rman, into.relations, &node_ranges);
-  
+
   // filter for those nodes that are in one of the areas
   area->collect_nodes(node_members, area_blocks_req, false, rman);
-  
+
   // Retrieve all ways referred by the relations.
-  set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-  get_ranges(rman, way_ranges);    
-  std::map< Uint31_Index, vector< Way_Skeleton > > way_members_
+  std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
+  get_ranges(rman, way_ranges);
+  std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
       = relation_way_members(&query, rman, into.relations, &way_ranges);
-  
+
   // Filter for those ways that are in one of the areas
   area->collect_ways(Way_Geometry_Store(way_members_, query, rman),
 		     way_members_, area_blocks_req, false, query, rman);
-    
+
   filter_relations_expensive(order_by_id(node_members, Order_By_Node_Id()),
 			     order_by_id(way_members_, Order_By_Way_Id()),
 			     into.relations);
@@ -153,37 +152,37 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   {
     //Process nodes
     area->collect_nodes(into.attic_nodes, area_blocks_req, true, rman);
-  
+
     //Process ways
     area->collect_ways(Way_Geometry_Store(into.attic_ways, timestamp, query, rman),
 		       into.attic_ways, area_blocks_req, false, query, rman);
-    
+
     //Process relations
-    
+
     // Retrieve all nodes referred by the relations.
-    set< pair< Uint32_Index, Uint32_Index > > node_ranges;
+    std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
     get_ranges(rman, node_ranges);
-    map< Uint32_Index, vector< Attic< Node_Skeleton > > > node_members
+    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
         = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
-  
+
     // filter for those nodes that are in one of the areas
     area->collect_nodes(node_members, area_blocks_req, false, rman);
-  
+
     // Retrieve all ways referred by the relations.
-    set< pair< Uint31_Index, Uint31_Index > > way_ranges;
-    get_ranges(rman, way_ranges);    
-    map< Uint31_Index, vector< Attic< Way_Skeleton > > > way_members_
+    std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
+    get_ranges(rman, way_ranges);
+    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
         = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
-  
+
     // Filter for those ways that are in one of the areas
     area->collect_ways(Way_Geometry_Store(way_members_, timestamp, query, rman),
 		       way_members_, area_blocks_req, false, query, rman);
-    
+
     filter_relations_expensive(order_attic_by_id(node_members, Order_By_Node_Id()),
 			       order_attic_by_id(way_members_, Order_By_Way_Id()),
 			       into.attic_relations);
   }
-  
+
   //TODO: filter areas
 }
 
@@ -195,25 +194,25 @@ bool Area_Query_Statement::is_used_ = false;
 Generic_Statement_Maker< Area_Query_Statement > Area_Query_Statement::statement_maker("area-query");
 
 Area_Query_Statement::Area_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   is_used_ = true;
 
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["ref"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   input = attributes["from"];
   set_output(attributes["into"]);
   submitted_id = atoll(attributes["ref"].c_str());
   if (submitted_id <= 0 && attributes["ref"] != "")
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"For the attribute \"ref\" of the element \"area-query\""
     <<" the only allowed values are positive integers.";
     add_static_error(temp.str());
@@ -224,15 +223,15 @@ Area_Query_Statement::Area_Query_Statement
 
 Area_Query_Statement::~Area_Query_Statement()
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+  for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }
 
 
 void Area_Query_Statement::get_ranges
-    (set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
-     set< Uint31_Index >& area_block_req,
+    (std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
+     std::set< Uint31_Index >& area_block_req,
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
@@ -243,12 +242,12 @@ void Area_Query_Statement::get_ranges
   {
     if (binary_search(area_id.begin(), area_id.end(), it.object().id))
     {
-      for (vector< uint32 >::const_iterator it2(it.object().used_indices.begin());
+      for (std::vector< uint32 >::const_iterator it2(it.object().used_indices.begin());
           it2 != it.object().used_indices.end(); ++it2)
       {
 	area_block_req.insert(Uint31_Index(*it2));
-	pair< Uint32_Index, Uint32_Index > range
-	    (make_pair(Uint32_Index(*it2), Uint32_Index((*it2) + 0x100)));
+	std::pair< Uint32_Index, Uint32_Index > range
+	    (std::make_pair(Uint32_Index(*it2), Uint32_Index((*it2) + 0x100)));
 	nodes_req.insert(range);
       }
     }
@@ -257,30 +256,30 @@ void Area_Query_Statement::get_ranges
 
 
 void Area_Query_Statement::get_ranges
-    (const map< Uint31_Index, vector< Area_Skeleton > >& input_areas,
-     set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
-     set< Uint31_Index >& area_block_req,
+    (const std::map< Uint31_Index, std::vector< Area_Skeleton > >& input_areas,
+     std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
+     std::set< Uint31_Index >& area_block_req,
      Resource_Manager& rman)
 {
   area_id.clear();
-  for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = input_areas.begin();
+  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = input_areas.begin();
        it != input_areas.end(); ++it)
   {
-    for (vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (std::vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       area_id.push_back(it2->id);
-      
-      for (vector< uint32 >::const_iterator it3(it2->used_indices.begin());
+
+      for (std::vector< uint32 >::const_iterator it3(it2->used_indices.begin());
           it3 != it2->used_indices.end(); ++it3)
       {
         area_block_req.insert(Uint31_Index(*it3));
-        pair< Uint32_Index, Uint32_Index > range
-	    (make_pair(Uint32_Index(*it3), Uint32_Index((*it3) + 0x100)));
+        std::pair< Uint32_Index, Uint32_Index > range
+	    (std::make_pair(Uint32_Index(*it3), Uint32_Index((*it3) + 0x100)));
         nodes_req.insert(range);
       }
     }
   }
-  
+
   sort(area_id.begin(), area_id.end());
 }
 
@@ -291,30 +290,30 @@ bool Area_Constraint::delivers_data(Resource_Manager& rman)
     return false;
   else
   {
-    map< string, Set >::const_iterator mit = rman.sets().find(area->get_input());
+    std::map< std::string, Set >::const_iterator mit = rman.sets().find(area->get_input());
     if (mit == rman.sets().end())
       return true;
-    
+
     // Count the indicies of the input areas
     int counter = 0;
-    
-    for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator it = mit->second.areas.begin();
+
+    for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = mit->second.areas.begin();
          it != mit->second.areas.end(); ++it)
     {
-      for (vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      for (std::vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
         counter += it2->used_indices.size();
     }
-  
+
     return (counter <= 12);
   }
 }
 
 
 void Area_Query_Statement::collect_nodes
-    (const set< pair< Uint32_Index, Uint32_Index > >& nodes_req,
-     const set< Uint31_Index >& req,
-     vector< Node::Id_Type >* ids,
-     map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+    (const std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
+     const std::set< Uint31_Index >& req,
+     std::vector< Node::Id_Type >* ids,
+     std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
@@ -331,8 +330,8 @@ void Area_Query_Statement::collect_nodes
   while (!(area_it == area_blocks_db.discrete_end()))
   {
     rman.health_check(*this);
-    
-    map< Area_Skeleton::Id_Type, vector< Area_Block > > areas;
+
+    std::map< Area_Skeleton::Id_Type, std::vector< Area_Block > > areas;
     while ((!(area_it == area_blocks_db.discrete_end())) &&
         (area_it.index().val() == current_idx))
     {
@@ -349,17 +348,17 @@ void Area_Query_Statement::collect_nodes
 	++nodes_it;
 	continue;
       }
-      
+
       uint32 ilat((::lat(nodes_it.index().val(), nodes_it.object().ll_lower)
           + 91.0)*10000000+0.5);
       int32 ilon(::lon(nodes_it.index().val(), nodes_it.object().ll_lower)*10000000
           + (::lon(nodes_it.index().val(), nodes_it.object().ll_lower) > 0
 	      ? 0.5 : -0.5));
-      for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
+      for (std::map< Area_Skeleton::Id_Type, std::vector< Area_Block > >::const_iterator it = areas.begin();
 	   it != areas.end(); ++it)
       {
         int inside = 0;
-        for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
+        for (std::vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
 	     ++it2)
         {
 	  int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
@@ -386,8 +385,8 @@ void Area_Query_Statement::collect_nodes
 
 template< typename Node_Skeleton >
 void Area_Query_Statement::collect_nodes
-    (map< Uint32_Index, vector< Node_Skeleton > >& nodes,
-     const set< Uint31_Index >& req, bool add_border,
+    (std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::set< Uint31_Index >& req, bool add_border,
      Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
@@ -395,8 +394,8 @@ void Area_Query_Statement::collect_nodes
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
 
-  typename std::map< Uint32_Index, vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
-  
+  typename std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
+
   uint32 loop_count = 0;
   uint32 current_idx(0);
   while (!(area_it == area_blocks_db.discrete_end()))
@@ -407,8 +406,8 @@ void Area_Query_Statement::collect_nodes
       rman.health_check(*this);
       loop_count = 0;
     }
-    
-    map< Area_Skeleton::Id_Type, vector< Area_Block > > areas;
+
+    std::map< Area_Skeleton::Id_Type, std::vector< Area_Block > > areas;
     while ((!(area_it == area_blocks_db.discrete_end())) &&
         (area_it.index().val() == current_idx))
     {
@@ -416,7 +415,7 @@ void Area_Query_Statement::collect_nodes
 	areas[area_it.object().id].push_back(area_it.object());
       ++area_it;
     }
-    
+
     while (nodes_it != nodes.end() && nodes_it->first.val() < current_idx)
     {
       nodes_it->second.clear();
@@ -433,15 +432,15 @@ void Area_Query_Statement::collect_nodes
             + 91.0)*10000000+0.5);
         int32 ilon(::lon(nodes_it->first.val(), iit->ll_lower)*10000000
             + (::lon(nodes_it->first.val(), iit->ll_lower) > 0 ? 0.5 : -0.5));
-        for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
+        for (std::map< Area_Skeleton::Id_Type, std::vector< Area_Block > >::const_iterator it = areas.begin();
 	     it != areas.end(); ++it)
         {
           int inside = 0;
-          for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
+          for (std::vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
 	       ++it2)
           {
             ++loop_count;
-            
+
 	    int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
 	    if (check == Coord_Query_Statement::HIT && add_border)
 	    {
@@ -458,7 +457,7 @@ void Area_Query_Statement::collect_nodes
 	  }
         }
       }
-      nodes_it->second.swap(into);      
+      nodes_it->second.swap(into);
       ++nodes_it;
     }
   }
@@ -481,7 +480,7 @@ inline int ordered_intersects_inner
   double det = ((double(lat_a1) - lat_a0)*(double(lon_b1) - lon_b0) - (double(lat_b1) - lat_b0)*(double(lon_a1) - lon_a0));
   if (det != 0)
   {
-    double lon = 
+    double lon =
 	double(lat_b0 - lat_a0
 	    + double(lon_a0)/(double(lon_a1) - lon_a0)*(double(lat_a1) - lat_a0)
 	    - double(lon_b0)/(double(lon_b1) - lon_b0)*(double(lat_b1) - lat_b0))
@@ -495,7 +494,7 @@ inline int ordered_intersects_inner
 	|| (fabs(lat_a1 - (double(lon_a1) - lon_b0)/(double(lon_b1) - lon_b0)
                 *(double(lat_b1) - lat_b0) - lat_b0) <= 1))
     return HIT;
-  
+
   return 0;
 }
 
@@ -523,7 +522,7 @@ inline int ordered_a_intersects_inner
           INTERSECT : 0);
     }
   }
-  
+
   return 0;
 }
 
@@ -567,28 +566,28 @@ inline int longitude_a_intersects_inner
         return ((lat_a1 < lat_b0 && lat_b1 < lat_a0) ? HIT : 0);
     }
   }
-  
+
   return 0;
 }
 
 
 int intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
 {
-  vector< pair< uint32, uint32 > > coords_a;
-  for (vector< uint64 >::const_iterator it = string_a.coors.begin(); it != string_a.coors.end(); ++it)
-    coords_a.push_back(make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
-				 ::ilon(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull))));
-  
-  vector< pair< uint32, uint32 > > coords_b;
-  for (vector< uint64 >::const_iterator it = string_b.coors.begin(); it != string_b.coors.end(); ++it)
-    coords_b.push_back(make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
+  std::vector< std::pair< uint32, uint32 > > coords_a;
+  for (std::vector< uint64 >::const_iterator it = string_a.coors.begin(); it != string_a.coors.end(); ++it)
+    coords_a.push_back(std::make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
 				 ::ilon(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull))));
 
-  for (vector< pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
+  std::vector< std::pair< uint32, uint32 > > coords_b;
+  for (std::vector< uint64 >::const_iterator it = string_b.coors.begin(); it != string_b.coors.end(); ++it)
+    coords_b.push_back(std::make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
+				 ::ilon(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull))));
+
+  for (std::vector< std::pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
   {
     if (coords_a[i].second < coords_a[i+1].second)
     {
-      for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
+      for (std::vector< std::pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
       {
 	int result = ordered_a_intersects_inner
 	    (coords_a[i].first, coords_a[i].second, coords_a[i+1].first, coords_a[i+1].second,
@@ -599,7 +598,7 @@ int intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
     }
     else if (coords_a[i+1].second < coords_a[i].second)
     {
-      for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
+      for (std::vector< std::pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
       {
 	int result = ordered_a_intersects_inner
 	    (coords_a[i+1].first, coords_a[i+1].second, coords_a[i].first, coords_a[i].second,
@@ -609,7 +608,7 @@ int intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
       }
     }
     else
-      for (vector< pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
+      for (std::vector< std::pair< uint32, uint32 > >::size_type j = 0; j < coords_b.size()-1; ++j)
       {
 	int result = longitude_a_intersects_inner
 	    (coords_a[i].first, coords_a[i].second, coords_a[i+1].first,
@@ -625,14 +624,14 @@ int intersects_inner(const Area_Block& string_a, const Area_Block& string_b)
 
 void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, int& inside)
 {
-  vector< pair< uint32, uint32 > > coords_a;
-  for (vector< uint64 >::const_iterator it = string_a.coors.begin(); it != string_a.coors.end(); ++it)
-    coords_a.push_back(make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
+  std::vector< std::pair< uint32, uint32 > > coords_a;
+  for (std::vector< uint64 >::const_iterator it = string_a.coors.begin(); it != string_a.coors.end(); ++it)
+    coords_a.push_back(std::make_pair(::ilat(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull)),
                                  ::ilon(uint32((*it>>32)&0xff), uint32(*it & 0xffffffffull))));
-  
+
   // Check additionally the middle of the segment to also get segments
   // that run through the area
-  for (vector< pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
+  for (std::vector< std::pair< uint32, uint32 > >::size_type i = 0; i < coords_a.size()-1; ++i)
   {
     uint32 ilat = (coords_a[i].first + coords_a[i+1].first)/2;
     uint32 ilon = (coords_a[i].second + coords_a[i+1].second)/2 + 0x80000000u;
@@ -648,8 +647,8 @@ void has_inner_points(const Area_Block& string_a, const Area_Block& string_b, in
 template< typename Way_Skeleton >
 void Area_Query_Statement::collect_ways
       (const Way_Geometry_Store& way_geometries,
-       std::map< Uint31_Index, vector< Way_Skeleton > >& ways,
-       const set< Uint31_Index >& req, bool add_border,
+       std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+       const std::set< Uint31_Index >& req, bool add_border,
        const Statement& query, Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
@@ -657,28 +656,28 @@ void Area_Query_Statement::collect_ways
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
 
-  map< Way::Id_Type, bool > ways_inside;
-  
-  map< Uint31_Index, vector< Area_Block > > way_segments;
-  for (typename std::map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+  std::map< Way::Id_Type, bool > ways_inside;
+
+  std::map< Uint31_Index, std::vector< Area_Block > > way_segments;
+  for (typename std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
     for (typename std::vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       add_way_to_area_blocks(way_geometries.get_geometry(*it2), it2->id.val(), way_segments);
   }
-      
-  map< uint32, vector< pair< uint32, Way::Id_Type > > > way_coords_to_id;
-  for (typename std::map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
+
+  std::map< uint32, std::vector< std::pair< uint32, Way::Id_Type > > > way_coords_to_id;
+  for (typename std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {
     for (typename std::vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
-      vector< Quad_Coord > coords = way_geometries.get_geometry(*it2);
-      for (vector< Quad_Coord >::const_iterator it3 = coords.begin(); it3 != coords.end(); ++it3)
-        way_coords_to_id[it3->ll_upper].push_back(make_pair(it3->ll_lower, it2->id));
+      std::vector< Quad_Coord > coords = way_geometries.get_geometry(*it2);
+      for (std::vector< Quad_Coord >::const_iterator it3 = coords.begin(); it3 != coords.end(); ++it3)
+        way_coords_to_id[it3->ll_upper].push_back(std::make_pair(it3->ll_lower, it2->id));
     }
   }
-  
-  map< uint32, vector< pair< uint32, Way::Id_Type > > >::const_iterator nodes_it = way_coords_to_id.begin();
-  
+
+  std::map< uint32, std::vector< std::pair< uint32, Way::Id_Type > > >::const_iterator nodes_it = way_coords_to_id.begin();
+
   // Fill node_status with the area related status of each node and segment
   uint32 loop_count = 0;
   uint32 current_idx(0);
@@ -690,8 +689,8 @@ void Area_Query_Statement::collect_ways
       rman.health_check(*this);
       loop_count = 0;
     }
-    
-    map< Area_Skeleton::Id_Type, vector< Area_Block > > areas;
+
+    std::map< Area_Skeleton::Id_Type, std::vector< Area_Block > > areas;
     while ((!(area_it == area_blocks_db.discrete_end())) &&
         (area_it.index().val() == current_idx))
     {
@@ -699,28 +698,28 @@ void Area_Query_Statement::collect_ways
 	areas[area_it.object().id].push_back(area_it.object());
       ++area_it;
     }
-    
+
     // check nodes
     while (nodes_it != way_coords_to_id.end() && nodes_it->first < current_idx)
       ++nodes_it;
     while (nodes_it != way_coords_to_id.end() &&
         (nodes_it->first & 0xffffff00) == current_idx)
     {
-      vector< pair< uint32, Way::Id_Type > > into;
-      for (vector< pair< uint32, Way::Id_Type > >::const_iterator iit = nodes_it->second.begin();
+      std::vector< std::pair< uint32, Way::Id_Type > > into;
+      for (std::vector< std::pair< uint32, Way::Id_Type > >::const_iterator iit = nodes_it->second.begin();
           iit != nodes_it->second.end(); ++iit)
       {
         uint32 ilat = ::ilat(nodes_it->first, iit->first);
         int32 ilon = ::ilon(nodes_it->first, iit->first);
-        for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
+        for (std::map< Area_Skeleton::Id_Type, std::vector< Area_Block > >::const_iterator it = areas.begin();
 	     it != areas.end(); ++it)
         {
           int inside = 0;
-          for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
+          for (std::vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
 	       ++it2)
           {
             ++loop_count;
-            
+
 	    int check(Coord_Query_Statement::check_area_block(current_idx, *it2, ilat, ilon));
 	    if (check == Coord_Query_Statement::HIT)
             {
@@ -736,18 +735,18 @@ void Area_Query_Statement::collect_ways
       }
       ++nodes_it;
     }
-      
+
     // check segments
-    for (vector< Area_Block >::const_iterator sit = way_segments[Uint31_Index(current_idx)].begin();
+    for (std::vector< Area_Block >::const_iterator sit = way_segments[Uint31_Index(current_idx)].begin();
 	 sit != way_segments[Uint31_Index(current_idx)].end(); ++sit)
     {
-      map< Area::Id_Type, int > area_status;
-      for (map< Area_Skeleton::Id_Type, vector< Area_Block > >::const_iterator it = areas.begin();
+      std::map< Area::Id_Type, int > area_status;
+      for (std::map< Area_Skeleton::Id_Type, std::vector< Area_Block > >::const_iterator it = areas.begin();
 	   it != areas.end(); ++it)
       {
 	if (ways_inside[Way::Id_Type(sit->id)])
 	  break;
-        for (vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
+        for (std::vector< Area_Block >::const_iterator it2 = it->second.begin(); it2 != it->second.end();
 	     ++it2)
 	{
 	  // If an area segment intersects this way segment in the inner of the way,
@@ -772,7 +771,7 @@ void Area_Query_Statement::collect_ways
           has_inner_points(*sit, *it2, area_status[it2->id]);
 	}
       }
-      for (map< Area::Id_Type, int >::const_iterator it = area_status.begin(); it != area_status.end(); ++it)
+      for (std::map< Area::Id_Type, int >::const_iterator it = area_status.begin(); it != area_status.end(); ++it)
       {
         if ((it->second && (!(it->second & Coord_Query_Statement::HIT))) ||
             (it->second && add_border))
@@ -781,13 +780,13 @@ void Area_Query_Statement::collect_ways
     }
   }
 
-  map< Uint31_Index, vector< Way_Skeleton > > result;
+  std::map< Uint31_Index, std::vector< Way_Skeleton > > result;
 
   // Mark ways as found that intersect the area border
-  for (typename std::map< Uint31_Index, vector< Way_Skeleton > >::iterator it = ways.begin();
+  for (typename std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways.begin();
        it != ways.end(); ++it)
   {
-    vector< Way_Skeleton > cur_result;
+    std::vector< Way_Skeleton > cur_result;
     for (typename std::vector< Way_Skeleton >::iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (ways_inside[it2->id])
@@ -798,14 +797,14 @@ void Area_Query_Statement::collect_ways
     }
     result[it->first].swap(cur_result);
   }
-  
+
   result.swap(ways);
 }
 
 
 void collect_nodes_from_req
-    (const set< pair< Uint32_Index, Uint32_Index > >& req,
-     map< Uint32_Index, vector< Node_Skeleton > >& nodes,
+    (const std::set< std::pair< Uint32_Index, Uint32_Index > >& req,
+     std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      Resource_Manager& rman)
 {
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
@@ -815,21 +814,21 @@ void collect_nodes_from_req
       (Default_Range_Iterator< Uint32_Index >(req.begin()),
        Default_Range_Iterator< Uint32_Index >(req.end())));
       !(it == nodes_db.range_end()); ++it)
-    nodes[it.index()].push_back(it.object());    
+    nodes[it.index()].push_back(it.object());
 }
 
 
 void Area_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-  
+
   Area_Constraint constraint(*this);
-  set< pair< Uint32_Index, Uint32_Index > > ranges;
+  std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
   constraint.get_ranges(rman, ranges);
   get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
       (into.nodes, into.attic_nodes,
-       vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
-       *osm_base_settings().NODES, *attic_settings().NODES);  
+       std::vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+       *osm_base_settings().NODES, *attic_settings().NODES);
   constraint.filter(rman, into, rman.get_desired_timestamp());
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
   constraint.filter(*this, rman, into, rman.get_desired_timestamp());

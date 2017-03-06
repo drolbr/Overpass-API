@@ -20,38 +20,113 @@
 #include "../frontend/web_output.h"
 
 
+class Output_Timestamp : public Output_Handler
+{
+public:
+  Output_Timestamp() {}
+
+  virtual bool write_http_headers();
+  virtual void write_payload_header(const std::string& db_dir,
+				    const std::string& timestamp, const std::string& area_timestamp);
+  virtual void write_footer() {}
+  virtual void display_remark(const std::string& text) {}
+  virtual void display_error(const std::string& text) {}
+
+  virtual void print_global_bbox(const Bbox_Double& bbox) {}
+
+  virtual void print_item(const Node_Skeleton& skel,
+      const Opaque_Geometry& geometry,
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+      const std::map< uint32, std::string >* users,
+      Output_Mode mode,
+      const Feature_Action& action = keep,
+      const Node_Skeleton* new_skel = 0,
+      const Opaque_Geometry* new_geometry = 0,
+      const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
+      const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0) {}
+
+  virtual void print_item(const Way_Skeleton& skel,
+      const Opaque_Geometry& geometry,
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+      const std::map< uint32, std::string >* users,
+      Output_Mode mode,
+      const Feature_Action& action = keep,
+      const Way_Skeleton* new_skel = 0,
+      const Opaque_Geometry* new_geometry = 0,
+      const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
+      const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0) {}
+
+  virtual void print_item(const Relation_Skeleton& skel,
+      const Opaque_Geometry& geometry,
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+      const std::map< uint32, std::string >* roles,
+      const std::map< uint32, std::string >* users,
+      Output_Mode mode,
+      const Feature_Action& action = keep,
+      const Relation_Skeleton* new_skel = 0,
+      const Opaque_Geometry* new_geometry = 0,
+      const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
+      const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0) {}
+
+  virtual void print_item(const Derived_Skeleton& skel,
+      const Opaque_Geometry& geometry,
+      const std::vector< std::pair< std::string, std::string > >* tags,
+      Output_Mode mode) {}
+};
+
+
+bool Output_Timestamp::write_http_headers()
+{
+  std::cout<<"Content-type: text/plain\n";
+  return true;
+}
+
+
+void Output_Timestamp::write_payload_header
+    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
+{
+  std::cout<<timestamp<<"\n";
+}
+
+
 int main(int argc, char *argv[])
 {
+  Parsed_Query global_settings;
+  Output_Timestamp output;
   Web_Output error_output(Error_Output::ASSISTING);
-  
+  error_output.set_output_handler(&output);
+
   try
   {
-    if (error_output.http_method == error_output.http_options
-        || error_output.http_method == error_output.http_head)
-      error_output.write_text_header("");
+    if (error_output.http_method == http_options
+        || error_output.http_method == http_head)
+      error_output.write_payload_header("", "", "", true);
     else
     {
       // open read transaction and log this.
-      Dispatcher_Stub dispatcher("", &error_output, "-- db-timestamp --", only_data, 0, 5, 256);
-      error_output.write_text_header(dispatcher.get_timestamp());
+      Dispatcher_Stub dispatcher("", &error_output, "-- db-timestamp --", only_data, 0, 5, 256, global_settings);
+      error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(), "", true);
     }
   }
   catch(File_Error e)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
-      if (error_output.http_method == error_output.http_get
-          || error_output.http_method == error_output.http_post)
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Probably the server is overcrowded.\n";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
-      if (error_output.http_method == error_output.http_get
-          || error_output.http_method == error_output.http_post)
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Please check /api/status for the quota of your IP address.\n";
     }
@@ -61,7 +136,7 @@ int main(int argc, char *argv[])
   }
   catch(Resource_Error e)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     if (e.timed_out)
       temp<<"Query timed out in \""<<e.stmt_name<<"\" at line "<<e.line_number
           <<" after "<<e.runtime<<" seconds.";

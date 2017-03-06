@@ -35,9 +35,9 @@
 struct Node_Updater
 {
   Node_Updater(Transaction& transaction, meta_modes meta);
-  
-  Node_Updater(string db_dir, meta_modes meta);
-  
+
+  Node_Updater(std::string db_dir, meta_modes meta);
+
   void set_id_deleted(Node::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
     if (meta)
@@ -48,13 +48,13 @@ struct Node_Updater
       new_data.data.push_back(Data_By_Id< Node_Skeleton >::Entry
           (Uint31_Index(0u), Node_Skeleton(id, 0u),
            OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(id)));
-    
-    ids_to_modify.push_back(make_pair(id, false));
+
+    ids_to_modify.push_back(std::make_pair(id, false));
     if (meta)
       user_by_id[meta->user_id] = meta->user_name;
   }
-  
-  
+
+
   void set_node(const Node& node, const OSM_Element_Metadata* meta = 0)
   {
     if (meta)
@@ -67,27 +67,27 @@ struct Node_Updater
           (Uint31_Index(node.index), Node_Skeleton(node),
            OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(node.id),
            node.tags));
-    
-    ids_to_modify.push_back(make_pair(node.id, true));
+
+    ids_to_modify.push_back(std::make_pair(node.id, true));
     nodes_to_insert.push_back(node);
     if (meta)
       user_by_id[meta->user_id] = meta->user_name;
   }
-  
+
   void update(Osm_Backend_Callback* callback, bool partial);
-  
-  const vector< pair< Node::Id_Type, Uint32_Index > >& get_moved_nodes() const
+
+  const std::vector< std::pair< Node::Id_Type, Uint32_Index > >& get_moved_nodes() const
   {
     return moved_nodes;
   }
-  
+
   const std::map< Uint31_Index, std::set< Node_Skeleton > > get_new_skeletons() const
       { return new_skeletons; }
   const std::map< Uint31_Index, std::set< Node_Skeleton > > get_attic_skeletons() const
       { return attic_skeletons; }
   const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > get_new_attic_skeletons() const
       { return new_attic_skeletons; }
-  
+
 private:
   uint32 update_counter;
   Transaction* transaction;
@@ -95,27 +95,27 @@ private:
   bool partial_possible;
   static Node_Comparator_By_Id node_comparator_by_id;
   static Node_Equal_Id node_equal_id;
-  string db_dir;
+  std::string db_dir;
 
   Data_By_Id< Node_Skeleton > new_data;
-  
-  vector< pair< Node::Id_Type, bool > > ids_to_modify;
-  vector< Node > nodes_to_insert;
-  vector< pair< Node::Id_Type, Uint32_Index > > moved_nodes;
+
+  std::vector< std::pair< Node::Id_Type, bool > > ids_to_modify;
+  std::vector< Node > nodes_to_insert;
+  std::vector< std::pair< Node::Id_Type, Uint32_Index > > moved_nodes;
 
   meta_modes meta;
-  map< uint32, string > user_by_id;
+  std::map< uint32, std::string > user_by_id;
 
   std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
   std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
-  
+
   Key_Storage keys;
 
-  void update_node_ids(map< uint32, vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves,
+  void update_node_ids(std::map< uint32, std::vector< Node::Id_Type > >& to_delete, bool record_minuscule_moves,
       const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions);
-  
-  void merge_files(const vector< string >& froms, string into);
+
+  void merge_files(const std::vector< std::string >& froms, std::string into);
 };
 
 

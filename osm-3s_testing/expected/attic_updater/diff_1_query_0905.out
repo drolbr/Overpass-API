@@ -10451,18 +10451,12 @@
     <nd ref="183232"/>
   </way>
   <node id="11011"/>
-  <relation id="16421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="17423" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18423" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="16421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="17421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="17423" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18421" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18423" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
   <node id="11012"/>
   <node id="11011"/>
   <node id="13021" lat="10.0000000" lon="3.0200010" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
@@ -10497,10 +10491,8 @@
     <member type="relation" ref="1171" role="once_changed"/>
     <tag k="purpose" v="meta"/>
   </relation>
-  <relation id="11711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="11712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="11711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="11712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="11013"/>
   <node id="13021" lat="10.0000000" lon="3.0200010" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
   <node id="13022" lat="10.0010000" lon="3.0200010" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
@@ -10533,10 +10525,8 @@
     <member type="relation" ref="1171" role="once_changed"/>
     <tag k="purpose" v="meta"/>
   </relation>
-  <relation id="11711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="11712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="11711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="11712" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="11011"/>
   <way id="1202" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
     <nd ref="12021"/>
@@ -11433,8 +11423,7 @@
     <tag k="foo" v="bar_1642"/>
     <tag k="foo_1642" v="bar"/>
   </relation>
-  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
   <node id="11012"/>
   <way id="16321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="163211"/>
@@ -11466,8 +11455,7 @@
     <tag k="foo" v="bar_1642"/>
     <tag k="foo_1642" v="bar"/>
   </relation>
-  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
   <node id="11013"/>
   <way id="16721" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="167211"/>
@@ -11483,8 +11471,7 @@
     <tag k="foo" v="bar_1672"/>
     <tag k="foo_1672" v="bar"/>
   </relation>
-  <relation id="16723" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="16723" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
   <node id="11011"/>
   <node id="161210" lat="10.1010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="161230" lat="10.1030000" lon="6.0200000" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
@@ -11511,8 +11498,7 @@
     <tag k="foo_1322" v="bar"/>
   </relation>
   <node id="12011"/>
-  <relation id="19411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="19411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="12012"/>
   <node id="11013"/>
   <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>

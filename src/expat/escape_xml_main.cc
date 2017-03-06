@@ -20,20 +20,19 @@
 
 #include "escape_xml.h"
 
-using namespace std;
 
 int main(int argc, char *argv[])
 {
   char c;
-  string buf;
-  cin.get(c);
-  while (!cin.eof())
+  std::string buf;
+  std::cin.get(c);
+  while (!std::cin.eof())
   {
     buf += c;
-    cin.get(c);
+    std::cin.get(c);
   }
-  
-  cout<<escape_xml(buf);
-  
+
+  std::cout<<escape_xml(buf);
+
   return 0;
 }

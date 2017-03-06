@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "../data/abstract_processing.h"
+#include "../data/utils.h"
 #include "union.h"
 
 
@@ -32,24 +33,24 @@ Generic_Statement_Maker< Union_Statement > Union_Statement::statement_maker("uni
 
 
 Union_Statement::Union_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["into"] = "_";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   set_output(attributes["into"]);
 }
 
 
-void Union_Statement::add_statement(Statement* statement, string text)
+void Union_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
-  
-  
+
+
   if (statement)
   {
     if (statement->get_name() == "newer")
@@ -57,7 +58,7 @@ void Union_Statement::add_statement(Statement* statement, string text)
     else if (statement->get_result_name() == "")
       substatement_error(get_name(), statement);
     else
-      substatements.push_back(statement);    
+      substatements.push_back(statement);
   }
 }
 
@@ -65,28 +66,30 @@ void Union_Statement::add_statement(Statement* statement, string text)
 void Union_Statement::execute(Resource_Manager& rman)
 {
   Set base_set;
-  
-  for (vector< Statement* >::iterator it(substatements.begin());
+
+  for (std::vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
     rman.push_reference(base_set);
     (*it)->execute(rman);
     rman.pop_reference();
-    
+
     Set& summand(rman.sets()[(*it)->get_result_name()]);
+    sort(summand);
 
     indexed_set_union(base_set.nodes, summand.nodes);
     indexed_set_union(base_set.attic_nodes, summand.attic_nodes);
-    
+
     indexed_set_union(base_set.ways, summand.ways);
     indexed_set_union(base_set.attic_ways, summand.attic_ways);
-    
+
     indexed_set_union(base_set.relations, summand.relations);
     indexed_set_union(base_set.attic_relations, summand.attic_relations);
-    
+
     indexed_set_union(base_set.areas, summand.areas);
+    indexed_set_union(base_set.deriveds, summand.deriveds);
   }
-  
+
   transfer_output(rman, base_set);
   rman.health_check(*this);
 }

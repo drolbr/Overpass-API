@@ -24,58 +24,59 @@
 #include <vector>
 
 #include "../core/datatypes.h"
+#include "../core/parsed_query.h"
 #include "../core/settings.h"
 #include "../dispatch/resource_manager.h"
+#include "../frontend/tokenizer_utils.h"
 #include "../osm-backend/area_updater.h"
 
-using namespace std;
 
 class Query_Constraint
 {
   public:
     virtual bool delivers_data(Resource_Manager& rman) = 0;
-    
+
     virtual bool collect_nodes(Resource_Manager& rman, Set& into,
-			 const vector< Uint64 >& ids, bool invert_ids) { return false; }
+			 const std::vector< Uint64 >& ids, bool invert_ids) { return false; }
     virtual bool collect(Resource_Manager& rman, Set& into,
-			 int type, const vector< Uint32_Index >& ids, bool invert_ids) { return false; }
-			 
+			 int type, const std::vector< Uint32_Index >& ids, bool invert_ids) { return false; }
+			
     virtual bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
       { return false; }
     virtual bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
       { return false; }
-      
+
     virtual bool get_node_ids
-        (Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
+        (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
       { return false; }
     virtual bool get_way_ids
-        (Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids)
+        (Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids)
       { return false; }
     virtual bool get_relation_ids
-        (Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids)
+        (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
       { return false; }
-      
+
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const set< pair< Uint32_Index, Uint32_Index > >& ranges,
-			  const vector< Node::Id_Type >& ids,
+			  const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+			  const std::vector< Node::Id_Type >& ids,
                           bool invert_ids, uint64 timestamp)
       { return false; }
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const set< pair< Uint31_Index, Uint31_Index > >& ranges,
+			  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
 			  int type,
-                          const vector< Uint32_Index >& ids,
+                          const std::vector< Uint32_Index >& ids,
                           bool invert_ids, uint64 timestamp)
       { return false; }
-    
+
     // Cheap filter. No health_check in between needed and should be called first.
     virtual void filter(Resource_Manager& rman, Set& into, uint64 timestamp) {}
 
     // Expensive filter. Health_check may be needed in between. These are called last
     // to minimize the number of elements that need to be processed.
     virtual void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp) {}
-    
+
     virtual ~Query_Constraint() {}
 };
 
@@ -85,41 +86,47 @@ class Query_Constraint
 class Statement
 {
   public:
+    enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible };
+
     struct Factory
     {
-      Factory() : error_output_(error_output), bbox_limitation(0) {}
+      Factory(Parsed_Query& global_settings_) : error_output_(error_output), global_settings(global_settings_) {}
       ~Factory();
-      
-      Statement* create_statement(string element, int line_number,
-				  const map< string, string >& attributes);
-      
-      vector< Statement* > created_statements;
+
+      Statement* create_statement(std::string element, int line_number,
+				  const std::map< std::string, std::string >& attributes);
+      Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context);
+
+      std::vector< Statement* > created_statements;
       Error_Output* error_output_;
-      Query_Constraint* bbox_limitation;
+      Parsed_Query& global_settings;
     };
-    
-    class Statement_Maker
+
+    struct Statement_Maker
     {
-      public:
-	virtual Statement* create_statement
-	    (int line_number, const map< string, string >& attributes, Query_Constraint* bbox_limitation) = 0;
-	virtual ~Statement_Maker() {}
+      virtual Statement* create_statement
+          (int line_number, const std::map< std::string, std::string >& attributes, Parsed_Query& global_settings) = 0;
+      virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output) = 0;
+      virtual ~Statement_Maker() {}
     };
-    
-    static map< string, Statement_Maker* >& maker_by_name();
-    
+
+    static std::map< std::string, Statement_Maker* >& maker_by_name();
+    static std::map< std::string, std::vector< Statement_Maker* > >& maker_by_token();
+    static std::map< std::string, std::vector< Statement_Maker* > >& maker_by_func_name();
+
     Statement(int line_number_) : line_number(line_number_), progress(0) {}
-    
-    virtual void add_statement(Statement* statement, string text);
-    virtual void add_final_text(string text);
-    virtual string get_name() const = 0;
-    virtual string get_result_name() const = 0;
+
+    virtual void add_statement(Statement* statement, std::string text);
+    virtual void add_final_text(std::string text);
+    virtual std::string get_name() const = 0;
+    virtual std::string get_result_name() const = 0;
     virtual void execute(Resource_Manager& rman) = 0;
 
     // May return 0. The ownership of the Query_Constraint remains at the called
     // object.
     virtual Query_Constraint* get_query_constraint() { return 0; }
-    
+
     virtual ~Statement() {}
 
     int get_progress() const { return progress; }
@@ -130,44 +137,50 @@ class Statement
     void set_endpos(int pos) { endpos = pos; }
     int get_tagendpos() const { return tagendpos; }
     void set_tagendpos(int pos) { tagendpos = pos; }
-    
+
     void display_full();
     void display_starttag();
-        
+
+    virtual std::string dump_xml(const std::string&) const { return ""; }
+    virtual std::string dump_compact_ql(const std::string&) const { return ""; }
+    virtual std::string dump_pretty_ql(const std::string&) const { return ""; }
+    virtual std::string dump_ql_in_query(const std::string& indent) const { return dump_compact_ql(indent); }
+
     static void set_error_output(Error_Output* error_output_)
     {
       error_output = error_output_;
     }
 
-    void runtime_remark(string error) const;
+    void runtime_error(std::string error) const;
+    void runtime_remark(std::string error) const;
 
     const static int NODE = 1;
     const static int WAY = 2;
     const static int RELATION = 3;
     const static int AREA = 4;
-    
+
   private:
     static Error_Output* error_output;
-    
+
     int line_number;
     int startpos, endpos, tagendpos;
     int progress;
-    
+
   protected:
     void eval_attributes_array
-        (string element, map< string, string >& attributes,
-	 const map< string, string >& input);
-    void assure_no_text(string text, string name);
-    void substatement_error(string parent, Statement* child);
-    
-    void add_static_error(string error);
-    void add_static_remark(string remark);
+        (std::string element, std::map< std::string, std::string >& attributes,
+	 const std::map< std::string, std::string >& input);
+    void assure_no_text(std::string text, std::string name);
+    void substatement_error(std::string parent, Statement* child);
+
+    void add_static_error(std::string error);
+    void add_static_remark(std::string remark);
 
     void set_progress(int progress_) { progress = progress_; }
 };
 
 
-map< string, string > convert_c_pairs(const char** attr);
+std::map< std::string, std::string > convert_c_pairs(const char** attr);
 
 
 template< class TStatement >
@@ -175,12 +188,18 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
 {
   public:
     virtual Statement* create_statement
-        (int line_number, const map< string, string >& attributes, Query_Constraint* bbox_limitation)
+        (int line_number, const std::map< std::string, std::string >& attributes, Parsed_Query& global_settings)
     {
-      return new TStatement(line_number, attributes, bbox_limitation);
+      return new TStatement(line_number, attributes, global_settings);
     }
-    
-    Generic_Statement_Maker(const string& name) { Statement::maker_by_name()[name] = this; }
+
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    {
+      return 0;
+    }
+
+    Generic_Statement_Maker(const std::string& name) { Statement::maker_by_name()[name] = this; }
     virtual ~Generic_Statement_Maker() {}
 };
 
@@ -189,16 +208,19 @@ class Output_Statement : public Statement
 {
   public:
     Output_Statement(int line_number) : Statement(line_number), output("_") {}
-    
-    virtual string get_result_name() const { return output; }
-    
+
+    virtual std::string get_result_name() const { return output; }
+
+    std::string dump_ql_result_name() const { return output != "_" ? std::string("->.") + output : ""; }
+    std::string dump_xml_result_name() const { return output != "_" ? std::string("into=\"") + output + "\"" : ""; }
+
   protected:
     void set_output(std::string output_) { output = output_; }
 
     void transfer_output(Resource_Manager& rman, Set& into) const;
-  
+
   private:
-    string output;
+    std::string output;
 };
 
 

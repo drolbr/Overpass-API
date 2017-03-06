@@ -1062,21 +1062,13 @@
     <member type="relation" ref="1171" role="once_changed"/>
     <tag k="purpose" v="meta"/>
   </relation>
-  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16432" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16723" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="16732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18423" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18432" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18723" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
-  </relation>
-  <relation id="18732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
-  </relation>
+  <relation id="16423" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16432" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16723" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="16732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18423" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18432" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18723" version="1" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo"/>
+  <relation id="18732" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
 
 </osm>

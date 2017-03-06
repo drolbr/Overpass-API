@@ -34,60 +34,88 @@
 int main(int argc, char* argv[])
 {
   // read command line arguments
-  string db_dir, data_version;
+  std::string db_dir, data_version;
   bool transactional = true;
   meta_modes meta = only_data;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
-  
+
   int argpos(1);
   while (argpos < argc)
   {
     if (!(strncmp(argv[argpos], "--db-dir=", 9)))
     {
-      db_dir = ((string)argv[argpos]).substr(9);
+      db_dir = ((std::string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
       transactional = false;
     }
     else if (!(strncmp(argv[argpos], "--version=", 10)))
-      data_version = ((string)argv[argpos]).substr(10);
+      data_version = ((std::string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
       meta = keep_meta;
     else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
       meta = keep_attic;
     else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
     {
-      flush_limit = atoll(string(argv[argpos]).substr(13).c_str()) *1024*1024;
+      flush_limit = atoll(std::string(argv[argpos]).substr(13).c_str()) *1024*1024;
       if (flush_limit == 0)
         flush_limit = std::numeric_limits< unsigned int >::max();
     }
-    else if (!(strncmp(argv[argpos], "--compression_method=", 21)))
+    else if (!(strncmp(argv[argpos], "--compression-method=", 21)))
     {
-      if (string(argv[argpos]).substr(21) == "no")
+      if (std::string(argv[argpos]).substr(21) == "no")
 	basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
-      else if (string(argv[argpos]).substr(21) == "gz")
+      else if (std::string(argv[argpos]).substr(21) == "gz")
 	basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+#ifdef HAVE_LZ4
+      else if (std::string(argv[argpos]).substr(21) == "lz4")
+        basic_settings().compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+#endif
       else
       {
-        cerr<<"For --compression_method, please use \"no\" or \"gz\" as value.\n";
+#ifdef HAVE_LZ4
+        std::cerr<<"For --compression-method, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+#else
+        std::cerr<<"For --compression-method, please use \"no\" or \"gz\" as value.\n";
+#endif
+        abort = true;
+      }
+    }
+    else if (!(strncmp(argv[argpos], "--map-compression-method=", 25)))
+    {
+      if (std::string(argv[argpos]).substr(25) == "no")
+        basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+      else if (std::string(argv[argpos]).substr(25) == "gz")
+        basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+#ifdef HAVE_LZ4
+      else if (std::string(argv[argpos]).substr(25) == "lz4")
+        basic_settings().map_compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+#endif
+      else
+      {
+#ifdef HAVE_LZ4
+        std::cerr<<"For --map-compression-method, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+#else
+        std::cerr<<"For --map-compression-method, please use \"no\" or \"gz\" as value.\n";
+#endif
         abort = true;
       }
     }
     else
     {
-      cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
+      std::cerr<<"Unkown argument: "<<argv[argpos]<<'\n';
       abort = true;
     }
     ++argpos;
   }
   if (abort)
   {
-    cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
+    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
         " [--compression_method=(no|gz)]\n";
     return 0;
   }
-  
+
   try
   {
     if (transactional)
@@ -112,6 +140,6 @@ int main(int argc, char* argv[])
   {
     report_file_error(e);
   }
-  
+
   return 0;
 }

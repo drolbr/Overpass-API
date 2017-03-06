@@ -22,73 +22,72 @@
 
 #include "console_output.h"
 
-using namespace std;
 
-void Console_Output::add_encoding_error(const string& error)
+void Console_Output::add_encoding_error(const std::string& error)
 {
   if (log_level != Error_Output::QUIET)
-    cerr<<"encoding error: "<<error<<'\n';
+    std::cerr<<"encoding error: "<<error<<'\n';
   encoding_errors = true;
 }
 
-void Console_Output::add_parse_error(const string& error, int line_number)
+void Console_Output::add_parse_error(const std::string& error, int line_number)
 {
   if (log_level != Error_Output::QUIET)
-    cerr<<"line "<<line_number<<": parse error: "<<error<<'\n';
+    std::cerr<<"line "<<line_number<<": parse error: "<<error<<'\n';
   parse_errors = true;
 }
 
-void Console_Output::add_static_error(const string& error, int line_number)
+void Console_Output::add_static_error(const std::string& error, int line_number)
 {
   if (log_level != Error_Output::QUIET)
-    cerr<<"line "<<line_number<<": static error: "<<error<<'\n';
+    std::cerr<<"line "<<line_number<<": static error: "<<error<<'\n';
   static_errors = true;
 }
 
-void Console_Output::add_encoding_remark(const string& error)
+void Console_Output::add_encoding_remark(const std::string& error)
 {
   if (log_level >= Error_Output::ASSISTING)
-    cerr<<"encoding remark: "<<error<<'\n';
+    std::cerr<<"encoding remark: "<<error<<'\n';
 }
 
-void Console_Output::add_parse_remark(const string& error, int line_number)
+void Console_Output::add_parse_remark(const std::string& error, int line_number)
 {
   if (log_level >= Error_Output::ASSISTING)
-    cerr<<"line "<<line_number<<": parse remark: "<<error<<'\n';
+    std::cerr<<"line "<<line_number<<": parse remark: "<<error<<'\n';
 }
 
-void Console_Output::add_static_remark(const string& error, int line_number)
+void Console_Output::add_static_remark(const std::string& error, int line_number)
 {
   if (log_level >= Error_Output::ASSISTING)
-    cerr<<"line "<<line_number<<": static remark: "<<error<<'\n';
+    std::cerr<<"line "<<line_number<<": static remark: "<<error<<'\n';
 }
 
-void Console_Output::runtime_error(const string& error)
+void Console_Output::runtime_error(const std::string& error)
 {
   if (log_level != Error_Output::QUIET)
-    cerr<<"runtime error: "<<error<<'\n';
+    std::cerr<<"runtime error: "<<error<<'\n';
 }
 
-void Console_Output::runtime_remark(const string& error)
+void Console_Output::runtime_remark(const std::string& error)
 {
   if (log_level >= Error_Output::ASSISTING)
-    cerr<<"runtime remark: "<<error<<'\n';
+    std::cerr<<"runtime remark: "<<error<<'\n';
 }
 
 void Console_Output::display_statement_progress
-    (uint timer, const string& name, int progress, int line_number,
-     const vector< pair< uint, uint > >& stack)
+    (uint timer, const std::string& name, int progress, int line_number,
+     const std::vector< std::pair< uint, uint > >& stack)
 {
   if (log_level < Error_Output::PROGRESS)
     return;
-  cerr<<"After "<<timer/3600<<"h"<<timer/60%60<<"m"<<timer%60<<"s: "
+  std::cerr<<"After "<<timer/3600<<"h"<<timer/60%60<<"m"<<timer%60<<"s: "
       <<"in \""<<name<<"\", part "<<progress<<", on line "<<line_number<<".";
   if (!stack.empty())
   {
-    cerr<<" Stack:";
-    for (vector< pair< uint, uint > >::const_iterator it(stack.begin());
+    std::cerr<<" Stack:";
+    for (std::vector< std::pair< uint, uint > >::const_iterator it(stack.begin());
         it != stack.end(); ++it)
-      cerr<<" "<<it->first<<" of "<<it->second;
+      std::cerr<<" "<<it->first<<" of "<<it->second;
   }
-  cerr<<'\n';
+  std::cerr<<'\n';
 }

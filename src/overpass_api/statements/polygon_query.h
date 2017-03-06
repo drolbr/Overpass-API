@@ -20,45 +20,77 @@
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__POLYGON_QUERY_H
 
 #include "../data/collect_members.h"
+#include "../data/utils.h"
+#include "../data/way_geometry_store.h"
 #include "statement.h"
 
 #include <map>
 #include <string>
 #include <vector>
 
-using namespace std;
-
 
 class Polygon_Query_Statement : public Output_Statement
 {
   public:
-    Polygon_Query_Statement(int line_number_, const map< string, string >& attributes,
-                            Query_Constraint* bbox_limitation = 0);
-    virtual string get_name() const { return "polygon-query"; }
+    Polygon_Query_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
+                            Parsed_Query& global_settings);
+    virtual std::string get_name() const { return "polygon-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Polygon_Query_Statement();
-    
+
     static Generic_Statement_Maker< Polygon_Query_Statement > statement_maker;
-    
+
     virtual Query_Constraint* get_query_constraint();
-    
-    set< pair< Uint32_Index, Uint32_Index > > calc_ranges();
+
+    std::set< std::pair< Uint32_Index, Uint32_Index > > calc_ranges();
 
     template< typename Node_Skeleton >
-    void collect_nodes(map< Uint32_Index, vector< Node_Skeleton > >& nodes, bool add_border);
-       
+    void collect_nodes(std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes, bool add_border);
+
     template< typename Way_Skeleton >
     void collect_ways
-      (map< Uint31_Index, vector< Way_Skeleton > >& ways,
+      (std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
        const Way_Geometry_Store& way_geometries,
        bool add_border, const Statement& query, Resource_Manager& rman);
-      
+
     bool covers_large_area() const { return covers_large_area_; }
 
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      std::string result = indent + "<polygon-query bounds=\"";
+      std::vector< std::pair< double, double > >::const_iterator it = edges.begin();
+      if (it != edges.end())
+      {
+        result += to_string(it->first) + " " + to_string(it->second);
+        for (++it; it != edges.end(); ++it)
+          result += "  " + to_string(it->first) + " " + to_string(it->second);
+      }
+      return result + "\"" + dump_xml_result_name() + "/>\n";
+    }
+
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return "node" + dump_ql_in_query("") + dump_ql_result_name();
+    }
+    virtual std::string dump_ql_in_query(const std::string&) const
+    {
+      std::string result = "(poly:\"";
+      std::vector< std::pair< double, double > >::const_iterator it = edges.begin();
+      if (it != edges.end())
+      {
+        result += to_string(it->first) + " " + to_string(it->second);
+        for (++it; it != edges.end(); ++it)
+          result += "  " + to_string(it->first) + " " + to_string(it->second);
+      }
+      return result + "\")";
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
+
   private:
-    vector< Aligned_Segment > segments;
+    std::vector< std::pair< double, double > > edges;
+    std::vector< Aligned_Segment > segments;
     bool covers_large_area_;
-    vector< Query_Constraint* > constraints;
+    std::vector< Query_Constraint* > constraints;
 };
 
 #endif

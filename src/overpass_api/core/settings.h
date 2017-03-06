@@ -37,6 +37,7 @@ struct Basic_Settings
   std::string shared_name_base;
   
   uint32 compression_method;
+  uint32 map_compression_method;
   
   Basic_Settings();
 };
@@ -146,6 +147,7 @@ class Logger
 };
 
 
-const uint64 NOW = std::numeric_limits< unsigned long long >::max();
+extern const uint64 NOW;
+
 
 #endif

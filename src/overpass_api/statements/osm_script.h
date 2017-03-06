@@ -25,85 +25,35 @@
 #include "bbox_query.h"
 #include "statement.h"
 
-using namespace std;
 
 class Output_Handle;
-
-
-struct Tag_Filter
-{
-  string key;
-  string value;
-  bool straight;  
-};
-
-struct Category_Filter
-{
-  string title;
-  string title_key;
-  vector< vector< Tag_Filter > > filter_disjunction;
-};
-
-struct Csv_Settings
-{
-  std::vector< std::pair< std::string, bool > > keyfields;
-  bool with_headerline;
-  string separator;
-};
-
 
 class Osm_Script_Statement : public Statement
 {
   public:
-    Osm_Script_Statement(int line_number_, const map< string, string >& input_attributes,
-                         Query_Constraint* bbox_limitation = 0);
-    virtual void add_statement(Statement* statement, string text);
-    virtual string get_name() const { return "osm-script"; }
-    virtual string get_result_name() const { return ""; }
+    Osm_Script_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                         Parsed_Query& global_settings);
+    virtual void add_statement(Statement* statement, std::string text);
+    virtual std::string get_name() const { return "osm-script"; }
+    virtual std::string get_result_name() const { return ""; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Osm_Script_Statement();
-    
+
     static Generic_Statement_Maker< Osm_Script_Statement > statement_maker;
-    
-    const string& get_type() const { return type; }
-    void set_factory(Statement::Factory* factory_, Output_Handle* output_handle_ = 0)
-    {
-      factory = factory_;
-      output_handle = output_handle_;
-    }
 
-    string adapt_url(const string& url) const;
-    uint32 get_written_elements_count() const;
-    
-    void set_template_name(const string& template_name_) { template_name = template_name_; }
-    bool template_contains_js() const { return template_contains_js_; }
-    void write_output() const;
+    void set_factory(Statement::Factory* factory_) { factory = factory_; }
 
-    void set_categories(const vector< Category_Filter >& categories_) { categories = categories_; }
-    void set_csv_settings(const Csv_Settings& csv_settings_) { csv_settings = csv_settings_; }
-    
     uint32 get_max_allowed_time() const { return max_allowed_time; }
     uint64 get_max_allowed_space() const { return max_allowed_space; }
-    Query_Constraint* get_bbox_limitation() { return bbox_limitation; }
     uint64 get_desired_timestamp() const { return desired_timestamp; }
-    
+
   private:
-    vector< Statement* > substatements;
-    Query_Constraint* bbox_limitation;
-    Bbox_Query_Statement* bbox_statement;
+    std::vector< Statement* > substatements;
     uint64 desired_timestamp;
     uint64 comparison_timestamp;
     bool add_deletion_information;
     uint32 max_allowed_time;
     uint64 max_allowed_space;
-    string type;
-    Output_Handle* output_handle;
     Statement::Factory* factory;
-    string template_name;
-    string header;
-    bool template_contains_js_;
-    vector< Category_Filter > categories;
-    Csv_Settings csv_settings;
 };
 
 #endif

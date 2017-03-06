@@ -30,13 +30,12 @@
 
 #include "basic_types.h"
 
-using namespace std;
 
 struct Aligned_Segment
 {
   uint32 ll_upper_;
   uint64 ll_lower_a, ll_lower_b;
-  
+
   bool operator<(const Aligned_Segment& b) const
   {
     return (ll_upper_ < b.ll_upper_);
@@ -46,7 +45,7 @@ struct Aligned_Segment
 struct Area
 {
   typedef Uint32_Index Id_Type;
-  
+
   static Aligned_Segment segment_from_ll_quad
       (uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
@@ -58,19 +57,19 @@ struct Area
         (((uint64)a_ll_upper & 0xff)<<32);
     result.ll_lower_b = (uint64)::ll_lower(to_lat, to_lon) |
         (((uint64)b_ll_upper & 0xff)<<32);
-    
+
     return result;
   }
-  
+
   static int32 proportion(int32 clow, int32 cmid, int32 cup, int32 low, int32 up)
   {
     if (cup == clow)
       return low;
     return (((int64)up - low))*((int64)cmid - clow)/((int64)cup - clow) + low;
   }
-  
+
   static void calc_horiz_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+      (std::vector< Aligned_Segment >& aligned_segments,
        uint32 from_lat, uint32 from_lon, uint32 to_lat, uint32 to_lon)
   {
     if ((from_lat & 0xfff00000) == (to_lat & 0xfff00000))
@@ -111,10 +110,10 @@ struct Area
            from_lat, from_lon));
     }
   }
-  
-  
+
+
   static void calc_vert_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+      (std::vector< Aligned_Segment >& aligned_segments,
        uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
     if ((from_lon & 0xfff00000) == (to_lon & 0xfff00000))
@@ -155,10 +154,11 @@ struct Area
 	   from_lat, from_lon);
     }
   }
-  
-  
-  static void calc_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+
+
+  // returns whether the segment is treated as crossing the date line
+  static bool calc_aligned_segments
+      (std::vector< Aligned_Segment >& aligned_segments,
        uint32 from_lat, int32 from_lon, uint32 to_lat, int32 to_lon)
   {
     if ((from_lon < -900000000) && (to_lon > 900000000))
@@ -171,6 +171,7 @@ struct Area
           (aligned_segments,
            proportion((uint64)to_lon - 3600000000ul, -1800000000, from_lon,
 		      to_lat, from_lat), -1800000000, from_lat, from_lon);
+      return true;
     }
     else if ((to_lon < -900000000) && (from_lon > 900000000))
     {
@@ -182,15 +183,18 @@ struct Area
           (aligned_segments,
 	   proportion((uint64)from_lon - 3600000000ul, -1800000000, to_lon,
 		      from_lat, to_lat), -1800000000, to_lat, to_lon);
+      return true;
     }
     else
       calc_vert_aligned_segments
         (aligned_segments, from_lat, from_lon, to_lat, to_lon);
+    return false;
   }
-      
-      
-  static void calc_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+
+
+  // returns whether the segment is treated as crossing the date line
+  static bool calc_aligned_segments
+      (std::vector< Aligned_Segment >& aligned_segments,
        uint64 from, uint64 to)
   {
     uint32 from_lat = ::ilat(from>>32, from&0xffffffff);
@@ -198,16 +202,16 @@ struct Area
     int32 from_lon = ::ilon(from>>32, from&0xffffffff);
     int32 to_lon = ::ilon(to>>32, to&0xffffffff);
 
-    calc_aligned_segments(aligned_segments, from_lat, from_lon, to_lat, to_lon);
+    return calc_aligned_segments(aligned_segments, from_lat, from_lon, to_lat, to_lon);
   }
 
-        
-      
-  static void calc_aligned_segments
-      (vector< Aligned_Segment >& aligned_segments,
+
+  // returns whether the segment is treated as crossing the date line
+  static bool calc_aligned_segments
+      (std::vector< Aligned_Segment >& aligned_segments,
        double from_lat, double from_lon, double to_lat, double to_lon)
   {
-    calc_aligned_segments(aligned_segments,
+    return calc_aligned_segments(aligned_segments,
 			  ::ilat(from_lat), ::ilon(from_lon), ::ilat(to_lat), ::ilon(to_lon));
   }
 };
@@ -216,19 +220,19 @@ struct Area
 struct Area_Location
 {
   uint32 id;
-  vector< uint32 > used_indices;
-  vector< pair< string, string > > tags;
-  
+  std::vector< uint32 > used_indices;
+  std::vector< std::pair< std::string, std::string > > tags;
+
   Area_Location() {}
-  
-  Area_Location(uint32 id_, const vector< uint32 >& used_indices_)
+
+  Area_Location(uint32 id_, const std::vector< uint32 >& used_indices_)
   : id(id_), used_indices(used_indices_) {}
-  
+
   bool operator<(const Area_Location& a) const
   {
     return (this->id < a.id);
   }
-  
+
   bool operator==(const Area_Location& a) const
   {
     return (this->id == a.id);
@@ -247,55 +251,55 @@ struct Area_Location
 struct Area_Skeleton
 {
   typedef Area::Id_Type Id_Type;
-  
+
   Id_Type id;
-  vector< uint32 > used_indices;
-  
+  std::vector< uint32 > used_indices;
+
   Area_Skeleton() : id(0u) {}
-  
+
   Area_Skeleton(void* data) : id(0u)
   {
     id = *(Id_Type*)data;
     for (uint i(0); i < *((uint32*)data + 1); ++i)
       used_indices.push_back(*((uint32*)data + i + 2));
   }
-  
+
   Area_Skeleton(const Area_Location& loc)
       : id(loc.id), used_indices(loc.used_indices) {}
-  
+
   uint32 size_of() const
   {
     return 8 + 4*used_indices.size();
   }
-  
+
   static uint32 size_of(void* data)
   {
     return (8 + 4 * *((uint32*)data + 1));
   }
-  
+
   static Id_Type get_id(void* data)
   {
     return *(Id_Type*)data;
   }
-  
+
   void to_data(void* data) const
   {
     *(Id_Type*)data = id.val();
     *((uint32*)data + 1) = used_indices.size();
     uint i(2);
-    for (vector< uint32 >::const_iterator it(used_indices.begin());
+    for (std::vector< uint32 >::const_iterator it(used_indices.begin());
     it != used_indices.end(); ++it)
     {
       *((uint32*)data + i) = *it;
       ++i;
     }
   }
-  
+
   bool operator<(const Area_Skeleton& a) const
   {
     return (this->id < a.id);
   }
-  
+
   bool operator==(const Area_Skeleton& a) const
   {
     return (this->id == a.id);
@@ -305,12 +309,12 @@ struct Area_Skeleton
 struct Area_Block
 {
   typedef Area::Id_Type Id_Type;
-  
+
   Id_Type id;
-  vector< uint64 > coors;
-  
+  std::vector< uint64 > coors;
+
   Area_Block() : id(0u) {}
-  
+
   Area_Block(void* data) : id(*(Id_Type*)data)
   {
     id = *(Id_Type*)data;
@@ -318,20 +322,20 @@ struct Area_Block
     for (int i(0); i < *((uint16*)data + 2); ++i)
       coors[i] = (*(uint64*)((uint8*)data + 6 + 5*i)) & (uint64)0xffffffffffull;
   }
-  
-  Area_Block(Id_Type id_, const vector< uint64 >& coors_)
+
+  Area_Block(Id_Type id_, const std::vector< uint64 >& coors_)
   : id(id_), coors(coors_) {}
-  
+
   uint32 size_of() const
   {
     return 6 + 5*coors.size();
   }
-  
+
   static uint32 size_of(void* data)
   {
     return (6 + 5 * *((uint16*)data + 2));
   }
-  
+
   void to_data(void* data) const
   {
     *(Id_Type*)data = id.val();
@@ -342,7 +346,7 @@ struct Area_Block
       *((uint8*)data + 10 + 5*i) = (coors[i])>>32;
     }
   }
-  
+
   bool operator<(const Area_Block& a) const
   {
     if (this->id < a.id)
@@ -351,7 +355,7 @@ struct Area_Block
       return false;
     return (this->coors < a.coors);
   }
-  
+
   bool operator==(const Area_Block& a) const
   {
     return ((this->id == a.id) && (this->coors == a.coors));

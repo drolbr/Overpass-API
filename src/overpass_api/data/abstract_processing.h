@@ -36,7 +36,7 @@ class And_Predicate
     bool match(const Object& obj) const { return (predicate_a.match(obj) && predicate_b.match(obj)); }
     bool match(const Handle< Object >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
     bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
-    
+
   private:
     TPredicateA predicate_a;
     TPredicateB predicate_b;
@@ -51,7 +51,7 @@ class Or_Predicate
     bool match(const Object& obj) const { return (predicate_a.match(obj) || predicate_b.match(obj)); }
     bool match(const Handle< Object >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
     bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
-    
+
   private:
     TPredicateA predicate_a;
     TPredicateB predicate_b;
@@ -66,7 +66,7 @@ class Not_Predicate
     bool match(const Object& obj) const { return (!predicate_a.match(obj)); }
     bool match(const Handle< Object >& h) const { return (!predicate_a.match(h)); }
     bool match(const Handle< Attic< Object > >& h) const { return (!predicate_a.match(h)); }
-    
+
   private:
     TPredicateA predicate_a;
 };
@@ -87,22 +87,22 @@ template < class Object >
 class Id_Predicate
 {
   public:
-    Id_Predicate(const vector< typename Object::Id_Type >& ids_)
+    Id_Predicate(const std::vector< typename Object::Id_Type >& ids_)
       : ids(ids_) {}
     bool match(const Object& obj) const { return binary_search(ids.begin(), ids.end(), obj.id); }
     bool match(const Handle< Object >& h) const { return binary_search(ids.begin(), ids.end(), h.id()); }
     bool match(const Handle< Attic< Object > >& h) const { return binary_search(ids.begin(), ids.end(), h.id()); }
-    
+
   private:
-    const vector< typename Object::Id_Type >& ids;
+    const std::vector< typename Object::Id_Type >& ids;
 };
 
 //-----------------------------------------------------------------------------
 
 inline bool has_a_child_with_id
-    (const Relation_Skeleton& relation, const vector< Uint64 >& ids, uint32 type)
+    (const Relation_Skeleton& relation, const std::vector< Uint64 >& ids, uint32 type)
 {
-  for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
+  for (std::vector< Relation_Entry >::const_iterator it3(relation.members.begin());
       it3 != relation.members.end(); ++it3)
   {
     if (it3->type == type &&
@@ -114,9 +114,9 @@ inline bool has_a_child_with_id
 
 
 inline bool has_a_child_with_id_and_role
-    (const Relation_Skeleton& relation, const vector< Uint64 >& ids, uint32 type, uint32 role_id)
+    (const Relation_Skeleton& relation, const std::vector< Uint64 >& ids, uint32 type, uint32 role_id)
 {
-  for (vector< Relation_Entry >::const_iterator it3(relation.members.begin());
+  for (std::vector< Relation_Entry >::const_iterator it3(relation.members.begin());
       it3 != relation.members.end(); ++it3)
   {
     if (it3->type == type && it3->role == role_id &&
@@ -128,9 +128,9 @@ inline bool has_a_child_with_id_and_role
 
 
 inline bool has_a_child_with_id
-    (const Way_Skeleton& way, const vector< Node::Id_Type >& ids)
+    (const Way_Skeleton& way, const std::vector< Node::Id_Type >& ids)
 {
-  for (vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
+  for (std::vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
       it3 != way.nds.end(); ++it3)
   {
     if (binary_search(ids.begin(), ids.end(), *it3))
@@ -143,7 +143,7 @@ inline bool has_a_child_with_id
 class Get_Parent_Rels_Predicate
 {
 public:
-  Get_Parent_Rels_Predicate(const vector< Uint64 >& ids_, uint32 child_type_)
+  Get_Parent_Rels_Predicate(const std::vector< Uint64 >& ids_, uint32 child_type_)
     : ids(ids_), child_type(child_type_) {}
   bool match(const Relation_Skeleton& obj) const
   { return has_a_child_with_id(obj, ids, child_type); }
@@ -151,9 +151,9 @@ public:
   { return has_a_child_with_id(h.object(), ids, child_type); }
   bool match(const Handle< Attic< Relation_Skeleton > >& h) const
   { return has_a_child_with_id(h.object(), ids, child_type); }
-  
+
 private:
-  const vector< Uint64 >& ids;
+  const std::vector< Uint64 >& ids;
   uint32 child_type;
 };
 
@@ -161,7 +161,7 @@ private:
 class Get_Parent_Rels_Role_Predicate
 {
 public:
-  Get_Parent_Rels_Role_Predicate(const vector< Uint64 >& ids_, uint32 child_type_, uint32 role_id_)
+  Get_Parent_Rels_Role_Predicate(const std::vector< Uint64 >& ids_, uint32 child_type_, uint32 role_id_)
     : ids(ids_), child_type(child_type_), role_id(role_id_) {}
   bool match(const Relation_Skeleton& obj) const
   { return has_a_child_with_id_and_role(obj, ids, child_type, role_id); }
@@ -169,9 +169,9 @@ public:
   { return has_a_child_with_id_and_role(h.object(), ids, child_type, role_id); }
   bool match(const Handle< Attic< Relation_Skeleton > >& h) const
   { return has_a_child_with_id_and_role(h.object(), ids, child_type, role_id); }
-  
+
 private:
-  const vector< Uint64 >& ids;
+  const std::vector< Uint64 >& ids;
   uint32 child_type;
   uint32 role_id;
 };
@@ -180,14 +180,14 @@ private:
 class Get_Parent_Ways_Predicate
 {
 public:
-  Get_Parent_Ways_Predicate(const vector< Node::Id_Type >& ids_)
+  Get_Parent_Ways_Predicate(const std::vector< Node::Id_Type >& ids_)
     : ids(ids_) {}
   bool match(const Way_Skeleton& obj) const { return has_a_child_with_id(obj, ids); }
   bool match(const Handle< Way_Skeleton >& h) const { return has_a_child_with_id(h.object(), ids); }
   bool match(const Handle< Attic< Way_Skeleton > >& h) const { return has_a_child_with_id(h.object(), ids); }
-  
+
 private:
-  const vector< Node::Id_Type >& ids;
+  const std::vector< Node::Id_Type >& ids;
 };
 
 
@@ -211,12 +211,12 @@ public:
 
 template < class TIndex, class TObject >
 void keep_only_least_younger_than
-    (map< TIndex, vector< Attic< TObject > > >& attic_result,
-     map< TIndex, vector< TObject > >& result,
+    (std::map< TIndex, std::vector< Attic< TObject > > >& attic_result,
+     std::map< TIndex, std::vector< TObject > >& result,
      uint64 timestamp)
 {
   std::map< typename TObject::Id_Type, uint64 > timestamp_per_id;
-  
+
   for (typename std::map< TIndex, std::vector< Attic< TObject > > >::iterator
       it = attic_result.begin(); it != attic_result.end(); ++it)
   {
@@ -240,7 +240,7 @@ void keep_only_least_younger_than
     }
     it->second.erase(it_to, it->second.end());
   }
-  
+
   for (typename std::map< TIndex, std::vector< Attic< TObject > > >::iterator
       it = attic_result.begin(); it != attic_result.end(); ++it)
   {
@@ -257,7 +257,7 @@ void keep_only_least_younger_than
     }
     it->second.erase(it_to, it->second.end());
   }
-  
+
   for (typename std::map< TIndex, std::vector< TObject > >::iterator
       it = result.begin(); it != result.end(); ++it)
   {
@@ -280,13 +280,13 @@ void keep_only_least_younger_than
 //-----------------------------------------------------------------------------
 
 template < class TIndex, class TObject, class TPredicate >
-void filter_items(const TPredicate& predicate, map< TIndex, vector< TObject > >& data)
+void filter_items(const TPredicate& predicate, std::map< TIndex, std::vector< TObject > >& data)
 {
-  for (typename map< TIndex, vector< TObject > >::iterator it = data.begin();
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = data.begin();
   it != data.end(); ++it)
   {
-    vector< TObject > local_into;
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+    std::vector< TObject > local_into;
+    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
     iit != it->second.end(); ++iit)
     {
       if (predicate.match(*iit))
@@ -297,50 +297,55 @@ void filter_items(const TPredicate& predicate, map< TIndex, vector< TObject > >&
 }
 
 template< class TIndex, class TObject >
-vector< typename TObject::Id_Type > filter_for_ids(const map< TIndex, vector< TObject > >& elems)
+std::vector< typename TObject::Id_Type > filter_for_ids(const std::map< TIndex, std::vector< TObject > >& elems)
 {
-  vector< typename TObject::Id_Type > ids;
-  for (typename map< TIndex, vector< TObject > >::const_iterator it = elems.begin();
+  std::vector< typename TObject::Id_Type > ids;
+  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator it = elems.begin();
   it != elems.end(); ++it)
   {
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
     iit != it->second.end(); ++iit)
     ids.push_back(iit->id);
   }
   sort(ids.begin(), ids.end());
-  
+
   return ids;
 }
 
 //-----------------------------------------------------------------------------
 
 template< class TIndex, class TObject >
-void indexed_set_union(map< TIndex, vector< TObject > >& result,
-		       map< TIndex, vector< TObject > >& summand)
+void indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
+		       std::map< TIndex, std::vector< TObject > >& summand)
 {
-  for (typename map< TIndex, vector< TObject > >::iterator
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator
       it = summand.begin(); it != summand.end(); ++it)
   {
-    sort(it->second.begin(), it->second.end());
-    vector< TObject > other;
-    other.swap(result[it->first]);
-    sort(other.begin(), other.end());
+    std::vector< TObject >& target = result[it->first];
+    if (target.empty())
+    {
+      target = it->second;
+      continue;
+    }
+
+    std::vector< TObject > other;
+    other.swap(target);
     set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-	      back_inserter(result[it->first]));
+	      back_inserter(target));
   }
 }
 
 //-----------------------------------------------------------------------------
 
 template< class TIndex, class TObject >
-void indexed_set_difference(map< TIndex, vector< TObject > >& result,
-                            map< TIndex, vector< TObject > >& to_substract)
+void indexed_set_difference(std::map< TIndex, std::vector< TObject > >& result,
+                            std::map< TIndex, std::vector< TObject > >& to_substract)
 {
-  for (typename map< TIndex, vector< TObject > >::iterator
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator
       it = to_substract.begin(); it != to_substract.end(); ++it)
   {
     sort(it->second.begin(), it->second.end());
-    vector< TObject > other;
+    std::vector< TObject > other;
     other.swap(result[it->first]);
     sort(other.begin(), other.end());
     set_difference(other.begin(), other.end(), it->second.begin(), it->second.end(),
@@ -350,7 +355,7 @@ void indexed_set_difference(map< TIndex, vector< TObject > >& result,
 
 //-----------------------------------------------------------------------------
 
-/* Returns for the given set of ids the set of corresponding indexes.
+/* Returns for the given std::set of ids the std::set of corresponding indexes.
  * For ids where the timestamp is zero, only the current index is returned.
  * For ids where the timestamp is nonzero, all attic indexes are also returned.
  * The function requires that the ids are sorted ascending by id.
@@ -361,16 +366,16 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
      Resource_Manager& rman)
 {
   std::pair< std::vector< Index >, std::vector< Index > > result;
-  
+
   Random_File< typename Skeleton::Id_Type, Index > current(rman.get_transaction()->random_index
       (current_skeleton_file_properties< Skeleton >()));
   for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
       it = ids.begin(); it != ids.end(); ++it)
     result.first.push_back(current.get(it->first.val()));
-  
+
   std::sort(result.first.begin(), result.first.end());
   result.first.erase(std::unique(result.first.begin(), result.first.end()), result.first.end());
-  
+
   if (rman.get_desired_timestamp() != NOW)
   {
     Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
@@ -386,18 +391,18 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
       else
         result.second.push_back(attic_random.get(it->first.val()));
     }
-  
+
     Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
         (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
     for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
         it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
         !(it == idx_list_db.discrete_end()); ++it)
       result.second.push_back(it.object());
-  
+
     std::sort(result.second.begin(), result.second.end());
     result.second.erase(std::unique(result.second.begin(), result.second.end()), result.second.end());
   }
-  
+
   return result;
 }
 

@@ -32,30 +32,29 @@
 #include "../../template_db/block_backend.h"
 #include "coord_query.h"
 
-using namespace std;
 
 bool Coord_Query_Statement::is_used_ = false;
 
 Generic_Statement_Maker< Coord_Query_Statement > Coord_Query_Statement::statement_maker("coord-query");
 
 Coord_Query_Statement::Coord_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
   is_used_ = true;
 
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["lat"] = "";
   attributes["lon"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   input = attributes["from"];
   set_output(attributes["into"]);
-  
+
   lat = 100.0;
   lon = 200.0;
   if (attributes["lat"] != "" || attributes["lon"] != "")
@@ -63,22 +62,22 @@ Coord_Query_Statement::Coord_Query_Statement
     lat = atof(attributes["lat"].c_str());
     if ((lat < -90.0) || (lat > 90.0) || (attributes["lat"] == ""))
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"For the attribute \"lat\" of the element \"coord-query\""
           <<" the only allowed values are floats between -90.0 and 90.0.";
       add_static_error(temp.str());
     }
-  
+
     lon = atof(attributes["lon"].c_str());
     if ((lon < -180.0) || (lon > 180.0) || (attributes["lon"] == ""))
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"For the attribute \"lon\" of the element \"coord-query\""
           <<" the only allowed values are floats between -180.0 and 180.0.";
       add_static_error(temp.str());
     }
   }
-  
+
 }
 
 
@@ -104,7 +103,7 @@ int Coord_Query_Statement::check_area_block
   // only either the western or the eastern side. We are part of the area if in the
   // end the western or eastern side have an odd state.
   int state = 0;
-  vector< uint64 >::const_iterator it(area_block.coors.begin());
+  std::vector< uint64 >::const_iterator it(area_block.coors.begin());
   uint32 lat = ::ilat(ll_index | (((*it)>>32)&0xff), (*it & 0xffffffff));
   int32 lon = ::ilon(ll_index | (((*it)>>32)&0xff), (*it & 0xffffffff));
   while (++it != area_block.coors.end())
@@ -113,7 +112,7 @@ int Coord_Query_Statement::check_area_block
     int32 last_lon = lon;
     lon = ::ilon(ll_index | (((*it)>>32)&0xff), (*it & 0xffffffff));
     lat = ::ilat(ll_index | (((*it)>>32)&0xff), (*it & 0xffffffff));
-    
+
     if (last_lon < lon)
     {
       if (lon < coord_lon)
@@ -171,7 +170,7 @@ int Coord_Query_Statement::check_area_block
         return HIT; // case (2)
       continue; // else: case (1)
     }
-    
+
     uint32 intersect_lat = lat +
         ((int64)coord_lon - lon)*((int64)last_lat - lat)/((int64)last_lon - lon);
     if (coord_lat > intersect_lat)
@@ -185,7 +184,7 @@ int Coord_Query_Statement::check_area_block
 
 
 void register_coord(double lat, double lon,
-    set< Uint31_Index >& req, map< Uint31_Index, vector< pair< double, double > > >& coord_per_req)
+    std::set< Uint31_Index >& req, std::map< Uint31_Index, std::vector< std::pair< double, double > > >& coord_per_req)
 {
   Uint31_Index idx = Uint31_Index(::ll_upper_(lat, lon) & 0xffffff00);
   req.insert(idx);
@@ -194,29 +193,29 @@ void register_coord(double lat, double lon,
 
 
 void Coord_Query_Statement::execute(Resource_Manager& rman)
-{ 
+{
   if (rman.area_updater())
     rman.area_updater()->flush();
-  
-  set< Uint31_Index > req;
-  map< Uint31_Index, vector< pair< double, double > > > coord_per_req;
-  
+
+  std::set< Uint31_Index > req;
+  std::map< Uint31_Index, std::vector< std::pair< double, double > > > coord_per_req;
+
   if (lat != 100.0)
     register_coord(lat, lon, req, coord_per_req);
   else
   {
     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes = rman.sets()[input].nodes;
-    for (map< Uint32_Index, vector< Node_Skeleton > >::const_iterator it = nodes.begin();
+    for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = nodes.begin();
 	 it != nodes.end(); ++it)
     {
-      for (vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
 	register_coord(::lat(it->first.val(), it2->ll_lower), ::lon(it->first.val(), it2->ll_lower),
 	    req, coord_per_req);
     }
-    
+
     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes
         = rman.sets()[input].attic_nodes;
-    for (map< Uint32_Index, vector< Attic< Node_Skeleton > > >::const_iterator it = attic_nodes.begin();
+    for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = attic_nodes.begin();
 	 it != attic_nodes.end(); ++it)
     {
       for (std::vector< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
@@ -228,10 +227,10 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
 
   std::map< std::pair< double, double >, std::map< Area::Id_Type, int > > areas_inside;
   std::set< Area::Id_Type > areas_found;
-  
-  map< Uint31_Index, vector< pair< double, double > > >::const_iterator coord_block_it = coord_per_req.begin();
+
+  std::map< Uint31_Index, std::vector< std::pair< double, double > > >::const_iterator coord_block_it = coord_per_req.begin();
   Uint31_Index last_idx = req.empty() ? Uint31_Index(0u) : *req.begin();
-  
+
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
   for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
@@ -241,11 +240,11 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     if (!(it.index() == last_idx))
     {
       last_idx = it.index();
-      
-      for (map< pair< double, double >, map< Area::Id_Type, int > >::const_iterator
+
+      for (std::map< std::pair< double, double >, std::map< Area::Id_Type, int > >::const_iterator
 	  inside_it = areas_inside.begin(); inside_it != areas_inside.end(); ++inside_it)
       {
-	for (map< Area::Id_Type, int >::const_iterator inside_it2 = inside_it->second.begin();
+	for (std::map< Area::Id_Type, int >::const_iterator inside_it2 = inside_it->second.begin();
 	     inside_it2 != inside_it->second.end(); ++inside_it2)
 	{
 	  if (inside_it2->second != 0)
@@ -253,37 +252,37 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
 	}
       }
       areas_inside.clear();
-      
+
       while (coord_block_it != coord_per_req.end() && coord_block_it->first < it.index())
         ++coord_block_it;
       if (coord_block_it == coord_per_req.end())
         break;
     }
 
-    for (vector< pair< double, double > >::const_iterator coord_it = coord_block_it->second.begin();
+    for (std::vector< std::pair< double, double > >::const_iterator coord_it = coord_block_it->second.begin();
 	 coord_it != coord_block_it->second.end(); ++coord_it)
     {
       uint32 ilat((coord_it->first + 91.0)*10000000+0.5);
       int32 ilon(coord_it->second*10000000 + (coord_it->second > 0 ? 0.5 : -0.5));
-  
+
       int check = check_area_block(it.index().val(), it.object(), ilat, ilon);
       if (check == HIT)
         areas_found.insert(it.object().id);
       else if (check != 0)
       {
-        map< Area::Id_Type, int >::iterator it2 = areas_inside[*coord_it].find(it.object().id);
+        std::map< Area::Id_Type, int >::iterator it2 = areas_inside[*coord_it].find(it.object().id);
         if (it2 != areas_inside[*coord_it].end())
 	  it2->second ^= check;
         else
-	  areas_inside[*coord_it].insert(make_pair(it.object().id, check));
+	  areas_inside[*coord_it].insert(std::make_pair(it.object().id, check));
       }
     }
   }
-  
-  for (map< pair< double, double >, map< Area::Id_Type, int > >::const_iterator
+
+  for (std::map< std::pair< double, double >, std::map< Area::Id_Type, int > >::const_iterator
       inside_it = areas_inside.begin(); inside_it != areas_inside.end(); ++inside_it)
   {
-    for (map< Area::Id_Type, int >::const_iterator inside_it2 = inside_it->second.begin();
+    for (std::map< Area::Id_Type, int >::const_iterator inside_it2 = inside_it->second.begin();
         inside_it2 != inside_it->second.end(); ++inside_it2)
     {
       if (inside_it2->second != 0)
@@ -291,20 +290,20 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     }
   }
   areas_inside.clear();
-  
+
   Set into;
-  
-  vector< uint32 > req_v;
-  for (set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+
+  std::vector< uint32 > req_v;
+  for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
     req_v.push_back(it->val());
-  vector< uint32 > idx_req_v = ::calc_parents(req_v);
-  vector< Uint31_Index > idx_req;
-  for (vector< uint32 >::const_iterator it = idx_req_v.begin(); it != idx_req_v.end(); ++it)
+  std::vector< uint32 > idx_req_v = ::calc_parents(req_v);
+  std::vector< Uint31_Index > idx_req;
+  for (std::vector< uint32 >::const_iterator it = idx_req_v.begin(); it != idx_req_v.end(); ++it)
     idx_req.push_back(*it);
   sort(idx_req.begin(), idx_req.end());
-  Block_Backend< Uint31_Index, Area_Skeleton, vector< Uint31_Index >::const_iterator > area_locations_db
+  Block_Backend< Uint31_Index, Area_Skeleton, std::vector< Uint31_Index >::const_iterator > area_locations_db
       (rman.get_area_transaction()->data_index(area_settings().AREAS));
-  for (Block_Backend< Uint31_Index, Area_Skeleton, vector< Uint31_Index >::const_iterator >::Discrete_Iterator
+  for (Block_Backend< Uint31_Index, Area_Skeleton, std::vector< Uint31_Index >::const_iterator >::Discrete_Iterator
       it = area_locations_db.discrete_begin(idx_req.begin(), idx_req.end());
       !(it == area_locations_db.discrete_end()); ++it)
   {

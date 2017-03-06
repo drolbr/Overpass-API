@@ -23,7 +23,6 @@
 #include <vector>
 #include "cgi-helper.h"
 
-using namespace std;
 
 char hex_digit(char c)
 {
@@ -48,7 +47,7 @@ char hex_digit(char c)
   return 16;
 }
 
-string cgi_get_to_text()
+std::string cgi_get_to_text()
 {
   char* method;
   method = getenv("REQUEST_METHOD");
@@ -62,21 +61,21 @@ string cgi_get_to_text()
   return "";
 }
 
-string cgi_post_to_text()
+std::string cgi_post_to_text()
 {
-  string raw, buf;
-  while (!cin.eof())
+  std::string raw, buf;
+  while (!std::cin.eof())
   {
-    getline(cin, buf);
+    getline(std::cin, buf);
     raw += buf + '\n';
   }
   return raw;
 }
 
-string replace_cgi(const string& raw)
+std::string replace_cgi(const std::string& raw)
 {
-  string result;
-  string::size_type pos = 0;
+  std::string result;
+  std::string::size_type pos = 0;
   
   while (pos < raw.size())
   {
@@ -105,111 +104,32 @@ string replace_cgi(const string& raw)
   return result;
 }
 
-string decode_cgi_to_plain(const string& raw,
-			   string& jsonp, string& url, bool& redirect, string& template_name)
+std::map< std::string, std::string > decode_cgi_to_plain(const std::string& raw)
 {
-  string result;
-  string::size_type pos = raw.find("data=");
+  std::map< std::string, std::string > result;
   
-  if (pos != string::npos)
+  std::string::size_type pos = 0;
+  do
   {
-    string::size_type endpos = raw.find('&', pos);
-    if (endpos == string::npos)
-      endpos = raw.size();
-    while (endpos > 0 && isspace(raw[endpos-1]))
-      --endpos;
+    std::string::size_type delim_pos = raw.find('&', pos);
+    if (delim_pos == std::string::npos)
+      delim_pos = raw.size();
     
-    result = replace_cgi(raw.substr(pos + 5, endpos - pos - 5));
-  }
-  else
-    return raw;
-  
-  pos = raw.find("jsonp=");
-  if (pos != string::npos)
-  {
-    string::size_type endpos = raw.find('&', pos);
-    if (endpos == string::npos)
-      endpos = raw.size();
-    while (endpos > 0 && isspace(raw[endpos-1]))
-      --endpos;
-    
-    jsonp = replace_cgi(raw.substr(pos + 6, endpos - pos - 6));
-  }
-  
-  pos = raw.find("url=");
-  if (pos != string::npos)
-  {
-    string::size_type endpos = raw.find('&', pos);
-    if (endpos == string::npos)
-      endpos = raw.size();
-    while (endpos > 0 && isspace(raw[endpos-1]))
-      --endpos;
-    
-    url = replace_cgi(raw.substr(pos + 4, endpos - pos - 4));
-  }
-  
-  pos = raw.find("template=");
-  if (pos != string::npos)
-  {
-    string::size_type endpos = raw.find('&', pos);
-    if (endpos == string::npos)
-      endpos = raw.size();
-    while (endpos > 0 && isspace(raw[endpos-1]))
-      --endpos;
-    
-    template_name = replace_cgi(raw.substr(pos + 9, endpos - pos - 9));
-  }
-  
-  pos = raw.find("redirect=");
-  if (pos != string::npos)
-  {
-    string::size_type endpos = raw.find('&', pos);
-    if (endpos == string::npos)
-      endpos = raw.size();
-    while (endpos > 0 && isspace(raw[endpos-1]))
-      --endpos;
-    
-    redirect = !(raw.substr(pos + 9, endpos - pos - 9) == "no");
-  }
-
-  pos = raw.find("bbox=");
-  if (pos != string::npos)
-  {
-    string::size_type endpos = raw.find('&', pos);
-    if (endpos == string::npos)
-      endpos = raw.size();
-    while (endpos > 0 && isspace(raw[endpos-1]))
-      --endpos;
-    
-    string lonlat = replace_cgi(raw.substr(pos + 5, endpos - pos - 5));
-    
-    vector< string > coords;
-    pos = 0;
-    string::size_type newpos = lonlat.find(",");
-    while (newpos != string::npos)
+    std::string::size_type middle_pos = raw.find('=', pos);
+    if (middle_pos != std::string::npos && middle_pos < delim_pos)
     {
-      coords.push_back(lonlat.substr(pos, newpos - pos));
-      pos = newpos + 1;
-      newpos = lonlat.find(",", pos);
+      std::string::size_type end_pos = delim_pos;
+      while (end_pos > 0 && isspace(raw[end_pos-1]))
+	--end_pos;
+      result[raw.substr(pos, middle_pos - pos)] = replace_cgi(raw.substr(middle_pos + 1, end_pos - middle_pos - 1));
     }
-    coords.push_back(lonlat.substr(pos));
-
-    if (coords.size() == 4)
-    {
-      string latlon = coords[1] + "," + coords[0] + "," + coords[3] + "," + coords[2];
-      
-      pos = result.find("(bbox)");
-      while (pos != string::npos)
-      {
-        result = result.substr(0, pos) + "(" + latlon + ")" + result.substr(pos + 6);
-        pos = result.find("(bbox)");
-      }
-      
-      pos = result.find("[bbox]");
-      if (pos != string::npos)
-        result = result.substr(0, pos) + "[bbox:" + latlon + "]" + result.substr(pos + 6);
-    }
+    
+    pos = delim_pos + 1;
   }
+  while (pos < raw.size());
+  
+  if (result["data"] == "")
+    result["data"] = raw;
   
   return result;
 }
