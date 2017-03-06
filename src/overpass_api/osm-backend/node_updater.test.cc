@@ -32,7 +32,6 @@
 #include "../frontend/output.h"
 #include "node_updater.h"
 
-using namespace std;
 
 /**
  * Tests the library node_updater with a sample OSM file
@@ -40,9 +39,9 @@ using namespace std;
 
 Node_Updater* node_updater;
 Node current_node;
-//vector< pair< uint32, uint32 > > id_idxs;
-ofstream* coord_source_out;
-ofstream* tags_source_out;
+//std::vector< std::pair< uint32, uint32 > > id_idxs;
+std::ofstream* coord_source_out;
+std::ofstream* tags_source_out;
 Osm_Backend_Callback* callback;
 uint32 DEBUG_nodes_count, DEBUG_update_count, DEBUG_nodes_8, DEBUG_nodes_64;
 
@@ -54,7 +53,7 @@ void start(const char *el, const char **attr)
   {
     if (current_node.id.val() > 0)
     {
-      string key(""), value("");
+      std::string key(""), value("");
       for (unsigned int i(0); attr[i]; i += 2)
       {
 	if (!strcmp(attr[i], "k"))
@@ -62,8 +61,8 @@ void start(const char *el, const char **attr)
 	if (!strcmp(attr[i], "v"))
 	  value = attr[i+1];
       }
-      current_node.tags.push_back(make_pair(key, value));
-      
+      current_node.tags.push_back(std::make_pair(key, value));
+
       *tags_source_out<<current_node.id.val()<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
@@ -81,9 +80,9 @@ void start(const char *el, const char **attr)
 	lon = atof(attr[i+1]);
     }
     current_node = Node(id, lat, lon);
-    //id_idxs.push_back(make_pair(id, Node::ll_upper(lat, lon)));
-    
-    *coord_source_out<<id<<'\t'<<fixed<<setprecision(7)<<lat<<'\t'<<lon<<'\n';
+    //id_idxs.push_back(std::make_pair(id, Node::ll_upper(lat, lon)));
+
+    *coord_source_out<<id<<'\t'<<std::fixed<<std::setprecision(7)<<lat<<'\t'<<lon<<'\n';
   }
 }
 
@@ -92,7 +91,7 @@ void end(const char *el)
   if (!strcmp(el, "node"))
   {
     node_updater->set_node(current_node);
-    
+
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
@@ -100,13 +99,13 @@ void end(const char *el)
       callback->parser_started();
       osm_element_count = 0;
     }
-    
+
     current_node.id = Node::Id_Type();
   }
   ++osm_element_count;
 }
 
-void cleanup_files(const File_Properties& file_properties, string db_dir,
+void cleanup_files(const File_Properties& file_properties, std::string db_dir,
 		   bool cleanup_map)
 {
 //   remove((db_dir + file_properties.get_file_name_trunk() +
@@ -125,22 +124,22 @@ void cleanup_files(const File_Properties& file_properties, string db_dir,
 
 int main(int argc, char* args[])
 {
-  string db_dir("./");
-  
+  std::string db_dir("./");
+
   try
   {
-    ofstream coord_db_out((db_dir + "coord_db.csv").c_str());
-    ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
-    ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
+    std::ofstream coord_db_out((db_dir + "coord_db.csv").c_str());
+    std::ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
+    std::ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
       Node_Updater node_updater_("./", only_data);
       node_updater = &node_updater_;
-      
-      coord_source_out = new ofstream((db_dir + "coord_source.csv").c_str());
-      tags_source_out = new ofstream((db_dir + "tags_source.csv").c_str());
-      
+
+      coord_source_out = new std::ofstream((db_dir + "coord_source.csv").c_str());
+      tags_source_out = new std::ofstream((db_dir + "tags_source.csv").c_str());
+
       callback = get_verbatim_callback();
-      
+
       DEBUG_nodes_count = 0;
       DEBUG_update_count = 0;
       DEBUG_nodes_8 = 0;
@@ -149,30 +148,30 @@ int main(int argc, char* args[])
       //reading the main document
       callback->parser_started();
       parse(stdin, start, end);
-      
+
       callback->nodes_finished();
       node_updater->update(callback, false);
-      
+
       delete coord_source_out;
       delete tags_source_out;
     }
-      
+
     // check update_node_ids
 /*    uint32 false_count(0);
     Random_File< Uint32_Index > random(de_osm3s_file_ids::NODES, true);
-    for (vector< pair< uint32, uint32 > >::const_iterator it(id_idxs.begin());
+    for (std::vector< std::pair< uint32, uint32 > >::const_iterator it(id_idxs.begin());
 	 it != id_idxs.end(); ++it)
     {
       if (it->second != random.get(it->first).val())
       {
-	cout<<it->first<<'\t'<<it->second<<'\t'
+	std::cout<<it->first<<'\t'<<it->second<<'\t'
 	    <<random.get(it->first).val()<<'\n';
 	++false_count;
       }
     }
-    cout<<'('<<id_idxs.size()<<" nodes checked, "
+    std::cout<<'('<<id_idxs.size()<<" nodes checked, "
 	<<false_count<<" are inconsistent)\n";*/
-    
+
     Nonsynced_Transaction transaction(false, false, "./", "");
 
     // check update_coords - compare both files for the result
@@ -181,11 +180,11 @@ int main(int argc, char* args[])
     for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
 	 it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
-      coord_db_out<<it.object().id.val()<<'\t'<<fixed<<setprecision(7)
+      coord_db_out<<it.object().id.val()<<'\t'<<std::fixed<<std::setprecision(7)
 	  <<::lat(it.index().val(), it.object().ll_lower)<<'\t'
 	  <<::lon(it.index().val(), it.object().ll_lower)<<'\n';
     }
-    
+
     // check update_node_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > nodes_local_db
 	(transaction.data_index(osm_base_settings().NODE_TAGS_LOCAL));
@@ -195,7 +194,7 @@ int main(int argc, char* args[])
       tags_local_out<<it.object().val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
-    
+
     // check update_node_tags_global - compare both files for the result
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > nodes_global_db
 	(transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
@@ -210,10 +209,10 @@ int main(int argc, char* args[])
   {
     report_file_error(e);
   }
-  
+
   //cleanup_files(*osm_base_settings().NODES, "./", true);
   //cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", false);
   //cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", false);
-  
+
   return 0;
 }

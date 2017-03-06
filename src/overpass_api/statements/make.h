@@ -43,7 +43,7 @@ If you do not set an id then an unique id from a global ascending counter is ass
 The base syntax is
 
   make <Type> <List of Tags>
-  
+
 where <List of Tags> is a comma separated list of items,
 each of which must be one the following
 
@@ -57,23 +57,23 @@ public:
   Make_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                    Parsed_Query& global_settings);
   virtual std::string get_name() const { return "make"; }
-  virtual void add_statement(Statement* statement, string text);
+  virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman);
   virtual ~Make_Statement();
   static Generic_Statement_Maker< Make_Statement > statement_maker;
-  
+
   virtual std::string dump_xml(const std::string& indent) const
   {
     std::string result = indent + "<make" + dump_xml_result_name() + " type=\"" + type;
     if (evaluators.empty())
       return result + "\"/>\n";
     result += "\">\n";
-    
+
     for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
       result += *it ? (*it)->dump_xml(indent + "  ") : "";
     return result + "</make>\n";
   }
-  
+
   virtual std::string dump_compact_ql(const std::string& indent) const
   {
     std::string result = indent + "make " + type;
@@ -101,7 +101,7 @@ public:
       result += ",\n  " + indent + (*it ? (*it)->dump_pretty_ql(indent + "  ") : "");
     return result + dump_ql_result_name();
   }
-  
+
 private:
   std::string type;
   std::vector< Set_Prop_Statement* > evaluators;

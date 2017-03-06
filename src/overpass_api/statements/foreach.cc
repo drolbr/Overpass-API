@@ -31,7 +31,7 @@
 Generic_Statement_Maker< Foreach_Statement > Foreach_Statement::statement_maker("foreach");
 
 Foreach_Statement::Foreach_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;
@@ -79,7 +79,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
 	(*it)->execute(rman);
     }
   }
-  
+
   for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
       it(base_set.attic_nodes.begin()); it != base_set.attic_nodes.end(); ++it)
   {
@@ -95,7 +95,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
 	(*it)->execute(rman);
     }
   }
-  
+
   for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
     it(base_set.ways.begin()); it != base_set.ways.end(); ++it)
   {
@@ -104,14 +104,14 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       rman.sets()[output].clear();
-      
+
       rman.sets()[output].ways[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
     }
   }
-  
+
   for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
     it(base_set.attic_ways.begin()); it != base_set.attic_ways.end(); ++it)
   {
@@ -127,7 +127,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
 	(*it)->execute(rman);
     }
   }
-  
+
   for (std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
     it(base_set.relations.begin()); it != base_set.relations.end(); ++it)
   {
@@ -136,14 +136,14 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       rman.sets()[output].clear();
-      
+
       rman.sets()[output].relations[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
     }
   }
-  
+
   for (std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
     it(base_set.attic_relations.begin()); it != base_set.attic_relations.end(); ++it)
   {
@@ -159,7 +159,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
 	(*it)->execute(rman);
     }
   }
-  
+
   for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
     it(base_set.areas.begin()); it != base_set.areas.end(); ++it)
   {

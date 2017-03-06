@@ -27,9 +27,9 @@
 
 void Key_Storage::flush_keys(Transaction& transaction)
 {
-  map< Uint32_Index, set< String_Object > > db_to_delete;
-  map< Uint32_Index, set< String_Object > > db_to_insert;
-  
+  std::map< Uint32_Index, std::set< String_Object > > db_to_delete;
+  std::map< Uint32_Index, std::set< String_Object > > db_to_insert;
+
   for (std::map< std::string, uint32 >::const_iterator it = key_ids.begin(); it != key_ids.end(); ++it)
   {
     if (it->second >= max_written_key_id)
@@ -37,7 +37,7 @@ void Key_Storage::flush_keys(Transaction& transaction)
     if (it->second >= max_key_id)
       max_key_id = it->second + 1;
   }
-  
+
   Block_Backend< Uint32_Index, String_Object > keys_db(transaction.data_index(file_properties));
   keys_db.update(db_to_delete, db_to_insert);
   max_written_key_id = max_key_id;
@@ -58,9 +58,9 @@ void Key_Storage::load_keys(Transaction& transaction)
 }
 
 
-void Key_Storage::register_key(const string& s)
+void Key_Storage::register_key(const std::string& s)
 {
-  map< string, uint32 >::const_iterator it(key_ids.find(s));
+  std::map< std::string, uint32 >::const_iterator it(key_ids.find(s));
   if (it != key_ids.end())
     return;
   key_ids[s] = max_key_id;
@@ -94,18 +94,18 @@ std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< N
          it2 != it->second.end(); ++it2)
       nodes_by_id[it2->id].push_back(std::make_pair(it->first, *it2));
   }
-  
+
   for (std::map< Node_Skeleton::Id_Type, Quad_Coord >::const_iterator it = new_node_idx_by_id.begin();
        it != new_node_idx_by_id.end(); ++it)
     nodes_by_id[it->first].push_back(std::make_pair
         (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
              NOW)));
-  
+
   for (std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
       ::iterator it = nodes_by_id.begin(); it != nodes_by_id.end(); ++it)
     std::sort(it->second.begin(), it->second.end(),
 	      Ascending_By_Timestamp< Uint31_Index, Node_Skeleton >());
-  
+
   return nodes_by_id;
 }
 
@@ -117,12 +117,12 @@ std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Wa
 {
   std::map< Way_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > > ways_by_id;
-         
+
   for (std::map< Way_Skeleton::Id_Type, Uint31_Index >::const_iterator it = new_way_idx_by_id.begin();
        it != new_way_idx_by_id.end(); ++it)
     ways_by_id[it->first].push_back(std::make_pair
         (it->second, Attic< Way_Skeleton::Id_Type >(it->first, NOW)));
-    
+
   for (std::map< Uint31_Index, std::set< Attic< Way_Delta > > >::const_iterator
       it = new_attic_way_skeletons.begin(); it != new_attic_way_skeletons.end(); ++it)
   {
@@ -131,11 +131,11 @@ std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Wa
       ways_by_id[it2->id].push_back(std::make_pair(it->first,
           Attic< Way_Skeleton::Id_Type >(it2->id, it2->timestamp)));
   }
-  
+
   for (std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >
       ::iterator it = ways_by_id.begin(); it != ways_by_id.end(); ++it)
     std::sort(it->second.begin(), it->second.end(),
 	      Ascending_By_Timestamp< Uint31_Index, Way_Skeleton::Id_Type >());
-  
+
   return ways_by_id;
 }

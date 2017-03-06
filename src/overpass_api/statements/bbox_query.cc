@@ -28,26 +28,25 @@
 #include "bbox_query.h"
 #include "recurse.h"
 
-using namespace std;
 
 //-----------------------------------------------------------------------------
 
-    
+
 class Bbox_Constraint : public Query_Constraint
 {
   public:
     bool delivers_data(Resource_Manager& rman);
-    
+
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_),
         filter_(Bbox_Double(bbox->get_south(), bbox->get_west(), bbox->get_north(), bbox->get_east())) {}
     bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Bbox_Constraint() {}
-    
+
   private:
     Bbox_Query_Statement* bbox;
     Bbox_Filter filter_;
@@ -57,16 +56,16 @@ class Bbox_Constraint : public Query_Constraint
 bool Bbox_Constraint::delivers_data(Resource_Manager& rman)
 {
   const Bbox_Double& bbox_ = filter_.get_bbox();
-  
+
   if (!bbox_.valid())
     return false;
-  
+
   return (bbox_.north - bbox_.south) * (bbox_.east - bbox_.west) < 1.0;
 }
 
 
 bool Bbox_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+    (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
 {
   ranges = filter_.get_ranges_32();
   return true;
@@ -74,7 +73,7 @@ bool Bbox_Constraint::get_ranges
 
 
 bool Bbox_Constraint::get_ranges
-    (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+    (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   ranges = filter_.get_ranges_31();
   return true;
@@ -97,24 +96,24 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 Generic_Statement_Maker< Bbox_Query_Statement > Bbox_Query_Statement::statement_maker("bbox-query");
 
 Bbox_Query_Statement::Bbox_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["into"] = "_";
   attributes["s"] = "";
   attributes["n"] = "";
   attributes["w"] = "";
   attributes["e"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   set_output(attributes["into"]);
   south = atof(attributes["s"].c_str());
   if ((south < -90.0) || (south > 90.0) || (attributes["s"] == ""))
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"For the attribute \"s\" of the element \"bbox-query\""
     <<" the only allowed values are floats between -90.0 and 90.0.";
     add_static_error(temp.str());
@@ -122,14 +121,14 @@ Bbox_Query_Statement::Bbox_Query_Statement
   north = atof(attributes["n"].c_str());
   if ((north < -90.0) || (north > 90.0) || (attributes["n"] == ""))
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"For the attribute \"n\" of the element \"bbox-query\""
     <<" the only allowed values are floats between -90.0 and 90.0.";
     add_static_error(temp.str());
   }
   if (north < south)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"The value of attribute \"n\" of the element \"bbox-query\""
     <<" must always be greater or equal than the value of attribute \"s\".";
     add_static_error(temp.str());
@@ -137,7 +136,7 @@ Bbox_Query_Statement::Bbox_Query_Statement
   west = atof(attributes["w"].c_str());
   if ((west < -180.0) || (west > 180.0) || (attributes["w"] == ""))
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"For the attribute \"w\" of the element \"bbox-query\""
     <<" the only allowed values are floats between -180.0 and 180.0.";
     add_static_error(temp.str());
@@ -145,7 +144,7 @@ Bbox_Query_Statement::Bbox_Query_Statement
   east = atof(attributes["e"].c_str());
   if ((east < -180.0) || (east > 180.0) || (attributes["e"] == ""))
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"For the attribute \"e\" of the element \"bbox-query\""
     <<" the only allowed values are floats between -180.0 and 180.0.";
     add_static_error(temp.str());
@@ -159,13 +158,13 @@ Bbox_Query_Statement::Bbox_Query_Statement(const Bbox_Double& bbox)
 
 Bbox_Query_Statement::~Bbox_Query_Statement()
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+  for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }
 
 
-const set< pair< Uint32_Index, Uint32_Index > >& Bbox_Query_Statement::get_ranges_32()
+const std::set< std::pair< Uint32_Index, Uint32_Index > >& Bbox_Query_Statement::get_ranges_32()
 {
   if (ranges_32.empty())
     ::get_ranges_32(south, north, west, east).swap(ranges_32);
@@ -173,7 +172,7 @@ const set< pair< Uint32_Index, Uint32_Index > >& Bbox_Query_Statement::get_range
 }
 
 
-const set< pair< Uint31_Index, Uint31_Index > >& Bbox_Query_Statement::get_ranges_31()
+const std::set< std::pair< Uint31_Index, Uint31_Index > >& Bbox_Query_Statement::get_ranges_31()
 {
   if (ranges_31.empty())
     ranges_31 = calc_parents(get_ranges_32());
@@ -184,14 +183,14 @@ const set< pair< Uint31_Index, Uint31_Index > >& Bbox_Query_Statement::get_range
 void Bbox_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-  
+
   Bbox_Constraint constraint(*this);
-  set< pair< Uint32_Index, Uint32_Index > > ranges;
+  std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
   constraint.get_ranges(rman, ranges);
   get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
       (into.nodes, into.attic_nodes,
-       vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
-       *osm_base_settings().NODES, *attic_settings().NODES);  
+       std::vector< Node::Id_Type >(), false, rman.get_desired_timestamp(), ranges, *this, rman,
+       *osm_base_settings().NODES, *attic_settings().NODES);
   constraint.filter(rman, into, rman.get_desired_timestamp());
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 

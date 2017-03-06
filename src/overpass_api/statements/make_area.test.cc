@@ -36,31 +36,30 @@
 
 #include <iomanip>
 
-using namespace std;
 
 void evaluate_grid(double south, double north, double west, double east,
 		   double step, Resource_Manager& rman)
-{  
+{
   Parsed_Query global_settings;
   bool areas_printed = false;
-  vector< vector< uint > > area_counter;
+  std::vector< std::vector< uint > > area_counter;
   for (double dlat = 0; dlat < north - south + step/2; dlat += step)
   {
-    area_counter.push_back(vector< uint >());
+    area_counter.push_back(std::vector< uint >());
     for (double dlon = 0; dlon < east - west + step/2; dlon += step)
     {
       {
-	ostringstream v_lat, v_lon;
-	v_lat<<fixed<<setprecision(7)<<(dlat + south);
-	v_lon<<fixed<<setprecision(7)<<(dlon + west);
-	string s_lat = v_lat.str();
-	string s_lon = v_lon.str();
+	std::ostringstream v_lat, v_lon;
+	v_lat<<std::fixed<<std::setprecision(7)<<(dlat + south);
+	v_lon<<std::fixed<<std::setprecision(7)<<(dlon + west);
+	std::string s_lat = v_lat.str();
+	std::string s_lon = v_lon.str();
 	const char* attributes[] = { "lat", s_lat.c_str(), "lon", s_lon.c_str(), 0 };
 	Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0, convert_c_pairs(attributes), global_settings);
         stmt1->execute(rman);
       }
       uint area_count = 0;
-      for (map< Uint31_Index, vector< Area_Skeleton > >::const_iterator
+      for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
 	  it = rman.sets()["_"].areas.begin(); it != rman.sets()["_"].areas.end(); ++it)
 	area_count += it->second.size();
       area_counter.back().push_back(area_count);
@@ -74,13 +73,13 @@ void evaluate_grid(double south, double north, double west, double east,
       }
     }
   }
-  
-  for (vector< vector< uint > >::const_reverse_iterator it = area_counter.rbegin();
+
+  for (std::vector< std::vector< uint > >::const_reverse_iterator it = area_counter.rbegin();
       it != area_counter.rend(); ++it)
   {
-    for (vector< uint >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-      cout<<' '<<*it2;
-    cout<<'\n';
+    for (std::vector< uint >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
+      std::cout<<' '<<*it2;
+    std::cout<<'\n';
   }
 }
 
@@ -88,23 +87,23 @@ int main(int argc, char* args[])
 {
   if (argc < 4)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
+    std::cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir\n";
     return 0;
   }
-  string test_to_execute = args[1];
+  std::string test_to_execute = args[1];
   // uint pattern_size = 0;
   // pattern_size = atoi(args[2]);
-  string db_dir(args[3]);
-  
+  std::string db_dir(args[3]);
+
   Error_Output* error_output(new Console_Output(Error_Output::ASSISTING));
   Statement::set_error_output(error_output);
-  
+
   Nonsynced_Transaction transaction(false, false, db_dir, "");
   Nonsynced_Transaction area_transaction(true, false, db_dir, "");
   Parsed_Query global_settings;
   global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   Resource_Manager rman(transaction, global_settings, 0, area_transaction, 0, new Area_Updater(area_transaction));
-  
+
   if (test_to_execute == "create")
   {
     {
@@ -248,6 +247,6 @@ int main(int argc, char* args[])
       stmt1->execute(rman);
     }
   }
-  
+
   return 0;
 }

@@ -29,9 +29,9 @@
 #include "union.h"
 
 
-string to_string_(uint64 val)
+std::string to_string_(uint64 val)
 {
-  ostringstream buf;
+  std::ostringstream buf;
   buf<<val;
   return buf.str();
 }
@@ -40,15 +40,15 @@ int main(int argc, char* args[])
 {
   if (argc < 4)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute db_dir node_id_offset\n";
+    std::cout<<"Usage: "<<args[0]<<" test_to_execute db_dir node_id_offset\n";
     return 0;
   }
-  string test_to_execute = args[1];
+  std::string test_to_execute = args[1];
   uint64 global_node_offset = atoll(args[3]);
   Parsed_Query global_settings;
   global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
-  
-  cout<<
+
+  std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm>\n";
 
@@ -64,7 +64,7 @@ int main(int argc, char* args[])
 	const char* attributes[] = { 0 };
 	Union_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
-	string buf = to_string_(2 + global_node_offset);
+	std::string buf = to_string_(2 + global_node_offset);
 	const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
 	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
 	stmt.add_statement(&stmt1, "");
@@ -92,7 +92,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -103,20 +103,20 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(false, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
-      
+
       const char* attributes[] = { 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-      
-      string buf = to_string_(2 + global_node_offset);
+
+      std::string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
       stmt.add_statement(&stmt1, "");
-      
+
       buf = to_string_(1 + global_node_offset);
       const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
       Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
       stmt.add_statement(&stmt2, "");
-      
+
       stmt.execute(rman);
       {
 	const char* attributes[] = { 0 };
@@ -126,7 +126,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -137,28 +137,28 @@ int main(int argc, char* args[])
     {
       Nonsynced_Transaction transaction(false, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
-      
+
       const char* attributes[] = { "into", "A", 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-      
-      string buf = to_string_(2 + global_node_offset);
+
+      std::string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
       stmt.add_statement(&stmt1, "");
-      
+
       const char* attributes2[] = { "type", "node-relation", "from", "B", "into", "C", 0 };
       Recurse_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
       stmt.add_statement(&stmt2, "");
-      
+
       const char* attributes3[] = { "type", "way", "into", "D", 0 };
       Query_Statement stmt3(0, convert_c_pairs(attributes3), global_settings);
-      
+
       const char* attributes_kv[] = { "k", "way_key_11", "v", "way_value_2", 0 };
       Has_Kv_Statement stmt4(0, convert_c_pairs(attributes_kv), global_settings);
       stmt3.add_statement(&stmt4, "");
-      
+
       stmt.add_statement(&stmt3, "");
-      
+
       stmt.execute(rman);
       {
 	const char* attributes[] = { "from", "A", 0 };
@@ -168,7 +168,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -184,23 +184,23 @@ int main(int argc, char* args[])
 	Id_Query_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
-      
+
       const char* attributes[] = { 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-      
+
       const char* attributes0[] = { "from", "A", 0 };
       Item_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
       stmt.add_statement(&stmt0, "");
-      
-      string buf = to_string_(2 + global_node_offset);
+
+      std::string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
       stmt.add_statement(&stmt1, "");
-      
+
       const char* attributes2[] = { "type", "node-relation", "from", "B", "into", "C", 0 };
       Recurse_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
       stmt.add_statement(&stmt2, "");
-      
+
       stmt.execute(rman);
       {
 	const char* attributes[] = { "from", "A", 0 };
@@ -210,7 +210,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -226,23 +226,23 @@ int main(int argc, char* args[])
 	Id_Query_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
-      
+
       const char* attributes[] = { 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-      
+
       const char* attributes0[] = { "from", "A", 0 };
       Item_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
       stmt.add_statement(&stmt0, "");
-      
-      string buf = to_string_(2 + global_node_offset);
+
+      std::string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
       stmt.add_statement(&stmt1, "");
-      
+
       const char* attributes2[] = { "type", "node-relation", "from", "B", "into", "C", 0 };
       Recurse_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
       stmt.add_statement(&stmt2, "");
-      
+
       stmt.execute(rman);
       {
 	const char* attributes[] = { "from", "B", 0 };
@@ -252,7 +252,7 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
@@ -268,23 +268,23 @@ int main(int argc, char* args[])
 	Id_Query_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 	stmt.execute(rman);
       }
-      
+
       const char* attributes[] = { 0 };
       Union_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-      
+
       const char* attributes0[] = { "from", "A", 0 };
       Item_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
       stmt.add_statement(&stmt0, "");
-      
-      string buf = to_string_(2 + global_node_offset);
+
+      std::string buf = to_string_(2 + global_node_offset);
       const char* attributes1[] = { "type", "node", "ref", buf.c_str(), "into", "B", 0 };
       Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
       stmt.add_statement(&stmt1, "");
-      
+
       const char* attributes2[] = { "type", "node-relation", "from", "B", "into", "C", 0 };
       Recurse_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
       stmt.add_statement(&stmt2, "");
-      
+
       stmt.execute(rman);
       {
 	const char* attributes[] = { "from", "C", 0 };
@@ -294,11 +294,11 @@ int main(int argc, char* args[])
     }
     catch (File_Error e)
     {
-      cerr<<"File error caught: "
+      std::cerr<<"File error caught: "
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
-  
-  cout<<"</osm>\n";
+
+  std::cout<<"</osm>\n";
   return 0;
 }

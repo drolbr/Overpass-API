@@ -28,14 +28,14 @@ class Filter_Constraint : public Query_Constraint
 {
   public:
     bool delivers_data(Resource_Manager& rman) { return false; }
-    
+
     Filter_Constraint(Filter_Statement& stmt_) : stmt(&stmt_) {}
-    bool get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges) { return false; }
-    bool get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges) { return false; }
+    bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges) { return false; }
+    bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges) { return false; }
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp) {}
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Filter_Constraint() {}
-    
+
   private:
     Filter_Statement* stmt;
 };
@@ -50,21 +50,21 @@ void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
   {
     std::vector< Maybe_Attic > local_into;
     local_into.reserve(it_idx->second.size());
-    
+
     for (typename std::vector< Maybe_Attic >::const_iterator it_elem = it_idx->second.begin();
         it_elem != it_idx->second.end(); ++it_elem)
     {
       const std::vector< std::pair< std::string, std::string > >* tags =
           tag_store ? tag_store->get(it_idx->first, *it_elem) : 0;
       std::vector< std::pair< std::string, std::string > > result_tags;
-      
+
       std::string valuation = task.eval(&*it_elem, tags, 0);
-      
+
       double val_d = 0;
       if (valuation != "" && (!try_double(valuation, val_d) || val_d != 0))
         local_into.push_back(*it_elem);
     }
-    
+
     local_into.swap(it_idx->second);
   }
 }
@@ -74,13 +74,13 @@ void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 {
   if (!stmt || !stmt->get_criterion())
     return;
-  
+
   std::pair< std::vector< Set_Usage >, uint > set_usage = stmt->get_criterion()->used_sets();
-  
+
   Prepare_Task_Context context(set_usage, rman);
-  
+
   Owner< Eval_Task > task(stmt->get_criterion()->get_task(context));
-  
+
   Set_With_Context into_context;
   into_context.name = "";
   into_context.prefetch(Set_Usage(into_context.name, set_usage.second), into, *rman.get_transaction());
@@ -106,18 +106,18 @@ Generic_Statement_Maker< Filter_Statement > Filter_Statement::statement_maker("f
 
 
 Filter_Statement::Filter_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_), criterion(0)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
 
 Filter_Statement::~Filter_Statement()
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+  for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }
@@ -141,7 +141,7 @@ void Filter_Statement::add_statement(Statement* statement, std::string text)
 void Filter_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-  
+
   Filter_Constraint constraint(*this);
   constraint.filter(rman, into, rman.get_desired_timestamp());
 

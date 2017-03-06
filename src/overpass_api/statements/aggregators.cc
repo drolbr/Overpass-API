@@ -23,13 +23,13 @@
 
 
 Evaluator_Aggregator::Evaluator_Aggregator
-    (const string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
+    (const std::string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
     : Evaluator(line_number_), rhs(0), input_set(0)
 {
   std::map< std::string, std::string > attributes;
   attributes["from"] = "_";
-  eval_attributes_array(func_name, attributes, input_attributes);  
+  eval_attributes_array(func_name, attributes, input_attributes);
   input = attributes["from"];
 }
 
@@ -59,24 +59,24 @@ void eval_elems(Value_Aggregator& aggregator, Eval_Task& task,
   }
 }
 
-  
+
 Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
 {
   if (!rhs)
     return 0;
-  
+
   Owner< Eval_Task > rhs_task(rhs->get_task(context));
   if (!rhs_task)
     return 0;
-  
+
   const Set_With_Context* input_set = context.get_set(input);
   if (!input_set || !input_set->base)
     return 0;
-  
+
   Owner< Value_Aggregator > value_agg(get_aggregator());
   if (!value_agg)
     return 0;
-  
+
   eval_elems(*value_agg, *rhs_task, input_set->base->nodes, input_set->tag_store_nodes);
   eval_elems(*value_agg, *rhs_task, input_set->base->attic_nodes, input_set->tag_store_attic_nodes);
   eval_elems(*value_agg, *rhs_task, input_set->base->ways, input_set->tag_store_ways);
@@ -89,7 +89,7 @@ Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
   return new Const_Eval_Task((*value_agg).get_value());
 }
 
-  
+
 std::pair< std::vector< Set_Usage >, uint > Evaluator_Aggregator::used_sets() const
 {
   if (rhs)
@@ -103,7 +103,7 @@ std::pair< std::vector< Set_Usage >, uint > Evaluator_Aggregator::used_sets() co
       it->usage |= result.second;
     return result;
   }
-  
+
   std::vector< Set_Usage > result;
   result.push_back(Set_Usage(input, 0u));
   return std::make_pair(result, 0u);
@@ -123,7 +123,7 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
         error_output->add_parse_error(message, tree_it->line_col.first);
       return false;
     }
-    
+
     input_set = "_";
     explicit_input_set = false;
   }
@@ -143,7 +143,7 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
         error_output->add_parse_error("Input set required if dot is present", tree_it->line_col.first);
       return false;
     }
-    
+
     input_set = tree_it.lhs()->token;
     explicit_input_set = true;
   }
@@ -171,10 +171,10 @@ Aggregator_Statement_Maker< Evaluator_Min_Value > Evaluator_Min_Value::statement
 
 
 void Evaluator_Min_Value::Aggregator::update_value(const std::string& value)
-{  
+{
   if (relevant_type == type_void)
     relevant_type = type_int64;
-  
+
   if (relevant_type <= type_int64)
   {
     int64 rhs_l = 0;
@@ -192,7 +192,7 @@ void Evaluator_Min_Value::Aggregator::update_value(const std::string& value)
     else
       relevant_type = type_string;
   }
-  
+
   if (value != "")
     result_s = (result_s != "" ? std::min(result_s, value) : value);
 }
@@ -206,7 +206,7 @@ std::string Evaluator_Min_Value::Aggregator::get_value()
     return to_string(result_l);
   else if (relevant_type == type_double)
     return to_string(result_d);
-  
+
   return result_s;
 }
 
@@ -221,7 +221,7 @@ void Evaluator_Max_Value::Aggregator::update_value(const std::string& value)
 {
   if (relevant_type == type_void)
     relevant_type = type_int64;
-  
+
   if (relevant_type <= type_int64)
   {
     int64 rhs_l = 0;
@@ -239,7 +239,7 @@ void Evaluator_Max_Value::Aggregator::update_value(const std::string& value)
     else
       relevant_type = type_string;
   }
-  
+
   if (value != "")
     result_s = (result_s != "" ? std::max(result_s, value) : value);
 }
@@ -253,7 +253,7 @@ std::string Evaluator_Max_Value::Aggregator::get_value()
     return to_string(result_l);
   else if (relevant_type == type_double)
     return to_string(result_d);
-  
+
   return result_s;
 }
 
@@ -292,7 +292,7 @@ std::string Evaluator_Sum_Value::Aggregator::get_value()
     return to_string(result_l);
   else if (relevant_type == type_double)
     return to_string(result_d);
-  
+
   return "NaN";
 }
 
@@ -306,7 +306,7 @@ Aggregator_Statement_Maker< Evaluator_Set_Value > Evaluator_Set_Value::statement
 void Evaluator_Set_Value::Aggregator::update_value(const std::string& value)
 {
   if (value != "")
-    values.insert(value);  
+    values.insert(value);
 }
 
 
@@ -335,8 +335,8 @@ Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   if (tree_it->token == "(")
   {
     if (!tree_it->lhs)
@@ -347,7 +347,7 @@ Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
         error_output->add_parse_error("count(object_type) needs an argument", tree_it->line_col.first);
       return 0;
     }
-    
+
     attributes["from"] = "_";
     attributes["type"] = tree_it.rhs()->token;
   }
@@ -367,11 +367,11 @@ Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
         error_output->add_parse_error("Input set required if dot is present", tree_it->line_col.first);
       return 0;
     }
-    
+
     attributes["from"] = tree_it.lhs()->token;
     attributes["type"] = tree_it.rhs().rhs()->token;
   }
-  
+
   return new Evaluator_Set_Count(tree_it->line_col.first, attributes, global_settings);
 }
 
@@ -395,14 +395,14 @@ Evaluator_Set_Count::Evaluator_Set_Count
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["from"] = "_";
   attributes["type"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   input = attributes["from"];
-  
+
   if (attributes["type"] == "nodes")
     to_count = nodes;
   else if (attributes["type"] == "ways")
@@ -413,8 +413,8 @@ Evaluator_Set_Count::Evaluator_Set_Count
     to_count = deriveds;
   else
   {
-    ostringstream temp("");
-    temp<<"For the attribute \"type\" of the element \"eval-set-count\""
+    std::ostringstream temp("");
+    temp<<"For the attribute \"type\" of the element \"eval-std::set-count\""
         <<" the only allowed values are \"nodes\", \"ways\", \"relations\", or \"deriveds\" strings.";
     add_static_error(temp.str());
   }
@@ -434,7 +434,7 @@ std::pair< std::vector< Set_Usage >, uint > Evaluator_Set_Count::used_sets() con
 Eval_Task* Evaluator_Set_Count::get_task(const Prepare_Task_Context& context)
 {
   const Set_With_Context* set = context.get_set(input);
-  
+
   unsigned int counter = 0;
   if (set && set->base)
   {
@@ -447,6 +447,6 @@ Eval_Task* Evaluator_Set_Count::get_task(const Prepare_Task_Context& context)
     if (to_count == deriveds)
       counter = count(set->base->areas) + count(set->base->deriveds);
   }
-  
+
   return new Const_Eval_Task(::to_string(counter));
 }

@@ -31,12 +31,12 @@ struct Bbox_Filter
   const Bbox_Double& get_bbox() const { return bbox; }
   const std::set< std::pair< Uint32_Index, Uint32_Index > >& get_ranges_32() const;
   const std::set< std::pair< Uint31_Index, Uint31_Index > >& get_ranges_31() const;
-  
-  bool matches(const vector< Quad_Coord >& way_geometry) const;
-  
+
+  bool matches(const std::vector< Quad_Coord >& way_geometry) const;
+
   void filter(Set& into, uint64 timestamp) const;
   void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp) const;
-  
+
 private:
   Bbox_Double bbox;
   mutable std::set< std::pair< Uint32_Index, Uint32_Index > > ranges_32;

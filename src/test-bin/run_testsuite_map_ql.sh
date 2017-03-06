@@ -74,8 +74,8 @@ perform_test_map_ql()
   if [[ -s "../../input/osm3s_query_$I/stdin.log" ]]; then
   {
     "$BASEDIR/bin/osm3s_query" "--dump-xml" <"../../input/osm3s_query_$I/stdin.log" >xml.out.log 2>xml.err.log
-    "$BASEDIR/bin/osm3s_query" "--dump-pretty-map-ql" <"../../input/osm3s_query_$I/stdin.log" >pretty.out.log 2>pretty.err.log
-    "$BASEDIR/bin/osm3s_query" "--dump-compact-map-ql" <"../../input/osm3s_query_$I/stdin.log" >compact.out.log 2>compact.err.log
+    "$BASEDIR/bin/osm3s_query" "--dump-pretty-ql" <"../../input/osm3s_query_$I/stdin.log" >pretty.out.log 2>pretty.err.log
+    "$BASEDIR/bin/osm3s_query" "--dump-compact-ql" <"../../input/osm3s_query_$I/stdin.log" >compact.out.log 2>compact.err.log
   }; else
   {
     echo "../../input/osm3s_query_$I/stdin.log missing"

@@ -36,7 +36,7 @@ void zero_out_tails(void* buf, uint32 block_size)
 
 template< class TIndex >
 void clone_bin_file(const File_Properties& src_file_prop, const File_Properties& dest_file_prop,
-		    Transaction& transaction, string dest_db_dir)
+		    Transaction& transaction, std::string dest_db_dir)
 {
   try
   {
@@ -46,24 +46,24 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
       std::cout<<"Block sizes of source and destination format are incompatible.\n";
       return;
     }
-    
+
     File_Blocks_Index< TIndex >& src_idx =
         *dynamic_cast< File_Blocks_Index< TIndex >* >(transaction.data_index(&src_file_prop));
-    File_Blocks< TIndex, typename set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
+    File_Blocks< TIndex, typename std::set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
 	src_file(&src_idx);
-    
+
     File_Blocks_Index< TIndex > dest_idx(dest_file_prop, true, false, dest_db_dir, "");
-    File_Blocks< TIndex, typename set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
+    File_Blocks< TIndex, typename std::set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
 	dest_file(&dest_idx);
-    
-    typename File_Blocks< TIndex, typename set< TIndex >::const_iterator,
+
+    typename File_Blocks< TIndex, typename std::set< TIndex >::const_iterator,
         Default_Range_Iterator< TIndex > >::Flat_Iterator
 	src_it = src_file.flat_begin();
-    
-    typename File_Blocks< TIndex, typename set< TIndex >::const_iterator,
+
+    typename File_Blocks< TIndex, typename std::set< TIndex >::const_iterator,
         Default_Range_Iterator< TIndex > >::Discrete_Iterator
 	dest_it = dest_file.discrete_end();
-    
+
     while (!(src_it == src_file.flat_end()))
     {
       void* buf = src_file.read_block(src_it);
@@ -81,7 +81,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 
 
 template< typename Key, typename TIndex >
-void clone_map_file(const File_Properties& file_prop, Transaction& transaction, string dest_db_dir)
+void clone_map_file(const File_Properties& file_prop, Transaction& transaction, std::string dest_db_dir)
 {
   try
   {
@@ -90,8 +90,8 @@ void clone_map_file(const File_Properties& file_prop, Transaction& transaction, 
 
     Random_File_Index dest_idx(file_prop, true, false, dest_db_dir, "");
     Random_File< Key, TIndex > dest_file(&dest_idx);
-    
-    for (vector< uint32 >::size_type i = 0; i < src_idx.get_blocks().size(); ++i)
+
+    for (std::vector< uint32 >::size_type i = 0; i < src_idx.get_blocks().size(); ++i)
     {
       if (src_idx.get_blocks()[i].pos != src_idx.npos)
       {
@@ -112,7 +112,7 @@ void clone_map_file(const File_Properties& file_prop, Transaction& transaction, 
 }
 
 
-void clone_database(Transaction& transaction, string dest_db_dir)
+void clone_database(Transaction& transaction, std::string dest_db_dir)
 {
   clone_bin_file< Uint32_Index >(*osm_base_settings().NODES, *osm_base_settings().NODES,
 				 transaction, dest_db_dir);
@@ -123,7 +123,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
 				     transaction, dest_db_dir);
   clone_bin_file< Uint32_Index >(*osm_base_settings().NODE_KEYS, *osm_base_settings().NODE_KEYS,
 				 transaction, dest_db_dir);
-  
+
   clone_bin_file< Uint31_Index >(*osm_base_settings().WAYS, *osm_base_settings().WAYS,
 				 transaction, dest_db_dir);
   clone_map_file< Way_Skeleton::Id_Type, Uint31_Index >(*osm_base_settings().WAYS, transaction, dest_db_dir);
@@ -133,7 +133,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
 				     transaction, dest_db_dir);
   clone_bin_file< Uint32_Index >(*osm_base_settings().WAY_KEYS, *osm_base_settings().WAY_KEYS,
 				 transaction, dest_db_dir);
-  
+
   clone_bin_file< Uint31_Index >(*osm_base_settings().RELATIONS, *osm_base_settings().RELATIONS,
 				 transaction, dest_db_dir);
   clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(
@@ -148,7 +148,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
       transaction, dest_db_dir);
   clone_bin_file< Uint32_Index >(*osm_base_settings().RELATION_KEYS, *osm_base_settings().RELATION_KEYS,
 				 transaction, dest_db_dir);
-  
+
   clone_bin_file< Uint31_Index >(*meta_settings().NODES_META, *meta_settings().NODES_META,
 				 transaction, dest_db_dir);
   clone_bin_file< Uint31_Index >(*meta_settings().WAYS_META, *meta_settings().WAYS_META,
@@ -176,7 +176,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
                                    transaction, dest_db_dir);
     clone_bin_file< Timestamp >(*attic_settings().NODE_CHANGELOG, *attic_settings().NODE_CHANGELOG,
                                 transaction, dest_db_dir);
-    
+
     clone_bin_file< Uint31_Index >(*attic_settings().WAYS, *attic_settings().WAYS,
                                    transaction, dest_db_dir);
     clone_map_file< Way_Skeleton::Id_Type, Uint31_Index >(*attic_settings().WAYS, transaction, dest_db_dir);
@@ -192,7 +192,7 @@ void clone_database(Transaction& transaction, string dest_db_dir)
                                    transaction, dest_db_dir);
     clone_bin_file< Timestamp >(*attic_settings().WAY_CHANGELOG, *attic_settings().WAY_CHANGELOG,
                                 transaction, dest_db_dir);
-    
+
     clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS, *attic_settings().RELATIONS,
                                    transaction, dest_db_dir);
     clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir);
