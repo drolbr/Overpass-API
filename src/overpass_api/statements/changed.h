@@ -30,21 +30,21 @@
 class Changed_Statement : public Output_Statement
 {
   public:
-    Changed_Statement(int line_number_, const map< string, string >& attributes,
+    Changed_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                        Parsed_Query& global_settings);
-    virtual string get_name() const { return "changed"; }
+    virtual std::string get_name() const { return "changed"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Changed_Statement();
-    
+
     static Generic_Statement_Maker< Changed_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
     uint64 get_since(Resource_Manager& rman) const;
     uint64 get_until(Resource_Manager& rman) const;
-    
+
     static bool area_query_exists() { return area_query_exists_; }
     bool trivial() const { return behave_trivial; }
-  
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<changed"
@@ -52,7 +52,7 @@ class Changed_Statement : public Output_Statement
           + (until != NOW ? std::string(" until=\"") + iso_string(until) + "\"" : "")
           + dump_xml_result_name() + "/>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       return std::string("(changed:")
@@ -61,12 +61,12 @@ class Changed_Statement : public Output_Statement
           + ")" + dump_ql_result_name();
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
-    
+
   private:
     uint64 since, until;
-    vector< Query_Constraint* > constraints;
+    std::vector< Query_Constraint* > constraints;
     bool behave_trivial;
-    
+
     static bool area_query_exists_;
 };
 

@@ -39,7 +39,7 @@ The content of this output element is controlled by the parameters of the statem
 It is necessary to set a fixed type as type for all the generated elements.
 After that, an arbitrary number of tags can be set.
 In addition, it can be specified to copy all keys from the originating object.
-In this case, tt is also possible to selectively suppress some tags.
+In this case, it is also possible to selectively suppress some tags.
 
 Finally, it is possible to explicitly set the id of the generated objects.
 If you do not set an id then an unique id from a global ascending counter is assigned.
@@ -47,7 +47,7 @@ If you do not set an id then an unique id from a global ascending counter is ass
 The base syntax is
 
   convert <Type> <List of Tags>
-  
+
 where <List of Tags> is a comma separated list of items,
 each of which must be one the following
 
@@ -63,28 +63,29 @@ public:
   Convert_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                    Parsed_Query& global_settings);
   virtual std::string get_name() const { return "convert"; }
-  virtual void add_statement(Statement* statement, string text);
+  virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman);
   virtual ~Convert_Statement();
   static Generic_Statement_Maker< Convert_Statement > statement_maker;
-    
+
   std::string get_source_name() const { return input; }
-  
+
   virtual std::string dump_xml(const std::string& indent) const
   {
     std::string result = indent + "<convert" + dump_xml_result_name() + " type=\"" + type;
     if (evaluators.empty())
       return result + "\"/>\n";
     result += "\">\n";
-    
+
     for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
       result += *it ? (*it)->dump_xml(indent + "  ") : "";
     return result + "</convert>\n";
   }
-  
+
   virtual std::string dump_compact_ql(const std::string& indent) const
   {
-    std::string result = indent + "convert " + type;
+    std::string result = indent + (input == "_" ? "" : "." + input + " ")
+        + "convert " + type;
     std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin();
     if (it != evaluators.end())
     {
@@ -98,7 +99,8 @@ public:
 
   virtual std::string dump_pretty_ql(const std::string& indent) const
   {
-    std::string result = indent + "convert " + type;
+    std::string result = indent + (input == "_" ? "" : "." + input + " ")
+        + "convert " + type;
     std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin();
     if (it != evaluators.end())
     {

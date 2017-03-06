@@ -32,23 +32,23 @@
 class Recurse_Statement : public Output_Statement
 {
   public:
-    Recurse_Statement(int line_number_, const map< string, string >& input_attributes,
+    Recurse_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                       Parsed_Query& global_settings);
-    virtual string get_name() const { return "recurse"; }
+    virtual std::string get_name() const { return "recurse"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Recurse_Statement();    
+    virtual ~Recurse_Statement();
     static Generic_Statement_Maker< Recurse_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
     unsigned int get_type() const { return type; }
-    string get_input() const { return input; }
-    
-    const string* get_role() const { return (restrict_to_role ? &role : 0); }
-    
+    std::string get_input() const { return input; }
+
+    const std::string* get_role() const { return (restrict_to_role ? &role : 0); }
+
     static std::string to_target_type(int type);
     static std::string to_xml_representation(int type);
     static std::string to_ql_representation(int type);
-  
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<recurse"
@@ -58,7 +58,7 @@ class Recurse_Statement : public Output_Statement
           + (restrict_to_role ? " role-restricted=\"yes\"" : "")
           + dump_xml_result_name() + "/>\n";
     }
-    
+
     virtual std::string dump_ql_in_query(const std::string&) const
     {
       return std::string("(") + to_ql_representation(type)
@@ -66,7 +66,7 @@ class Recurse_Statement : public Output_Statement
           + (restrict_to_role ? std::string(":\"") + escape_cstr(role) + "\"" : "")
           + ")";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       std::string target_type = to_target_type(type);
@@ -80,13 +80,13 @@ class Recurse_Statement : public Output_Statement
             + to_ql_representation(type) + dump_ql_result_name();
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
-    
+
   private:
-    string input;
+    std::string input;
     unsigned int type;
-    string role;
+    std::string role;
     bool restrict_to_role;
-    vector< Query_Constraint* > constraints;
+    std::vector< Query_Constraint* > constraints;
 };
 
 

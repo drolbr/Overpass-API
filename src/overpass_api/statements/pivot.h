@@ -29,24 +29,24 @@
 class Pivot_Statement : public Output_Statement
 {
   public:
-    Pivot_Statement(int line_number_, const map< string, string >& attributes,
+    Pivot_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                     Parsed_Query& global_settings);
-    virtual string get_name() const { return "pivot"; }
+    virtual std::string get_name() const { return "pivot"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Pivot_Statement();
-    
+
     static Generic_Statement_Maker< Pivot_Statement > statement_maker;
-    
+
     virtual Query_Constraint* get_query_constraint();
-    string get_input() const { return input; }
-  
+    std::string get_input() const { return input; }
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<pivot"
           + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
           + dump_xml_result_name() + "/>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       return "node" + dump_ql_in_query("") + dump_ql_result_name();
@@ -58,10 +58,10 @@ class Pivot_Statement : public Output_Statement
           + ")";
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
-  
+
   private:
-    string input;
-    vector< Query_Constraint* > constraints;
+    std::string input;
+    std::vector< Query_Constraint* > constraints;
 };
 
 #endif

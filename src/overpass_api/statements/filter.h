@@ -43,32 +43,32 @@ This has the same semantics and is faster.
 Its syntax is
 
   (if: <Evaluator>)
-  
+
 The whitespace is optional.
 */
 
 class Filter_Statement : public Output_Statement
 {
   public:
-    Filter_Statement(int line_number_, const map< string, string >& attributes,
+    Filter_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                          Parsed_Query& global_settings);
-    virtual string get_name() const { return "filter"; }
-    virtual void add_statement(Statement* statement, string text);
+    virtual std::string get_name() const { return "filter"; }
+    virtual void add_statement(Statement* statement, std::string text);
     virtual void execute(Resource_Manager& rman);
-    virtual ~Filter_Statement();    
+    virtual ~Filter_Statement();
     static Generic_Statement_Maker< Filter_Statement > statement_maker;
-    
+
     virtual Query_Constraint* get_query_constraint();
-    
+
     Evaluator* get_criterion() { return criterion; }
-  
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<filter>\n"
           + (criterion ? criterion->dump_xml(indent + "  ") : "")
           + indent + "</filter>\n";
     }
-  
+
     virtual std::string dump_compact_ql(const std::string&) const
     {
       return std::string("(if:") + (criterion ? criterion->dump_compact_ql("") : "") + ")";
@@ -76,7 +76,7 @@ class Filter_Statement : public Output_Statement
     virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
 
   private:
-    vector< Query_Constraint* > constraints;
+    std::vector< Query_Constraint* > constraints;
     Evaluator* criterion;
 };
 

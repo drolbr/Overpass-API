@@ -49,27 +49,27 @@ int main(int argc, char *argv[])
   Parsed_Query global_settings;
   Web_Output error_output(Error_Output::ASSISTING);
   Statement::set_error_output(&error_output);
-  
+
   try
   {
     global_settings.set_input_params(
 	get_xml_cgi(&error_output, 16*1024*1024,
 	error_output.http_method, error_output.allow_headers, error_output.has_origin));
-    
+
     if (error_output.display_encoding_errors())
       return 0;
-    
+
     Statement::Factory stmt_factory(global_settings);
     if (!parse_and_validate(stmt_factory, global_settings, global_settings.get_input_params().find("data")->second,
         &error_output, parser_execute))
       return 0;
-    
+
     error_output.set_output_handler(global_settings.get_output_handler());
-    
+
     Osm_Script_Statement* osm_script = 0;
     if (!get_statement_stack()->empty())
       osm_script = dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
-    
+
     uint32 max_allowed_time = 0;
     uint64 max_allowed_space = 0;
     if (osm_script)
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      Osm_Script_Statement temp(0, map< string, string >(), global_settings);
+      Osm_Script_Statement temp(0, std::map< std::string, std::string >(), global_settings);
       max_allowed_time = temp.get_max_allowed_time();
       max_allowed_space = temp.get_max_allowed_space();
     }
@@ -96,12 +96,12 @@ int main(int argc, char *argv[])
 				 max_allowed_time, max_allowed_space, global_settings);
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
-    
+
       error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(),
  	  area_level > 0 ? dispatcher.get_area_timestamp() : "", true);
-      
+
       dispatcher.resource_manager().start_cpu_timer(0);
-      for (vector< Statement* >::const_iterator it(get_statement_stack()->begin());
+      for (std::vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	   it != get_statement_stack()->end(); ++it)
         (*it)->execute(dispatcher.resource_manager());
       dispatcher.resource_manager().stop_cpu_timer(0);
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
   }
   catch(File_Error e)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
   }
   catch(Resource_Error e)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     if (e.timed_out)
       temp<<"Query timed out in \""<<e.stmt_name<<"\" at line "<<e.line_number
           <<" after "<<e.runtime<<" seconds.";
@@ -158,13 +158,13 @@ int main(int argc, char *argv[])
   {
     rlimit limit;
     getrlimit(RLIMIT_AS, &limit);
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"Query run out of memory using about "<<limit.rlim_cur/(1024*1024)<<" MB of RAM.";
     error_output.runtime_error(temp.str());
   }
   catch(std::exception& e)
   {
-    error_output.runtime_error(std::string("Query failed with the exception: ") + e.what());    
+    error_output.runtime_error(std::string("Query failed with the exception: ") + e.what());
   }
   catch(Exit_Error e) {}
 

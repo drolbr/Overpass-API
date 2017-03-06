@@ -78,11 +78,11 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
     Index idx = (current_it == current_end ? attic_it.index() : current_it.index());
     if (!(attic_it == attic_end) && attic_it.index() < idx)
       idx = attic_it.index();
-    
+
     std::vector< Object > skels;
     std::vector< Attic< typename Object::Delta > > deltas;
     std::vector< std::pair< typename Object::Id_Type, uint64 > > local_timestamp_by_id;
-    
+
     while (!(current_it == current_end) && current_it.index() == idx)
     {
       timestamp_by_id.push_back(std::make_pair(current_it.object().id, NOW));
@@ -90,7 +90,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       skels.push_back(current_it.object());
       ++current_it;
     }
-    
+
     while (!(attic_it == attic_end) && attic_it.index() == idx)
     {
       if (timestamp < attic_it.object().timestamp)
@@ -101,7 +101,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       }
       ++attic_it;
     }
-    
+
     std::sort(skels.begin(), skels.end());
     std::sort(deltas.begin(), deltas.end(), Delta_Comparator< Attic< typename Object::Delta > >());
     std::sort(local_timestamp_by_id.begin(), local_timestamp_by_id.end());
@@ -150,7 +150,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
         rman.log_and_display_error(out.str());
       }
     }
-    
+
     for (typename std::vector< Attic< Object > >::const_iterator it = attics.begin(); it != attics.end(); ++it)
     {
       if (predicate.match(*it))
@@ -204,12 +204,12 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
 
   reconstruct_items(stmt, rman, current_begin, current_end, predicate, result, timestamp_by_id);
   reconstruct_items(stmt, rman, attic_begin, attic_end, predicate, attic_result, timestamp_by_id);
-  
+
   std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
-  
+
   filter_items_by_timestamp(timestamp_by_id, result);
   filter_items_by_timestamp(timestamp_by_id, attic_result);
-  
+
   // Debug-Feature. Can be disabled once no further bugs appear
   for (typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::size_type i = 0; i+1 < timestamp_by_id.size(); ++i)
   {
@@ -237,12 +237,12 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
 
   reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end,
                     predicate, result, attic_result, timestamp_by_id);
-  
+
   std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
-  
+
   filter_items_by_timestamp(timestamp_by_id, result);
   filter_items_by_timestamp(timestamp_by_id, attic_result);
-  
+
   // Debug-Feature. Can be disabled once no further bugs appear
   for (std::vector< std::pair< Relation_Skeleton::Id_Type, uint64 > >::size_type i = 0; i+1 < timestamp_by_id.size(); ++i)
   {
@@ -263,19 +263,19 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
                    const Predicate& predicate,
-                   map< Index, vector< Way_Skeleton > >& result,
-                   map< Index, vector< Attic< Way_Skeleton > > >& attic_result)
+                   std::map< Index, std::vector< Way_Skeleton > >& result,
+                   std::map< Index, std::vector< Attic< Way_Skeleton > > >& attic_result)
 {
   std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > > timestamp_by_id;
 
   reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end,
                     predicate, result, attic_result, timestamp_by_id);
-  
+
   std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
-  
+
   filter_items_by_timestamp(timestamp_by_id, result);
   filter_items_by_timestamp(timestamp_by_id, attic_result);
-  
+
   // Debug-Feature. Can be disabled once no further bugs appear
   for (std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > >::size_type i = 0; i+1 < timestamp_by_id.size(); ++i)
   {
@@ -295,7 +295,7 @@ template < class Index, class Object, class Container, class Predicate >
 void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
 		   const Container& req, const Predicate& predicate,
-		   map< Index, vector< Object > >& result)
+		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
   Block_Backend< Index, Object, typename Container::const_iterator > db
@@ -320,7 +320,7 @@ template < class Index, class Object, class Container, class Predicate >
 void collect_items_discrete(Transaction& transaction,
                    File_Properties& file_properties,
                    const Container& req, const Predicate& predicate,
-                   map< Index, vector< Object > >& result)
+                   std::map< Index, std::vector< Object > >& result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > db
       (transaction.data_index(&file_properties));
@@ -337,8 +337,8 @@ void collect_items_discrete(Transaction& transaction,
 template < class Index, class Object, class Container, class Predicate >
 void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    const Container& req, const Predicate& predicate,
-                   map< Index, vector< Object > >& result,
-                   map< Index, vector< Attic< Object > > >& attic_result)
+                   std::map< Index, std::vector< Object > >& result,
+                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > current_db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
@@ -355,7 +355,7 @@ template < class Index, class Object, class Container, class Predicate >
 void collect_items_range(const Statement* stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
 		   const Container& req, const Predicate& predicate,
-		   map< Index, vector< Object > >& result)
+		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
   Block_Backend< Index, Object, typename Container::const_iterator > db
@@ -379,8 +379,8 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
 template < class Index, class Object, class Container, class Predicate >
 void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    const Container& req, const Predicate& predicate,
-                   map< Index, vector< Object > >& result,
-                   map< Index, vector< Attic< Object > > >& attic_result)
+                   std::map< Index, std::vector< Object > >& result,
+                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > current_db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
@@ -396,7 +396,7 @@ void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& r
 template < class Index, class Object, class Predicate >
 void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
 		   File_Properties& file_properties, const Predicate& predicate,
-		   map< Index, vector< Object > >& result)
+		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
   Block_Backend< Index, Object > db
@@ -418,8 +418,8 @@ void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
 template < class Index, class Object, class Predicate >
 void collect_items_flat_by_timestamp(const Statement& stmt, Resource_Manager& rman,
                    const Predicate& predicate,
-                   map< Index, vector< Object > >& result,
-                   map< Index, vector< Attic< Object > > >& attic_result)
+                   std::map< Index, std::vector< Object > >& result,
+                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object > current_db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
@@ -432,7 +432,7 @@ void collect_items_flat_by_timestamp(const Statement& stmt, Resource_Manager& rm
 }
 
 
-/* Returns for the given set of ids the set of corresponding indexes.
+/* Returns for the given std::set of ids the std::set of corresponding indexes.
  * The function requires that the ids are sorted ascending by id.
  */
 template< typename Index, typename Skeleton >
@@ -440,16 +440,16 @@ std::vector< Index > get_indexes_
     (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman, bool get_attic_idxs = false)
 {
   std::vector< Index > result;
-  
+
   Random_File< typename Skeleton::Id_Type, Index > current(rman.get_transaction()->random_index
       (current_skeleton_file_properties< Skeleton >()));
   for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
       it = ids.begin(); it != ids.end(); ++it)
     result.push_back(current.get(it->val()));
-  
+
   std::sort(result.begin(), result.end());
   result.erase(std::unique(result.begin(), result.end()), result.end());
-  
+
   if (rman.get_desired_timestamp() != NOW || get_attic_idxs)
   {
     Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
@@ -465,18 +465,18 @@ std::vector< Index > get_indexes_
       else
         result.push_back(attic_random.get(it->val()));
     }
-  
+
     Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
         (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
     for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
         it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
         !(it == idx_list_db.discrete_end()); ++it)
       result.push_back(it.object());
-  
+
     std::sort(result.begin(), result.end());
     result.erase(std::unique(result.begin(), result.end()), result.end());
   }
-  
+
   return result;
 }
 

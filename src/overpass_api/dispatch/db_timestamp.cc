@@ -24,7 +24,7 @@ class Output_Timestamp : public Output_Handler
 {
 public:
   Output_Timestamp() {}
-  
+
   virtual bool write_http_headers();
   virtual void write_payload_header(const std::string& db_dir,
 				    const std::string& timestamp, const std::string& area_timestamp);
@@ -33,7 +33,7 @@ public:
   virtual void display_error(const std::string& text) {}
 
   virtual void print_global_bbox(const Bbox_Double& bbox) {}
-  
+
   virtual void print_item(const Node_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
@@ -45,7 +45,7 @@ public:
       const Opaque_Geometry* new_geometry = 0,
       const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0) {}
-  
+
   virtual void print_item(const Way_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
@@ -57,20 +57,20 @@ public:
       const Opaque_Geometry* new_geometry = 0,
       const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0) {}
-      
+
   virtual void print_item(const Relation_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
       const std::map< uint32, std::string >* roles,
-      const map< uint32, std::string >* users,
+      const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action = keep,
       const Relation_Skeleton* new_skel = 0,
       const Opaque_Geometry* new_geometry = 0,
       const std::vector< std::pair< std::string, std::string > >* new_tags = 0,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0) {}
-                            
+
   virtual void print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
   Output_Timestamp output;
   Web_Output error_output(Error_Output::ASSISTING);
   error_output.set_output_handler(&output);
-  
+
   try
   {
     if (error_output.http_method == http_options
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
   }
   catch(File_Error e)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     if (e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
   }
   catch(Resource_Error e)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     if (e.timed_out)
       temp<<"Query timed out in \""<<e.stmt_name<<"\" at line "<<e.line_number
           <<" after "<<e.runtime<<" seconds.";

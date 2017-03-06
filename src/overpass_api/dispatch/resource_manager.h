@@ -39,7 +39,7 @@ class Resource_Manager
 public:
   Resource_Manager(Transaction& transaction_, Parsed_Query* global_settings_ = 0, Watchdog_Callback* watchdog_ = 0,
 		   Error_Output* error_output_ = 0);
-  
+
   Resource_Manager(Transaction& transaction_, Parsed_Query& global_settings_, Error_Output* error_output_,
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
 		   Area_Usage_Listener* area_updater__)
@@ -57,17 +57,17 @@ public:
       delete global_settings;
     delete area_updater_;
   }
-  
-  map< string, Set >& sets()
+
+  std::map< std::string, Set >& sets()
   {
     return sets_;
   }
-  
+
   Area_Usage_Listener* area_updater()
   {
     return area_updater_;
   }
-  
+
   Parsed_Query& get_global_settings() const { return *global_settings; }
 
   void push_reference(const Set& set_);
@@ -77,35 +77,35 @@ public:
   void log_and_display_error(std::string message);
 
   void health_check(const Statement& stmt, uint32 extra_time = 0, uint64 extra_space = 0);
-  
+
   void set_limits(uint32 max_allowed_time_, uint64 max_allowed_space_)
   {
     max_allowed_time = max_allowed_time_;
     max_allowed_space = max_allowed_space_;
   }
-  
+
   Transaction* get_transaction() { return transaction; }
   Transaction* get_area_transaction() { return area_transaction; }
-  
+
   uint64 get_desired_timestamp() const { return desired_timestamp; }
   uint64 get_diff_from_timestamp() const { return diff_from_timestamp; }
   uint64 get_diff_to_timestamp() const { return diff_to_timestamp; }
-  
+
   void set_desired_timestamp(uint64 timestamp) { desired_timestamp = timestamp; }
   void set_diff_from_timestamp(uint64 timestamp) { diff_from_timestamp = timestamp; }
   void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
-  
+
   const std::map< uint32, std::string >& users() { return user_data_cache.users(*transaction); }
-    
+
   void start_cpu_timer(uint index);
   void stop_cpu_timer(uint index);
   const std::vector< uint64 >& cpu_time() const { return cpu_runtime; }
 
 private:
-  map< string, Set > sets_;
-  vector< const Set* > set_stack;
-  vector< pair< uint, uint > > stack_progress;
-  vector< long long > set_stack_sizes;
+  std::map< std::string, Set > sets_;
+  std::vector< const Set* > set_stack;
+  std::vector< std::pair< uint, uint > > stack_progress;
+  std::vector< long long > set_stack_sizes;
   Transaction* transaction;
   Error_Output* error_output;
   Transaction* area_transaction;
@@ -119,31 +119,31 @@ private:
   uint32 last_report_time;
   uint32 max_allowed_time;
   uint64 max_allowed_space;
-  
+
   uint64 desired_timestamp;
   uint64 diff_from_timestamp;
   uint64 diff_to_timestamp;
-  
+
   std::vector< clock_t > cpu_start_time;
   std::vector< uint64 > cpu_runtime;
 };
 
 
-uint64 eval_map(const std::map< Uint32_Index, vector< Node_Skeleton > >& nodes);
-uint64 eval_map(const std::map< Uint31_Index, vector< Way_Skeleton > >& ways);
-uint64 eval_map(const std::map< Uint31_Index, vector< Relation_Skeleton > >& relations);
+uint64 eval_map(const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations);
 
-uint64 eval_map(const std::map< Uint32_Index, vector< Attic< Node_Skeleton > > >& nodes);
-uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Way_Skeleton > > >& ways);
-uint64 eval_map(const std::map< Uint31_Index, vector< Attic< Relation_Skeleton > > >& relations);
+uint64 eval_map(const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& nodes);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations);
 
-uint64 eval_map(const std::map< Uint31_Index, vector< Area_Skeleton > >& areas);
+uint64 eval_map(const std::map< Uint31_Index, std::vector< Area_Skeleton > >& areas);
 
 
 struct Resource_Error
 {
   bool timed_out;
-  string stmt_name;
+  std::string stmt_name;
   uint line_number;
   uint64 size;
   uint runtime;

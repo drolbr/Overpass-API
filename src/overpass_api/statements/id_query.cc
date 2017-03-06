@@ -26,7 +26,6 @@
 #include "../data/filenames.h"
 #include "id_query.h"
 
-using namespace std;
 
 bool Id_Query_Statement::area_query_exists_ = false;
 
@@ -36,14 +35,14 @@ Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_make
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 		   Uint64 lower, Uint64 upper,
-		   map< TIndex, vector< TObject > >& elems)
+		   std::map< TIndex, std::vector< TObject > >& elems)
 {
-  set< TIndex > req;
+  std::set< TIndex > req;
   {
     Random_File< uint64, TIndex > random(rman.get_transaction()->random_index(&prop));
     for (Uint64 i = lower; i < upper; ++i)
       req.insert(random.get(i.val()));
-  }    
+  }
   Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
   for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
       it(elems_db.discrete_begin(req.begin(), req.end()));
@@ -58,10 +57,10 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 template< class TIndex, class TObject >
 void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 		   Uint64 lower, Uint64 upper,
-		   const vector< typename TObject::Id_Type >& ids, bool invert_ids,
-		   map< TIndex, vector< TObject > >& elems)
+		   const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
+		   std::map< TIndex, std::vector< TObject > >& elems)
 {
-  set< TIndex > req;
+  std::set< TIndex > req;
   {
     Random_File< uint64, TIndex > random(rman.get_transaction()->random_index(&prop));
     for (typename TObject::Id_Type i = lower.val(); i.val() < upper.val(); ++i)
@@ -69,7 +68,7 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
       if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)
         req.insert(random.get(i.val()));
     }
-  }    
+  }
   Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
   for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
       it(elems_db.discrete_begin(req.begin(), req.end()));
@@ -84,8 +83,8 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 
 void collect_elems_flat(Resource_Manager& rman,
 		   Area_Skeleton::Id_Type lower, Area_Skeleton::Id_Type upper,
-		   const vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
-		   map< Uint31_Index, vector< Area_Skeleton > >& elems)
+		   const std::vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
+		   std::map< Uint31_Index, std::vector< Area_Skeleton > >& elems)
 {
   Block_Backend< Uint31_Index, Area_Skeleton > elems_db
       (rman.get_transaction()->data_index(area_settings().AREAS));
@@ -101,13 +100,13 @@ void collect_elems_flat(Resource_Manager& rman,
 
 template< class TIndex, class TObject >
 void filter_elems(Uint64 lower, Uint64 upper,
-		  map< TIndex, vector< TObject > >& elems)
+		  std::map< TIndex, std::vector< TObject > >& elems)
 {
-  for (typename map< TIndex, vector< TObject > >::iterator it = elems.begin();
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = elems.begin();
       it != elems.end(); ++it)
   {
-    vector< TObject > local_into;
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+    std::vector< TObject > local_into;
+    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
       if (iit->id.val() >= lower.val() && iit->id.val() < upper.val())
@@ -124,30 +123,30 @@ class Id_Query_Constraint : public Query_Constraint
 {
   public:
     Id_Query_Constraint(Id_Query_Statement& stmt_) : stmt(&stmt_) {}
-    
+
     bool delivers_data(Resource_Manager& rman) { return true; }
-    
+
     bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges);
+        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
-        (Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges);
+        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
 	
     bool get_node_ids
-        (Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids);
+        (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids);
     bool get_way_ids
-        (Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids);
+        (Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids);
     bool get_relation_ids
-        (Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids);
+        (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids);
 	
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Id_Query_Constraint() {}
-    
+
   private:
     Id_Query_Statement* stmt;
 };
 
 
-bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, vector< Node_Skeleton::Id_Type >& ids)
+bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
 {
   ids.clear();
   if (stmt->get_type() == Statement::NODE)
@@ -159,7 +158,7 @@ bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, vector< Node_Skel
 }
 
 
-bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, vector< Way_Skeleton::Id_Type >& ids)
+bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids)
 {
   ids.clear();
   if (stmt->get_type() == Statement::WAY)
@@ -171,7 +170,7 @@ bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, vector< Way_Skelet
 }
 
 
-bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relation_Skeleton::Id_Type >& ids)
+bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
 {
   ids.clear();
   if (stmt->get_type() == Statement::RELATION)
@@ -183,22 +182,22 @@ bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, vector< Relat
 }
 
 
-bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
 {
   std::vector< Node_Skeleton::Id_Type > ids;
   for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
     ids.push_back(i);
   std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
-  
+
   ranges.clear();
   for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
     ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
-  
+
   return true;
 }
 
 
-bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_Index, Uint31_Index > >& ranges)
+bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   std::vector< Uint31_Index > req;
   if (stmt->get_type() == Statement::WAY)
@@ -215,11 +214,11 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, set< pair< Uint31_I
       ids.push_back(i);
     get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman).swap(req);
   }
-  
+
   ranges.clear();
   for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
     ranges.insert(std::make_pair(*it, inc(*it)));
-  
+
   return true;
 }
 
@@ -241,7 +240,7 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 times
   }
   else
     into.ways.clear();
-  
+
   if (stmt->get_type() == Statement::RELATION)
   {
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.relations);
@@ -249,7 +248,7 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 times
   }
   else
     into.relations.clear();
-  
+
   if (stmt->get_type() == Statement::AREA)
     filter_elems(stmt->get_lower(), stmt->get_upper(), into.areas);
   else
@@ -259,21 +258,21 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 times
 //-----------------------------------------------------------------------------
 
 Id_Query_Statement::Id_Query_Statement
-    (int line_number_, const map< string, string >& input_attributes, Parsed_Query& global_settings)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["into"] = "_";
   attributes["type"] = "";
   attributes["ref"] = "";
   attributes["lower"] = "";
   attributes["upper"] = "";
-  
+
   Statement::eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   set_output(attributes["into"]);
-  
+
   if (attributes["type"] == "node")
     type = Statement::NODE;
   else if (attributes["type"] == "way")
@@ -288,12 +287,12 @@ Id_Query_Statement::Id_Query_Statement
   else
   {
     type = 0;
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"For the attribute \"type\" of the element \"id-query\""
 	<<" the only allowed values are \"node\", \"way\", \"relation\", or \"area\".";
     add_static_error(temp.str());
   }
-  
+
   ref = atoll(attributes["ref"].c_str());
   lower = atoll(attributes["lower"].c_str());
   upper = atoll(attributes["upper"].c_str());
@@ -301,7 +300,7 @@ Id_Query_Statement::Id_Query_Statement
   {
     if (lower.val() == 0 || upper.val() == 0)
     {
-      ostringstream temp;
+      std::ostringstream temp;
       temp<<"For the attribute \"ref\" of the element \"id-query\""
 	  <<" the only allowed values are positive integers.";
       add_static_error(temp.str());
@@ -339,7 +338,7 @@ struct Id_Pair_Full_Comparator
     if (lhs.first < rhs.first)
       return true;
     if (rhs.first < lhs.first)
-      return false;    
+      return false;
     return (lhs.second < rhs.second);
   }
 };
@@ -351,13 +350,13 @@ struct Attic_Skeleton_By_Id
   Attic_Skeleton_By_Id(const typename Skeleton::Id_Type& id_, uint64 timestamp_)
       : id(id_), timestamp(timestamp_), index(0u), meta_confirmed(false),
         elem(Skeleton(), 0xffffffffffffffffull) {}
-  
+
   typename Skeleton::Id_Type id;
   uint64 timestamp;
   Index index;
   bool meta_confirmed;
   Attic< Skeleton > elem;
-  
+
   bool operator<(const Attic_Skeleton_By_Id& rhs) const
   {
     if (id < rhs.id)
@@ -394,7 +393,7 @@ void get_elements(uint64 lower, uint64 upper, Statement* stmt, Resource_Manager&
 void Id_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
-  
+
   if (type == NODE)
     get_elements(lower.val(), upper.val(), this, rman, into.nodes, into.attic_nodes);
   else if (type == WAY)
@@ -402,7 +401,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   else if (type == RELATION)
     get_elements(lower.val(), upper.val(), this, rman, into.relations, into.attic_relations);
   else if (type == AREA)
-    collect_elems_flat(rman, lower.val(), upper.val(), vector< Area_Skeleton::Id_Type >(), true, into.areas);
+    collect_elems_flat(rman, lower.val(), upper.val(), std::vector< Area_Skeleton::Id_Type >(), true, into.areas);
 
   transfer_output(rman, into);
   rman.health_check(*this);
@@ -410,7 +409,7 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
 
 Id_Query_Statement::~Id_Query_Statement()
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+  for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }
