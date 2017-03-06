@@ -323,6 +323,7 @@ void Dispatcher_Stub::ping() const
 Dispatcher_Stub::~Dispatcher_Stub()
 {
   bool areas_written = (rman->area_updater() != 0);
+  std::vector< uint64 > cpu_runtime = rman->cpu_time();
   delete rman;
   if (transaction)
     delete transaction;
@@ -336,7 +337,7 @@ Dispatcher_Stub::~Dispatcher_Stub()
       std::ostringstream out;
       out<<"read_finished() start "<<global_read_counter();
       if (rman)
-        for (std::vector< uint64 >::const_iterator it = rman->cpu_time().begin(); it != rman->cpu_time().end(); ++it)
+        for (std::vector< uint64 >::const_iterator it = cpu_runtime.begin(); it != cpu_runtime.end(); ++it)
             out<<' '<<*it;
       logger.annotated_log(out.str());
       dispatcher_client->read_finished();

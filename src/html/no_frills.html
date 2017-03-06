@@ -40,10 +40,10 @@ bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta</pre>
 
 <p><a href="#minute_updates">Activate minutely updates</a>:</p>
 <pre>mkdir -p diffs</pre>
-<pre>nohup ./dispatcher --osm-base --meta --db-dir=&quot;db/&quot; &amp;
+<pre>nohup bin/dispatcher --osm-base --meta --db-dir=&quot;db/&quot; &amp;
 chmod 666 &quot;db/osm3s_v0.7.54_osm_base&quot;
 nohup bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;
-nohup bin/apply_osc_to_db.sh &quot;minute-diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
+nohup bin/apply_osc_to_db.sh &quot;diffs/&quot; auto --meta=yes &amp;</pre>
 
 
 <h2><a name="required">Requirements</a></h2>
