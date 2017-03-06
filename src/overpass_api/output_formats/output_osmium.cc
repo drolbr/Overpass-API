@@ -22,6 +22,13 @@
 #include <osmium/osm.hpp>
 #include <osmium/osm/types.hpp>
 
+Output_Osmium::~Output_Osmium()
+{
+  delete writer;
+  delete output_file;
+  delete header;
+}
+
 
 bool Output_Osmium::write_http_headers()
 {
@@ -47,7 +54,14 @@ void Output_Osmium::write_footer()
   (*writer)(std::move(buffer));
   writer->flush();
   writer->close();
+
   delete writer;
+  delete output_file;
+  delete header;
+
+  writer = nullptr;
+  output_file = nullptr;
+  header = nullptr;
 }
 
 void Output_Osmium::display_remark(const std::string& text)

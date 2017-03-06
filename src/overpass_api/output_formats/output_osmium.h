@@ -32,6 +32,8 @@ public:
   Output_Osmium(std::string output_format_) : output_format(output_format_), writer(nullptr),
                                             output_file(nullptr), header(nullptr) {}
 
+  ~Output_Osmium();
+
   virtual bool write_http_headers();
   virtual void write_payload_header(const std::string& db_dir,
                                     const std::string& timestamp, const std::string& area_timestamp);
