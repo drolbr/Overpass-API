@@ -134,6 +134,7 @@ output_formats_cc = \
   overpass_api/output_formats/output_json_factory.cc \
   overpass_api/output_formats/output_xml.cc \
   overpass_api/output_formats/output_xml_factory.cc \
+  overpass_api/output_formats/output_popup.cc \
   overpass_api/output_formats/output_popup_factory.cc
 
 libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
