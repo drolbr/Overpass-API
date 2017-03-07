@@ -25,21 +25,21 @@ Output_Handler* Output_Popup_Generator::new_output_handler(const std::map< std::
 {
   if (token)
   {
-    std::vector< Category_Filter > categories;
+    std::vector< Category_Filter* > categories;
 
     clear_until_after(*token, error_output, "(", "]", false);
     while (token->good() && **token == "(")
     {
       ++(*token);
 
-      Category_Filter category;
+      Category_Filter* category = new Category_Filter();
 
-      category.set_title(get_text_token(*token, error_output, "title"));
+      category->set_title(get_text_token(*token, error_output, "title"));
       clear_until_after(*token, error_output, ";", ")", true);
 
       while (token->good() && **token == "[")
       {	
-	std::vector< Tag_Filter > filter_conjunction;
+	std::vector< Tag_Filter* > filter_conjunction;
 	
         while (token->good() && **token == "[")
 	{
@@ -71,16 +71,17 @@ Output_Handler* Output_Popup_Generator::new_output_handler(const std::map< std::
           }
 	  clear_until_after(*token, error_output, "]");
 	
-	  filter_conjunction.push_back(Tag_Filter(key, value, straight));
+	  filter_conjunction.push_back(new Tag_Filter(key, value, straight));
 	}
 
         clear_until_after(*token, error_output, ";", true);
 	
-	category.add_filter(filter_conjunction);
+	category->add_filter(filter_conjunction);
       }
+      
       if (**token != ")")
       {
-	category.set_title_key(get_text_token(*token, error_output, "title key"));
+	category->set_title_key(get_text_token(*token, error_output, "title key"));
         clear_until_after(*token, error_output, ";", true);
       }
       clear_until_after(*token, error_output, ")", true);

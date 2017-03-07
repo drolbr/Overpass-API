@@ -28,9 +28,21 @@ private:
 
 struct Category_Filter
 {
+  Category_Filter() {}
+  
+  ~Category_Filter()
+  {
+    for (std::vector< std::vector< Tag_Filter* > >::iterator it_conj = filter_disjunction.begin();
+        it_conj != filter_disjunction.end(); ++it_conj)
+    {
+      for (std::vector< Tag_Filter* >::iterator it = it_conj->begin(); it != it_conj->end(); ++it)
+        delete *it;
+    }
+  }
+  
   void set_title(const std::string& title);
   void set_title_key(const std::string& title_key);
-  void add_filter(const std::vector< Tag_Filter >& conjunction) { filter_disjunction.push_back(conjunction); }
+  void add_filter(const std::vector< Tag_Filter* >& conjunction) { filter_disjunction.push_back(conjunction); }
   
   bool consider(const Node_Skeleton& skel, const std::vector< std::pair< std::string, std::string > >* tags);
   bool consider(const Way_Skeleton& skel, const std::vector< std::pair< std::string, std::string > >* tags);
@@ -39,16 +51,25 @@ struct Category_Filter
   std::string result() const { return output; }
   
 private:
+  Category_Filter(const Category_Filter&);
+  const Category_Filter& operator=(const Category_Filter&);
+  
   std::string output;
   std::string title_key;
-  std::vector< std::vector< Tag_Filter > > filter_disjunction;
+  std::vector< std::vector< Tag_Filter* > > filter_disjunction;
 };
 
 
 class Output_Popup : public Output_Handler
 {
 public:
-  Output_Popup(std::vector< Category_Filter > categories_) : categories(categories_) {}
+  Output_Popup(std::vector< Category_Filter* > categories_) : categories(categories_) {}
+  
+  virtual ~Output_Popup()
+  {
+    for (std::vector< Category_Filter* >::iterator it = categories.begin(); it != categories.end(); ++it)
+      delete *it;
+  }
 
   virtual bool write_http_headers();
   virtual void write_payload_header(const std::string& db_dir,
@@ -102,7 +123,7 @@ public:
       Output_Mode mode);
   
 private:
-  std::vector< Category_Filter > categories;
+  std::vector< Category_Filter* > categories;
 };
 
 
