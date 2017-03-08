@@ -27,7 +27,6 @@
 #include <sstream>
 #include <vector>
 
-using namespace std;
 
 //-----------------------------------------------------------------------------
 
@@ -37,10 +36,10 @@ class Newer_Constraint : public Query_Constraint
     Newer_Constraint(Newer_Statement& newer) : timestamp(newer.get_timestamp()) {}
 
     bool delivers_data(Resource_Manager& rman) { return false; }
-    
+
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Newer_Constraint() {}
-    
+
   private:
     uint64 timestamp;
 };
@@ -48,18 +47,18 @@ class Newer_Constraint : public Query_Constraint
 
 template< typename TIndex, typename TObject >
 void newer_filter_map
-    (map< TIndex, vector< TObject > >& modify,
+    (std::map< TIndex, std::vector< TObject > >& modify,
      Resource_Manager& rman, uint64 timestamp, File_Properties* file_properties)
 {
   if (modify.empty())
     return;
   Meta_Collector< TIndex, typename TObject::Id_Type > meta_collector
-      (modify, *rman.get_transaction(), file_properties, false);
-  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      (modify, *rman.get_transaction(), file_properties);
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
   {
-    vector< TObject > local_into;
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+    std::vector< TObject > local_into;
+    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
       const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
@@ -74,23 +73,23 @@ void newer_filter_map
 
 template< typename TIndex, typename TObject >
 void newer_filter_map_attic
-    (map< TIndex, vector< TObject > >& modify,
+    (std::map< TIndex, std::vector< TObject > >& modify,
      Resource_Manager& rman, uint64 timestamp,
      File_Properties* current_file_properties, File_Properties* attic_file_properties)
 {
   if (modify.empty())
     return;
-  
+
   Meta_Collector< TIndex, typename TObject::Id_Type > current_meta_collector
-      (modify, *rman.get_transaction(), current_file_properties, false);
+      (modify, *rman.get_transaction(), current_file_properties);
   Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
-      (modify, *rman.get_transaction(), attic_file_properties, false);
-      
-  for (typename map< TIndex, vector< TObject > >::iterator it = modify.begin();
+      (modify, *rman.get_transaction(), attic_file_properties);
+
+  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = modify.begin();
       it != modify.end(); ++it)
   {
-    vector< TObject > local_into;
-    for (typename vector< TObject >::const_iterator iit = it->second.begin();
+    std::vector< TObject > local_into;
+    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
       const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
@@ -110,7 +109,7 @@ void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Se
   newer_filter_map(into.nodes, rman, this->timestamp, meta_settings().NODES_META);
   newer_filter_map(into.ways, rman, this->timestamp, meta_settings().WAYS_META);
   newer_filter_map(into.relations, rman, this->timestamp, meta_settings().RELATIONS_META);
-  
+
   if (timestamp != NOW)
   {
     newer_filter_map_attic(into.attic_nodes, rman, this->timestamp,
@@ -120,7 +119,7 @@ void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Se
     newer_filter_map_attic(into.attic_relations, rman, this->timestamp,
 			   meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
   }
-  
+
   into.areas.clear();
 }
 
@@ -129,17 +128,17 @@ void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Se
 Generic_Statement_Maker< Newer_Statement > Newer_Statement::statement_maker("newer");
 
 Newer_Statement::Newer_Statement
-    (int line_number_, const map< string, string >& input_attributes, Query_Constraint* bbox_limitation)
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_), than_timestamp(0)
 {
-  map< string, string > attributes;
-  
+  std::map< std::string, std::string > attributes;
+
   attributes["than"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
-  string timestamp = attributes["than"];
-  
+
+  std::string timestamp = attributes["than"];
+
   if (timestamp.size() >= 19)
     than_timestamp = Timestamp(
         atol(timestamp.c_str()), //year
@@ -149,10 +148,10 @@ Newer_Statement::Newer_Statement
         atoi(timestamp.c_str()+14), //minute
         atoi(timestamp.c_str()+17) //second
         ).timestamp;
-  
+
   if (than_timestamp == 0)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     temp<<"The attribute \"than\" must contain a timestamp exactly in the form yyyy-mm-ddThh:mm:ssZ.";
     add_static_error(temp.str());
   }
@@ -160,7 +159,7 @@ Newer_Statement::Newer_Statement
 
 Newer_Statement::~Newer_Statement()
 {
-  for (vector< Query_Constraint* >::const_iterator it = constraints.begin();
+  for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }

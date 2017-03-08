@@ -30,7 +30,6 @@
 #include "node_updater.h"
 #include "way_updater.h"
 
-using namespace std;
 
 /**
  * Tests the library way_updater with a sample OSM file
@@ -43,8 +42,8 @@ Way current_way;
 int state;
 const int IN_NODES = 1;
 const int IN_WAYS = 2;
-ofstream* member_source_out;
-ofstream* tags_source_out;
+std::ofstream* member_source_out;
+std::ofstream* tags_source_out;
 Osm_Backend_Callback* callback;
 
 uint32 osm_element_count;
@@ -53,7 +52,7 @@ void start(const char *el, const char **attr)
 {
   if (!strcmp(el, "tag"))
   {
-    string key(""), value("");
+    std::string key(""), value("");
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "k"))
@@ -62,11 +61,11 @@ void start(const char *el, const char **attr)
 	value = attr[i+1];
     }
     if (current_node.id.val() > 0)
-      current_node.tags.push_back(make_pair(key, value));
+      current_node.tags.push_back(std::make_pair(key, value));
     else if (current_way.id.val() > 0)
     {
-      current_way.tags.push_back(make_pair(key, value));
-      
+      current_way.tags.push_back(std::make_pair(key, value));
+
       *tags_source_out<<current_way.id.val()<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
@@ -81,7 +80,7 @@ void start(const char *el, const char **attr)
 	  ref = atoll(attr[i+1]);
       }
       current_way.nds.push_back(ref);
-      
+
       *member_source_out<<ref<<' ';
     }
   }
@@ -89,7 +88,7 @@ void start(const char *el, const char **attr)
   {
     if (state == 0)
       state = IN_NODES;
-    
+
     unsigned int id(0);
     double lat(100.0), lon(200.0);
     for (unsigned int i(0); attr[i]; i += 2)
@@ -113,7 +112,7 @@ void start(const char *el, const char **attr)
       osm_element_count = 0;
       state = IN_WAYS;
     }
-    
+
     unsigned int id(0);
     for (unsigned int i(0); attr[i]; i += 2)
     {
@@ -121,7 +120,7 @@ void start(const char *el, const char **attr)
 	id = atoll(attr[i+1]);
     }
     current_way = Way(id);
-    
+
     *member_source_out<<id<<'\t';
   }
 }
@@ -131,7 +130,7 @@ void end(const char *el)
   if (!strcmp(el, "node"))
   {
     node_updater->set_node(current_node);
-    
+
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
@@ -144,7 +143,7 @@ void end(const char *el)
   else if (!strcmp(el, "way"))
   {
     way_updater->set_way(current_way);
-    
+
     *member_source_out<<'\n';
 
     if (osm_element_count >= 4*1024*1024)
@@ -161,14 +160,14 @@ void end(const char *el)
   ++osm_element_count;
 }
 
-void cleanup_files(const File_Properties& file_properties, string db_dir,
+void cleanup_files(const File_Properties& file_properties, std::string db_dir,
 		   bool cleanup_map)
 {
   remove((db_dir + file_properties.get_file_name_trunk() +
       file_properties.get_data_suffix() + file_properties.get_index_suffix()).c_str());
   remove((db_dir + file_properties.get_file_name_trunk() +
       file_properties.get_data_suffix()).c_str());
-  
+
   if (cleanup_map)
   {
     remove((db_dir + file_properties.get_file_name_trunk() +
@@ -180,29 +179,29 @@ void cleanup_files(const File_Properties& file_properties, string db_dir,
 
 int main(int argc, char* args[])
 {
-  string db_dir("./");
-  
+  std::string db_dir("./");
+
   try
   {
-    ofstream member_db_out((db_dir + "member_db.csv").c_str());
-    ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
-    ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
+    std::ofstream member_db_out((db_dir + "member_db.csv").c_str());
+    std::ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
+    std::ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
       Node_Updater node_updater_("./", only_data);
       node_updater = &node_updater_;
       Way_Updater way_updater_("./", only_data);
       way_updater = &way_updater_;
-      
-      member_source_out = new ofstream((db_dir + "member_source.csv").c_str());
-      tags_source_out = new ofstream((db_dir + "tags_source.csv").c_str());
+
+      member_source_out = new std::ofstream((db_dir + "member_source.csv").c_str());
+      tags_source_out = new std::ofstream((db_dir + "tags_source.csv").c_str());
       callback = get_verbatim_callback();
-      
+
       osm_element_count = 0;
       state = 0;
       //reading the main document
       callback->parser_started();
       parse(stdin, start, end);
-      
+
       if (state == IN_NODES)
       {
 	callback->nodes_finished();
@@ -215,13 +214,13 @@ int main(int argc, char* args[])
                             node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                             node_updater->get_new_attic_skeletons());
       }
-      
+
       delete member_source_out;
       delete tags_source_out;
     }
 
     Nonsynced_Transaction transaction(false, false, "./", "");
-    
+
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db
 	(transaction.data_index(osm_base_settings().WAYS));
@@ -233,7 +232,7 @@ int main(int argc, char* args[])
 	member_db_out<<it.object().nds[i].val()<<' ';
       member_db_out<<'\n';
     }
-    
+
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > ways_local_db
 	(transaction.data_index(osm_base_settings().WAY_TAGS_LOCAL));
@@ -243,7 +242,7 @@ int main(int argc, char* args[])
       tags_local_out<<it.object().val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
-    
+
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > ways_global_db
 	(transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
@@ -258,14 +257,14 @@ int main(int argc, char* args[])
   {
     report_file_error(e);
   }
-  
+
   cleanup_files(*osm_base_settings().NODES, "./", true);
   cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", true);
   cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", true);
-  
+
   //cleanup_files(*osm_base_settings().WAYS, "./", true);
   //cleanup_files(*osm_base_settings().WAY_TAGS_LOCAL, "./", true);
   //cleanup_files(*osm_base_settings().WAY_TAGS_GLOBAL, "./", true);
-  
+
   return 0;
 }

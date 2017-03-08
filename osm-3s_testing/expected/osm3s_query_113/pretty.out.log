@@ -1,4 +1,4 @@
 foreach(
   node(w);
-  out body;
+  out;
 );

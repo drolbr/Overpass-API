@@ -25,7 +25,6 @@
 #include <set>
 #include <vector>
 
-using namespace std;
 
 //-----------------------------------------------------------------------------
 
@@ -34,16 +33,16 @@ class Comment_Replacer
 {
     Comment_Replacer(const Comment_Replacer&);
     Comment_Replacer& operator=(const Comment_Replacer&);
-    
+
   public:
     Comment_Replacer(In& in_) : in(in_), buffer(0),
         buffer_state(invalid), state(plainfile), line(1), col(1) {}
     bool good() { return (buffer_state != invalid || in.good()); }
     void get(char& c);
-    
+
     // The line and the column of the next character to read.
-    pair< uint, uint > line_col() { return make_pair(line, col); }
-    
+    std::pair< uint, uint > line_col() { return std::make_pair(line, col); }
+
   private:
     In& in;
     char buffer;
@@ -75,7 +74,7 @@ inline void Comment_Replacer< In >::get(char& c)
     if (!in.good())
       return;
   }
-  
+
   // Adjust line and column counter
   if (c == '\n')
   {
@@ -84,7 +83,7 @@ inline void Comment_Replacer< In >::get(char& c)
   }
   else
     ++col;
-  
+
   // We've got a valid character. Process it with regard to the state.
   if (state == single_quot)
   {
@@ -132,7 +131,7 @@ inline void Comment_Replacer< In >::get(char& c)
     while (in.good() && (c != '\n'))
       in.get(c);
     c = ' ';
-    
+
     ++line;
     col = 1;
   }
@@ -178,20 +177,20 @@ class Whitespace_Compressor
   // Don't copy or assign.
   Whitespace_Compressor(const Whitespace_Compressor&);
   Whitespace_Compressor& operator=(const Whitespace_Compressor&);
-  
+
   public:
     Whitespace_Compressor(In& in_) : in(in_), buffer(0),
         buffer_state(invalid), state(plainfile) {}
     bool good() { return (buffer_state != invalid || in.good()); }
     void get(char& c);
-    
+
     // The line and the column of the next character to read.
-    pair< uint, uint > line_col();
-    
+    std::pair< uint, uint > line_col();
+
   private:
     In& in;
     char buffer;
-    pair< uint, uint > buffer_line_col;
+    std::pair< uint, uint > buffer_line_col;
     enum { invalid, read, written, escaped } buffer_state;
     enum { plainfile, single_quot, double_quot } state;
 };
@@ -217,8 +216,8 @@ inline void Whitespace_Compressor< In >::get(char& c)
     in.get(c);
     if (!in.good())
       return;
-  }  
-  
+  }
+
   // We've got a valid character. Process it with regard to the state.
   if (state == single_quot)
   {
@@ -250,7 +249,7 @@ inline void Whitespace_Compressor< In >::get(char& c)
       state = plainfile;
     return;
   }
-  
+
   // state == plainfile
   if (c == '\'')
     state = single_quot;
@@ -258,7 +257,7 @@ inline void Whitespace_Compressor< In >::get(char& c)
     state = double_quot;
   if (!isspace(c))
     return;
-  
+
   while (in.good() && isspace(c))
   {
     buffer_line_col = in.line_col();
@@ -273,7 +272,7 @@ inline void Whitespace_Compressor< In >::get(char& c)
 }
 
 template< class In >
-inline pair< uint, uint > Whitespace_Compressor< In >::line_col()
+inline std::pair< uint, uint > Whitespace_Compressor< In >::line_col()
 {
   if (buffer_state == written || buffer_state == escaped)
     return buffer_line_col;
@@ -288,21 +287,21 @@ class Tokenizer
 {
   Tokenizer(const Tokenizer&);
   Tokenizer& operator=(const Tokenizer&);
-  
+
   public:
     Tokenizer(In& in_);
     bool good() { return (buffer != "" || in.good()); }
-    void get(string& s);
-    
+    void get(std::string& s);
+
     // The line and the column of the next token to read.
-    pair< uint, uint > line_col();
-    
+    std::pair< uint, uint > line_col();
+
   private:
     In& in;
-    string buffer;
-    queue< pair< uint, uint > > line_cols;
+    std::string buffer;
+    std::queue< std::pair< uint, uint > > line_cols;
     void grow_buffer(unsigned int size);
-    void probe(string& s, const string& probe1, const string& probe2 = "");
+    void probe(std::string& s, const std::string& probe1, const std::string& probe2 = "");
     void clear_space();
 };
 
@@ -317,7 +316,7 @@ inline void Tokenizer< In >::grow_buffer(unsigned int size)
 {
   if (buffer.size() >= size)
     return;
-  
+
   char c;
   line_cols.push(in.line_col());
   in.get(c);
@@ -333,7 +332,7 @@ inline void Tokenizer< In >::grow_buffer(unsigned int size)
 
 template< class In >
 inline void Tokenizer< In >::probe
-    (string& s, const string& probe1, const string& probe2)
+    (std::string& s, const std::string& probe1, const std::string& probe2)
 {
   grow_buffer(2);
   if (buffer.substr(0, 2) == probe1)
@@ -361,6 +360,7 @@ inline void Tokenizer< In >::probe
   }
 }
 
+
 template< class In >
 inline void Tokenizer< In >::clear_space()
 {
@@ -372,13 +372,21 @@ inline void Tokenizer< In >::clear_space()
     grow_buffer(1);
   }
 }
-  
+
+
+void pop_front(std::string& s, std::string& buffer, unsigned int num_bytes)
+{
+  s = buffer.substr(0, num_bytes);
+  buffer = buffer.substr(num_bytes);
+}
+
+
 template< class In >
-inline void Tokenizer< In >::get(string& s)
+inline void Tokenizer< In >::get(std::string& s)
 {
   if (buffer == "")
     return;
-  
+
   if (isalpha(buffer[0]) || buffer[0] == '_')
   {
     uint pos = 1;
@@ -400,13 +408,23 @@ inline void Tokenizer< In >::get(string& s)
     {
       while (buffer.size() > pos && isdigit(buffer[pos]))
         grow_buffer((++pos) + 1);
+
       if (buffer.size() > pos && buffer[pos] == '.')
       {
         grow_buffer((++pos) + 1);
         while (buffer.size() > pos && isdigit(buffer[pos]))
 	  grow_buffer((++pos) + 1);
       }
-    
+
+      if (buffer.size() > pos && buffer[pos] == 'e')
+      {
+        grow_buffer((++pos) + 1);
+        if (buffer.size() > pos && buffer[pos] == '-')
+	  grow_buffer((++pos) + 1);
+        while (buffer.size() > pos && isdigit(buffer[pos]))
+	  grow_buffer((++pos) + 1);
+      }
+
       s = buffer.substr(0, pos);
       for (uint i = 0; i < pos; ++i)
         line_cols.pop();
@@ -483,20 +501,47 @@ inline void Tokenizer< In >::get(string& s)
   else if (buffer[0] == '&')
     probe(s, "&&");
   else if (buffer[0] == '<')
-    probe(s, "<<");
+    probe(s, "<<", "<=");
   else if (buffer[0] == '>')
-    probe(s, ">>");
+    probe(s, ">>", ">=");
   else
   {
-    s = buffer.substr(0, 1);
+    if ((buffer[0] & 0x80) == 0)
+      pop_front(s, buffer, 1);
+    else if ((buffer[0] & 0xe0) == 0xc0)
+    {
+      grow_buffer(2);
+      if (buffer.size() >= 2)
+        pop_front(s, buffer, 2);
+      else // The input is invalid UTF-8.
+        pop_front(s, buffer, 1);
+    }
+    else if ((buffer[0] & 0xf0) == 0xe0)
+    {
+      grow_buffer(3);
+      if (buffer.size() >= 3)
+        pop_front(s, buffer, 3);
+      else // The input is invalid UTF-8.
+        pop_front(s, buffer, 1);
+    }
+    else if ((buffer[0] & 0xf8) == 0xf0)
+    {
+      grow_buffer(4);
+      if (buffer.size() >= 4)
+        pop_front(s, buffer, 4);
+      else // The input is invalid UTF-8.
+        pop_front(s, buffer, 1);
+    }
+    else // The input is invalid UTF-8.
+      pop_front(s, buffer, 1);
+
     line_cols.pop();
-    buffer = buffer.substr(1);
     clear_space();
   }
 }
 
 template< class In >
-inline pair< uint, uint > Tokenizer< In >::line_col()
+inline std::pair< uint, uint > Tokenizer< In >::line_col()
 {
   if (line_cols.empty())
     return in.line_col();
@@ -506,11 +551,11 @@ inline pair< uint, uint > Tokenizer< In >::line_col()
 
 //-----------------------------------------------------------------------------
 
-Tokenizer_Wrapper::Tokenizer_Wrapper(istream& in_)
+Tokenizer_Wrapper::Tokenizer_Wrapper(std::istream& in_)
 {
-  incr = new Comment_Replacer< istream >(in_);
-  inwsc = new Whitespace_Compressor< Comment_Replacer< istream > >(*incr);
-  in = new Tokenizer< Whitespace_Compressor< Comment_Replacer< istream > > >(*inwsc);
+  incr = new Comment_Replacer< std::istream >(in_);
+  inwsc = new Whitespace_Compressor< Comment_Replacer< std::istream > >(*incr);
+  in = new Tokenizer< Whitespace_Compressor< Comment_Replacer< std::istream > > >(*inwsc);
   line_col_ = in->line_col();
   good_ = in->good();
   in->get(head);

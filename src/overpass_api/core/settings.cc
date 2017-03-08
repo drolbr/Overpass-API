@@ -40,14 +40,14 @@ struct OSM_File_Properties : public File_Properties
   OSM_File_Properties(const std::string& file_base_name_, uint32 block_size_,
 		      uint32 map_block_size_)
     : file_base_name(file_base_name_), block_size(block_size_), map_block_size(map_block_size_) {}
-
+  
   const std::string& get_file_name_trunk() const { return file_base_name; }
-
+  
   const std::string& get_index_suffix() const { return basic_settings().INDEX_SUFFIX; }
   const std::string& get_data_suffix() const { return basic_settings().DATA_SUFFIX; }
-  const std::string& get_id_suffix() const { return basic_settings().ID_SUFFIX; }
+  const std::string& get_id_suffix() const { return basic_settings().ID_SUFFIX; }  
   const std::string& get_shadow_suffix() const { return basic_settings().SHADOW_SUFFIX; }
-
+  
   uint32 get_block_size() const { return block_size/8; }
   uint32 get_compression_factor() const { return 8; }
   uint32 get_compression_method() const { return basic_settings().compression_method; }
@@ -96,7 +96,7 @@ Basic_Settings::Basic_Settings()
 
   base_directory("./"),
   logfile_name("transactions.log"),
-  shared_name_base("/osm3s_v0.7.53"),
+  shared_name_base("/osm3s_v0.7.54"),
 #ifdef HAVE_LZ4
   compression_method(File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION),
 #else
@@ -296,3 +296,6 @@ const std::string& get_logfile_name()
 {
   return basic_settings().logfile_name;
 }
+
+
+const uint64 NOW = std::numeric_limits< unsigned long long >::max();

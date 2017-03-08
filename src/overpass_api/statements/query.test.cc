@@ -21,59 +21,67 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../output_formats/output_xml.h"
+#include "aggregators.h"
 #include "around.h"
 #include "bbox_query.h"
+#include "binary_operators.h"
+#include "filter.h"
 #include "id_query.h"
 #include "item.h"
 #include "query.h"
 #include "print.h"
 #include "recurse.h"
+#include "unary_operators.h"
 #include "union.h"
 
-using namespace std;
 
 template < class TStatement >
 class SProxy
 {
   public:
     SProxy() : stmt_(0) {}
-    
+
     ~SProxy()
     {
       if (stmt_)
 	delete stmt_;
     }
-    
-    SProxy& operator()(const string& k, const string& v)
+
+    SProxy& operator()(const std::string& k, const std::string& v)
     {
       attributes[k] = v;
       return *this;
     }
-    
+
     TStatement& stmt()
     {
+      Parsed_Query global_settings;
+      global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
       if (!stmt_)
-        stmt_ = new TStatement(0, attributes);
-      
+        stmt_ = new TStatement(0, attributes, global_settings);
+
       return *stmt_;
     }
-    
+
   private:
     TStatement* stmt_;
-    map< string, string > attributes;
+    std::map< std::string, std::string > attributes;
 };
 
-void perform_print(Resource_Manager& rman, string from = "_")
+void perform_print(Resource_Manager& rman, std::string from = "_")
 {
   SProxy< Print_Statement >()("order", "id")("from", from).stmt().execute(rman);
 }
 
-void perform_query(string type, string key, string value, string db_dir)
+void perform_query(std::string type, std::string key, std::string value, std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -100,32 +108,34 @@ void perform_query(string type, string key, string value, string db_dir)
         (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
         (rman.sets()["_"].relations != rman.sets()["b"].relations))
     {
-      cout<<"Sets \"_\" and \"b\" differ:\n";
+      std::cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");
     }
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 void perform_query
-    (string type, string key1, string value1, string key2, string value2,
-     string db_dir)
+    (std::string type, std::string key1, std::string value1, std::string key2, std::string value2,
+     std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
       SProxy< Has_Kv_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2("k", key1)("v", value1).stmt(), "");
       SProxy< Has_Kv_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("k", key2)("v", value2).stmt(), "");      
+      stmt1.stmt().add_statement(&stmt3("k", key2)("v", value2).stmt(), "");
       stmt1.stmt().execute(rman);
     }
     perform_print(rman);
@@ -142,21 +152,21 @@ void perform_query
       SProxy< Item_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2("set", "a").stmt(), "");
       SProxy< Has_Kv_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("k", key2)("v", value2).stmt(), "");      
+      stmt1.stmt().add_statement(&stmt3("k", key2)("v", value2).stmt(), "");
       stmt1.stmt().execute(rman);
     }
     if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
         (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
         (rman.sets()["_"].relations != rman.sets()["b"].relations))
     {
-      cout<<"Sets \"_\" and \"b\" differ:\n";
+      std::cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");
     }
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type)("into", "c");
       SProxy< Has_Kv_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("k", key2)("v", value2).stmt(), "");      
+      stmt1.stmt().add_statement(&stmt3("k", key2)("v", value2).stmt(), "");
       stmt1.stmt().execute(rman);
     }
     {
@@ -172,25 +182,27 @@ void perform_query
         (rman.sets()["_"].ways != rman.sets()["d"].ways) ||
         (rman.sets()["_"].relations != rman.sets()["d"].relations))
     {
-      cout<<"Sets \"_\" and \"d\" differ:\n";
+      std::cout<<"Sets \"_\" and \"d\" differ:\n";
       perform_print(rman, "d");
     }
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 void perform_query
-    (string type, string key1, string value1, string key2, string value2,
-     string key3, string value3, string db_dir)
+    (std::string type, std::string key1, std::string value1, std::string key2, std::string value2,
+     std::string key3, std::string value3, std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -225,34 +237,36 @@ void perform_query
       SProxy< Item_Statement > stmt3;
       stmt1.stmt().add_statement(&stmt3("set", "b").stmt(), "");
       SProxy< Has_Kv_Statement > stmt4;
-      stmt1.stmt().add_statement(&stmt4("k", key3)("v", value3).stmt(), "");      
+      stmt1.stmt().add_statement(&stmt4("k", key3)("v", value3).stmt(), "");
       stmt1.stmt().execute(rman);
     }
     if ((rman.sets()["_"].nodes != rman.sets()["c"].nodes) ||
         (rman.sets()["_"].ways != rman.sets()["c"].ways) ||
         (rman.sets()["_"].relations != rman.sets()["c"].relations))
     {
-      cout<<"Sets \"_\" and \"c\" differ:\n";
+      std::cout<<"Sets \"_\" and \"c\" differ:\n";
       perform_print(rman, "c");
     }
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 void perform_regex_query
-    (string type, string key, string value, string key2, string regex2, bool straight2,
-     string key3, string regex3, bool straight3, 
-     string key4, string value4, bool straight4, 
-     string key5, string value5, bool straight5, string db_dir)
+    (std::string type, std::string key, std::string value, std::string key2, std::string regex2, bool straight2,
+     std::string key3, std::string regex3, bool straight3,
+     std::string key4, std::string value4, bool straight4,
+     std::string key5, std::string value5, bool straight5, std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -281,21 +295,23 @@ void perform_regex_query
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
 void perform_key_regex_query
-    (string type, string key, string value,
-     string key2, string regval2, bool straight2,
-     string key3, string regval3, bool straight3, string db_dir)
+    (std::string type, std::string key, std::string value,
+     std::string key2, std::string regval2, bool straight2,
+     std::string key3, std::string regval3, bool straight3, std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -316,38 +332,20 @@ void perform_key_regex_query
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
-template< class T >
-string to_string(T d)
-{
-  ostringstream out;
-  out<<d;
-  return out.str();
-}
-
-
-template< >
-string to_string< double >(double d)
-{
-  ostringstream out;
-  out<<setprecision(14)<<d;
-  return out.str();
-}
-
-
 void perform_query_with_around
-    (string id_type, string type, string key1, string value1, string db_dir, uint pattern_size,
+    (std::string id_type, std::string type, std::string key1, std::string value1, std::string db_dir, uint pattern_size,
      uint64 global_node_offset, bool big_radius = false)
 {
-  string radius = "200.1";
+  std::string radius = "200.1";
   if (id_type == "node" && type == "way")
   {
-    ostringstream out;
+    std::ostringstream out;
     if (big_radius)
       out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.5;
     else
@@ -356,7 +354,7 @@ void perform_query_with_around
   }
   else if (id_type == "node" && type == "relation")
   {
-    ostringstream out;
+    std::ostringstream out;
     if (big_radius)
       out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.9;
     else
@@ -365,7 +363,7 @@ void perform_query_with_around
   }
   else if (id_type == "way")
   {
-    ostringstream out;
+    std::ostringstream out;
     if (type == "node")
       out<<(120.0/pattern_size)/360.0*40*1000*1000*1.1;
     else
@@ -374,20 +372,22 @@ void perform_query_with_around
   }
   else if (id_type == "relation")
   {
-    ostringstream out;
+    std::ostringstream out;
     if (type == "node")
       out<<(120.0/pattern_size)/360.0*40*1000*1000*1.1;
     else
       out<<1;
     radius = out.str();
   }
-  
+
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
-      ostringstream buf;
+      std::ostringstream buf;
       if (id_type == "node" && type == "node")
         buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
       else if (id_type == "node" && type == "relation")
@@ -426,14 +426,14 @@ void perform_query_with_around
       else if (key1 != "")
 	stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
       SProxy< Around_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("radius", radius).stmt(), "");      
+      stmt1.stmt().add_statement(&stmt3("radius", radius).stmt(), "");
       stmt1.stmt().execute(rman);
     }
     perform_print(rman);
     if (key1 == "")
       return;
     {
-      ostringstream buf;
+      std::ostringstream buf;
       if (id_type == "node" && type == "node")
 	buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
       else if (id_type == "node" && big_radius)
@@ -461,32 +461,32 @@ void perform_query_with_around
       SProxy< Item_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2("set", "b").stmt(), "");
       SProxy< Around_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("radius", radius)("from", "a").stmt(), "");      
+      stmt1.stmt().add_statement(&stmt3("radius", radius)("from", "a").stmt(), "");
       stmt1.stmt().execute(rman);
     }
     if ((rman.sets()["_"].nodes != rman.sets()["c"].nodes) ||
         (rman.sets()["_"].ways != rman.sets()["c"].ways) ||
         (rman.sets()["_"].relations != rman.sets()["c"].relations))
     {
-      cout<<"Sets \"_\" and \"c\" differ:\n";
+      std::cout<<"Sets \"_\" and \"c\" differ:\n";
       perform_print(rman, "c");
     }
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
 void perform_query_with_around
-    (string type, string key1, string value1, string db_dir, uint pattern_size, bool big_radius = false)
+    (std::string type, std::string key1, std::string value1, std::string db_dir, uint pattern_size, bool big_radius = false)
 {
-  string radius = "200.1";
+  std::string radius = "200.1";
   if (type == "way")
   {
-    ostringstream out;
+    std::ostringstream out;
     if (big_radius)
       out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.5;
     else
@@ -495,20 +495,22 @@ void perform_query_with_around
   }
   else if (type == "relation")
   {
-    ostringstream out;
+    std::ostringstream out;
     if (big_radius)
       out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*0.9;
     else
       out<<(120.0/pattern_size)/360.0*40*1000*1000*cos(-10.0/90.0*acos(0))*1.2;
     radius = out.str();
   }
-  
+
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
-      string lat, lon;
+      std::string lat, lon;
       if (type == "node")
       {
         lat = to_string(47.9 + 0.1/pattern_size);
@@ -537,7 +539,7 @@ void perform_query_with_around
         lat = to_string(-10.0 + 45.0/pattern_size);
         lon = to_string(105.0 - 60.0/pattern_size*3);
       }
-      
+
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
       SProxy< Has_Kv_Statement > stmt2;
@@ -546,27 +548,29 @@ void perform_query_with_around
       else if (key1 != "")
         stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
       SProxy< Around_Statement > stmt3;
-      stmt1.stmt().add_statement(&stmt3("radius", radius)("lat", lat)("lon", lon).stmt(), "");      
+      stmt1.stmt().add_statement(&stmt3("radius", radius)("lat", lat)("lon", lon).stmt(), "");
       stmt1.stmt().execute(rman);
     }
     perform_print(rman);
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
 void perform_query_with_bbox
-    (string type, string key1, string value1,
-     string south, string north, string west, string east, string db_dir)
+    (std::string type, std::string key1, std::string value1,
+     std::string south, std::string north, std::string west, std::string east, std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -597,37 +601,188 @@ void perform_query_with_bbox
       (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
       (rman.sets()["_"].relations != rman.sets()["b"].relations))
     {
-      cout<<"Sets \"_\" and \"b\" differ:\n";
+      std::cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");
     }
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_filter_with_bbox
+    (std::string type, std::string key1, std::string value1,
+     std::string south, std::string north, std::string west, std::string east, std::string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Bbox_Query_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("n", north)("s", south)("e", east)("w", west).stmt(), "");
+//       SProxy< Has_Kv_Statement > stmt3;
+//       stmt1.stmt().add_statement(&stmt3("k", key1)("v", value1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Fixed > stmt6;
+      stmt4.stmt().add_statement(&stmt6("v", value1).stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_filter_with_key
+    (std::string type, std::string key1, std::string value1, std::string key2, std::string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key2).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Fixed > stmt6;
+      stmt4.stmt().add_statement(&stmt6("v", value1).stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_filter_from_previous_element
+    (std::string type, uint64 start_id, std::string key1, std::string key2, std::string from_set, std::string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("ref", to_string(start_id));
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Union_Value > stmt6;
+      SProxy< Evaluator_Value > stmt7;
+      stmt6.stmt().add_statement(&stmt7("k", key2).stmt(), "");
+      stmt4.stmt().add_statement(&stmt6.stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+
+    std::string from_set = "foo";
+    {
+      SProxy< Id_Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("ref", to_string(start_id));
+      stmt1("into", from_set);
+      stmt1.stmt().execute(rman);
+    }
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", type);
+      stmt1("into", "b");
+      SProxy< Has_Kv_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2("k", key1).stmt(), "");
+      SProxy< Filter_Statement > stmt3;
+      SProxy< Evaluator_Equal > stmt4;
+      SProxy< Evaluator_Value > stmt5;
+      SProxy< Evaluator_Union_Value > stmt6;
+      SProxy< Evaluator_Value > stmt7;
+      stmt6("from", from_set).stmt().add_statement(&stmt7("k", key2).stmt(), "");
+      stmt4.stmt().add_statement(&stmt6.stmt(), "");
+      stmt4.stmt().add_statement(&stmt5("k", key1).stmt(), "");
+      stmt3.stmt().add_statement(&stmt4.stmt(), "");
+      stmt1.stmt().add_statement(&stmt3.stmt(), "");
+      stmt1.stmt().execute(rman);
+    }
+
+    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
+      (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
+      (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    {
+      std::cout<<"Sets \"_\" and \"b\" differ:\n";
+      perform_print(rman, "b");
+    }
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
 void perform_multi_query_with_bbox
-    (string type, string key1, string value1, string key2, string value2, string key3, string value3,
+    (std::string type, std::string key1, std::string value1, std::string key2, std::string value2, std::string key3, std::string value3,
      int regex, bool straight2,
-     double south, double north, double west, double east, string db_dir)
+     double south, double north, double west, double east, std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
-      
+
       SProxy< Has_Kv_Statement > stmt2;
       if (regex & 0x10)
 	stmt2("regk", key1);
       else
 	stmt2("k", key1);
-            
+
       if (value1 != "")
       {
         if (regex & 0x1)
@@ -636,7 +791,7 @@ void perform_multi_query_with_bbox
           stmt2("v", value1);
       }
       stmt1.stmt().add_statement(&stmt2.stmt(), "");
-      
+
       SProxy< Has_Kv_Statement > stmt4;
       if (key2 != "")
       {
@@ -644,7 +799,7 @@ void perform_multi_query_with_bbox
 	  stmt4("regk", key2);
 	else
 	  stmt4("k", key2);
-      
+
 	if (regex & 0x2)
 	  stmt4("regv", value2);
 	else
@@ -659,7 +814,7 @@ void perform_multi_query_with_bbox
 	  stmt5("regk", key3);
 	else
 	  stmt5("k", key3);
-      
+
 	if (regex & 0x4)
 	  stmt5("regv", value3);
 	else
@@ -676,21 +831,23 @@ void perform_multi_query_with_bbox
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
 void perform_query_with_recurse
-    (string query_type, string recurse_type, string key1, string value1,
+    (std::string query_type, std::string recurse_type, std::string key1, std::string value1,
      double south, double north, double west, double east, bool double_recurse,
-     int pattern_size, uint64 global_node_offset, string db_dir)
+     int pattern_size, uint64 global_node_offset, std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Id_Query_Statement > stmt1;
       if (recurse_type == "way-node")
@@ -754,7 +911,7 @@ void perform_query_with_recurse
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", query_type);
-      
+
       SProxy< Recurse_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2("type", recurse_type).stmt(), "");
 
@@ -780,26 +937,28 @@ void perform_query_with_recurse
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
 void perform_query_with_role_recurse
-    (string recurse_type, string role, string key1, string value1,
-     int pattern_size, uint64 global_node_offset, string db_dir)
+    (std::string recurse_type, std::string role, std::string key1, std::string value1,
+     int pattern_size, uint64 global_node_offset, std::string db_dir)
 {
-  string query_type = "relation";
+  std::string query_type = "relation";
   if (recurse_type == "relation-node")
     query_type = "node";
   else if (recurse_type == "relation-way")
     query_type = "way";
-  
+
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Id_Query_Statement > stmt1;
       if (recurse_type == "relation-node")
@@ -819,7 +978,7 @@ void perform_query_with_role_recurse
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", query_type);
-      
+
       SProxy< Recurse_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2("type", recurse_type)("role", role).stmt(), "");
 
@@ -833,25 +992,27 @@ void perform_query_with_role_recurse
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
 
 
 void perform_query_with_id_query
-    (string query_type, string key1, string value1,
+    (std::string query_type, std::string key1, std::string value1,
      double south, double north, double west, double east, bool double_id_query,
-     int pattern_size, uint64 global_node_offset, string db_dir)
+     int pattern_size, uint64 global_node_offset, std::string db_dir)
 {
   try
   {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
-    Resource_Manager rman(transaction);
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", query_type);
-      
+
       SProxy< Id_Query_Statement > stmt2;
       stmt1.stmt().add_statement(&stmt2
           ("type", query_type)
@@ -883,7 +1044,7 @@ void perform_query_with_id_query
   }
   catch (File_Error e)
   {
-    cerr<<"File error caught: "
+    std::cerr<<"File error caught: "
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
@@ -892,18 +1053,18 @@ int main(int argc, char* args[])
 {
   if (argc < 5)
   {
-    cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir node_id_offset\n";
+    std::cout<<"Usage: "<<args[0]<<" test_to_execute pattern_size db_dir node_id_offset\n";
     return 0;
   }
-  string test_to_execute = args[1];
+  std::string test_to_execute = args[1];
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
-  
-  cout<<
+
+  std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm>\n";
-  
+
   // Test queries for nodes.
   if ((test_to_execute == "") || (test_to_execute == "1"))
     // Test a key and value which appears only locally
@@ -921,28 +1082,28 @@ int main(int argc, char* args[])
     // Test a key only which doesn't appear at all
     perform_query("node", "nowhere", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "6"))
-    // Test a key intersected with a small key and value pair
+    // Test a key intersected with a small key and value std::pair
     perform_query("node", "node_key_7", "", "node_key_11", "node_value_8", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "7"))
-    // Test a key intersected with a large key and value pair
+    // Test a key intersected with a large key and value std::pair
     perform_query("node", "node_key_7", "", "node_key_15", "node_value_15", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "8"))
-    // Test a bbox combined with a local key-value pair
+    // Test a bbox combined with a local key-value std::pair
     perform_query_with_bbox("node", "node_key_11", "node_value_2",
 			    "51.0", "51.2", "7.0", "8.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "9"))
-    // Test a bbox combined with a global key-value pair
+    // Test a bbox combined with a global key-value std::pair
     perform_query_with_bbox("node", "node_key_5", "node_value_5",
 			    "-10.0", "-1.0", "-15.0", "-3.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "10"))
-    // Test a bbox combined with a global key-value pair
+    // Test a bbox combined with a global key-value std::pair
     perform_query_with_bbox("node", "node_key_7", "",
 			    "-10.0", "-1.0", "-15.0", "-3.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "11"))
     // Test three key-values intersected
     perform_query("node", "node_key_5", "node_value_5", "node_key_7", "node_value_0",
 		  "node_key_15", "node_value_15", args[3]);
-		  
+		
   // Test queries for ways.
   if ((test_to_execute == "") || (test_to_execute == "12"))
     // Test a key and value which appears only locally
@@ -960,10 +1121,10 @@ int main(int argc, char* args[])
     // Test a key only which doesn't appear at all
     perform_query("way", "nowhere", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "17"))
-    // Test a key intersected with a small key and value pair
+    // Test a key intersected with a small key and value std::pair
     perform_query("way", "way_key_7", "", "way_key_11", "way_value_8", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "18"))
-    // Test a key intersected with a large key and value pair
+    // Test a key intersected with a large key and value std::pair
     perform_query("way", "way_key_7", "", "way_key_15", "way_value_15", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "19"))
     // Test three key-values intersected
@@ -993,33 +1154,33 @@ int main(int argc, char* args[])
 		  "relation_key_5", "relation_value_5", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "26"))
-    // Test an around combined with a local key-value pair
+    // Test an around combined with a local key-value std::pair
     perform_query_with_around("node", "node", "node_key_11", "", args[3], pattern_size, global_node_offset);
   if ((test_to_execute == "") || (test_to_execute == "27"))
-    // Test an around combined with a global key-value pair
+    // Test an around combined with a global key-value std::pair
     perform_query_with_around("node", "node", "node_key_7", "node_value_1", args[3],
 			      pattern_size, global_node_offset);
 
   if ((test_to_execute == "") || (test_to_execute == "28"))
-    // Test a bbox combined with a global key-value pair, yielding diagonal ways.
+    // Test a bbox combined with a global key-value std::pair, yielding diagonal ways.
     perform_query_with_bbox("way", "way_key_5", "way_value_5",
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "29"))
-    // Test a bbox combined with a global key-value pair, yielding horizontal and vertical ways.
+    // Test a bbox combined with a global key-value std::pair, yielding horizontal and vertical ways.
     perform_query_with_bbox("way", "way_key_5", "way_value_5",
 			    "57.5", "80.0", "75.0", "105.0", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "30"))
-    // Test a bbox combined with a global key-value pair, yielding diagonal ways.
+    // Test a bbox combined with a global key-value std::pair, yielding diagonal ways.
     perform_query_with_bbox("relation", "relation_key_2/4", "",
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "31"))
-    // Test a bbox combined with a global key-value pair, yielding horizontal and vertical ways.
+    // Test a bbox combined with a global key-value std::pair, yielding horizontal and vertical ways.
     perform_query_with_bbox("relation", "relation_key_2/4", "",
 			    "57.5", "80.0", "75.0", "105.0", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "32"))
-    // Test regular expressions: A simple string
+    // Test regular expressions: A simple std::string
     perform_regex_query("node", "", "",
 			"node_key_11", "^node_value_2$", true,
 			"", "", true, "", "", true, "", "", true, args[3]);
@@ -1035,7 +1196,7 @@ int main(int argc, char* args[])
 			"relation_key_5", "^relation_.*_5$", true,
 			"", "", true, "", "", true, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "35"))
-    // Test regular expressions: A regular expression and a key-value pair
+    // Test regular expressions: A regular expression and a key-value std::pair
     perform_regex_query("relation",
 			"relation_key_2/4", "relation_value_0",
 			"relation_key_5", "^relation_.*_5$", true,
@@ -1065,7 +1226,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "42"))
     // Test an around collecting relations from nodes based on way membership
     perform_query_with_around("way", "way", "", "", args[3], pattern_size, global_node_offset);
-  
+
   if ((test_to_execute == "") || (test_to_execute == "43"))
     // Test an around collecting relations from nodes based on node membership
     perform_query_with_around("relation", "node", "", "", args[3], pattern_size, global_node_offset);
@@ -1124,7 +1285,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "55"))
     perform_query_with_recurse("node", "way-node", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			       pattern_size, global_node_offset, args[3]);
-  
+
   // Test recurse of type relation-node as subquery
   if ((test_to_execute == "") || (test_to_execute == "56"))
     perform_query_with_recurse("node", "relation-node", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1143,7 +1304,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "60"))
     perform_query_with_recurse("node", "relation-node", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			       pattern_size, global_node_offset, args[3]);
-  
+
   // Test recurse of type relation-way as subquery
   if ((test_to_execute == "") || (test_to_execute == "61"))
     perform_query_with_recurse("way", "relation-way", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1163,7 +1324,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "65"))
     perform_query_with_recurse("way", "relation-way", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			       pattern_size, global_node_offset, args[3]);
-  
+
   // Test recurse of type relation-relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "66"))
     perform_query_with_recurse("relation", "relation-relation", "", "",
@@ -1277,7 +1438,7 @@ int main(int argc, char* args[])
     perform_query_with_recurse("relation", "relation-backwards", "", "",
 			       100.0, 100.0, 0.0, 0.0, true,
 			       pattern_size, global_node_offset, args[3]);
-			       
+			
   // Test id-query type node as subquery
   if ((test_to_execute == "") || (test_to_execute == "91"))
     perform_query_with_id_query("node", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1297,7 +1458,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "95"))
     perform_query_with_id_query("node", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			        pattern_size, global_node_offset, args[3]);
-			       
+			
   // Test id-query type way as subquery
   if ((test_to_execute == "") || (test_to_execute == "96"))
     perform_query_with_id_query("way", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1317,7 +1478,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "100"))
     perform_query_with_id_query("way", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			        pattern_size, global_node_offset, args[3]);
-			       
+			
   // Test id-query type relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "101"))
     perform_query_with_id_query("relation", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1337,7 +1498,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "105"))
     perform_query_with_id_query("relation", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			        pattern_size, global_node_offset, args[3]);
-  
+
   // Test recurse of type down as subquery
   if ((test_to_execute == "") || (test_to_execute == "106"))
     perform_query_with_recurse("node", "down", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1348,7 +1509,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "108"))
     perform_query_with_recurse("relation", "down", "", "", 100.0, 100.0, 0.0, 0.0, false,
 			       pattern_size, global_node_offset, args[3]);
-  
+
   // Test recurse of type down-rel as subquery
   if ((test_to_execute == "") || (test_to_execute == "109"))
     perform_query_with_recurse("node", "down-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1359,7 +1520,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "111"))
     perform_query_with_recurse("relation", "down-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
 			       pattern_size, global_node_offset, args[3]);
-  
+
   // Test recurse of type up as subquery
   if ((test_to_execute == "") || (test_to_execute == "112"))
     perform_query_with_recurse("node", "up", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1370,7 +1531,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "114"))
     perform_query_with_recurse("relation", "up", "", "", 100.0, 100.0, 0.0, 0.0, false,
 			       pattern_size, global_node_offset, args[3]);
-  
+
   // Test recurse of type up-rel as subquery
   if ((test_to_execute == "") || (test_to_execute == "115"))
     perform_query_with_recurse("node", "up-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1381,7 +1542,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "117"))
     perform_query_with_recurse("relation", "up-rel", "", "", 100.0, 100.0, 0.0, 0.0, false,
 			       pattern_size, global_node_offset, args[3]);
-    
+
   // Test combination of keys-only with several other elements
   if ((test_to_execute == "") || (test_to_execute == "118"))
     perform_multi_query_with_bbox("node", "node_key_5", "", "node_key_7", "", "", "", 0, true,
@@ -1410,12 +1571,12 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "126"))
     perform_multi_query_with_bbox("node", "node_key_7", "node_....._0", "node_key_7", "value_", "", "", 3, true,
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
-    
+
   if ((test_to_execute == "") || (test_to_execute == "127"))
-    // Test an around combined with a local key-value pair
+    // Test an around combined with a local key-value std::pair
     perform_query_with_around("node", "node_key_11", "", args[3], pattern_size);
   if ((test_to_execute == "") || (test_to_execute == "128"))
-    // Test an around combined with a global key-value pair
+    // Test an around combined with a global key-value std::pair
     perform_query_with_around("node", "node_key_7", "node_value_1", args[3],
                               pattern_size);
 
@@ -1457,7 +1618,7 @@ int main(int argc, char* args[])
     // Test an around collecting relations from nodes based on way membership
     perform_query_with_role_recurse("relation-backwards", "one", "", "",
                                     pattern_size, global_node_offset, args[3]);
-    
+
   if ((test_to_execute == "") || (test_to_execute == "139"))
     // Test a single regex on keys
     perform_key_regex_query("node", "", "",
@@ -1488,7 +1649,7 @@ int main(int argc, char* args[])
     perform_key_regex_query("way", "way_key_2/4", "",
 	"^way_key_11$", "^way_value_..$", true,
 	"^way_key_5", "^way", true, args[3]);
-    
+
   if ((test_to_execute == "") || (test_to_execute == "145"))
     // Test a single regex on keys with bounding box
     perform_multi_query_with_bbox("node", "^node_key_11$", "^node_value_..$",
@@ -1513,7 +1674,41 @@ int main(int argc, char* args[])
     // Test a single regex on keys with bounding box
     perform_multi_query_with_bbox("way", "way_key_2/4", "",
 	"^way_key_11$", "^way_value_..$", "^way_key_5", "^way", 0x66, true, 51, 51.5, 7, 8, args[3]);
-  
-  cout<<"</osm>\n";
+
+  if ((test_to_execute == "") || (test_to_execute == "151"))
+    // Test a bbox combined with a key-value std::pair via a filter
+    perform_filter_with_bbox("node", "node_key_5", "node_value_5",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "152"))
+    // Test a bbox combined with a key-value std::pair via a filter
+    perform_filter_with_bbox("way", "way_key_5", "way_value_5",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "153"))
+    // Test a bbox combined with a key-value std::pair via a filter
+    perform_filter_with_bbox("relation", "relation_key_2/4", "relation_value_0",
+			    "12.5", "35.0", "-15.0", "45.0", args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "154"))
+    // Test a key combined with a key-value std::pair via a filter
+    perform_filter_with_key("node", "node_key_5", "node_value_5", "node_key", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "155"))
+    // Test a key combined with a key-value std::pair via a filter
+    perform_filter_with_key("way", "way_key_5", "way_value_5", "way_key", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "156"))
+    // Test a key combined with a key-value std::pair via a filter
+    perform_filter_with_key("relation", "relation_key_5", "relation_value_5",
+                            "relation_key_2/4", args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "157"))
+    // Test a key-value std::pair via a filter set by a previous element
+    perform_filter_from_previous_element("node", 14 + global_node_offset, "node_key_11", "node_key_7", "_", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "158"))
+    // Test a key-value std::pair via a filter set by a previous element
+    perform_filter_from_previous_element("way", 14, "way_key_11", "way_key_7", "_", args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "159"))
+    // Test a key-value std::pair via a filter set by a previous element
+    perform_filter_from_previous_element("relation", 14, "relation_key_11", "relation_key_7", "_", args[3]);
+
+  std::cout<<"</osm>\n";
   return 0;
 }

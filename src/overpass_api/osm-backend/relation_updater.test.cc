@@ -34,7 +34,6 @@
 #include "relation_updater.h"
 #include "way_updater.h"
 
-using namespace std;
 
 /**
  * Tests the library relation_updater with a sample OSM file
@@ -50,8 +49,8 @@ int state;
 const int IN_NODES = 1;
 const int IN_WAYS = 2;
 const int IN_RELATIONS = 3;
-ofstream* member_source_out;
-ofstream* tags_source_out;
+std::ofstream* member_source_out;
+std::ofstream* tags_source_out;
 Osm_Backend_Callback* callback;
 
 uint32 osm_element_count;
@@ -60,7 +59,7 @@ void start(const char *el, const char **attr)
 {
   if (!strcmp(el, "tag"))
   {
-    string key(""), value("");
+    std::string key(""), value("");
     for (unsigned int i(0); attr[i]; i += 2)
     {
       if (!strcmp(attr[i], "k"))
@@ -69,12 +68,12 @@ void start(const char *el, const char **attr)
 	value = attr[i+1];
     }
     if (current_node.id.val() > 0)
-      current_node.tags.push_back(make_pair(key, value));
+      current_node.tags.push_back(std::make_pair(key, value));
     else if (current_way.id.val() > 0)
-      current_way.tags.push_back(make_pair(key, value));
+      current_way.tags.push_back(std::make_pair(key, value));
     else if (current_relation.id.val() > 0)
     {
-      current_relation.tags.push_back(make_pair(key, value));
+      current_relation.tags.push_back(std::make_pair(key, value));
       *tags_source_out<<current_relation.id.val()<<'\t'<<key<<'\t'<<value<<'\n';
     }
   }
@@ -96,7 +95,7 @@ void start(const char *el, const char **attr)
     if (current_relation.id.val() > 0)
     {
       unsigned int ref(0);
-      string type, role;
+      std::string type, role;
       for (unsigned int i(0); attr[i]; i += 2)
       {
 	if (!strcmp(attr[i], "ref"))
@@ -116,7 +115,7 @@ void start(const char *el, const char **attr)
 	entry.type = Relation_Entry::RELATION;
       entry.role = relation_updater->get_role_id(role);
       current_relation.members.push_back(entry);
-      
+
       *member_source_out<<ref<<' '<<entry.type<<' '<<role<<' ';
     }
   }
@@ -124,7 +123,7 @@ void start(const char *el, const char **attr)
   {
     if (state == 0)
       state = IN_NODES;
-    
+
     unsigned int id(0);
     double lat(100.0), lon(200.0);
     for (unsigned int i(0); attr[i]; i += 2)
@@ -148,7 +147,7 @@ void start(const char *el, const char **attr)
       osm_element_count = 0;
       state = IN_WAYS;
     }
-    
+
     unsigned int id(0);
     for (unsigned int i(0); attr[i]; i += 2)
     {
@@ -177,7 +176,7 @@ void start(const char *el, const char **attr)
       osm_element_count = 0;
       state = IN_RELATIONS;
     }
-    
+
     unsigned int id(0);
     for (unsigned int i(0); attr[i]; i += 2)
     {
@@ -185,7 +184,7 @@ void start(const char *el, const char **attr)
 	id = atoll(attr[i+1]);
     }
     current_relation = Relation(id);
-    
+
     *member_source_out<<id<<'\t';
   }
 }
@@ -223,9 +222,9 @@ void end(const char *el)
   else if (!strcmp(el, "relation"))
   {
     relation_updater->set_relation(current_relation);
-    
+
     *member_source_out<<'\n';
-    
+
     if (osm_element_count >= 4*1024*1024)
     {
       callback->relation_elapsed(current_relation.id);
@@ -242,7 +241,7 @@ void end(const char *el)
   ++osm_element_count;
 }
 
-void cleanup_files(const File_Properties& file_properties, string db_dir,
+void cleanup_files(const File_Properties& file_properties, std::string db_dir,
 		   bool cleanup_map)
 {
   remove((db_dir + file_properties.get_file_name_trunk() +
@@ -260,13 +259,13 @@ void cleanup_files(const File_Properties& file_properties, string db_dir,
 
 int main(int argc, char* args[])
 {
-  string db_dir("./");
-  
+  std::string db_dir("./");
+
   try
   {
-    ofstream member_db_out((db_dir + "member_db.csv").c_str());
-    ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
-    ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
+    std::ofstream member_db_out((db_dir + "member_db.csv").c_str());
+    std::ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
+    std::ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
       Node_Updater node_updater_("./", only_data);
       node_updater = &node_updater_;
@@ -274,18 +273,18 @@ int main(int argc, char* args[])
       way_updater = &way_updater_;
       Relation_Updater relation_updater_("./", only_data);
       relation_updater = &relation_updater_;
-      
-      member_source_out = new ofstream((db_dir + "member_source.csv").c_str());
-      tags_source_out = new ofstream((db_dir + "tags_source.csv").c_str());
-      
+
+      member_source_out = new std::ofstream((db_dir + "member_source.csv").c_str());
+      tags_source_out = new std::ofstream((db_dir + "tags_source.csv").c_str());
+
       callback = get_verbatim_callback();
-      
+
       osm_element_count = 0;
       state = 0;
       //reading the main document
       callback->parser_started();
       parse(stdin, start, end);
-      
+
       if (state == IN_NODES)
       {
 	callback->nodes_finished();
@@ -307,21 +306,21 @@ int main(int argc, char* args[])
                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
                           way_updater->get_new_attic_skeletons());
       }
-      
+
       delete member_source_out;
       delete tags_source_out;
     }
-    
+
     Nonsynced_Transaction transaction(false, false, "./", "");
-    
+
     // prepare check update_members - load roles
-    map< uint32, string > roles;
+    std::map< uint32, std::string > roles;
     Block_Backend< Uint32_Index, String_Object > roles_db
       (transaction.data_index(osm_base_settings().RELATION_ROLES));
     for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
         it(roles_db.flat_begin()); !(it == roles_db.flat_end()); ++it)
       roles[it.index().val()] = it.object().val();
-    
+
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
 	(transaction.data_index(osm_base_settings().RELATIONS));
@@ -335,7 +334,7 @@ int main(int argc, char* args[])
 	    <<roles[it.object().members[i].role]<<' ';
       member_db_out<<'\n';
     }
-    
+
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Local, Uint32_Index > relations_local_db
 	(transaction.data_index(osm_base_settings().RELATION_TAGS_LOCAL));
@@ -346,7 +345,7 @@ int main(int argc, char* args[])
       tags_local_out<<it.object().val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
-    
+
     // check update_way_tags_local - compare both files for the result
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > relations_global_db
 	(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
@@ -362,19 +361,19 @@ int main(int argc, char* args[])
   {
     report_file_error(e);
   }
-  
+
   cleanup_files(*osm_base_settings().NODES, "./", true);
   cleanup_files(*osm_base_settings().NODE_TAGS_LOCAL, "./", true);
   cleanup_files(*osm_base_settings().NODE_TAGS_GLOBAL, "./", true);
-  
+
   cleanup_files(*osm_base_settings().WAYS, "./", true);
   cleanup_files(*osm_base_settings().WAY_TAGS_LOCAL, "./", true);
   cleanup_files(*osm_base_settings().WAY_TAGS_GLOBAL, "./", true);
-  
+
   //cleanup_files(*osm_base_settings().RELATIONS, "./", true);
   //cleanup_files(*osm_base_settings().RELATION_ROLES, "./", true);
   //cleanup_files(*osm_base_settings().RELATION_TAGS_LOCAL, "./", true);
   //cleanup_files(*osm_base_settings().RELATION_TAGS_GLOBAL, "./", true);
-  
+
   return 0;
 }

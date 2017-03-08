@@ -40,17 +40,16 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 template< class TIndex, class Id_Type >
 struct Flat_Meta_Collector
 {
   public:
     Flat_Meta_Collector(Transaction& transaction, const File_Properties* meta_file_prop = 0);
-    
+
     void reset();
     const OSM_Element_Metadata_Skeleton< Id_Type >* get(const TIndex& index, Id_Type ref);
-    
+
     ~Flat_Meta_Collector()
     {
       if (meta_db)
@@ -59,13 +58,13 @@ struct Flat_Meta_Collector
 	delete meta_db;
       }
     }
-  
+
   private:
     Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< Id_Type > >* meta_db;
     typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< Id_Type > >::Flat_Iterator*
       db_it;
     TIndex* current_index;
-    map< OSM_Element_Metadata_Skeleton< Id_Type >, bool > current_objects;
+    std::map< OSM_Element_Metadata_Skeleton< Id_Type >, bool > current_objects;
 };
 
 /** Implementation --------------------------------------------------------- */
@@ -77,16 +76,16 @@ Flat_Meta_Collector< TIndex, Id_Type >::Flat_Meta_Collector
 {
   meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< Id_Type > >
       (transaction.data_index(meta_file_prop));
-	  
+	
   reset();
 }
-    
+
 template< class TIndex, class Id_Type >
 void Flat_Meta_Collector< TIndex, Id_Type >::reset()
 {
   if (!meta_db)
     return;
-      
+
   if (db_it)
     delete db_it;
   if (current_index)
@@ -94,7 +93,7 @@ void Flat_Meta_Collector< TIndex, Id_Type >::reset()
     delete current_index;
     current_index = 0;
   }
-  
+
   db_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< Id_Type > >
       ::Flat_Iterator(meta_db->flat_begin());
 	
@@ -102,7 +101,7 @@ void Flat_Meta_Collector< TIndex, Id_Type >::reset()
     current_index = new TIndex(db_it->index());
   while (!(*db_it == meta_db->flat_end()) && (*current_index == db_it->index()))
   {
-    current_objects.insert(make_pair(db_it->object(), false));
+    current_objects.insert(std::make_pair(db_it->object(), false));
     ++(*db_it);
   }
 }
@@ -113,34 +112,34 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Flat_Meta_Collector< TIndex, Id_
 {
   if (!meta_db)
     return 0;
-  
+
   if ((current_index) && (*current_index < index))
   {
-    for (typename map< OSM_Element_Metadata_Skeleton< Id_Type >, bool >::const_iterator
+    for (typename std::map< OSM_Element_Metadata_Skeleton< Id_Type >, bool >::const_iterator
         it = current_objects.begin(); it != current_objects.end(); ++it)
     {
       if (!it->second)
-        cout<<"Skipping meta data of "<<dec<<it->first.ref.val()
-            <<" at "<<hex<<current_index->val()<<'\n';
+        std::cout<<"Skipping meta data of "<<std::dec<<it->first.ref.val()
+            <<" at "<<std::hex<<current_index->val()<<'\n';
     }
     current_objects.clear();
-    
+
     while (!(*db_it == meta_db->flat_end()) && (db_it->index() < index))
     {
-      cout<<"Skipping meta data of "<<dec<<db_it->object().ref.val()
-          <<" at "<<hex<<db_it->index().val()<<'\n';
+      std::cout<<"Skipping meta data of "<<std::dec<<db_it->object().ref.val()
+          <<" at "<<std::hex<<db_it->index().val()<<'\n';
       ++(*db_it);
     }
     if (!(*db_it == meta_db->flat_end()))
       *current_index = db_it->index();
     while (!(*db_it == meta_db->flat_end()) && (*current_index == db_it->index()))
     {
-      current_objects.insert(make_pair(db_it->object(), false));
+      current_objects.insert(std::make_pair(db_it->object(), false));
       ++(*db_it);
     }
   }
-  
-  typename map< OSM_Element_Metadata_Skeleton< Id_Type >, bool >::iterator it
+
+  typename std::map< OSM_Element_Metadata_Skeleton< Id_Type >, bool >::iterator it
       = current_objects.find(OSM_Element_Metadata_Skeleton< Id_Type >(ref));
   it->second = true;
   if (it != current_objects.end())
@@ -152,9 +151,9 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Flat_Meta_Collector< TIndex, Id_
 //-----------------------------------------------------------------------------
 
 int main(int argc, char *argv[])
-{ 
+{
   // read command line arguments
-  string db_dir;
+  std::string db_dir;
   uint log_level = Error_Output::ASSISTING;
 
   int area_level = 0;
@@ -164,7 +163,7 @@ int main(int argc, char *argv[])
   {
     if (!(strncmp(argv[argpos], "--db-dir=", 9)))
     {
-      db_dir = ((string)argv[argpos]).substr(9);
+      db_dir = ((std::string)argv[argpos]).substr(9);
       if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
     }
@@ -178,18 +177,19 @@ int main(int argc, char *argv[])
       log_level = Error_Output::VERBOSE;
     ++argpos;
   }
-  
+
   Error_Output* error_output(new Console_Output(log_level));
   Statement::set_error_output(error_output);
-  
+
   // connect to dispatcher and get database dir
   try
   {
     // open read transaction and log this.
+    Parsed_Query global_settings;
     Dispatcher_Stub dispatcher(db_dir, error_output, "-- consistency check --\n", keep_meta, area_level,
-			       24*60*60, 1024*1024*1024);
+			       24*60*60, 1024*1024*1024, global_settings);
     Resource_Manager& rman = dispatcher.resource_manager();
-    
+
     // perform check
     {
       uint32 count = 0;
@@ -204,11 +204,11 @@ int main(int argc, char *argv[])
         {
 	  dispatcher.ping();
           count = 0;
-          cout<<"Processed 1000000 nodes.\n";
+          std::cout<<"Processed 1000000 nodes.\n";
         }
         if (!meta_collector.get(it.index(), it.object().id))
-	  cout<<"Missing meta data of "<<dec<<it.object().id.val()
-	      <<" at "<<hex<<it.index().val()<<'\n';
+	  std::cout<<"Missing meta data of "<<std::dec<<it.object().id.val()
+	      <<" at "<<std::hex<<it.index().val()<<'\n';
       }
     }
 
@@ -216,12 +216,12 @@ int main(int argc, char *argv[])
       uint32 count = 0;
       File_Properties* props = meta_settings().WAYS_META;
       File_Blocks_Index_Base* index_base = rman.get_transaction()->data_index(props);
-      cout<<"ways_meta address "<<index_base<<'\n';
+      std::cout<<"ways_meta address "<<index_base<<'\n';
       File_Blocks_Index< Uint31_Index >* index = (File_Blocks_Index< Uint31_Index >*)index_base;
-      cout<<"ways_meta";
+      std::cout<<"ways_meta";
       for (int i = 0; i < (int)index->get_void_blocks().size(); ++i)
-	cout<<' '<<index->get_void_blocks()[i].first<<' '<<index->get_void_blocks()[i].second;
-      cout<<'\n';
+	std::cout<<' '<<index->get_void_blocks()[i].first<<' '<<index->get_void_blocks()[i].second;
+      std::cout<<'\n';
       Flat_Meta_Collector< Uint31_Index, Way::Id_Type > meta_collector
           (*rman.get_transaction(), props);
       Block_Backend< Uint31_Index, Way_Skeleton > db
@@ -233,11 +233,11 @@ int main(int argc, char *argv[])
         {
 	  dispatcher.ping();
 	  count = 0;
-          cout<<"Processed 100000 ways.\n";
+          std::cout<<"Processed 100000 ways.\n";
         }
         if (!meta_collector.get(it.index(), it.object().id))
-	  cout<<"Missing meta data of "<<dec<<it.object().id.val()
-	      <<" at "<<hex<<it.index().val()<<'\n';
+	  std::cout<<"Missing meta data of "<<std::dec<<it.object().id.val()
+	      <<" at "<<std::hex<<it.index().val()<<'\n';
       }
     }
 
@@ -254,33 +254,33 @@ int main(int argc, char *argv[])
         {
 	  dispatcher.ping();
 	  count = 0;
-          cout<<"Processed 100000 relations.\n";
+          std::cout<<"Processed 100000 relations.\n";
         }
         if (!meta_collector.get(it.index(), it.object().id))
-	  cout<<"Missing meta data of "<<dec<<it.object().id.val()
-	      <<" at "<<hex<<it.index().val()<<'\n';
+	  std::cout<<"Missing meta data of "<<std::dec<<it.object().id.val()
+	      <<" at "<<std::hex<<it.index().val()<<'\n';
       }
     }
 
-    cout<<"done\n";
+    std::cout<<"done\n";
 
     return 0;
   }
   catch(File_Error e)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     if (e.origin != "Dispatcher_Stub::Dispatcher_Stub::1")
     {
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
       if (error_output)
         error_output->runtime_error(temp.str());
     }
-    
+
     return 1;
   }
   catch(Resource_Error e)
   {
-    ostringstream temp;
+    std::ostringstream temp;
     if (e.timed_out)
       temp<<"Query timed out in \""<<e.stmt_name<<"\" at line "<<e.line_number
           <<" after "<<e.runtime<<" seconds.";
@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
           <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
     if (error_output)
       error_output->runtime_error(temp.str());
-    
+
     return 2;
   }
   catch(Exit_Error e)

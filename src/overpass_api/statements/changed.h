@@ -22,32 +22,51 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "../data/utils.h"
+#include "../frontend/basic_formats.h"
 #include "statement.h"
 
 
 class Changed_Statement : public Output_Statement
 {
   public:
-    Changed_Statement(int line_number_, const map< string, string >& attributes,
-                       Query_Constraint* bbox_limitation = 0);
-    virtual string get_name() const { return "changed"; }
+    Changed_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
+                       Parsed_Query& global_settings);
+    virtual std::string get_name() const { return "changed"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Changed_Statement();
-    
+
     static Generic_Statement_Maker< Changed_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
     uint64 get_since(Resource_Manager& rman) const;
     uint64 get_until(Resource_Manager& rman) const;
-    
+
     static bool area_query_exists() { return area_query_exists_; }
     bool trivial() const { return behave_trivial; }
-    
+
+    virtual std::string dump_xml(const std::string& indent) const
+    {
+      return indent + "<changed"
+          + (since != NOW ? std::string(" since=\"") + iso_string(since) + "\"" : "")
+          + (until != NOW ? std::string(" until=\"") + iso_string(until) + "\"" : "")
+          + dump_xml_result_name() + "/>\n";
+    }
+
+    virtual std::string dump_compact_ql(const std::string&) const
+    {
+      return std::string("(changed:")
+          + (since != NOW ? std::string("\"") + iso_string(since) + "\"" : "")
+          + (until != NOW ? std::string(",\"") + iso_string(until) + "\"" : "")
+          + ")" + dump_ql_result_name();
+    }
+    virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
+
   private:
     uint64 since, until;
-    vector< Query_Constraint* > constraints;
+    std::vector< Query_Constraint* > constraints;
     bool behave_trivial;
-    
+
     static bool area_query_exists_;
 };
 

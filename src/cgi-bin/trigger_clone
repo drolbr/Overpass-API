@@ -17,11 +17,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-CLONE_DIR="/var/www/clone"
+CLONE_DIR="/var/www/clone/"
 
 echo "Content-Type: text/plain; charset=utf-8"
 echo
-echo "http://dev.overpass-api.de/clone/"
-
-touch "$CLONE_DIR/trigger"
-chmod 666 "$CLONE_DIR/trigger"
+cat "$CLONE_DIR/latest_dir"

@@ -39,17 +39,16 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 typedef enum
     { parser_execute, parser_dump_xml, parser_dump_pretty_map_ql, parser_dump_compact_map_ql, parser_dump_bbox_map_ql }
     Debug_Level;
-    
+
 bool parse_and_validate
-    (Statement::Factory& stmt_factory,
-     const string& xml_raw, Error_Output* error_output, Debug_Level debug_type);
-    
-vector< Statement* >* get_statement_stack();
+    (Statement::Factory& stmt_factory, Parsed_Query& parsed_query,
+     const std::string& xml_raw, Error_Output* error_output, Debug_Level debug_type);
+
+std::vector< Statement* >* get_statement_stack();
 
 meta_modes get_uses_meta_data();
 

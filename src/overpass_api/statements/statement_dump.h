@@ -19,6 +19,9 @@
 #ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__STATEMENT_DUMP_H
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__STATEMENT_DUMP_H
 
+
+#include "statement.h"
+
 #include <map>
 #include <string>
 #include <vector>
@@ -32,33 +35,40 @@ class Statement_Dump
   public:
     struct Factory
     {
-      Factory() : bbox_limitation(0) {}
+      Factory(Statement::Factory& stmt_factory_) : bbox_limitation(0), stmt_factory(&stmt_factory_) {}
       
-      Statement_Dump* create_statement(string element, int line_number,
-				       const map< string, string >& attributes);
+      Statement_Dump* create_statement(std::string element, int line_number,
+				       const std::map< std::string, std::string >& attributes);
+      Statement_Dump* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context);
       
       int bbox_limitation;
+      Statement::Factory* stmt_factory;
     };
     
-    Statement_Dump(string name, const map< string, string >& attributes_)
-        : name_(name), attributes(attributes_) {}
+    Statement_Dump(std::string name, const std::map< std::string, std::string >& attributes_, int line_number_,
+        Statement* stmt = 0)
+        : name_(name), attributes(attributes_), line_number(line_number_), non_dump_stmt(stmt) {}
     ~Statement_Dump();
     
-    void add_statement(Statement_Dump* statement, string text);
-    string dump_xml() const;
-    string dump_pretty_map_ql() const;
-    string dump_compact_map_ql() const;
-    string dump_bbox_map_ql() const;
+    void add_statement(Statement_Dump* statement, std::string text);
+    std::string dump_xml() const;
+    std::string dump_pretty_map_ql(Statement::Factory& stmt_factory);
+    std::string dump_compact_map_ql(Statement::Factory& stmt_factory);
+    std::string dump_bbox_map_ql(Statement::Factory& stmt_factory);
     
     const std::string& name() const { return name_; }
     std::string attribute(const std::string& key) const;
     
-    void add_final_text(string text) {}
+    void add_final_text(std::string text) {}
 
+    Statement* create_non_dump_stmt(Statement::Factory& stmt_factory);
+    
   private:
-    string name_;
-    map< string, string > attributes;
-    vector< Statement_Dump* > substatements;
+    std::string name_;
+    std::map< std::string, std::string > attributes;
+    std::vector< Statement_Dump* > substatements;
+    int line_number;
+    Statement* non_dump_stmt;
 };
 
 #endif

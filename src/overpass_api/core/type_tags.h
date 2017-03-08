@@ -185,6 +185,9 @@ void generate_ids_by_coarse
     std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
     ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
   }
+  for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    std::sort(it->second.begin(), it->second.end());
 }
 
 
@@ -211,6 +214,9 @@ void generate_ids_by_coarse
     std::sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
     ids_by_coarse_.erase(std::unique(ids_by_coarse_.begin(), ids_by_coarse_.end()), ids_by_coarse_.end());
   }
+  for (typename std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >::iterator
+      it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    std::sort(it->second.begin(), it->second.end());
 }
 
 

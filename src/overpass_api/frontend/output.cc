@@ -21,58 +21,31 @@
 
 #include "output.h"
 
-using namespace std;
-
-
-string escape_cstr(const string& s)
-{
-  string result;
-  result.reserve(s.length()*2);
-  for (string::size_type i(0); i < s.size(); ++i)
-  {
-    if (s[i] == '\"')
-      result += "\\\"";
-    else if (s[i] == '\\')
-      result += "\\\\";
-    else if (s[i] == '\n')
-      result += "\\n";
-    else if (s[i] == '\t')
-      result += "\\t";
-    else if (s[i] == '\r')
-      result += "\\r";
-    else if ((unsigned char)s[i] < 32)
-      result += '?';
-    else
-      result += s[i];
-  }
-  return result;
-}
-
 
 class Verbose_Osm_Backend_Callback : public Osm_Backend_Callback
 {
   public:
-    virtual void update_started() { cerr<<"Flushing to database ."; }
-    virtual void compute_indexes_finished() { cerr<<'.'; }
-    virtual void update_ids_finished() { cerr<<'.'; }
-    virtual void update_coords_finished() { cerr<<'.'; }
-    virtual void prepare_delete_tags_finished() { cerr<<'.'; }
-    virtual void tags_local_finished() { cerr<<'.'; }
-    virtual void tags_global_finished() { cerr<<'.'; }
-    virtual void flush_roles_finished() { cerr<<'.'; }
-    virtual void update_finished() { cerr<<" done.\n"; }
-    virtual void partial_started() { cerr<<"Reorganizing the database ..."; }
-    virtual void partial_finished() { cerr<<" done.\n"; }
+    virtual void update_started() { std::cerr<<"Flushing to database ."; }
+    virtual void compute_indexes_finished() { std::cerr<<'.'; }
+    virtual void update_ids_finished() { std::cerr<<'.'; }
+    virtual void update_coords_finished() { std::cerr<<'.'; }
+    virtual void prepare_delete_tags_finished() { std::cerr<<'.'; }
+    virtual void tags_local_finished() { std::cerr<<'.'; }
+    virtual void tags_global_finished() { std::cerr<<'.'; }
+    virtual void flush_roles_finished() { std::cerr<<'.'; }
+    virtual void update_finished() { std::cerr<<" done.\n"; }
+    virtual void partial_started() { std::cerr<<"Reorganizing the database ..."; }
+    virtual void partial_finished() { std::cerr<<" done.\n"; }
     
-    virtual void parser_started() { cerr<<"Reading XML file ..."; }
-    virtual void node_elapsed(Node::Id_Type id) { cerr<<" elapsed node "<<id.val()<<". "; }
-    virtual void nodes_finished() { cerr<<" finished reading nodes. "; }
-    virtual void way_elapsed(Way::Id_Type id) { cerr<<" elapsed way "<<id.val()<<". "; }
-    virtual void ways_finished() { cerr<<" finished reading ways. "; }
-    virtual void relation_elapsed(Relation::Id_Type id) { cerr<<" elapsed relation "<<id.val()<<". "; }
-    virtual void relations_finished() { cerr<<" finished reading relations. "; }
+    virtual void parser_started() { std::cerr<<"Reading XML file ..."; }
+    virtual void node_elapsed(Node::Id_Type id) { std::cerr<<" elapsed node "<<id.val()<<". "; }
+    virtual void nodes_finished() { std::cerr<<" finished reading nodes. "; }
+    virtual void way_elapsed(Way::Id_Type id) { std::cerr<<" elapsed way "<<id.val()<<". "; }
+    virtual void ways_finished() { std::cerr<<" finished reading ways. "; }
+    virtual void relation_elapsed(Relation::Id_Type id) { std::cerr<<" elapsed relation "<<id.val()<<". "; }
+    virtual void relations_finished() { std::cerr<<" finished reading relations. "; }
 
-    virtual void parser_succeeded() { cerr<<"Update complete.\n"; }
+    virtual void parser_succeeded() { std::cerr<<"Update complete.\n"; }
 };
 
 
@@ -117,6 +90,6 @@ Osm_Backend_Callback* get_quiet_callback()
 
 void report_file_error(const File_Error& e)
 {
-  cerr<<"File error caught: "
+  std::cerr<<"File error caught: "
       <<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
 }
