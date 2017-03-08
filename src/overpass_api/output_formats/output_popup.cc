@@ -134,7 +134,7 @@ bool Category_Filter::consider(const Node_Skeleton& skel,
   if (it_conj != filter_disjunction.end())
     output += print(title_key, skel, tags);
   
-  return it_conj == filter_disjunction.end();
+  return it_conj != filter_disjunction.end();
 }
 
 
@@ -157,7 +157,7 @@ bool Category_Filter::consider(const Way_Skeleton& skel,
   if (it_conj != filter_disjunction.end())
     output += print(title_key, skel, tags);
   
-  return it_conj == filter_disjunction.end();
+  return it_conj != filter_disjunction.end();
 }
 
 
@@ -180,7 +180,7 @@ bool Category_Filter::consider(const Relation_Skeleton& skel,
   if (it_conj != filter_disjunction.end())
     output += print(title_key, skel, tags);
   
-  return it_conj == filter_disjunction.end();
+  return it_conj != filter_disjunction.end();
 }
 
 
