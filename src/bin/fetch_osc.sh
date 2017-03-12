@@ -38,6 +38,17 @@ if [[ ! -d $LOCAL_DIR ]];
 };
 fi
 
+if [[ $REPLICATE_ID == "auto" ]] ; then
+    REPLICATE_ID=`find $LOCAL_DIR -type f -name '*state.txt' | sort | tail -n 1 | sed -e "s#^$LOCAL_DIR##" -e 's#[./]##g' -e 's#statetxt##' -e 's/^0\+//g'`
+    if [[ "x$REPLICATE_ID" == "x" ]] ; then
+        REPLICATE_ID=`cat $DB_DIR/replicate_id`
+    fi
+    if [[ "x$REPLICATE_ID" == "x" ]] ; then
+        echo "Could not determine REPLICATE_ID. Exiting"
+        exit 1
+    fi
+fi
+
 # $1 - remote source
 # $2 - local destination
 fetch_file()
