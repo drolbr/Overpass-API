@@ -40,6 +40,15 @@ fi
 
 if [[ $REPLICATE_ID == "auto" ]] ; then
     REPLICATE_ID=`find $LOCAL_DIR -type f -name '*state.txt' | sort | tail -n 1 | sed -e "s#^$LOCAL_DIR##" -e 's#[./]##g' -e 's#statetxt##' -e 's/^0\+//g'`
+
+    EXEC_DIR="`dirname $0`/"
+    DB_DIR=`$EXEC_DIR/dispatcher --show-dir`
+
+    if [[ ! -d $DB_DIR ]] ; then
+        echo "Can't find DB_DIR. Returned value: $DB_DIR"
+        exit 1;
+    fi
+
     if [[ "x$REPLICATE_ID" == "x" ]] ; then
         REPLICATE_ID=`cat $DB_DIR/replicate_id`
     fi
