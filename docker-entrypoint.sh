@@ -15,7 +15,7 @@ if [ ! -d /db/db ] ; then
     fi
 
     if [ "$OVERPASS_MODE" = "init" ]; then
-        lftp -c "get -c $OVERPASS_PLANET_URL -o /db/planet; exit" \
+        lftp -c "get -c \"$OVERPASS_PLANET_URL\" -o /db/planet; exit" \
         && /app/bin/init_osm3s.sh /db/planet /db/db /app "--meta=$OVERPASS_META" \
         && echo $OVERPASS_PLANET_SEQUENCE_ID > /db/db/replicate_id \
         && rm /db/planet \
