@@ -26,7 +26,7 @@ RUN cd /app/src \
     && libtoolize \
     && automake --add-missing  \
     && autoconf \
-    && CXXFLAGS='-O2' CFLAGS='-O2' ./configure --prefix=/app \
+    && CXXFLAGS='-O2' CFLAGS='-O2' ./configure --prefix=/app --enable-lz4 \
     && make -j $(grep -c ^processor /proc/cpuinfo) install clean \
     && apt-get remove -y \
         autoconf \
