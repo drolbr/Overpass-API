@@ -3,10 +3,12 @@
 This image on startup initializes with data on first start.
 To do it properly it needs a bit of guidance in form of enviroment variables.
 * `OVERPASS_MODE` - takes the value of either `init` or `clone`
-* `OVERPASS_META` - `yes` or `no` - passed to Overpass as `--meta`
+* `OVERPASS_META` - `yes`, `no` or `attic` - passed to Overpass as `--meta` or `--keep-attic`
 * `OVERPASS_DIFF_URL` - url to diff's directory for updating the instance (eg. https://planet.openstreetmap.org/replication/minute/)
 * `OVERPASS_PLANET_URL` - url to "planet" file in `init` mode
 * `OVERPASS_PLANET_SEQUENCE_ID` - sequence identifier corresponding to planet file above. All files after this one will be applied
+* `OVERPASS_COMPRESSION` - takes values of `no`, `gz` or `lz4`. Specifies compression mode of the Overpass database. 
+Ony useful in `init` mode. Defaults to `gz`
 
 Image works in two modes `clone` or `init`. This affects how the instance gets initialized. If the mode is set to `clone`
 then data is copied from http://dev.overpass-api.de/api_drolbr/ and then updated from diffs. This will result in Overpass instance
