@@ -80,11 +80,11 @@ int main(int argc, char *argv[])
     }
     else if (!(strcmp(argv[argpos], "--dump-xml")))
       debug_level = parser_dump_xml;
-    else if (!(strcmp(argv[argpos], "--dump-pretty-ql")))
+    else if (!(strcmp(argv[argpos], "--dump-pretty-map-ql")))
       debug_level = parser_dump_pretty_map_ql;
-    else if (!(strcmp(argv[argpos], "--dump-compact-ql")))
+    else if (!(strcmp(argv[argpos], "--dump-compact-map-ql")))
       debug_level = parser_dump_compact_map_ql;
-    else if (!(strcmp(argv[argpos], "--dump-bbox-ql")))
+    else if (!(strcmp(argv[argpos], "--dump-bbox-map-ql")))
       debug_level = parser_dump_bbox_map_ql;
     else if (!(strncmp(argv[argpos], "--clone=", 8)))
     {
@@ -99,9 +99,9 @@ int main(int argc, char *argv[])
       "  --db-dir=$DB_DIR: The directory where the database resides. If you set this parameter\n"
       "        then osm3s_query will read from the database without using the dispatcher management.\n"
       "  --dump-xml: Don't execute the query but only dump the query in XML format.\n"
-      "  --dump-pretty-ql: Don't execute the query but only dump the query in pretty QL format.\n"
-      "  --dump-compact-ql: Don't execute the query but only dump the query in compact QL format.\n"
-      "  --dump-bbox-ql: Don't execute the query but only dump the query in a suitable form\n"
+      "  --dump-pretty-map-ql: Don't execute the query but only dump the query in pretty QL format.\n"
+      "  --dump-compact-map-ql: Don't execute the query but only dump the query in compact QL format.\n"
+      "  --dump-bbox-map-ql: Don't execute the query but only dump the query in a suitable form\n"
       "        for an OpenLayers slippy map.\n"
       "  --clone=$TARGET_DIR: Write a consistent copy of the entire database to the given $TARGET_DIR.\n"
       "  --rules: Ignore all time limits and allow area creation by this query.\n"
