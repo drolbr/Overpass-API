@@ -15,6 +15,7 @@ if [ ! -d /db/db ] ; then
         fi
         mkdir -p /db/db \
         && /app/bin/download_clone.sh --db-dir=/db/db --source=http://dev.overpass-api.de/api_drolbr/ $META "--compresion_method=$OVERPASS_COMPRESSION" \
+        && cp -r /app/src/rules /db/db \
         && chown -R overpass:overpass /db \
         && echo "Overpass ready, you can start your container with docker start"
         exit
@@ -25,6 +26,7 @@ if [ ! -d /db/db ] ; then
         && /app/bin/init_osm3s.sh /db/planet /db/db /app "--meta=$OVERPASS_META" \
         && echo $OVERPASS_PLANET_SEQUENCE_ID > /db/db/replicate_id \
         && rm /db/planet \
+        && cp -r /app/src/rules /db/db \
         && chown -R overpass:overpass /db \
         && echo "Overpass ready, you can start your container with docker start"
         exit
