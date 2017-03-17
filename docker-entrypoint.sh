@@ -14,7 +14,7 @@ if [ ! -d /db/db ] ; then
             META="--meta=$OVERPASS_META"
         fi
         mkdir -p /db/db \
-        && /app/bin/download_clone.sh --db-dir=/db/db --source=http://dev.overpass-api.de/api_drolbr/ $META "--compresion_method=$OVERPASS_COMPRESSION" \
+        && /app/bin/download_clone.sh --db-dir=/db/db --source=http://dev.overpass-api.de/api_drolbr/ $META \
         && cp -r /app/src/rules /db/db \
         && chown -R overpass:overpass /db \
         && echo "Overpass ready, you can start your container with docker start"
@@ -23,7 +23,7 @@ if [ ! -d /db/db ] ; then
 
     if [ "$OVERPASS_MODE" = "init" ]; then
         lftp -c "get -c \"$OVERPASS_PLANET_URL\" -o /db/planet; exit" \
-        && /app/bin/init_osm3s.sh /db/planet /db/db /app "--meta=$OVERPASS_META" \
+        && /app/bin/init_osm3s.sh /db/planet /db/db /app "--meta=$OVERPASS_META" "--compresion_method=$OVERPASS_COMPRESSION" \
         && echo $OVERPASS_PLANET_SEQUENCE_ID > /db/db/replicate_id \
         && rm /db/planet \
         && cp -r /app/src/rules /db/db \
