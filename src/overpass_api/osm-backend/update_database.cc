@@ -113,10 +113,10 @@ int main(int argc, char* argv[])
   {
 #ifdef HAVE_LZ4
     std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
-        " [--compression-method=(no|gz|lz4)]\n";
+        " [--compression-method=(no|gz|lz4)] [--map-compression-method=(no|gz|lz4)]\n";
 #else
     std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
-        " [--compression-method=(no|gz)]\n";
+        " [--compression-method=(no|gz)] [--map-compression-method=(no|gz)]\n";
 #endif
     return 0;
   }
