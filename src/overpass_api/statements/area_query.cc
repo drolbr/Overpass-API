@@ -189,7 +189,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 
 //-----------------------------------------------------------------------------
 
-bool Area_Query_Statement::is_used_ = false;
+int Area_Query_Statement::area_stmt_ref_counter_ = 0;
 
 Generic_Statement_Maker< Area_Query_Statement > Area_Query_Statement::statement_maker("area-query");
 
@@ -197,7 +197,7 @@ Area_Query_Statement::Area_Query_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  is_used_ = true;
+  ++area_stmt_ref_counter_;
 
   std::map< std::string, std::string > attributes;
 
@@ -223,6 +223,9 @@ Area_Query_Statement::Area_Query_Statement
 
 Area_Query_Statement::~Area_Query_Statement()
 {
+  if (area_stmt_ref_counter_ > 0)
+    --area_stmt_ref_counter_;
+
   for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;

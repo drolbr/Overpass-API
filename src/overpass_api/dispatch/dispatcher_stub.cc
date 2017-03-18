@@ -69,6 +69,8 @@ void set_limits(uint32 time, uint64 space)
 {
   rlimit limit;
 
+  //TODO: Set soft limits for FastCGI instead of hard limits!
+
   int result = getrlimit(RLIMIT_CPU, &limit);
   if (result == 0 && time < limit.rlim_cur && time < limit.rlim_max)
   {
@@ -90,6 +92,13 @@ void set_limits(uint32 time, uint64 space)
 Dispatcher_Stub::Dispatcher_Stub
     (std::string db_dir_, Error_Output* error_output_, std::string xml_raw, meta_modes meta_, int area_level,
      uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings)
+:  Dispatcher_Stub(db_dir_, error_output_, xml_raw, meta_, area_level,
+    max_allowed_time, max_allowed_space, global_settings, nullptr) {}
+
+
+Dispatcher_Stub::Dispatcher_Stub
+    (std::string db_dir_, Error_Output* error_output_, std::string xml_raw, meta_modes meta_, int area_level,
+     uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings, Index_Cache* ic)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
       transaction(0), area_transaction(0), rman(0), meta(meta_)
@@ -120,6 +129,30 @@ Dispatcher_Stub::Dispatcher_Stub
     }
     transaction = new Nonsynced_Transaction
         (false, false, dispatcher_client->get_db_dir(), "");
+
+
+
+    if (ic != nullptr)
+      transaction = new Nonsynced_Transaction
+        (false, false, dispatcher_client->get_db_dir(), "", ic);
+    else
+      transaction = new Nonsynced_Transaction
+          (false, false, dispatcher_client->get_db_dir(), "");
+
+    {
+      std::ifstream version((dispatcher_client->get_db_dir() + "osm_base_version").c_str());
+      getline(version, timestamp);
+      timestamp = de_escape(timestamp);
+    }
+
+    {
+      std::ifstream replicate_id_stream((dispatcher_client->get_db_dir() + "replicate_id").c_str());
+      std::string replicate_id;
+      getline(replicate_id_stream, replicate_id);
+      transaction->set_replicate_id(replicate_id);
+    }
+
+    transaction->flush_outdated_index_cache();
 
     transaction->data_index(osm_base_settings().NODES);
     transaction->random_index(osm_base_settings().NODES);
@@ -172,11 +205,6 @@ Dispatcher_Stub::Dispatcher_Stub
       transaction->data_index(attic_settings().RELATION_CHANGELOG);
     }
 
-    {
-      std::ifstream version((dispatcher_client->get_db_dir() + "osm_base_version").c_str());
-      getline(version, timestamp);
-      timestamp = de_escape(timestamp);
-    }
     try
     {
       logger.annotated_log("read_idx_finished() start");

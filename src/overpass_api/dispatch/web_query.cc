@@ -16,6 +16,16 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#undef VERSION
+#endif
+
+#ifdef HAVE_FASTCGI
+#include "fcgio.h"
+#endif
+
 #include "resource_manager.h"
 #include "scripting_core.h"
 #include "../frontend/web_output.h"
@@ -43,8 +53,11 @@
 #include <string>
 #include <vector>
 
+// Maximum bytes
+const unsigned long STDIN_MAX = 1000000;
 
-int main(int argc, char *argv[])
+
+int handle_request(const std::string & content, bool is_cgi, Index_Cache* ic)
 {
   Parsed_Query global_settings;
   Web_Output error_output(Error_Output::ASSISTING);
@@ -53,8 +66,8 @@ int main(int argc, char *argv[])
   try
   {
     global_settings.set_input_params(
-	get_xml_cgi(&error_output, 16*1024*1024,
-	error_output.http_method, error_output.allow_headers, error_output.has_origin));
+	get_xml_cgi(content, &error_output, 16*1024*1024,
+	error_output.http_method, error_output.allow_headers, error_output.has_origin, is_cgi));
 
     if (error_output.display_encoding_errors())
       return 0;
@@ -170,3 +183,112 @@ int main(int argc, char *argv[])
 
   return 0;
 }
+
+#ifdef HAVE_FASTCGI
+std::string get_request_content(const FCGX_Request & request) {
+    char * content_length_str = FCGX_GetParam("CONTENT_LENGTH", request.envp);
+    unsigned long content_length = STDIN_MAX;
+
+    if (content_length_str) {
+        content_length = strtol(content_length_str, &content_length_str, 10);
+        if (*content_length_str) {
+          std::cerr << "Can't Parse 'CONTENT_LENGTH='"
+                 << FCGX_GetParam("CONTENT_LENGTH", request.envp)
+                 << "'. Consuming stdin up to " << STDIN_MAX << std::endl;
+        }
+
+        if (content_length > STDIN_MAX) {
+            content_length = STDIN_MAX;
+        }
+    } else {
+        // Do not read from stdin if CONTENT_LENGTH is missing
+        content_length = 0;
+    }
+
+    char * content_buffer = new char[content_length];
+    std::cin.read(content_buffer, content_length);
+    content_length = std::cin.gcount();
+
+    // Chew up any remaining stdin - this shouldn't be necessary
+    // but is because mod_fastcgi doesn't handle it correctly.
+
+    // ignore() doesn't set the eof bit in some versions of glibc++
+    // so use gcount() instead of eof()...
+    do std::cin.ignore(1024); while (std::cin.gcount() == 1024);
+
+    std::string content(content_buffer, content_length);
+    delete [] content_buffer;
+    return content;
+}
+#endif
+
+
+int main(int argc, char *argv[])
+{
+  Index_Cache ic;
+
+#ifdef HAVE_FASTCGI
+
+  if (FCGX_IsCGI())
+  {
+
+#endif
+
+    int ret = handle_request("", true, &ic);
+    return (ret);
+
+#ifdef HAVE_FASTCGI
+
+  }
+  else
+  {
+    // Backup the stdio streambufs
+    std::streambuf * cin_streambuf  = std::cin.rdbuf();
+    std::streambuf * cout_streambuf = std::cout.rdbuf();
+    std::streambuf * cerr_streambuf = std::cerr.rdbuf();
+
+    FCGX_Request request;
+
+    FCGX_Init();
+    FCGX_InitRequest(&request, 0, 0);
+
+    while (FCGX_Accept_r(&request) == 0) {
+      fcgi_streambuf cin_fcgi_streambuf(request.in);
+      fcgi_streambuf cout_fcgi_streambuf(request.out);
+      fcgi_streambuf cerr_fcgi_streambuf(request.err);
+
+      std::cin.rdbuf(&cin_fcgi_streambuf);
+      std::cout.rdbuf(&cout_fcgi_streambuf);
+      std::cerr.rdbuf(&cerr_fcgi_streambuf);
+
+      std::string content = get_request_content(request);
+
+      char* request_method = FCGX_GetParam("REQUEST_METHOD", request.envp);
+      char* access_control_headers = FCGX_GetParam("HTTP_ACCESS_CONTROL_REQUEST_HEADERS", request.envp);
+      char* http_origin = FCGX_GetParam("HTTP_ORIGIN", request.envp);
+      char* remote_addr = FCGX_GetParam("REMOTE_ADDR", request.envp);
+      char* query_string = FCGX_GetParam("QUERY_STRING", request.envp);
+
+      setenv("REQUEST_METHOD", request_method != NULL ? request_method : "", true);
+      setenv("HTTP_ACCESS_CONTROL_REQUEST_HEADERS", access_control_headers != NULL ? access_control_headers : "" , true);
+      setenv("HTTP_ORIGIN", http_origin != NULL ? http_origin : "", true);
+      setenv("REMOTE_ADDR", remote_addr != NULL ? remote_addr : "", true);
+      setenv("QUERY_STRING", query_string != NULL ? query_string : "", true);
+
+      initialize();
+
+      int ret = handle_request(content, FCGX_IsCGI(), &ic);
+
+    }
+
+    // restore stdio streambufs
+    std::cin.rdbuf(cin_streambuf);
+    std::cout.rdbuf(cout_streambuf);
+    std::cerr.rdbuf(cerr_streambuf);
+
+  }
+#endif
+
+  return 0;
+}
+

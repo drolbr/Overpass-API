@@ -42,7 +42,7 @@ class Id_Query_Statement : public Output_Statement
     Uint64 get_upper() const { return upper; }
     int get_type() const { return type; }
 
-    static bool area_query_exists() { return area_query_exists_; }
+    static bool area_query_exists() { return area_query_ref_counter_ > 0; }
 
     static std::string to_string(int type)
     {
@@ -83,7 +83,7 @@ class Id_Query_Statement : public Output_Statement
     Uint64 ref, lower, upper;
     std::vector< Query_Constraint* > constraints;
 
-    static bool area_query_exists_;
+    static int area_query_ref_counter_;
 };
 
 #endif

@@ -36,7 +36,7 @@
 
 //-----------------------------------------------------------------------------
 
-bool Query_Statement::area_query_exists_ = false;
+int Query_Statement::area_query_ref_counter_ = 0;
 
 Generic_Statement_Maker< Query_Statement > Query_Statement::statement_maker("query");
 
@@ -61,7 +61,7 @@ Query_Statement::Query_Statement
   else if (attributes["type"] == "area")
   {
     type = QUERY_AREA;
-    area_query_exists_ = true;
+    ++area_query_ref_counter_;
   }
   else
   {

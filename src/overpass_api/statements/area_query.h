@@ -75,7 +75,7 @@ class Area_Query_Statement : public Output_Statement
     bool areas_from_input() const { return (submitted_id == 0); }
     std::string get_input() const { return input; }
 
-    static bool is_used() { return is_used_; }
+    static bool is_used() { return area_stmt_ref_counter_ > 0; }
 
     virtual std::string dump_xml(const std::string& indent) const
     {
@@ -102,7 +102,7 @@ class Area_Query_Statement : public Output_Statement
     std::string input;
     long long submitted_id;
     std::vector< Area_Skeleton::Id_Type > area_id;
-    static bool is_used_;
+    static int area_stmt_ref_counter_;
     std::vector< Query_Constraint* > constraints;
 };
 

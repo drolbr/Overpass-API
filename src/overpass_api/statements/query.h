@@ -45,14 +45,17 @@ class Query_Statement : public Output_Statement
   public:
     Query_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                     Parsed_Query& global_settings);
-    virtual ~Query_Statement() {}
+    virtual ~Query_Statement() {
+      if (type == QUERY_AREA && area_query_ref_counter_ > 0)
+        --area_query_ref_counter_;
+    }
     virtual void add_statement(Statement* statement, std::string text);
     virtual std::string get_name() const { return "query"; }
     virtual void execute(Resource_Manager& rman);
 
     static Generic_Statement_Maker< Query_Statement > statement_maker;
 
-    static bool area_query_exists() { return area_query_exists_; }
+    static bool area_query_exists() { return area_query_ref_counter_ > 0; }
 
     static std::string to_string(int type)
     {
@@ -122,7 +125,7 @@ class Query_Statement : public Output_Statement
     std::vector< Statement* > substatements;
     Bbox_Query_Statement* global_bbox_statement;
 
-    static bool area_query_exists_;
+    static int area_query_ref_counter_;
 
     template< typename Skeleton, typename Id_Type >
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids

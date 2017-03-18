@@ -31,18 +31,28 @@
 
 struct User_Data_Cache
 {
-  User_Data_Cache() : loaded(false) {}
+  User_Data_Cache()  {}
   const std::map< uint32, std::string >& users(Transaction& transaction);
-
-private:
-  std::map< uint32, std::string > users_;
-  bool loaded;
 };
 
 
 inline const std::map< uint32, std::string >& User_Data_Cache::users(
     Transaction& transaction)
 {
+  static std::map< uint32, std::string > users_;
+  static bool loaded;
+  static std::string replicate_id;
+
+  if (replicate_id != transaction.get_replicate_id())
+  {
+    replicate_id = transaction.get_replicate_id();
+    if (loaded)
+    {
+      users_.clear();
+      loaded = false;
+    }
+  }
+
   if (!loaded)
   {
     Block_Backend< Uint32_Index, User_Data > user_db
