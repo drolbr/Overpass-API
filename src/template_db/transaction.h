@@ -96,7 +96,7 @@ class Nonsynced_Transaction : public Transaction
 inline Nonsynced_Transaction::Nonsynced_Transaction
     (bool writeable_, bool use_shadow_,
      const std::string& db_dir_, const std::string& file_name_extension_)
-   : Nonsynced_Transaction(writeable_, use_shadow_, db_dir, file_name_extension, nullptr) {}
+   : Nonsynced_Transaction(writeable_, use_shadow_, db_dir_, file_name_extension_, nullptr) {}
 
 
 inline Nonsynced_Transaction::Nonsynced_Transaction

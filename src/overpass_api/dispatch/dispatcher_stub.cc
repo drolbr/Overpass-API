@@ -127,10 +127,6 @@ Dispatcher_Stub::Dispatcher_Stub
       logger.annotated_log(out.str());
       throw;
     }
-    transaction = new Nonsynced_Transaction
-        (false, false, dispatcher_client->get_db_dir(), "");
-
-
 
     if (ic != nullptr)
       transaction = new Nonsynced_Transaction
