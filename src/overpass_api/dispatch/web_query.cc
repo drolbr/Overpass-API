@@ -106,7 +106,7 @@ int handle_request(const std::string & content, bool is_cgi, Index_Cache* ic)
       int area_level = determine_area_level(&error_output, 0);
       Dispatcher_Stub dispatcher("", &error_output, global_settings.get_input_params().find("data")->second,
 			         get_uses_meta_data(), area_level,
-				 max_allowed_time, max_allowed_space, global_settings);
+				 max_allowed_time, max_allowed_space, global_settings, ic);
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
 
