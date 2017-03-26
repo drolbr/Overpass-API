@@ -314,12 +314,6 @@ Id_Query_Statement::Id_Query_Statement
   lower = atoll(attributes["lower"].c_str());
   upper = atoll(attributes["upper"].c_str());
 
-  if (lower.val() > 0 && upper.val() > 0)
-  {
-    for (Uint64::Id_Type i = lower.val(); i < upper.val(); ++i)
-      ref_ids.insert(i);
-  }
-
   if (ref.val() <= 0)
   {
     if (lower.val() == 0 || upper.val() == 0)
@@ -330,6 +324,17 @@ Id_Query_Statement::Id_Query_Statement
       add_static_error(temp.str());
     }
     ++upper;
+  }
+  else
+  {
+    lower = ref;
+    upper = ++ref;
+  }
+
+  if (lower.val() > 0 && upper.val() > 0)
+  {
+    for (Uint64::Id_Type i = lower.val(); i < upper.val(); ++i)
+      ref_ids.insert(i);
   }
 }
 

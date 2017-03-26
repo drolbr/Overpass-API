@@ -72,9 +72,21 @@ class Id_Query_Statement : public Output_Statement
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
     virtual std::string dump_ql_in_query(const std::string& indent) const
     {
-      return std::string("(")
-          + (lower.val() == upper.val()-1 ? ::to_string(lower.val()) : "")
-          + ")";
+      if (ref_ids.size() > 1)
+      {
+        std::string result("(id:");
+        std::set<Uint64::Id_Type>::iterator it(ref_ids.begin());
+
+        result += ::to_string(*it++);
+        while (it != ref_ids.end())
+          result += "," + ::to_string(*it++);
+        result += ")";
+        return result;
+      }
+      else
+        return std::string("(")
+            + (lower.val() == upper.val()-1 ? ::to_string(lower.val()) : "")
+            + ")";
     }
 
   private:
