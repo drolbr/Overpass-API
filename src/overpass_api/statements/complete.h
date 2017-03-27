@@ -47,7 +47,6 @@ class Complete_Statement : public Output_Statement
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
         result += *it ? (*it)->dump_xml(indent + "  ") : "";
 
-      // TODO: "-> .output_complete" is still missing
       return result + indent + "</complete>\n";
     }
 
@@ -59,9 +58,8 @@ class Complete_Statement : public Output_Statement
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
         result += (*it)->dump_compact_ql(indent) + ";";
       result += ")";
-      // TODO: "-> .output_complete" is still missing
 
-      return result;
+      return result + dump_ql_result_name();
     }
 
     virtual std::string dump_pretty_ql(const std::string& indent) const
@@ -72,13 +70,12 @@ class Complete_Statement : public Output_Statement
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
         result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
       result += "\n)";
-      // TODO: "-> .output_complete" is still missing
 
-      return result;
+      return result + dump_ql_result_name();
     }
 
   private:
-    std::string input, output_iteration, output_complete;
+    std::string input, output_iteration, output;
     std::vector< Statement* > substatements;
 };
 

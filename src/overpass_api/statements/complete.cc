@@ -46,7 +46,8 @@ Complete_Statement::Complete_Statement
   
   input = "_";
   output_iteration = attributes["into"];
-  output_complete = attributes["into_complete"];
+
+  set_output(attributes["into_complete"]);
 }
 
 void Complete_Statement::add_statement(Statement* statement, std::string text)
@@ -143,8 +144,7 @@ void Complete_Statement::execute(Resource_Manager& rman)
 
   }  while (new_elements_found);
 
-  rman.sets()[output_complete].swap(result_set);
-  result_set.clear();
+  transfer_output(rman, result_set);
 
   rman.health_check(*this);
 }
