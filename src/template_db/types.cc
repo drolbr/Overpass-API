@@ -19,8 +19,9 @@
 
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <string.h>
 #include "types.h"
+
+#include <cstring>
 
 
 void copy_file(const std::string& source, const std::string& dest)
