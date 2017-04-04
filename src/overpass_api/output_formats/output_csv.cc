@@ -125,6 +125,16 @@ template< >
 void print_meta< int >(const std::string& keyfield,
     const int& meta, const std::map< uint32, std::string >* users) {}
 
+std::string get_count_tag(const std::vector< std::pair< std::string, std::string> >* tags, std::string tag)
+{
+  if (tags)
+    for (std::vector< std::pair< std::string, std::string> >::const_iterator it_tags = tags->begin();
+         it_tags != tags->end(); ++it_tags)
+      if (it_tags->first == tag)
+        return it_tags->second;
+  return "0";
+}
+
 
 template< typename Id_Type, typename OSM_Element_Metadata_Skeleton >
 void process_csv_line(int otype, const std::string& type, Id_Type id, const Opaque_Geometry& geometry,
@@ -177,6 +187,19 @@ void process_csv_line(int otype, const std::string& type, Id_Type id, const Opaq
         if ((mode.mode & (Output_Mode::COORDS | Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
 	    && geometry.has_center())
           std::cout<<std::fixed<<std::setprecision(7)<<geometry.center_lon();
+      }
+      if (type == "count")
+      {
+        if (it->first == "count")
+          std::cout << get_count_tag(tags, "total");
+        else if (it->first == "count:nodes")
+          std::cout << get_count_tag(tags, "nodes");
+        else if (it->first == "count:ways")
+          std::cout << get_count_tag(tags, "ways");
+        else if (it->first == "count:relations")
+          std::cout << get_count_tag(tags, "relations");
+        else if (it->first == "count:areas")
+          std::cout << get_count_tag(tags, "areas");
       }
     }
       
