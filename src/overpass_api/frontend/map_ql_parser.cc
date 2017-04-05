@@ -256,23 +256,21 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory,
-				      std::string type, std::vector< std::string > ref, std::string into, uint line_nr)
+    std::string type, const std::vector< std::string >& ref, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
-  int i;
-  std::vector< std::string >::iterator it;
 
   attr["type"] = type;
   attr["into"] = into;
 
-  for(it = ref.begin(), i = 0; it != ref.end(); ++it, ++i)
+  for (uint i = 0; i < ref.size(); ++i)
   {
     std::stringstream id;
     if (i == 0)
       id << "ref";
     else
       id << "ref_" << i;
-    attr[id.str()] = *it;
+    attr[id.str()] = ref[i];
   }
 
   return stmt_factory.create_statement("id-query", line_nr, attr);
@@ -289,8 +287,7 @@ TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
-				  std::string south, std::string north, std::string west, std::string east,
-				 std::string into, uint line_nr)
+  std::string south, std::string north, std::string west, std::string east, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["s"] = south;
