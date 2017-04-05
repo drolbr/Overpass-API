@@ -81,7 +81,7 @@ echo -e "\
       var lat = 53.86;\n\
       var lon = 8.44;\n\
       var zoom = 18;\n\
-      var data_url = \"/api/interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\";\n\
+      var data_url = \"/api/interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-ql --concise | ../bin/tocgi `\";\n\
       var map;\n\
 \n\
       DetectBoundsOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {\n\
@@ -257,7 +257,7 @@ echo -e "\
           map.setCenter (lonLat, zoom);\n\
 \n\
           map.addLayers([\n\
-              make_layer(\"/api/interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-bbox-map-ql --concise | ../bin/tocgi `\", \"blue\")\n\
+              make_layer(\"/api/interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-bbox-ql --concise | ../bin/tocgi `\", \"blue\")\n\
           ]);\n\
       }\n\
   </script>\n\
@@ -293,14 +293,14 @@ else
   {
     echo "<p>Your query in pretty Overpass QL:</p>"
     echo "<pre>"
-    echo -n "$DATA" | ../bin/osm3s_query --dump-pretty-map-ql --concise | ../bin/escape_xml
+    echo -n "$DATA" | ../bin/osm3s_query --dump-pretty-ql --concise | ../bin/escape_xml
     echo "</pre>"
   };
   elif [[ $OUTPUT_TYPE == "compact" ]]; then
   {
     echo "<p>Your query in compact Overpass QL:</p>"
-    echo "<a href=\"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/tocgi `\"><pre>"
-    echo -n "$DATA" | ../bin/osm3s_query --dump-compact-map-ql --concise | ../bin/escape_xml 
+    echo "<a href=\"interpreter?data=`echo "$DATA" | ../bin/osm3s_query --dump-compact-ql --concise | ../bin/tocgi `\"><pre>"
+    echo -n "$DATA" | ../bin/osm3s_query --dump-compact-ql --concise | ../bin/escape_xml 
     echo "</pre></a>"
   };
   fi
