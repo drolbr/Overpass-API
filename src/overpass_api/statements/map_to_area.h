@@ -32,15 +32,18 @@ class Map_To_Area_Statement : public Output_Statement
                           Parsed_Query& global_settings);
     virtual std::string get_name() const { return "map-to-area"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Map_To_Area_Statement() {}
+    virtual ~Map_To_Area_Statement() {
+       if (map_stmt_ref_counter_  > 0)
+         --map_stmt_ref_counter_;
+    }
     static Generic_Statement_Maker< Map_To_Area_Statement > statement_maker;
 
-    static bool is_used() { return is_used_; }
+    static bool is_used() { return map_stmt_ref_counter_ > 0; }
 
   private:
     std::string input;
 
-    static bool is_used_;
+    static int map_stmt_ref_counter_;
 };
 
 #endif

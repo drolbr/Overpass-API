@@ -27,7 +27,7 @@
 #include "id_query.h"
 
 
-bool Id_Query_Statement::area_query_exists_ = false;
+int Id_Query_Statement::area_query_ref_counter_ = 0;
 
 Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_maker("id-query");
 
@@ -284,7 +284,7 @@ Id_Query_Statement::Id_Query_Statement
   else if (attributes["type"] == "area")
   {
     type = Statement::AREA;
-    area_query_exists_ = true;
+    ++area_query_ref_counter_;
   }
   else
   {
@@ -435,6 +435,9 @@ Id_Query_Statement::~Id_Query_Statement()
   for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
+
+  if (type == Statement::AREA && area_query_ref_counter_ > 0)
+     --area_query_ref_counter_;
 }
 
 Query_Constraint* Id_Query_Statement::get_query_constraint()

@@ -26,8 +26,8 @@
 
 
 std::map< std::string, std::string > get_xml_cgi(
-    Error_Output* error_output, uint32 max_input_size,
-    Http_Methods& http_method, std::string& allow_header, bool& has_origin);
+    const std::string& content, Error_Output* error_output, uint32 max_input_size,
+    Http_Methods& http_method, std::string& allow_header, bool& has_origin, bool is_cgi);
 
 std::string get_xml_console(Error_Output* error_output, uint32 max_input_size = 1048576);
 

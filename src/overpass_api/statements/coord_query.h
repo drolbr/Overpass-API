@@ -33,7 +33,12 @@ class Coord_Query_Statement : public Output_Statement
                           Parsed_Query& global_settings);
     virtual std::string get_name() const { return "coord-query"; }
     virtual void execute(Resource_Manager& rman);
-    virtual ~Coord_Query_Statement() {}
+    virtual ~Coord_Query_Statement()
+    {
+      if (coord_stmt_ref_counter_ > 0)
+        --coord_stmt_ref_counter_;
+
+    }
     static Generic_Statement_Maker< Coord_Query_Statement > statement_maker;
 
     static int check_segment
@@ -51,7 +56,7 @@ class Coord_Query_Statement : public Output_Statement
     const static int TOGGLE_WEST = 4;
     const static int INTERSECT = 8;
 
-    static bool is_used() { return is_used_; }
+    static bool is_used() { return coord_stmt_ref_counter_ > 0; }
 
     virtual std::string dump_xml(const std::string& indent) const
     {
@@ -76,7 +81,7 @@ class Coord_Query_Statement : public Output_Statement
     std::string input;
     double lat, lon;
 
-    static bool is_used_;
+    static int coord_stmt_ref_counter_;
 };
 
 #endif

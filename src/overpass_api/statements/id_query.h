@@ -41,7 +41,7 @@ class Id_Query_Statement : public Output_Statement
     virtual const std::set<Uint64::Id_Type> & get_ref_ids() { return ref_ids; }
     int get_type() const { return type; }
 
-    static bool area_query_exists() { return area_query_exists_; }
+    static bool area_query_exists() { return area_query_ref_counter_ > 0; }
 
     static std::string to_string(int type)
     {
@@ -96,7 +96,7 @@ class Id_Query_Statement : public Output_Statement
     std::vector< Query_Constraint* > constraints;
     Uint64 ref, lower, upper;
 
-    static bool area_query_exists_;
+    static int area_query_ref_counter_;
 };
 
 #endif

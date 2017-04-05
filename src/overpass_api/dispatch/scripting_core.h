@@ -54,4 +54,6 @@ meta_modes get_uses_meta_data();
 
 int determine_area_level(Error_Output* error_output, int area_level);
 
+void initialize();
+
 #endif

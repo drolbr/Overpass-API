@@ -58,7 +58,7 @@ namespace
   std::vector< Statement* > statement_stack_;
   std::vector< Statement_Dump* > statement_dump_stack_;
   std::vector< std::string > text_stack;
-  Script_Parser xml_parser;
+  Script_Parser* xml_parser = 0;
 
   template< class TStatement >
   std::vector< TStatement* >& statement_stack();
@@ -109,11 +109,11 @@ template< class TStatement >
 void start(const char *el, const char **attr)
 {
   TStatement* statement(get_factory((typename TStatement::Factory*)(0))->create_statement
-      (el, xml_parser.current_line_number(), convert_c_pairs(attr)));
+      (el, xml_parser->current_line_number(), convert_c_pairs(attr)));
 
   statement_stack< TStatement >().push_back(statement);
-  text_stack.push_back(xml_parser.get_parsed_text());
-  xml_parser.reset_parsed_text();
+  text_stack.push_back(xml_parser->get_parsed_text());
+  xml_parser->reset_parsed_text();
 }
 
 template< class TStatement >
@@ -125,8 +125,8 @@ void end(const char *el)
 
     if (statement)
     {
-      statement->add_final_text(xml_parser.get_parsed_text());
-      xml_parser.reset_parsed_text();
+      statement->add_final_text(xml_parser->get_parsed_text());
+      xml_parser->reset_parsed_text();
 /*      statement->set_endpos(get_tag_end());*/
     }
 
@@ -137,7 +137,7 @@ void end(const char *el)
   }
   else if ((statement_stack< TStatement >().size() == 1) &&
       (statement_stack< TStatement >().front()))
-    statement_stack< TStatement >().front()->add_final_text(xml_parser.get_parsed_text());
+    statement_stack< TStatement >().front()->add_final_text(xml_parser->get_parsed_text());
 }
 
 bool parse_and_validate
@@ -153,6 +153,9 @@ bool parse_and_validate
 
   if (pos < xml_raw.size() && xml_raw[pos] == '<')
   {
+    Script_Parser xml_parser_;
+    xml_parser = &xml_parser_;
+
     try
     {
       if (debug_level == parser_dump_xml || debug_level == parser_dump_compact_map_ql
@@ -160,7 +163,7 @@ bool parse_and_validate
       {
 	Statement_Dump::Factory stmt_dump_factory(stmt_factory);
 	stmt_dump_factory_global = &stmt_dump_factory;
-	xml_parser.parse(xml_raw, start< Statement_Dump >, end< Statement_Dump >);
+	xml_parser->parse(xml_raw, start< Statement_Dump >, end< Statement_Dump >);
 
         for (std::vector< Statement_Dump* >::const_iterator it =
 	    statement_stack< Statement_Dump >().begin();
@@ -182,7 +185,7 @@ bool parse_and_validate
       else
       {
 	stmt_factory_global = &stmt_factory;
-        xml_parser.parse(xml_raw, start< Statement >, end< Statement >);
+        xml_parser->parse(xml_raw, start< Statement >, end< Statement >);
 	Osm_Script_Statement* root =
 	    get_statement_stack()->empty() ? 0 :
 	        dynamic_cast< Osm_Script_Statement* >(get_statement_stack()->front());
@@ -195,7 +198,7 @@ bool parse_and_validate
     {
       if (error_output)
         error_output->add_parse_error(parse_error.message,
-				      xml_parser.current_line_number());
+				      xml_parser->current_line_number());
     }
     catch(File_Error e)
     {
@@ -247,4 +250,27 @@ std::vector< Statement* >* get_statement_stack()
 meta_modes get_uses_meta_data()
 {
   return keep_attic;
+}
+
+void initialize()
+{
+  // initializes all static variables which are used throughout the application
+  // this way, we can safely reuse the existing interpreter process via fastcgi
+  if (stmt_factory_global != NULL)
+    delete stmt_factory_global;
+
+  if (stmt_dump_factory_global != NULL)
+    delete stmt_dump_factory_global;
+
+  stmt_factory_global = 0;
+  stmt_dump_factory_global = 0;
+  xml_parser = 0;
+
+  statement_stack_.clear();
+  statement_dump_stack_.clear();
+
+  text_stack.clear();
+
+  (global_read_counter()) = 0;
+
 }

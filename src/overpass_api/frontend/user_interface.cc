@@ -107,8 +107,8 @@ namespace
 }
 
 std::map< std::string, std::string > get_xml_cgi(
-    Error_Output* error_output, uint32 max_input_size,
-    Http_Methods& http_method, std::string& allow_header, bool& has_origin)
+    const std::string& content, Error_Output* error_output, uint32 max_input_size,
+    Http_Methods& http_method, std::string& allow_header, bool& has_origin, bool is_cgi)
 {
   // Check for various HTTP headers
   char* method = getenv("REQUEST_METHOD");
@@ -159,7 +159,7 @@ std::map< std::string, std::string > get_xml_cgi(
 	error_output->add_encoding_remark("Only whitespace found from GET method. Trying to retrieve input by POST method.");
     }
     
-    input = cgi_post_to_text();
+    input = (is_cgi ? cgi_post_to_text() : content);
     pos = 0;
     line_number = 1;
     while ((pos < input.size()) && (isspace(input[pos])))

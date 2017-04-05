@@ -33,7 +33,7 @@
 #include "coord_query.h"
 
 
-bool Coord_Query_Statement::is_used_ = false;
+int Coord_Query_Statement::coord_stmt_ref_counter_ = 0;
 
 Generic_Statement_Maker< Coord_Query_Statement > Coord_Query_Statement::statement_maker("coord-query");
 
@@ -41,7 +41,7 @@ Coord_Query_Statement::Coord_Query_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  is_used_ = true;
+  ++coord_stmt_ref_counter_;
 
   std::map< std::string, std::string > attributes;
 

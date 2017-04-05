@@ -46,6 +46,8 @@ AC_FUNC_STAT
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([clock_gettime floor ftruncate getcwd munmap regcomp select shm_open socket sqrt strnlen])
 
+
+
 AC_ARG_ENABLE([lz4],
               AS_HELP_STRING([--enable-lz4],[enable lz4 compression algorithm]),,
               [enable_lz4="no"])
@@ -72,6 +74,42 @@ if test "$want_lz4" != "no"; then
 fi
 
 AC_SUBST(COMPRESS_LIBS, ["$COMPRESS_LIBS"])
+
+# FastCGI
+
+AC_LANG_PUSH([C++])
+
+AC_ARG_ENABLE([fastcgi],
+     AS_HELP_STRING([--enable-fastcgi],[enable FastCGI]),
+     [case "${enableval}" in
+       yes) enable_fastcgi=true ;;
+       no)  enable_fastcgi=false ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-fastcgi]) ;;
+     esac],[enable_fastcgi=false])
+AS_IF([test x$enable_fastcgi != xfalse], [want_fastcgi="yes"], [want_fastcgi="no"])
+
+FASTCGI_LIBS=""
+
+if test "$want_fastcgi" != "no"; then
+  AC_CHECK_HEADER([fcgio.h], [
+    AC_CHECK_LIB(fcgi, FCGX_Accept_r, [
+      AC_DEFINE(HAVE_FASTCGI, 1, [Define if you have FastCGI library])
+      FASTCGI_LIBS="$FASTCGI_LIBS -lfcgi++ -lfcgi"
+    ], [
+      if test "$want_fastcgi" = "yes"; then
+	    AC_ERROR([Can't build with fastcgi support: libfcgi not found])
+      fi
+    ])
+  ], [
+    if test "$want_fastcgi" = "yes"; then
+      AC_ERROR([Can't build with FastCGI support: unable to find FastCGI header files])
+    fi
+  ])
+fi
+
+AC_SUBST(FASTCGI_LIBS, ["$FASTCGI_LIBS"])     
+AC_LANG_POP([C++])
+
 
 #AC_CONFIG_FILES([Makefile test-bin/Makefile])
 AC_CONFIG_FILES([Makefile])

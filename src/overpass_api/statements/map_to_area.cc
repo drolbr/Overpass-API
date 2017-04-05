@@ -22,13 +22,13 @@
 
 Generic_Statement_Maker< Map_To_Area_Statement > Map_To_Area_Statement::statement_maker("map-to-area");
 
-bool Map_To_Area_Statement::is_used_ = false;
+int Map_To_Area_Statement::map_stmt_ref_counter_ = 0;
 
 Map_To_Area_Statement::Map_To_Area_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  is_used_ = true;
+  ++map_stmt_ref_counter_;
 
   std::map< std::string, std::string > attributes;
 
