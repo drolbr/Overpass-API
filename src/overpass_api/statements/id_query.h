@@ -38,8 +38,7 @@ class Id_Query_Statement : public Output_Statement
     static Generic_Statement_Maker< Id_Query_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
-    Uint64 get_lower() const { return lower; }
-    Uint64 get_upper() const { return upper; }
+    virtual const std::set<Uint64::Id_Type> & get_ref_ids() { return ref_ids; }
     int get_type() const { return type; }
 
     static bool area_query_exists() { return area_query_exists_; }
@@ -73,15 +72,29 @@ class Id_Query_Statement : public Output_Statement
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
     virtual std::string dump_ql_in_query(const std::string& indent) const
     {
-      return std::string("(")
-          + (lower.val() == upper.val()-1 ? ::to_string(lower.val()) : "")
-          + ")";
+      if (ref_ids.size() > 1)
+      {
+        std::string result("(id:");
+        std::set<Uint64::Id_Type>::iterator it(ref_ids.begin());
+
+        result += ::to_string(*it++);
+        while (it != ref_ids.end())
+          result += "," + ::to_string(*it++);
+        result += ")";
+        return result;
+      }
+      else
+        return std::string("(")
+            + (lower.val() == upper.val()-1 ? ::to_string(lower.val()) : "")
+            + ")";
     }
 
   private:
     int type;
-    Uint64 ref, lower, upper;
+
+    std::set<Uint64::Id_Type> ref_ids;
     std::vector< Query_Constraint* > constraints;
+    Uint64 ref, lower, upper;
 
     static bool area_query_exists_;
 };
