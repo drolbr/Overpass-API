@@ -286,26 +286,35 @@ void Area_Query_Statement::get_ranges
 
 bool Area_Constraint::delivers_data(Resource_Manager& rman)
 {
+  int counter = 0;
+
+  // Count the indicies of the input areas
   if (!area->areas_from_input())
-    return false;
+  {
+    Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
+        (rman.get_area_transaction()->data_index(area_settings().AREAS));
+    for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
+        it(area_locations_db.flat_begin());
+        !(it == area_locations_db.flat_end()); ++it)
+    {
+      if (area->get_submitted_id() == it.handle().id().val())
+        counter += it.object().used_indices.size();
+    }
+  }
   else
   {
     std::map< std::string, Set >::const_iterator mit = rman.sets().find(area->get_input());
     if (mit == rman.sets().end())
       return true;
-
-    // Count the indicies of the input areas
-    int counter = 0;
-
     for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = mit->second.areas.begin();
          it != mit->second.areas.end(); ++it)
     {
       for (std::vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
         counter += it2->used_indices.size();
     }
-
-    return (counter <= 12);
   }
+  
+  return (counter <= 12);
 }
 
 

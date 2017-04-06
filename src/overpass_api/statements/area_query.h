@@ -73,8 +73,9 @@ class Area_Query_Statement : public Output_Statement
        const Statement& query, Resource_Manager& rman);
 
     bool areas_from_input() const { return (submitted_id == 0); }
+    long long get_submitted_id() const { return submitted_id; }
     std::string get_input() const { return input; }
-
+    
     static bool is_used() { return is_used_; }
 
     virtual std::string dump_xml(const std::string& indent) const
