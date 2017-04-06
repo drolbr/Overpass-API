@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -108,11 +109,14 @@ int main(int argc, char *argv[])
     ++argi;
   }
   
+	//The case insensitve search (case=ignore) was added to the script for the
+	//network and ref values to reduce zero results returned for a user
+	//who capitalizes the word incorrectly when submitting the web form
   cout<<"<osm-script>\n"
       <<"\n"
       <<"<query type=\"relation\">\n"
-      <<"  <has-kv k=\"network\" v=\""<<network<<"\"/>\n"
-      <<"  <has-kv k=\"ref\" v=\""<<ref<<"\"/>\n";
+      <<"  <has-kv case=\"ignore\" k=\"network\" regv=\""<<network<<"\"/>\n"
+      <<"  <has-kv case=\"ignore\" k=\"ref\" regv=\""<<ref<<"\"/>\n";
   if (operator_ != "")
     cout<<"  <has-kv k=\"operator\" v=\""<<operator_<<"\"/>\n";
   cout<<"</query>\n"
