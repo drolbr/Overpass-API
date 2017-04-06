@@ -19,6 +19,7 @@
 #ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__AROUND_H
 #define DE__OSM3S___OVERPASS_API__STATEMENTS__AROUND_H
 
+#include <iostream>
 #include <map>
 #include <set>
 #include <string>
@@ -28,6 +29,19 @@
 #include "../data/way_geometry_store.h"
 #include "statement.h"
 
+
+struct Prepared_BBox
+{
+  double min_lat;
+  double min_lon;
+  double max_lat;
+  double max_lon;
+
+  Prepared_BBox();
+  void merge(Prepared_BBox&);
+  bool intersects(const Prepared_BBox &) const;
+  bool intersects(const std::vector < Prepared_BBox > &) const;
+};
 
 struct Prepared_Segment
 {
@@ -85,6 +99,9 @@ class Around_Statement : public Output_Statement
     void add_ways(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
 		  const Way_Geometry_Store& way_geometries);
 
+    bool matches_bboxes(double lat, double lon) const;
+    bool matches_bboxes(const Prepared_BBox&) const;
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<around"
@@ -115,10 +132,13 @@ class Around_Statement : public Output_Statement
     double radius;
     double lat;
     double lon;
+
     std::map< Uint32_Index, std::vector< std::pair< double, double > > > radius_lat_lons;
-    std::vector< Prepared_Point > simple_lat_lons;
-    std::vector< Prepared_Segment > simple_segments;
+    std::vector< std::pair< Prepared_BBox, Prepared_Point> > simple_lat_lons;
+    std::vector< std::pair< Prepared_BBox, Prepared_Segment> > simple_segments;
     std::vector< Query_Constraint* > constraints;
+    std::vector< Prepared_BBox > node_bboxes;
+    std::vector< Prepared_BBox > way_bboxes;
 };
 
 #endif
