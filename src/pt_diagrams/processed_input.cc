@@ -897,6 +897,41 @@ void end(const char *el)
   }
 }
 
+void remove_nameless_stops(vector< unsigned int > *stops)
+{
+  for(vector< unsigned int >::iterator it = stops->begin();
+      it != stops->end(); )
+  {
+    if (nodes[*it].name.length() == 0)
+    {
+      it = stops->erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+}
+
+void reduce_consecutive_stops_with_same_name(vector< unsigned int > *stops)
+{
+  string previous_stop_name;
+
+  for(vector< unsigned int >::iterator it = stops->begin();
+      it != stops->end(); )
+  {
+    if (previous_stop_name == nodes[*it].name)
+    {
+      it = stops->erase(it);
+    }
+    else
+    {
+      previous_stop_name = nodes[*it].name;
+      ++it;
+    }
+  }
+}
+
 Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
 		       vector< Display_Class >& display_classes_,
 		       string pivot_ref_,
@@ -950,6 +985,16 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
       (correspondences, nodes, display_nodes, walk_limit_for_changes);
   Stoplist stoplist;
   Stop::used_by_size = relations->size();
+
+  // remove nameless stops and reduce consecutive stops with equal names to one
+  for(vector< Relation >::iterator rit(relations->begin());
+      rit != relations->end(); ++rit)
+  {
+    remove_nameless_stops(&rit->forward_stops);
+    reduce_consecutive_stops_with_same_name(&rit->forward_stops);
+    remove_nameless_stops(&rit->backward_stops);
+    reduce_consecutive_stops_with_same_name(&rit->backward_stops);
+  }
   
   // make a common stoplist from all relations
   // integrate all relations (their forward direction) into the stoplist
