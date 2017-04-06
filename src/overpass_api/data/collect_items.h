@@ -51,10 +51,10 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       if (stmt)
         rman.health_check(*stmt, 0, eval_map(result));
     }
-    if (timestamp < timestamp_of(it.object()))
+    if (timestamp < timestamp_of(it.object()) &&
+        predicate.match(it.object()))
     {
-      timestamp_by_id.push_back(std::make_pair(it.object().id, timestamp_of(it.object())));
-      if (predicate.match(it.object()))
+        timestamp_by_id.push_back(std::make_pair(it.object().id, timestamp_of(it.object())));
         result[it.index()].push_back(it.object());
     }
   }
