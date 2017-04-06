@@ -47,9 +47,13 @@ AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([clock_gettime floor ftruncate getcwd munmap regcomp select shm_open socket sqrt strnlen])
 
 AC_ARG_ENABLE([lz4],
-              AS_HELP_STRING([--enable-lz4],[enable lz4 compression algorithm]),,
-              [enable_lz4="no"])
-AS_IF([test x"$enable_lz4" != "xno"], [want_lz4="yes"], [want_lz4="no"])
+     AS_HELP_STRING([--enable-lz4],[enable lz4 compression algorithm]),
+     [case "${enableval}" in
+       yes) enable_lz4=true ;;
+       no)  enable_lz4=false ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-lz4]) ;;
+     esac],[enable_lz4=false])
+AS_IF([test x$enable_lz4 != xfalse], [want_lz4="yes"], [want_lz4="no"])
 
 COMPRESS_LIBS="-lz"
 AC_SUBST(COMPRESS_LIBS, ["$COMPRESS_LIBS"])
@@ -73,8 +77,22 @@ fi
 
 AC_SUBST(COMPRESS_LIBS, ["$COMPRESS_LIBS"])
 
-AC_CONFIG_FILES([Makefile test-bin/Makefile])
-#AC_CONFIG_FILES([Makefile])
+AC_ARG_ENABLE([tests],
+     AS_HELP_STRING([--enable-tests],[enable Overpass API test suite]),
+     [case "${enableval}" in
+       yes) tests=true ;;
+       no)  tests=false ;;
+       *) AC_MSG_ERROR([bad value ${enableval} for --enable-tests]) ;;
+     esac],[tests=false])
+
+AM_CONDITIONAL([COND_TESTS], [test x$tests = xtrue])
+
+AC_CONFIG_FILES([Makefile])
+
+if test "$tests" = "true"; then
+  AC_CONFIG_FILES([test-bin/Makefile])
+fi
+
 AC_OUTPUT
 AC_SYS_LARGEFILE
 
