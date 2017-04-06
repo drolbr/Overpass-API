@@ -256,8 +256,6 @@ Id_Query_Statement::Id_Query_Statement
         refs.push_back(ref);
     }
   }
-  std::sort(refs.begin(), refs.end());
-  refs.erase(std::unique(refs.begin(), refs.end()), refs.end());
 
   uint64 lower = atoll(attributes["lower"].c_str());
   uint64 upper = atoll(attributes["upper"].c_str());
@@ -284,6 +282,9 @@ Id_Query_Statement::Id_Query_Statement
     for (uint64 i = lower; i < upper; ++i)
       refs.push_back(i);
   }
+  
+  std::sort(refs.begin(), refs.end());
+  refs.erase(std::unique(refs.begin(), refs.end()), refs.end());
 }
 
 

@@ -78,7 +78,7 @@ class Id_Query_Statement : public Output_Statement
     {
       std::vector< uint64 >::const_iterator it = refs.begin();
         
-      std::string result = "(id:";
+      std::string result = "(id:" + ::to_string(refs.size()) + ",";
       if (it != refs.end())
         result += ::to_string(*it++);
       while (it != refs.end())
