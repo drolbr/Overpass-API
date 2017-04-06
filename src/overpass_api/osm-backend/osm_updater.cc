@@ -50,11 +50,11 @@
 
 namespace
 {
-  Node_Updater* node_updater;
+  Node_Updater* node_updater(0);
   Node current_node;
-  Way_Updater* way_updater;
+  Way_Updater* way_updater(0);
   Way current_way;
-  Relation_Updater* relation_updater;
+  Relation_Updater* relation_updater(0);
   Relation current_relation;
   int state;
   const int IN_NODES = 1;
@@ -66,7 +66,8 @@ namespace
   OSM_Element_Metadata* meta;
 
   uint32 osm_element_count;
-  Osm_Backend_Callback* callback;
+  Osm_Backend_Callback* callback(0);
+  Cpu_Stopwatch* cpu_stopwatch(0);
 
   std::string data_version;
 
@@ -186,7 +187,7 @@ namespace
     if (osm_element_count >= flush_limit)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, true);
+      node_updater->update(callback, cpu_stopwatch, true);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -199,7 +200,7 @@ namespace
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false);
+      node_updater->update(callback, cpu_stopwatch, false);
       //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
       callback->parser_started();
       osm_element_count = 0;
@@ -247,7 +248,7 @@ namespace
     if (osm_element_count >= flush_limit)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update(callback, true,
+      way_updater->update(callback, cpu_stopwatch, true,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons());
       callback->parser_started();
@@ -266,7 +267,7 @@ namespace
     if (osm_element_count >= flush_limit)
     {
       callback->relation_elapsed(current_relation.id);
-      relation_updater->update(callback,
+      relation_updater->update(callback, cpu_stopwatch,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons(),
                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
@@ -283,7 +284,7 @@ namespace
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false);
+      node_updater->update(callback, cpu_stopwatch, false);
 //       relation_updater->update_moved_idxs
 //           (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
@@ -293,7 +294,7 @@ namespace
     else if (state == IN_WAYS)
     {
       callback->ways_finished();
-      way_updater->update(callback, false,
+      way_updater->update(callback, cpu_stopwatch, false,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons());
 //       relation_updater->update_moved_idxs
@@ -450,13 +451,13 @@ void Osm_Updater::finish_updater()
 
   if (state == IN_NODES)
   {
-    node_updater->update(callback, false);
+    node_updater->update(callback, cpu_stopwatch, false);
     //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
     state = IN_WAYS;
   }
   if (state == IN_WAYS)
   {
-    way_updater->update(callback, false,
+    way_updater->update(callback, cpu_stopwatch, false,
                         node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                         node_updater->get_new_attic_skeletons());
 //     relation_updater->update_moved_idxs
@@ -464,7 +465,7 @@ void Osm_Updater::finish_updater()
     state = IN_RELATIONS;
   }
   if (state == IN_RELATIONS)
-    relation_updater->update(callback,
+    relation_updater->update(callback, cpu_stopwatch,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons(),
                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
@@ -527,6 +528,8 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
   way_updater = way_updater_;
   relation_updater = relation_updater_;
   callback = callback_;
+  cpu_stopwatch = new Cpu_Stopwatch();
+  cpu_stopwatch->start_cpu_timer(0);
   if (meta)
     ::meta = new OSM_Element_Metadata();
 }
@@ -570,16 +573,26 @@ void Osm_Updater::flush()
   way_updater_ = new Way_Updater(db_dir_, meta);
   delete relation_updater_;
   relation_updater_ = new Relation_Updater(db_dir_, meta);
+  if (cpu_stopwatch)
+    cpu_stopwatch->stop_cpu_timer(0);
+  std::vector< uint64 > cpu_runtime = cpu_stopwatch ? cpu_stopwatch->cpu_time() : std::vector< uint64 >();
 
   if (dispatcher_client)
   {
     delete transaction;
     transaction = 0;
+    
     Logger logger(dispatcher_client->get_db_dir());
-    logger.annotated_log("write_commit() start");
+    std::ostringstream out;
+    out<<"write_commit() start "<<global_read_counter();
+    for (std::vector< uint64 >::const_iterator it = cpu_runtime.begin(); it != cpu_runtime.end(); ++it)
+      out<<' '<<*it;
+    logger.annotated_log(out.str());
+    
     dispatcher_client->write_commit();
     rename((dispatcher_client->get_db_dir() + "osm_base_version.shadow").c_str(),
 	   (dispatcher_client->get_db_dir() + "osm_base_version").c_str());
+    
     logger.annotated_log("write_commit() end");
     delete dispatcher_client;
     dispatcher_client = 0;

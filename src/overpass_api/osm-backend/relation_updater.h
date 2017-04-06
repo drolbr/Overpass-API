@@ -75,7 +75,7 @@ struct Relation_Updater
   uint32 get_role_id(const std::string& s);
   std::vector< std::string > get_roles();
 
-  void update(Osm_Backend_Callback* callback,
+  void update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,

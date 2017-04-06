@@ -72,7 +72,7 @@ struct Way_Updater
       user_by_id[meta->user_id] = meta->user_name;
   }
 
-  void update(Osm_Backend_Callback* callback, bool partial,
+  void update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch, bool partial,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons);

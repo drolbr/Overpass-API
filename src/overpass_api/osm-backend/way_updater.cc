@@ -788,11 +788,14 @@ std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute
 }
 
 
-void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
+void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch, bool partial,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
 {
+  if (cpu_stopwatch)
+    cpu_stopwatch->start_cpu_timer(2);
+  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
 
@@ -1106,6 +1109,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
       callback->partial_finished();
     }
   }
+  
+  if (cpu_stopwatch)
+    cpu_stopwatch->stop_cpu_timer(2);
 }
 
 

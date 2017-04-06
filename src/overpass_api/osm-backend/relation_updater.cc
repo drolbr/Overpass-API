@@ -1056,7 +1056,7 @@ std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > co
 }
 
 
-void Relation_Updater::update(Osm_Backend_Callback* callback,
+void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
               const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
@@ -1064,6 +1064,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_way_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons)
 {
+  if (cpu_stopwatch)
+    cpu_stopwatch->start_cpu_timer(3);
+  
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
 
@@ -1311,6 +1314,9 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
 
   if (!external_transaction)
     delete transaction;
+  
+  if (cpu_stopwatch)
+    cpu_stopwatch->stop_cpu_timer(3);
 }
 
 

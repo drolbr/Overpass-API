@@ -142,7 +142,7 @@ void start(const char *el, const char **attr)
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false);
+      node_updater->update(callback, 0, false);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_WAYS;
@@ -161,7 +161,7 @@ void start(const char *el, const char **attr)
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false);
+      node_updater->update(callback, 0, false);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_RELATIONS;
@@ -169,7 +169,7 @@ void start(const char *el, const char **attr)
     else if (state == IN_WAYS)
     {
       callback->ways_finished();
-      way_updater->update(callback, false,
+      way_updater->update(callback, 0, false,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons());
       callback->parser_started();
@@ -198,7 +198,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, true);
+      node_updater->update(callback, 0, true);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -211,7 +211,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update(callback, false,
+      way_updater->update(callback, 0, false,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons());
       callback->parser_started();
@@ -228,7 +228,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->relation_elapsed(current_relation.id);
-      relation_updater->update(callback,
+      relation_updater->update(callback, 0,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons(),
                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
@@ -288,19 +288,19 @@ int main(int argc, char* args[])
       if (state == IN_NODES)
       {
 	callback->nodes_finished();
-	node_updater->update(callback, false);
+	node_updater->update(callback, 0, false);
       }
       else if (state == IN_WAYS)
       {
 	callback->ways_finished();
-	way_updater->update(callback, false,
+	way_updater->update(callback, 0, false,
                             node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                             node_updater->get_new_attic_skeletons());
       }
       else if (state == IN_RELATIONS)
       {
 	callback->relations_finished();
-	relation_updater->update(callback,
+	relation_updater->update(callback, 0,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons(),
                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),

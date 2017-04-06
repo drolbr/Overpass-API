@@ -139,3 +139,20 @@ std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Wa
 
   return ways_by_id;
 }
+
+
+void Cpu_Stopwatch::start_cpu_timer(uint index)
+{
+  if (cpu_start_time.size() <= index)
+    cpu_start_time.resize(index+1, 0);
+  cpu_start_time[index] = clock()/1000;
+}
+
+
+void Cpu_Stopwatch::stop_cpu_timer(uint index)
+{
+  if (cpu_runtime.size() <= index)
+    cpu_runtime.resize(index+1, 0);
+  if (index < cpu_start_time.size())
+    cpu_runtime[index] += clock()/1000 - cpu_start_time[index];
+}

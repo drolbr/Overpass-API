@@ -1192,4 +1192,16 @@ std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Wa
         const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id);
 
 
+struct Cpu_Stopwatch
+{
+  void start_cpu_timer(uint index);
+  void stop_cpu_timer(uint index);
+  const std::vector< uint64 >& cpu_time() const { return cpu_runtime; }
+  
+private:
+  std::vector< clock_t > cpu_start_time;
+  std::vector< uint64 > cpu_runtime;
+};
+
+
 #endif

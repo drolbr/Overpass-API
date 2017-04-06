@@ -107,7 +107,7 @@ void start(const char *el, const char **attr)
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, false);
+      node_updater->update(callback, 0, false);
       callback->parser_started();
       osm_element_count = 0;
       state = IN_WAYS;
@@ -134,7 +134,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, true);
+      node_updater->update(callback, 0, true);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -149,7 +149,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update(callback, true,
+      way_updater->update(callback, 0, true,
                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                           node_updater->get_new_attic_skeletons());
       callback->parser_started();
@@ -205,12 +205,12 @@ int main(int argc, char* args[])
       if (state == IN_NODES)
       {
 	callback->nodes_finished();
-	node_updater->update(callback, false);
+	node_updater->update(callback, 0, false);
       }
       else if (state == IN_WAYS)
       {
 	callback->ways_finished();
-	way_updater->update(callback, false,
+	way_updater->update(callback, 0, false,
                             node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
                             node_updater->get_new_attic_skeletons());
       }

@@ -100,11 +100,10 @@ int main(int argc, char *argv[])
       error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(),
  	  area_level > 0 ? dispatcher.get_area_timestamp() : "", true);
 
-      dispatcher.resource_manager().start_cpu_timer(0);
+      Cpu_Timer(dispatcher.resource_manager(), 0);
       for (std::vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	   it != get_statement_stack()->end(); ++it)
         (*it)->execute(dispatcher.resource_manager());
-      dispatcher.resource_manager().stop_cpu_timer(0);
 
     //TODO
 //       if (osm_script && osm_script->get_type() == "popup")
