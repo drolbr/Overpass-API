@@ -523,6 +523,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
   new_current_local_tags< Node_Skeleton, Node_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
+  //clear_common_values(attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > attic_global_tags;
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > new_global_tags;
   new_current_global_tags< Node_Skeleton::Id_Type >

@@ -700,6 +700,56 @@ void new_implicit_local_tags
 }
 
 
+/* Compares the new data and the already existing skeletons to determine those that have
+ * moved. This information is used to prepare the deletion and insertion lists for the
+ * database operation.  Also, the list of moved nodes is filled. */
+template< typename Id_Type >
+void clear_common_values
+    (std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
+     std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags)
+{
+  typename std::map< Tag_Index_Local, std::set< Id_Type > >::iterator old_it = attic_local_tags.begin();
+  typename std::map< Tag_Index_Local, std::set< Id_Type > >::iterator new_it = new_local_tags.begin();
+  while (old_it != attic_local_tags.end() && new_it != new_local_tags.end())
+  {
+    if (old_it->first < new_it->first)
+      ++old_it;
+    else if (new_it->first < old_it->first)
+      ++new_it;
+    else
+    {
+      typename std::set< Id_Type >::iterator old_sit = old_it->second.begin();
+      typename std::set< Id_Type >::iterator new_sit = new_it->second.begin();
+      
+      while (old_sit != old_it->second.end() && new_sit != new_it->second.end())
+      {
+        if (*old_sit < *new_sit)
+          ++old_sit;
+        else if (*new_sit < *old_sit)
+          ++new_sit;
+        else
+        {
+          std::cerr<<old_it->first.key<<'\t'<<old_it->first.value<<'\t'<<std::hex<<old_it->first.index<<'\t'
+              <<new_it->first.key<<'\t'<<new_it->first.value<<'\t'<<std::hex<<new_it->first.index<<'\t'
+              <<std::dec<<old_sit->val()<<'\t'<<new_sit->val()<<'\n';
+          
+          typename std::set< Id_Type >::iterator old_erase = old_sit;
+          ++old_sit;
+          old_it->second.erase(old_erase);
+          
+          typename std::set< Id_Type >::iterator new_erase = new_sit;
+          ++new_sit;
+          new_it->second.erase(new_erase);
+        }
+      }
+      
+      ++old_it;
+      ++new_it;
+    }
+  }
+}
+
+
 template< typename Skeleton >
 void add_deleted_skeletons
     (const std::map< Uint31_Index, std::set< Skeleton > >& attic_skeletons,
