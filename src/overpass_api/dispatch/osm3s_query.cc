@@ -181,10 +181,11 @@ int main(int argc, char *argv[])
     web_output.write_payload_header("", dispatcher.get_timestamp(),
  	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
 
-    Cpu_Timer cpu_timer(dispatcher.resource_manager(), 0);
+    dispatcher.resource_manager().start_cpu_timer(0);
     for (std::vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	 it != get_statement_stack()->end(); ++it)
       (*it)->execute(dispatcher.resource_manager());
+    dispatcher.resource_manager().stop_cpu_timer(0);
 
     //TODO
     /*if (osm_script && osm_script->get_type() == "custom")

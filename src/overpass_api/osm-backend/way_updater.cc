@@ -885,7 +885,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   new_current_local_tags< Way_Skeleton, Way_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
-  //clear_common_values(attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > attic_global_tags;
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > new_global_tags;
   new_current_global_tags< Way_Skeleton::Id_Type >
@@ -898,57 +897,28 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
 
   store_new_keys(new_data, keys, *transaction);
 
-  if (cpu_stopwatch)
-    cpu_stopwatch->start_cpu_timer(4);
-  
-  if (cpu_stopwatch)
-    cpu_stopwatch->start_cpu_timer(6);
   // Update id indexes
   update_map_positions(new_positions, *transaction, *osm_base_settings().WAYS);
   callback->update_ids_finished();
-  if (cpu_stopwatch)
-    cpu_stopwatch->stop_cpu_timer(6);
 
-  if (cpu_stopwatch)
-    cpu_stopwatch->start_cpu_timer(7);
   // Update skeletons
   update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().WAYS);
   callback->update_coords_finished();
-  if (cpu_stopwatch)
-    cpu_stopwatch->stop_cpu_timer(7);
 
-  if (cpu_stopwatch)
-    cpu_stopwatch->start_cpu_timer(8);
   // Update meta
   if (meta)
     update_elements(attic_meta, new_meta, *transaction, *meta_settings().WAYS_META);
-  if (cpu_stopwatch)
-    cpu_stopwatch->stop_cpu_timer(8);
 
-  if (cpu_stopwatch)
-    cpu_stopwatch->start_cpu_timer(9);
   // Update local tags
   update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().WAY_TAGS_LOCAL);
   callback->tags_local_finished();
-  if (cpu_stopwatch)
-    cpu_stopwatch->stop_cpu_timer(9);
 
-  if (cpu_stopwatch)
-    cpu_stopwatch->start_cpu_timer(10);
   // Update global tags
   update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
   callback->tags_global_finished();
-  if (cpu_stopwatch)
-    cpu_stopwatch->stop_cpu_timer(10);
 
-  if (cpu_stopwatch)
-    cpu_stopwatch->stop_cpu_timer(4);
-  
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
-  if (cpu_stopwatch)
-    cpu_stopwatch->start_cpu_timer(5);
-  
   if (meta == keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
@@ -1044,9 +1014,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
                     *transaction, *attic_settings().WAY_CHANGELOG);
   }
 
-  if (cpu_stopwatch)
-    cpu_stopwatch->stop_cpu_timer(5);
-  
   if (meta != only_data)
   {
     copy_idxs_by_id(new_meta, idxs_by_id);
