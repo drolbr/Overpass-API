@@ -19,8 +19,8 @@
 
 if [[ -z $1  ]]; then
 {
-  echo "Usage: $0 diff_url --meta=(yes|no)"
-  echo "Error : Set the URL to get diffs from (like http://planet.osm.org/replication/minute )"
+  echo "Usage: $0 diff_url --meta=(yes|no|attic)"
+  echo "Error : Set the URL to get diffs from (e.g. http://planet.osm.org/replication/minute )"
   exit 0
 };
 fi
