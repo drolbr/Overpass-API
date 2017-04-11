@@ -18,3 +18,5 @@ osmy_vigilance
 init_database.sql
 init_derived_data.sql
 
+/.idea/
+*.iml
