@@ -2,3 +2,5 @@
 /cgi-bin/
 /test-bin/
 
+/.idea/
+*.iml
