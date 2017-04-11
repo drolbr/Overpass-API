@@ -107,6 +107,10 @@ META_OPTION=
 if [[ $2 == "--meta=yes" ]]; then
 {
   META_OPTION="--meta"
+};
+elif [[ $2 == "--meta=attic" ]]; then
+{
+  META_OPTION="--keep-attic"
 }; fi
 
 

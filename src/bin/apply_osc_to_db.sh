@@ -48,7 +48,7 @@ elif [[ $3 == "--meta=no" ]]; then
   META=
 else
 {
-  echo "You must specify --meta=yes or --meta=no"
+  echo "You have to specify --meta=yes, --meta=no or --meta=attic"
   exit 0
 }; fi
 
