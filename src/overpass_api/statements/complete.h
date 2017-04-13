@@ -26,57 +26,104 @@
 #include "statement.h"
 
 
+/* === The block statement <em>complete</em> ===
+
+''since v0.7.55''
+
+The block statement <em>complete</em> loops through its substatements
+until the results of the loop stabilize.
+This allows to track a group of loosely or tightly connected elements
+like all sections of a way with the same name or a system of tributary rivers.
+
+The statement delivers the accumulated elements in its output set
+both at the beginning of each loop execution and as output of the whole statement.
+
+The elements are accumulated from the input set before entering the loop
+and again from the input set at the end of the loop.
+If the input set contains extra elements then the loop is executed again.
+
+The base syntax is
+
+  complete(
+    <List of Substatements>
+  );
+
+where <List of Substatements> is a list of substatements.
+The input and output set can be specified between complete and the opening parenthesis,
+i.e. you set the input set
+
+  complete.<Name of Input Set>(
+    <List of Substatements>
+  );
+
+or the output set
+
+  complete->.<Name of Output Set>(
+    <List of Substatements>
+  );
+
+or both
+  
+  complete.<Name of Input Set>->.<Name of Output Set>(
+    <List of Substatements>
+  );
+
+*/
+
 class Complete_Statement : public Output_Statement
 {
-  public:
+public:
   Complete_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                      Parsed_Query& global_settings);
-    virtual void add_statement(Statement* statement, std::string text);
-    virtual std::string get_name() const { return "complete"; }
-    virtual void execute(Resource_Manager& rman);
-    virtual ~Complete_Statement() {}
+  virtual void add_statement(Statement* statement, std::string text);
+  virtual std::string get_name() const { return "complete"; }
+  virtual void execute(Resource_Manager& rman);
+  virtual ~Complete_Statement() {}
     
-    static Generic_Statement_Maker< Complete_Statement > statement_maker;
+  static Generic_Statement_Maker< Complete_Statement > statement_maker;
     
-    virtual std::string dump_xml(const std::string& indent) const
-    {
-      std::string result = indent + "<complete"
-          + (input != "_" ? " from=\"" + input + "\"" : "")
-          + (output_iteration != "_" ? " into=\"" + output_iteration + "\"" : "") + ">\n";
+  virtual std::string dump_xml(const std::string& indent) const
+  {
+    std::string result = indent + "<complete"
+        + (input != "_" ? " from=\"" + input + "\"" : "")
+        + dump_xml_result_name() + ">\n";
 
-      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += *it ? (*it)->dump_xml(indent + "  ") : "";
+    for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+      result += *it ? (*it)->dump_xml(indent + "  ") : "";
 
-      return result + indent + "</complete>\n";
-    }
+    return result + indent + "</complete>\n";
+  }
 
-    virtual std::string dump_compact_ql(const std::string& indent) const
-    {
-      std::string result = indent + "complete"
-          + (input != "_" ? "." + input : "") + (output_iteration != "_" ? "->." + output_iteration : "") + "(";
+  virtual std::string dump_compact_ql(const std::string& indent) const
+  {
+    std::string result = indent + "complete"
+        + (input != "_" ? "." + input : "")
+        + dump_ql_result_name() + "(";
 
-      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += (*it)->dump_compact_ql(indent) + ";";
-      result += ")";
+    for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+      result += (*it)->dump_compact_ql(indent) + ";";
+    result += ")";
 
-      return result + dump_ql_result_name();
-    }
+    return result;
+  }
 
-    virtual std::string dump_pretty_ql(const std::string& indent) const
-    {
-      std::string result = indent + "complete"
-          + (input != "_" ? "." + input : "") + (output_iteration != "_" ? "->." + output_iteration : "") + "(";
+  virtual std::string dump_pretty_ql(const std::string& indent) const
+  {
+    std::string result = indent + "complete"
+        + (input != "_" ? "." + input : "")
+        + dump_ql_result_name() + "(";
 
-      for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
-      result += "\n)";
+    for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
+      result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
+    result += "\n)";
 
-      return result + dump_ql_result_name();
-    }
+    return result;
+  }
 
-  private:
-    std::string input, output_iteration, output;
-    std::vector< Statement* > substatements;
+private:
+  std::string input;
+  std::vector< Statement* > substatements;
 };
+
 
 #endif

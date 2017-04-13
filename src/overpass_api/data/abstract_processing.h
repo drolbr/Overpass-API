@@ -315,9 +315,11 @@ std::vector< typename TObject::Id_Type > filter_for_ids(const std::map< TIndex, 
 //-----------------------------------------------------------------------------
 
 template< class TIndex, class TObject >
-void indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
+bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
 		       std::map< TIndex, std::vector< TObject > >& summand)
 {
+  bool result_has_grown = false;
+  
   for (typename std::map< TIndex, std::vector< TObject > >::iterator
       it = summand.begin(); it != summand.end(); ++it)
   {
@@ -325,6 +327,7 @@ void indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
     if (target.empty())
     {
       target = it->second;
+      result_has_grown = true;
       continue;
     }
 
@@ -332,7 +335,11 @@ void indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
     other.swap(target);
     set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
 	      back_inserter(target));
+    
+    result_has_grown |= (target.size() > other.size());
   }
+  
+  return result_has_grown;
 }
 
 //-----------------------------------------------------------------------------

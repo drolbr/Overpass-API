@@ -1,5 +1,5 @@
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query difference foreach convert make make_area polygon_query print query recurse union generate_test_file_areas generate_test_file_meta generate_test_file_interpreter index_computations consistency_check
+testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query complete difference foreach convert make make_area polygon_query print query recurse union generate_test_file_areas generate_test_file_meta generate_test_file_interpreter index_computations consistency_check
 dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_testsuite_template_db.sh run_testsuite_osm_backend.sh run_unittests_statements.sh run_testsuite_osm3s_query.sh run_testsuite_map_ql.sh run_testsuite_interpreter.sh run_testsuite_translate_xapi.sh run_testsuite_diff_updater.sh run_unittests_areas.sh run_unittests_meta.sh run_unittests_attic.sh run_unittests_output_csv.sh run_and_compare.sh
 
 expat_cc = ../expat/expat_justparse_interface.cc
@@ -21,6 +21,7 @@ statements_cc = \
   ../overpass_api/statements/bbox_query.cc \
   ../overpass_api/statements/binary_operators.cc \
   ../overpass_api/statements/changed.cc \
+  ../overpass_api/statements/complete.cc \
   ../overpass_api/statements/convert.cc \
   ../overpass_api/statements/coord_query.cc \
   ../overpass_api/statements/difference.cc \
@@ -94,6 +95,8 @@ around_SOURCES = ../overpass_api/statements/around.test.cc ${statements_cc} ${te
 around_LDADD = @COMPRESS_LIBS@
 bbox_query_SOURCES = ../overpass_api/statements/bbox_query.test.cc ${statements_cc} ${testenv_cc}
 bbox_query_LDADD = @COMPRESS_LIBS@
+complete_SOURCES = ../overpass_api/statements/complete.test.cc ${statements_cc} ${testenv_cc}
+complete_LDADD = @COMPRESS_LIBS@
 convert_SOURCES = ../overpass_api/statements/convert.test.cc ${statements_cc} ${testenv_cc}
 convert_LDADD = @COMPRESS_LIBS@
 difference_SOURCES = ../overpass_api/statements/difference.test.cc ${statements_cc} ${testenv_cc}

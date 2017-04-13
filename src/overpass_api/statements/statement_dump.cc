@@ -167,18 +167,14 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
         it != substatements.end(); ++it)
       result += (*it)->dump_compact_map_ql(stmt_factory);
   }
-  else if (name_ == "area-query" || name_ == "around"|| name_ == "bbox-query" || name_ == "convert"
-      || name_ == "coord-query" || name_ == "difference" || name_ == "foreach" || name_ == "id-query"
-      || name_ == "item" || name_ == "make" || name_ == "newer" || name_ == "pivot"
-      || name_ == "polygon-query" || name_ == "print" || name_ == "query" || name_ == "recurse"
-      || name_ == "union" || name_ == "user")
+  else
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
       result += stmt->dump_compact_ql("");
+    else
+      result += "(" + name_ + ":)";
   }
-  else
-    result += "(" + name_ + ":)";
   
   if (name_ != "osm-script")
     result += ";";
@@ -245,18 +241,16 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
         it != substatements.end(); ++it)
       result += (*it)->dump_bbox_map_ql(stmt_factory);
   }
-  else if (name_ == "area-query" || name_ == "around"|| name_ == "bbox-query" || name_ == "convert"
-      || name_ == "coord-query" || name_ == "difference" || name_ == "foreach" || name_ == "id-query"
-      || name_ == "item" || name_ == "make" || name_ == "newer" || name_ == "pivot"
-      || name_ == "polygon-query" || name_ == "print" || name_ == "query" || name_ == "recurse"
-      || name_ == "union" || name_ == "user")
+  else
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
-      result += stmt->dump_compact_ql(name_ == "difference" || name_ == "foreach" || name_ == "query" || name_ == "union" ? "(bbox)" : "");
+      result += stmt->dump_compact_ql(
+          name_ == "complete" || name_ == "difference" || name_ == "foreach"
+          || name_ == "query" || name_ == "union" ? "(bbox)" : "");
+    else
+      result += "(" + name_ + ":)";
   }
-  else
-    result += "(" + name_ + ":)";
   
   if (name_ != "osm-script")
     result += ";";
@@ -318,18 +312,14 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
         it != substatements.end(); ++it)
       result += (*it)->dump_pretty_map_ql(stmt_factory) + "\n";
   }
-  else if (name_ == "area-query" || name_ == "around"|| name_ == "bbox-query" || name_ == "convert"
-      || name_ == "coord-query" || name_ == "difference" || name_ == "foreach" || name_ == "id-query"
-      || name_ == "item" || name_ == "make" || name_ == "newer" || name_ == "pivot"
-      || name_ == "polygon-query" || name_ == "print" || name_ == "query" || name_ == "recurse"
-      || name_ == "union" || name_ == "user")
+  else
   {
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
       result += stmt->dump_pretty_ql("");
+    else
+      result += "(" + name_ + ":)";
   }
-  else
-    result += "(" + name_ + ":)";
   
   if (name_ != "osm-script")
     result += ";";

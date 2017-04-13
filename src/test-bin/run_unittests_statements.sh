@@ -199,6 +199,11 @@ prepare_test_loop difference 5 $DATA_SIZE
 date +%T
 perform_test_loop difference 5 "../../input/update_database/ $NODE_OFFSET"
 
+# Test the difference statement
+prepare_test_loop complete 7 $DATA_SIZE
+date +%T
+perform_test_loop complete 7 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+
 # Test the polygon statement
 prepare_test_loop polygon_query 5 $DATA_SIZE
 date +%T

@@ -199,11 +199,11 @@ TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory, 
 
 template< class TStatement >
 TStatement* create_complete_statement(typename TStatement::Factory& stmt_factory,
-    std::string into, std::string into_complete, uint line_nr)
+    std::string from, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
+  attr["from"] = from;
   attr["into"] = into;
-  attr["into_complete"] = into_complete;
   return stmt_factory.create_statement("complete", line_nr, attr);
 }
 
@@ -588,13 +588,13 @@ TStatement* parse_complete(typename TStatement::Factory& stmt_factory, Parsed_Qu
   std::pair< uint, uint > line_col = token.line_col();
   ++token;
 
+  std::string from = probe_from(token, error_output);
   std::string into = probe_into(token, error_output);
   std::vector< TStatement* > substatements =
       collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
-  std::string into_complete = probe_into(token, error_output);
 
   TStatement* statement = create_complete_statement< TStatement >
-      (stmt_factory, into, into_complete, line_col.first);
+      (stmt_factory, from, into, line_col.first);
   for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
       it != substatements.end(); ++it)
     statement->add_statement(*it, "");
