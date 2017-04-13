@@ -1,0 +1,7 @@
+DIFF_URL="http://planet.osm.org/replication/minute/"
+DB_DIR=/data/work/api.openstreetmap.fr/db/
+EXEC_DIR=/data/project/api.openstreetmap.fr/web/exec/bin/
+LOG_DIR=/var/log/overpass/
+RUN_AS_USER=api
+AREA=no
+META=yes

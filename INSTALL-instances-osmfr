@@ -1,0 +1,171 @@
+(Cette procédure a été écrite de mémoire, merci de signaler à sylvain-at-letuffe.org
+les problèmes ou faire une pull request ;-)
+
+
+Installation d'une instance pour osmfr comprenant les appels xapi/overpass et api 0.6
+=====================================================================================
+On créer un utilisateur spécifique pour gérer deux dossiers, un qui contiendra la base de donnée overpass, et un autre qui détient le code de
+l'overpass+l'interface web de l'api
+
+Un truc genre :
+adduser api -s /bin/bash -d /data/project/api.openstreetmap.fr -g users
+mkdir /data/project/api.openstreetmap.fr
+mkdir /data/work/api.openstreetmap.fr
+chown api.users /data/work/api.openstreetmap.fr /data/project/api.openstreetmap.fr
+
+* Installation des dépendances
+
+apt-get install g++ make expat libexpat1-dev git autoconf automake bzip2
+
+* téléchargement et compilation de l'overpass comprenant quelques scripts pour osmfr
+
+su - api
+cd ~
+
+#création du dossier "web" futur vhost pour apache
+mkdir web
+#création du dossier qui contiendra les executable overpass
+mkdir web/exec
+
+git clone https://github.com/osm-fr/Overpass-API.git
+cd Overpass-API/src
+autoscan
+aclocal
+autoheader
+#Needed at least on debian to correct Error: ‘required file `./ltmain.sh' not found’
+libtoolize
+automake --add-missing
+autoconf
+
+
+#Default is /usr/local/bin without --prefix
+./configure --prefix=/data/project/api.openstreetmap.fr/web/exec
+make install
+
+Configuration du lancement automatique et des updates
+=====================================================
+#script init à copier :
+cp /data/project/api.openstreetmap.fr/Overpass-API/debian/overpass /etc/init.d/
+update-rc.d overpass defaults
+#chemins d'accès, et choix d'option : (à adapter)
+cp /data/project/api.openstreetmap.fr/Overpass-API/scripts-osm-fr/overpass /etc/defaults/
+
+Chargement de la base overpass
+==============================
+Il est bon de relire les scripts eux même car ça peut avoir changé
+on lance un screen car ça va durer longtemps !!
+dans /etc/default/overpass vérifier les chemins d'accès aux programmes, à la base et aux options souhaitées, voir ./Overpass-API/debian/overpass le script d'import et d'update a besion que ça soit renseigné
+
+* Chargement
+
+./Overpass-API/scripts-osm-fr/importation-url-osm.bz2.sh http://$OSM_FILE.osm.bz2
+ou (mais il vous faut télécharger et compiler osmconvert http://wiki.openstreetmap.org/wiki/Osmconvert )
+./Overpass-API/scripts-osm-fr/importation-url-pbf.sh http://$OSM_FILE.pbf 
+
+On attend des plombes
+on fait 
+# chargement des chemins
+. /etc/default/overpass
+echo 456123 > $DB_DIR/replicate_id 
+ou 456123 est le numéro de séquence diff un peu avant la date du dernier object modifié contenu dans fichier osm importé
+Pour démarrer le tout : /etc/init.d/overpass start 
+
+Activation des query "area"
+==========================
+(Note que cela peut aussi se faire après coup)
+dans $DB_DIR créer un dossier "rules" et mettre dedans le fichier ./scripts-osm-fr/areas.osm3s
+(c'est ce fichier qui indique quelles sont les polygones et relations qui
+doivent être considérées comme des surfaces)
+
+# chargement des chemins de la config
+. /etc/default/overpass
+mkdir $DB_DIR/rules 
+cp ./Overpass-API/scripts-osm-fr/areas.osm3s $DB_DIR/rules
+
+#Dans /etc/default/overpass pensez à mettre AREA=yes
+
+/etc/init.d/overpass restart
+
+
+Configuration de apache
+=======================
+On suppose que vous avez déjà installé apache
+en root :
+cp /data/project/api.openstreetmap.fr/Overpass-API/scripts-osm-fr/api.openstreetmap.fr /etc/apache2/site-available
+a2ensite api.openstreetmap.fr
+/etc/init.d/apache2 reload
+
+
+
+Configuration du proxy "api 0.6"
+================================
+
+* dépendances
+apt-get install php5 php5-curl libapache2-mod-php5
+* Configuration php
+php dispose par défaut de 128Mo de Mémoire autorisé par script, dans certains cas de grosses requête c'est trop juste, je pousse donc à 1go - 
+Le max input size est à 2Mo, c'est parfois trop juste lorsqu'on réalise un très gros édit, le passer à 20Mo laisse plus de marge - 
+Le module de protection installé par debian (suhosin) limite la taille des variables $_GET (soit enlever se module soit trouver où augmenter cette limite)
+
+* htaccess dans le dossier vhost de apache
+Plus flexible que dans la config du vhost, on trouvera
+dans Overpass-API/scripts-osm-fr/htaccess-a-mettre-dans-vhost un fichier
+htacess qui fourni des redirects en cas de panne
+
+en utilisateur api :
+cd ~
+cd web
+suivre : https://github.com/osm-fr/simple_api_proxy
+
+convertisseur en gpx ou simplification en noeud :
+=================================================
+en utilisateur api :
+cd ~
+cd web
+suivre https://github.com/osm-fr/osm2node
+
+Installer munin pour le suivi et monit pour la gestion de panne
+===============================================================
+le script munin est là : ./Overpass-API/munin
+celui de monit est là : ./Overpass-API/scripts-osm-fr/monit
+(FIXME je ne sais pas comment l'installer moi, demander à jocelyn)
+
+A compléter :
+============
+- Lorsque, pour quelle que raison que ce soit, les données de la base
+- locales sont vielles de plus de x minutes ou que la base locale ne répond
+- pas passer sur une autre OverpassAPI et si pas disponible devenir
+- uniquement un proxy de l'api officielle et prévenir par mail du problème
+- et envoyer un email sur tech@listes.openstreetmap.Fr pour informer de ce
+- problème
+
+- Sur l'appel "map" Mettre en place l'inclusion des ways qui interse la bbox
+- mais n'ayant pas de nœud à l'intérieur
+
+- Lors d'un ajout/modification de donnée en passant par cette API trouver un
+- moyen pour que la récupération des données dans les secondes qui suivent
+- contiennent les modifications récentes de l'utilisateur.
+
+    Soit injecter dans la base locale les données en même temps qu'elles
+sont envoyé à l'api officielle
+    attendre que l'api officielle propose un mécanisme de "seconde diff"
+    bidouiller et interroger l'api officielle si l'utilisateur redemande la
+même zone dans la minute qui suit
+    autre idée ? 
+
+en cas de maintenance
+
+Lors des maintenances qui coupent totalement les apis, il est possible de
+réduire l'impact négatif de cette coupure par plusieurs subterfuge dont le
+principe est toujours le même : - Renvoyer automatique vers un miroir de
+l'overpass situé là : http://www.overpass-api.de
+Pour l'API 0.6
+
+il suffit de changer la variable dans le code de config.php et dé-commenter
+:
+$config['overpass_interpreter_url']="http://www.overpass-api.de/api/interpreter";
+
+xapi et overpass
+================
+Voir le fichier .htaccess et dé-commenter la fin pour activer un redirect
+301 

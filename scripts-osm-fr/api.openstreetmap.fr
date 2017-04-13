@@ -1,0 +1,26 @@
+############## api.openstreetmap.fr
+<VirtualHost *:80>
+        ServerName api.openstreetmap.fr
+        DocumentRoot /data/project/api.openstreetmap.fr/web/
+        CustomLog /var/log/apache2/api.openstreetmap.fr-access.log combined
+        ErrorLog /var/log/apache2/api.openstreetmap.fr-errors.log 
+        UseCanonicalName Off
+        Adddefaultcharset UTF-8
+
+        #Avec Overpass en version > 0.6.96 2 cgi xapi sont disponibles, un qui force a retourner les meta info, un sans les forcer
+        # je préfère que l'appel "/xapi" soit comme la documentation xapi donc pointe vers le "xapi-meta"
+        # j'en laisse aussi un appel spécial "comme avant"
+        ScriptAlias /xapi /data/project/api.openstreetmap.fr/web/exec/cgi-bin/xapi_meta
+        ScriptAlias /xapi-without-meta /data/project/api.openstreetmap.fr/web/exec/cgi-bin/xapi
+        ScriptAlias /oapi /data/project/api.openstreetmap.fr/web/exec/cgi-bin/
+
+        #To allow .htaccess
+        <Directory /data/project/api.openstreetmap.fr/web/>
+                AllowOverride All All
+        </Directory>
+
+        <Directory /data/project/api.openstreetmap.fr/web/exec/cgi-bin/>
+                AllowOverride All All
+                Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+        </Directory>
+</VirtualHost>

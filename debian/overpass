@@ -39,10 +39,16 @@ DISPATCHER=$EXEC_DIR/dispatcher
 DIFF_UPDATER=$EXEC_DIR/fetch_osc_and_apply.sh
 AREA_BUILDER=$EXEC_DIR/rules_loop.sh
 
-DISPATCHER_OPTIONS="--meta=$META --osm-base --db-dir=$DB_DIR"
+if [ $META = "yes" ] ; then
+	with_meta="--meta"
+else
+	with_meta=""
+fi
+
+DISPATCHER_OPTIONS="$with_meta --osm-base --db-dir=$DB_DIR"
 AREA_DISPATCHER_OPTIONS="--areas --db-dir=$DB_DIR"
 
-DIFF_UPDATER_OPTION="$DIFF_URL --meta=$META"
+DIFF_UPDATER_OPTION="$DIFF_URL $with_meta"
 
 
 test -x $DISPATCHER || exit 0
@@ -76,9 +82,6 @@ case "$1" in
 	rm /dev/shm/osm3s* 2>/dev/null
 	rm $DB_DIR/osm3s* 2>/dev/null
 	if start-stop-daemon --start --quiet -b --oknodo --make-pidfile -c $RUN_AS_USER --pidfile $DISPATCHER_PID_FILE --exec $DISPATCHER -- $DISPATCHER_OPTIONS >> $LOG_DIR/dispatcher.log 2>&1; then
-	    #That directory is used by the xapi translator and not automatically created
-	    mkdir /tmp/translate_xapi 2>/dev/null
-	    chmod 777 /tmp/translate_xapi 
 	    log_end_msg 0
 	else
 	    log_end_msg 1
@@ -111,8 +114,6 @@ case "$1" in
 	if test -x $DIFF_UPDATER ; then
 	  if start-stop-daemon --stop --quiet --oknodo --pidfile $DIFF_UPDATE_PID_FILE; then
 	    log_daemon_msg "Stopping Overpass diff updates" "diff updates"
-	    #A little clean up of the xapi tmp dirrectory
-	    rm -r /tmp/translate_xapi 2>/dev/null
 	    rm -f $DIFF_UPDATE_PID_FILE
 	    log_end_msg 0
 	  else
@@ -139,6 +140,7 @@ case "$1" in
 	  #FIXME this isn't enought, the osm3s_query builder will keep running for an entire loop of several hours, but we don't get it's pid
 	  # Better than nothing -- sly 
 	  killall osm3s_query
+	  rm $DB_DIR/areas_shadow.lock
 	  log_daemon_msg "Stopping Overpass area builder " "area builder"
 	  if start-stop-daemon --stop --quiet --oknodo --pidfile $AREA_UPDATE_PID_FILE; then
 	    log_end_msg 0

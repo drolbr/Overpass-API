@@ -53,23 +53,20 @@ elif [[ "${BUF:0:7}" == "compact" ]]; then
 };
 fi
 
-# No mkdir - directory should be created and made world-writeable
-# by the maintainer to allow periodic cleanups.
-REQUEST_FILE=`mktemp /tmp/translate_xapi/XXXXXX`
-$BIN_DIR/translate_xapi "${BUF}" >$REQUEST_FILE
+REQUEST_BUFFER=$($BIN_DIR/translate_xapi "${BUF}")
 EXITCODE=$?
 if [[ $EXITCODE -ne 0 ]]; then
 {
   echo "Content-Type: text/plain; charset=utf-8"
   echo
   echo "Error in [$BUF]:"
-  cat <$REQUEST_FILE
+echo $REQUEST_BUFFER
 };
 else
 {
   if [[ $DEBUG == "yes" ]]; then
   {
-    cat <$REQUEST_FILE
+    echo $REQUEST_BUFFER
     echo
   };
   fi
@@ -80,23 +77,21 @@ else
   {
     echo "Your query in pretty XML:"
     echo
-    ../bin/osm3s_query --dump-xml <$REQUEST_FILE
+    echo $REQUEST_BUFFER | ../bin/osm3s_query --dump-xml
   };
   elif [[ $OUTPUT_TYPE == "mapql" ]]; then
   {
     echo "Your query in pretty OverpassQL:"
     echo
-    ../bin/osm3s_query --dump-pretty-ql <$REQUEST_FILE
+    echo $REQUEST_BUFFER | ../bin/osm3s_query --dump-pretty-ql
   };
   elif [[ $OUTPUT_TYPE == "compact" ]]; then
   {
     echo "Your query in compact OverpassQL:"
     echo
-    ../bin/osm3s_query --dump-compact-ql <$REQUEST_FILE
+    echo $REQUEST_BUFFER | ../bin/osm3s_query --dump-compact-ql
     echo
   };
   fi
 };
 fi
-
-rm $REQUEST_FILE
