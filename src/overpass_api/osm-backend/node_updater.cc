@@ -220,50 +220,6 @@ void compare_and_add_different_tags(Id_Type id, Uint31_Index idx,
 }
 
 
-/* Cancels out all tags that are equal in the old and the new tag data. */
-template< typename Id_Type >
-void cancel_out_equal_tags
-    (std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
-     std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags)
-{
-  typename std::map< Tag_Index_Local, std::set< Id_Type > >::iterator it_idx_attic
-      = attic_local_tags.begin();
-  typename std::map< Tag_Index_Local, std::set< Id_Type > >::iterator it_idx_new
-      = new_local_tags.begin();
-  while (it_idx_attic != attic_local_tags.end() && it_idx_new != new_local_tags.end())
-  {
-    if (it_idx_attic->first < it_idx_new->first)
-      ++it_idx_attic;
-    else if (it_idx_new->first < it_idx_attic->first)
-      ++it_idx_new;
-    else
-    {
-      typename std::set< Id_Type >::iterator it_attic = it_idx_attic->second.begin();
-      typename std::set< Id_Type >::iterator it_new = it_idx_new->second.begin();
-
-      while (it_attic != it_idx_attic->second.end() && it_new != it_idx_new->second.end())
-      {
-        if (*it_attic < *it_new)
-          ++it_attic;
-        else if (*it_new < *it_attic)
-          ++it_new;
-        else
-        {
-          Id_Type val = *it_new;
-          it_idx_attic->second.erase(it_attic);
-          it_idx_new->second.erase(it_new);
-          it_attic = it_idx_attic->second.upper_bound(val);
-          it_new = it_idx_new->second.upper_bound(val);
-        }
-      }
-
-      ++it_idx_attic;
-      ++it_idx_new;
-    }
-  }
-}
-
-
 /* Enhance the existing attic tags by the tags of intermediate versions.
    Also store for tags that have been created on already existing elements a non-tag, i.e.
    write explicitly that until now the key existed with empty value for this element. */
@@ -523,6 +479,10 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
   new_current_local_tags< Node_Skeleton, Node_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
+      
+  std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > full_attic_local_tags
+      = (meta == keep_attic ? attic_local_tags : std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > >());
+  clear_common_values(attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > attic_global_tags;
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > new_global_tags;
   new_current_global_tags< Node_Skeleton::Id_Type >
@@ -565,7 +525,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   if (meta == keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
-    //cancel_out_equal_tags(attic_local_tags, new_local_tags);
+    //cancel_out_equal_tags(full_attic_local_tags, new_local_tags);
 
     // Collect all data of existing attic id indexes
     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
@@ -601,7 +561,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     // Compute tags
     std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > > new_attic_local_tags
         = compute_new_attic_local_tags(new_data,
-	    existing_map_positions, existing_attic_map_positions, attic_local_tags);
+	    existing_map_positions, existing_attic_map_positions, full_attic_local_tags);
     std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > >
         new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
 

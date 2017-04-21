@@ -885,6 +885,10 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   new_current_local_tags< Way_Skeleton, Way_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
+  
+  std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > full_attic_local_tags
+      = (meta == keep_attic ? attic_local_tags : std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > >());
+  clear_common_values(attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > attic_global_tags;
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > new_global_tags;
   new_current_global_tags< Way_Skeleton::Id_Type >
@@ -922,7 +926,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   if (meta == keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
-    //cancel_out_equal_tags(attic_local_tags, new_local_tags);
+    //cancel_out_equal_tags(full_attic_local_tags, new_local_tags);
 
     // Also include ids from the only moved ways
     enhance_ids_to_update(implicitly_moved_skeletons, ids_to_update_);
@@ -964,7 +968,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     // Compute tags
     std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > > new_attic_local_tags
         = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
-            compute_tags_by_id_and_time(new_data, attic_local_tags),
+            compute_tags_by_id_and_time(new_data, full_attic_local_tags),
                                        existing_map_positions, existing_idx_lists);
     std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
         new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);

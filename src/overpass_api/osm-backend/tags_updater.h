@@ -342,4 +342,62 @@ void update_tags_local
 }
 
 
+template< typename Id_Type >
+void clear_common_values
+    (std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
+     std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags)
+{
+  typename std::map< Tag_Index_Local, std::set< Id_Type > >::iterator old_it = attic_local_tags.begin();
+  typename std::map< Tag_Index_Local, std::set< Id_Type > >::iterator new_it = new_local_tags.begin();
+  while (old_it != attic_local_tags.end() && new_it != new_local_tags.end())
+  {
+    if (old_it->first < new_it->first)
+      ++old_it;
+    else if (new_it->first < old_it->first)
+      ++new_it;
+    else
+    {
+      typename std::set< Id_Type >::iterator old_sit = old_it->second.begin();
+      typename std::set< Id_Type >::iterator new_sit = new_it->second.begin();
+      
+      while (old_sit != old_it->second.end() && new_sit != new_it->second.end())
+      {
+        if (*old_sit < *new_sit)
+          ++old_sit;
+        else if (*new_sit < *old_sit)
+          ++new_sit;
+        else
+        {
+          typename std::set< Id_Type >::iterator old_erase = old_sit;
+          ++old_sit;
+          old_it->second.erase(old_erase);
+          
+          typename std::set< Id_Type >::iterator new_erase = new_sit;
+          ++new_sit;
+          new_it->second.erase(new_erase);
+        }
+      }
+      
+      if (old_it->second.empty())
+      {
+        typename std::map< Tag_Index_Local, std::set< Id_Type > >::iterator old_erase = old_it;
+        ++old_it;
+        attic_local_tags.erase(old_erase);
+      }
+      else
+        ++old_it;
+      
+      if (new_it->second.empty())
+      {
+        typename std::map< Tag_Index_Local, std::set< Id_Type > >::iterator new_erase = new_it;
+        ++new_it;
+        new_local_tags.erase(new_erase);
+      }
+      else
+        ++new_it;
+    }
+  }
+}
+
+
 #endif
