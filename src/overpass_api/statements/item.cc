@@ -38,6 +38,7 @@ class Item_Constraint : public Query_Constraint
     Item_Statement* item;
 };
 
+
 template< typename TIndex, typename TObject >
 void collect_elements(const std::map< TIndex, std::vector< TObject > >& from,
 		      std::map< TIndex, std::vector< TObject > >& into,
@@ -127,16 +128,46 @@ Generic_Statement_Maker< Item_Statement > Item_Statement::statement_maker("item"
 
 Item_Statement::Item_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                                Parsed_Query& global_settings)
-    : Statement(line_number_)
+    : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;
 
+  attributes["from"] = "_";
+  attributes["into"] = "_";
   attributes["set"] = "_";
 
   eval_attributes_array(get_name(), attributes, input_attributes);
 
-  output = attributes["set"];
+  if (attributes["set"] == "_")
+  {
+    input = attributes["from"];
+    set_output(attributes["into"]);
+  }
+  else if (attributes["from"] == "_" && attributes["into"] == "_")
+  {
+    input = attributes["set"];
+    set_output(attributes["set"]);
+  }
+  else
+    add_static_error("The attribute \"set\" of the element \"item\" can only be set "
+      "if the attributes \"from\" and \"into\" are both empty.");
 }
+
+
+void Item_Statement::execute(Resource_Manager& rman)
+{
+  if (input != get_result_name())
+  {
+    Set into;
+    
+    std::map< std::string, Set >::const_iterator mit(rman.sets().find(input));
+    if (mit != rman.sets().end())
+      into = mit->second;
+    
+    transfer_output(rman, into);
+  }
+}
+
 
 Item_Statement::~Item_Statement()
 {

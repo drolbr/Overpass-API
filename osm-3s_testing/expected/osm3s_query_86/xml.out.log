@@ -1,6 +1,6 @@
 <osm-script>
   <query into="_" type="node">
-    <item set="wrong"/>
+    <item from="wrong" into="_"/>
     <around from="in" into="_" lat="" lon="" radius="100"/>
   </query>
 </osm-script>

@@ -288,10 +288,11 @@ TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory
 
 template< class TStatement >
 TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
-				  std::string from, uint line_nr)
+				  std::string from, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
-  attr["set"] = from;
+  attr["from"] = from;
+  attr["into"] = into;
   return stmt_factory.create_statement("item", line_nr, attr);
 }
 
@@ -891,7 +892,7 @@ TStatement* create_query_substatement
         (stmt_factory, clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "item")
     return create_item_statement< TStatement >
-        (stmt_factory, clause.attributes[0], clause.line_col.first);
+        (stmt_factory, clause.attributes[0], "_", clause.line_col.first);
   else if (clause.statement == "changed")
     return create_changed_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], into, clause.line_col.first);
@@ -1329,12 +1330,12 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
     else
     {
       if (type == "")
-        statement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
+        statement = create_item_statement< TStatement >(stmt_factory, from, into, query_line_col.first);
       else
       {
         statement = create_query_statement< TStatement >
            (stmt_factory, type, into, query_line_col.first);
-        TStatement* substatement = create_item_statement< TStatement >(stmt_factory, from, query_line_col.first);
+        TStatement* substatement = create_item_statement< TStatement >(stmt_factory, from, "_", query_line_col.first);
         statement->add_statement(substatement, "");
       }
     }
@@ -1379,7 +1380,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
     if (from != "")
     {
       TStatement* substatement = create_item_statement< TStatement >
-          (stmt_factory, from, query_line_col.first);
+          (stmt_factory, from, "_", query_line_col.first);
       if (substatement)
 	statement->add_statement(substatement, "");
     }
