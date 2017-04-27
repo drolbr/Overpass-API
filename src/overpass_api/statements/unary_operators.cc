@@ -188,7 +188,7 @@ std::string Evaluator_Number::process(const std::string& rhs_s) const
     return to_string(rhs_l);
   
   double rhs_d = 0;  
-  if (try_double(rhs_s, rhs_d))
+  if (try_starts_with_double(rhs_s, rhs_d))
     return to_string(rhs_d);
   
   return "NaN";
@@ -208,10 +208,22 @@ std::string Evaluator_Is_Num::process(const std::string& rhs_s) const
     return "1";
   
   double rhs_d = 0;  
-  if (try_double(rhs_s, rhs_d))
+  if (try_starts_with_double(rhs_s, rhs_d))
     return "1";
   
   return "0";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+String_Endom_Statement_Maker< Evaluator_Suffix > Evaluator_Suffix::statement_maker;
+
+
+std::string Evaluator_Suffix::process(const std::string& rhs_s) const
+{
+  return double_suffix(rhs_s);
 }
 
 

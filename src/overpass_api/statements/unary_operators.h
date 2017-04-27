@@ -278,13 +278,15 @@ struct Evaluator_String_Endom_Syntax : public Evaluator_Prefix_Operator
 };
 
 
-/* === Number Check and Normalizer ===
+/* === Number Check, Normalizer and Suffix ===
 
 The function <em>number</em> turns its argument into a number.
-If its argument is a number then <em>number</em> returns its argument in a normalized format.
+If its argument starts with a number then <em>number</em> returns that number in a normalized format.
 Otherwise it returns "NaN".
-The function <em>is_number</em> checks whether its argument is a number.
+The function <em>is_number</em> checks whether its argument starts with a number.
 It returns "1" if its argument can be parsed as a number and "0" otherwise.
+The function <em>suffix</em> returns the suffix if any after the number in its argument.
+If the argument does not start with a number then it returns the empty string.
 
 Their syntaxes are
 
@@ -293,6 +295,11 @@ Their syntaxes are
 resp.
 
   is_number(<Evaluator>)
+  
+resp.
+
+  suffix(<Evaluator>)
+
 */
 
 class Evaluator_Number : public Evaluator_String_Endom_Syntax< Evaluator_Number >
@@ -318,6 +325,20 @@ public:
 
   Evaluator_Is_Num(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
       : Evaluator_String_Endom_Syntax< Evaluator_Is_Num >(line_number_, input_attributes) {}
+
+  virtual std::string process(const std::string& rhs_result) const;
+};
+
+
+class Evaluator_Suffix : public Evaluator_String_Endom_Syntax< Evaluator_Suffix >
+{
+public:
+  static String_Endom_Statement_Maker< Evaluator_Suffix > statement_maker;
+  static std::string stmt_func_name() { return "suffix"; }
+  static std::string stmt_name() { return "eval-suffix"; }
+
+  Evaluator_Suffix(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_String_Endom_Syntax< Evaluator_Suffix >(line_number_, input_attributes) {}
 
   virtual std::string process(const std::string& rhs_result) const;
 };

@@ -23,6 +23,7 @@
 #include "../core/datatypes.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdlib>
 #include <iomanip>
 #include <map>
@@ -58,8 +59,43 @@ inline bool try_double(const std::string& input, double& result)
   
   const char* input_c = input.c_str();
   char* end_c = 0;
-  result = strtod(input_c, &end_c);
+  errno = 0;
+  result = strtod(input_c, &end_c);  
   return input_c + input.size() == end_c;
+}
+
+
+inline bool try_starts_with_double(const std::string& input, double& result)
+{
+  if (input == "")
+    return false;
+  
+  const char* input_c = input.c_str();
+  char* end_c = 0;
+  errno = 0;
+  result = strtod(input_c, &end_c); 
+  return !errno && input_c != end_c;
+}
+
+
+inline std::string double_suffix(const std::string& input)
+{
+  if (input == "")
+    return "";
+  
+  const char* input_c = input.c_str();
+  char* end_c = 0;
+  errno = 0;
+  strtod(input_c, &end_c);  
+  
+  if (!errno && input_c != end_c)
+  {
+    while (*end_c && isspace(*end_c))
+      ++end_c;
+    return end_c;
+  }
+  
+  return "";
 }
 
 
@@ -70,6 +106,7 @@ inline bool try_int64(const std::string& input, int64& result)
   
   const char* input_c = input.c_str();
   char* end_c = 0;
+  errno = 0;
   result = strtoll(input_c, &end_c, 0);
   return input_c + input.size() == end_c;
 }

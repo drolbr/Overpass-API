@@ -4156,7 +4156,20 @@ int main(int argc, char* args[])
       "    <tag k=\"is_nonsense\" v=\"0\"/>\n"
       "    <tag k=\"empty_isnt_date\" v=\"0\"/>\n"
       "  </test-date>\n";
-
+    if (std::string(args[2]) == "make_81")
+      std::cout<<
+      "  <test-suffix id=\"1\">\n"
+      "    <tag k=\"empty\" v=\"\"/>\n"
+      "    <tag k=\"pure\" v=\"\"/>\n"
+      "    <tag k=\"unit\" v=\"m\"/>\n"
+      "    <tag k=\"whitespace\" v=\"\"/>\n"
+      "    <tag k=\"whitespace_and_unit\" v=\"m/s\"/>\n"
+      "    <tag k=\"second_number\" v=\"2\"/>\n"
+      "    <tag k=\"comma_sep_number\" v=\",14\"/>\n"
+      "    <tag k=\"possible_exp\" v=\"e\"/>\n"
+      "    <tag k=\"misc\" v=\"3/4\"/>\n"
+      "  </test-suffix>\n";
+      
     std::cout<<"</osm>\n";
   }
   else if ((argc > 2) && (std::string(args[2]).substr(0, 8) == "convert_"))
