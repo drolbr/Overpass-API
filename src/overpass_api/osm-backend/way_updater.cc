@@ -17,8 +17,6 @@
  */
 
 #include <algorithm>
-#include <atomic>
-#include <future>
 #include <map>
 #include <set>
 #include <vector>
@@ -35,6 +33,7 @@
 #include "meta_updater.h"
 #include "tags_updater.h"
 #include "way_updater.h"
+#include "parallel_proc.h"
 
 
 
@@ -934,33 +933,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
     callback->tags_global_finished();
   });
-  
-  const unsigned int PARALLEL_PROCS = 4;    //TODO: change to command line param
-  std::vector<std::future< void > > futures;
-  std::atomic<unsigned int> package;
 
-  package = 0;
+  process_package(f, 4);       //TODO: change to command line param
 
-  for (int i = 0; i < PARALLEL_PROCS; i++)
-  {
-    futures.push_back(
-        std::async(std::launch::async, [&]
-      {
-        while (true) {
-          int current_package = package++;
-          if (current_package >= f.size())
-            return;
-          f[current_package]();
-      }
-    }
-    ));
-  }
-
-  for (auto &e : futures)
-    e.get();
-
-  futures.clear();
-  f.clear();
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
     
@@ -1085,32 +1060,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
             *transaction, *attic_settings().WAY_CHANGELOG);
     });
 
-    const unsigned int PARALLEL_PROCS = 4;    //TODO: change to command line param
-    std::vector<std::future< void > > futures;
-    std::atomic<unsigned int> package;
-
-    package = 0;
-
-    for (int i = 0; i < PARALLEL_PROCS; i++)
-    {
-      futures.push_back(
-          std::async(std::launch::async, [&]
-        {
-          while (true) {
-            int current_package = package++;
-            if (current_package >= f.size())
-              return;
-            f[current_package]();
-        }
-      }
-      ));
-    }
-
-    for (auto &e : futures)
-      e.get();
-
-    futures.clear();
-    f.clear();
+    process_package(f, 4);       //TODO: change to command line param
   }
 
   if (meta != only_data)
@@ -1245,30 +1195,5 @@ void Way_Updater::merge_files(const std::vector< std::string >& froms, std::stri
     });
   }
 
-  const unsigned int PARALLEL_PROCS = 4;                 //TODO: change to command line param
-  std::vector<std::future< void > > futures;
-  std::atomic<unsigned int> package;
-
-  package = 0;
-
-  for (int i = 0; i < PARALLEL_PROCS; i++)
-  {
-    futures.push_back(
-        std::async(std::launch::async, [&]
-      {
-        while (true) {
-          int current_package = package++;
-          if (current_package >= f.size())
-            return;
-          f[current_package]();
-      }
-    }
-    ));
-  }
-
-  for (auto &e : futures)
-    e.get();
-
-  futures.clear();
-  f.clear();
+  process_package(f, 4);       //TODO: change to command line param
 }

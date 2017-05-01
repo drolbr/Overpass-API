@@ -31,6 +31,7 @@
 #include "meta_updater.h"
 #include "relation_updater.h"
 #include "tags_updater.h"
+#include "parallel_proc.h"
 
 
 Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_)
@@ -1217,32 +1218,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     callback->flush_roles_finished();
   });
 
-  const unsigned int PARALLEL_PROCS = 4;    //TODO: change to command line param
-  std::vector<std::future< void > > futures;
-  std::atomic<unsigned int> package;
-
-  package = 0;
-
-  for (int i = 0; i < PARALLEL_PROCS; i++)
-  {
-    futures.push_back(
-        std::async(std::launch::async, [&]
-      {
-        while (true) {
-          int current_package = package++;
-          if (current_package >= f.size())
-            return;
-          f[current_package]();
-      }
-    }
-    ));
-  }
-
-  for (auto &e : futures)
-    e.get();
-
-  futures.clear();
-  f.clear();
+  process_package(f, 4);       //TODO: change to command line param
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
   
@@ -1374,32 +1350,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
       flush_roles();
     });
 
-    const unsigned int PARALLEL_PROCS = 4;    //TODO: change to command line param
-    std::vector<std::future< void > > futures;
-    std::atomic<unsigned int> package;
-
-    package = 0;
-
-    for (int i = 0; i < PARALLEL_PROCS; i++)
-    {
-      futures.push_back(
-          std::async(std::launch::async, [&]
-        {
-          while (true) {
-            int current_package = package++;
-            if (current_package >= f.size())
-              return;
-            f[current_package]();
-        }
-      }
-      ));
-    }
-
-    for (auto &e : futures)
-      e.get();
-
-    futures.clear();
-    f.clear();
+    process_package(f, 4);       //TODO: change to command line param
   }
 
   if (meta != only_data)

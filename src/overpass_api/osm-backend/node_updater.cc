@@ -33,6 +33,7 @@
 #include "meta_updater.h"
 #include "node_updater.h"
 #include "tags_updater.h"
+#include "parallel_proc.h"
 
 
 // New node_updater:
@@ -578,32 +579,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     callback->tags_global_finished();
   });
 
-  const unsigned int PARALLEL_PROCS = 4;    //TODO: change to command line param
-  std::vector<std::future< void > > futures;
-  std::atomic<unsigned int> package;
-
-  package = 0;
-
-  for (int i = 0; i < PARALLEL_PROCS; i++)
-  {
-    futures.push_back(
-        std::async(std::launch::async, [&]
-      {
-        while (true) {
-          int current_package = package++;
-          if (current_package >= f.size())
-            return;
-          f[current_package]();
-      }
-    }
-    ));
-  }
-
-  for (auto &e : futures)
-    e.get();
-
-  futures.clear();
-  f.clear();
+  process_package(f, 4);       //TODO: change to command line param
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
@@ -716,32 +692,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
             *transaction, *attic_settings().NODE_CHANGELOG);
     });
 
-    const unsigned int PARALLEL_PROCS = 4;          //TODO: change to command line param
-    std::vector<std::future< void > > futures;
-    std::atomic<unsigned int> package;
-
-    package = 0;
-
-    for (int i = 0; i < PARALLEL_PROCS; i++)
-    {
-      futures.push_back(
-          std::async(std::launch::async, [&]
-        {
-          while (true) {
-            int current_package = package++;
-            if (current_package >= f.size())
-              return;
-            f[current_package]();
-        }
-      }
-      ));
-    }
-
-    for (auto &e : futures)
-      e.get();
-
-    futures.clear();
-    f.clear();
+    process_package(f, 4);       //TODO: change to command line param
   }
 
   if (meta != only_data)
@@ -904,30 +855,5 @@ void Node_Updater::merge_files(const std::vector< std::string >& froms, std::str
     });
   }
 
-  const unsigned int PARALLEL_PROCS = 4;                 //TODO: change to command line param
-  std::vector<std::future< void > > futures;
-  std::atomic<unsigned int> package;
-
-  package = 0;
-
-  for (int i = 0; i < PARALLEL_PROCS; i++)
-  {
-    futures.push_back(
-        std::async(std::launch::async, [&]
-      {
-        while (true) {
-          int current_package = package++;
-          if (current_package >= f.size())
-            return;
-          f[current_package]();
-      }
-    }
-    ));
-  }
-
-  for (auto &e : futures)
-    e.get();
-
-  futures.clear();
-  f.clear();
+  process_package(f, 4);       //TODO: change to command line param
 }
