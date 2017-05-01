@@ -17,8 +17,6 @@
  */
 
 #include <algorithm>
-#include <atomic>
-#include <future>
 #include <iostream>
 #include <map>
 #include <set>
@@ -1221,7 +1219,6 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   process_package(f, 4);       //TODO: change to command line param
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
-  
   if (meta == keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.

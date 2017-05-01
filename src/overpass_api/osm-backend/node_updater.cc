@@ -17,8 +17,6 @@
  */
 
 #include <algorithm>
-#include <atomic>
-#include <future>
 #include <map>
 #include <set>
 #include <vector>
