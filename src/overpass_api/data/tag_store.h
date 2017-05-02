@@ -87,6 +87,10 @@ void collect_attic_tags
    const std::vector< Attic< Id_Type > >& id_vec, uint32 coarse_index)
 {
   std::map< Attic< Id_Type >, std::vector< std::pair< std::string, std::string > > > found_tags;
+
+  while ((!(current_tag_it == current_items_db.range_end())) &&
+      (((current_tag_it.index().index) & 0x7fffff00) < coarse_index))
+    ++current_tag_it;
   
   // Collect all id-matched tag information from the current tags
   while ((!(current_tag_it == current_items_db.range_end())) &&
@@ -102,6 +106,10 @@ void collect_attic_tags
           (std::make_pair(current_tag_it.index().key, current_tag_it.index().value));
     ++current_tag_it;
   }
+  
+  while ((!(attic_tag_it == attic_items_db.range_end())) &&
+      (((attic_tag_it.index().index) & 0x7fffff00) < coarse_index))
+    ++attic_tag_it;
   
   // Collect all id-matched tag information that is younger than the respective timestamp from the attic tags
   while ((!(attic_tag_it == attic_items_db.range_end())) &&
@@ -299,7 +307,6 @@ void Tag_Store< Index, Object >::prefetch_chunk(const std::map< Index, std::vect
   tags_by_id.clear();
   
   //generate std::set of relevant coarse indices
-  std::set< Index > coarse_indices;
   generate_ids_by_coarse(ids_by_coarse, elems);
   
   //formulate range query

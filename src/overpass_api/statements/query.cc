@@ -769,11 +769,11 @@ void Query_Statement::filter_by_tags
 
   // prepare straight keys
   std::map< std::string, std::pair< std::string, std::vector< Regular_Expression* > > > key_union;
-  for (std::vector< std::string >::const_iterator it = keys.begin(); it != keys.end();
-      ++it)
+  for (std::vector< std::string >::const_iterator it = keys.begin();
+      it != keys.end(); ++it)
     key_union[*it];
-  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = key_values.begin(); it != key_values.end();
-      ++it)
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = key_values.begin();
+      it != key_values.end(); ++it)
     key_union[it->first].first = it->second;
   for (std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator
       it = key_regexes.begin(); it != key_regexes.end(); ++it)
@@ -784,98 +784,101 @@ void Query_Statement::filter_by_tags
   std::map< TIndex, std::vector< Attic< TObject > > > attic_result;
   uint coarse_count = 0;
 
-  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
-      (transaction.data_index(&file_prop));
-  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
-    tag_it(items_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-
-  typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it
-      = items.begin();
-
-  if (timestamp == NOW)
+  if (!key_union.empty() || !regkey_regexes.empty())
   {
-    for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
-        it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
+        (transaction.data_index(&file_prop));
+    typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
+        tag_it(items_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+        Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+
+    typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it
+        = items.begin();
+
+    if (timestamp == NOW)
     {
-      if (++coarse_count >= 1024)
+      for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
+          it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
       {
-        coarse_count = 0;
-        rman.health_check(*this);
-      }
-      std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
-
-      filter_ids_by_tags(key_union, regkey_regexes, items_db, tag_it, it->first, ids_by_coarse_);
-
-      while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
-	     eit != item_it->second.end(); ++eit)
+        if (++coarse_count >= 1024)
         {
-          if (binary_search(ids_by_coarse_.begin(),
-              ids_by_coarse_.end(), eit->id))
-	    result[item_it->first.val()].push_back(*eit);
+          coarse_count = 0;
+          rman.health_check(*this);
         }
-        ++item_it;
+        std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
+
+        filter_ids_by_tags(key_union, regkey_regexes, items_db, tag_it, it->first, ids_by_coarse_);
+
+        while ((item_it != items.end()) &&
+            ((item_it->first.val() & 0x7fffff00) == it->first))
+        {
+          for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
+              eit != item_it->second.end(); ++eit)
+          {
+            if (binary_search(ids_by_coarse_.begin(),
+                ids_by_coarse_.end(), eit->id))
+              result[item_it->first.val()].push_back(*eit);
+          }
+          ++item_it;
+        }
       }
     }
-  }
-  else
-  {
-    Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > > attic_items_db
-        (transaction.data_index(attic_file_prop));
-    typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
-      attic_tag_it(attic_items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-
-    typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator attic_item_it
-        = attic_items->begin();
-
-    for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
-        it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    else
     {
-      if (++coarse_count >= 1024)
-      {
-        coarse_count = 0;
-        rman.health_check(*this);
-      }
-      std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
+      Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > > attic_items_db
+          (transaction.data_index(attic_file_prop));
+      typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
+          attic_tag_it(attic_items_db.range_begin
+          (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
 
-      filter_ids_by_tags(key_union, regkey_regexes, timestamp, items_db, tag_it, attic_items_db, attic_tag_it,
-                         it->first, ids_by_coarse_);
+      typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator attic_item_it
+          = attic_items->begin();
 
-      while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->first))
+      for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
+          it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
       {
-        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
-             eit != item_it->second.end(); ++eit)
+        if (++coarse_count >= 1024)
         {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
-            result[item_it->first.val()].push_back(*eit);
+          coarse_count = 0;
+          rman.health_check(*this);
         }
-        ++item_it;
-      }
+        std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
 
-      while ((attic_item_it != attic_items->end()) &&
-          ((attic_item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< Attic< TObject > >::const_iterator eit = attic_item_it->second.begin();
-             eit != attic_item_it->second.end(); ++eit)
+        filter_ids_by_tags(key_union, regkey_regexes, timestamp, items_db, tag_it, attic_items_db, attic_tag_it,
+                          it->first, ids_by_coarse_);
+
+        while ((item_it != items.end()) &&
+            ((item_it->first.val() & 0x7fffff00) == it->first))
         {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
-            attic_result[attic_item_it->first.val()].push_back(*eit);
+          for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
+              eit != item_it->second.end(); ++eit)
+          {
+            if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
+              result[item_it->first.val()].push_back(*eit);
+          }
+          ++item_it;
         }
-        ++attic_item_it;
+
+        while ((attic_item_it != attic_items->end()) &&
+            ((attic_item_it->first.val() & 0x7fffff00) == it->first))
+        {
+          for (typename std::vector< Attic< TObject > >::const_iterator eit = attic_item_it->second.begin();
+              eit != attic_item_it->second.end(); ++eit)
+          {
+            if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
+              attic_result[attic_item_it->first.val()].push_back(*eit);
+          }
+          ++attic_item_it;
+        }
       }
     }
-  }
 
-  items.swap(result);
-  if (attic_items)
-    attic_items->swap(attic_result);
+    items.swap(result);
+    if (attic_items)
+      attic_items->swap(attic_result);
+  }
 
   if (key_nregexes.empty() && key_nvalues.empty())
     return;
@@ -893,11 +896,12 @@ void Query_Statement::filter_by_tags
   result.clear();
   attic_result.clear();
   coarse_count = 0;
+  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db(transaction.data_index(&file_prop));
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
       ntag_it(items_db.range_begin
       (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
        Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-  item_it = items.begin();
+  typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it = items.begin();
 
   if (timestamp == NOW)
   {
@@ -1003,11 +1007,11 @@ void Query_Statement::filter_by_tags
 
   // prepare straight keys
   std::map< std::string, std::pair< std::string, std::vector< Regular_Expression* > > > key_union;
-  for (std::vector< std::string >::const_iterator it = keys.begin(); it != keys.end();
-      ++it)
+  for (std::vector< std::string >::const_iterator it = keys.begin();
+      it != keys.end(); ++it)
     key_union[*it];
-  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = key_values.begin(); it != key_values.end();
-      ++it)
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = key_values.begin();
+      it != key_values.end(); ++it)
     key_union[it->first].first = it->second;
   for (std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator
       it = key_regexes.begin(); it != key_regexes.end(); ++it)
@@ -1018,44 +1022,47 @@ void Query_Statement::filter_by_tags
   std::map< TIndex, std::vector< Attic< TObject > > > attic_result;
   uint coarse_count = 0;
 
-  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
-      (transaction.data_index(&file_prop));
-  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
-    tag_it(items_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-
-  typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it
-      = items.begin();
-
+  if (!key_union.empty() || !regkey_regexes.empty())
   {
-    for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator it = ids_by_coarse.begin();
-        it != ids_by_coarse.end(); ++it)
+    Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
+        (transaction.data_index(&file_prop));
+    typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
+        tag_it(items_db.range_begin
+        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
+        Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+
+    typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it
+        = items.begin();
+
     {
-      if (++coarse_count >= 1024)
+      for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator it = ids_by_coarse.begin();
+          it != ids_by_coarse.end(); ++it)
       {
-        coarse_count = 0;
-        rman.health_check(*this);
-      }
-      std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
-
-      filter_ids_by_tags_old(ids_by_coarse_, key_union, regkey_regexes, items_db, tag_it, it->first);
-
-      while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
-	     eit != item_it->second.end(); ++eit)
+        if (++coarse_count >= 1024)
         {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
-	    result[item_it->first.val()].push_back(*eit);
+          coarse_count = 0;
+          rman.health_check(*this);
         }
-        ++item_it;
+        std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
+
+        filter_ids_by_tags_old(ids_by_coarse_, key_union, regkey_regexes, items_db, tag_it, it->first);
+
+        while ((item_it != items.end()) &&
+            ((item_it->first.val() & 0x7fffff00) == it->first))
+        {
+          for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
+              eit != item_it->second.end(); ++eit)
+          {
+            if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
+              result[item_it->first.val()].push_back(*eit);
+          }
+          ++item_it;
+        }
       }
     }
-  }
 
-  items.swap(result);
+    items.swap(result);
+  }
 
   if (key_nregexes.empty() && key_nvalues.empty())
     return;
@@ -1073,11 +1080,13 @@ void Query_Statement::filter_by_tags
   result.clear();
   attic_result.clear();
   coarse_count = 0;
+  Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
+      (transaction.data_index(&file_prop));
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
       ntag_it(items_db.range_begin
       (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
        Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-  item_it = items.begin();
+  typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it = items.begin();
 
   {
     for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator it = ids_by_coarse.begin();
@@ -1282,8 +1291,8 @@ void Query_Statement::execute(Resource_Manager& rman)
   if (timestamp == 0)
     timestamp = NOW;
 
-  set_progress(1);
   rman.health_check(*this);
+  set_progress(1);
 
   bool check_keys_late = false;
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin(); it != constraints.end(); ++it)
@@ -1327,8 +1336,8 @@ void Query_Statement::execute(Resource_Manager& rman)
       collect_elems(ids, invert_ids, answer_state, into, rman);
     }
 
-    set_progress(2);
     rman.health_check(*this);
+    set_progress(2);
 
     if (type == QUERY_NODE)
     {
@@ -1462,8 +1471,8 @@ void Query_Statement::execute(Resource_Manager& rman)
       }
     }
 
-    set_progress(3);
     rman.health_check(*this);
+    set_progress(3);
 
     if (type == QUERY_NODE)
     {
@@ -1484,8 +1493,8 @@ void Query_Statement::execute(Resource_Manager& rman)
       }
     }
 
-    set_progress(4);
     rman.health_check(*this);
+    set_progress(4);
 
     if (answer_state == nothing && node_ids.empty() && ids.empty())
       runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
@@ -1555,8 +1564,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
   }
 
-  set_progress(5);
   rman.health_check(*this);
+  set_progress(5);
 
 //   std::cout<<'\n';
 //   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = into.nodes.begin();
@@ -1593,15 +1602,15 @@ void Query_Statement::execute(Resource_Manager& rman)
       it != constraints.end(); ++it)
     (*it)->filter(rman, into, timestamp);
 
-  set_progress(6);
   rman.health_check(*this);
+  set_progress(6);
 
   filter_attic_elements(rman, timestamp, into.nodes, into.attic_nodes);
   filter_attic_elements(rman, timestamp, into.ways, into.attic_ways);
   filter_attic_elements(rman, timestamp, into.relations, into.attic_relations);
 
-  set_progress(7);
   rman.health_check(*this);
+  set_progress(7);
 
   if (check_keys_late)
   {
@@ -1620,15 +1629,15 @@ void Query_Statement::execute(Resource_Manager& rman)
 		     rman, *rman.get_transaction());
   }
 
-  set_progress(8);
   rman.health_check(*this);
+  set_progress(8);
 
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
     (*it)->filter(*this, rman, into, timestamp);
 
-  set_progress(9);
   rman.health_check(*this);
+  set_progress(9);
 
   clear_empty_indices(into.nodes);
   clear_empty_indices(into.attic_nodes);
