@@ -225,8 +225,6 @@ int main(int argc, char *argv[])
     }
     else*/
       web_output.write_footer();
-
-    return 0;
   }
   catch(File_Error e)
   {
@@ -276,4 +274,6 @@ int main(int argc, char *argv[])
     error_output->runtime_error(std::string("Query failed with the exception: ") + e.what());
     return 4;
   }
+  
+  return 0;
 }
