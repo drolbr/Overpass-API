@@ -24,7 +24,7 @@ if [[ -z $1  ]]; then
 };
 fi
 
-DB_DIR=$1
+DB_DIR="`pwd`/$1"
 
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
