@@ -32,17 +32,18 @@
 #include "parallel_proc.h"
 
 
-Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_)
+Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_, unsigned int parallel_processes_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true),
-    max_role_id(0), max_written_role_id(0), meta(meta_), keys(*osm_base_settings().RELATION_KEYS)
+    max_role_id(0), max_written_role_id(0), meta(meta_), parallel_processes(parallel_processes_),
+    keys(*osm_base_settings().RELATION_KEYS)
 {}
 
-Relation_Updater::Relation_Updater(std::string db_dir_, meta_modes meta_)
+Relation_Updater::Relation_Updater(std::string db_dir_, meta_modes meta_, unsigned int parallel_processes_)
   : update_counter(0), transaction(0),
     external_transaction(false),
     max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_),
-    keys(*osm_base_settings().RELATION_KEYS)
+    parallel_processes(parallel_processes_), keys(*osm_base_settings().RELATION_KEYS)
 {}
 
 
@@ -1216,7 +1217,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     callback->flush_roles_finished();
   });
 
-  process_package(f, 4);       //TODO: change to command line param
+  process_package(f, parallel_processes);
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
   if (meta == keep_attic)
@@ -1347,7 +1348,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
       flush_roles();
     });
 
-    process_package(f, 4);       //TODO: change to command line param
+    process_package(f, parallel_processes);
   }
 
   if (meta != only_data)

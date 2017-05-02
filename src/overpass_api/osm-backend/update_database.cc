@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
   meta_modes meta = only_data;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
+  unsigned int parallel_processes = 1;
 
   int argpos(1);
   while (argpos < argc)
@@ -61,6 +62,10 @@ int main(int argc, char* argv[])
       flush_limit = atoll(std::string(argv[argpos]).substr(13).c_str()) *1024*1024;
       if (flush_limit == 0)
         flush_limit = std::numeric_limits< unsigned int >::max();
+    }
+    else if (!(strncmp(argv[argpos], "--parallel=", 11)))
+    {
+      parallel_processes = atoi(std::string(argv[argpos]).substr(11).c_str());
     }
     else if (!(strncmp(argv[argpos], "--compression-method=", 21)))
     {
@@ -120,13 +125,13 @@ int main(int argc, char* argv[])
   {
     if (transactional)
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit, parallel_processes);
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit, parallel_processes);
       //reading the main document
       osm_updater.parse_file_completely(stdin);
     }

@@ -26,10 +26,17 @@
 
 inline void process_package(std::vector<std::function<void()>>& f, const int parallel_processes)
 {
-  std::vector<std::future< void > > futures;
-  std::atomic<unsigned int> package;
+  // skip thread creation if no parallel processing requested
+  if (parallel_processes <= 1)
+  {
+    for (int i = 0; i < f.size(); i++)
+      f[i]();
+    f.clear();
+    return;
+  }
 
-  package = 0;
+  std::vector< std::future< void > > futures;
+  std::atomic< unsigned int > package{0};
 
   for (int i = 0; i < parallel_processes; i++)
   {

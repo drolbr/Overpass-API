@@ -456,15 +456,17 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
 }
 
 
-Node_Updater::Node_Updater(Transaction& transaction_, meta_modes meta_)
+Node_Updater::Node_Updater(Transaction& transaction_, meta_modes meta_, unsigned int parallel_processes_)
   : update_counter(0), transaction(&transaction_),
-    external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().NODE_KEYS)
+    external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().NODE_KEYS),
+    parallel_processes(parallel_processes_)
 {}
 
-Node_Updater::Node_Updater(std::string db_dir_, meta_modes meta_)
+Node_Updater::Node_Updater(std::string db_dir_, meta_modes meta_, unsigned int parallel_processes_)
   : update_counter(0), transaction(0),
     external_transaction(false), partial_possible(meta_ == only_data || meta_ == keep_meta),
-    db_dir(db_dir_), meta(meta_), keys(*osm_base_settings().NODE_KEYS)
+    db_dir(db_dir_), meta(meta_), keys(*osm_base_settings().NODE_KEYS),
+    parallel_processes(parallel_processes_)
 {
   partial_possible = !file_exists
       (db_dir +
@@ -577,7 +579,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     callback->tags_global_finished();
   });
 
-  process_package(f, 4);       //TODO: change to command line param
+  process_package(f, parallel_processes);
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
@@ -690,7 +692,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
             *transaction, *attic_settings().NODE_CHANGELOG);
     });
 
-    process_package(f, 4);       //TODO: change to command line param
+    process_package(f, parallel_processes);
   }
 
   if (meta != only_data)
@@ -853,5 +855,5 @@ void Node_Updater::merge_files(const std::vector< std::string >& froms, std::str
     });
   }
 
-  process_package(f, 4);       //TODO: change to command line param
+  process_package(f, parallel_processes);
 }

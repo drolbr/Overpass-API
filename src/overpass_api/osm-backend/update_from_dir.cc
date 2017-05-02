@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
   meta_modes meta = only_data;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
+  unsigned int parallel_processes = 1;
 
   int argpos(1);
   while (argpos < argc)
@@ -116,6 +117,10 @@ int main(int argc, char* argv[])
       flush_limit = atoll(std::string(argv[argpos]).substr(13).c_str()) *1024*1024;
       if (flush_limit == 0)
         flush_limit = std::numeric_limits< unsigned int >::max();
+    }
+    else if (!(strncmp(argv[argpos], "--parallel=", 11)))
+    {
+      parallel_processes = atoi(std::string(argv[argpos]).substr(11).c_str());
     }
     else
     {
@@ -153,7 +158,7 @@ int main(int argc, char* argv[])
   {
     if (db_dir == "")
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit, parallel_processes);
       get_verbatim_callback()->parser_started();
 
       process_source_files< Node_Caller >(source_dir, source_file_names);
@@ -164,7 +169,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
+      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit, parallel_processes);
       get_verbatim_callback()->parser_started();
 
       process_source_files< Node_Caller >(source_dir, source_file_names);

@@ -498,8 +498,8 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& data_version_,
-			 meta_modes meta_, unsigned int flush_limit_)
-  : dispatcher_client(0), meta(meta_)
+			 meta_modes meta_, unsigned int flush_limit_, unsigned int parallel_processes_)
+  : dispatcher_client(0), meta(meta_), parallel_processes(parallel_processes_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
   Logger logger(dispatcher_client->get_db_dir());
@@ -514,9 +514,9 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
     version<<data_version_<<'\n';
   }
 
-  node_updater_ = new Node_Updater(*transaction, meta);
-  way_updater_ = new Way_Updater(*transaction, meta);
-  relation_updater_ = new Relation_Updater(*transaction, meta);
+  node_updater_ = new Node_Updater(*transaction, meta, parallel_processes);
+  way_updater_ = new Way_Updater(*transaction, meta, parallel_processes);
+  relation_updater_ = new Relation_Updater(*transaction, meta, parallel_processes);
   flush_limit = flush_limit_;
 
   data_version = data_version_;
@@ -533,8 +533,9 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
 
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, std::string db_dir, const std::string& data_version_,
-     meta_modes meta_, unsigned int flush_limit_)
-  : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
+     meta_modes meta_, unsigned int flush_limit_, unsigned int parallel_processes_)
+  : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_),
+    parallel_processes(parallel_processes_)
 {
   if (file_present(db_dir + osm_base_settings().shared_name))
     throw Context_Error("File " + db_dir + osm_base_settings().shared_name + " present, "
@@ -545,9 +546,9 @@ Osm_Updater::Osm_Updater
     version<<data_version_<<'\n';
   }
 
-  node_updater_ = new Node_Updater(db_dir, meta);
-  way_updater_ = new Way_Updater(db_dir, meta);
-  relation_updater_ = new Relation_Updater(db_dir, meta);
+  node_updater_ = new Node_Updater(db_dir, meta, parallel_processes);
+  way_updater_ = new Way_Updater(db_dir, meta, parallel_processes);
+  relation_updater_ = new Relation_Updater(db_dir, meta, parallel_processes);
   flush_limit = flush_limit_;
 
   data_version = data_version_;
@@ -565,11 +566,11 @@ Osm_Updater::Osm_Updater
 void Osm_Updater::flush()
 {
   delete node_updater_;
-  node_updater_ = new Node_Updater(db_dir_, meta ? keep_meta : only_data);
+  node_updater_ = new Node_Updater(db_dir_, meta ? keep_meta : only_data, parallel_processes);
   delete way_updater_;
-  way_updater_ = new Way_Updater(db_dir_, meta);
+  way_updater_ = new Way_Updater(db_dir_, meta, parallel_processes);
   delete relation_updater_;
-  relation_updater_ = new Relation_Updater(db_dir_, meta);
+  relation_updater_ = new Relation_Updater(db_dir_, meta, parallel_processes);
 
   if (dispatcher_client)
   {
