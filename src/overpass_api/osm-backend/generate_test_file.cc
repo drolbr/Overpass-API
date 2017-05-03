@@ -2689,6 +2689,18 @@ struct Accept_Complete_7 : public Accept_All_Tags
     uint iteration;
 };
 
+struct Accept_If : public Accept_All_Tags
+{
+  Accept_If(uint target_way_id_) : target_way_id(target_way_id_) {}
+
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return id == target_way_id; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+  private:
+    uint target_way_id;
+};
+
 struct Accept_Polygon_1 : public Accept_All_Tags
 {
   Accept_Polygon_1(uint pattern_size_) : pattern_size(pattern_size_) {}
@@ -3618,6 +3630,14 @@ int main(int argc, char* args[])
       modifier = new Accept_Complete_6(pattern_size, false);
     else if (std::string(args[2]) == "complete_7")
       modifier = new Accept_Complete_7(pattern_size, 0);
+    else if (std::string(args[2]) == "if_1")
+      modifier = new Accept_If(2);
+    else if (std::string(args[2]) == "if_2")
+      modifier = new Accept_If(1);
+    else if (std::string(args[2]) == "if_3")
+      modifier = new Accept_If(2);
+    else if (std::string(args[2]) == "if_4")
+      modifier = new Accept_If(3);
     else if (std::string(args[2]) == "around_1")
       modifier = new Accept_Around_1(pattern_size, 20.01);
     else if (std::string(args[2]) == "around_2")

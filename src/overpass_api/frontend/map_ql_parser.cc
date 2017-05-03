@@ -189,6 +189,7 @@ TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement(strategy, line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory, uint line_nr)
 {
@@ -206,6 +207,15 @@ TStatement* create_complete_statement(typename TStatement::Factory& stmt_factory
   attr["into"] = into;
   return stmt_factory.create_statement("complete", line_nr, attr);
 }
+
+
+template< class TStatement >
+TStatement* create_if_statement(typename TStatement::Factory& stmt_factory, uint line_nr)
+{
+  std::map< std::string, std::string > attr;
+  return stmt_factory.create_statement("if", line_nr, attr);
+}
+
 
 template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
@@ -532,6 +542,19 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
   return result;
 }
 
+
+template< class TStatement >
+TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
+    Error_Output* error_output, Statement::QL_Context tree_context, bool parenthesis_expected)
+{
+  Token_Tree tree(token, error_output, parenthesis_expected);
+  if (tree.tree.empty())
+    return 0;
+
+  return stmt_factory.create_statement(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context);
+}
+
+
 template< class TStatement >
 TStatement* parse_union(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
 			Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
@@ -582,6 +605,7 @@ TStatement* parse_foreach(typename TStatement::Factory& stmt_factory, Parsed_Que
   return statement;
 }
 
+
 template< class TStatement >
 TStatement* parse_complete(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
               Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
@@ -601,6 +625,30 @@ TStatement* parse_complete(typename TStatement::Factory& stmt_factory, Parsed_Qu
     statement->add_statement(*it, "");
   return statement;
 }
+
+
+template< class TStatement >
+TStatement* parse_if(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
+              Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
+{
+  std::pair< uint, uint > line_col = token.line_col();
+  ++token;
+
+  clear_until_after(token, error_output, "(");
+  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
+      Statement::evaluator_expected, true);
+  clear_until_after(token, error_output, ")");
+  std::vector< TStatement* > substatements =
+      collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
+
+  TStatement* statement = create_if_statement< TStatement >(stmt_factory, line_col.first);
+  statement->add_statement(condition, "");
+  for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    statement->add_statement(*it, "");
+  return statement;
+}
+
 
 template< class TStatement >
 TStatement* parse_output(typename TStatement::Factory& stmt_factory,
@@ -683,18 +731,6 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
   }
 
   return statement;
-}
-
-
-template< class TStatement >
-TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
-    Error_Output* error_output, Statement::QL_Context tree_context, bool parenthesis_expected)
-{
-  Token_Tree tree(token, error_output, parenthesis_expected);
-  if (tree.tree.empty())
-    return 0;
-
-  return stmt_factory.create_statement(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context);
 }
 
 
@@ -1428,6 +1464,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
     return parse_foreach< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
   else if (*token == "complete")
     return parse_complete< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
+  else if (*token == "if")
+    return parse_if< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
 
   std::string from = "";
   if (token.good() && *token == ".")
