@@ -279,6 +279,17 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Evaluator_Properties_Count stmt50(0, attributes, global_settings);
   stmt5.add_statement(&stmt50, "");
 
+  attributes.clear();
+  attributes["k"] = "distinct_members";
+  Set_Prop_Statement stmt6(0, attributes, global_settings);
+  stmt.add_statement(&stmt6, "");
+  attributes.clear();
+  attributes["type"] = "distinct_members";
+  if (from != "_")
+    attributes["from"] = from;
+  Evaluator_Properties_Count stmt60(0, attributes, global_settings);
+  stmt6.add_statement(&stmt60, "");
+
   stmt.execute(rman);
 
   {
@@ -379,6 +390,10 @@ int main(int argc, char* args[])
       count_test(global_settings, transaction, "count-from-default", "_", 1, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "8"))
       is_tag_test(global_settings, transaction, "is-tag", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "9"))
+      count_test(global_settings, transaction, "count-from-default", "_", 2, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "10"))
+      count_test(global_settings, transaction, "count-from-default", "_", 10, global_node_offset);
 
     std::cout<<"</osm>\n";
   }

@@ -381,6 +381,8 @@ std::string Evaluator_Properties_Count::to_string(Evaluator_Properties_Count::Ob
     return "tags";
   if (objects == members)
     return "members";
+  if (objects == distinct_members)
+    return "distinct_members";
 
   return "nothing";
 }
@@ -400,12 +402,13 @@ Evaluator_Properties_Count::Evaluator_Properties_Count
     to_count = tags;
   else if (attributes["type"] == "members")
     to_count = members;
+  else if (attributes["type"] == "distinct_members")
+    to_count = distinct_members;
   else
   {
     std::ostringstream temp("");
-    temp<<"For the attribute \"type\" of the element \"eval-set-count\""
-        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", \"deriveds\", \"tags\", "
-          "or \"members\" strings.";
+    temp<<"For the attribute \"type\" of the element \"eval-prop-count\""
+        <<" the only allowed values are \"tags\", \"members\", or \"distinct_members\" strings.";
     add_static_error(temp.str());
   }
 }
@@ -415,7 +418,7 @@ std::pair< std::vector< Set_Usage >, uint > Evaluator_Properties_Count::used_set
 {
   if (to_count == Evaluator_Properties_Count::tags)
     return std::make_pair(std::vector< Set_Usage >(), 2u);
-  else if (to_count == Evaluator_Properties_Count::members)
+  else if (to_count == Evaluator_Properties_Count::members || to_count == Evaluator_Properties_Count::distinct_members)
     return std::make_pair(std::vector< Set_Usage >(), 1u);
 
   return std::make_pair(std::vector< Set_Usage >(), 0u);
@@ -458,6 +461,12 @@ std::string Prop_Count_Eval_Task::eval(const Way_Skeleton* elem,
 {
   if (to_count == Evaluator_Properties_Count::members && elem)
     return to_string(elem->nds.size());
+  else if (to_count == Evaluator_Properties_Count::distinct_members && elem)
+  {
+    std::vector< Node::Id_Type > distinct = elem->nds;
+    std::sort(distinct.begin(), distinct.end());
+    return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
+  }
   else if (to_count == Evaluator_Properties_Count::tags && tags)
     return to_string(tags->size());
   return "0";
@@ -469,10 +478,28 @@ std::string Prop_Count_Eval_Task::eval(const Attic< Way_Skeleton >* elem,
 {
   if (to_count == Evaluator_Properties_Count::members && elem)
     return to_string(elem->nds.size());
+  else if (to_count == Evaluator_Properties_Count::distinct_members && elem)
+  {
+    std::vector< Node::Id_Type > distinct = elem->nds;
+    std::sort(distinct.begin(), distinct.end());
+    return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
+  }
   else if (to_count == Evaluator_Properties_Count::tags && tags)
     return to_string(tags->size());
   return "0";
 }
+
+
+struct Relation_Member_Comparer
+{
+  bool operator()(const Relation_Entry& lhs, const Relation_Entry& rhs) const
+  {
+    if (lhs.type != rhs.type)
+      return lhs.type < rhs.type;
+    
+    return lhs.ref < rhs.ref;
+  }
+};
 
 
 std::string Prop_Count_Eval_Task::eval(const Relation_Skeleton* elem,
@@ -480,6 +507,12 @@ std::string Prop_Count_Eval_Task::eval(const Relation_Skeleton* elem,
 {
   if (to_count == Evaluator_Properties_Count::members && elem)
     return to_string(elem->members.size());
+  else if (to_count == Evaluator_Properties_Count::distinct_members && elem)
+  {
+    std::vector< Relation_Entry > distinct = elem->members;
+    std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
+    return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
+  }
   else if (to_count == Evaluator_Properties_Count::tags && tags)
     return to_string(tags->size());
   return "0";
@@ -491,6 +524,12 @@ std::string Prop_Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
 {
   if (to_count == Evaluator_Properties_Count::members && elem)
     return to_string(elem->members.size());
+  else if (to_count == Evaluator_Properties_Count::distinct_members && elem)
+  {
+    std::vector< Relation_Entry > distinct = elem->members;
+    std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
+    return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
+  }
   else if (to_count == Evaluator_Properties_Count::tags && tags)
     return to_string(tags->size());
   return "0";

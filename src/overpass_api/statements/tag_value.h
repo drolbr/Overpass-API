@@ -478,15 +478,19 @@ The syntax for tags is
 
   count_tags()
 
-The syntax for members is
+The syntax to count the number of member entries is
 
   count_members()
+
+The syntax to count the number of distinct members is
+
+  count_distinct_members()
 */
 
 class Evaluator_Properties_Count : public Evaluator
 {
 public:
-  enum Objects { nothing, tags, members };
+  enum Objects { nothing, tags, members, distinct_members };
   static std::string to_string(Objects objects);
 
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Properties_Count >
@@ -496,6 +500,7 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Properties_Count >("eval-prop-count")
     {
       Statement::maker_by_func_name()["count_members"].push_back(this);
+      Statement::maker_by_func_name()["count_distinct_members"].push_back(this);
       Statement::maker_by_func_name()["count_tags"].push_back(this);
     }
   };
@@ -504,7 +509,7 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-prop-count type=\"" + to_string(to_count) + "\"/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string(to_count == members ? "count_members" : "count_tags") + "()"; }
+  { return std::string("count_") + to_string(to_count) + "()"; }
 
   Evaluator_Properties_Count(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);

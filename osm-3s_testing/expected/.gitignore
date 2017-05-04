@@ -1,7 +1,11 @@
 around_?/
 bbox_query_?/
+complete_?/
+convert_?/
+convert_??/
 difference_?/
 foreach_?/
+if_?/
 interpreter_?/
 interpreter_??/
 make_?/

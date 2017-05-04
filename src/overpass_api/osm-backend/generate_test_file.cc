@@ -4271,6 +4271,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "    <tag k=\"tags\" v=\"1\"/>\n"
       "    <tag k=\"members\" v=\"0\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"0\"/>\n"
       "  </count-from-default>\n"
       "  <count-from-default id=\"2\">\n"
       "    <tag k=\"nodes\" v=\"1\"/>\n"
@@ -4278,6 +4279,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "    <tag k=\"tags\" v=\"2\"/>\n"
       "    <tag k=\"members\" v=\"2\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"2\"/>\n"
       "  </count-from-default>\n"
       "  <count-from-default id=\"3\">\n"
       "    <tag k=\"nodes\" v=\"1\"/>\n"
@@ -4285,6 +4287,7 @@ int main(int argc, char* args[])
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "    <tag k=\"tags\" v=\"2\"/>\n"
       "    <tag k=\"members\" v=\"2\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"2\"/>\n"
       "  </count-from-default>\n";
     if (std::string(args[2]) == "convert_8")
       std::cout<<
@@ -4318,6 +4321,58 @@ int main(int argc, char* args[])
       "    <tag k=\"relation_key\" v=\"0\"/>\n"
       "    <tag k=\"number\" v=\"1\"/>\n"
       "  </is-tag>\n";
+    if (std::string(args[2]) == "convert_9")
+      std::cout<<
+      "  <count-from-default id=\"1\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"1\"/>\n"
+      "    <tag k=\"members\" v=\"0\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"0\"/>\n"
+      "  </count-from-default>\n"
+      "  <count-from-default id=\"2\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"2\"/>\n"
+      "    <tag k=\"members\" v=\"2\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"2\"/>\n"
+      "  </count-from-default>\n"
+      "  <count-from-default id=\"3\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"2\"/>\n"
+      "    <tag k=\"members\" v=\"5\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"4\"/>\n"
+      "  </count-from-default>\n";
+    if (std::string(args[2]) == "convert_10")
+      std::cout<<
+      "  <count-from-default id=\"1\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"2\"/>\n"
+      "    <tag k=\"members\" v=\"0\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"0\"/>\n"
+      "  </count-from-default>\n"
+      "  <count-from-default id=\"2\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"3\"/>\n"
+      "    <tag k=\"members\" v=\"2\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"2\"/>\n"
+      "  </count-from-default>\n"
+      "  <count-from-default id=\"3\">\n"
+      "    <tag k=\"nodes\" v=\"1\"/>\n"
+      "    <tag k=\"ways\" v=\"1\"/>\n"
+      "    <tag k=\"relations\" v=\"1\"/>\n"
+      "    <tag k=\"tags\" v=\"3\"/>\n"
+      "    <tag k=\"members\" v=\"11\"/>\n"
+      "    <tag k=\"distinct_members\" v=\"10\"/>\n"
+      "  </count-from-default>\n";
 
     std::cout<<"</osm>\n";
   }
