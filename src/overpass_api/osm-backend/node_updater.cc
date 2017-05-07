@@ -17,6 +17,7 @@
  */
 
 #include <algorithm>
+#include <functional>
 #include <map>
 #include <set>
 #include <vector>
@@ -540,7 +541,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
 
   store_new_keys(new_data, keys, *transaction);
   
-  std::vector<std::function<void()>> f;
+  std::vector< std::function< void() > > f;
 
   f.push_back( [&]
   {
@@ -633,7 +634,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, bool partial)
     // Prepare user indices
     copy_idxs_by_id(attic_meta, idxs_by_id);
 
-    std::vector<std::function<void()>> f;
+    std::vector< std::function< void() > > f;
 
     f.push_back( [&]
     {
@@ -826,7 +827,7 @@ void Node_Updater::merge_files(const std::vector< std::string >& froms, std::str
   Transaction_Collection from_transactions(false, false, db_dir, froms);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
 
-  std::vector<std::function<void()>> f;
+  std::vector< std::function< void() > > f;
 
   f.push_back( [&]
   {

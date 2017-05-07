@@ -20,11 +20,12 @@
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__PARALLEL_PROC_H
 
 #include <atomic>
+#include <functional>
 #include <future>
 #include <vector>
 
 
-inline void process_package(std::vector<std::function<void()>>& f, const int parallel_processes)
+inline void process_package(std::vector< std::function< void() > >& f, const int parallel_processes)
 {
   // skip thread creation if no parallel processing requested
   if (parallel_processes <= 1)
@@ -48,9 +49,8 @@ inline void process_package(std::vector<std::function<void()>>& f, const int par
           if (current_package >= f.size())
             return;
           f[current_package]();
-      }
-    }
-    ));
+        }
+      }));
   }
 
   for (auto &e : futures)

@@ -17,6 +17,7 @@
  */
 
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <set>
@@ -1172,7 +1173,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
 
   store_new_keys(new_data, keys, *transaction);
   
-  std::vector<std::function<void()>> f;
+  std::vector< std::function< void() > > f;
 
   f.push_back( [&]
   {
@@ -1285,7 +1286,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
     // Prepare user indices
     copy_idxs_by_id(new_attic_meta, idxs_by_id);
     
-    std::vector<std::function<void()>> f;
+    std::vector< std::function< void() > > f;
 
     f.push_back( [&]
     {
