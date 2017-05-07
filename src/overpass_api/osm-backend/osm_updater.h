@@ -34,9 +34,9 @@ class Osm_Updater
 {
   public:
     Osm_Updater(Osm_Backend_Callback* callback_, const std::string& data_version,
-		meta_modes meta, unsigned int flush_limit);
+		meta_modes meta, unsigned int flush_limit, unsigned int parallel_processes);
     Osm_Updater(Osm_Backend_Callback* callback_, std::string db_dir, const std::string& data_version,
-		meta_modes meta, unsigned int flush_limit);
+		meta_modes meta, unsigned int flush_limit, unsigned int parallel_processes);
     ~Osm_Updater();
 
     void finish_updater();
@@ -50,6 +50,7 @@ class Osm_Updater
     Relation_Updater* relation_updater_;
     std::string db_dir_;
     meta_modes meta;
+    unsigned int parallel_processes;
 
     void flush();
 };

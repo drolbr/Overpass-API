@@ -17,6 +17,7 @@
  */
 
 #include <algorithm>
+#include <functional>
 #include <map>
 #include <set>
 #include <vector>
@@ -33,18 +34,20 @@
 #include "meta_updater.h"
 #include "tags_updater.h"
 #include "way_updater.h"
+#include "parallel_proc.h"
 
 
 
-Way_Updater::Way_Updater(Transaction& transaction_, meta_modes meta_)
+Way_Updater::Way_Updater(Transaction& transaction_, meta_modes meta_, unsigned int parallel_processes_)
   : update_counter(0), transaction(&transaction_),
-    external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().WAY_KEYS)
+    external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().WAY_KEYS),
+    parallel_processes(parallel_processes_)
 {}
 
-Way_Updater::Way_Updater(std::string db_dir_, meta_modes meta_)
+Way_Updater::Way_Updater(std::string db_dir_, meta_modes meta_, unsigned int parallel_processes_)
   : update_counter(0), transaction(0),
     external_transaction(false), partial_possible(true), db_dir(db_dir_), meta(meta_),
-    keys(*osm_base_settings().WAY_KEYS)
+    keys(*osm_base_settings().WAY_KEYS), parallel_processes(parallel_processes_)
 {
   partial_possible = !file_exists
       (db_dir +
@@ -295,7 +298,7 @@ void adapt_newest_existing_attic
 
 
 /* Compares the new data and the already existing skeletons to determine those that have
- * moved. This information is used to prepare the std::set of elements to store to attic.
+ * moved. This information is used to prepare the set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
 void compute_new_attic_skeletons
     (const Data_By_Id< Way_Skeleton >& new_data,
@@ -695,7 +698,7 @@ void new_implicit_skeletons
 
 
 /* Compares the new data and the already existing skeletons to determine those that have
- * moved. This information is used to prepare the std::set of elements to store to attic.
+ * moved. This information is used to prepare the set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
 std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute_changelog(
     const Data_By_Id< Way_Skeleton >& new_data,
@@ -893,29 +896,51 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
   callback->prepare_delete_tags_finished();
 
   store_new_keys(new_data, keys, *transaction);
+  
+  std::vector< std::function< void() > > f;
 
-  // Update id indexes
-  update_map_positions(new_positions, *transaction, *osm_base_settings().WAYS);
-  callback->update_ids_finished();
+  f.push_back( [&]
+  {
+    // Update id indexes
+    update_map_positions(new_positions, *transaction, *osm_base_settings().WAYS);
+    callback->update_ids_finished();
+  });
 
-  // Update skeletons
-  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().WAYS);
-  callback->update_coords_finished();
+  f.push_back( [&]
+  {
+    // Update skeletons
+    update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().WAYS);
+    callback->update_coords_finished();
+  });
 
   // Update meta
   if (meta)
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().WAYS_META);
+  {
+    f.push_back( [&]
+    {
+      update_elements(attic_meta, new_meta, *transaction, *meta_settings().WAYS_META);
+    });
+  }
 
-  // Update local tags
-  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().WAY_TAGS_LOCAL);
-  callback->tags_local_finished();
+  f.push_back( [&]
+  {
+    // Update local tags
+    update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().WAY_TAGS_LOCAL);
+    callback->tags_local_finished();
+  });
 
-  // Update global tags
-  update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
-  callback->tags_global_finished();
+  f.push_back( [&]
+  {
+    // Update global tags
+    update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
+    callback->tags_global_finished();
+  });
+
+  process_package(f, parallel_processes);
+
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
-
+    
   if (meta == keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
@@ -978,37 +1003,66 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
 
     // Prepare user indices
     copy_idxs_by_id(new_attic_meta, idxs_by_id);
+    
+    std::vector< std::function< void() > > f;
 
-    // Update id indexes
-    update_map_positions(new_attic_map_positions, *transaction, *attic_settings().WAYS);
+    f.push_back( [&]
+    {
+      // Update id indexes
+      update_map_positions(new_attic_map_positions, *transaction, *attic_settings().WAYS);
+    });
 
-    // Update id index lists
-    update_elements(existing_idx_lists, new_attic_idx_lists,
-                    *transaction, *attic_settings().WAY_IDX_LIST);
+    f.push_back( [&]
+    {
+      // Update id index lists
+      update_elements(existing_idx_lists, new_attic_idx_lists,
+            *transaction, *attic_settings().WAY_IDX_LIST);
+    });
 
-    // Add attic elements
-    update_elements(attic_skeletons_to_delete, new_attic_skeletons,
-                    *transaction, *attic_settings().WAYS);
+    f.push_back( [&]
+    {
+      // Add attic elements
+        update_elements(attic_skeletons_to_delete, new_attic_skeletons,
+            *transaction, *attic_settings().WAYS);
+    });
 
-    // Add attic elements
-    update_elements(std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >(),
-                    new_undeleted, *transaction, *attic_settings().WAYS_UNDELETED);
+    f.push_back( [&]
+    {
+      // Add attic elements
+      update_elements(std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >(),
+          new_undeleted, *transaction, *attic_settings().WAYS_UNDELETED);
+    });
 
-    // Add attic meta
-    update_elements
+    f.push_back( [&]
+    {
+      // Add attic meta
+      update_elements
         (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >(),
-         new_attic_meta, *transaction, *attic_settings().WAYS_META);
+            new_attic_meta, *transaction, *attic_settings().WAYS_META);
+    });
 
-    // Update tags
-    update_elements(std::map< Tag_Index_Local, std::set< Attic < Way_Skeleton::Id_Type > > >(),
-                    new_attic_local_tags, *transaction, *attic_settings().WAY_TAGS_LOCAL);
-    update_elements(std::map< Tag_Index_Global,
-                        std::set< Attic < Tag_Object_Global< Way_Skeleton::Id_Type > > > >(),
-                    new_attic_global_tags, *transaction, *attic_settings().WAY_TAGS_GLOBAL);
+    f.push_back( [&]
+    {
+      // Update tags
+      update_elements(std::map< Tag_Index_Local, std::set< Attic < Way_Skeleton::Id_Type > > >(),
+            new_attic_local_tags, *transaction, *attic_settings().WAY_TAGS_LOCAL);
+    });
 
-    // Write changelog
-    update_elements(std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > >(), changelog,
-                    *transaction, *attic_settings().WAY_CHANGELOG);
+    f.push_back( [&]
+    {
+      update_elements(std::map< Tag_Index_Global,
+           std::set< Attic < Tag_Object_Global< Way_Skeleton::Id_Type > > > >(),
+           new_attic_global_tags, *transaction, *attic_settings().WAY_TAGS_GLOBAL);
+    });
+
+    f.push_back( [&]
+    {
+      // Write changelog
+      update_elements(std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > >(), changelog,
+            *transaction, *attic_settings().WAY_CHANGELOG);
+    });
+
+    process_package(f, parallel_processes);
   }
 
   if (meta != only_data)
@@ -1113,15 +1167,35 @@ void Way_Updater::merge_files(const std::vector< std::string >& froms, std::stri
 {
   Transaction_Collection from_transactions(false, false, db_dir, froms);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
-  ::merge_files< Uint31_Index, Way_Skeleton >
-      (from_transactions, into_transaction, *osm_base_settings().WAYS);
-  ::merge_files< Tag_Index_Local, Way::Id_Type >
-      (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
-  ::merge_files< Tag_Index_Global, Tag_Object_Global< Way::Id_Type > >
-      (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
+
+  std::vector< std::function< void() > > f;
+
+  f.push_back( [&]
+  {
+    ::merge_files< Uint31_Index, Way_Skeleton >
+    (from_transactions, into_transaction, *osm_base_settings().WAYS);
+  });
+
+  f.push_back( [&]
+  {
+    ::merge_files< Tag_Index_Local, Way::Id_Type >
+       (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_LOCAL);
+  });
+
+  f.push_back( [&]
+  {
+    ::merge_files< Tag_Index_Global, Tag_Object_Global< Way::Id_Type > >
+       (from_transactions, into_transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
+  });
+
   if (meta)
   {
-    ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >
-        (from_transactions, into_transaction, *meta_settings().WAYS_META);
+    f.push_back( [&]
+    {
+      ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton< Way::Id_Type > >
+       (from_transactions, into_transaction, *meta_settings().WAYS_META);
+    });
   }
+
+  process_package(f, parallel_processes);
 }

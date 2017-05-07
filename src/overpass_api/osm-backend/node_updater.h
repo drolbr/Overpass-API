@@ -34,9 +34,9 @@
 
 struct Node_Updater
 {
-  Node_Updater(Transaction& transaction, meta_modes meta);
+  Node_Updater(Transaction& transaction, meta_modes meta, unsigned int parallel_processes);
 
-  Node_Updater(std::string db_dir, meta_modes meta);
+  Node_Updater(std::string db_dir, meta_modes meta, unsigned int parallel_processes);
 
   void set_id_deleted(Node::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
@@ -116,6 +116,8 @@ private:
       const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& new_idx_positions);
 
   void merge_files(const std::vector< std::string >& froms, std::string into);
+
+  unsigned int parallel_processes;
 };
 
 

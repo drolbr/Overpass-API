@@ -17,6 +17,7 @@
  */
 
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <set>
@@ -29,19 +30,21 @@
 #include "meta_updater.h"
 #include "relation_updater.h"
 #include "tags_updater.h"
+#include "parallel_proc.h"
 
 
-Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_)
+Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_, unsigned int parallel_processes_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true),
-    max_role_id(0), max_written_role_id(0), meta(meta_), keys(*osm_base_settings().RELATION_KEYS)
+    max_role_id(0), max_written_role_id(0), meta(meta_), parallel_processes(parallel_processes_),
+    keys(*osm_base_settings().RELATION_KEYS)
 {}
 
-Relation_Updater::Relation_Updater(std::string db_dir_, meta_modes meta_)
+Relation_Updater::Relation_Updater(std::string db_dir_, meta_modes meta_, unsigned int parallel_processes_)
   : update_counter(0), transaction(0),
     external_transaction(false),
     max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_),
-    keys(*osm_base_settings().RELATION_KEYS)
+    parallel_processes(parallel_processes_), keys(*osm_base_settings().RELATION_KEYS)
 {}
 
 
@@ -806,7 +809,7 @@ void adapt_newest_existing_attic
 
 
 /* Compares the new data and the already existing skeletons to determine those that have
- * moved. This information is used to prepare the std::set of elements to store to attic.
+ * moved. This information is used to prepare the set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
 void compute_new_attic_skeletons
     (const Data_By_Id< Relation_Skeleton >& new_data,
@@ -954,7 +957,7 @@ void compute_new_attic_skeletons
 
 
 /* Compares the new data and the already existing skeletons to determine those that have
- * moved. This information is used to prepare the std::set of elements to store to attic.
+ * moved. This information is used to prepare the set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
 std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > compute_changelog(
     const Data_By_Id< Relation_Skeleton >& new_data,
@@ -1169,32 +1172,55 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
   callback->prepare_delete_tags_finished();
 
   store_new_keys(new_data, keys, *transaction);
+  
+  std::vector< std::function< void() > > f;
 
-  // Update id indexes
-  update_map_positions(new_positions, *transaction, *osm_base_settings().RELATIONS);
-  callback->update_ids_finished();
+  f.push_back( [&]
+  {
+    // Update id indexes
+    update_map_positions(new_positions, *transaction, *osm_base_settings().RELATIONS);
+      callback->update_ids_finished();
+  });
 
-  // Update skeletons
-  update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().RELATIONS);
-  callback->update_coords_finished();
+  f.push_back( [&]
+  {
+   // Update skeletons
+   update_elements(attic_skeletons, new_skeletons, *transaction, *osm_base_settings().RELATIONS);
+      callback->update_coords_finished();
+  });
 
   // Update meta
   if (meta)
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().RELATIONS_META);
+  {
+    f.push_back( [&]
+    {
+      update_elements(attic_meta, new_meta, *transaction, *meta_settings().RELATIONS_META);
+    });
+  }
 
-  // Update local tags
-  update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().RELATION_TAGS_LOCAL);
-  callback->tags_local_finished();
+  f.push_back( [&]
+  {
+    // Update local tags
+    update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().RELATION_TAGS_LOCAL);
+       callback->tags_local_finished();
+  });
 
-  // Update global tags
-  update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().RELATION_TAGS_GLOBAL);
-  callback->tags_global_finished();
+  f.push_back( [&]
+  {
+    // Update global tags
+    update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().RELATION_TAGS_GLOBAL);
+      callback->tags_global_finished();
+  });
 
-  flush_roles();
-  callback->flush_roles_finished();
+  f.push_back( [&]
+  {
+    flush_roles();
+    callback->flush_roles_finished();
+  });
+
+  process_package(f, parallel_processes);
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
-
   if (meta == keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
@@ -1259,39 +1285,71 @@ void Relation_Updater::update(Osm_Backend_Callback* callback,
 
     // Prepare user indices
     copy_idxs_by_id(new_attic_meta, idxs_by_id);
+    
+    std::vector< std::function< void() > > f;
 
-    // Update id indexes
-    update_map_positions(new_attic_map_positions, *transaction, *attic_settings().RELATIONS);
+    f.push_back( [&]
+    {
+      // Update id indexes
+      update_map_positions(new_attic_map_positions, *transaction, *attic_settings().RELATIONS);
+    });
 
-    // Update id index lists
-    update_elements(existing_idx_lists, new_attic_idx_lists,
-                    *transaction, *attic_settings().RELATION_IDX_LIST);
+    f.push_back( [&]
+    {
+      // Update id index lists
+        update_elements(existing_idx_lists, new_attic_idx_lists,
+            *transaction, *attic_settings().RELATION_IDX_LIST);
+    });
 
-    // Add attic elements
-    update_elements(attic_skeletons_to_delete, new_attic_skeletons,
-                    *transaction, *attic_settings().RELATIONS);
+    f.push_back( [&]
+    {
+      // Add attic elements
+        update_elements(attic_skeletons_to_delete, new_attic_skeletons,
+            *transaction, *attic_settings().RELATIONS);
+    });
 
-    // Add attic elements
-    update_elements(std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >(),
-                    new_undeleted, *transaction, *attic_settings().RELATIONS_UNDELETED);
+    f.push_back( [&]
+    {
+      // Add attic elements
+       update_elements(std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >(),
+            new_undeleted, *transaction, *attic_settings().RELATIONS_UNDELETED);
+    });
 
-    // Add attic meta
-    update_elements
+    f.push_back( [&]
+    {
+      // Add attic meta
+      update_elements
         (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > > >(),
-         new_attic_meta, *transaction, *attic_settings().RELATIONS_META);
+            new_attic_meta, *transaction, *attic_settings().RELATIONS_META);
+    });
 
-    // Update tags
-    update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
-                    new_attic_local_tags, *transaction, *attic_settings().RELATION_TAGS_LOCAL);
-    update_elements(std::map< Tag_Index_Global,
-                        std::set< Attic < Tag_Object_Global< Relation_Skeleton::Id_Type > > > >(),
-                    new_attic_global_tags, *transaction, *attic_settings().RELATION_TAGS_GLOBAL);
+    f.push_back( [&]
+    {
+      // Update tags
+      update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
+            new_attic_local_tags, *transaction, *attic_settings().RELATION_TAGS_LOCAL);
+    });
 
-    // Write changelog
-    update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,
-                    *transaction, *attic_settings().RELATION_CHANGELOG);
+    f.push_back( [&]
+    {
+      update_elements(std::map< Tag_Index_Global,
+          std::set< Attic < Tag_Object_Global< Relation_Skeleton::Id_Type > > > >(),
+          new_attic_global_tags, *transaction, *attic_settings().RELATION_TAGS_GLOBAL);
+    });
 
-    flush_roles();
+    f.push_back( [&]
+    {
+      // Write changelog
+      update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,
+           *transaction, *attic_settings().RELATION_CHANGELOG);
+    });
+
+    f.push_back( [&]
+    {
+      flush_roles();
+    });
+
+    process_package(f, parallel_processes);
   }
 
   if (meta != only_data)
