@@ -19,7 +19,7 @@
 
 if [[ -z $1  ]]; then
 {
-  echo "Usage: $0 diff_url --meta=(yes|no|attic)"
+  echo "Usage: $0 diff_url --meta=(yes|no|attic) [sleep time]"
   echo "Error : Set the URL to get diffs from (like https://planet.osm.org/replication/minute )"
   exit 0
 };
@@ -132,6 +132,14 @@ DIFF_COUNT=0
 pushd "$EXEC_DIR"
 START=`cat $DB_DIR/replicate_id`
 
+#Default is 10
+SLEEP_TIME="10"
+
+if [[ -n "$3" ]]; then
+{
+  SLEEP_TIME="$3"
+}; fi
+
 while [[ true ]]; do
 {
   echo "`date -u '+%F %T'`: updating from $START" >>$DB_DIR/fetch_osc_and_apply.log
@@ -152,7 +160,7 @@ while [[ true ]]; do
   };
   else
   {
-    sleep 10
+    sleep $SLEEP_TIME # Wait for the diff to be available
   }; fi
 
   rm -f $TEMP_TARGET_DIR/*
