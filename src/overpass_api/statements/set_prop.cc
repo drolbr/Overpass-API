@@ -167,17 +167,18 @@ std::string Set_Prop_Statement::dump_compact_ql(const std::string&) const
 
 
 
-std::pair< std::vector< Set_Usage >, uint > Set_Prop_Statement::used_sets() const
+Requested_Context Set_Prop_Statement::request_context() const
 {
   if (tag_value)
   {
-    std::pair< std::vector< Set_Usage >, uint > result = tag_value->used_sets();
-    result.second |= Set_Usage::TAGS;
+    Requested_Context result = tag_value->request_context();
+    result.object_usage |= Set_Usage::TAGS;
     return result;
   }
 
-  std::vector< Set_Usage > result;
-  return std::make_pair(result, Set_Usage::TAGS);
+  Requested_Context result;
+  result.add_usage(Set_Usage::TAGS);
+  return result;
 }
 
 

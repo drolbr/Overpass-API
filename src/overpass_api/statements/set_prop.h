@@ -100,8 +100,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Set_Prop_Statement() {}
 
-  std::pair< std::vector< Set_Usage >, uint > used_sets() const;
-  std::vector< std::string > used_tags() const;
+  virtual Requested_Context request_context() const;
 
   Set_Prop_Task* get_task(const Prepare_Task_Context& context);
 

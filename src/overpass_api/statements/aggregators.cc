@@ -90,23 +90,16 @@ Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > Evaluator_Aggregator::used_sets() const
+Requested_Context Evaluator_Aggregator::request_context() const
 {
   if (rhs)
   {
-    std::pair< std::vector< Set_Usage >, uint > result = rhs->used_sets();
-    std::vector< Set_Usage >::iterator it =
-        std::lower_bound(result.first.begin(), result.first.end(), Set_Usage(input, 0u));
-    if (it == result.first.end() || it->set_name != input)
-      result.first.insert(it, Set_Usage(input, result.second));
-    else
-      it->usage |= result.second;
+    Requested_Context result = rhs->request_context();
+    result.bind(input);
     return result;
   }
-
-  std::vector< Set_Usage > result;
-  result.push_back(Set_Usage(input, 0u));
-  return std::make_pair(result, 0u);
+  
+  return Requested_Context();
 }
 
 
@@ -421,13 +414,13 @@ Evaluator_Set_Count::Evaluator_Set_Count
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > Evaluator_Set_Count::used_sets() const
+Requested_Context Evaluator_Set_Count::request_context() const
 {
-  std::vector< Set_Usage > result;
+  Requested_Context result;
   if (to_count == Evaluator_Set_Count::nodes || to_count == Evaluator_Set_Count::ways
         || to_count == Evaluator_Set_Count::relations || to_count == Evaluator_Set_Count::deriveds)
-    result.push_back(Set_Usage(input, 1u));
-  return std::make_pair(result, 0u);
+    result.add_usage(input, 1u);
+  return result;
 }
 
 

@@ -383,6 +383,10 @@ std::string Evaluator_Properties_Count::to_string(Evaluator_Properties_Count::Ob
     return "members";
   if (objects == distinct_members)
     return "distinct_members";
+  if (objects == by_role)
+    return "by_role";
+  if (objects == distinct_by_role)
+    return "distinct_by_role";
 
   return "nothing";
 }
@@ -406,29 +410,22 @@ Evaluator_Properties_Count::Evaluator_Properties_Count
     to_count = distinct_members;
   else
   {
-    std::ostringstream temp("");
-    temp<<"For the attribute \"type\" of the element \"eval-prop-count\""
-        <<" the only allowed values are \"tags\", \"members\", or \"distinct_members\" strings.";
-    add_static_error(temp.str());
+    add_static_error("For the attribute \"type\" of the element \"eval-prop-count\""
+        " the only allowed values are \"tags\", \"members\", \"distinct_members\","
+        " \"by_role\", or \"distinct_by_role\" strings.");
   }
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > Evaluator_Properties_Count::used_sets() const
+Requested_Context Evaluator_Properties_Count::request_context() const
 {
   if (to_count == Evaluator_Properties_Count::tags)
-    return std::make_pair(std::vector< Set_Usage >(), 2u);
-  else if (to_count == Evaluator_Properties_Count::members || to_count == Evaluator_Properties_Count::distinct_members)
-    return std::make_pair(std::vector< Set_Usage >(), 1u);
+    return Requested_Context().add_usage(Set_Usage::TAGS);
+  else if (to_count == Evaluator_Properties_Count::members || to_count == Evaluator_Properties_Count::distinct_members
+      || to_count == Evaluator_Properties_Count::by_role || to_count == Evaluator_Properties_Count::distinct_by_role)
+    return Requested_Context().add_usage(Set_Usage::SKELETON);
 
-  return std::make_pair(std::vector< Set_Usage >(), 0u);
-}
-
-
-std::vector< std::string > Evaluator_Properties_Count::used_tags() const
-{
-  std::vector< std::string > result;
-  return result;
+  return Requested_Context();
 }
 
 
@@ -513,6 +510,14 @@ std::string Prop_Count_Eval_Task::eval(const Relation_Skeleton* elem,
     std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
     return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
   }
+  else if (to_count == Evaluator_Properties_Count::by_role && elem)
+    return to_string(elem->members.size());
+  else if (to_count == Evaluator_Properties_Count::distinct_by_role && elem)
+  {
+    std::vector< Relation_Entry > distinct = elem->members;
+    std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
+    return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
+  }
   else if (to_count == Evaluator_Properties_Count::tags && tags)
     return to_string(tags->size());
   return "0";
@@ -525,6 +530,14 @@ std::string Prop_Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
   if (to_count == Evaluator_Properties_Count::members && elem)
     return to_string(elem->members.size());
   else if (to_count == Evaluator_Properties_Count::distinct_members && elem)
+  {
+    std::vector< Relation_Entry > distinct = elem->members;
+    std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
+    return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
+  }
+  else if (to_count == Evaluator_Properties_Count::by_role && elem)
+    return to_string(elem->members.size());
+  else if (to_count == Evaluator_Properties_Count::distinct_by_role && elem)
   {
     std::vector< Relation_Entry > distinct = elem->members;
     std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());

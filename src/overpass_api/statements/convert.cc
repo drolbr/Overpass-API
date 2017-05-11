@@ -119,18 +119,10 @@ void generate_elems(const std::string& set_name,
 
 void Convert_Statement::execute(Resource_Manager& rman)
 {
-  std::pair< std::vector< Set_Usage >, uint > set_usage;
+  Requested_Context requested_context;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-    set_usage = union_usage(set_usage, (*it)->used_sets());
-  
-  std::vector< Set_Usage >::size_type input_pos = 0;
-  while (input_pos < set_usage.first.size() && set_usage.first[input_pos].set_name != input)
-    ++input_pos;
-  
-  if (input_pos == set_usage.first.size())
-    set_usage.first.push_back(Set_Usage(input, set_usage.second));
-  else
-    set_usage.first[input_pos].usage |= set_usage.second;
+    requested_context.add((*it)->request_context());
+  requested_context.bind(input);
   
   std::vector< std::string > declared_keys;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
@@ -141,7 +133,7 @@ void Convert_Statement::execute(Resource_Manager& rman)
   std::sort(declared_keys.begin(), declared_keys.end());
   declared_keys.erase(std::unique(declared_keys.begin(), declared_keys.end()), declared_keys.end());
   
-  Prepare_Task_Context context(set_usage, rman);
+  Prepare_Task_Context context(requested_context, rman);
   
   Owning_Array< Set_Prop_Task* > tasks;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)

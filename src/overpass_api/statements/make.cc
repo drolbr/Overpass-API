@@ -83,11 +83,11 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
 
 void Make_Statement::execute(Resource_Manager& rman)
 {
-  std::pair< std::vector< Set_Usage >, uint > set_usage;
+  Requested_Context requested_context;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-    set_usage = union_usage(set_usage, (*it)->used_sets());
+    requested_context.add((*it)->request_context());
   
-  Prepare_Task_Context context(set_usage, rman);
+  Prepare_Task_Context context(requested_context, rman);
   
   Owning_Array< Set_Prop_Task* > tasks;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)

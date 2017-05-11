@@ -132,31 +132,20 @@ std::string Binary_Eval_Task::eval(const Derived_Skeleton* elem,
 }
 
     
-std::pair< std::vector< Set_Usage >, uint > Evaluator_Pair_Operator::used_sets() const
+Requested_Context Evaluator_Pair_Operator::request_context() const
 {
   if (lhs && rhs)
-    return union_usage(lhs->used_sets(), rhs->used_sets());
+  {
+    Requested_Context result = lhs->request_context();
+    result.add(rhs->request_context());
+    return result;
+  }
   else if (lhs)
-    return lhs->used_sets();
+    return lhs->request_context();
   else if (rhs)
-    return rhs->used_sets();
-  return std::make_pair(std::vector< Set_Usage >(), 0u);
-}
-
-
-std::vector< std::string > Evaluator_Pair_Operator::used_tags() const
-{
-  std::vector< std::string > lhs_result;
-  if (lhs)
-    lhs->used_tags().swap(lhs_result);
-  std::vector< std::string > rhs_result;
-  if (rhs)
-    rhs->used_tags().swap(rhs_result);
+    return rhs->request_context();
   
-  std::vector< std::string > result(lhs_result.size() + rhs_result.size());
-  result.erase(std::set_union(lhs_result.begin(), lhs_result.end(), rhs_result.begin(), rhs_result.end(),
-      result.begin()), result.end());
-  return result;
+  return Requested_Context();
 }
 
 

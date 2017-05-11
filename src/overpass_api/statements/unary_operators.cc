@@ -122,20 +122,11 @@ std::string Unary_Eval_Task::eval(const Derived_Skeleton* elem,
 }
   
 
-std::pair< std::vector< Set_Usage >, uint > Evaluator_Prefix_Operator::used_sets() const
+Requested_Context Evaluator_Prefix_Operator::request_context() const
 {
   if (rhs)
-    return rhs->used_sets();
-  return std::make_pair(std::vector< Set_Usage >(), 0u);
-}
-
-
-std::vector< std::string > Evaluator_Prefix_Operator::used_tags() const
-{
-  if (rhs)
-    return rhs->used_tags();
-  
-  return std::vector< std::string >();
+    return rhs->request_context();
+  return Requested_Context();
 }
 
 

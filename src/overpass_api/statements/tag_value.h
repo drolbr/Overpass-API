@@ -64,9 +64,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Fixed() {}
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
-  { return std::pair< std::vector< Set_Usage >, uint >(); }
-  virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
+  virtual Requested_Context request_context() const { return Requested_Context(); }
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Const_Eval_Task(value); }
 
@@ -154,9 +152,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Id() {}
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
-  { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::SKELETON); }
-  virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Id_Eval_Task(); }
 };
@@ -214,9 +210,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Type() {}
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
-  { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::SKELETON); }
-  virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Type_Eval_Task(); }
 };
@@ -308,15 +302,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Value() {}
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
-  { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }
-
-  virtual std::vector< std::string > used_tags() const
-  {
-    std::vector< std::string > result;
-    result.push_back(key);
-    return result;
-  }
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Value_Eval_Task(key); }
 
@@ -388,15 +374,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Is_Tag() {}
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
-  { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }
-
-  virtual std::vector< std::string > used_tags() const
-  {
-    std::vector< std::string > result;
-    result.push_back(key);
-    return result;
-  }
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Is_Tag_Eval_Task(key); }
 
@@ -458,10 +436,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Generic() {}
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const
-  { return std::make_pair(std::vector< Set_Usage >(), Set_Usage::TAGS); }
-
-  virtual std::vector< std::string > used_tags() const { return std::vector< std::string >(); }
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Generic_Eval_Task(); }
 };
@@ -490,7 +465,7 @@ The syntax to count the number of distinct members is
 class Evaluator_Properties_Count : public Evaluator
 {
 public:
-  enum Objects { nothing, tags, members, distinct_members };
+  enum Objects { nothing, tags, members, distinct_members, by_role, distinct_by_role };
   static std::string to_string(Objects objects);
 
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Properties_Count >
@@ -499,9 +474,11 @@ public:
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Properties_Count >("eval-prop-count")
     {
+      Statement::maker_by_func_name()["count_tags"].push_back(this);
       Statement::maker_by_func_name()["count_members"].push_back(this);
       Statement::maker_by_func_name()["count_distinct_members"].push_back(this);
-      Statement::maker_by_func_name()["count_tags"].push_back(this);
+      Statement::maker_by_func_name()["count_by_role"].push_back(this);
+      Statement::maker_by_func_name()["count_distinct_by_role"].push_back(this);
     }
   };
   static Statement_Maker statement_maker;
@@ -518,13 +495,13 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Properties_Count() {}
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;
-  virtual std::vector< std::string > used_tags() const;
+  virtual Requested_Context request_context() const;
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
 
 private:
   Objects to_count;
+  std::string role;
 };
 
 

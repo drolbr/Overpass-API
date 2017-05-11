@@ -58,8 +58,7 @@ void If_Statement::add_statement(Statement* statement, std::string text)
 
 bool evals_to_true(Evaluator& criterion, Resource_Manager& rman)
 {
-  std::pair< std::vector< Set_Usage >, uint > set_usage = criterion.used_sets();
-  Prepare_Task_Context context(set_usage, rman);
+  Prepare_Task_Context context(criterion.request_context(), rman);
   Owner< Eval_Task > task(criterion.get_task(context));  
   std::string valuation = (*task).eval(0);
   double val_d = 0;

@@ -75,15 +75,14 @@ void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, S
   if (!stmt || !stmt->get_criterion())
     return;
 
-  std::pair< std::vector< Set_Usage >, uint > set_usage = stmt->get_criterion()->used_sets();
-
-  Prepare_Task_Context context(set_usage, rman);
+  Requested_Context requested_context = stmt->get_criterion()->request_context();
+  Prepare_Task_Context context(requested_context, rman);
 
   Owner< Eval_Task > task(stmt->get_criterion()->get_task(context));
 
   Set_With_Context into_context;
   into_context.name = "";
-  into_context.prefetch(Set_Usage(into_context.name, set_usage.second), into, *rman.get_transaction());
+  into_context.prefetch(requested_context.object_usage, into, *rman.get_transaction());
 
   if (task)
   {

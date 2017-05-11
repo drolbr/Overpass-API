@@ -26,11 +26,62 @@ const uint Set_Usage::SKELETON = 1;
 const uint Set_Usage::TAGS = 2;
 
 
-void Set_With_Context::prefetch(const Set_Usage& usage, const Set& set, Transaction& transaction)
+Requested_Context& Requested_Context::add_usage(const std::string& set_name, uint usage)
+{
+  for (std::vector< Set_Usage >::iterator it = set_usage.begin(); it != set_usage.end(); ++it)
+  {
+    if (it->set_name == set_name)
+    {
+      it->usage |= usage;
+      return *this;
+    }
+  }
+  
+  set_usage.push_back(Set_Usage(set_name, usage));
+  return *this;
+}
+
+
+Requested_Context& Requested_Context::add_usage(uint usage_)
+{
+  object_usage |= usage_;
+  return *this;
+}
+
+
+void Requested_Context::add(const Requested_Context& rhs)
+{
+  for (std::vector< Set_Usage >::const_iterator rit = rhs.set_usage.begin(); rit != rhs.set_usage.end(); ++rit)
+  {
+    for (std::vector< Set_Usage >::iterator it = set_usage.begin(); it != set_usage.end(); ++it)
+    {
+      if (it->set_name == rit->set_name)
+      {
+        it->usage |= rit->usage;
+        continue;
+      }
+    }
+    
+    set_usage.push_back(*rit);
+  }
+  
+  object_usage |= rhs.object_usage;
+  role_names_requested |= rhs.role_names_requested;
+}
+
+
+void Requested_Context::bind(const std::string& set_name)
+{
+  add_usage(set_name, object_usage);
+  object_usage = 0;
+}
+
+  
+void Set_With_Context::prefetch(uint usage, const Set& set, Transaction& transaction)
 {
   base = &set;
   
-  if (usage.usage & Set_Usage::TAGS)
+  if (usage & Set_Usage::TAGS)
   {
     tag_store_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(transaction);
     tag_store_nodes->prefetch_all(set.nodes);
@@ -71,19 +122,21 @@ void Set_With_Context::prefetch(const Set_Usage& usage, const Set& set, Transact
 }
 
 
-Prepare_Task_Context::Prepare_Task_Context(
-    std::pair< std::vector< Set_Usage >, uint > set_usage, Resource_Manager& rman)
-    : contexts(set_usage.first.size())
+Prepare_Task_Context::Prepare_Task_Context(const Requested_Context& requested, Resource_Manager& rman)
+    : contexts(requested.set_usage.size()), relation_member_roles_(0)
 {
-  for (std::vector< Set_Usage >::iterator it = set_usage.first.begin(); it != set_usage.first.end(); ++it)
+  for (std::vector< Set_Usage >::const_iterator it = requested.set_usage.begin(); it != requested.set_usage.end(); ++it)
   {
-    Set_With_Context& context = contexts[std::distance(set_usage.first.begin(), it)];
+    Set_With_Context& context = contexts[std::distance(requested.set_usage.begin(), it)];
     context.name = it->set_name;
     
     std::map< std::string, Set >::const_iterator mit(rman.sets().find(context.name));
     if (mit != rman.sets().end())
-      context.prefetch(*it, mit->second, *rman.get_transaction());
+      context.prefetch(it->usage, mit->second, *rman.get_transaction());
   }
+  
+  if (requested.role_names_requested)
+    relation_member_roles_ = &relation_member_roles(*rman.get_transaction());
 }
 
 
@@ -98,42 +151,16 @@ const Set_With_Context* Prepare_Task_Context::get_set(const std::string& set_nam
 }
 
 
-std::pair< std::vector< Set_Usage >, uint > union_usage(const std::pair< std::vector< Set_Usage >, uint >& lhs,
-    const std::pair< std::vector< Set_Usage >, uint >& rhs)
+uint32 Prepare_Task_Context::get_role_id(const std::string& role) const
 {
-  std::vector< Set_Usage > result(lhs.first.size() + rhs.first.size(), Set_Usage("", 0u));
+  if (!relation_member_roles_)
+    return std::numeric_limits< uint32 >::max();
     
-  std::vector< Set_Usage >::const_iterator it_lhs = lhs.first.begin();
-  std::vector< Set_Usage >::const_iterator it_rhs = rhs.first.begin();
-  std::vector< Set_Usage >::iterator it_res = result.begin();
-    
-  while (it_lhs != lhs.first.end() && it_rhs != rhs.first.end())
+  for (std::map< uint32, std::string >::const_iterator it = relation_member_roles_->begin();
+      it != relation_member_roles_->end(); ++it)
   {
-    if (it_lhs->set_name < it_rhs->set_name)
-    {
-      *it_res = *it_lhs;
-      ++it_res;
-      ++it_lhs;        
-    }
-    else if (it_rhs->set_name < it_lhs->set_name)
-    {
-      *it_res = *it_rhs;
-      ++it_res;
-      ++it_rhs;
-    }
-    else
-    {
-      *it_res = *it_lhs;
-      it_res->usage |= it_rhs->usage;
-      ++it_res;
-      ++it_lhs;
-      ++it_rhs;
-    }
+    if (it->second == role)
+      return it->first;
   }
-  
-  it_res = std::copy(it_lhs, lhs.first.end(), it_res);
-  it_res = std::copy(it_rhs, rhs.first.end(), it_res);  
-  result.erase(it_res, result.end());
-  
-  return std::make_pair(result, lhs.second | rhs.second);
+  return std::numeric_limits< uint32 >::max();
 }

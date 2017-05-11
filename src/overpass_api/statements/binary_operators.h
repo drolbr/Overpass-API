@@ -77,8 +77,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
   virtual std::string get_result_name() const { return ""; }
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const;
-  virtual std::vector< std::string > used_tags() const;
+  virtual Requested_Context request_context() const;
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context);
 

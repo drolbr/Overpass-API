@@ -21,6 +21,7 @@
 
 
 #include "statement.h"
+#include "../data/collect_members.h"
 #include "../data/tag_store.h"
 #include "../data/utils.h"
 
@@ -40,6 +41,20 @@ struct Set_Usage
   static const uint TAGS;
 
   bool operator<(const Set_Usage& rhs) const { return this->set_name < rhs.set_name; }
+};
+
+
+struct Requested_Context
+{
+  Requested_Context() : object_usage(0), role_names_requested(false) {}
+  Requested_Context& add_usage(const std::string& set_name, uint usage);
+  Requested_Context& add_usage(uint usage);
+  void add(const Requested_Context& rhs);
+  void bind(const std::string& set_name);
+  
+  std::vector< Set_Usage > set_usage;
+  uint object_usage;
+  bool role_names_requested;
 };
 
 
@@ -68,7 +83,7 @@ public:
     delete tag_store_deriveds;
   }
 
-  void prefetch(const Set_Usage& usage, const Set& set, Transaction& transaction);
+  void prefetch(uint usage, const Set& set, Transaction& transaction);
 
   std::string name;
   const Set* base;
@@ -80,6 +95,19 @@ public:
   Tag_Store< Uint31_Index, Relation_Skeleton >* tag_store_attic_relations;
   Tag_Store< Uint31_Index, Area_Skeleton >* tag_store_areas;
   Tag_Store< Uint31_Index, Derived_Structure >* tag_store_deriveds;
+};
+
+
+struct Prepare_Task_Context
+{
+  Prepare_Task_Context(const Requested_Context& requested, Resource_Manager& rman);
+  
+  const Set_With_Context* get_set(const std::string& set_name) const;  
+  uint32 get_role_id(const std::string& role) const;
+
+private:
+  Array< Set_With_Context > contexts;
+  const std::map< uint32, std::string >* relation_member_roles_;
 };
 
 
@@ -104,15 +132,6 @@ They only make sense in the context of a single element.
 * Operators and endomorphisms combine the result of one or two evaluator executions into a new result.
 
 */
-
-struct Prepare_Task_Context
-{
-  Prepare_Task_Context(std::pair< std::vector< Set_Usage >, uint > set_usage, Resource_Manager& rman);
-  const Set_With_Context* get_set(const std::string& set_name) const;
-
-private:
-  Array< Set_With_Context > contexts;
-};
 
 
 struct Eval_Task
@@ -163,18 +182,13 @@ struct Evaluator : public Statement
 {
   Evaluator(int line_number) : Statement(line_number) {}
 
-  virtual std::pair< std::vector< Set_Usage >, uint > used_sets() const = 0;
-  virtual std::vector< std::string > used_tags() const = 0;
+  virtual Requested_Context request_context() const = 0;
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) = 0;
 
   virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   virtual int get_operator_priority() const { return std::numeric_limits< int >::max(); }
 };
-
-
-std::pair< std::vector< Set_Usage >, uint > union_usage(const std::pair< std::vector< Set_Usage >, uint >& lhs,
-    const std::pair< std::vector< Set_Usage >, uint >& rhs);
 
 
 template< typename Evaluator_ >
