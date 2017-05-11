@@ -290,6 +290,30 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Evaluator_Properties_Count stmt60(0, attributes, global_settings);
   stmt6.add_statement(&stmt60, "");
 
+  attributes.clear();
+  attributes["k"] = "by_role";
+  Set_Prop_Statement stmt7(0, attributes, global_settings);
+  stmt.add_statement(&stmt7, "");
+  attributes.clear();
+  attributes["type"] = "by_role";
+  attributes["role"] = "one";
+  if (from != "_")
+    attributes["from"] = from;
+  Evaluator_Properties_Count stmt70(0, attributes, global_settings);
+  stmt7.add_statement(&stmt70, "");
+
+  attributes.clear();
+  attributes["k"] = "distinct_by_role";
+  Set_Prop_Statement stmt8(0, attributes, global_settings);
+  stmt.add_statement(&stmt8, "");
+  attributes.clear();
+  attributes["type"] = "distinct_by_role";
+  attributes["role"] = "one";
+  if (from != "_")
+    attributes["from"] = from;
+  Evaluator_Properties_Count stmt80(0, attributes, global_settings);
+  stmt8.add_statement(&stmt80, "");
+
   stmt.execute(rman);
 
   {

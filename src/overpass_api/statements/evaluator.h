@@ -49,6 +49,7 @@ struct Requested_Context
   Requested_Context() : object_usage(0), role_names_requested(false) {}
   Requested_Context& add_usage(const std::string& set_name, uint usage);
   Requested_Context& add_usage(uint usage);
+  Requested_Context& add_role_names();
   void add(const Requested_Context& rhs);
   void bind(const std::string& set_name);
   

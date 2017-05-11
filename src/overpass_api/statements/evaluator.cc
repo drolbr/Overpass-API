@@ -49,6 +49,13 @@ Requested_Context& Requested_Context::add_usage(uint usage_)
 }
 
 
+Requested_Context& Requested_Context::add_role_names()
+{ 
+  role_names_requested = true;
+  return *this;
+}
+
+
 void Requested_Context::add(const Requested_Context& rhs)
 {
   for (std::vector< Set_Usage >::const_iterator rit = rhs.set_usage.begin(); rit != rhs.set_usage.end(); ++rit)

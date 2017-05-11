@@ -484,9 +484,17 @@ public:
   static Statement_Maker statement_maker;
 
   virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-prop-count type=\"" + to_string(to_count) + "\"/>\n"; }
+  {
+    return indent + "<eval-prop-count type=\"" + to_string(to_count) + "\""
+        + (to_count == by_role || to_count == distinct_by_role ?
+            std::string(" role=\"") + escape_xml(role) + "\"" : std::string("")) + "/>\n";
+  }
   virtual std::string dump_compact_ql(const std::string&) const
-  { return std::string("count_") + to_string(to_count) + "()"; }
+  {
+    return std::string("count_") + to_string(to_count) + "("
+        + (to_count == by_role || to_count == distinct_by_role ?
+            std::string("\"") + escape_cstr(role) + "\"" : std::string("")) + ")";
+  }
 
   Evaluator_Properties_Count(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -507,7 +515,9 @@ private:
 
 struct Prop_Count_Eval_Task : public Eval_Task
 {
-  Prop_Count_Eval_Task(Evaluator_Properties_Count::Objects to_count_) : to_count(to_count_) {}
+  Prop_Count_Eval_Task(
+      Evaluator_Properties_Count::Objects to_count_, uint32 role_id_ = std::numeric_limits< uint32 >::max())
+      : to_count(to_count_), role_id(role_id_) {}
 
   virtual std::string eval(const std::string* key) const { return "0"; }
 
@@ -530,6 +540,7 @@ struct Prop_Count_Eval_Task : public Eval_Task
 
 private:
   Evaluator_Properties_Count::Objects to_count;
+  uint32 role_id;
 };
 
 
