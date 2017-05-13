@@ -368,7 +368,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
   std::vector< uint > stack;
   stack.push_back(0);
   
-  while (token.good() && *token != "," && *token != ";" && *token != "->")
+  while (token.good() && *token != ";" && *token != "->")
   {
     if (*token == "(" || *token == "[" || *token == "{")
     {

@@ -314,6 +314,56 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   Evaluator_Properties_Count stmt80(0, attributes, global_settings);
   stmt8.add_statement(&stmt80, "");
 
+  attributes.clear();
+  attributes["k"] = "members_with_type";
+  Set_Prop_Statement stmt_10(0, attributes, global_settings);
+  stmt.add_statement(&stmt_10, "");
+  attributes.clear();
+  attributes["type"] = "members";
+  attributes["members_type"] = "nodes";
+  if (from != "_")
+    attributes["from"] = from;
+  Evaluator_Properties_Count stmt_100(0, attributes, global_settings);
+  stmt_10.add_statement(&stmt_100, "");
+
+  attributes.clear();
+  attributes["k"] = "distinct_members_with_type";
+  Set_Prop_Statement stmt_11(0, attributes, global_settings);
+  stmt.add_statement(&stmt_11, "");
+  attributes.clear();
+  attributes["type"] = "distinct_members";
+  attributes["members_type"] = "nodes";
+  if (from != "_")
+    attributes["from"] = from;
+  Evaluator_Properties_Count stmt_110(0, attributes, global_settings);
+  stmt_11.add_statement(&stmt_110, "");
+
+  attributes.clear();
+  attributes["k"] = "by_role_with_type";
+  Set_Prop_Statement stmt_12(0, attributes, global_settings);
+  stmt.add_statement(&stmt_12, "");
+  attributes.clear();
+  attributes["type"] = "by_role";
+  attributes["role"] = "one";
+  attributes["members_type"] = "nodes";
+  if (from != "_")
+    attributes["from"] = from;
+  Evaluator_Properties_Count stmt_120(0, attributes, global_settings);
+  stmt_12.add_statement(&stmt_120, "");
+
+  attributes.clear();
+  attributes["k"] = "distinct_by_role_with_type";
+  Set_Prop_Statement stmt_13(0, attributes, global_settings);
+  stmt.add_statement(&stmt_13, "");
+  attributes.clear();
+  attributes["type"] = "distinct_by_role";
+  attributes["role"] = "one";
+  attributes["members_type"] = "nodes";
+  if (from != "_")
+    attributes["from"] = from;
+  Evaluator_Properties_Count stmt_130(0, attributes, global_settings);
+  stmt_13.add_statement(&stmt_130, "");
+
   stmt.execute(rman);
 
   {

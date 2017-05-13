@@ -747,19 +747,31 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
     if (*token != ";")
       type = get_identifier_token(token, error_output, "Element class name");
 
-    while (token.good() && *token != ";" && *token != "->")
+    Token_Tree tree(token, error_output, false);
+    if (!tree.tree.empty())
     {
-      if (*token == ",")
-        ++token;
-
-      if (token.good())
+      Statement::QL_Context tree_context = (strategy == "convert" ? Statement::in_convert : Statement::generic);
+      Token_Node_Ptr tree_it(tree, tree.tree[0].rhs);
+      
+      while (tree_it->token == ",")
       {
-        TStatement* stmt = parse_value_tree< TStatement >(stmt_factory, token, error_output,
-            strategy == "convert" ? Statement::in_convert : Statement::generic, false);
-        if (stmt)
-          evaluators.push_back(stmt);
+        if (tree_it->rhs)
+        {
+          TStatement* stmt = stmt_factory.create_statement(tree_it.rhs(), tree_context);
+          if (stmt)
+            evaluators.push_back(stmt);
+        }
+      
+        tree_it = tree_it.lhs();
       }
+      
+      TStatement* stmt = stmt_factory.create_statement(tree_it, tree_context);
+      if (stmt)
+        evaluators.push_back(stmt);
+      
+      std::reverse(evaluators.begin(),evaluators.end());
     }
+
     std::string into = probe_into(token, error_output);
 
     statement = create_make_statement< TStatement >(stmt_factory, strategy, from, into, type, token.line_col().first);

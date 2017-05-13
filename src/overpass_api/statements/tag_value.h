@@ -460,6 +460,14 @@ The syntax to count the number of member entries is
 The syntax to count the number of distinct members is
 
   count_distinct_members()
+
+The syntax to count the number of member entries with a specific role is
+
+  count_by_role()
+
+The syntax to count the number of distinct members with a specific role is
+
+  count_distinct_by_role()
 */
 
 class Evaluator_Properties_Count : public Evaluator
@@ -467,6 +475,8 @@ class Evaluator_Properties_Count : public Evaluator
 public:
   enum Objects { nothing, tags, members, distinct_members, by_role, distinct_by_role };
   static std::string to_string(Objects objects);
+  enum Members_Type { all, nodes, ways, relations };
+  static std::string to_string(Members_Type types);
 
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Properties_Count >
   {
@@ -487,13 +497,17 @@ public:
   {
     return indent + "<eval-prop-count type=\"" + to_string(to_count) + "\""
         + (to_count == by_role || to_count == distinct_by_role ?
-            std::string(" role=\"") + escape_xml(role) + "\"" : std::string("")) + "/>\n";
+            std::string(" role=\"") + escape_xml(role) + "\"" : std::string("")) 
+        + (type_to_count != all ?
+            std::string(" members_type=\"") + to_string(type_to_count) + "\"" : std::string("")) + "/>\n";
   }
   virtual std::string dump_compact_ql(const std::string&) const
   {
     return std::string("count_") + to_string(to_count) + "("
         + (to_count == by_role || to_count == distinct_by_role ?
-            std::string("\"") + escape_cstr(role) + "\"" : std::string("")) + ")";
+            std::string("\"") + escape_cstr(role) + "\""
+            + (type_to_count != all ? "," : "") : std::string("")) 
+        + (type_to_count != all ? to_string(type_to_count) : std::string("")) + ")";
   }
 
   Evaluator_Properties_Count(int line_number_, const std::map< std::string, std::string >& input_attributes,
@@ -509,6 +523,7 @@ public:
 
 private:
   Objects to_count;
+  Members_Type type_to_count;
   std::string role;
 };
 
@@ -516,8 +531,9 @@ private:
 struct Prop_Count_Eval_Task : public Eval_Task
 {
   Prop_Count_Eval_Task(
-      Evaluator_Properties_Count::Objects to_count_, uint32 role_id_ = std::numeric_limits< uint32 >::max())
-      : to_count(to_count_), role_id(role_id_) {}
+      Evaluator_Properties_Count::Objects to_count_, Evaluator_Properties_Count::Members_Type type_to_count_,
+      uint32 role_id_ = std::numeric_limits< uint32 >::max())
+      : to_count(to_count_), type_to_count(type_to_count_), role_id(role_id_) {}
 
   virtual std::string eval(const std::string* key) const { return "0"; }
 
@@ -540,6 +556,7 @@ struct Prop_Count_Eval_Task : public Eval_Task
 
 private:
   Evaluator_Properties_Count::Objects to_count;
+  Evaluator_Properties_Count::Members_Type type_to_count;
   uint32 role_id;
 };
 
