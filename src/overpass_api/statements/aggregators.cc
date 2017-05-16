@@ -55,7 +55,25 @@ void eval_elems(Value_Aggregator& aggregator, Eval_Task& task,
   {
     for (typename std::vector< Maybe_Attic >::const_iterator elem_it = idx_it->second.begin();
         elem_it != idx_it->second.end(); ++elem_it)
-      aggregator.update_value(task.eval(&*elem_it, tag_store ? tag_store->get(idx_it->first, *elem_it) : 0, 0));
+      aggregator.update_value(task.eval(
+          Element_With_Context< Maybe_Attic >(&*elem_it, tag_store ? tag_store->get(idx_it->first, *elem_it) : 0), 0));
+  }
+}
+
+
+template< >
+void eval_elems< Uint31_Index, Derived_Structure, Derived_Structure >(Value_Aggregator& aggregator, Eval_Task& task,
+    const std::map< Uint31_Index, std::vector< Derived_Structure > >& elems,
+    Tag_Store< Uint31_Index, Derived_Structure >* tag_store)
+{
+  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::const_iterator idx_it = elems.begin();
+      idx_it != elems.end(); ++idx_it)
+  {
+    for (std::vector< Derived_Structure >::const_iterator elem_it = idx_it->second.begin();
+        elem_it != idx_it->second.end(); ++elem_it)
+      aggregator.update_value(task.eval(
+          Element_With_Context< Derived_Skeleton >(
+              &*elem_it, tag_store ? tag_store->get(idx_it->first, *elem_it) : 0), 0));
   }
 }
 

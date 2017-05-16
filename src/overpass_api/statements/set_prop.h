@@ -41,30 +41,22 @@ struct Set_Prop_Task
 
   void process(Derived_Structure& result, bool& id_set) const;
 
-  void process(const Node_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
-    Derived_Structure& result, bool& id_set) const;
-  void process(const Attic< Node_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
-    Derived_Structure& result, bool& id_set) const;
-  void process(const Way_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
-    Derived_Structure& result, bool& id_set) const;
-  void process(const Attic< Way_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
-    Derived_Structure& result, bool& id_set) const;
-  void process(const Relation_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
-    Derived_Structure& result, bool& id_set) const;
-  void process(const Attic< Relation_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
-    Derived_Structure& result, bool& id_set) const;
-  void process(const Area_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
-    Derived_Structure& result, bool& id_set) const;
-  void process(const Derived_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::vector< std::string >& declared_keys,
-    Derived_Structure& result, bool& id_set) const;
+  void process(const Element_With_Context< Node_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  void process(const Element_With_Context< Attic< Node_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  void process(const Element_With_Context< Way_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  void process(const Element_With_Context< Attic< Way_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  void process(const Element_With_Context< Relation_Skeleton>& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  void process(const Element_With_Context< Attic< Relation_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  void process(const Element_With_Context< Area_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  void process(const Element_With_Context< Derived_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
 
 private:
   Eval_Task* rhs;

@@ -544,58 +544,57 @@ Eval_Task* Evaluator_Properties_Count::get_task(const Prepare_Task_Context& cont
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Node_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
 {
-  if (to_count == Evaluator_Properties_Count::tags && tags)
-    return to_string(tags->size());
+  if (to_count == Evaluator_Properties_Count::tags && data.tags)
+    return to_string(data.tags->size());
   return "0";
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Attic< Node_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Node_Skeleton > >& data,
+    const std::string* key) const
 {
-  if (to_count == Evaluator_Properties_Count::tags && tags)
-    return to_string(tags->size());
+  if (to_count == Evaluator_Properties_Count::tags && data.tags)
+    return to_string(data.tags->size());
   return "0";
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Way_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Way_Skeleton >& data,
+    const std::string* key) const
 {
   if (to_count == Evaluator_Properties_Count::members
-      && type_to_count == Evaluator_Properties_Count::all && elem)
-    return to_string(elem->nds.size());
+      && type_to_count == Evaluator_Properties_Count::all && data.object)
+    return to_string(data.object->nds.size());
   else if (to_count == Evaluator_Properties_Count::distinct_members
-      && type_to_count == Evaluator_Properties_Count::all && elem)
+      && type_to_count == Evaluator_Properties_Count::all && data.object)
   {
-    std::vector< Node::Id_Type > distinct = elem->nds;
+    std::vector< Node::Id_Type > distinct = data.object->nds;
     std::sort(distinct.begin(), distinct.end());
     return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
   }
-  else if (to_count == Evaluator_Properties_Count::tags && tags)
-    return to_string(tags->size());
+  else if (to_count == Evaluator_Properties_Count::tags && data.tags)
+    return to_string(data.tags->size());
   return "0";
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Attic< Way_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Way_Skeleton > >& data,
+    const std::string* key) const
 {
   if (to_count == Evaluator_Properties_Count::members
-      && type_to_count == Evaluator_Properties_Count::all && elem)
-    return to_string(elem->nds.size());
+      && type_to_count == Evaluator_Properties_Count::all && data.object)
+    return to_string(data.object->nds.size());
   else if (to_count == Evaluator_Properties_Count::distinct_members
-      && type_to_count == Evaluator_Properties_Count::all && elem)
+      && type_to_count == Evaluator_Properties_Count::all && data.object)
   {
-    std::vector< Node::Id_Type > distinct = elem->nds;
+    std::vector< Node::Id_Type > distinct = data.object->nds;
     std::sort(distinct.begin(), distinct.end());
     return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
   }
-  else if (to_count == Evaluator_Properties_Count::tags && tags)
-    return to_string(tags->size());
+  else if (to_count == Evaluator_Properties_Count::tags && data.tags)
+    return to_string(data.tags->size());
   return "0";
 }
 
@@ -633,19 +632,19 @@ struct Relation_Member_Comparer
 };
 
 
-std::string Prop_Count_Eval_Task::eval(const Relation_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Relation_Skeleton >& data,
+    const std::string* key) const
 {
   if (to_count == Evaluator_Properties_Count::members || to_count == Evaluator_Properties_Count::by_role)
   {
-    if (!elem)
+    if (!data.object)
       return "0";
     
     if (to_count == Evaluator_Properties_Count::members && type_to_count == Evaluator_Properties_Count::all)
-      return to_string(elem->members.size());
+      return to_string(data.object->members.size());
     
     uint counter = 0;
-    for (std::vector< Relation_Entry >::const_iterator it = elem->members.begin(); it != elem->members.end(); ++it)
+    for (std::vector< Relation_Entry >::const_iterator it = data.object->members.begin(); it != data.object->members.end(); ++it)
     {
       if (matches_criterion(*it, to_count, type_to_count, role_id))
         ++counter;
@@ -655,10 +654,10 @@ std::string Prop_Count_Eval_Task::eval(const Relation_Skeleton* elem,
   else if (to_count == Evaluator_Properties_Count::distinct_members
       || to_count == Evaluator_Properties_Count::distinct_by_role)
   {
-    if (!elem)
+    if (!data.object)
       return "0";
     
-    std::vector< Relation_Entry > distinct = elem->members;
+    std::vector< Relation_Entry > distinct = data.object->members;
     
     if (to_count != Evaluator_Properties_Count::distinct_members || type_to_count != Evaluator_Properties_Count::all)
     {
@@ -675,25 +674,25 @@ std::string Prop_Count_Eval_Task::eval(const Relation_Skeleton* elem,
     std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
     return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
   }
-  else if (to_count == Evaluator_Properties_Count::tags && tags)
-    return to_string(tags->size());
+  else if (to_count == Evaluator_Properties_Count::tags && data.tags)
+    return to_string(data.tags->size());
   return "0";
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Relation_Skeleton > >& data,
+    const std::string* key) const
 {
   if (to_count == Evaluator_Properties_Count::members || to_count == Evaluator_Properties_Count::by_role)
   {
-    if (!elem)
+    if (!data.object)
       return "0";
     
     if (to_count == Evaluator_Properties_Count::members && type_to_count == Evaluator_Properties_Count::all)
-      return to_string(elem->members.size());
+      return to_string(data.object->members.size());
     
     uint counter = 0;
-    for (std::vector< Relation_Entry >::const_iterator it = elem->members.begin(); it != elem->members.end(); ++it)
+    for (std::vector< Relation_Entry >::const_iterator it = data.object->members.begin(); it != data.object->members.end(); ++it)
     {
       if (matches_criterion(*it, to_count, type_to_count, role_id))
         ++counter;
@@ -703,10 +702,10 @@ std::string Prop_Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
   else if (to_count == Evaluator_Properties_Count::distinct_members
       || to_count == Evaluator_Properties_Count::distinct_by_role)
   {
-    if (!elem)
+    if (!data.object)
       return "0";
     
-    std::vector< Relation_Entry > distinct = elem->members;
+    std::vector< Relation_Entry > distinct = data.object->members;
     
     if (to_count != Evaluator_Properties_Count::distinct_members || type_to_count != Evaluator_Properties_Count::all)
     {
@@ -723,25 +722,23 @@ std::string Prop_Count_Eval_Task::eval(const Attic< Relation_Skeleton >* elem,
     std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
     return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
   }
-  else if (to_count == Evaluator_Properties_Count::tags && tags)
-    return to_string(tags->size());
+  else if (to_count == Evaluator_Properties_Count::tags && data.tags)
+    return to_string(data.tags->size());
   return "0";
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Area_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
 {
-  if (to_count == Evaluator_Properties_Count::tags && tags)
-    return to_string(tags->size());
+  if (to_count == Evaluator_Properties_Count::tags && data.tags)
+    return to_string(data.tags->size());
   return "0";
 }
 
 
-std::string Prop_Count_Eval_Task::eval(const Derived_Skeleton* elem,
-    const std::vector< std::pair< std::string, std::string > >* tags, const std::string* key) const
+std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
 {
-  if (to_count == Evaluator_Properties_Count::tags && tags)
-    return to_string(tags->size());
+  if (to_count == Evaluator_Properties_Count::tags && data.tags)
+    return to_string(data.tags->size());
   return "0";
 }
