@@ -27,6 +27,23 @@ const uint Set_Usage::TAGS = 2;
 const uint Set_Usage::META = 4;
 
 
+bool assert_element_in_context(Error_Output* error_output,
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context)
+{
+  if (tree_context != Statement::elem_eval_possible)
+  {
+    const std::string* func_name = tree_it.function_name();
+    if (error_output)
+      error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function")
+          + " must be called in a context where it can evaluate an element",
+          tree_it->line_col.first);
+    return false;
+  }
+  
+  return true;
+}
+
+
 Requested_Context& Requested_Context::add_usage(const std::string& set_name, uint usage)
 {
   for (std::vector< Set_Usage >::iterator it = set_usage.begin(); it != set_usage.end(); ++it)

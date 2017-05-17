@@ -447,3 +447,182 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
     error_output->add_parse_error(std::string("Left ") + tree[stack[stack_pos]].token
         + " not closed.", token.line_col().first);
 }
+
+
+const std::string* Token_Node_Ptr::function_name() const
+{
+  if (tree && pos < tree->tree.size())
+  {
+    if (operator*().token == "(")
+    {
+      if (operator*().lhs)
+        return &lhs()->token;
+    }
+    
+    return &rhs().lhs()->token;
+  }
+  
+  return 0;
+}
+
+
+bool Token_Node_Ptr::assert_is_function(Error_Output* error_output) const
+{
+  if (tree && pos < tree->tree.size())
+  {
+    if (operator*().token == "(")
+    {
+      if (!operator*().lhs)
+      {
+        if (error_output)
+          error_output->add_parse_error("Function expected, but no function name found",
+              + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+        return false;
+      }
+      
+      Token_Node_Ptr lhs_ = lhs();
+      if (lhs_->lhs || lhs_->rhs)
+      {
+        if (error_output)
+          error_output->add_parse_error("Function name expected, compound expression found",
+              + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+        return false;
+      }
+      
+      return true;
+    }
+    else if (operator*().token == ".")
+    {
+      if (!operator*().rhs)
+      {
+        if (error_output)
+          error_output->add_parse_error("Function expected, but token right of \".\" is void",
+              + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+        return false;
+      }
+      
+      Token_Node_Ptr rhs_ = rhs();
+      if (rhs_->token != "(")
+      {
+        if (error_output)
+          error_output->add_parse_error(std::string("Function left parenthesis expected, but ")
+              + "\"" + rhs_->token + "\" found.", rhs_->line_col.first);
+        return false;
+      }
+      
+      if (!rhs_->lhs)
+      {
+        if (error_output)
+          error_output->add_parse_error("Function expected, but no function name found",
+              + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+        return false;
+      }
+      
+      Token_Node_Ptr lhs_ = rhs_.lhs();
+      if (lhs_->lhs || lhs_->rhs)
+      {
+        if (error_output)
+          error_output->add_parse_error("Function name expected, compound expression found",
+              + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+        return false;
+      }
+      
+      return true;
+    }
+  }
+  
+  if (error_output)
+    error_output->add_parse_error(std::string("Function expected, but ")
+        + (tree && pos < tree->tree.size() ?
+            "\"" + operator*().token + "\"" : "void token") + " found.",
+        (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+  
+  return false;
+}
+
+
+bool Token_Node_Ptr::assert_has_input_set(Error_Output* error_output, bool expected) const
+{
+  // We assume that this is a function to avoid double checking
+  
+  if (operator*().token == "(")
+  {
+    if (expected)
+    {
+      if (error_output)
+        error_output->add_parse_error("Input set expected, but only function name found",
+            (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+      return false;
+    }
+    else
+      return true;
+  }
+  else if (operator*().token == ".")
+  {
+    if (!operator*().lhs)
+    {
+      if (error_output)
+        error_output->add_parse_error("Input set expected, but token left of \".\" is void",
+            (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+      return false;
+    }
+      
+    if (expected)
+    {
+      Token_Node_Ptr lhs_ = lhs();
+      if (lhs_->lhs || lhs_->rhs)
+      {
+        if (error_output)
+          error_output->add_parse_error("Input set expected, compound expression found",
+              (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+        return false;
+      }
+      return true;
+    }
+    else
+    {
+      const std::string* func_name = function_name();
+      if (error_output)
+        error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function") + " cannot have an input set",
+            (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+      return false;
+    }
+  }
+    
+  return false;
+}
+
+
+bool Token_Node_Ptr::assert_has_arguments(Error_Output* error_output, bool expected) const
+{
+  // We assume that this is a function to avoid double checking
+  
+  bool has_arguments = operator*().rhs;  
+  if (operator*().token == ".")
+    has_arguments = rhs()->rhs;
+  
+  if (has_arguments)
+  {
+    if (expected)
+      return true;
+    
+    const std::string* func_name = function_name();
+    if (error_output)
+      error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function") 
+          + " does not accept any arguments",
+          (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+    return false;
+  }
+  else
+  {
+    if (!expected)
+      return true;
+    
+    const std::string* func_name = function_name();
+    if (error_output)
+      error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function") 
+          + " must have one or more arguments",
+          (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
+    return false;
+  }
+}

@@ -323,26 +323,10 @@ Statement* Evaluator_Version::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_context != Statement::elem_eval_possible)
-  {
-    if (error_output)
-      error_output->add_parse_error("version() must be called in a context where it can evaluate an element",
-          tree_it->line_col.first);
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !tree_it.assert_has_arguments(error_output, false)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
-  }
-
-  if (tree_it->token != "(")
-  {
-    if (error_output)
-      error_output->add_parse_error("version() cannot have an input set", tree_it->line_col.first);
-    return 0;
-  }
-  if (tree_it->rhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("version() cannot have an argument", tree_it->line_col.first);
-    return 0;
-  }
   
   return new Evaluator_Version(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
 }

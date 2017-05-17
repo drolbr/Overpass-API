@@ -94,7 +94,7 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
-      error_output->add_parse_error("Property assignement needs a right-hand-side value", tree_it->line_col.first);
+      error_output->add_parse_error("Property assignment needs a right-hand-side value", tree_it->line_col.first);
   }
   return result;
 }

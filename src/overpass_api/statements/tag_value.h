@@ -404,7 +404,7 @@ public:
 
 /* === Version Operator ===
 
-The version operator returns the version number of the given element.
+The <em>version</em> operator returns the version number of the given element.
 Its syntax is:
 
   version()

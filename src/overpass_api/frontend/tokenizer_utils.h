@@ -88,6 +88,11 @@ struct Token_Node_Ptr
   Token_Node_Ptr lhs() const { return Token_Node_Ptr(*tree, tree->tree[pos].lhs); }
   Token_Node_Ptr rhs() const { return Token_Node_Ptr(*tree, tree->tree[pos].rhs); }
   
+  const std::string* function_name() const;
+  bool assert_is_function(Error_Output* error_output) const;
+  bool assert_has_input_set(Error_Output* error_output, bool expected) const;
+  bool assert_has_arguments(Error_Output* error_output, bool expected) const;
+  
 private:
   const Token_Tree* tree;
   uint pos;

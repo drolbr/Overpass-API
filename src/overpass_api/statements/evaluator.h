@@ -60,6 +60,10 @@ struct Set_Usage
 };
 
 
+bool assert_element_in_context(Error_Output* error_output,
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context);
+
+
 struct Requested_Context
 {
   Requested_Context() : object_usage(0), role_names_requested(false) {}
