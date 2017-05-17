@@ -88,26 +88,11 @@ Statement* Evaluator_Id::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_context != Statement::elem_eval_possible)
-  {
-    if (error_output)
-      error_output->add_parse_error("id() must be called in a context where it can evaluate an element",
-          tree_it->line_col.first);
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !tree_it.assert_has_arguments(error_output, false)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
-  }
-
-  if (tree_it->token != "(")
-  {
-    if (error_output)
-      error_output->add_parse_error("id() cannot have an input set", tree_it->line_col.first);
-    return 0;
-  }
-  if (tree_it->rhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("id() cannot have an argument", tree_it->line_col.first);
-    return 0;
-  }
+  
   std::map< std::string, std::string > attributes;
   return new Evaluator_Id(tree_it->line_col.first, attributes, global_settings);
 }
@@ -133,26 +118,11 @@ Statement* Evaluator_Type::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_context != Statement::elem_eval_possible)
-  {
-    if (error_output)
-      error_output->add_parse_error("type() must be called in a context where it can evaluate an element",
-          tree_it->line_col.first);
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !tree_it.assert_has_arguments(error_output, false)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
-  }
-
-  if (tree_it->token != "(")
-  {
-    if (error_output)
-      error_output->add_parse_error("type() cannot have an input set", tree_it->line_col.first);
-    return 0;
-  }
-  if (tree_it->rhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("type() cannot have an argument", tree_it->line_col.first);
-    return 0;
-  }
+  
   std::map< std::string, std::string > attributes;
   return new Evaluator_Type(tree_it->line_col.first, attributes, global_settings);
 }
@@ -194,13 +164,8 @@ Statement* Evaluator_Value::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_context != Statement::elem_eval_possible)
-  {
-    if (error_output)
-      error_output->add_parse_error("Operator \"[\" must be called in a context where it can evaluate an element",
-          tree_it->line_col.first);
+  if (!assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
-  }
 
   if (!tree_it->lhs || tree_it.lhs()->lhs || tree_it.lhs()->rhs || tree_it.lhs()->token != "t")
   {
@@ -267,26 +232,11 @@ Statement* Evaluator_Is_Tag::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_context != Statement::elem_eval_possible)
-  {
-    if (error_output)
-      error_output->add_parse_error("is_tag(...) must be called in a context where it can evaluate an element",
-          tree_it->line_col.first);
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !tree_it.assert_has_arguments(error_output, true)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
-  }
-
-  if (tree_it->token != "(")
-  {
-    if (error_output)
-      error_output->add_parse_error("is_tag(...) cannot have an input set", tree_it->line_col.first);
-    return 0;
-  }
-  if (!tree_it->rhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("is_tag(key) needs a string as argument", tree_it->line_col.first);
-    return 0;
-  }
+  
   if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
   {
     if (error_output)
