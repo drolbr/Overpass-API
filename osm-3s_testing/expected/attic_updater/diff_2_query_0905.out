@@ -13381,5 +13381,149 @@
     <tag k="fee_3" v="new_vee"/>
     <tag k="sense" v="no"/>
   </relation>
+  <meta id="2501">
+    <tag k="type" v="node"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2502">
+    <tag k="type" v="node"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2503">
+    <tag k="type" v="node"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2504">
+    <tag k="type" v="node"/>
+    <tag k="version" v="5"/>
+  </meta>
+  <meta id="2505">
+    <tag k="type" v="node"/>
+    <tag k="version" v="5"/>
+  </meta>
+  <meta id="2506">
+    <tag k="type" v="node"/>
+    <tag k="version" v="5"/>
+  </meta>
+  <meta id="25011">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25012">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25013">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25021">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25022">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25023">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25031">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25032">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25033">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25041">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25042">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25043">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25051">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25052">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25053">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25061">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25062">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="25063">
+    <tag k="type" v="node"/>
+    <tag k="version" v="1"/>
+  </meta>
+  <meta id="2501">
+    <tag k="type" v="way"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2502">
+    <tag k="type" v="way"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2503">
+    <tag k="type" v="way"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2504">
+    <tag k="type" v="way"/>
+    <tag k="version" v="5"/>
+  </meta>
+  <meta id="2505">
+    <tag k="type" v="way"/>
+    <tag k="version" v="5"/>
+  </meta>
+  <meta id="2506">
+    <tag k="type" v="way"/>
+    <tag k="version" v="5"/>
+  </meta>
+  <meta id="2501">
+    <tag k="type" v="relation"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2502">
+    <tag k="type" v="relation"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2503">
+    <tag k="type" v="relation"/>
+    <tag k="version" v="3"/>
+  </meta>
+  <meta id="2504">
+    <tag k="type" v="relation"/>
+    <tag k="version" v="5"/>
+  </meta>
+  <meta id="2505">
+    <tag k="type" v="relation"/>
+    <tag k="version" v="5"/>
+  </meta>
+  <meta id="2506">
+    <tag k="type" v="relation"/>
+    <tag k="version" v="5"/>
+  </meta>
 
 </osm>

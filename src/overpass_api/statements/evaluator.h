@@ -22,6 +22,7 @@
 
 #include "statement.h"
 #include "../data/collect_members.h"
+#include "../data/meta_collector.h"
 #include "../data/tag_store.h"
 #include "../data/utils.h"
 
@@ -33,11 +34,14 @@
 template< typename Object >
 struct Element_With_Context
 {
-  Element_With_Context(const Object* object_, const std::vector< std::pair< std::string, std::string > >* tags_)
-      : object(object_), tags(tags_) {}
+  Element_With_Context(const Object* object_,
+      const std::vector< std::pair< std::string, std::string > >* tags_,
+      const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta_)
+      : object(object_), tags(tags_), meta(meta_) {}
   
   const Object* object;
   const std::vector< std::pair< std::string, std::string > >* tags;
+  const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta;
 };
 
 
@@ -50,6 +54,7 @@ struct Set_Usage
 
   static const uint SKELETON;
   static const uint TAGS;
+  static const uint META;
 
   bool operator<(const Set_Usage& rhs) const { return this->set_name < rhs.set_name; }
 };
@@ -81,7 +86,10 @@ public:
       tag_store_nodes(0), tag_store_attic_nodes(0),
       tag_store_ways(0), tag_store_attic_ways(0),
       tag_store_relations(0), tag_store_attic_relations(0),
-      tag_store_areas(0), tag_store_deriveds(0) {}
+      tag_store_areas(0), tag_store_deriveds(0),
+      meta_collector_nodes(0), meta_collector_attic_nodes(0),
+      meta_collector_ways(0), meta_collector_attic_ways(0),
+      meta_collector_relations(0), meta_collector_attic_relations(0) {}
 
   ~Set_With_Context()
   {
@@ -93,7 +101,26 @@ public:
     delete tag_store_attic_relations;
     delete tag_store_areas;
     delete tag_store_deriveds;
+    
+    delete meta_collector_nodes;
+    delete meta_collector_attic_nodes;
+    delete meta_collector_ways;
+    delete meta_collector_attic_ways;
+    delete meta_collector_relations;
+    delete meta_collector_attic_relations;
   }
+  
+  Element_With_Context< Node_Skeleton > get_context(const Uint32_Index& index, const Node_Skeleton& elem) const;
+  Element_With_Context< Attic< Node_Skeleton > > get_context(
+      const Uint32_Index& index, const Attic< Node_Skeleton >& elem) const;
+  Element_With_Context< Way_Skeleton > get_context(const Uint31_Index& index, const Way_Skeleton& elem) const;
+  Element_With_Context< Attic< Way_Skeleton > > get_context(
+      const Uint31_Index& index, const Attic< Way_Skeleton >& elem) const;
+  Element_With_Context< Relation_Skeleton > get_context(const Uint31_Index& index, const Relation_Skeleton& elem) const;
+  Element_With_Context< Attic< Relation_Skeleton > > get_context(
+      const Uint31_Index& index, const Attic< Relation_Skeleton >& elem) const;
+  Element_With_Context< Area_Skeleton > get_context(const Uint31_Index& index, const Area_Skeleton& elem) const;
+  Element_With_Context< Derived_Skeleton > get_context(const Uint31_Index& index, const Derived_Structure& elem) const;
 
   void prefetch(uint usage, const Set& set, Transaction& transaction);
 
@@ -107,6 +134,13 @@ public:
   Tag_Store< Uint31_Index, Relation_Skeleton >* tag_store_attic_relations;
   Tag_Store< Uint31_Index, Area_Skeleton >* tag_store_areas;
   Tag_Store< Uint31_Index, Derived_Structure >* tag_store_deriveds;
+  
+  Meta_Collector< Uint32_Index, Node_Skeleton::Id_Type >* meta_collector_nodes;
+  Attic_Meta_Collector< Uint32_Index, Node_Skeleton >* meta_collector_attic_nodes;
+  Meta_Collector< Uint31_Index, Way_Skeleton::Id_Type >* meta_collector_ways;
+  Attic_Meta_Collector< Uint31_Index, Way_Skeleton >* meta_collector_attic_ways;
+  Meta_Collector< Uint31_Index, Relation_Skeleton::Id_Type >* meta_collector_relations;
+  Attic_Meta_Collector< Uint31_Index, Relation_Skeleton >* meta_collector_attic_relations;
 };
 
 

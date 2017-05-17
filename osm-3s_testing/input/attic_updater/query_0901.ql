@@ -931,3 +931,13 @@ node(12012);out ids;
 node["sense"="no"](10.9,2,11.1,3.03)[~"f(aa|ee)"~"."][~"sense"~"."];out meta;
 way["sense"="no"](10.9,2,11.1,3.03)[~"f(aa|ee)"~"."][~"sense"~"."];out meta;
 rel["sense"="no"](10.9,2,11.1,3.03)[~"f(aa|ee)"~"."][~"sense"~"."];out meta;
+
+node(10,1,10.1,1.1);
+convert meta ::id=id(), version=version();
+out;
+way(10,1,10.1,1.1);
+convert meta ::id=id(), version=version();
+out;
+rel(10,1,10.8,1.1);
+convert meta ::id=id(), version=version();
+out;

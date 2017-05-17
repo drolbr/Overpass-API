@@ -41,9 +41,9 @@ class Filter_Constraint : public Query_Constraint
 };
 
 
-template< typename Index, typename Maybe_Attic, typename Object >
+template< typename Index, typename Maybe_Attic >
 void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
-    Tag_Store< Index, Object >* tag_store, Eval_Task& task)
+    const Set_With_Context& into_context, Eval_Task& task)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -54,41 +54,7 @@ void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
     for (typename std::vector< Maybe_Attic >::const_iterator it_elem = it_idx->second.begin();
         it_elem != it_idx->second.end(); ++it_elem)
     {
-      const std::vector< std::pair< std::string, std::string > >* tags =
-          tag_store ? tag_store->get(it_idx->first, *it_elem) : 0;
-      std::vector< std::pair< std::string, std::string > > result_tags;
-
-      std::string valuation = task.eval(Element_With_Context< Maybe_Attic >(&*it_elem, tags), 0);
-
-      double val_d = 0;
-      if (valuation != "" && (!try_double(valuation, val_d) || val_d != 0))
-        local_into.push_back(*it_elem);
-    }
-
-    local_into.swap(it_idx->second);
-  }
-}
-
-
-template< >
-void eval_elems< Uint31_Index, Derived_Structure, Derived_Structure >(
-    std::map< Uint31_Index, std::vector< Derived_Structure > >& items,
-    Tag_Store< Uint31_Index, Derived_Structure >* tag_store, Eval_Task& task)
-{
-  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::iterator it_idx = items.begin();
-      it_idx != items.end(); ++it_idx)
-  {
-    std::vector< Derived_Structure > local_into;
-    local_into.reserve(it_idx->second.size());
-
-    for (std::vector< Derived_Structure >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      const std::vector< std::pair< std::string, std::string > >* tags =
-          tag_store ? tag_store->get(it_idx->first, *it_elem) : 0;
-      std::vector< std::pair< std::string, std::string > > result_tags;
-
-      std::string valuation = task.eval(Element_With_Context< Derived_Skeleton >(&*it_elem, tags), 0);
+      std::string valuation = task.eval(into_context.get_context(it_idx->first, *it_elem), 0);
 
       double val_d = 0;
       if (valuation != "" && (!try_double(valuation, val_d) || val_d != 0))
@@ -116,14 +82,14 @@ void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 
   if (task)
   {
-    eval_elems(into.nodes, into_context.tag_store_nodes, *task);
-    eval_elems(into.attic_nodes, into_context.tag_store_attic_nodes, *task);
-    eval_elems(into.ways, into_context.tag_store_ways, *task);
-    eval_elems(into.attic_ways, into_context.tag_store_attic_ways, *task);
-    eval_elems(into.relations, into_context.tag_store_relations, *task);
-    eval_elems(into.attic_relations, into_context.tag_store_attic_relations, *task);
-    eval_elems(into.areas, into_context.tag_store_areas, *task);
-    eval_elems(into.deriveds, into_context.tag_store_deriveds, *task);
+    eval_elems(into.nodes, into_context, *task);
+    eval_elems(into.attic_nodes, into_context, *task);
+    eval_elems(into.ways, into_context, *task);
+    eval_elems(into.attic_ways, into_context, *task);
+    eval_elems(into.relations, into_context, *task);
+    eval_elems(into.attic_relations, into_context, *task);
+    eval_elems(into.areas, into_context, *task);
+    eval_elems(into.deriveds, into_context, *task);
   }
 }
 

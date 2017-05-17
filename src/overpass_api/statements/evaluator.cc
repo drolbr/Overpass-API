@@ -24,6 +24,7 @@
 
 const uint Set_Usage::SKELETON = 1;
 const uint Set_Usage::TAGS = 2;
+const uint Set_Usage::META = 4;
 
 
 Requested_Context& Requested_Context::add_usage(const std::string& set_name, uint usage)
@@ -126,6 +127,106 @@ void Set_With_Context::prefetch(uint usage, const Set& set, Transaction& transac
     tag_store_deriveds = new Tag_Store< Uint31_Index, Derived_Structure >(transaction);
     tag_store_deriveds->prefetch_all(set.deriveds);
   }
+  
+  if (usage & Set_Usage::META)
+  {
+    meta_collector_nodes = new Meta_Collector< Uint32_Index, Node_Skeleton::Id_Type >(
+        set.nodes, transaction, current_meta_file_properties< Node_Skeleton >());
+    
+    if (!set.attic_nodes.empty())
+    {
+      meta_collector_attic_nodes = new Attic_Meta_Collector< Uint32_Index, Node_Skeleton >(
+          set.attic_nodes, transaction, true);
+    }
+    
+    meta_collector_ways = new Meta_Collector< Uint31_Index, Way_Skeleton::Id_Type >(
+        set.ways, transaction, current_meta_file_properties< Way_Skeleton >());
+    
+    if (!set.attic_ways.empty())
+    {
+      meta_collector_attic_ways = new Attic_Meta_Collector< Uint31_Index, Way_Skeleton >(
+          set.attic_ways, transaction, true);
+    }
+    
+    meta_collector_relations = new Meta_Collector< Uint31_Index, Relation_Skeleton::Id_Type >(
+        set.relations, transaction, current_meta_file_properties< Relation_Skeleton >());
+    
+    if (!set.attic_relations.empty())
+    {
+      meta_collector_attic_relations = new Attic_Meta_Collector< Uint31_Index, Relation_Skeleton >(
+          set.attic_relations, transaction, true);
+    }
+  }
+}
+
+
+Element_With_Context< Node_Skeleton > Set_With_Context::get_context(
+    const Uint32_Index& index, const Node_Skeleton& elem) const
+{
+  return Element_With_Context< Node_Skeleton >(&elem,
+      tag_store_nodes ? tag_store_nodes->get(index, elem) : 0,
+      meta_collector_nodes ? meta_collector_nodes->get(index, elem.id) : 0);
+}
+
+
+Element_With_Context< Attic< Node_Skeleton > > Set_With_Context::get_context(
+    const Uint32_Index& index, const Attic< Node_Skeleton >& elem) const
+{
+  return Element_With_Context< Attic< Node_Skeleton > >(&elem,
+      tag_store_attic_nodes ? tag_store_attic_nodes->get(index, elem) : 0,
+      meta_collector_attic_nodes ? meta_collector_attic_nodes->get(index, elem.id, elem.timestamp) : 0);
+}
+
+
+Element_With_Context< Way_Skeleton > Set_With_Context::get_context(
+    const Uint31_Index& index, const Way_Skeleton& elem) const
+{
+  return Element_With_Context< Way_Skeleton >(&elem,
+      tag_store_ways ? tag_store_ways->get(index, elem) : 0,
+      meta_collector_ways ? meta_collector_ways->get(index, elem.id) : 0);
+}
+
+
+Element_With_Context< Attic< Way_Skeleton > > Set_With_Context::get_context(
+    const Uint31_Index& index, const Attic< Way_Skeleton >& elem) const
+{
+  return Element_With_Context< Attic< Way_Skeleton > >(&elem,
+      tag_store_attic_ways ? tag_store_attic_ways->get(index, elem) : 0,
+      meta_collector_attic_ways ? meta_collector_attic_ways->get(index, elem.id, elem.timestamp) : 0);
+}
+
+
+Element_With_Context< Relation_Skeleton > Set_With_Context::get_context(
+    const Uint31_Index& index, const Relation_Skeleton& elem) const
+{
+  return Element_With_Context< Relation_Skeleton >(&elem,
+      tag_store_relations ? tag_store_relations->get(index, elem) : 0,
+      meta_collector_relations ? meta_collector_relations->get(index, elem.id) : 0);
+}
+
+
+Element_With_Context< Attic< Relation_Skeleton > > Set_With_Context::get_context(
+    const Uint31_Index& index, const Attic< Relation_Skeleton >& elem) const
+{
+  return Element_With_Context< Attic< Relation_Skeleton > >(&elem,
+      tag_store_attic_relations ? tag_store_attic_relations->get(index, elem) : 0,
+      meta_collector_attic_relations ? meta_collector_attic_relations->get(index, elem.id, elem.timestamp) : 0);
+}
+
+
+Element_With_Context< Area_Skeleton > Set_With_Context::get_context(
+    const Uint31_Index& index, const Area_Skeleton& elem) const
+{
+  return Element_With_Context< Area_Skeleton >(&elem,
+      tag_store_areas ? tag_store_areas->get(index, elem) : 0, 0);
+}
+
+
+Element_With_Context< Derived_Skeleton > Set_With_Context::get_context(
+    const Uint31_Index& index, const Derived_Structure& elem) const
+{
+  return Element_With_Context< Derived_Skeleton >(&elem,
+      tag_store_deriveds ? tag_store_deriveds->get(index, elem) : 0, 0);
 }
 
 

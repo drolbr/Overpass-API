@@ -402,6 +402,69 @@ public:
 };
 
 
+/* === Version Operator ===
+
+The version operator returns the version number of the given element.
+Its syntax is:
+
+  version()
+*/
+
+struct Version_Eval_Task : public Eval_Task
+{
+  Version_Eval_Task() {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->version) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->version) : ""; }
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->version) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->version) : ""; }
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->version) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->version) : ""; }
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->version) : ""; }
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->version) : ""; }
+};
+
+
+class Evaluator_Version : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Version >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Version >("eval-version")
+    { Statement::maker_by_func_name()["version"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-version/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return "version(\"\")"; }
+
+  Evaluator_Version(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-version"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Version() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
+
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Version_Eval_Task(); }
+};
+
+
 /* === Element Properties Count ===
 
 This variant of the <em>count</em> operator counts tags or members

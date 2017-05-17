@@ -316,6 +316,51 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
 //-----------------------------------------------------------------------------
 
 
+Evaluator_Version::Statement_Maker Evaluator_Version::statement_maker;
+
+
+Statement* Evaluator_Version::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (tree_context != Statement::elem_eval_possible)
+  {
+    if (error_output)
+      error_output->add_parse_error("version() must be called in a context where it can evaluate an element",
+          tree_it->line_col.first);
+    return 0;
+  }
+
+  if (tree_it->token != "(")
+  {
+    if (error_output)
+      error_output->add_parse_error("version() cannot have an input set", tree_it->line_col.first);
+    return 0;
+  }
+  if (tree_it->rhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("version() cannot have an argument", tree_it->line_col.first);
+    return 0;
+  }
+  
+  return new Evaluator_Version(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
+}
+
+
+Evaluator_Version::Evaluator_Version
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Evaluator_Generic::Statement_Maker Evaluator_Generic::statement_maker;
 
 
