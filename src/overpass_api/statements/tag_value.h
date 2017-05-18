@@ -402,12 +402,23 @@ public:
 };
 
 
-/* === Version Operator ===
+/* === Meta Data Operators ===
 
 The <em>version</em> operator returns the version number of the given element.
 Its syntax is:
 
   version()
+
+The <em>timestamp</em> operator returns the timestamp of the given element.
+Its syntax is:
+
+  timestamp()
+
+The <em>changeset</em> operator returns the changeset id of the changeset
+in which the given element has been last edited.
+Its syntax is:
+
+  changeset()
 */
 
 struct Version_Eval_Task : public Eval_Task
@@ -462,6 +473,116 @@ public:
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
   virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Version_Eval_Task(); }
+};
+
+
+struct Timestamp_Eval_Task : public Eval_Task
+{
+  Timestamp_Eval_Task() {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return data.meta ? Timestamp(data.meta->timestamp).str() : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? Timestamp(data.meta->timestamp).str() : ""; }
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return data.meta ? Timestamp(data.meta->timestamp).str() : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? Timestamp(data.meta->timestamp).str() : ""; }
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return data.meta ? Timestamp(data.meta->timestamp).str() : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? Timestamp(data.meta->timestamp).str() : ""; }
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return data.meta ? Timestamp(data.meta->timestamp).str() : ""; }
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return data.meta ? Timestamp(data.meta->timestamp).str() : ""; }
+};
+
+
+class Evaluator_Timestamp : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Timestamp >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Timestamp >("eval-timestamp")
+    { Statement::maker_by_func_name()["timestamp"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-timestamp/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return "timestamp(\"\")"; }
+
+  Evaluator_Timestamp(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-timestamp"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Timestamp() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
+
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Timestamp_Eval_Task(); }
+};
+
+
+struct Changeset_Eval_Task : public Eval_Task
+{
+  Changeset_Eval_Task() {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->changeset) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->changeset) : ""; }
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->changeset) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->changeset) : ""; }
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->changeset) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->changeset) : ""; }
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->changeset) : ""; }
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->changeset) : ""; }
+};
+
+
+class Evaluator_Changeset : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Changeset >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Changeset >("eval-changeset")
+    { Statement::maker_by_func_name()["changeset"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-changeset/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return "changeset(\"\")"; }
+
+  Evaluator_Changeset(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-changeset"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Changeset() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
+
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Changeset_Eval_Task(); }
 };
 
 

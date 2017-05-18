@@ -932,12 +932,12 @@ node["sense"="no"](10.9,2,11.1,3.03)[~"f(aa|ee)"~"."][~"sense"~"."];out meta;
 way["sense"="no"](10.9,2,11.1,3.03)[~"f(aa|ee)"~"."][~"sense"~"."];out meta;
 rel["sense"="no"](10.9,2,11.1,3.03)[~"f(aa|ee)"~"."][~"sense"~"."];out meta;
 
-node(10,1,10.1,1.1);
-convert meta ::id=id(), version=version();
+node(11,5,11.1,5.1);
+convert meta ::id=id(), type=type(), version=version(), timestamp=timestamp(), changeset=changeset();
 out;
-way(10,1,10.1,1.1);
-convert meta ::id=id(), version=version();
+way(11,5,11.1,5.1);
+convert meta ::id=id(), type=type(), version=version(), timestamp=timestamp(), changeset=changeset();
 out;
-rel(10,1,10.8,1.1);
-convert meta ::id=id(), version=version();
+rel(11,5,11.1,5.1);
+convert meta ::id=id(), type=type(), version=version(), timestamp=timestamp(), changeset=changeset();
 out;
