@@ -208,20 +208,10 @@ struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_
   virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
-    if (tree_it->token != "(")
-    {
-      if (error_output)
-        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) cannot have an input set",
-            tree_it->line_col.first);
+    if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+        || !tree_it.assert_has_arguments(error_output, true))
       return 0;
-    }
-    if (!tree_it->rhs)
-    {
-      if (error_output)
-        error_output->add_parse_error(Evaluator_::stmt_func_name() + "(...) needs an argument",
-            tree_it->line_col.first);
-      return 0;
-    }
+  
     std::map< std::string, std::string > attributes;
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     if (result)

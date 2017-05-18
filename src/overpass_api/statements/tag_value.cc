@@ -329,20 +329,16 @@ Statement* Evaluator_Properties_Count::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  std::map< std::string, std::string > attributes;
-
-  if (tree_it->token != "(")
-  {
-    if (error_output && tree_it->rhs && tree_it.rhs()->lhs)
-      error_output->add_parse_error(tree_it.rhs().lhs()->token + "(...) cannot have an input set",
-          tree_it->line_col.first);
-    return 0;
-  }
-
-  if (!tree_it->lhs)
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
   
-  if (tree_it.lhs()->token == "count_by_role" || tree_it.lhs()->token == "count_distinct_by_role")
+  std::map< std::string, std::string > attributes;
+  
+  const std::string* func_name = tree_it.function_name();
+  attributes["type"] = func_name->size() > 6 ? func_name->substr(6) : "";
+
+  if (*func_name == "count_by_role" || *func_name == "count_distinct_by_role")
   {
     if (tree_it->rhs)
     {
@@ -389,7 +385,7 @@ Statement* Evaluator_Properties_Count::Statement_Maker::create_statement(
       return 0;
     }
   }
-  else if (tree_it.lhs()->token == "count_members" || tree_it.lhs()->token == "count_distinct_members")
+  else if (*func_name == "count_members" || *func_name == "count_distinct_members")
   {
     if (tree_it->rhs)
     {
@@ -409,16 +405,9 @@ Statement* Evaluator_Properties_Count::Statement_Maker::create_statement(
   }
   else
   {
-    if (tree_it->rhs)
-    {
-      if (error_output)
-        error_output->add_parse_error(tree_it.lhs()->token + "() cannot have an argument",
-            tree_it->line_col.first);
+    if (!tree_it.assert_has_arguments(error_output, false))
       return 0;
-    }
   }
-
-  attributes["type"] = tree_it.lhs()->token.size() > 6 ? tree_it.lhs()->token.substr(6) : "";
 
   return new Evaluator_Properties_Count(tree_it->line_col.first, attributes, global_settings);
 }

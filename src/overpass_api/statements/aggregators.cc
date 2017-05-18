@@ -328,39 +328,19 @@ Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
+  if (!tree_it.assert_is_function(error_output)
+      || !tree_it.assert_has_arguments(error_output, true))
+    return 0;
+  
   std::map< std::string, std::string > attributes;
 
   if (tree_it->token == "(")
   {
-    if (!tree_it->lhs)
-      return 0;
-    if (!tree_it->rhs)
-    {
-      if (error_output)
-        error_output->add_parse_error("count(object_type) needs an argument", tree_it->line_col.first);
-      return 0;
-    }
-
     attributes["from"] = "_";
     attributes["type"] = tree_it.rhs()->token;
   }
   else
   {
-    if (!tree_it->lhs)
-      return 0;
-    if (!tree_it->rhs || !tree_it.rhs()->rhs)
-    {
-      if (error_output)
-        error_output->add_parse_error("count(object_type) needs an argument", tree_it->line_col.first);
-      return 0;
-    }
-    if (!tree_it.rhs()->lhs)
-    {
-      if (error_output)
-        error_output->add_parse_error("Input set required if dot is present", tree_it->line_col.first);
-      return 0;
-    }
-
     attributes["from"] = tree_it.lhs()->token;
     attributes["type"] = tree_it.rhs().rhs()->token;
   }
