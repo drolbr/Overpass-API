@@ -78,6 +78,7 @@ void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 
   Set_With_Context into_context;
   into_context.name = "";
+  into_context.parent = &context;
   into_context.prefetch(requested_context.object_usage, into, *rman.get_transaction());
 
   if (task)

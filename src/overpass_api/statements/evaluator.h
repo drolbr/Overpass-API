@@ -36,12 +36,14 @@ struct Element_With_Context
 {
   Element_With_Context(const Object* object_,
       const std::vector< std::pair< std::string, std::string > >* tags_,
-      const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta_)
-      : object(object_), tags(tags_), meta(meta_) {}
+      const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta_,
+      const std::string* user_name_)
+      : object(object_), tags(tags_), meta(meta_), user_name(user_name_) {}
   
   const Object* object;
   const std::vector< std::pair< std::string, std::string > >* tags;
   const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta;
+  const std::string* user_name;
 };
 
 
@@ -70,13 +72,18 @@ struct Requested_Context
   Requested_Context& add_usage(const std::string& set_name, uint usage);
   Requested_Context& add_usage(uint usage);
   Requested_Context& add_role_names();
+  Requested_Context& add_user_names();
   void add(const Requested_Context& rhs);
   void bind(const std::string& set_name);
   
   std::vector< Set_Usage > set_usage;
   uint object_usage;
   bool role_names_requested;
+  bool user_names_requested;
 };
+
+
+struct Prepare_Task_Context;
 
 
 struct Set_With_Context
@@ -86,7 +93,7 @@ private:
   Set_With_Context& operator=(const Set_With_Context&);
 
 public:
-  Set_With_Context() : base(0),
+  Set_With_Context() : base(0), parent(0),
       tag_store_nodes(0), tag_store_attic_nodes(0),
       tag_store_ways(0), tag_store_attic_ways(0),
       tag_store_relations(0), tag_store_attic_relations(0),
@@ -130,6 +137,8 @@ public:
 
   std::string name;
   const Set* base;
+  const Prepare_Task_Context* parent;
+  
   Tag_Store< Uint32_Index, Node_Skeleton >* tag_store_nodes;
   Tag_Store< Uint32_Index, Node_Skeleton >* tag_store_attic_nodes;
   Tag_Store< Uint31_Index, Way_Skeleton >* tag_store_ways;
@@ -154,10 +163,12 @@ struct Prepare_Task_Context
   
   const Set_With_Context* get_set(const std::string& set_name) const;  
   uint32 get_role_id(const std::string& role) const;
+  const std::string* get_user_name(uint32 user_id) const;
 
 private:
   Array< Set_With_Context > contexts;
   const std::map< uint32, std::string >* relation_member_roles_;
+  const std::map< uint32, std::string >* users;
 };
 
 

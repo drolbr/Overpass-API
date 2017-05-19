@@ -287,7 +287,6 @@ Evaluator_Version::Evaluator_Version
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
@@ -313,7 +312,6 @@ Evaluator_Timestamp::Evaluator_Timestamp
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
@@ -339,7 +337,56 @@ Evaluator_Changeset::Evaluator_Changeset
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
 
+
+Evaluator_Uid::Statement_Maker Evaluator_Uid::statement_maker;
+
+
+Statement* Evaluator_Uid::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !tree_it.assert_has_arguments(error_output, false)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
+    return 0;
+  
+  return new Evaluator_Uid(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
+}
+
+
+Evaluator_Uid::Evaluator_Uid
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+Evaluator_User::Statement_Maker Evaluator_User::statement_maker;
+
+
+Statement* Evaluator_User::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !tree_it.assert_has_arguments(error_output, false)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
+    return 0;
+  
+  return new Evaluator_User(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
+}
+
+
+Evaluator_User::Evaluator_User
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 

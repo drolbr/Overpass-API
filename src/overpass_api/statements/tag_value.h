@@ -586,6 +586,117 @@ public:
 };
 
 
+struct Uid_Eval_Task : public Eval_Task
+{
+  Uid_Eval_Task() {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->user_id) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->user_id) : ""; }
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->user_id) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->user_id) : ""; }
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->user_id) : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->user_id) : ""; }
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->user_id) : ""; }
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return data.meta ? to_string(data.meta->user_id) : ""; }
+};
+
+
+class Evaluator_Uid : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Uid >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Uid >("eval-uid")
+    { Statement::maker_by_func_name()["uid"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-uid/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return "uid(\"\")"; }
+
+  Evaluator_Uid(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-uid"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Uid() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
+
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new Uid_Eval_Task(); }
+};
+
+
+struct User_Eval_Task : public Eval_Task
+{
+  User_Eval_Task() {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return data.user_name ? *data.user_name : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return data.user_name ? *data.user_name : ""; }
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return data.user_name ? *data.user_name : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return data.user_name ? *data.user_name : ""; }
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return data.user_name ? *data.user_name : ""; }
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return data.user_name ? *data.user_name : ""; }
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return data.user_name ? *data.user_name : ""; }
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return data.user_name ? *data.user_name : ""; }
+};
+
+
+class Evaluator_User : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_User >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_User >("eval-user")
+    { Statement::maker_by_func_name()["user"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-user/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return "user(\"\")"; }
+
+  Evaluator_User(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-user"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_User() {}
+
+  virtual Requested_Context request_context() const
+  { return Requested_Context().add_usage(Set_Usage::META).add_user_names(); }
+
+  virtual Eval_Task* get_task(const Prepare_Task_Context& context) { return new User_Eval_Task(); }
+};
+
+
 /* === Element Properties Count ===
 
 This variant of the <em>count</em> operator counts tags or members
