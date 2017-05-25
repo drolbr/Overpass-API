@@ -1,5 +1,7 @@
 #include "geometry.h"
 
+#include <cmath>
+
 
 const Bbox_Double Bbox_Double::invalid(100.0, 200.0, 100.0, 200.0);
 
@@ -638,4 +640,47 @@ void Partial_Relation_Geometry::add_way_placeholder()
   Partial_Way_Geometry* geom = dynamic_cast< Partial_Way_Geometry* >(components.back());
   if (geom)
     geom->add_point(Point_Double(100., 200.));
+}
+
+
+double great_circle_dist(double lat1, double lon1, double lat2, double lon2)
+{
+  if (lat1 == lat2 && lon1 == lon2)
+    return 0;
+  static const double deg_to_arc = acos(0)/90.;
+  double scalar_prod = cos((lat2-lat1)*deg_to_arc)
+      + cos(lat1*deg_to_arc)*cos(lat2*deg_to_arc)*(cos((lon2-lon1)*deg_to_arc) - 1);
+  if (scalar_prod > 1)
+    scalar_prod = 1;
+  static const double arc_to_meter = 10*1000*1000/acos(0);
+  return acos(scalar_prod)*arc_to_meter;
+}
+
+
+double length(const Opaque_Geometry& geometry)
+{
+  double result = 0;
+  
+  if (geometry.has_components())
+  {
+    const std::vector< Opaque_Geometry* >* components = geometry.get_components();
+    for (std::vector< Opaque_Geometry* >::const_iterator it = components->begin(); it != components->end(); ++it)
+      result += (*it ? length(**it) : 0);
+  }
+  else if (geometry.has_line_geometry())
+  {
+    const std::vector< Point_Double >* line_geometry = geometry.get_line_geometry();
+    for (unsigned int i = 1; i < line_geometry->size(); ++i)
+      result += great_circle_dist((*line_geometry)[i-1].lat, (*line_geometry)[i-1].lon,
+          (*line_geometry)[i].lat, (*line_geometry)[i].lon);
+  }
+  else if (geometry.has_faithful_way_geometry())
+  {
+    for (unsigned int i = 1; i < geometry.way_size(); ++i)
+      result += (geometry.way_pos_is_valid(i-1) && geometry.way_pos_is_valid(i) ?
+          great_circle_dist(geometry.way_pos_lat(i-1), geometry.way_pos_lon(i-1),
+              geometry.way_pos_lat(i), geometry.way_pos_lon(i)) : 0);
+  }
+  
+  return result;
 }

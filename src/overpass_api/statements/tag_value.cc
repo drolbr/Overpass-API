@@ -266,6 +266,34 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
 //-----------------------------------------------------------------------------
 
 
+Evaluator_Length::Statement_Maker Evaluator_Length::statement_maker;
+
+
+Statement* Evaluator_Length::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !tree_it.assert_has_arguments(error_output, false)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
+    return 0;
+  
+  return new Evaluator_Length(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
+}
+
+
+Evaluator_Length::Evaluator_Length
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Evaluator_Version::Statement_Maker Evaluator_Version::statement_maker;
 
 
@@ -602,7 +630,7 @@ Requested_Context Evaluator_Properties_Count::request_context() const
 }
 
 
-Eval_Task* Evaluator_Properties_Count::get_task(const Prepare_Task_Context& context)
+Eval_Task* Evaluator_Properties_Count::get_task(Prepare_Task_Context& context)
 {
   if (to_count == Evaluator_Properties_Count::by_role || to_count == Evaluator_Properties_Count::distinct_by_role)
     return new Prop_Count_Eval_Task(to_count, type_to_count, context.get_role_id(role));

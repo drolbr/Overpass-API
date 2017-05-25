@@ -56,9 +56,9 @@ void If_Statement::add_statement(Statement* statement, std::string text)
 }
 
 
-bool evals_to_true(Evaluator& criterion, Resource_Manager& rman)
+bool evals_to_true(Evaluator& criterion, const Statement& stmt, Resource_Manager& rman)
 {
-  Prepare_Task_Context context(criterion.request_context(), rman);
+  Prepare_Task_Context context(criterion.request_context(), stmt, rman);
   Owner< Eval_Task > task(criterion.get_task(context));  
   std::string valuation = (*task).eval(0);
   double val_d = 0;
@@ -68,7 +68,7 @@ bool evals_to_true(Evaluator& criterion, Resource_Manager& rman)
 
 void If_Statement::execute(Resource_Manager& rman)
 {
-  if (criterion && evals_to_true(*criterion, rman))
+  if (criterion && evals_to_true(*criterion, *this, rman))
   {
     for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
       (*it)->execute(rman);

@@ -86,7 +86,7 @@ void Convert_Statement::add_statement(Statement* statement, std::string text)
 
 template< typename Index, typename Maybe_Attic >
 void generate_elems(const std::string& set_name,
-    const std::map< Index, std::vector< Maybe_Attic > >& items, const Set_With_Context& context_from,
+    const std::map< Index, std::vector< Maybe_Attic > >& items, Set_With_Context& context_from,
     Owning_Array< Set_Prop_Task* >& tasks, const std::vector< std::string >& declared_keys,
     Set& into, Resource_Manager& rman, const std::string& type)
 {
@@ -130,14 +130,14 @@ void Convert_Statement::execute(Resource_Manager& rman)
   std::sort(declared_keys.begin(), declared_keys.end());
   declared_keys.erase(std::unique(declared_keys.begin(), declared_keys.end()), declared_keys.end());
   
-  Prepare_Task_Context context(requested_context, rman);
+  Prepare_Task_Context context(requested_context, *this, rman);
   
   Owning_Array< Set_Prop_Task* > tasks;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     tasks.push_back((*it)->get_task(context));
 
   Set into;
-  const Set_With_Context* context_from = context.get_set(input);
+  Set_With_Context* context_from = context.get_set(input);
   
   if (context_from && context_from->base)
   {

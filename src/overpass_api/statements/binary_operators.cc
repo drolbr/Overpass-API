@@ -62,7 +62,7 @@ void Evaluator_Pair_Operator::add_substatements(Statement* result, const std::st
 }
 
 
-Eval_Task* Evaluator_Pair_Operator::get_task(const Prepare_Task_Context& context)
+Eval_Task* Evaluator_Pair_Operator::get_task(Prepare_Task_Context& context)
 {
   Eval_Task* lhs_task = lhs ? lhs->get_task(context) : 0;
   Eval_Task* rhs_task = rhs ? rhs->get_task(context) : 0;

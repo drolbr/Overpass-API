@@ -36,45 +36,93 @@ pushd run/attic_updater
 
 date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/init.osm
 
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query.ql >init_query.out 2>init_query.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0901.ql >init_query_0901.out 2>init_query_0901.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902.ql >init_query_0902.out 2>init_query_0902.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >init_query_0903.out 2>init_query_0903.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >init_query_0904.out 2>init_query_0904.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >init_query_0905.out 2>init_query_0905.err
+date '+%T'
+cat $INPUTDIR/query.ql \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >init_query.out 2>init_query.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:01:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >init_query_0901.out 2>init_query_0901.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:02:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >init_query_0902.out 2>init_query_0902.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:03:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >init_query_0903.out 2>init_query_0903.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:04:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >init_query_0904.out 2>init_query_0904.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >init_query_0905.out 2>init_query_0905.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/diff_0902.ql >init_diff_0902.out 2>init_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >init_adiff_0902.out 2>init_adiff_0902.err
 
 date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_1.osc
 
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query.ql >diff_1_query.out 2>diff_1_query.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0901.ql >diff_1_query_0901.out 2>diff_1_query_0901.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902.ql >diff_1_query_0902.out 2>diff_1_query_0902.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_1_query_0903.out 2>diff_1_query_0903.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_1_query_0904.out 2>diff_1_query_0904.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_1_query_0905.out 2>diff_1_query_0905.err
+date '+%T'
+cat $INPUTDIR/query.ql \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_1_query.out 2>diff_1_query.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:01:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_1_query_0901.out 2>diff_1_query_0901.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:02:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_1_query_0902.out 2>diff_1_query_0902.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:03:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_1_query_0903.out 2>diff_1_query_0903.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:04:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_1_query_0904.out 2>diff_1_query_0904.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_1_query_0905.out 2>diff_1_query_0905.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/diff_0902.ql >diff_1_diff_0902.out 2>diff_1_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_1_adiff_0902.out 2>diff_1_adiff_0902.err
 
 date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_2.osc
 
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query.ql >diff_2_query.out 2>diff_2_query.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0901.ql >diff_2_query_0901.out 2>diff_2_query_0901.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902.ql >diff_2_query_0902.out 2>diff_2_query_0902.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_2_query_0903.out 2>diff_2_query_0903.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_2_query_0904.out 2>diff_2_query_0904.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_2_query_0905.out 2>diff_2_query_0905.err
+date '+%T'
+cat $INPUTDIR/query.ql \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_2_query.out 2>diff_2_query.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:01:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_2_query_0901.out 2>diff_2_query_0901.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:02:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_2_query_0902.out 2>diff_2_query_0902.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:03:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_2_query_0903.out 2>diff_2_query_0903.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:04:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_2_query_0904.out 2>diff_2_query_0904.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_2_query_0905.out 2>diff_2_query_0905.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/diff_0902.ql >diff_2_diff_0902.out 2>diff_2_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_2_adiff_0902.out 2>diff_2_adiff_0902.err
 
 date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_3.osc
 
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query.ql >diff_3_query.out 2>diff_3_query.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0901.ql >diff_3_query_0901.out 2>diff_3_query_0901.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0902.ql >diff_3_query_0902.out 2>diff_3_query_0902.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0903.ql >diff_3_query_0903.out 2>diff_3_query_0903.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0904.ql >diff_3_query_0904.out 2>diff_3_query_0904.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/query_0905.ql >diff_3_query_0905.out 2>diff_3_query_0905.err
+date '+%T'
+cat $INPUTDIR/query.ql \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_3_query.out 2>diff_3_query.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:01:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_3_query_0901.out 2>diff_3_query_0901.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:02:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_3_query_0902.out 2>diff_3_query_0902.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:03:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_3_query_0903.out 2>diff_3_query_0903.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:04:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_3_query_0904.out 2>diff_3_query_0904.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_3_query_0905.out 2>diff_3_query_0905.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/diff_0902.ql >diff_3_diff_0902.out 2>diff_3_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_3_adiff_0902.out 2>diff_3_adiff_0902.err
 
@@ -98,12 +146,24 @@ date '+%T'; $BASEDIR/bin/osm3s_query --db-dir=./ --clone="clone/" >clone.out 2>c
 
 date '+%T'
 
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query.ql >diff_clone_query.out 2>diff_clone_query.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0901.ql >diff_clone_query_0901.out 2>diff_clone_query_0901.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0902.ql >diff_clone_query_0902.out 2>diff_clone_query_0902.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0903.ql >diff_clone_query_0903.out 2>diff_clone_query_0903.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0904.ql >diff_clone_query_0904.out 2>diff_clone_query_0904.err
-date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/query_0905.ql >diff_clone_query_0905.out 2>diff_clone_query_0905.err
+date '+%T'
+cat $INPUTDIR/query.ql \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ >diff_clone_query.out 2>diff_clone_query.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:01:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ >diff_clone_query_0901.out 2>diff_clone_query_0901.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:02:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ >diff_clone_query_0902.out 2>diff_clone_query_0902.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:03:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ >diff_clone_query_0903.out 2>diff_clone_query_0903.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:04:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ >diff_clone_query_0904.out 2>diff_clone_query_0904.err
+date '+%T'
+{ echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ >diff_clone_query_0905.out 2>diff_clone_query_0905.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/diff_0902.ql >diff_clone_diff_0902.out 2>diff_clone_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=clone/ <$INPUTDIR/adiff_0902.ql >diff_clone_adiff_0902.out 2>diff_clone_adiff_0902.err
 

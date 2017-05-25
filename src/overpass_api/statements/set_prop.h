@@ -94,7 +94,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
-  Set_Prop_Task* get_task(const Prepare_Task_Context& context);
+  Set_Prop_Task* get_task(Prepare_Task_Context& context);
 
   const std::string* get_key() const { return input != "" ? 0 : &keys.front(); }
   bool has_value() const { return tag_value; }

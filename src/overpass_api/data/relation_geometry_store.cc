@@ -88,7 +88,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
 {
   if (relations.empty())
   {
-    // Turn off bounding bix, because it isn't needed anyway
+    // Turn off bounding box, because it isn't needed anyway
     north = 0;
     south = 1;
   }

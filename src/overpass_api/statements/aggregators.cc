@@ -48,7 +48,7 @@ void Evaluator_Aggregator::add_statement(Statement* statement, std::string text)
 
 template< typename Index, typename Maybe_Attic >
 void eval_elems(Value_Aggregator& aggregator, Eval_Task& task,
-    const std::map< Index, std::vector< Maybe_Attic > >& elems, const Set_With_Context& input_set)
+    const std::map< Index, std::vector< Maybe_Attic > >& elems, Set_With_Context& input_set)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator idx_it = elems.begin();
       idx_it != elems.end(); ++idx_it)
@@ -60,7 +60,7 @@ void eval_elems(Value_Aggregator& aggregator, Eval_Task& task,
 }
 
 
-Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
+Eval_Task* Evaluator_Aggregator::get_task(Prepare_Task_Context& context)
 {
   if (!rhs)
     return 0;
@@ -69,7 +69,7 @@ Eval_Task* Evaluator_Aggregator::get_task(const Prepare_Task_Context& context)
   if (!rhs_task)
     return 0;
 
-  const Set_With_Context* input_set = context.get_set(input);
+  Set_With_Context* input_set = context.get_set(input);
   if (!input_set || !input_set->base)
     return 0;
 
@@ -404,7 +404,7 @@ Requested_Context Evaluator_Set_Count::request_context() const
 }
 
 
-Eval_Task* Evaluator_Set_Count::get_task(const Prepare_Task_Context& context)
+Eval_Task* Evaluator_Set_Count::get_task(Prepare_Task_Context& context)
 {
   const Set_With_Context* set = context.get_set(input);
 

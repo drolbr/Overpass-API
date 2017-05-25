@@ -268,6 +268,8 @@ const Opaque_Geometry& Geometry_Broker::make_way_geom(
 
   if (store && (mode & Output_Mode::GEOMETRY))
   {
+    //geom = new_opaque_geometry(geometry);
+    
     std::vector< Quad_Coord > geometry = store->get_geometry(skel);
 
     bool is_complete = true;

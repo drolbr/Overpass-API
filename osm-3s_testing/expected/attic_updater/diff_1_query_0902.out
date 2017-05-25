@@ -11808,5 +11808,53 @@
     <tag k="uid" v="42"/>
     <tag k="user" v="foo"/>
   </meta>
+  <geometry id="1303">
+    <tag k="type" v="way"/>
+    <tag k="length" v="222.222"/>
+  </geometry>
+  <geometry id="1403">
+    <tag k="type" v="way"/>
+    <tag k="length" v="222.222"/>
+  </geometry>
+  <geometry id="1503">
+    <tag k="type" v="way"/>
+    <tag k="length" v="222.222"/>
+  </geometry>
+  <geometry id="1603">
+    <tag k="type" v="way"/>
+    <tag k="length" v="222.222"/>
+  </geometry>
+  <geometry id="1703">
+    <tag k="type" v="way"/>
+    <tag k="length" v="222.222"/>
+  </geometry>
+  <geometry id="1803">
+    <tag k="type" v="way"/>
+    <tag k="length" v="222.222"/>
+  </geometry>
+  <geometry id="1333">
+    <tag k="type" v="relation"/>
+    <tag k="length" v="21.864"/>
+  </geometry>
+  <geometry id="1433">
+    <tag k="type" v="relation"/>
+    <tag k="length" v="21.864"/>
+  </geometry>
+  <geometry id="1673">
+    <tag k="type" v="relation"/>
+    <tag k="length" v="21.836"/>
+  </geometry>
+  <geometry id="1773">
+    <tag k="type" v="relation"/>
+    <tag k="length" v="21.836"/>
+  </geometry>
+  <geometry id="1873">
+    <tag k="type" v="relation"/>
+    <tag k="length" v="21.836"/>
+  </geometry>
+  <geometry id="1922">
+    <tag k="type" v="relation"/>
+    <tag k="length" v="222222.223"/>
+  </geometry>
 
 </osm>

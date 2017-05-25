@@ -395,9 +395,14 @@ public:
 private:
   std::vector< Opaque_Geometry* > components;
   mutable Bbox_Double* bounds;
-  mutable std::vector< std::vector< Point_Double > >* linestrings;
+  //mutable std::vector< std::vector< Point_Double > >* linestrings;
   bool has_coords;
 };
+
+
+double length(const Opaque_Geometry& geometry);
+
+double great_circle_dist(double lat1, double lon1, double lat2, double lon2);
 
 
 #endif

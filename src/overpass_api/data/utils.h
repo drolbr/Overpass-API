@@ -52,6 +52,15 @@ std::string to_string(T t)
 }
 
 
+template < typename T >
+std::string fixed_to_string(T t, unsigned int precision)
+{
+  std::ostringstream out;
+  out<<std::fixed<<std::setprecision(precision)<<t;
+  return out.str();
+}
+
+
 inline bool try_double(const std::string& input, double& result)
 {
   if (input == "")

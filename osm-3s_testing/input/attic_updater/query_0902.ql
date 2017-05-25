@@ -941,3 +941,10 @@ out;
 rel(11,5,11.1,5.1);
 convert meta ::id=id(), type=type(), version=version(), timestamp=timestamp(), changeset=changeset(), uid=uid(), user=user();
 out;
+
+way(id:1303,1403,1503,1603,1703,1803);
+convert geometry ::id=id(), type=type(), length=length();
+out;
+rel(id:1333,1433,1673,1773,1873,1922);
+convert geometry ::id=id(), type=type(), length=length();
+out;

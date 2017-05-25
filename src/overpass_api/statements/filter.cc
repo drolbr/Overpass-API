@@ -43,7 +43,7 @@ class Filter_Constraint : public Query_Constraint
 
 template< typename Index, typename Maybe_Attic >
 void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
-    const Set_With_Context& into_context, Eval_Task& task)
+    Set_With_Context& into_context, Eval_Task& task)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -72,14 +72,14 @@ void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     return;
 
   Requested_Context requested_context = stmt->get_criterion()->request_context();
-  Prepare_Task_Context context(requested_context, rman);
+  Prepare_Task_Context context(requested_context, query, rman);
 
   Owner< Eval_Task > task(stmt->get_criterion()->get_task(context));
 
   Set_With_Context into_context;
   into_context.name = "";
   into_context.parent = &context;
-  into_context.prefetch(requested_context.object_usage, into, *rman.get_transaction());
+  into_context.prefetch(requested_context.object_usage, into, query, rman);
 
   if (task)
   {

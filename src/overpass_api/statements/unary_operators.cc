@@ -53,7 +53,7 @@ void Evaluator_Prefix_Operator::add_substatements(Statement* result, const std::
 }
 
 
-Eval_Task* Evaluator_Prefix_Operator::get_task(const Prepare_Task_Context& context)
+Eval_Task* Evaluator_Prefix_Operator::get_task(Prepare_Task_Context& context)
 {
   Eval_Task* rhs_task = rhs ? rhs->get_task(context) : 0;
   return new Unary_Eval_Task(rhs_task, this);

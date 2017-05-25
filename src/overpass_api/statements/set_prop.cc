@@ -182,7 +182,7 @@ Requested_Context Set_Prop_Statement::request_context() const
 }
 
 
-Set_Prop_Task* Set_Prop_Statement::get_task(const Prepare_Task_Context& context)
+Set_Prop_Task* Set_Prop_Statement::get_task(Prepare_Task_Context& context)
 {
   Eval_Task* rhs_task = tag_value ? tag_value->get_task(context) : 0;
   return new Set_Prop_Task(rhs_task, keys.empty() ? "" : keys.front(),

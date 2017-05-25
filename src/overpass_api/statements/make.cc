@@ -87,7 +87,7 @@ void Make_Statement::execute(Resource_Manager& rman)
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     requested_context.add((*it)->request_context());
   
-  Prepare_Task_Context context(requested_context, rman);
+  Prepare_Task_Context context(requested_context, *this, rman);
   
   Owning_Array< Set_Prop_Task* > tasks;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
