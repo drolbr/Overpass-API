@@ -748,7 +748,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
       type = get_identifier_token(token, error_output, "Element class name");
 
     Token_Tree tree(token, error_output, false);
-    if (!tree.tree.empty())
+    if (tree.tree.size() > 1)
     {
       Statement::QL_Context tree_context = (strategy == "convert" ? Statement::in_convert : Statement::generic);
       Token_Node_Ptr tree_it(tree, tree.tree[0].rhs);

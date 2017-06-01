@@ -211,6 +211,8 @@ Statement* Statement::Factory::create_statement(const Token_Node_Ptr& tree_it, S
             tree_it->line_col.first);
     }
   }
+  else if (tree_it->token == "")
+    error_output->add_parse_error("Evaluator expected, but empty token found.", tree_it->line_col.first);
   else
   {
     std::map< std::string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
