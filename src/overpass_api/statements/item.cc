@@ -79,9 +79,9 @@ void collect_elements(const std::map< TIndex, std::vector< TObject > >& from,
 bool Item_Constraint::collect_nodes(Resource_Manager& rman, Set& into,
 				    const std::vector< Uint64 >& ids, bool invert_ids)
 {
-  collect_elements(rman.sets()[item->get_result_name()].nodes, into.nodes,
+  collect_elements(rman.sets()[item->get_input_name()].nodes, into.nodes,
 		   ids, invert_ids);
-  collect_elements(rman.sets()[item->get_result_name()].attic_nodes, into.attic_nodes,
+  collect_elements(rman.sets()[item->get_input_name()].attic_nodes, into.attic_nodes,
                    ids, invert_ids);
   return true;
 }
@@ -92,20 +92,20 @@ bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
 {
   if (type == QUERY_WAY)
   {
-    collect_elements(rman.sets()[item->get_result_name()].ways, into.ways,
+    collect_elements(rman.sets()[item->get_input_name()].ways, into.ways,
                      ids, invert_ids);
-    collect_elements(rman.sets()[item->get_result_name()].attic_ways, into.attic_ways,
+    collect_elements(rman.sets()[item->get_input_name()].attic_ways, into.attic_ways,
 		     ids, invert_ids);
   }
   if (type == QUERY_RELATION)
   {
-    collect_elements(rman.sets()[item->get_result_name()].relations, into.relations,
+    collect_elements(rman.sets()[item->get_input_name()].relations, into.relations,
 		     ids, invert_ids);
-    collect_elements(rman.sets()[item->get_result_name()].attic_relations, into.attic_relations,
+    collect_elements(rman.sets()[item->get_input_name()].attic_relations, into.attic_relations,
                      ids, invert_ids);
   }
   if (type == QUERY_AREA)
-    collect_elements(rman.sets()[item->get_result_name()].areas, into.areas,
+    collect_elements(rman.sets()[item->get_input_name()].areas, into.areas,
 		     ids, invert_ids);
   return true;
 }
@@ -113,13 +113,13 @@ bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
 
 void Item_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  item_filter_map(into.nodes, rman.sets()[item->get_result_name()].nodes);
-  item_filter_map(into.attic_nodes, rman.sets()[item->get_result_name()].attic_nodes);
-  item_filter_map(into.ways, rman.sets()[item->get_result_name()].ways);
-  item_filter_map(into.attic_ways, rman.sets()[item->get_result_name()].attic_ways);
-  item_filter_map(into.relations, rman.sets()[item->get_result_name()].relations);
-  item_filter_map(into.attic_relations, rman.sets()[item->get_result_name()].attic_relations);
-  item_filter_map(into.areas, rman.sets()[item->get_result_name()].areas);
+  item_filter_map(into.nodes, rman.sets()[item->get_input_name()].nodes);
+  item_filter_map(into.attic_nodes, rman.sets()[item->get_input_name()].attic_nodes);
+  item_filter_map(into.ways, rman.sets()[item->get_input_name()].ways);
+  item_filter_map(into.attic_ways, rman.sets()[item->get_input_name()].attic_ways);
+  item_filter_map(into.relations, rman.sets()[item->get_input_name()].relations);
+  item_filter_map(into.attic_relations, rman.sets()[item->get_input_name()].attic_relations);
+  item_filter_map(into.areas, rman.sets()[item->get_input_name()].areas);
 }
 
 //-----------------------------------------------------------------------------
