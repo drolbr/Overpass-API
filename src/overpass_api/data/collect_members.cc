@@ -37,7 +37,7 @@ std::vector< Node::Id_Type > way_nd_ids(const std::map< Uint31_Index, std::vecto
     }
   }
 
-  sort(ids.begin(), ids.end());
+  std::sort(ids.begin(), ids.end());
   ids.erase(unique(ids.begin(), ids.end()), ids.end());
 
   return ids;
@@ -62,7 +62,7 @@ std::vector< Node::Id_Type > way_nd_ids
     }
   }
 
-  sort(ids.begin(), ids.end());
+  std::sort(ids.begin(), ids.end());
   ids.erase(unique(ids.begin(), ids.end()), ids.end());
 
   return ids;
@@ -153,7 +153,7 @@ inline std::set< std::pair< Uint32_Index, Uint32_Index > > calc_node_children_ra
     else
       ranges.push_back(std::make_pair(*it, (*it) + 1));
   }
-  sort(ranges.begin(), ranges.end());
+  std::sort(ranges.begin(), ranges.end());
   uint32 pos = 0;
   for (std::vector< std::pair< uint32, uint32 > >::const_iterator it = ranges.begin();
       it != ranges.end(); ++it)
@@ -180,7 +180,7 @@ std::vector< Uint31_Index > collect_relation_req
     req.push_back(random.get(it->val()));
 
   rman.health_check(stmt);
-  sort(req.begin(), req.end());
+  std::sort(req.begin(), req.end());
   req.erase(unique(req.begin(), req.end()), req.end());
   rman.health_check(stmt);
 
@@ -192,13 +192,8 @@ std::vector< Uint31_Index > collect_attic_relation_req
     (const Statement& stmt, Resource_Manager& rman,
      const std::vector< Relation::Id_Type >& map_ids)
 {
-  uint64 timestamp = rman.get_desired_timestamp();
-  std::vector< std::pair< Relation::Id_Type, uint64 > > ids;
-  for (std::vector< Relation::Id_Type >::const_iterator it = map_ids.begin(); it != map_ids.end(); ++it)
-    ids.push_back(std::make_pair(*it, timestamp));
-
   std::pair< std::vector< Uint31_Index >, std::vector< Uint31_Index > > idxs
-      = get_indexes< Uint31_Index, Relation_Skeleton >(ids, rman);
+      = get_indexes< Uint31_Index, Relation_Skeleton >(map_ids, rman);
 
   std::vector< Uint31_Index > req;
   std::set_union(idxs.first.begin(), idxs.first.end(), idxs.second.begin(), idxs.second.end(),
@@ -228,7 +223,7 @@ std::vector< Uint31_Index > collect_way_req
 
   if (stmt)
     rman.health_check(*stmt);
-  sort(req.begin(), req.end());
+  std::sort(req.begin(), req.end());
   req.erase(unique(req.begin(), req.end()), req.end());
   if (stmt)
     rman.health_check(*stmt);
@@ -271,7 +266,7 @@ std::vector< Uint31_Index > relation_relation_member_indices
     // Treat relations with really large indices: get the node indexes from nodes.std::map.
     filter_for_member_ids(it->second, map_ids, Relation_Entry::RELATION);
 
-  sort(map_ids.begin(), map_ids.end());
+  std::sort(map_ids.begin(), map_ids.end());
   rman.health_check(stmt);
 
   return collect_relation_req(stmt, rman, map_ids);
@@ -292,7 +287,7 @@ std::vector< Uint31_Index > relation_relation_member_indices
     // Treat relations with really large indices: get the node indexes from nodes.std::map.
     filter_for_member_ids(it->second, map_ids, Relation_Entry::RELATION);
 
-  sort(map_ids.begin(), map_ids.end());
+  std::sort(map_ids.begin(), map_ids.end());
   map_ids.erase(std::unique(map_ids.begin(), map_ids.end()), map_ids.end());
   rman.health_check(stmt);
   std::vector< Uint31_Index > current = collect_relation_req(stmt, rman, map_ids);
@@ -303,7 +298,7 @@ std::vector< Uint31_Index > relation_relation_member_indices
     // Treat relations with really large indices: get the node indexes from nodes.std::map.
     filter_for_member_ids(it->second, map_ids, Relation_Entry::RELATION);
 
-  sort(map_ids.begin(), map_ids.end());
+  std::sort(map_ids.begin(), map_ids.end());
   map_ids.erase(std::unique(map_ids.begin(), map_ids.end()), map_ids.end());
   rman.health_check(stmt);
   std::vector< Uint31_Index > attic = collect_attic_relation_req(stmt, rman, map_ids);
@@ -338,7 +333,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
     else
       parents.push_back(it->first.val());
   }
-  sort(parents.begin(), parents.end());
+  std::sort(parents.begin(), parents.end());
   parents.erase(unique(parents.begin(), parents.end()), parents.end());
   if (stmt)
     rman.health_check(*stmt);
@@ -390,7 +385,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
     else
       parents.push_back(it->first.val());
   }
-  sort(parents.begin(), parents.end());
+  std::sort(parents.begin(), parents.end());
   parents.erase(unique(parents.begin(), parents.end()), parents.end());
   if (stmt)
     rman.health_check(*stmt);
@@ -417,7 +412,7 @@ std::vector< Relation::Id_Type > relation_relation_member_ids
       filter_for_member_ids(it->second, ids, Relation_Entry::RELATION);
   }
 
-  sort(ids.begin(), ids.end());
+  std::sort(ids.begin(), ids.end());
 
   return ids;
 }
@@ -448,7 +443,7 @@ std::vector< Relation::Id_Type > relation_relation_member_ids
       filter_for_member_ids(it->second, ids, Relation_Entry::RELATION);
   }
 
-  sort(ids.begin(), ids.end());
+  std::sort(ids.begin(), ids.end());
 
   return ids;
 }

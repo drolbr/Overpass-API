@@ -307,7 +307,7 @@ std::vector< typename TObject::Id_Type > filter_for_ids(const std::map< TIndex, 
     iit != it->second.end(); ++iit)
     ids.push_back(iit->id);
   }
-  sort(ids.begin(), ids.end());
+  std::sort(ids.begin(), ids.end());
 
   return ids;
 }
@@ -351,10 +351,10 @@ void indexed_set_difference(std::map< TIndex, std::vector< TObject > >& result,
   for (typename std::map< TIndex, std::vector< TObject > >::iterator
       it = to_substract.begin(); it != to_substract.end(); ++it)
   {
-    sort(it->second.begin(), it->second.end());
+    std::sort(it->second.begin(), it->second.end());
     std::vector< TObject > other;
     other.swap(result[it->first]);
-    sort(other.begin(), other.end());
+    std::sort(other.begin(), other.end());
     set_difference(other.begin(), other.end(), it->second.begin(), it->second.end(),
                    back_inserter(result[it->first]));
   }
@@ -362,23 +362,22 @@ void indexed_set_difference(std::map< TIndex, std::vector< TObject > >& result,
 
 //-----------------------------------------------------------------------------
 
-/* Returns for the given std::set of ids the std::set of corresponding indexes.
+/* Returns for the given set of ids the set of corresponding indexes.
  * For ids where the timestamp is zero, only the current index is returned.
  * For ids where the timestamp is nonzero, all attic indexes are also returned.
  * The function requires that the ids are sorted ascending by id.
  */
 template< typename Index, typename Skeleton >
 std::pair< std::vector< Index >, std::vector< Index > > get_indexes
-    (const std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >& ids,
-     Resource_Manager& rman)
+    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman)
 {
   std::pair< std::vector< Index >, std::vector< Index > > result;
 
   Random_File< typename Skeleton::Id_Type, Index > current(rman.get_transaction()->random_index
       (current_skeleton_file_properties< Skeleton >()));
-  for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
+  for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
       it = ids.begin(); it != ids.end(); ++it)
-    result.first.push_back(current.get(it->first.val()));
+    result.first.push_back(current.get(it->val()));
 
   std::sort(result.first.begin(), result.first.end());
   result.first.erase(std::unique(result.first.begin(), result.first.end()), result.first.end());
@@ -388,15 +387,15 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
     Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
         (attic_skeleton_file_properties< Skeleton >()));
     std::set< typename Skeleton::Id_Type > idx_list_ids;
-    for (typename std::vector< std::pair< typename Skeleton::Id_Type, uint64 > >::const_iterator
+    for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
         it = ids.begin(); it != ids.end(); ++it)
     {
-      if (it->second == 0 || attic_random.get(it->first.val()).val() == 0)
+      if (attic_random.get(it->val()).val() == 0)
         ;
-      else if (attic_random.get(it->first.val()) == 0xff)
-        idx_list_ids.insert(it->first.val());
+      else if (attic_random.get(it->val()) == 0xff)
+        idx_list_ids.insert(it->val());
       else
-        result.second.push_back(attic_random.get(it->first.val()));
+        result.second.push_back(attic_random.get(it->val()));
     }
 
     Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
