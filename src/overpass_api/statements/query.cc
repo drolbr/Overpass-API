@@ -1510,7 +1510,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
         ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
             (into.nodes, into.attic_nodes,
-             node_ids, invert_ids, timestamp, range_req_32, *this, rman,
+             node_ids, invert_ids, range_req_32, *this, rman,
              *osm_base_settings().NODES, *attic_settings().NODES);
       }
     }
@@ -1526,7 +1526,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
 	::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
 	    (into.ways, into.attic_ways,
-             ids, invert_ids, timestamp, range_req_31, *this, rman,
+             ids, invert_ids, range_req_31, *this, rman,
              *osm_base_settings().WAYS, *attic_settings().WAYS);
       }
     }
@@ -1542,7 +1542,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
 	::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
 	    (into.relations, into.attic_relations,
-             ids, invert_ids, timestamp, range_req_31, *this, rman,
+             ids, invert_ids, range_req_31, *this, rman,
              *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);
       }
     }

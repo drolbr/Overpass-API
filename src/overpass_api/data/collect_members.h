@@ -191,11 +191,13 @@ template < typename TIndex, typename TObject >
 void get_elements_by_id_from_db
     (std::map< TIndex, std::vector< TObject > >& elements,
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
-     const std::vector< typename TObject::Id_Type >& ids, bool invert_ids, uint64 timestamp,
+     const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
      const std::set< std::pair< TIndex, TIndex > >& range_req,
      const Statement& query, Resource_Manager& rman,
      File_Properties& file_prop, File_Properties& attic_file_prop)
 {
+  uint64 timestamp = rman.get_desired_timestamp();
+  
   elements.clear();
   attic_elements.clear();
   if (ids.empty())
