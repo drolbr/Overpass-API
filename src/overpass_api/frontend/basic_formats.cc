@@ -17,36 +17,16 @@
 */
 
 
+#include "../core/datatypes.h"
 #include "basic_formats.h"
 
 
 #include <string>
 
 
-const std::string& iso_string(uint64 timestamp)
+std::string iso_string(uint64 timestamp)
 {
-  uint32 year = (timestamp)>>26;
-  uint32 month = ((timestamp)>>22) & 0xf;
-  uint32 day = ((timestamp)>>17) & 0x1f;
-  uint32 hour = ((timestamp)>>12) & 0x1f;
-  uint32 minute = ((timestamp)>>6) & 0x3f;
-  uint32 second = timestamp & 0x3f;
-  static std::string result("    -  -  T  :  :  Z");
-  result[0] = (year / 1000) % 10 + '0';
-  result[1] = (year / 100) % 10 + '0';
-  result[2] = (year / 10) % 10 + '0';
-  result[3] = year % 10 + '0';
-  result[5] = (month / 10) % 10 + '0';
-  result[6] = month % 10 + '0';
-  result[8] = (day / 10) % 10 + '0';
-  result[9] = day % 10 + '0';
-  result[11] = (hour / 10) % 10 + '0';
-  result[12] = hour % 10 + '0';
-  result[14] = (minute / 10) % 10 + '0';
-  result[15] = minute % 10 + '0';
-  result[17] = (second / 10) % 10 + '0';
-  result[18] = second % 10 + '0';
-  return result;
+  return Timestamp(timestamp).str();
 }
 
 
