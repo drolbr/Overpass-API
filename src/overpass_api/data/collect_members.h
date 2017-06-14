@@ -44,7 +44,6 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_parents,
-     uint64 timestamp,
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
      const std::vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
 
@@ -59,14 +58,12 @@ std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
-     uint64 timestamp,
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges = 0,
      const std::vector< Way::Id_Type >* way_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
 
 std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     uint64 timestamp,
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges = 0);
 
 std::map< Uint32_Index, std::vector< Node_Skeleton > > relation_node_members
@@ -80,14 +77,12 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
-     uint64 timestamp,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
      const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
 
 std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     uint64 timestamp,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0);
 
 std::map< Uint32_Index, std::vector< Node_Skeleton > > way_members
@@ -101,7 +96,6 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
-     uint64 timestamp,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
      const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
 

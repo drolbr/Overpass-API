@@ -101,7 +101,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
   std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
       std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
       = relation_node_members(&query, rman,
-          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp,
+          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
           north < south ? 0 : &node_ranges);
   
   // Order node ids by id.
@@ -129,7 +129,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
   std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > ways_by_idx
       = relation_way_members(&query, rman,
-          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations, timestamp,
+          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
           north < south ? 0 : &way_ranges);
   
   for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways_by_idx.first.begin();

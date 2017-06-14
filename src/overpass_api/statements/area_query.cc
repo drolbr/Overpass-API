@@ -163,7 +163,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
     get_ranges(rman, node_ranges);
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
+        = relation_node_members(&query, rman, into.attic_relations, &node_ranges);
 
     // filter for those nodes that are in one of the areas
     area->collect_nodes(node_members, area_blocks_req, false, rman);
@@ -172,7 +172,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
     get_ranges(rman, way_ranges);
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
+        = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
 
     // Filter for those ways that are in one of the areas
     area->collect_ways(Way_Geometry_Store(way_members_, timestamp, query, rman),

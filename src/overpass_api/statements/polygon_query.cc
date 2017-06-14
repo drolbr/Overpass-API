@@ -137,14 +137,14 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
     // Retrieve all nodes referred by the relations.
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(&query, rman, into.attic_relations, timestamp, &node_ranges);
+        = relation_node_members(&query, rman, into.attic_relations, &node_ranges);
 
     // filter for those nodes that are in one of the areas
     polygon->collect_nodes(node_members, false);
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, timestamp, &way_ranges);
+        = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
 
     polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, timestamp, query, rman),
 			  false, query, rman);
