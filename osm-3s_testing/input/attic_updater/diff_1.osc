@@ -572,6 +572,13 @@
     <tag k="foo" v="bar_1802"/>
     <tag k="foo_1802" v="bar"/>
   </way>
+
+  <way id="1811" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo">
+    <nd ref="18112"/>
+    <nd ref="18111"/>
+    <tag k="foo" v="bar_1811"/>
+    <tag k="foo_1811" v="bar"/>
+  </way>
 </modify>
   
 <modify>
