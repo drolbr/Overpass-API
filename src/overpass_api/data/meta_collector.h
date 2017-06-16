@@ -268,10 +268,10 @@ const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* Attic_Meta_Coll
     const Index& index, typename Object::Id_Type ref, uint64 timestamp)
 {
   const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
-      = attic.get(index, ref, timestamp);
+      = current.get(index, ref, timestamp);
   if (meta)
     return meta;
-  return current.get(index, ref, timestamp);
+  return attic.get(index, ref, timestamp);
 }
 
 
