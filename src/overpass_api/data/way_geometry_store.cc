@@ -104,7 +104,7 @@ Way_Geometry_Store::Way_Geometry_Store
 
 
 Way_Geometry_Store::Way_Geometry_Store
-    (const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+    (const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
      const Statement& query, Resource_Manager& rman)
 {
   // Retrieve all nodes referred by the ways.
@@ -114,7 +114,7 @@ Way_Geometry_Store::Way_Geometry_Store
       small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
       Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current, attic);
   
-  keep_matching_skeletons(nodes, current, attic, timestamp);
+  keep_matching_skeletons(nodes, current, attic, rman.get_desired_timestamp());
 }
 
 
@@ -137,10 +137,10 @@ Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
 
 
 Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
-    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
     const Statement& query, Resource_Manager& rman,
     double south_, double north_, double west_, double east_)
-  : Way_Geometry_Store(ways, timestamp, query, rman),
+  : Way_Geometry_Store(ways, query, rman),
     south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {}
 

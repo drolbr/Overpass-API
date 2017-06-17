@@ -130,7 +130,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   if (timestamp != NOW)
   {
     //Process ways
-    polygon->collect_ways(into.attic_ways, Way_Geometry_Store(into.attic_ways, timestamp, query, rman),
+    polygon->collect_ways(into.attic_ways, Way_Geometry_Store(into.attic_ways, query, rman),
 			  true, query, rman);
 
     //Process relations
@@ -146,7 +146,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
         = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
 
-    polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, timestamp, query, rman),
+    polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, query, rman),
 			  false, query, rman);
 
     filter_relations_expensive(order_attic_by_id(node_members, Order_By_Node_Id()),

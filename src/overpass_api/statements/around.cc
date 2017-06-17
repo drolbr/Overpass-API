@@ -492,7 +492,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
   if (timestamp != NOW)
   {
     filter_nodes_expensive(*around, into.attic_nodes);
-    filter_ways_expensive(*around, Way_Geometry_Store(into.attic_ways, timestamp, query, rman), into.attic_ways);
+    filter_ways_expensive(*around, Way_Geometry_Store(into.attic_ways, query, rman), into.attic_ways);
 
     {
       //Process relations
@@ -514,7 +514,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
           = order_attic_by_id(way_members_, Order_By_Way_Id());
 
       filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
-          Way_Geometry_Store(way_members_, timestamp, query, rman), into.attic_relations);
+          Way_Geometry_Store(way_members_, query, rman), into.attic_relations);
     }
   }
   //TODO: areas
@@ -911,11 +911,10 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
       = relation_way_members(&query, rman, input.relations);
   add_ways(way_members, Way_Geometry_Store(way_members, query, rman));
 
-  uint64 timestamp = rman.get_desired_timestamp();
-  if (timestamp != NOW)
+  if (rman.get_desired_timestamp() != NOW)
   {
     add_nodes(input.attic_nodes);
-    add_ways(input.attic_ways, Way_Geometry_Store(input.attic_ways, rman.get_desired_timestamp(), query, rman));
+    add_ways(input.attic_ways, Way_Geometry_Store(input.attic_ways, query, rman));
 
     // Retrieve all node and way members referred by the relations.
     add_nodes(relation_node_members(&query, rman, input.attic_relations));
@@ -923,7 +922,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members
         = relation_way_members(&query, rman, input.attic_relations);
-    add_ways(way_members, Way_Geometry_Store(way_members, timestamp, query, rman));
+    add_ways(way_members, Way_Geometry_Store(way_members, query, rman));
   }
 }
 

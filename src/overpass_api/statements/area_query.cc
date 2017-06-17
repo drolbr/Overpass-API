@@ -154,7 +154,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     area->collect_nodes(into.attic_nodes, area_blocks_req, true, rman);
 
     //Process ways
-    area->collect_ways(Way_Geometry_Store(into.attic_ways, timestamp, query, rman),
+    area->collect_ways(Way_Geometry_Store(into.attic_ways, query, rman),
 		       into.attic_ways, area_blocks_req, false, query, rman);
 
     //Process relations
@@ -175,7 +175,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
         = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
 
     // Filter for those ways that are in one of the areas
-    area->collect_ways(Way_Geometry_Store(way_members_, timestamp, query, rman),
+    area->collect_ways(Way_Geometry_Store(way_members_, query, rman),
 		       way_members_, area_blocks_req, false, query, rman);
 
     filter_relations_expensive(order_attic_by_id(node_members, Order_By_Node_Id()),

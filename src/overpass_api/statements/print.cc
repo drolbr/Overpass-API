@@ -205,7 +205,7 @@ Extra_Data::Extra_Data(
     if (rman.get_desired_timestamp() < NOW)
     {
       attic_way_geometry_store = new Way_Bbox_Geometry_Store(
-          to_print.attic_ways, rman.get_desired_timestamp(), stmt, rman,
+          to_print.attic_ways, stmt, rman,
           south, north, west, east);
     }
 
@@ -214,7 +214,7 @@ Extra_Data::Extra_Data(
     if (rman.get_desired_timestamp() < NOW)
     {
       attic_relation_geometry_store = new Relation_Geometry_Store(
-          to_print.attic_relations, rman.get_desired_timestamp(), stmt, rman,
+          to_print.attic_relations, stmt, rman,
           south, north, west, east);
     }
   }

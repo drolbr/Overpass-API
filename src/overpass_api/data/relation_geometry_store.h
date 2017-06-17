@@ -33,7 +33,7 @@ public:
       const Statement& query, Resource_Manager& rman,
       double south_ = 1., double north_ = 0., double west_ = 0., double east_ = 0.);
   Relation_Geometry_Store
-      (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations, uint64 timestamp,
+      (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
       const Statement& query, Resource_Manager& rman,
       double south_ = 1., double north_ = 0., double west_ = 0., double east_ = 0.);
       

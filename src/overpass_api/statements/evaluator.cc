@@ -161,12 +161,11 @@ void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stm
     
     way_geometry_store = new Way_Geometry_Store(set.ways, stmt, rman);
     if (!set.attic_ways.empty())
-      attic_way_geometry_store = new Way_Geometry_Store(set.attic_ways, rman.get_desired_timestamp(), stmt, rman);
+      attic_way_geometry_store = new Way_Geometry_Store(set.attic_ways, stmt, rman);
     
     relation_geometry_store = new Relation_Geometry_Store(set.relations, stmt, rman);
     if (!set.attic_relations.empty())
-      attic_relation_geometry_store = new Relation_Geometry_Store(
-          set.attic_relations, rman.get_desired_timestamp(), stmt, rman);
+      attic_relation_geometry_store = new Relation_Geometry_Store(set.attic_relations, stmt, rman);
   }
   
   if (usage & Set_Usage::META)

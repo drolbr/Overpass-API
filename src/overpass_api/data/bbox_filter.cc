@@ -209,7 +209,7 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
   if (timestamp != NOW)
   {
     //Process attic ways
-    filter_ways_expensive(*this, Way_Geometry_Store(into.attic_ways, timestamp, query, rman), into.attic_ways);
+    filter_ways_expensive(*this, Way_Geometry_Store(into.attic_ways, query, rman), into.attic_ways);
 
     //Process attic relations
 
@@ -226,7 +226,7 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
         = order_attic_by_id(way_members_, Order_By_Way_Id());
 
     filter_relations_expensive(*this, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_, timestamp, query, rman), into.attic_relations);
+        Way_Geometry_Store(way_members_, query, rman), into.attic_relations);
   }
 
   //TODO: filter areas

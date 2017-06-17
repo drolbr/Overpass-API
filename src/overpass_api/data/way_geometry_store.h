@@ -33,7 +33,7 @@ class Way_Geometry_Store
 public:
   Way_Geometry_Store(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
                      const Statement& query, Resource_Manager& rman);
-  Way_Geometry_Store(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+  Way_Geometry_Store(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
                      const Statement& query, Resource_Manager& rman);
 
   // return the empty std::vector if the way is not found
@@ -50,7 +50,7 @@ public:
   Way_Bbox_Geometry_Store(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
                      const Statement& query, Resource_Manager& rman,
                      double south_, double north_, double west_, double east_);
-  Way_Bbox_Geometry_Store(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways, uint64 timestamp,
+  Way_Bbox_Geometry_Store(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
                      const Statement& query, Resource_Manager& rman,
                      double south_, double north_, double west_, double east_);
 
