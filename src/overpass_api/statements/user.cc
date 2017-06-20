@@ -328,9 +328,9 @@ void User_Statement::execute(Resource_Manager& rman)
   if (bbox_limitation)
   {
     Bbox_Filter filter(*bbox_limitation);
-    filter.filter(into, rman.get_desired_timestamp());
+    filter.filter(into);
     constraint.filter(*this, rman, into, rman.get_desired_timestamp());
-    filter.filter(*this, rman, into, rman.get_desired_timestamp());
+    filter.filter(*this, rman, into, rman.get_desired_timestamp() != NOW);
   }
   else
     constraint.filter(*this, rman, into, rman.get_desired_timestamp());

@@ -82,13 +82,13 @@ bool Bbox_Constraint::get_ranges
 
 void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  filter_.filter(into, timestamp);
+  filter_.filter(into);
 }
 
 
 void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
 {
-  filter_.filter(query, rman, into, timestamp);
+  filter_.filter(query, rman, into, timestamp != NOW);
 }
 
 //-----------------------------------------------------------------------------

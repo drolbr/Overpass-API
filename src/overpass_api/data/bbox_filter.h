@@ -34,8 +34,8 @@ struct Bbox_Filter
 
   bool matches(const std::vector< Quad_Coord >& way_geometry) const;
 
-  void filter(Set& into, uint64 timestamp) const;
-  void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp) const;
+  void filter(Set& into) const;
+  void filter(const Statement& query, Resource_Manager& rman, Set& into, bool with_attic) const;
 
 private:
   Bbox_Double bbox;

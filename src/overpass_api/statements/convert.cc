@@ -144,21 +144,21 @@ void Convert_Statement::execute(Resource_Manager& rman)
     generate_elems< Uint32_Index, Node_Skeleton >(
         context_from->name, context_from->base->nodes, *context_from, tasks,
         declared_keys, into, rman, type);
-    if (rman.get_desired_timestamp() != NOW)
+    if (!context_from->base->attic_nodes.empty())
       generate_elems< Uint32_Index, Attic< Node_Skeleton > >(
           context_from->name, context_from->base->attic_nodes, *context_from, tasks,
           declared_keys, into, rman, type);
     generate_elems< Uint31_Index, Way_Skeleton >(
         context_from->name, context_from->base->ways, *context_from, tasks,
         declared_keys, into, rman, type);
-    if (rman.get_desired_timestamp() != NOW)
+    if (!context_from->base->attic_ways.empty())
       generate_elems< Uint31_Index, Attic< Way_Skeleton > >(
           context_from->name, context_from->base->attic_ways, *context_from, tasks,
           declared_keys, into, rman, type);
     generate_elems< Uint31_Index, Relation_Skeleton >(
         context_from->name, context_from->base->relations, *context_from, tasks,
         declared_keys, into, rman, type);
-    if (rman.get_desired_timestamp() != NOW)
+    if (!context_from->base->attic_relations.empty())
       generate_elems< Uint31_Index, Attic< Relation_Skeleton > >(
           context_from->name, context_from->base->attic_relations, *context_from, tasks,
           declared_keys, into, rman, type);
