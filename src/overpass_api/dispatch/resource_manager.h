@@ -91,7 +91,7 @@ public:
   uint64 get_diff_from_timestamp() const { return diff_from_timestamp; }
   uint64 get_diff_to_timestamp() const { return diff_to_timestamp; }
 
-  void set_desired_timestamp(uint64 timestamp) { desired_timestamp = timestamp; }
+  void set_desired_timestamp(uint64 timestamp) { desired_timestamp = (timestamp == 0 ? NOW : timestamp); }
   void set_diff_from_timestamp(uint64 timestamp) { diff_from_timestamp = timestamp; }
   void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
 

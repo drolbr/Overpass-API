@@ -1182,11 +1182,7 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair<
     return true;
   }
 
-  uint64 timestamp = rman.get_desired_timestamp();
-  if (timestamp == 0)
-    timestamp = NOW;
-
-  if (timestamp == NOW)
+  if (rman.get_desired_timestamp() == NOW)
   {
     if (stmt->get_type() == RECURSE_RELATION_NODE)
     {
@@ -1243,11 +1239,7 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair<
     return true;
   }
 
-  uint64 timestamp = rman.get_desired_timestamp();
-  if (timestamp == 0)
-    timestamp = NOW;
-
-  if (timestamp == NOW)
+  if (rman.get_desired_timestamp() == NOW)
   {
     if (stmt->get_type() == RECURSE_RELATION_WAY)
     {
