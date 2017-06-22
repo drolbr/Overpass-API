@@ -159,42 +159,16 @@ Osm_Script_Statement::Osm_Script_Statement
 
   if (attributes["date"] != "")
   {
-    std::string timestamp = attributes["date"];
-
-    desired_timestamp = 0;
-    desired_timestamp |= (atoll(timestamp.c_str())<<26); //year
-    desired_timestamp |= (atoi(timestamp.c_str()+5)<<22); //month
-    desired_timestamp |= (atoi(timestamp.c_str()+8)<<17); //day
-    desired_timestamp |= (atoi(timestamp.c_str()+11)<<12); //hour
-    desired_timestamp |= (atoi(timestamp.c_str()+14)<<6); //minute
-    desired_timestamp |= atoi(timestamp.c_str()+17); //second
-
+    desired_timestamp = Timestamp(attributes["date"]).timestamp;
     if (desired_timestamp == 0)
-    {
-      std::ostringstream temp;
-      temp<<"The attribute \"date\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
-      add_static_error(temp.str());
-    }
+      add_static_error("The attribute \"date\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".");
   }
 
   if (attributes["from"] != "")
   {
-    std::string timestamp = attributes["from"];
-
-    comparison_timestamp = 0;
-    comparison_timestamp |= (atoll(timestamp.c_str())<<26); //year
-    comparison_timestamp |= (atoi(timestamp.c_str()+5)<<22); //month
-    comparison_timestamp |= (atoi(timestamp.c_str()+8)<<17); //day
-    comparison_timestamp |= (atoi(timestamp.c_str()+11)<<12); //hour
-    comparison_timestamp |= (atoi(timestamp.c_str()+14)<<6); //minute
-    comparison_timestamp |= atoi(timestamp.c_str()+17); //second
-
+    comparison_timestamp = Timestamp(attributes["from"]).timestamp;
     if (comparison_timestamp == 0)
-    {
-      std::ostringstream temp;
-      temp<<"The attribute \"from\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".";
-      add_static_error(temp.str());
-    }
+      add_static_error("The attribute \"from\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".");
   }
 
   if (attributes["augmented"] != "")

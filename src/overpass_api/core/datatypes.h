@@ -520,6 +520,30 @@ struct Timestamp
     timestamp |= ((minute & 0x3f)<<6); //minute
     timestamp |= (second & 0x3f); //second
   }
+  
+  Timestamp(const std::string& input) : timestamp(0)
+  {
+    if (input.size() < 19
+        || !isdigit(input[0]) || !isdigit(input[1])
+        || !isdigit(input[2]) || !isdigit(input[3])
+        || !isdigit(input[5]) || !isdigit(input[6])
+        || !isdigit(input[8]) || !isdigit(input[9])
+        || !isdigit(input[11]) || !isdigit(input[12])
+        || !isdigit(input[14]) || !isdigit(input[15])
+        || !isdigit(input[17]) || !isdigit(input[18]))
+      return;
+
+    timestamp |= (uint64(four_digits(&input[0]) & 0x3fff)<<26); //year
+    timestamp |= ((two_digits(&input[5]) & 0xf)<<22); //month
+    timestamp |= ((two_digits(&input[8]) & 0x1f)<<17); //day
+    timestamp |= ((two_digits(&input[11]) & 0x1f)<<12); //hour
+    timestamp |= ((two_digits(&input[14]) & 0x3f)<<6); //minute
+    timestamp |= (two_digits(&input[17]) & 0x3f); //second
+  }
+  
+  static int two_digits(const char* input) { return (input[0] - '0')*10 + (input[1] - '0'); }
+  static int four_digits(const char* input)
+  { return (input[0] - '0')*1000 + (input[1] - '0')*100 + (input[2] - '0')*10 + (input[3] - '0'); }
 
   static int year(uint64 timestamp) { return ((timestamp>>26) & 0x3fff); }
   static int month(uint64 timestamp) { return ((timestamp>>22) & 0xf); }

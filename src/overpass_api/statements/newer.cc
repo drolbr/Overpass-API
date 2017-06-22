@@ -137,24 +137,9 @@ Newer_Statement::Newer_Statement
 
   eval_attributes_array(get_name(), attributes, input_attributes);
 
-  std::string timestamp = attributes["than"];
-
-  if (timestamp.size() >= 19)
-    than_timestamp = Timestamp(
-        atol(timestamp.c_str()), //year
-        atoi(timestamp.c_str()+5), //month
-        atoi(timestamp.c_str()+8), //day
-        atoi(timestamp.c_str()+11), //hour
-        atoi(timestamp.c_str()+14), //minute
-        atoi(timestamp.c_str()+17) //second
-        ).timestamp;
-
+  than_timestamp = Timestamp(attributes["than"]).timestamp;
   if (than_timestamp == 0)
-  {
-    std::ostringstream temp;
-    temp<<"The attribute \"than\" must contain a timestamp exactly in the form yyyy-mm-ddThh:mm:ssZ.";
-    add_static_error(temp.str());
-  }
+    add_static_error("The attribute \"than\" must contain a timestamp exactly in the form yyyy-mm-ddThh:mm:ssZ.");
 }
 
 Newer_Statement::~Newer_Statement()
