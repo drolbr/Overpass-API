@@ -1157,12 +1157,12 @@ class Recurse_Constraint : public Query_Constraint
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
                           const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
                           const std::vector< Node::Id_Type >& ids,
-                          bool invert_ids, uint64 timestamp);
+                          bool invert_ids);
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
                           const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
                           int type,
                           const std::vector< Uint32_Index >& ids,
-                          bool invert_ids, uint64 timestamp);
+                          bool invert_ids);
     void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
     void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
     virtual ~Recurse_Constraint() {}
@@ -1340,13 +1340,13 @@ bool Recurse_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
      const std::vector< Node::Id_Type >& ids,
-     bool invert_ids, uint64 timestamp)
+     bool invert_ids)
 {
   std::map< std::string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   if (mit == rman.sets().end())
     return true;
 
-  if (timestamp == NOW)
+  if (rman.get_desired_timestamp() == NOW)
   {
     if (stmt->get_role())
     {
@@ -1426,7 +1426,7 @@ bool Recurse_Constraint::get_data
       sort_second(into.attic_nodes);
       sort_second(rel_attic_nodes);
       indexed_set_union(into.attic_nodes, rel_attic_nodes);
-      keep_matching_skeletons(into.nodes, into.attic_nodes, timestamp);
+      keep_matching_skeletons(into.nodes, into.attic_nodes, rman.get_desired_timestamp());
     }
     else if (stmt->get_type() == RECURSE_DOWN_REL)
     {
@@ -1453,7 +1453,7 @@ bool Recurse_Constraint::get_data
       sort_second(into.attic_nodes);
       sort_second(rel_attic_nodes);
       indexed_set_union(into.attic_nodes, rel_attic_nodes);
-      keep_matching_skeletons(into.nodes, into.attic_nodes, timestamp);
+      keep_matching_skeletons(into.nodes, into.attic_nodes, rman.get_desired_timestamp());
     }
   }
   return true;
@@ -1464,13 +1464,13 @@ bool Recurse_Constraint::get_data
      const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
      int type,
      const std::vector< Uint32_Index >& ids,
-     bool invert_ids, uint64 timestamp)
+     bool invert_ids)
 {
   std::map< std::string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   if (mit == rman.sets().end())
     return true;
 
-  if (timestamp == NOW)
+  if (rman.get_desired_timestamp() == NOW)
   {
     if (stmt->get_role())
     {
@@ -1754,7 +1754,7 @@ bool Recurse_Constraint::get_data
         into.relations.swap(rel_rels);
         into.attic_relations.swap(attic_rel_rels);
 
-        keep_matching_skeletons(into.relations, into.attic_relations, timestamp);
+        keep_matching_skeletons(into.relations, into.attic_relations, rman.get_desired_timestamp());
       }
     }
     else if (stmt->get_type() == RECURSE_NODE_WAY)
