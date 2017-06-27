@@ -41,7 +41,7 @@ class User_Constraint : public Query_Constraint
 
     bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~User_Constraint() {}
 
   private:
@@ -110,7 +110,7 @@ void user_filter_map_attic
 }
 
 
-void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   std::set< Uint32_Index > user_ids = user->get_ids(*rman.get_transaction());
 
@@ -118,15 +118,17 @@ void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   user_filter_map(into.ways, rman, user_ids, meta_settings().WAYS_META);
   user_filter_map(into.relations, rman, user_ids, meta_settings().RELATIONS_META);
 
-  if (timestamp != NOW)
-  {
+  if (!into.attic_nodes.empty())
     user_filter_map_attic(into.attic_nodes, rman, user_ids,
 			  meta_settings().NODES_META, attic_settings().NODES_META);
+    
+  if (!into.attic_ways.empty())
     user_filter_map_attic(into.attic_ways, rman, user_ids,
 			  meta_settings().WAYS_META, attic_settings().WAYS_META);
+    
+  if (!into.attic_relations.empty())
     user_filter_map_attic(into.attic_relations, rman, user_ids,
 			  meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
-  }
 
   into.areas.clear();
 }
@@ -329,11 +331,11 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     Bbox_Filter filter(*bbox_limitation);
     filter.filter(into);
-    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
+    constraint.filter(*this, rman, into);
     filter.filter(*this, rman, into, rman.get_desired_timestamp() != NOW);
   }
   else
-    constraint.filter(*this, rman, into, rman.get_desired_timestamp());
+    constraint.filter(*this, rman, into);
 
   transfer_output(rman, into);
   rman.health_check(*this);

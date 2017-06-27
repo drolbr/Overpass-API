@@ -46,8 +46,8 @@ class Area_Constraint : public Query_Constraint
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Area_Constraint() {}
 
   private:
@@ -84,26 +84,26 @@ bool Area_Constraint::get_ranges
 }
 
 
-void Area_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
   get_ranges(rman, ranges);
 
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
-  if (timestamp != NOW)
+  if (!into.attic_ways.empty())
     filter_ways_by_ranges(into.attic_ways, ranges);
 
   // pre-filter relations
   filter_relations_by_ranges(into.relations, ranges);
-  if (timestamp != NOW)
+  if (!into.attic_relations.empty())
     filter_relations_by_ranges(into.attic_relations, ranges);
 
   //TODO: filter areas
 }
 
 
-void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   std::set< Uint31_Index > area_blocks_req;
   std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
@@ -148,17 +148,18 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 			     order_by_id(way_members_, Order_By_Way_Id()),
 			     into.relations);
 
-  if (timestamp != NOW)
-  {
-    //Process nodes
+  //Process nodes
+  if (!into.attic_nodes.empty())
     area->collect_nodes(into.attic_nodes, area_blocks_req, true, rman);
 
-    //Process ways
+  //Process ways
+  if (!into.attic_ways.empty())
     area->collect_ways(Way_Geometry_Store(into.attic_ways, query, rman),
 		       into.attic_ways, area_blocks_req, false, query, rman);
 
-    //Process relations
-
+  //Process relations
+  if (!into.attic_relations.empty())
+  {
     // Retrieve all nodes referred by the relations.
     std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
     get_ranges(rman, node_ranges);
@@ -829,9 +830,9 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
       (into.nodes, into.attic_nodes,
        std::vector< Node::Id_Type >(), false, ranges, *this, rman,
        *osm_base_settings().NODES, *attic_settings().NODES);
-  constraint.filter(rman, into, rman.get_desired_timestamp());
+  constraint.filter(rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
-  constraint.filter(*this, rman, into, rman.get_desired_timestamp());
+  constraint.filter(*this, rman, into);
 
   transfer_output(rman, into);
   rman.health_check(*this);

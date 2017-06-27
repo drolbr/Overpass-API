@@ -37,7 +37,7 @@ class Newer_Constraint : public Query_Constraint
 
     bool delivers_data(Resource_Manager& rman) { return false; }
 
-    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Newer_Constraint() {}
 
   private:
@@ -104,21 +104,23 @@ void newer_filter_map_attic
 }
 
 
-void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   newer_filter_map(into.nodes, rman, this->timestamp, meta_settings().NODES_META);
   newer_filter_map(into.ways, rman, this->timestamp, meta_settings().WAYS_META);
   newer_filter_map(into.relations, rman, this->timestamp, meta_settings().RELATIONS_META);
 
-  if (timestamp != NOW)
-  {
+  if (!into.attic_nodes.empty())
     newer_filter_map_attic(into.attic_nodes, rman, this->timestamp,
 			   meta_settings().NODES_META, attic_settings().NODES_META);
+    
+  if (!into.attic_ways.empty())
     newer_filter_map_attic(into.attic_ways, rman, this->timestamp,
 			   meta_settings().WAYS_META, attic_settings().WAYS_META);
+    
+  if (!into.attic_relations.empty())
     newer_filter_map_attic(into.attic_relations, rman, this->timestamp,
 			   meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
-  }
 
   into.areas.clear();
 }

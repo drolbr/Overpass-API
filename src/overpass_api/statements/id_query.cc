@@ -87,7 +87,7 @@ class Id_Query_Constraint : public Query_Constraint
     bool get_relation_ids
         (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids);
 	
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into);
     virtual ~Id_Query_Constraint() {}
 
   private:
@@ -164,7 +164,7 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair
 }
 
 
-void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   if (stmt->get_type() == Statement::NODE)
   {

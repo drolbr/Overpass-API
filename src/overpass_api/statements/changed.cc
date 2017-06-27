@@ -96,7 +96,7 @@ class Changed_Constraint : public Query_Constraint
     bool get_relation_ids
         (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids);
 	
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into);
     virtual ~Changed_Constraint() {}
 
   private:
@@ -164,7 +164,7 @@ bool Changed_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< R
 // }
 
 
-void Changed_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void Changed_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   if (!stmt->trivial())
   {

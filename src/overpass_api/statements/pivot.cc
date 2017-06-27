@@ -140,7 +140,7 @@ class Pivot_Constraint : public Query_Constraint
                           int type,
                           const std::vector< Uint32_Index >& ids,
                           bool invert_ids);
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into);
     virtual ~Pivot_Constraint() {}
 
   private:
@@ -221,7 +221,7 @@ bool Pivot_Constraint::get_data
   return true;
 }
 
-void Pivot_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void Pivot_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   filter_elems(get_node_pivot_ids(rman.sets()[stmt->get_input()].areas), into.nodes);
   filter_elems(get_way_pivot_ids(rman.sets()[stmt->get_input()].areas), into.ways);

@@ -43,8 +43,8 @@ class Bbox_Constraint : public Query_Constraint
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Bbox_Constraint() {}
 
   private:
@@ -80,15 +80,15 @@ bool Bbox_Constraint::get_ranges
 }
 
 
-void Bbox_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   filter_.filter(into);
 }
 
 
-void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
-  filter_.filter(query, rman, into, timestamp != NOW);
+  filter_.filter(query, rman, into, rman.get_desired_timestamp() != NOW);
 }
 
 //-----------------------------------------------------------------------------
@@ -191,7 +191,7 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
       (into.nodes, into.attic_nodes,
        std::vector< Node::Id_Type >(), false, ranges, *this, rman,
        *osm_base_settings().NODES, *attic_settings().NODES);
-  constraint.filter(rman, into, rman.get_desired_timestamp());
+  constraint.filter(rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
   transfer_output(rman, into);

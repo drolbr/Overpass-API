@@ -275,8 +275,8 @@ class Around_Constraint : public Query_Constraint
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Around_Constraint() {}
 
   private:
@@ -305,7 +305,7 @@ bool Around_Constraint::get_ranges
 }
 
 
-void Around_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void Around_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   {
     std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
@@ -456,7 +456,7 @@ void filter_relations_expensive(const Around_Statement& around,
 }
 
 
-void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   around->calc_lat_lons(rman.sets()[around->get_source_name()], *around, rman);
 
@@ -489,34 +489,36 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
         Way_Geometry_Store(way_members_, query, rman), into.relations);
   }
 
-  if (timestamp != NOW)
-  {
+  if (!into.attic_nodes.empty())
     filter_nodes_expensive(*around, into.attic_nodes);
+  
+  if (!into.attic_ways.empty())
     filter_ways_expensive(*around, Way_Geometry_Store(into.attic_ways, query, rman), into.attic_ways);
 
-    {
-      //Process relations
-      std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
-      get_ranges(rman, node_ranges);
+  if (!into.attic_relations.empty())
+  {
+    //Process relations
+    std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+    get_ranges(rman, node_ranges);
 
-      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-          = relation_node_members(&query, rman, into.attic_relations, &node_ranges);
-      std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
-          = order_attic_by_id(node_members, Order_By_Node_Id());
+    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
+        = relation_node_members(&query, rman, into.attic_relations, &node_ranges);
+    std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
+        = order_attic_by_id(node_members, Order_By_Node_Id());
 
-      // Retrieve all ways referred by the relations.
-      std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
-      get_ranges(rman, way_ranges);
+    // Retrieve all ways referred by the relations.
+    std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
+    get_ranges(rman, way_ranges);
 
-      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-          = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
-      std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
-          = order_attic_by_id(way_members_, Order_By_Way_Id());
+    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
+        = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
+    std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
+        = order_attic_by_id(way_members_, Order_By_Way_Id());
 
-      filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
-          Way_Geometry_Store(way_members_, query, rman), into.attic_relations);
-    }
+    filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
+        Way_Geometry_Store(way_members_, query, rman), into.attic_relations);
   }
+  
   //TODO: areas
 }
 
@@ -1034,7 +1036,7 @@ void Around_Statement::execute(Resource_Manager& rman)
       (into.nodes, into.attic_nodes,
        std::vector< Node::Id_Type >(), false, ranges, *this, rman,
        *osm_base_settings().NODES, *attic_settings().NODES);
-  constraint.filter(*this, rman, into, rman.get_desired_timestamp());
+  constraint.filter(*this, rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
   transfer_output(rman, into);

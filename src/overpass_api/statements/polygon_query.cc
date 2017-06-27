@@ -44,8 +44,8 @@ class Polygon_Constraint : public Query_Constraint
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Polygon_Constraint() {}
 
   private:
@@ -76,10 +76,10 @@ bool Polygon_Constraint::get_ranges
 }
 
 
-void Polygon_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void Polygon_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   polygon->collect_nodes(into.nodes, true);
-  if (timestamp != NOW)
+  if (!into.attic_nodes.empty())
     polygon->collect_nodes(into.attic_nodes, true);
 
   std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
@@ -87,19 +87,19 @@ void Polygon_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
 
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
-  if (timestamp != NOW)
+  if (!into.attic_ways.empty())
     filter_ways_by_ranges(into.attic_ways, ranges);
 
   // pre-filter relations
   filter_relations_by_ranges(into.relations, ranges);
-  if (timestamp != NOW)
+  if (!into.attic_relations.empty())
     filter_relations_by_ranges(into.attic_relations, ranges);
 
   //TODO: filter areas
 }
 
 
-void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   //Process ways
   polygon->collect_ways(into.ways, Way_Geometry_Store(into.ways, query, rman), true, query, rman);
@@ -127,14 +127,14 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 			     order_by_id(way_members_, Order_By_Way_Id()),
 			     into.relations);
 
-  if (timestamp != NOW)
-  {
-    //Process ways
+  //Process ways
+  if (!into.attic_ways.empty())
     polygon->collect_ways(into.attic_ways, Way_Geometry_Store(into.attic_ways, query, rman),
 			  true, query, rman);
 
-    //Process relations
-
+  //Process relations
+  if (!into.attic_relations.empty())
+  {
     // Retrieve all nodes referred by the relations.
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
         = relation_node_members(&query, rman, into.attic_relations, &node_ranges);
@@ -533,7 +533,7 @@ void Polygon_Query_Statement::execute(Resource_Manager& rman)
       (into.nodes, into.attic_nodes,
        std::vector< Node::Id_Type >(), false, ranges, *this, rman,
        *osm_base_settings().NODES, *attic_settings().NODES);
-  constraint.filter(rman, into, rman.get_desired_timestamp());
+  constraint.filter(rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
   transfer_output(rman, into);

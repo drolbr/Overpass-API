@@ -1589,7 +1589,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
-    (*it)->filter(rman, into, timestamp);
+    (*it)->filter(rman, into);
 
   set_progress(6);
   rman.health_check(*this);
@@ -1623,7 +1623,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end(); ++it)
-    (*it)->filter(*this, rman, into, timestamp);
+    (*it)->filter(*this, rman, into);
 
   set_progress(9);
   rman.health_check(*this);

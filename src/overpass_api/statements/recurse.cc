@@ -1163,8 +1163,8 @@ class Recurse_Constraint : public Query_Constraint
                           int type,
                           const std::vector< Uint32_Index >& ids,
                           bool invert_ids);
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp);
-    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into);
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Recurse_Constraint() {}
 
   private:
@@ -1930,7 +1930,7 @@ bool Recurse_Constraint::get_data
 }
 
 
-void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timestamp)
+void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   std::map< std::string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
   if (mit == rman.sets().end())
@@ -1954,7 +1954,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     std::vector< Node::Id_Type > ids;
     if (stmt->get_type() == RECURSE_RELATION_NODE)
     {
-      if (timestamp == NOW)
+      if (rman.get_desired_timestamp() == NOW)
         ids = relation_node_member_ids(rman, mit->second.relations, &role_id);
       else
         ids = relation_node_member_ids(rman, mit->second.relations, mit->second.attic_relations, &role_id);
@@ -1966,7 +1966,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     if (stmt->get_type() == RECURSE_RELATION_WAY)
     {
       std::vector< Way::Id_Type > ids;
-      if (timestamp == NOW)
+      if (rman.get_desired_timestamp() == NOW)
         relation_way_member_ids(rman, mit->second.relations, &role_id).swap(ids);
       else
         relation_way_member_ids(rman, mit->second.relations, mit->second.attic_relations, &role_id).swap(ids);
@@ -1983,7 +1983,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
     if (stmt->get_type() == RECURSE_RELATION_RELATION)
     {
       std::vector< Relation::Id_Type > ids;
-      if (timestamp == NOW)
+      if (rman.get_desired_timestamp() == NOW)
         relation_relation_member_ids(rman, mit->second.relations, &role_id).swap(ids);
       else
         relation_relation_member_ids(rman, mit->second.relations, mit->second.attic_relations, &role_id)
@@ -2039,7 +2039,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
   std::vector< Node::Id_Type > ids;
   if (stmt->get_type() == RECURSE_WAY_NODE)
   {
-    if (timestamp == NOW)
+    if (rman.get_desired_timestamp() == NOW)
       ids = way_nd_ids(mit->second.ways);
     else
       ids = way_nd_ids(mit->second.ways, mit->second.attic_ways);
@@ -2047,7 +2047,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
   }
   else if (stmt->get_type() == RECURSE_RELATION_NODE)
   {
-    if (timestamp == NOW)
+    if (rman.get_desired_timestamp() == NOW)
       ids = relation_node_member_ids(rman, mit->second.relations);
     else
       ids = relation_node_member_ids(rman, mit->second.relations, mit->second.attic_relations);
@@ -2060,7 +2060,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
   if (stmt->get_type() == RECURSE_RELATION_WAY)
   {
     std::vector< Way::Id_Type > ids;
-    if (timestamp == NOW)
+    if (rman.get_desired_timestamp() == NOW)
       relation_way_member_ids(rman, mit->second.relations).swap(ids);
     else
       relation_way_member_ids(rman, mit->second.relations, mit->second.attic_relations).swap(ids);
@@ -2090,7 +2090,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
   if (stmt->get_type() == RECURSE_RELATION_RELATION)
   {
     std::vector< Relation::Id_Type > ids;
-    if (timestamp == NOW)
+    if (rman.get_desired_timestamp() == NOW)
       relation_relation_member_ids(rman, mit->second.relations).swap(ids);
     else
       relation_relation_member_ids(rman, mit->second.relations, mit->second.attic_relations).swap(ids);
@@ -2149,7 +2149,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into, uint64 timest
 }
 
 
-void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   std::map< std::string, Set >::const_iterator mit = rman.sets().find(stmt->get_input());
 
@@ -2161,7 +2161,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
   if (stmt->get_type() == RECURSE_DOWN)
   {
-    if (timestamp == NOW)
+    if (rman.get_desired_timestamp() == NOW)
     {
       std::vector< Node::Id_Type > rel_ids
           = relation_node_member_ids(rman, mit->second.relations);
@@ -2208,7 +2208,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   }
   else if (stmt->get_type() == RECURSE_DOWN_REL)
   {
-    if (timestamp == NOW)
+    if (rman.get_desired_timestamp() == NOW)
     {
       std::map< Uint31_Index, std::vector< Relation_Skeleton > > rel_rels;
       relations_loop(query, rman, mit->second.relations, rel_rels);
@@ -2263,7 +2263,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   }
   else if (stmt->get_type() == RECURSE_UP && !into.relations.empty())
   {
-    if (timestamp == NOW)
+    if (rman.get_desired_timestamp() == NOW)
     {
       std::map< Uint31_Index, std::vector< Way_Skeleton > > rel_ways = mit->second.ways;
       std::map< Uint31_Index, std::vector< Way_Skeleton > > node_ways;
@@ -2324,7 +2324,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   }
   else if (stmt->get_type() == RECURSE_UP_REL && !into.relations.empty())
   {
-    if (timestamp == NOW)
+    if (rman.get_desired_timestamp() == NOW)
     {
       std::map< Uint31_Index, std::vector< Way_Skeleton > > rel_ways = mit->second.ways;
       std::map< Uint31_Index, std::vector< Way_Skeleton > > node_ways;

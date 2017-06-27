@@ -32,8 +32,8 @@ class Filter_Constraint : public Query_Constraint
     Filter_Constraint(Filter_Statement& stmt_) : stmt(&stmt_) {}
     bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges) { return false; }
     bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges) { return false; }
-    void filter(Resource_Manager& rman, Set& into, uint64 timestamp) {}
-    void filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp);
+    void filter(Resource_Manager& rman, Set& into) {}
+    void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Filter_Constraint() {}
 
   private:
@@ -66,7 +66,7 @@ void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
 }
 
 
-void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into, uint64 timestamp)
+void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   if (!stmt || !stmt->get_criterion())
     return;
@@ -139,7 +139,7 @@ void Filter_Statement::execute(Resource_Manager& rman)
   Set into;
 
   Filter_Constraint constraint(*this);
-  constraint.filter(rman, into, rman.get_desired_timestamp());
+  constraint.filter(rman, into);
 
   transfer_output(rman, into);
   rman.health_check(*this);
