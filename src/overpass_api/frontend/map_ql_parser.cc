@@ -236,6 +236,20 @@ TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("print", line_nr, attr);
 }
 
+
+template< class TStatement >
+TStatement* create_timeline_statement(typename TStatement::Factory& stmt_factory, uint line_nr,
+    const std::string& type, const std::string& ref, const std::string& version, const std::string& into)
+{
+  std::map< std::string, std::string > attr;
+  attr["type"] = type;
+  attr["ref"] = ref;
+  attr["version"] = version;
+  attr["into"] = into;
+  return stmt_factory.create_statement("timeline", line_nr, attr);
+}
+
+
 template< class TStatement >
 TStatement* create_query_statement(typename TStatement::Factory& stmt_factory,
 				   std::string type, std::string into, uint line_nr)
@@ -647,6 +661,35 @@ TStatement* parse_if(typename TStatement::Factory& stmt_factory, Parsed_Query& p
       it != substatements.end(); ++it)
     statement->add_statement(*it, "");
   return statement;
+}
+
+
+template< class TStatement >
+TStatement* parse_timeline(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
+              Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
+{
+  std::pair< uint, uint > line_col = token.line_col();
+  ++token;
+
+  clear_until_after(token, error_output, "(");
+  std::string type = get_text_token(token, error_output, "OSM base type");
+  if (type == "rel")
+    type = "relation";
+    
+  clear_until_after(token, error_output, ",");
+  std::string ref = get_text_token(token, error_output, "OSM element id");
+  clear_until_after(token, error_output, ",", ")", false);
+  std::string version;
+  if (*token == ",")
+  {
+    ++token;
+    version = get_text_token(token, error_output, "Number");
+  }
+  clear_until_after(token, error_output, ")");
+
+  std::string into = probe_into(token, error_output);
+
+  return create_timeline_statement< TStatement >(stmt_factory, line_col.first, type, ref, version, into);
 }
 
 
@@ -1478,6 +1521,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
     return parse_complete< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
   else if (*token == "if")
     return parse_if< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
+  else if (*token == "timeline")
+    return parse_timeline< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
 
   std::string from = "";
   if (token.good() && *token == ".")

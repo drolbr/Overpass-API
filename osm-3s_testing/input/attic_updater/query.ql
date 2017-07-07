@@ -1,26 +1,44 @@
 
 node(1101);out meta;
+timeline(node,1101);out;
 node(1102);out meta;
+timeline(node,1102);out;
 
 node(1201);out meta;
+timeline(node,1201);out;
 node(1202);out meta;
+timeline(node,1202);out;
 node(1203);out meta;
+timeline(node,1203);out;
 
 node(1301);out meta;
+timeline(node,1301);out;
 node(1302);out meta;
+timeline(node,1302);out;
 node(1303);out meta;
+timeline(node,1303);out;
 node(1304);out meta;
+timeline(node,1304);out;
 
 node(1401);out meta;
+timeline(node,1401);out;
 node(1402);out meta;
+timeline(node,1402);out;
 node(1403);out meta;
+timeline(node,1403);out;
 node(1404);out meta;
+timeline(node,1404);out;
 
 node(1501);out meta;
+timeline(node,1501);out;
 node(1502);out meta;
+timeline(node,1502);out;
 node(1503);out meta;
+timeline(node,1503);out;
 node(1504);out meta;
+timeline(node,1504);out;
 node(1505);out meta;
+timeline(node,1505);out;
 
 node(2101);out meta;
 node(2102);out meta;
@@ -62,40 +80,68 @@ node(2608);out meta;
 
 
 way(1101);out meta;
+timeline(way,1101);out;
 way(1102);out meta;
+timeline(way,1102);out;
 way(1103);out meta;
+timeline(way,1103);out;
 
 way(1201);out meta;
+timeline(way,1201);out;
 way(1202);out meta;
+timeline(way,1202);out;
 way(1203);out meta;
+timeline(way,1203);out;
 
 way(1301);out meta;
+timeline(way,1301);out;
 way(1302);out meta;
+timeline(way,1302);out;
 way(1303);out meta;
+timeline(way,1303);out;
 way(1304);out meta;
+timeline(way,1304);out;
 
 way(1401);out meta;
+timeline(way,1401);out;
 way(1402);out meta;
+timeline(way,1402);out;
 way(1403);out meta;
+timeline(way,1403);out;
 way(1404);out meta;
+timeline(way,1404);out;
 
 way(1501);out meta;
+timeline(way,1501);out;
 way(1502);out meta;
+timeline(way,1502);out;
 way(1503);out meta;
+timeline(way,1503);out;
 way(1504);out meta;
+timeline(way,1504);out;
 way(1505);out meta;
+timeline(way,1505);out;
 
 way(1601);out meta;
+timeline(way,1601);out;
 way(1602);out meta;
+timeline(way,1602);out;
 way(1603);out meta;
+timeline(way,1603);out;
 
 way(1701);out meta;
+timeline(way,1701);out;
 way(1702);out meta;
+timeline(way,1702);out;
 way(1703);out meta;
+timeline(way,1703);out;
 
 way(1801);out meta;
+timeline(way,1801);out;
 way(1802);out meta;
+timeline(way,1802);out;
 way(1803);out meta;
+timeline(way,1803);out;
 
 way(2101);out meta;
 way(2102);out meta;
@@ -137,136 +183,239 @@ way(2608);out meta;
 
 
 rel(1111);out meta;
+timeline(rel,1111);out;
 rel(1112);out meta;
+timeline(rel,1112);out;
 rel(1113);out meta;
+timeline(rel,1113);out;
 
 rel(1121);out meta;
+timeline(rel,1121);out;
 rel(1122);out meta;
+timeline(rel,1122);out;
 rel(1123);out meta;
+timeline(rel,1123);out;
 
 rel(1131);out meta;
+timeline(rel,1131);out;
 rel(1132);out meta;
+timeline(rel,1132);out;
 rel(1133);out meta;
+timeline(rel,1133);out;
 
 rel(1141);out meta;
+timeline(rel,1141);out;
 rel(1142);out meta;
+timeline(rel,1142);out;
 rel(1143);out meta;
+timeline(rel,1143);out;
 
 rel(1171);out meta;
+timeline(rel,1171);out;
 rel(1172);out meta;
+timeline(rel,1172);out;
 rel(1173);out meta;
+timeline(rel,1173);out;
 
 rel(1201);out meta;
+timeline(rel,1201);out;
 rel(1202);out meta;
+timeline(rel,1202);out;
 rel(1203);out meta;
+timeline(rel,1203);out;
 
 rel(1311);out meta;
+timeline(rel,1311);out;
 rel(1312);out meta;
+timeline(rel,1312);out;
 rel(1313);out meta;
+timeline(rel,1313);out;
 rel(1314);out meta;
+timeline(rel,1314);out;
 
 rel(1321);out meta;
+timeline(rel,1321);out;
 rel(1322);out meta;
+timeline(rel,1322);out;
 rel(1323);out meta;
+timeline(rel,1323);out;
 rel(1324);out meta;
+timeline(rel,1324);out;
 rel(1325);out meta;
+timeline(rel,1325);out;
 rel(1326);out meta;
+timeline(rel,1326);out;
 rel(1327);out meta;
+timeline(rel,1327);out;
 
 rel(1331);out meta;
+timeline(rel,1331);out;
 rel(1332);out meta;
+timeline(rel,1332);out;
 rel(1333);out meta;
+timeline(rel,1333);out;
 rel(1334);out meta;
+timeline(rel,1334);out;
 
 rel(1411);out meta;
+timeline(rel,1411);out;
 rel(1412);out meta;
+timeline(rel,1412);out;
 rel(1413);out meta;
+timeline(rel,1413);out;
 rel(1414);out meta;
+timeline(rel,1414);out;
 
 rel(1421);out meta;
+timeline(rel,1421);out;
 rel(1422);out meta;
+timeline(rel,1422);out;
 rel(1423);out meta;
+timeline(rel,1423);out;
 rel(1424);out meta;
+timeline(rel,1424);out;
 rel(1425);out meta;
+timeline(rel,1425);out;
 rel(1426);out meta;
+timeline(rel,1426);out;
 rel(1427);out meta;
+timeline(rel,1427);out;
 
 rel(1431);out meta;
+timeline(rel,1431);out;
 rel(1432);out meta;
+timeline(rel,1432);out;
 rel(1433);out meta;
+timeline(rel,1433);out;
 rel(1434);out meta;
+timeline(rel,1434);out;
 
 rel(1501);out meta;
+timeline(rel,1501);out;
 rel(1502);out meta;
+timeline(rel,1502);out;
 rel(1503);out meta;
+timeline(rel,1503);out;
 rel(1504);out meta;
+timeline(rel,1504);out;
 rel(1505);out meta;
+timeline(rel,1505);out;
 
 rel(1611);out meta;
+timeline(rel,1611);out;
 rel(1612);out meta;
+timeline(rel,1612);out;
 rel(1613);out meta;
+timeline(rel,1613);out;
 
 rel(1621);out meta;
+timeline(rel,1621);out;
 rel(1622);out meta;
+timeline(rel,1622);out;
 rel(1623);out meta;
+timeline(rel,1623);out;
 
 rel(1631);out meta;
+timeline(rel,1631);out;
 rel(1632);out meta;
+timeline(rel,1632);out;
 rel(1633);out meta;
+timeline(rel,1633);out;
 
 rel(1641);out meta;
+timeline(rel,1641);out;
 rel(1642);out meta;
+timeline(rel,1642);out;
 rel(1643);out meta;
+timeline(rel,1643);out;
 
 rel(1671);out meta;
+timeline(rel,1671);out;
 rel(1672);out meta;
+timeline(rel,1672);out;
 rel(1673);out meta;
+timeline(rel,1673);out;
 
 rel(1711);out meta;
+timeline(rel,1711);out;
 rel(1712);out meta;
+timeline(rel,1712);out;
 rel(1713);out meta;
+timeline(rel,1713);out;
 
 rel(1721);out meta;
+timeline(rel,1721);out;
 rel(1722);out meta;
+timeline(rel,1722);out;
 rel(1723);out meta;
+timeline(rel,1723);out;
 
 rel(1731);out meta;
+timeline(rel,1731);out;
 rel(1732);out meta;
+timeline(rel,1732);out;
 rel(1733);out meta;
+timeline(rel,1733);out;
 
 rel(1741);out meta;
+timeline(rel,1741);out;
 rel(1742);out meta;
+timeline(rel,1742);out;
 rel(1743);out meta;
+timeline(rel,1743);out;
 
 rel(1771);out meta;
+timeline(rel,1771);out;
 rel(1772);out meta;
+timeline(rel,1772);out;
 rel(1773);out meta;
+timeline(rel,1773);out;
 
 rel(1811);out meta;
+timeline(rel,1811);out;
 rel(1812);out meta;
+timeline(rel,1812);out;
 rel(1813);out meta;
+timeline(rel,1813);out;
 
 rel(1821);out meta;
+timeline(rel,1821);out;
 rel(1822);out meta;
+timeline(rel,1822);out;
 rel(1823);out meta;
+timeline(rel,1823);out;
 
 rel(1831);out meta;
+timeline(rel,1831);out;
 rel(1832);out meta;
+timeline(rel,1832);out;
 rel(1833);out meta;
+timeline(rel,1833);out;
 
 rel(1841);out meta;
+timeline(rel,1841);out;
 rel(1842);out meta;
+timeline(rel,1842);out;
 rel(1843);out meta;
+timeline(rel,1843);out;
 
 rel(1871);out meta;
+timeline(rel,1871);out;
 rel(1872);out meta;
+timeline(rel,1872);out;
 rel(1873);out meta;
+timeline(rel,1873);out;
 
 rel(1901);out meta;
+timeline(rel,1901);out;
 rel(1911);out meta;
+timeline(rel,1911);out;
 rel(1921);out meta;
+timeline(rel,1921);out;
 rel(1922);out meta;
+timeline(rel,1922);out;
 rel(1941);out meta;
+timeline(rel,1941);out;
 
 rel(2101);out meta;
 rel(2102);out meta;

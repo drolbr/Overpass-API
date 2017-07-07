@@ -7,70 +7,172 @@
     <tag k="foo" v="bar_1101"/>
     <tag k="foo_1101" v="bar"/>
   </node>
+  <timeline id="1">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1101"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <node id="1201" lat="10.0000000" lon="2.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1201"/>
     <tag k="foo_1201" v="bar"/>
   </node>
+  <timeline id="2">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1201"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <node id="1202" lat="10.0000000" lon="2.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1202"/>
     <tag k="foo_1202" v="bar"/>
   </node>
+  <timeline id="3">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1202"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <node id="1203" lat="10.0000000" lon="2.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1203"/>
     <tag k="foo_1203" v="bar"/>
   </node>
+  <timeline id="4">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1203"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <node id="1301" lat="10.0000000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1301"/>
     <tag k="foo_1301" v="bar"/>
   </node>
+  <timeline id="5">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1301"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <node id="1302" lat="10.0000000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1302"/>
     <tag k="foo_1302" v="bar"/>
   </node>
+  <timeline id="6">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1302"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <node id="1303" lat="10.0000000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1303"/>
     <tag k="foo_1303" v="bar"/>
   </node>
+  <timeline id="7">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1303"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <node id="1304" lat="10.0000000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1304"/>
     <tag k="foo_1304" v="bar"/>
   </node>
+  <timeline id="8">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1304"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </node>
+  <timeline id="9">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1401"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
   </node>
+  <timeline id="10">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1402"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </node>
+  <timeline id="11">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1403"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1404"/>
     <tag k="foo_1404" v="bar"/>
   </node>
+  <timeline id="12">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1404"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <node id="1501" lat="10.0000000" lon="5.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
   </node>
+  <timeline id="13">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1501"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <node id="1502" lat="10.0000000" lon="5.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1502"/>
     <tag k="foo_1502" v="bar"/>
   </node>
+  <timeline id="14">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1502"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <node id="1503" lat="10.0000000" lon="5.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </node>
+  <timeline id="15">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1503"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <node id="1504" lat="10.0000000" lon="5.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1504"/>
     <tag k="foo_1504" v="bar"/>
   </node>
+  <timeline id="16">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1504"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <node id="1505" lat="10.0000000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </node>
+  <timeline id="17">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1505"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:15Z"/>
+  </timeline>
   <node id="2101" lat="11.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="2102" lat="11.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="2103" lat="11.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
@@ -176,6 +278,12 @@
     <tag k="foo" v="bar_1101"/>
     <tag k="foo_1101" v="bar"/>
   </way>
+  <timeline id="18">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1101"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <way id="1201" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="12011"/>
     <nd ref="12012"/>
@@ -183,6 +291,12 @@
     <tag k="foo" v="bar_1201"/>
     <tag k="foo_1201" v="bar"/>
   </way>
+  <timeline id="19">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1201"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <way id="1202" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="12021"/>
     <nd ref="12022"/>
@@ -190,6 +304,12 @@
     <tag k="foo" v="bar_1202"/>
     <tag k="foo_1202" v="bar"/>
   </way>
+  <timeline id="20">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1202"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <way id="1203" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="12031"/>
     <nd ref="12032"/>
@@ -197,6 +317,12 @@
     <tag k="foo" v="bar_1203"/>
     <tag k="foo_1203" v="bar"/>
   </way>
+  <timeline id="21">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1203"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <way id="1301" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="13011"/>
     <nd ref="13012"/>
@@ -204,6 +330,12 @@
     <tag k="foo" v="bar_1301"/>
     <tag k="foo_1301" v="bar"/>
   </way>
+  <timeline id="22">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1301"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <way id="1302" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="13021"/>
     <nd ref="13022"/>
@@ -211,6 +343,12 @@
     <tag k="foo" v="bar_1302"/>
     <tag k="foo_1302" v="bar"/>
   </way>
+  <timeline id="23">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1302"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <way id="1303" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="13031"/>
     <nd ref="13032"/>
@@ -218,6 +356,12 @@
     <tag k="foo" v="bar_1303"/>
     <tag k="foo_1303" v="bar"/>
   </way>
+  <timeline id="24">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1303"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <way id="1304" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <nd ref="13041"/>
     <nd ref="13042"/>
@@ -225,6 +369,12 @@
     <tag k="foo" v="bar_1304"/>
     <tag k="foo_1304" v="bar"/>
   </way>
+  <timeline id="25">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1304"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <way id="1401" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="14011"/>
     <nd ref="14012"/>
@@ -232,6 +382,12 @@
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </way>
+  <timeline id="26">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1401"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="14021"/>
     <nd ref="14022"/>
@@ -239,6 +395,12 @@
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
   </way>
+  <timeline id="27">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1402"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <way id="1403" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="14031"/>
     <nd ref="14032"/>
@@ -246,6 +408,12 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
+  <timeline id="28">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1403"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <way id="1404" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <nd ref="14041"/>
     <nd ref="14042"/>
@@ -253,6 +421,12 @@
     <tag k="foo" v="bar_1404"/>
     <tag k="foo_1404" v="bar"/>
   </way>
+  <timeline id="29">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1404"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <way id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="15011"/>
     <nd ref="15012"/>
@@ -260,6 +434,12 @@
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
   </way>
+  <timeline id="30">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1501"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <way id="1502" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="15021"/>
     <nd ref="15022"/>
@@ -267,6 +447,12 @@
     <tag k="foo" v="bar_1502"/>
     <tag k="foo_1502" v="bar"/>
   </way>
+  <timeline id="31">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1502"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <way id="1503" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="15031"/>
     <nd ref="15032"/>
@@ -274,6 +460,12 @@
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </way>
+  <timeline id="32">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1503"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <way id="1504" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <nd ref="15041"/>
     <nd ref="15042"/>
@@ -281,6 +473,12 @@
     <tag k="foo" v="bar_1504"/>
     <tag k="foo_1504" v="bar"/>
   </way>
+  <timeline id="33">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1504"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <way id="1505" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
     <nd ref="15051"/>
     <nd ref="15052"/>
@@ -288,6 +486,12 @@
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </way>
+  <timeline id="34">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1505"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:15Z"/>
+  </timeline>
   <way id="1601" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="16011"/>
     <nd ref="16012"/>
@@ -295,6 +499,12 @@
     <tag k="foo" v="bar_1601"/>
     <tag k="foo_1601" v="bar"/>
   </way>
+  <timeline id="35">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1601"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <way id="1602" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="16021"/>
     <nd ref="16022"/>
@@ -302,6 +512,12 @@
     <tag k="foo" v="bar_1602"/>
     <tag k="foo_1602" v="bar"/>
   </way>
+  <timeline id="36">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1602"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <way id="1603" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="16031"/>
     <nd ref="16032"/>
@@ -309,6 +525,12 @@
     <tag k="foo" v="bar_1603"/>
     <tag k="foo_1603" v="bar"/>
   </way>
+  <timeline id="37">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1603"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <way id="1701" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="17011"/>
     <nd ref="17012"/>
@@ -316,6 +538,12 @@
     <tag k="foo" v="bar_1701"/>
     <tag k="foo_1701" v="bar"/>
   </way>
+  <timeline id="38">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1701"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <way id="1702" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="17021"/>
     <nd ref="17022"/>
@@ -323,6 +551,12 @@
     <tag k="foo" v="bar_1702"/>
     <tag k="foo_1702" v="bar"/>
   </way>
+  <timeline id="39">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1702"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <way id="1703" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="17031"/>
     <nd ref="17032"/>
@@ -330,6 +564,12 @@
     <tag k="foo" v="bar_1703"/>
     <tag k="foo_1703" v="bar"/>
   </way>
+  <timeline id="40">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1703"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <way id="1801" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="18011"/>
     <nd ref="18012"/>
@@ -337,6 +577,12 @@
     <tag k="foo" v="bar_1801"/>
     <tag k="foo_1801" v="bar"/>
   </way>
+  <timeline id="41">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1801"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <way id="1802" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <nd ref="18021"/>
     <nd ref="18022"/>
@@ -344,6 +590,12 @@
     <tag k="foo" v="bar_1802"/>
     <tag k="foo_1802" v="bar"/>
   </way>
+  <timeline id="42">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1802"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <way id="1803" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <nd ref="18031"/>
     <nd ref="18032"/>
@@ -351,6 +603,12 @@
     <tag k="foo" v="bar_1803"/>
     <tag k="foo_1803" v="bar"/>
   </way>
+  <timeline id="43">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1803"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <way id="2101" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="21011"/>
     <nd ref="21012"/>
@@ -535,12 +793,24 @@
     <tag k="foo" v="bar_1111"/>
     <tag k="foo_1111" v="bar"/>
   </relation>
+  <timeline id="44">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1111"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1121" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="11211" role=""/>
     <member type="way" ref="11212" role=""/>
     <tag k="foo" v="bar_1121"/>
     <tag k="foo_1121" v="bar"/>
   </relation>
+  <timeline id="45">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1121"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1131" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="113110" role=""/>
     <member type="node" ref="113120" role=""/>
@@ -549,12 +819,24 @@
     <tag k="foo" v="bar_1131"/>
     <tag k="foo_1131" v="bar"/>
   </relation>
+  <timeline id="46">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1131"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1141" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="11411" role=""/>
     <member type="relation" ref="11412" role=""/>
     <tag k="foo" v="bar_1141"/>
     <tag k="foo_1141" v="bar"/>
   </relation>
+  <timeline id="47">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1141"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1171" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="117110" role=""/>
     <member type="node" ref="117120" role=""/>
@@ -565,90 +847,180 @@
     <tag k="foo" v="bar_1171"/>
     <tag k="foo_1171" v="bar"/>
   </relation>
+  <timeline id="48">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1171"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1201" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120110" role=""/>
     <member type="node" ref="120120" role=""/>
     <tag k="foo" v="bar_1201"/>
     <tag k="foo_1201" v="bar"/>
   </relation>
+  <timeline id="49">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1201"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1202" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120210" role=""/>
     <member type="node" ref="120220" role=""/>
     <tag k="foo" v="bar_1202"/>
     <tag k="foo_1202" v="bar"/>
   </relation>
+  <timeline id="50">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1202"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1203" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="120310" role=""/>
     <member type="node" ref="120320" role=""/>
     <tag k="foo" v="bar_1203"/>
     <tag k="foo_1203" v="bar"/>
   </relation>
+  <timeline id="51">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1203"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1311" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="131110" role=""/>
     <member type="node" ref="131120" role=""/>
     <tag k="foo" v="bar_1311"/>
     <tag k="foo_1311" v="bar"/>
   </relation>
+  <timeline id="52">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1311"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1312" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="131210" role=""/>
     <member type="node" ref="131220" role=""/>
     <tag k="foo" v="bar_1312"/>
     <tag k="foo_1312" v="bar"/>
   </relation>
+  <timeline id="53">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1312"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1313" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="131310" role=""/>
     <member type="node" ref="131320" role=""/>
     <tag k="foo" v="bar_1313"/>
     <tag k="foo_1313" v="bar"/>
   </relation>
+  <timeline id="54">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1313"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1314" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="131410" role=""/>
     <member type="node" ref="131420" role=""/>
     <tag k="foo" v="bar_1314"/>
     <tag k="foo_1314" v="bar"/>
   </relation>
+  <timeline id="55">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1314"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <relation id="1321" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13211" role=""/>
     <member type="way" ref="13212" role=""/>
     <tag k="foo" v="bar_1321"/>
     <tag k="foo_1321" v="bar"/>
   </relation>
+  <timeline id="56">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1321"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1322" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13221" role=""/>
     <member type="way" ref="13222" role=""/>
     <tag k="foo" v="bar_1322"/>
     <tag k="foo_1322" v="bar"/>
   </relation>
+  <timeline id="57">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1322"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1323" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13231" role=""/>
     <member type="way" ref="13232" role=""/>
     <tag k="foo" v="bar_1323"/>
     <tag k="foo_1323" v="bar"/>
   </relation>
+  <timeline id="58">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1323"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1324" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13241" role=""/>
     <member type="way" ref="13242" role=""/>
     <tag k="foo" v="bar_1324"/>
     <tag k="foo_1324" v="bar"/>
   </relation>
+  <timeline id="59">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1324"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <relation id="1325" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13251" role=""/>
     <member type="way" ref="13252" role=""/>
     <tag k="foo" v="bar_1325"/>
     <tag k="foo_1325" v="bar"/>
   </relation>
+  <timeline id="60">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1325"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:15Z"/>
+  </timeline>
   <relation id="1326" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13261" role=""/>
     <member type="way" ref="13262" role=""/>
     <tag k="foo" v="bar_1326"/>
     <tag k="foo_1326" v="bar"/>
   </relation>
+  <timeline id="61">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1326"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:16Z"/>
+  </timeline>
   <relation id="1327" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="13271" role=""/>
     <member type="way" ref="13272" role=""/>
     <tag k="foo" v="bar_1327"/>
     <tag k="foo_1327" v="bar"/>
   </relation>
+  <timeline id="62">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1327"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:17Z"/>
+  </timeline>
   <relation id="1331" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="133110" role=""/>
     <member type="node" ref="133120" role=""/>
@@ -657,6 +1029,12 @@
     <tag k="foo" v="bar_1331"/>
     <tag k="foo_1331" v="bar"/>
   </relation>
+  <timeline id="63">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1331"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1332" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="133210" role=""/>
     <member type="node" ref="133220" role=""/>
@@ -665,6 +1043,12 @@
     <tag k="foo" v="bar_1332"/>
     <tag k="foo_1332" v="bar"/>
   </relation>
+  <timeline id="64">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1332"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1333" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="133310" role=""/>
     <member type="node" ref="133320" role=""/>
@@ -673,6 +1057,12 @@
     <tag k="foo" v="bar_1333"/>
     <tag k="foo_1333" v="bar"/>
   </relation>
+  <timeline id="65">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1333"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1334" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="133410" role=""/>
     <member type="node" ref="133420" role=""/>
@@ -681,72 +1071,144 @@
     <tag k="foo" v="bar_1334"/>
     <tag k="foo_1334" v="bar"/>
   </relation>
+  <timeline id="66">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1334"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <relation id="1411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="141110" role=""/>
     <member type="node" ref="141120" role=""/>
     <tag k="foo" v="bar_1411"/>
     <tag k="foo_1411" v="bar"/>
   </relation>
+  <timeline id="67">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1411"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1412" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="141210" role=""/>
     <member type="node" ref="141220" role=""/>
     <tag k="foo" v="bar_1412"/>
     <tag k="foo_1412" v="bar"/>
   </relation>
+  <timeline id="68">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1412"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1413" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="141310" role=""/>
     <member type="node" ref="141320" role=""/>
     <tag k="foo" v="bar_1413"/>
     <tag k="foo_1413" v="bar"/>
   </relation>
+  <timeline id="69">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1413"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1414" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="141410" role=""/>
     <member type="node" ref="141420" role=""/>
     <tag k="foo" v="bar_1414"/>
     <tag k="foo_1414" v="bar"/>
   </relation>
+  <timeline id="70">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1414"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <relation id="1421" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14211" role=""/>
     <member type="way" ref="14212" role=""/>
     <tag k="foo" v="bar_1421"/>
     <tag k="foo_1421" v="bar"/>
   </relation>
+  <timeline id="71">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1421"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1422" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14221" role=""/>
     <member type="way" ref="14222" role=""/>
     <tag k="foo" v="bar_1422"/>
     <tag k="foo_1422" v="bar"/>
   </relation>
+  <timeline id="72">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1422"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1423" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14231" role=""/>
     <member type="way" ref="14232" role=""/>
     <tag k="foo" v="bar_1423"/>
     <tag k="foo_1423" v="bar"/>
   </relation>
+  <timeline id="73">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1423"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1424" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14241" role=""/>
     <member type="way" ref="14242" role=""/>
     <tag k="foo" v="bar_1424"/>
     <tag k="foo_1424" v="bar"/>
   </relation>
+  <timeline id="74">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1424"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <relation id="1425" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14251" role=""/>
     <member type="way" ref="14252" role=""/>
     <tag k="foo" v="bar_1425"/>
     <tag k="foo_1425" v="bar"/>
   </relation>
+  <timeline id="75">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1425"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:15Z"/>
+  </timeline>
   <relation id="1426" version="1" timestamp="2013-07-01T09:01:16Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14261" role=""/>
     <member type="way" ref="14262" role=""/>
     <tag k="foo" v="bar_1426"/>
     <tag k="foo_1426" v="bar"/>
   </relation>
+  <timeline id="76">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1426"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:16Z"/>
+  </timeline>
   <relation id="1427" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="14271" role=""/>
     <member type="way" ref="14272" role=""/>
     <tag k="foo" v="bar_1427"/>
     <tag k="foo_1427" v="bar"/>
   </relation>
+  <timeline id="77">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1427"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:17Z"/>
+  </timeline>
   <relation id="1431" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="143110" role=""/>
     <member type="node" ref="143120" role=""/>
@@ -755,6 +1217,12 @@
     <tag k="foo" v="bar_1431"/>
     <tag k="foo_1431" v="bar"/>
   </relation>
+  <timeline id="78">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1431"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1432" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="143210" role=""/>
     <member type="node" ref="143220" role=""/>
@@ -763,6 +1231,12 @@
     <tag k="foo" v="bar_1432"/>
     <tag k="foo_1432" v="bar"/>
   </relation>
+  <timeline id="79">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1432"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1433" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="143310" role=""/>
     <member type="node" ref="143320" role=""/>
@@ -771,6 +1245,12 @@
     <tag k="foo" v="bar_1433"/>
     <tag k="foo_1433" v="bar"/>
   </relation>
+  <timeline id="80">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1433"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1434" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="143410" role=""/>
     <member type="node" ref="143420" role=""/>
@@ -779,72 +1259,144 @@
     <tag k="foo" v="bar_1434"/>
     <tag k="foo_1434" v="bar"/>
   </relation>
+  <timeline id="81">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1434"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <relation id="1501" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="150110" role=""/>
     <member type="node" ref="150120" role=""/>
     <tag k="foo" v="bar_1501"/>
     <tag k="foo_1501" v="bar"/>
   </relation>
+  <timeline id="82">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1501"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1502" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="150210" role=""/>
     <member type="node" ref="150220" role=""/>
     <tag k="foo" v="bar_1502"/>
     <tag k="foo_1502" v="bar"/>
   </relation>
+  <timeline id="83">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1502"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1503" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="150310" role=""/>
     <member type="node" ref="150320" role=""/>
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </relation>
+  <timeline id="84">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1503"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1504" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="150410" role=""/>
     <member type="node" ref="150420" role=""/>
     <tag k="foo" v="bar_1504"/>
     <tag k="foo_1504" v="bar"/>
   </relation>
+  <timeline id="85">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1504"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:14Z"/>
+  </timeline>
   <relation id="1505" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="150510" role=""/>
     <member type="node" ref="150520" role=""/>
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </relation>
+  <timeline id="86">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1505"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:15Z"/>
+  </timeline>
   <relation id="1611" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="161110" role=""/>
     <member type="node" ref="161120" role=""/>
     <tag k="foo" v="bar_1611"/>
     <tag k="foo_1611" v="bar"/>
   </relation>
+  <timeline id="87">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1611"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1612" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="161210" role=""/>
     <member type="node" ref="161220" role=""/>
     <tag k="foo" v="bar_1612"/>
     <tag k="foo_1612" v="bar"/>
   </relation>
+  <timeline id="88">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1612"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1613" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="161310" role=""/>
     <member type="node" ref="161320" role=""/>
     <tag k="foo" v="bar_1613"/>
     <tag k="foo_1613" v="bar"/>
   </relation>
+  <timeline id="89">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1613"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1621" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16211" role=""/>
     <member type="way" ref="16212" role=""/>
     <tag k="foo" v="bar_1621"/>
     <tag k="foo_1621" v="bar"/>
   </relation>
+  <timeline id="90">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1621"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1622" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16221" role=""/>
     <member type="way" ref="16222" role=""/>
     <tag k="foo" v="bar_1622"/>
     <tag k="foo_1622" v="bar"/>
   </relation>
+  <timeline id="91">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1622"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1623" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="16231" role=""/>
     <member type="way" ref="16232" role=""/>
     <tag k="foo" v="bar_1623"/>
     <tag k="foo_1623" v="bar"/>
   </relation>
+  <timeline id="92">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1623"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1631" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163110" role=""/>
     <member type="node" ref="163120" role=""/>
@@ -853,6 +1405,12 @@
     <tag k="foo" v="bar_1631"/>
     <tag k="foo_1631" v="bar"/>
   </relation>
+  <timeline id="93">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1631"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1632" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163210" role=""/>
     <member type="node" ref="163220" role=""/>
@@ -861,6 +1419,12 @@
     <tag k="foo" v="bar_1632"/>
     <tag k="foo_1632" v="bar"/>
   </relation>
+  <timeline id="94">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1632"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="163310" role=""/>
     <member type="node" ref="163320" role=""/>
@@ -869,24 +1433,48 @@
     <tag k="foo" v="bar_1633"/>
     <tag k="foo_1633" v="bar"/>
   </relation>
+  <timeline id="95">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1633"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1641" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="16411" role=""/>
     <member type="relation" ref="16412" role=""/>
     <tag k="foo" v="bar_1641"/>
     <tag k="foo_1641" v="bar"/>
   </relation>
+  <timeline id="96">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1641"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1642" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="16421" role=""/>
     <member type="relation" ref="16422" role=""/>
     <tag k="foo" v="bar_1642"/>
     <tag k="foo_1642" v="bar"/>
   </relation>
+  <timeline id="97">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1642"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1643" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="16431" role=""/>
     <member type="relation" ref="16432" role=""/>
     <tag k="foo" v="bar_1643"/>
     <tag k="foo_1643" v="bar"/>
   </relation>
+  <timeline id="98">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1643"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1671" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167110" role=""/>
     <member type="node" ref="167120" role=""/>
@@ -897,6 +1485,12 @@
     <tag k="foo" v="bar_1671"/>
     <tag k="foo_1671" v="bar"/>
   </relation>
+  <timeline id="99">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1671"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1672" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167210" role=""/>
     <member type="node" ref="167220" role=""/>
@@ -907,6 +1501,12 @@
     <tag k="foo" v="bar_1672"/>
     <tag k="foo_1672" v="bar"/>
   </relation>
+  <timeline id="100">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1672"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1673" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="167310" role=""/>
     <member type="node" ref="167320" role=""/>
@@ -917,42 +1517,84 @@
     <tag k="foo" v="bar_1673"/>
     <tag k="foo_1673" v="bar"/>
   </relation>
+  <timeline id="101">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1673"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1711" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171110" role=""/>
     <member type="node" ref="171120" role=""/>
     <tag k="foo" v="bar_1711"/>
     <tag k="foo_1711" v="bar"/>
   </relation>
+  <timeline id="102">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1711"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1712" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171210" role=""/>
     <member type="node" ref="171220" role=""/>
     <tag k="foo" v="bar_1712"/>
     <tag k="foo_1712" v="bar"/>
   </relation>
+  <timeline id="103">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1712"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1713" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="171310" role=""/>
     <member type="node" ref="171320" role=""/>
     <tag k="foo" v="bar_1713"/>
     <tag k="foo_1713" v="bar"/>
   </relation>
+  <timeline id="104">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1713"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1721" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17211" role=""/>
     <member type="way" ref="17212" role=""/>
     <tag k="foo" v="bar_1721"/>
     <tag k="foo_1721" v="bar"/>
   </relation>
+  <timeline id="105">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1721"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1722" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17221" role=""/>
     <member type="way" ref="17222" role=""/>
     <tag k="foo" v="bar_1722"/>
     <tag k="foo_1722" v="bar"/>
   </relation>
+  <timeline id="106">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1722"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1723" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="17231" role=""/>
     <member type="way" ref="17232" role=""/>
     <tag k="foo" v="bar_1723"/>
     <tag k="foo_1723" v="bar"/>
   </relation>
+  <timeline id="107">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1723"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1731" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173110" role=""/>
     <member type="node" ref="173120" role=""/>
@@ -961,6 +1603,12 @@
     <tag k="foo" v="bar_1731"/>
     <tag k="foo_1731" v="bar"/>
   </relation>
+  <timeline id="108">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1731"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1732" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173210" role=""/>
     <member type="node" ref="173220" role=""/>
@@ -969,6 +1617,12 @@
     <tag k="foo" v="bar_1732"/>
     <tag k="foo_1732" v="bar"/>
   </relation>
+  <timeline id="109">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1732"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1733" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="173310" role=""/>
     <member type="node" ref="173320" role=""/>
@@ -977,24 +1631,48 @@
     <tag k="foo" v="bar_1733"/>
     <tag k="foo_1733" v="bar"/>
   </relation>
+  <timeline id="110">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1733"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1741" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="17411" role=""/>
     <member type="relation" ref="17412" role=""/>
     <tag k="foo" v="bar_1741"/>
     <tag k="foo_1741" v="bar"/>
   </relation>
+  <timeline id="111">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1741"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1742" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="17421" role=""/>
     <member type="relation" ref="17422" role=""/>
     <tag k="foo" v="bar_1742"/>
     <tag k="foo_1742" v="bar"/>
   </relation>
+  <timeline id="112">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1742"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1743" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="17431" role=""/>
     <member type="relation" ref="17432" role=""/>
     <tag k="foo" v="bar_1743"/>
     <tag k="foo_1743" v="bar"/>
   </relation>
+  <timeline id="113">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1743"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1771" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177110" role=""/>
     <member type="node" ref="177120" role=""/>
@@ -1005,6 +1683,12 @@
     <tag k="foo" v="bar_1771"/>
     <tag k="foo_1771" v="bar"/>
   </relation>
+  <timeline id="114">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1771"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1772" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177210" role=""/>
     <member type="node" ref="177220" role=""/>
@@ -1015,6 +1699,12 @@
     <tag k="foo" v="bar_1772"/>
     <tag k="foo_1772" v="bar"/>
   </relation>
+  <timeline id="115">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1772"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1773" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="177310" role=""/>
     <member type="node" ref="177320" role=""/>
@@ -1025,42 +1715,84 @@
     <tag k="foo" v="bar_1773"/>
     <tag k="foo_1773" v="bar"/>
   </relation>
+  <timeline id="116">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1773"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1811" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="181110" role=""/>
     <member type="node" ref="181120" role=""/>
     <tag k="foo" v="bar_1811"/>
     <tag k="foo_1811" v="bar"/>
   </relation>
+  <timeline id="117">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1811"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1812" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="181210" role=""/>
     <member type="node" ref="181220" role=""/>
     <tag k="foo" v="bar_1812"/>
     <tag k="foo_1812" v="bar"/>
   </relation>
+  <timeline id="118">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1812"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1813" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="181310" role=""/>
     <member type="node" ref="181320" role=""/>
     <tag k="foo" v="bar_1813"/>
     <tag k="foo_1813" v="bar"/>
   </relation>
+  <timeline id="119">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1813"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1821" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18211" role=""/>
     <member type="way" ref="18212" role=""/>
     <tag k="foo" v="bar_1821"/>
     <tag k="foo_1821" v="bar"/>
   </relation>
+  <timeline id="120">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1821"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1822" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18221" role=""/>
     <member type="way" ref="18222" role=""/>
     <tag k="foo" v="bar_1822"/>
     <tag k="foo_1822" v="bar"/>
   </relation>
+  <timeline id="121">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1822"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1823" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="18231" role=""/>
     <member type="way" ref="18232" role=""/>
     <tag k="foo" v="bar_1823"/>
     <tag k="foo_1823" v="bar"/>
   </relation>
+  <timeline id="122">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1823"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1831" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183110" role=""/>
     <member type="node" ref="183120" role=""/>
@@ -1069,6 +1801,12 @@
     <tag k="foo" v="bar_1831"/>
     <tag k="foo_1831" v="bar"/>
   </relation>
+  <timeline id="123">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1831"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1832" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183210" role=""/>
     <member type="node" ref="183220" role=""/>
@@ -1077,6 +1815,12 @@
     <tag k="foo" v="bar_1832"/>
     <tag k="foo_1832" v="bar"/>
   </relation>
+  <timeline id="124">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1832"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1833" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="183310" role=""/>
     <member type="node" ref="183320" role=""/>
@@ -1085,24 +1829,48 @@
     <tag k="foo" v="bar_1833"/>
     <tag k="foo_1833" v="bar"/>
   </relation>
+  <timeline id="125">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1833"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1841" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="18411" role=""/>
     <member type="relation" ref="18412" role=""/>
     <tag k="foo" v="bar_1841"/>
     <tag k="foo_1841" v="bar"/>
   </relation>
+  <timeline id="126">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1841"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1842" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="18421" role=""/>
     <member type="relation" ref="18422" role=""/>
     <tag k="foo" v="bar_1842"/>
     <tag k="foo_1842" v="bar"/>
   </relation>
+  <timeline id="127">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1842"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1843" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="18431" role=""/>
     <member type="relation" ref="18432" role=""/>
     <tag k="foo" v="bar_1843"/>
     <tag k="foo_1843" v="bar"/>
   </relation>
+  <timeline id="128">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1843"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1871" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187110" role=""/>
     <member type="node" ref="187120" role=""/>
@@ -1113,6 +1881,12 @@
     <tag k="foo" v="bar_1871"/>
     <tag k="foo_1871" v="bar"/>
   </relation>
+  <timeline id="129">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1871"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1872" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187210" role=""/>
     <member type="node" ref="187220" role=""/>
@@ -1123,6 +1897,12 @@
     <tag k="foo" v="bar_1872"/>
     <tag k="foo_1872" v="bar"/>
   </relation>
+  <timeline id="130">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1872"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1873" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="187310" role=""/>
     <member type="node" ref="187320" role=""/>
@@ -1133,31 +1913,67 @@
     <tag k="foo" v="bar_1873"/>
     <tag k="foo_1873" v="bar"/>
   </relation>
+  <timeline id="131">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1873"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:13Z"/>
+  </timeline>
   <relation id="1901" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1901"/>
     <tag k="foo_1901" v="bar"/>
   </relation>
+  <timeline id="132">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1901"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1911" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="191110" role="initial"/>
     <tag k="foo" v="bar_1911"/>
     <tag k="foo_1911" v="bar"/>
   </relation>
+  <timeline id="133">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1911"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1921" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19211" role="initial"/>
     <tag k="foo" v="bar_1921"/>
     <tag k="foo_1921" v="bar"/>
   </relation>
+  <timeline id="134">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1921"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="1922" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
     <member type="way" ref="19221" role="initial"/>
     <member type="way" ref="19222" role="initial"/>
     <tag k="foo" v="bar_1922"/>
     <tag k="foo_1922" v="bar"/>
   </relation>
+  <timeline id="135">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1922"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+  </timeline>
   <relation id="1941" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="relation" ref="19411" role="initial"/>
     <tag k="foo" v="bar_1941"/>
     <tag k="foo_1941" v="bar"/>
   </relation>
+  <timeline id="136">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1941"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:11Z"/>
+  </timeline>
   <relation id="2101" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="21011" role=""/>
     <member type="node" ref="21012" role=""/>
