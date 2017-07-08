@@ -54,6 +54,9 @@ date '+%T'
 date '+%T'
 { echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
   | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >init_query_0905.out 2>init_query_0905.err
+date '+%T'
+cat $INPUTDIR/timeline.ql\
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >init_query_timeline.out 2>init_query_timeline.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/diff_0902.ql >init_diff_0902.out 2>init_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >init_adiff_0902.out 2>init_adiff_0902.err
 
@@ -77,6 +80,9 @@ date '+%T'
 date '+%T'
 { echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
   | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_1_query_0905.out 2>diff_1_query_0905.err
+date '+%T'
+cat $INPUTDIR/timeline.ql\
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_1_query_timeline.out 2>diff_1_query_timeline.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/diff_0902.ql >diff_1_diff_0902.out 2>diff_1_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_1_adiff_0902.out 2>diff_1_adiff_0902.err
 
@@ -100,6 +106,9 @@ date '+%T'
 date '+%T'
 { echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
   | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_2_query_0905.out 2>diff_2_query_0905.err
+date '+%T'
+cat $INPUTDIR/timeline.ql\
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_2_query_timeline.out 2>diff_2_query_timeline.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/diff_0902.ql >diff_2_diff_0902.out 2>diff_2_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_2_adiff_0902.out 2>diff_2_adiff_0902.err
 
@@ -123,6 +132,9 @@ date '+%T'
 date '+%T'
 { echo '[date:"2013-07-01T09:05:00Z"];'; cat $INPUTDIR/query.ql; } \
   | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_3_query_0905.out 2>diff_3_query_0905.err
+date '+%T'
+cat $INPUTDIR/timeline.ql\
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >diff_3_query_timeline.out 2>diff_3_query_timeline.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/diff_0902.ql >diff_3_diff_0902.out 2>diff_3_diff_0902.err
 date '+%T'; $BASEDIR/bin/osm3s_query --concise --db-dir=./ <$INPUTDIR/adiff_0902.ql >diff_3_adiff_0902.out 2>diff_3_adiff_0902.err
 

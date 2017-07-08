@@ -66,6 +66,17 @@ Timeline_Statement::Timeline_Statement
 }
 
 
+template< typename Skeleton >
+struct Ref_Ver_Equal
+{
+  bool operator()(const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& lhs,
+                  const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& rhs)
+  {
+    return (lhs.ref == rhs.ref && lhs.version == rhs.version);
+  }
+};
+
+
 template< typename Index, typename Skeleton >
 void create_timeline_entries(uint64 ref, uint32 version, Statement* stmt, Resource_Manager& rman,
     const std::string& reftype, std::map< Uint31_Index, std::vector< Derived_Structure > >& deriveds)
@@ -103,7 +114,7 @@ void create_timeline_entries(uint64 ref, uint32 version, Statement* stmt, Resour
   }
   
   std::sort(metas.begin(), metas.end());
-  metas.erase(std::unique(metas.begin(), metas.end()), metas.end());
+  metas.erase(std::unique(metas.begin(), metas.end(), Ref_Ver_Equal< Skeleton >()), metas.end());
   
   for (uint i = 0; i < metas.size(); ++i)
   {
