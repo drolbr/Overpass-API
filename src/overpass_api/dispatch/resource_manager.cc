@@ -22,6 +22,26 @@
 #include <sstream>
 
 
+Set* Runtime_Stack_Frame::get_set(const std::string& set_name)
+{
+  std::map< std::string, Set >::iterator it = sets.find(set_name);
+  if (it != sets.end())
+    return &it->second;
+  
+  if (parent)
+    return parent->get_set(set_name);
+  
+  return 0;
+}
+
+
+void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
+{
+  Set& to_swap = sets[set_name];
+  set_.swap(to_swap);
+}
+
+
 Resource_Manager::Resource_Manager(
     Transaction& transaction_, Parsed_Query* global_settings_, Watchdog_Callback* watchdog_,
     Error_Output* error_output_)
@@ -37,6 +57,28 @@ Resource_Manager::Resource_Manager(
     global_settings = new Parsed_Query();
     global_settings_owned = true;
   }
+}
+
+
+Set* Resource_Manager::get_set(const std::string& set_name)
+{
+  std::map< std::string, Set >::iterator it = sets_.find(set_name);
+  if (it == sets_.end())
+    return 0;
+  return &it->second;
+}
+
+
+void Resource_Manager::swap_set(const std::string& set_name, Set& set_)
+{
+  Set& lhs_set = sets_[set_name];
+  lhs_set.swap(set_);
+}
+
+
+void Resource_Manager::clear_sets()
+{
+  sets_.clear();
 }
 
 

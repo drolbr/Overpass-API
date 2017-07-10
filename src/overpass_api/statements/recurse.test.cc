@@ -71,12 +71,21 @@ int main(int argc, char* args[])
       // Collect the nodes of some small ways
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
+      Set* total_ = total_rman.get_set("_");
+      if (!total_)
+      {
+        Set empty;
+        total_rman.swap_set("_", empty);
+        total_ = total_rman.get_set("_");
+      }
+      
       for (uint32 i = 1; i <= pattern_size/2; ++i)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
-	if (!rman.sets()["_"].ways.empty())
-	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->ways.empty())
+	  total_->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
       }
       {
 	const char* attributes[] = { "type", "way-node", 0 };
@@ -102,6 +111,14 @@ int main(int argc, char* args[])
       // Collect the nodes of some large ways
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
+      Set* total_ = total_rman.get_set("_");
+      if (!total_)
+      {
+        Set empty;
+        total_rman.swap_set("_", empty);
+        total_ = total_rman.get_set("_");
+      }
+      
       uint way_id_offset = 2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2
           + pattern_size*(pattern_size/2-1);
       perform_id_query(total_rman, "way", way_id_offset + 1);
@@ -109,8 +126,9 @@ int main(int argc, char* args[])
 	Resource_Manager rman(transaction, &global_settings);
 	way_id_offset = pattern_size*(pattern_size/2-1);
 	perform_id_query(rman, "way", way_id_offset + 1);
-	if (!rman.sets()["_"].ways.empty())
-	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->ways.empty())
+	  total_->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
       }
       {
 	const char* attributes[] = { "type", "way-node", 0 };
@@ -186,14 +204,23 @@ int main(int argc, char* args[])
       // Recurse node-way: try an entire bbox of nodes (without using bbox)
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
+      Set* total_ = total_rman.get_set("_");
+      if (!total_)
+      {
+        Set empty;
+        total_rman.swap_set("_", empty);
+        total_ = total_rman.get_set("_");
+      }
+      
       for (uint i = 0; i < pattern_size/2; ++i)
       {
 	for (uint j = 1; j <= pattern_size/2; ++j)
 	{
 	  Resource_Manager rman(transaction, &global_settings);
 	  perform_id_query(rman, "node", pattern_size*i + j + global_node_offset);
-	  if (!rman.sets()["_"].nodes.empty())
-	    total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
+          Set* default_ = rman.get_set("_");
+	  if (default_ && !default_->nodes.empty())
+	    total_->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
 	}
       }
       {
@@ -221,11 +248,20 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 2);
+      Set* total_ = total_rman.get_set("_");
+      if (!total_)
+      {
+        Set empty;
+        total_rman.swap_set("_", empty);
+        total_ = total_rman.get_set("_");
+      }
+      
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", 3);
-	if (!rman.sets()["_"].relations.empty())
-	  total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->relations.empty())
+	  total_->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
       }
       {
 	const char* attributes[] = { "type", "relation-node", 0 };
@@ -652,6 +688,14 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
+      Set* total_ = total_rman.get_set("_");
+      if (!total_)
+      {
+        Set empty;
+        total_rman.swap_set("_", empty);
+        total_ = total_rman.get_set("_");
+      }
+      
       {
         const char* attributes[] = { "type", "relation-node", "role", "one", 0 };
         Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
@@ -677,11 +721,20 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", 1 + global_node_offset);
+      Set* total_ = total_rman.get_set("_");
+      if (!total_)
+      {
+        Set empty;
+        total_rman.swap_set("_", empty);
+        total_ = total_rman.get_set("_");
+      }
+      
       {
         Resource_Manager rman(transaction, &global_settings);
         perform_id_query(rman, "node", 4 + global_node_offset);
-        if (!rman.sets()["_"].nodes.empty())
-          total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+        if (default_ && !default_->nodes.empty())
+          total_->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
       }
       {
         const char* attributes[] = { "type", "node-relation", "role", "zero", 0 };
@@ -758,6 +811,14 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
+      Set* total_ = total_rman.get_set("_");
+      if (!total_)
+      {
+        Set empty;
+        total_rman.swap_set("_", empty);
+        total_ = total_rman.get_set("_");
+      }
+      
       {
         const char* attributes[] = { "type", "relation-relation", "role", "one", 0 };
         Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
@@ -783,11 +844,20 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
+      Set* total_ = total_rman.get_set("_");
+      if (!total_)
+      {
+        Set empty;
+        total_rman.swap_set("_", empty);
+        total_ = total_rman.get_set("_");
+      }
+      
       {
         Resource_Manager rman(transaction, &global_settings);
         perform_id_query(rman, "relation", 3);
-        if (!rman.sets()["_"].relations.empty())
-          total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+        if (default_ && !default_->relations.empty())
+          total_->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
       }
       {
         const char* attributes[] = { "type", "relation-backwards", "role", "one", 0 };

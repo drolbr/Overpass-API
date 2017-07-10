@@ -204,24 +204,27 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     register_coord(lat, lon, req, coord_per_req);
   else
   {
-    const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes = rman.sets()[input].nodes;
-    for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = nodes.begin();
-	 it != nodes.end(); ++it)
+    Set* input_set = rman.get_set(input);
+    if (input_set)
     {
-      for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-	register_coord(::lat(it->first.val(), it2->ll_lower), ::lon(it->first.val(), it2->ll_lower),
-	    req, coord_per_req);
-    }
+      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes = input_set->nodes;
+      for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = nodes.begin();
+	  it != nodes.end(); ++it)
+      {
+        for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+          register_coord(::lat(it->first.val(), it2->ll_lower), ::lon(it->first.val(), it2->ll_lower),
+              req, coord_per_req);
+      }
 
-    const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes
-        = rman.sets()[input].attic_nodes;
-    for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = attic_nodes.begin();
-	 it != attic_nodes.end(); ++it)
-    {
-      for (std::vector< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
-	  it2 != it->second.end(); ++it2)
-	register_coord(::lat(it->first.val(), it2->ll_lower), ::lon(it->first.val(), it2->ll_lower),
-	    req, coord_per_req);
+      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes = input_set->attic_nodes;
+      for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = attic_nodes.begin();
+          it != attic_nodes.end(); ++it)
+      {
+        for (std::vector< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
+            it2 != it->second.end(); ++it2)
+          register_coord(::lat(it->first.val(), it2->ll_lower), ::lon(it->first.val(), it2->ll_lower),
+              req, coord_per_req);
+      }
     }
   }
 

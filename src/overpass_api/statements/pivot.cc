@@ -154,7 +154,10 @@ bool Pivot_Constraint::get_data
      const std::vector< Node_Skeleton::Id_Type >& ids,
      bool invert_ids)
 {
-  std::vector< Node::Id_Type > pivot_ids = get_node_pivot_ids(rman.sets()[stmt->get_input()].areas);
+  Set* input_set = rman.get_set(stmt->get_input());
+  std::vector< Node::Id_Type > pivot_ids;
+  if (input_set)
+    pivot_ids = get_node_pivot_ids(input_set->areas);
   std::vector< Node::Id_Type > intersect_ids(pivot_ids.size());
   if (ids.empty())
     pivot_ids.swap(intersect_ids);
@@ -181,9 +184,13 @@ bool Pivot_Constraint::get_data
      const std::vector< Uint32_Index >& ids,
      bool invert_ids)
 {
+  Set* input_set = rman.get_set(stmt->get_input());
+  
   if (type == QUERY_WAY)
   {
-    std::vector< Way::Id_Type > pivot_ids = get_way_pivot_ids(rman.sets()[stmt->get_input()].areas);
+    std::vector< Way::Id_Type > pivot_ids;
+    if (input_set)
+      pivot_ids = get_way_pivot_ids(input_set->areas);
     std::vector< Way::Id_Type > intersect_ids(pivot_ids.size());
     if (ids.empty())
       pivot_ids.swap(intersect_ids);
@@ -201,7 +208,9 @@ bool Pivot_Constraint::get_data
   }
   else if (type == QUERY_RELATION)
   {
-    std::vector< Relation::Id_Type > pivot_ids = get_relation_pivot_ids(rman.sets()[stmt->get_input()].areas);
+    std::vector< Relation::Id_Type > pivot_ids;
+    if (input_set)
+      pivot_ids = get_relation_pivot_ids(input_set->areas);
     std::vector< Relation::Id_Type > intersect_ids(pivot_ids.size());
     if (ids.empty())
       pivot_ids.swap(intersect_ids);
@@ -223,10 +232,25 @@ bool Pivot_Constraint::get_data
 
 void Pivot_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  filter_elems(get_node_pivot_ids(rman.sets()[stmt->get_input()].areas), into.nodes);
-  filter_elems(get_way_pivot_ids(rman.sets()[stmt->get_input()].areas), into.ways);
-  filter_elems(get_relation_pivot_ids(rman.sets()[stmt->get_input()].areas), into.relations);
+  Set* input_set = rman.get_set(stmt->get_input());
+  
+  if (input_set)
+  {
+    filter_elems(get_node_pivot_ids(input_set->areas), into.nodes);
+    filter_elems(get_way_pivot_ids(input_set->areas), into.ways);
+    filter_elems(get_relation_pivot_ids(input_set->areas), into.relations);
+  }
+  else
+  {
+    into.nodes.clear();
+    into.ways.clear();
+    into.relations.clear();
+  }
+  into.attic_nodes.clear();
+  into.attic_ways.clear();
+  into.attic_relations.clear();
   into.areas.clear();
+  into.deriveds.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -251,10 +275,13 @@ void Pivot_Statement::execute(Resource_Manager& rman)
 {
   Set into;
 
-  collect_elems(rman, *osm_base_settings().NODES, get_node_pivot_ids(rman.sets()[input].areas), into.nodes);
-  collect_elems(rman, *osm_base_settings().WAYS, get_way_pivot_ids(rman.sets()[input].areas), into.ways);
-  collect_elems(rman, *osm_base_settings().RELATIONS,
-                get_relation_pivot_ids(rman.sets()[input].areas), into.relations);
+  Set* input_set = rman.get_set(input);
+  if (input_set)
+  {
+    collect_elems(rman, *osm_base_settings().NODES, get_node_pivot_ids(input_set->areas), into.nodes);
+    collect_elems(rman, *osm_base_settings().WAYS, get_way_pivot_ids(input_set->areas), into.ways);
+    collect_elems(rman, *osm_base_settings().RELATIONS, get_relation_pivot_ids(input_set->areas), into.relations);
+  }
 
   transfer_output(rman, into);
   rman.health_check(*this);

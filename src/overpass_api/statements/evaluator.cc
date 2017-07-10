@@ -437,9 +437,9 @@ Prepare_Task_Context::Prepare_Task_Context(
     context.name = it->set_name;
     context.parent = this;
     
-    std::map< std::string, Set >::const_iterator mit(rman.sets().find(context.name));
-    if (mit != rman.sets().end())
-      context.prefetch(it->usage, mit->second, stmt, rman);
+    Set* input = rman.get_set(context.name);
+    if (input)
+      context.prefetch(it->usage, *input, stmt, rman);
   }
   
   if (requested.role_names_requested)

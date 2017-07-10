@@ -59,11 +59,15 @@ void evaluate_grid(double south, double north, double west, double east,
         stmt1->execute(rman);
       }
       uint area_count = 0;
-      for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
-	  it = rman.sets()["_"].areas.begin(); it != rman.sets()["_"].areas.end(); ++it)
-	area_count += it->second.size();
+      Set* default_ = rman.get_set("_");
+      if (default_)
+      {
+        for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
+            it = default_->areas.begin(); it != default_->areas.end(); ++it)
+          area_count += it->second.size();
+      }
       area_counter.back().push_back(area_count);
-      if (!areas_printed && !rman.sets()["_"].areas.empty())
+      if (!areas_printed && default_ && !default_->areas.empty())
       {
 	areas_printed = true;
 	

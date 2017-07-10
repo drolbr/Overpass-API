@@ -39,13 +39,19 @@ void draw_item(std::vector< std::string >& visual, uint32 index, const Node_Skel
     visual[i][j] = c;
 }
 
-void comp_sets(Set& s1, Set& s2)
+void comp_sets(Set* s1, Set* s2)
 {
-  std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it1(s1.nodes.begin());
-  std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it2(s2.nodes.begin());
+  Set empty;
+  if (!s1)
+    s1 = &empty;
+  if (!s2)
+    s2 = &empty;
+  
+  std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it1(s1->nodes.begin());
+  std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it2(s2->nodes.begin());
   std::vector< std::string > visual(600, std::string(1000, '.'));
 
-  while ((it1 != s1.nodes.end()) && (it2 != s2.nodes.end()))
+  while ((it1 != s1->nodes.end()) && (it2 != s2->nodes.end()))
   {
     if (it1->first == it2->first)
     {
@@ -125,7 +131,7 @@ void comp_sets(Set& s1, Set& s2)
       ++it2;
     }
   }
-  while (it1 != s1.nodes.end())
+  while (it1 != s1->nodes.end())
   {
     for (std::vector< Node_Skeleton >::const_iterator it(it1->second.begin());
         it != it1->second.end(); ++it)
@@ -137,7 +143,7 @@ void comp_sets(Set& s1, Set& s2)
     }
     ++it1;
   }
-  while (it2 != s2.nodes.end())
+  while (it2 != s2->nodes.end())
   {
     for (std::vector< Node_Skeleton >::const_iterator it(it2->second.begin());
         it != it2->second.end(); ++it)
@@ -402,7 +408,7 @@ int main(int argc, char* args[])
     stmt1->set_attributes(attributes);
     stmt1->execute(rman);
   }*/
-  comp_sets(rman.sets()["comp"], rman.sets()["_"]);
+  comp_sets(rman.get_set("comp"), rman.get_set("_"));
 
   {
     const char* attributes[] = { "type", "node", "into", "comp", 0 };
@@ -419,7 +425,7 @@ int main(int argc, char* args[])
     }
     stmt1->execute(rman);
   }
-  comp_sets(rman.sets()["comp"], rman.sets()["_"]);
+  comp_sets(rman.get_set("comp"), rman.get_set("_"));
 
   {
     const char* attributes[] = { "type", "node", 0 };
@@ -436,7 +442,7 @@ int main(int argc, char* args[])
     }
     stmt1->execute(rman);
   }
-  comp_sets(rman.sets()["comp"], rman.sets()["_"]);
+  comp_sets(rman.get_set("comp"), rman.get_set("_"));
 
   return 0;
 }

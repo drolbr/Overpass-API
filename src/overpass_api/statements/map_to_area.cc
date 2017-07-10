@@ -134,18 +134,22 @@ void Map_To_Area_Statement::execute(Resource_Manager& rman)
   Set into;
   std::vector< Area_Skeleton::Id_Type > idx;
 
-  std::vector< Area_Skeleton::Id_Type > ways_idx = get_area_ids_for_ways(rman.sets()[input].ways);
-  std::vector< Area_Skeleton::Id_Type > rels_idx = get_area_ids_for_relations(rman.sets()[input].relations);
-  std::vector< Area_Skeleton::Id_Type > attic_ways_idx = get_area_ids_for_attic_ways(rman.sets()[input].attic_ways);
-  std::vector< Area_Skeleton::Id_Type > attic_rels_idx = get_area_ids_for_attic_relations(rman.sets()[input].attic_relations);
+  Set* input_set = rman.get_set(input);
+  if (input_set)
+  {
+    std::vector< Area_Skeleton::Id_Type > ways_idx = get_area_ids_for_ways(input_set->ways);
+    std::vector< Area_Skeleton::Id_Type > rels_idx = get_area_ids_for_relations(input_set->relations);
+    std::vector< Area_Skeleton::Id_Type > attic_ways_idx = get_area_ids_for_attic_ways(input_set->attic_ways);
+    std::vector< Area_Skeleton::Id_Type > attic_rels_idx = get_area_ids_for_attic_relations(input_set->attic_relations);
 
-  idx.insert(idx.end(), ways_idx.begin(), ways_idx.end());
-  idx.insert(idx.end(), rels_idx.begin(), rels_idx.end());
-  idx.insert(idx.end(), attic_ways_idx.begin(), attic_ways_idx.end());
-  idx.insert(idx.end(), attic_rels_idx.begin(), attic_rels_idx.end());
+    idx.insert(idx.end(), ways_idx.begin(), ways_idx.end());
+    idx.insert(idx.end(), rels_idx.begin(), rels_idx.end());
+    idx.insert(idx.end(), attic_ways_idx.begin(), attic_ways_idx.end());
+    idx.insert(idx.end(), attic_rels_idx.begin(), attic_rels_idx.end());
 
-  sort(idx.begin(), idx.end());
-  idx.erase(unique(idx.begin(), idx.end()), idx.end());
+    sort(idx.begin(), idx.end());
+    idx.erase(unique(idx.begin(), idx.end()), idx.end());
+  }
 
   collect_elems_flat(rman, idx, into.areas);
 

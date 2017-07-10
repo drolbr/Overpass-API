@@ -300,6 +300,6 @@ std::map< std::string, std::string > convert_c_pairs(const char** attr)
 
 void Output_Statement::transfer_output(Resource_Manager& rman, Set& into) const
 {
-  rman.sets()[output].swap(into);
+  rman.swap_set(output, into);
   into.clear();
 }

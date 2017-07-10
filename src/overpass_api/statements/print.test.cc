@@ -210,26 +210,32 @@ int main(int argc, char* args[])
     {
       // Print all items sorted by id:
       Resource_Manager total_rman(transaction, &global_settings);
+      Set empty;
+      total_rman.swap_set("_", empty);
+      Set* total_ = total_rman.get_set("_");
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
-	if (!rman.sets()["_"].nodes.empty())
-	  total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->nodes.empty())
+	  total_->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
-	if (!rman.sets()["_"].ways.empty())
-	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->ways.empty())
+	  total_->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
-	if (!rman.sets()["_"].relations.empty())
-	  total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->relations.empty())
+	  total_->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
       }
       {
 	const char* attributes[] = { "order", "id", 0 };
@@ -249,26 +255,32 @@ int main(int argc, char* args[])
     {
       std::cout<<"Print all items sorted by quadtile:\n";
       Resource_Manager total_rman(transaction, &global_settings);
+      Set empty;
+      total_rman.swap_set("_", empty);
+      Set* total_ = total_rman.get_set("_");
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
-	if (!rman.sets()["_"].nodes.empty())
-	  total_rman.sets()["_"].nodes[rman.sets()["_"].nodes.begin()->first].push_back(rman.sets()["_"].nodes.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->nodes.empty())
+	  total_->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
-	if (!rman.sets()["_"].ways.empty())
-	  total_rman.sets()["_"].ways[rman.sets()["_"].ways.begin()->first].push_back(rman.sets()["_"].ways.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->ways.empty())
+	  total_->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
-	if (!rman.sets()["_"].relations.empty())
-	  total_rman.sets()["_"].relations[rman.sets()["_"].relations.begin()->first].push_back(rman.sets()["_"].relations.begin()->second.front());
+        Set* default_ = rman.get_set("_");
+	if (default_ && !default_->relations.empty())
+	  total_->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
       }
       {
 	const char* attributes[] = { "order", "quadtile", 0 };

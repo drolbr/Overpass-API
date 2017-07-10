@@ -61,11 +61,11 @@ bool Area_Constraint::get_ranges
 {
   if (area->areas_from_input())
   {
-    std::map< std::string, Set >::const_iterator mit = rman.sets().find(area->get_input());
-    if (mit == rman.sets().end())
+    Set* input = rman.get_set(area->get_input());
+    if (!input)
       return true;
 
-    area->get_ranges(mit->second.areas, ranges, area_blocks_req, rman);
+    area->get_ranges(input->areas, ranges, area_blocks_req, rman);
   }
   else
     area->get_ranges(ranges, area_blocks_req, rman);
@@ -109,9 +109,9 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
   if (area->areas_from_input())
   {
-    std::map< std::string, Set >::const_iterator mit = rman.sets().find(area->get_input());
-    if (mit != rman.sets().end())
-      area->get_ranges(mit->second.areas, range_req, area_blocks_req, rman);
+    Set* input = rman.get_set(area->get_input());
+    if (input)
+      area->get_ranges(input->areas, range_req, area_blocks_req, rman);
   }
   else
     area->get_ranges(range_req, area_blocks_req, rman);
@@ -291,15 +291,15 @@ bool Area_Constraint::delivers_data(Resource_Manager& rman)
     return false;
   else
   {
-    std::map< std::string, Set >::const_iterator mit = rman.sets().find(area->get_input());
-    if (mit == rman.sets().end())
+    Set* input = rman.get_set(area->get_input());
+    if (!input)
       return true;
 
     // Count the indicies of the input areas
     int counter = 0;
 
-    for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = mit->second.areas.begin();
-         it != mit->second.areas.end(); ++it)
+    for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = input->areas.begin();
+         it != input->areas.end(); ++it)
     {
       for (std::vector< Area_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
         counter += it2->used_indices.size();

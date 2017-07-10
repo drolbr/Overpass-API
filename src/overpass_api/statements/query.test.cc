@@ -104,9 +104,14 @@ void perform_query(std::string type, std::string key, std::string value, std::st
       stmt1.stmt().add_statement(&stmt2("set", "a").stmt(), "");
       stmt1.stmt().execute(rman);
     }
-    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
-        (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
-        (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    Set empty;
+    Set* lhs = rman.get_set("_");
+    if (!lhs)
+      lhs = &empty;
+    Set* rhs = rman.get_set("b");
+    if (!rhs)
+      rhs = &empty;
+    if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
     {
       std::cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");
@@ -155,9 +160,14 @@ void perform_query
       stmt1.stmt().add_statement(&stmt3("k", key2)("v", value2).stmt(), "");
       stmt1.stmt().execute(rman);
     }
-    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
-        (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
-        (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    Set empty;
+    Set* lhs = rman.get_set("_");
+    if (!lhs)
+      lhs = &empty;
+    Set* rhs = rman.get_set("b");
+    if (!rhs)
+      rhs = &empty;
+    if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
     {
       std::cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");
@@ -178,9 +188,14 @@ void perform_query
       stmt1.stmt().add_statement(&stmt3("set", "c").stmt(), "");
       stmt1.stmt().execute(rman);
     }
-    if ((rman.sets()["_"].nodes != rman.sets()["d"].nodes) ||
-        (rman.sets()["_"].ways != rman.sets()["d"].ways) ||
-        (rman.sets()["_"].relations != rman.sets()["d"].relations))
+    
+    lhs = rman.get_set("_");
+    if (!lhs)
+      lhs = &empty;
+    rhs = rman.get_set("d");
+    if (!rhs)
+      rhs = &empty;
+    if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
     {
       std::cout<<"Sets \"_\" and \"d\" differ:\n";
       perform_print(rman, "d");
@@ -240,9 +255,14 @@ void perform_query
       stmt1.stmt().add_statement(&stmt4("k", key3)("v", value3).stmt(), "");
       stmt1.stmt().execute(rman);
     }
-    if ((rman.sets()["_"].nodes != rman.sets()["c"].nodes) ||
-        (rman.sets()["_"].ways != rman.sets()["c"].ways) ||
-        (rman.sets()["_"].relations != rman.sets()["c"].relations))
+    Set empty;
+    Set* lhs = rman.get_set("_");
+    if (!lhs)
+      lhs = &empty;
+    Set* rhs = rman.get_set("c");
+    if (!rhs)
+      rhs = &empty;
+    if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
     {
       std::cout<<"Sets \"_\" and \"c\" differ:\n";
       perform_print(rman, "c");
@@ -464,9 +484,14 @@ void perform_query_with_around
       stmt1.stmt().add_statement(&stmt3("radius", radius)("from", "a").stmt(), "");
       stmt1.stmt().execute(rman);
     }
-    if ((rman.sets()["_"].nodes != rman.sets()["c"].nodes) ||
-        (rman.sets()["_"].ways != rman.sets()["c"].ways) ||
-        (rman.sets()["_"].relations != rman.sets()["c"].relations))
+    Set empty;
+    Set* lhs = rman.get_set("_");
+    if (!lhs)
+      lhs = &empty;
+    Set* rhs = rman.get_set("c");
+    if (!rhs)
+      rhs = &empty;
+    if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
     {
       std::cout<<"Sets \"_\" and \"c\" differ:\n";
       perform_print(rman, "c");
@@ -597,9 +622,14 @@ void perform_query_with_bbox
       stmt1.stmt().add_statement(&stmt3("n", north)("s", south)("e", east)("w", west).stmt(), "");
       stmt1.stmt().execute(rman);
     }
-    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
-      (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
-      (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    Set empty;
+    Set* lhs = rman.get_set("_");
+    if (!lhs)
+      lhs = &empty;
+    Set* rhs = rman.get_set("b");
+    if (!rhs)
+      rhs = &empty;
+    if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
     {
       std::cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");
@@ -746,9 +776,14 @@ void perform_filter_from_previous_element
       stmt1.stmt().execute(rman);
     }
 
-    if ((rman.sets()["_"].nodes != rman.sets()["b"].nodes) ||
-      (rman.sets()["_"].ways != rman.sets()["b"].ways) ||
-      (rman.sets()["_"].relations != rman.sets()["b"].relations))
+    Set empty;
+    Set* lhs = rman.get_set("_");
+    if (!lhs)
+      lhs = &empty;
+    Set* rhs = rman.get_set("b");
+    if (!rhs)
+      rhs = &empty;
+    if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
     {
       std::cout<<"Sets \"_\" and \"b\" differ:\n";
       perform_print(rman, "b");

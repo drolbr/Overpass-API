@@ -29,10 +29,29 @@
 
 class Statement;
 
+
 struct Watchdog_Callback
 {
   virtual void ping() const = 0;
 };
+
+
+class Runtime_Stack_Frame
+{
+public:
+  Runtime_Stack_Frame(Runtime_Stack_Frame* parent_) : parent(parent_) {}
+  
+  // Returns the used RAM including the used RAM of parent frames
+  uint64 total_used_space() const;
+    
+  Set* get_set(const std::string& set_name);
+  void swap_set(const std::string& set_name, Set& set_);
+    
+private:
+  Runtime_Stack_Frame* parent;
+  std::map< std::string, Set > sets;
+};
+
 
 class Resource_Manager
 {
@@ -58,11 +77,10 @@ public:
     delete area_updater_;
   }
 
-  std::map< std::string, Set >& sets()
-  {
-    return sets_;
-  }
-
+  Set* get_set(const std::string& set_name);
+  void swap_set(const std::string& set_name, Set& set_);
+  void clear_sets();
+  
   Area_Usage_Listener* area_updater()
   {
     return area_updater_;

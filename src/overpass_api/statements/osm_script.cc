@@ -236,7 +236,7 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
         print->set_collect_rhs(add_deletion_information);
     }
 
-    rman.sets().clear();
+    rman.clear_sets();
     rman.set_desired_timestamp(desired_timestamp);
   }
 

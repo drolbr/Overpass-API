@@ -67,11 +67,13 @@ void Complete_Statement::add_statement(Statement* statement, std::string text)
 void Complete_Statement::execute(Resource_Manager& rman)
 {
   bool new_elements_found = false;
-  Set result_set = rman.sets()[input];
+  Set* result_ref = rman.get_set(input);
+  Set result_set = result_ref ? *result_ref : Set();
 
   do
   {
-    rman.sets()[get_result_name()] = result_set;
+    rman.swap_set(get_result_name(), result_set);
+    result_set = *rman.get_set(get_result_name());
     
     for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
     {
@@ -80,7 +82,7 @@ void Complete_Statement::execute(Resource_Manager& rman)
       rman.pop_reference();
     }
 
-    Set& growth_set = rman.sets()[input];
+    Set& growth_set = *rman.get_set(input);
     
     new_elements_found = indexed_set_union(result_set.nodes, growth_set.nodes);
     new_elements_found |= indexed_set_union(result_set.attic_nodes, growth_set.attic_nodes);

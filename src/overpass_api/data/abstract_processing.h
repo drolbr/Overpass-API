@@ -316,11 +316,11 @@ std::vector< typename TObject::Id_Type > filter_for_ids(const std::map< TIndex, 
 
 template< class TIndex, class TObject >
 bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
-		       std::map< TIndex, std::vector< TObject > >& summand)
+		       const std::map< TIndex, std::vector< TObject > >& summand)
 {
   bool result_has_grown = false;
   
-  for (typename std::map< TIndex, std::vector< TObject > >::iterator
+  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
       it = summand.begin(); it != summand.end(); ++it)
   {
     std::vector< TObject >& target = result[it->first];

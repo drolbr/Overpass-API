@@ -57,32 +57,40 @@ Resource_Manager& fill_loop_set
   global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   Resource_Manager partial_rman(transaction, &global_settings);
   perform_id_query(partial_rman, "node", 1 + global_node_offset);
-  if (!partial_rman.sets()["_"].nodes.empty())
-    rman.sets()[set_name].nodes[partial_rman.sets()["_"].nodes.begin()->first].push_back(partial_rman.sets()["_"].nodes.begin()->second.front());
+  Set* target = rman.get_set(set_name);
+  if (!target)
+  {
+    Set empty;
+    rman.swap_set(set_name, empty);
+    target = rman.get_set(set_name);
+  }
+  Set* default_ = partial_rman.get_set("_");
+  if (default_ && !default_->nodes.empty())
+    target->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
   perform_id_query(partial_rman, "node", 2 + global_node_offset);
-  if (!partial_rman.sets()["_"].nodes.empty())
-    rman.sets()[set_name].nodes[partial_rman.sets()["_"].nodes.begin()->first].push_back(partial_rman.sets()["_"].nodes.begin()->second.front());
+  if (default_ && !default_->nodes.empty())
+    target->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
   perform_id_query(partial_rman, "node", 3 + global_node_offset);
-  if (!partial_rman.sets()["_"].nodes.empty())
-    rman.sets()[set_name].nodes[partial_rman.sets()["_"].nodes.begin()->first].push_back(partial_rman.sets()["_"].nodes.begin()->second.front());
+  if (default_ && !default_->nodes.empty())
+    target->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
 /*  perform_id_query(partial_rman, "way", 1);
-  if (!partial_rman.sets()["_"].ways.empty())
-    rman.sets()[set_name].ways[partial_rman.sets()["_"].ways.begin()->first].push_back(partial_rman.sets()["_"].ways.begin()->second.front());*/
+  if (!default_->ways.empty())
+    target->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());*/
   perform_id_query(partial_rman, "way", way_id_offset + 1);
-  if (!partial_rman.sets()["_"].ways.empty())
-    rman.sets()[set_name].ways[partial_rman.sets()["_"].ways.begin()->first].push_back(partial_rman.sets()["_"].ways.begin()->second.front());
+  if (default_ && !default_->ways.empty())
+    target->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
   perform_id_query(partial_rman, "way", 2*way_id_offset + 1);
-  if (!partial_rman.sets()["_"].ways.empty())
-    rman.sets()[set_name].ways[partial_rman.sets()["_"].ways.begin()->first].push_back(partial_rman.sets()["_"].ways.begin()->second.front());
+  if (default_ && !default_->ways.empty())
+    target->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
 /*  perform_id_query(partial_rman, "relation", 10);
-  if (!partial_rman.sets()["_"].relations.empty())
-    rman.sets()[set_name].relations[partial_rman.sets()["_"].relations.begin()->first].push_back(partial_rman.sets()["_"].relations.begin()->second.front());*/
+  if (!default_->relations.empty())
+    target->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());*/
   perform_id_query(partial_rman, "relation", 21);
-  if (!partial_rman.sets()["_"].relations.empty())
-    rman.sets()[set_name].relations[partial_rman.sets()["_"].relations.begin()->first].push_back(partial_rman.sets()["_"].relations.begin()->second.front());
+  if (default_ && !default_->relations.empty())
+    target->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
   perform_id_query(partial_rman, "relation", 32);
-  if (!partial_rman.sets()["_"].relations.empty())
-    rman.sets()[set_name].relations[partial_rman.sets()["_"].relations.begin()->first].push_back(partial_rman.sets()["_"].relations.begin()->second.front());
+  if (default_ && !default_->relations.empty())
+    target->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
 
   return rman;
 }

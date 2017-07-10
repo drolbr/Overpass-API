@@ -288,13 +288,13 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   Set into;
 
   // detect pivot element
-  std::map< std::string, Set >::const_iterator mit(rman.sets().find(pivot));
-  if (mit == rman.sets().end())
+  Set* pivot_set = rman.get_set(pivot);
+  if (!pivot_set)
   {
     transfer_output(rman, into);
     return;
   }
-  std::pair< uint32, Uint64 > pivot_pair(detect_pivot(mit->second));
+  std::pair< uint32, Uint64 > pivot_pair(detect_pivot(*pivot_set));
   int pivot_type(pivot_pair.first);
   uint32 pivot_id(pivot_pair.second.val());
 
@@ -308,11 +308,11 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   std::set< Uint31_Index > coarse_indices;
   std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
   if (pivot_type == NODE)
-    coarse_indices.insert(mit->second.nodes.begin()->first.val() & 0x7fffff00);
+    coarse_indices.insert(pivot_set->nodes.begin()->first.val() & 0x7fffff00);
   else if (pivot_type == WAY)
-    coarse_indices.insert(mit->second.ways.begin()->first.val() & 0x7fffff00);
+    coarse_indices.insert(pivot_set->ways.begin()->first.val() & 0x7fffff00);
   else if (pivot_type == RELATION)
-    coarse_indices.insert(mit->second.relations.begin()->first.val() & 0x7fffff00);
+    coarse_indices.insert(pivot_set->relations.begin()->first.val() & 0x7fffff00);
 
   formulate_range_query(range_set, coarse_indices);
 
@@ -342,15 +342,15 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   else if (pivot_type == RELATION)
     pivot_id += 3600000000u;
 
-  mit = rman.sets().find(input);
-  if (mit == rman.sets().end())
+  Set* input_set = rman.get_set(input);
+  if (!input_set)
   {
     transfer_output(rman, into);
     return;
   }
 
   // check node parity
-  Node::Id_Type odd_id(check_node_parity(mit->second));
+  Node::Id_Type odd_id(check_node_parity(*input_set));
   if (!(odd_id == Node::Id_Type(0ull)))
   {
     std::ostringstream temp;
@@ -363,7 +363,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   std::map< Uint31_Index, std::vector< Area_Block > > area_blocks;
   bool wraps_around_date_line = false;
   std::pair< Node::Id_Type, Way::Id_Type > odd_pair
-    (create_area_blocks(area_blocks, wraps_around_date_line, pivot_id, mit->second));
+    (create_area_blocks(area_blocks, wraps_around_date_line, pivot_id, *input_set));
   if (!(odd_pair.first == Node::Id_Type(0ull)))
   {
     std::ostringstream temp;

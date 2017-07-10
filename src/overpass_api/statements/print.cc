@@ -974,23 +974,23 @@ void Print_Statement::execute(Resource_Manager& rman)
   if (rman.area_updater())
     rman.area_updater()->flush();
 
-  std::map< std::string, Set >::const_iterator mit(rman.sets().find(input));
+  Set* input_set = rman.get_set(input);
 
   Set count_set;
   const Set* output_items = 0;
   if (mode & Output_Mode::COUNT)
   {
     count_set.deriveds[Uint31_Index(0u)].push_back(Derived_Structure("count", Uint64(0ull),
-        make_count_tags(mit == rman.sets().end() ? Set() : mit->second, rman.get_area_transaction())));
+        make_count_tags(input_set ? *input_set : Set(), rman.get_area_transaction())));
     output_items = &count_set;
     mode = mode | Output_Mode::TAGS;
   }
   else
   {
-    if (mit == rman.sets().end())
+    if (!input_set)
       return;
 
-    output_items = &mit->second;
+    output_items = input_set;
   }
 
   Extra_Data extra_data(rman, *this, *output_items, mode, south, north, west, east);
@@ -2181,12 +2181,12 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
 
 void Print_Statement::execute_comparison(Resource_Manager& rman)
 {
-  std::map< std::string, Set >::const_iterator mit(rman.sets().find(input));
+  Set* input_set = rman.get_set(input);
   uint32 element_count = 0;
-  if (mit == rman.sets().end())
+  if (!input_set)
     return;
 
-  Extra_Data extra_data(rman, *this, mit->second, Output_Mode::ID
+  Extra_Data extra_data(rman, *this, *input_set, Output_Mode::ID
         | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
         | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
         | Output_Mode::GEOMETRY, south, north, west, east);
@@ -2204,31 +2204,31 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
       | Output_Mode::GEOMETRY;
 
   {
-    tags_quadtile(extra_data, mit->second.nodes,
+    tags_quadtile(extra_data, input_set->nodes,
 		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data, mit->second.attic_nodes,
+      tags_quadtile_attic(extra_data, input_set->attic_nodes,
                       *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (collection_mode == collect_rhs)
       collection_print_target->clear_nodes(rman, add_deletion_information);
 
-    tags_quadtile(extra_data, mit->second.ways,
+    tags_quadtile(extra_data, input_set->ways,
 		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data, mit->second.attic_ways,
+      tags_quadtile_attic(extra_data, input_set->attic_ways,
                       *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (collection_mode == collect_rhs)
       collection_print_target->clear_ways(rman, add_deletion_information);
 
-    tags_quadtile(extra_data, mit->second.relations,
+    tags_quadtile(extra_data, input_set->relations,
 		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data, mit->second.attic_relations,
+      tags_quadtile_attic(extra_data, input_set->attic_relations,
                       *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (collection_mode == collect_rhs)
