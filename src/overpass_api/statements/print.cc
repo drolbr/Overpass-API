@@ -974,7 +974,7 @@ void Print_Statement::execute(Resource_Manager& rman)
   if (rman.area_updater())
     rman.area_updater()->flush();
 
-  Set* input_set = rman.get_set(input);
+  const Set* input_set = rman.get_set(input);
 
   Set count_set;
   const Set* output_items = 0;
@@ -2181,7 +2181,7 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
 
 void Print_Statement::execute_comparison(Resource_Manager& rman)
 {
-  Set* input_set = rman.get_set(input);
+  const Set* input_set = rman.get_set(input);
   uint32 element_count = 0;
   if (!input_set)
     return;

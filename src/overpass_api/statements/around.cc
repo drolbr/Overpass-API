@@ -290,7 +290,7 @@ bool Around_Constraint::get_ranges
 {
   ranges_used = true;
 
-  Set* input = rman.get_set(around->get_source_name());
+  const Set* input = rman.get_set(around->get_source_name());
   ranges = around->calc_ranges(input ? *input : Set(), rman);
   return true;
 }
@@ -459,7 +459,7 @@ void filter_relations_expensive(const Around_Statement& around,
 
 void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
-  Set* input = rman.get_set(around->get_source_name());
+  const Set* input = rman.get_set(around->get_source_name());
   around->calc_lat_lons(input ? *input : Set(), *around, rman);
 
   filter_nodes_expensive(*around, into.nodes);

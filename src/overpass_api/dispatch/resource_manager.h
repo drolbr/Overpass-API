@@ -39,13 +39,15 @@ struct Watchdog_Callback
 class Runtime_Stack_Frame
 {
 public:
-  Runtime_Stack_Frame(Runtime_Stack_Frame* parent_) : parent(parent_) {}
+  Runtime_Stack_Frame(Runtime_Stack_Frame* parent_ = 0) : parent(parent_) {}
   
   // Returns the used RAM including the used RAM of parent frames
   uint64 total_used_space() const;
     
   Set* get_set(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
+  void clear_sets();
+  uint64 total_size();
     
 private:
   Runtime_Stack_Frame* parent;
@@ -77,7 +79,7 @@ public:
     delete area_updater_;
   }
 
-  Set* get_set(const std::string& set_name);
+  const Set* get_set(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
   void clear_sets();
   
@@ -120,7 +122,7 @@ public:
   const std::vector< uint64 >& cpu_time() const { return cpu_runtime; }
 
 private:
-  std::map< std::string, Set > sets_;
+  std::vector< Runtime_Stack_Frame > runtime_stack;
   std::vector< const Set* > set_stack;
   std::vector< std::pair< uint, uint > > stack_progress;
   std::vector< long long > set_stack_sizes;

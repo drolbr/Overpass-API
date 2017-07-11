@@ -59,7 +59,7 @@ void evaluate_grid(double south, double north, double west, double east,
         stmt1->execute(rman);
       }
       uint area_count = 0;
-      Set* default_ = rman.get_set("_");
+      const Set* default_ = rman.get_set("_");
       if (default_)
       {
         for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator

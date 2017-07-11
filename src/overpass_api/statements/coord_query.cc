@@ -204,7 +204,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     register_coord(lat, lon, req, coord_per_req);
   else
   {
-    Set* input_set = rman.get_set(input);
+    const Set* input_set = rman.get_set(input);
     if (input_set)
     {
       const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes = input_set->nodes;

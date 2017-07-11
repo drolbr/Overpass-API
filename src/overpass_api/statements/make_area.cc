@@ -288,7 +288,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   Set into;
 
   // detect pivot element
-  Set* pivot_set = rman.get_set(pivot);
+  const Set* pivot_set = rman.get_set(pivot);
   if (!pivot_set)
   {
     transfer_output(rman, into);
@@ -342,7 +342,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   else if (pivot_type == RELATION)
     pivot_id += 3600000000u;
 
-  Set* input_set = rman.get_set(input);
+  const Set* input_set = rman.get_set(input);
   if (!input_set)
   {
     transfer_output(rman, into);

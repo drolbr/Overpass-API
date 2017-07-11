@@ -17,100 +17,10 @@
  */
 
 #include "resource_manager.h"
+#include "../data/utils.h"
 #include "../statements/statement.h"
 
 #include <sstream>
-
-
-Set* Runtime_Stack_Frame::get_set(const std::string& set_name)
-{
-  std::map< std::string, Set >::iterator it = sets.find(set_name);
-  if (it != sets.end())
-    return &it->second;
-  
-  if (parent)
-    return parent->get_set(set_name);
-  
-  return 0;
-}
-
-
-void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
-{
-  Set& to_swap = sets[set_name];
-  set_.swap(to_swap);
-}
-
-
-Resource_Manager::Resource_Manager(
-    Transaction& transaction_, Parsed_Query* global_settings_, Watchdog_Callback* watchdog_,
-    Error_Output* error_output_)
-      : transaction(&transaction_), error_output(error_output_),
-        area_transaction(0), area_updater_(0),
-        watchdog(watchdog_), global_settings(global_settings_), global_settings_owned(false),
-	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0),
-	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW)
-{
-  if (!global_settings)
-  {
-    global_settings = new Parsed_Query();
-    global_settings_owned = true;
-  }
-}
-
-
-Set* Resource_Manager::get_set(const std::string& set_name)
-{
-  std::map< std::string, Set >::iterator it = sets_.find(set_name);
-  if (it == sets_.end())
-    return 0;
-  return &it->second;
-}
-
-
-void Resource_Manager::swap_set(const std::string& set_name, Set& set_)
-{
-  Set& lhs_set = sets_[set_name];
-  lhs_set.swap(set_);
-}
-
-
-void Resource_Manager::clear_sets()
-{
-  sets_.clear();
-}
-
-
-uint count_set(const Set& set_)
-{
-  uint size(0);
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator
-      it(set_.nodes.begin()); it != set_.nodes.end(); ++it)
-    size += it->second.size();
-  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
-      it(set_.ways.begin()); it != set_.ways.end(); ++it)
-    size += it->second.size();
-  for (std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-      it(set_.relations.begin()); it != set_.relations.end(); ++it)
-    size += it->second.size();
-
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
-      it(set_.attic_nodes.begin()); it != set_.attic_nodes.end(); ++it)
-    size += it->second.size();
-  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
-      it(set_.attic_ways.begin()); it != set_.attic_ways.end(); ++it)
-    size += it->second.size();
-  for (std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-      it(set_.attic_relations.begin()); it != set_.attic_relations.end(); ++it)
-    size += it->second.size();
-
-  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
-      it(set_.areas.begin()); it != set_.areas.end(); ++it)
-    size += it->second.size();
-
-  return size;
-}
 
 
 uint64 eval_map(const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes)
@@ -191,6 +101,123 @@ uint64 eval_set(const Set& set_)
 }
 
 
+Set* Runtime_Stack_Frame::get_set(const std::string& set_name)
+{
+  std::map< std::string, Set >::iterator it = sets.find(set_name);
+  if (it != sets.end())
+    return &it->second;
+  
+  if (parent)
+    return parent->get_set(set_name);
+  
+  return 0;
+}
+
+
+void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
+{
+  Set& to_swap = sets[set_name];
+  set_.swap(to_swap);
+}
+
+
+void Runtime_Stack_Frame::clear_sets()
+{
+  sets.clear();
+}
+
+
+uint64 Runtime_Stack_Frame::total_size()
+{
+  uint64 result = 0;
+  
+  for (std::map< std::string, Set >::const_iterator it = sets.begin(); it != sets.end(); ++it)
+    result += eval_set(it->second);
+  
+  if (parent)
+    return result + parent->total_size();
+  
+  return result;
+}
+
+
+Resource_Manager::Resource_Manager(
+    Transaction& transaction_, Parsed_Query* global_settings_, Watchdog_Callback* watchdog_,
+    Error_Output* error_output_)
+      : transaction(&transaction_), error_output(error_output_),
+        area_transaction(0), area_updater_(0),
+        watchdog(watchdog_), global_settings(global_settings_), global_settings_owned(false),
+	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
+	max_allowed_time(0), max_allowed_space(0),
+	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW)
+{
+  if (!global_settings)
+  {
+    global_settings = new Parsed_Query();
+    global_settings_owned = true;
+  }
+  
+  runtime_stack.push_back(Runtime_Stack_Frame());
+}
+
+
+const Set* Resource_Manager::get_set(const std::string& set_name)
+{
+  if (runtime_stack.empty())
+    return 0;
+  
+  return runtime_stack.back().get_set(set_name);
+}
+
+
+void Resource_Manager::swap_set(const std::string& set_name, Set& set_)
+{
+  if (runtime_stack.empty())
+    runtime_stack.push_back(Runtime_Stack_Frame());
+  
+  sort(set_);
+  runtime_stack.back().swap_set(set_name, set_);
+}
+
+
+void Resource_Manager::clear_sets()
+{
+  if (!runtime_stack.empty())
+    runtime_stack.back().clear_sets();
+}
+
+
+uint count_set(const Set& set_)
+{
+  uint size(0);
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator
+      it(set_.nodes.begin()); it != set_.nodes.end(); ++it)
+    size += it->second.size();
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
+      it(set_.ways.begin()); it != set_.ways.end(); ++it)
+    size += it->second.size();
+  for (std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
+      it(set_.relations.begin()); it != set_.relations.end(); ++it)
+    size += it->second.size();
+
+  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
+      it(set_.attic_nodes.begin()); it != set_.attic_nodes.end(); ++it)
+    size += it->second.size();
+  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
+      it(set_.attic_ways.begin()); it != set_.attic_ways.end(); ++it)
+    size += it->second.size();
+  for (std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
+      it(set_.attic_relations.begin()); it != set_.attic_relations.end(); ++it)
+    size += it->second.size();
+
+  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
+      it(set_.areas.begin()); it != set_.areas.end(); ++it)
+    size += it->second.size();
+
+  return size;
+}
+
+
 void Resource_Manager::push_reference(const Set& set_)
 {
   set_stack.push_back(&set_);
@@ -251,10 +278,9 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
   if (max_allowed_space > 0)
   {
     size = extra_space;
+    if (!runtime_stack.empty())
+      size += runtime_stack.back().total_size();
 
-    for (std::map< std::string, Set >::const_iterator it(sets_.begin()); it != sets_.end();
-        ++it)
-      size += eval_set(it->second);
     for (std::vector< long long >::const_iterator it = set_stack_sizes.begin();
         it != set_stack_sizes.end(); ++it)
       size += *it;

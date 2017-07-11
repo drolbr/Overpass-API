@@ -61,7 +61,7 @@ void Foreach_Statement::add_statement(Statement* statement, std::string text)
 
 void Foreach_Statement::execute(Resource_Manager& rman)
 {
-  Set* base_set_ref = rman.get_set(input);
+  const Set* base_set_ref = rman.get_set(input);
   Set base_set = base_set_ref ? *base_set_ref : Set();
   rman.push_reference(base_set);
 
@@ -73,9 +73,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       Set empty;
+      empty.nodes[it->first].push_back(*it2);
       rman.swap_set(output, empty);
 
-      rman.get_set(output)->nodes[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
@@ -90,9 +90,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       Set empty;
+      empty.attic_nodes[it->first].push_back(*it2);
       rman.swap_set(output, empty);
 
-      rman.get_set(output)->attic_nodes[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
@@ -107,9 +107,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       Set empty;
+      empty.ways[it->first].push_back(*it2);
       rman.swap_set(output, empty);
 
-      rman.get_set(output)->ways[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
@@ -124,9 +124,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       Set empty;
+      empty.attic_ways[it->first].push_back(*it2);
       rman.swap_set(output, empty);
 
-      rman.get_set(output)->attic_ways[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
@@ -141,9 +141,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       Set empty;
+      empty.relations[it->first].push_back(*it2);
       rman.swap_set(output, empty);
 
-      rman.get_set(output)->relations[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
@@ -158,9 +158,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       Set empty;
+      empty.attic_relations[it->first].push_back(*it2);
       rman.swap_set(output, empty);
 
-      rman.get_set(output)->attic_relations[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
@@ -175,9 +175,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       Set empty;
+      empty.areas[it->first].push_back(*it2);
       rman.swap_set(output, empty);
 
-      rman.get_set(output)->areas[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
@@ -192,9 +192,9 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     {
       rman.count_loop();
       Set empty;
+      empty.deriveds[it->first].push_back(*it2);
       rman.swap_set(output, empty);
 
-      rman.get_set(output)->deriveds[it->first].push_back(*it2);
       for (std::vector< Statement* >::iterator it(substatements.begin());
           it != substatements.end(); ++it)
 	(*it)->execute(rman);

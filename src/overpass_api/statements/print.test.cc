@@ -210,33 +210,32 @@ int main(int argc, char* args[])
     {
       // Print all items sorted by id:
       Resource_Manager total_rman(transaction, &global_settings);
-      Set empty;
-      total_rman.swap_set("_", empty);
-      Set* total_ = total_rman.get_set("_");
+      Set total;
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
-        Set* default_ = rman.get_set("_");
+        const Set* default_ = rman.get_set("_");
 	if (default_ && !default_->nodes.empty())
-	  total_->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
+	  total.nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
-        Set* default_ = rman.get_set("_");
+        const Set* default_ = rman.get_set("_");
 	if (default_ && !default_->ways.empty())
-	  total_->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
+	  total.ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
-        Set* default_ = rman.get_set("_");
+        const Set* default_ = rman.get_set("_");
 	if (default_ && !default_->relations.empty())
-	  total_->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
+	  total.relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
       }
+      total_rman.swap_set("_", total);
       {
 	const char* attributes[] = { "order", "id", 0 };
 	Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);
@@ -255,33 +254,32 @@ int main(int argc, char* args[])
     {
       std::cout<<"Print all items sorted by quadtile:\n";
       Resource_Manager total_rman(transaction, &global_settings);
-      Set empty;
-      total_rman.swap_set("_", empty);
-      Set* total_ = total_rman.get_set("_");
+      Set total;
       for (uint32 i = 10000; i <= node_id_upper_limit; i += 10000)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "node", i + global_node_offset);
-        Set* default_ = rman.get_set("_");
+        const Set* default_ = rman.get_set("_");
 	if (default_ && !default_->nodes.empty())
-	  total_->nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
+	  total.nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
       }
       for (uint32 i = 1000; i <= way_id_upper_limit; i += 1000)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "way", i);
-        Set* default_ = rman.get_set("_");
+        const Set* default_ = rman.get_set("_");
 	if (default_ && !default_->ways.empty())
-	  total_->ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
+	  total.ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
       }
       for (uint32 i = 4; i <= relation_id_upper_limit; i += 4)
       {
 	Resource_Manager rman(transaction, &global_settings);
 	perform_id_query(rman, "relation", i);
-        Set* default_ = rman.get_set("_");
+        const Set* default_ = rman.get_set("_");
 	if (default_ && !default_->relations.empty())
-	  total_->relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
+	  total.relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
       }
+      total_rman.swap_set("_", total);
       {
 	const char* attributes[] = { "order", "quadtile", 0 };
 	Print_Statement stmt(2, convert_c_pairs(attributes), global_settings);

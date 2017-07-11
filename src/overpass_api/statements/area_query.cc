@@ -61,7 +61,7 @@ bool Area_Constraint::get_ranges
 {
   if (area->areas_from_input())
   {
-    Set* input = rman.get_set(area->get_input());
+    const Set* input = rman.get_set(area->get_input());
     if (!input)
       return true;
 
@@ -109,7 +109,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
   if (area->areas_from_input())
   {
-    Set* input = rman.get_set(area->get_input());
+    const Set* input = rman.get_set(area->get_input());
     if (input)
       area->get_ranges(input->areas, range_req, area_blocks_req, rman);
   }
@@ -291,7 +291,7 @@ bool Area_Constraint::delivers_data(Resource_Manager& rman)
     return false;
   else
   {
-    Set* input = rman.get_set(area->get_input());
+    const Set* input = rman.get_set(area->get_input());
     if (!input)
       return true;
 

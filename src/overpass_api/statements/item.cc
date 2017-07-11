@@ -79,7 +79,7 @@ void collect_elements(const std::map< TIndex, std::vector< TObject > >& from,
 bool Item_Constraint::collect_nodes(Resource_Manager& rman, Set& into,
 				    const std::vector< Uint64 >& ids, bool invert_ids)
 {
-  Set* input = rman.get_set(item->get_input_name());
+  const Set* input = rman.get_set(item->get_input_name());
   if (input)
   {
     collect_elements(input->nodes, into.nodes, ids, invert_ids);
@@ -97,7 +97,7 @@ bool Item_Constraint::collect_nodes(Resource_Manager& rman, Set& into,
 bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
 			      int type, const std::vector< Uint32_Index >& ids, bool invert_ids)
 {
-  Set* input = rman.get_set(item->get_input_name());
+  const Set* input = rman.get_set(item->get_input_name());
   if (input)
   {
     if (type == QUERY_WAY)
@@ -128,7 +128,7 @@ bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
 
 void Item_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  Set* input = rman.get_set(item->get_input_name());
+  const Set* input = rman.get_set(item->get_input_name());
   if (input)
   {
     item_filter_map(into.nodes, input->nodes);
@@ -191,7 +191,7 @@ void Item_Statement::execute(Resource_Manager& rman)
   {
     Set into;
     
-    Set* input_set = rman.get_set(input);
+    const Set* input_set = rman.get_set(input);
     if (input_set)
       into = *input_set;
     

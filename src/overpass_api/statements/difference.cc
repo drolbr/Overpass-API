@@ -80,7 +80,7 @@ void Difference_Statement::execute(Resource_Manager& rman)
   (*it)->execute(rman);
   rman.pop_reference();
 
-  Set* base_set_ref = rman.get_set((*it)->get_result_name());
+  const Set* base_set_ref = rman.get_set((*it)->get_result_name());
   base_set = base_set_ref ? *base_set_ref : Set();
 
   ++it;
@@ -90,7 +90,7 @@ void Difference_Statement::execute(Resource_Manager& rman)
     (*it)->execute(rman);
     rman.pop_reference();
 
-    Set* summand = rman.get_set((*it)->get_result_name());
+    const Set* summand = rman.get_set((*it)->get_result_name());
 
     if (summand)
     {

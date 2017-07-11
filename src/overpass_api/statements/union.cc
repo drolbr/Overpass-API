@@ -74,12 +74,10 @@ void Union_Statement::execute(Resource_Manager& rman)
     (*it)->execute(rman);
     rman.pop_reference();
 
-    Set* summand = rman.get_set((*it)->get_result_name());
+    const Set* summand = rman.get_set((*it)->get_result_name());
     
     if (summand)
     {
-      sort(*summand);
-
       indexed_set_union(base_set.nodes, summand->nodes);
       indexed_set_union(base_set.attic_nodes, summand->attic_nodes);
 

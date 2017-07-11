@@ -437,7 +437,7 @@ Prepare_Task_Context::Prepare_Task_Context(
     context.name = it->set_name;
     context.parent = this;
     
-    Set* input = rman.get_set(context.name);
+    const Set* input = rman.get_set(context.name);
     if (input)
       context.prefetch(it->usage, *input, stmt, rman);
   }

@@ -105,10 +105,10 @@ void perform_query(std::string type, std::string key, std::string value, std::st
       stmt1.stmt().execute(rman);
     }
     Set empty;
-    Set* lhs = rman.get_set("_");
+    const Set* lhs = rman.get_set("_");
     if (!lhs)
       lhs = &empty;
-    Set* rhs = rman.get_set("b");
+    const Set* rhs = rman.get_set("b");
     if (!rhs)
       rhs = &empty;
     if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
@@ -161,10 +161,10 @@ void perform_query
       stmt1.stmt().execute(rman);
     }
     Set empty;
-    Set* lhs = rman.get_set("_");
+    const Set* lhs = rman.get_set("_");
     if (!lhs)
       lhs = &empty;
-    Set* rhs = rman.get_set("b");
+    const Set* rhs = rman.get_set("b");
     if (!rhs)
       rhs = &empty;
     if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
@@ -256,10 +256,10 @@ void perform_query
       stmt1.stmt().execute(rman);
     }
     Set empty;
-    Set* lhs = rman.get_set("_");
+    const Set* lhs = rman.get_set("_");
     if (!lhs)
       lhs = &empty;
-    Set* rhs = rman.get_set("c");
+    const Set* rhs = rman.get_set("c");
     if (!rhs)
       rhs = &empty;
     if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
@@ -485,10 +485,10 @@ void perform_query_with_around
       stmt1.stmt().execute(rman);
     }
     Set empty;
-    Set* lhs = rman.get_set("_");
+    const Set* lhs = rman.get_set("_");
     if (!lhs)
       lhs = &empty;
-    Set* rhs = rman.get_set("c");
+    const Set* rhs = rman.get_set("c");
     if (!rhs)
       rhs = &empty;
     if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
@@ -623,10 +623,10 @@ void perform_query_with_bbox
       stmt1.stmt().execute(rman);
     }
     Set empty;
-    Set* lhs = rman.get_set("_");
+    const Set* lhs = rman.get_set("_");
     if (!lhs)
       lhs = &empty;
-    Set* rhs = rman.get_set("b");
+    const Set* rhs = rman.get_set("b");
     if (!rhs)
       rhs = &empty;
     if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))
@@ -777,10 +777,10 @@ void perform_filter_from_previous_element
     }
 
     Set empty;
-    Set* lhs = rman.get_set("_");
+    const Set* lhs = rman.get_set("_");
     if (!lhs)
       lhs = &empty;
-    Set* rhs = rman.get_set("b");
+    const Set* rhs = rman.get_set("b");
     if (!rhs)
       rhs = &empty;
     if ((lhs->nodes != rhs->nodes) || (lhs->ways != rhs->ways) || (lhs->relations != rhs->relations))

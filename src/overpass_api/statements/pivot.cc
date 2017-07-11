@@ -154,7 +154,7 @@ bool Pivot_Constraint::get_data
      const std::vector< Node_Skeleton::Id_Type >& ids,
      bool invert_ids)
 {
-  Set* input_set = rman.get_set(stmt->get_input());
+  const Set* input_set = rman.get_set(stmt->get_input());
   std::vector< Node::Id_Type > pivot_ids;
   if (input_set)
     pivot_ids = get_node_pivot_ids(input_set->areas);
@@ -184,7 +184,7 @@ bool Pivot_Constraint::get_data
      const std::vector< Uint32_Index >& ids,
      bool invert_ids)
 {
-  Set* input_set = rman.get_set(stmt->get_input());
+  const Set* input_set = rman.get_set(stmt->get_input());
   
   if (type == QUERY_WAY)
   {
@@ -232,7 +232,7 @@ bool Pivot_Constraint::get_data
 
 void Pivot_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  Set* input_set = rman.get_set(stmt->get_input());
+  const Set* input_set = rman.get_set(stmt->get_input());
   
   if (input_set)
   {
@@ -275,7 +275,7 @@ void Pivot_Statement::execute(Resource_Manager& rman)
 {
   Set into;
 
-  Set* input_set = rman.get_set(input);
+  const Set* input_set = rman.get_set(input);
   if (input_set)
   {
     collect_elems(rman, *osm_base_settings().NODES, get_node_pivot_ids(input_set->areas), into.nodes);

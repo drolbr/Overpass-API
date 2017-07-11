@@ -1176,7 +1176,7 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair<
 {
   ranges.clear();
 
-  Set* input = rman.get_set(stmt->get_input());
+  const Set* input = rman.get_set(stmt->get_input());
   if (!input)
     return true;
 
@@ -1231,7 +1231,7 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair<
 {
   ranges.clear();
 
-  Set* input = rman.get_set(stmt->get_input());
+  const Set* input = rman.get_set(stmt->get_input());
   if (!input)
     return true;
 
@@ -1338,7 +1338,7 @@ bool Recurse_Constraint::get_data
      const std::vector< Node::Id_Type >& ids,
      bool invert_ids)
 {
-  Set* input = rman.get_set(stmt->get_input());
+  const Set* input = rman.get_set(stmt->get_input());
   if (!input)
     return true;
 
@@ -1462,7 +1462,7 @@ bool Recurse_Constraint::get_data
      const std::vector< Uint32_Index >& ids,
      bool invert_ids)
 {
-  Set* input = rman.get_set(stmt->get_input());
+  const Set* input = rman.get_set(stmt->get_input());
   if (!input)
     return true;
 
@@ -1928,7 +1928,7 @@ bool Recurse_Constraint::get_data
 
 void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  Set* input = rman.get_set(stmt->get_input());
+  const Set* input = rman.get_set(stmt->get_input());
   if (!input)
   {
     into.clear();
@@ -2144,7 +2144,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
 
 void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
-  Set* input = rman.get_set(stmt->get_input());
+  const Set* input = rman.get_set(stmt->get_input());
   if (!input)
     return;
   if (stmt->get_type() != RECURSE_DOWN && stmt->get_type() != RECURSE_DOWN_REL
@@ -2556,7 +2556,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 {
   Set into;
 
-  Set* input_set = rman.get_set(input);
+  const Set* input_set = rman.get_set(input);
   if (!input_set)
   {
     transfer_output(rman, into);

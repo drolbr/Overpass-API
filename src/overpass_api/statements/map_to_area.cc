@@ -58,7 +58,7 @@ std::vector< Area_Skeleton::Id_Type > get_area_ids_for_ways(const std::map< Uint
   return area_ids;
 }
 
-std::vector< Area_Skeleton::Id_Type > get_area_ids_for_attic_ways(std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways)
+std::vector< Area_Skeleton::Id_Type > get_area_ids_for_attic_ways(const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways)
 {
   std::vector<Area::Id_Type> area_ids;
   for (std::map<Uint31_Index, std::vector<Attic<Way_Skeleton> > >::const_iterator it =
@@ -90,7 +90,7 @@ std::vector< Area_Skeleton::Id_Type > get_area_ids_for_relations(const std::map<
   return area_ids;
 }
 
-std::vector< Area_Skeleton::Id_Type > get_area_ids_for_attic_relations(std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels)
+std::vector< Area_Skeleton::Id_Type > get_area_ids_for_attic_relations(const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels)
 {
   std::vector<Area::Id_Type> area_ids;
   for (std::map<Uint31_Index, std::vector<Attic<Relation_Skeleton> > >::const_iterator it =
@@ -134,7 +134,7 @@ void Map_To_Area_Statement::execute(Resource_Manager& rman)
   Set into;
   std::vector< Area_Skeleton::Id_Type > idx;
 
-  Set* input_set = rman.get_set(input);
+  const Set* input_set = rman.get_set(input);
   if (input_set)
   {
     std::vector< Area_Skeleton::Id_Type > ways_idx = get_area_ids_for_ways(input_set->ways);
