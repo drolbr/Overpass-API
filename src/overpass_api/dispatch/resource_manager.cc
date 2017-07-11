@@ -117,6 +117,7 @@ Set* Runtime_Stack_Frame::get_set(const std::string& set_name)
 void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
 {
   Set& to_swap = sets[set_name];
+  size_per_set[set_name] = eval_set(to_swap);
   set_.swap(to_swap);
 }
 
@@ -124,6 +125,7 @@ void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
 void Runtime_Stack_Frame::clear_sets()
 {
   sets.clear();
+  size_per_set.clear();
 }
 
 
@@ -131,8 +133,8 @@ uint64 Runtime_Stack_Frame::total_size()
 {
   uint64 result = 0;
   
-  for (std::map< std::string, Set >::const_iterator it = sets.begin(); it != sets.end(); ++it)
-    result += eval_set(it->second);
+  for (std::map< std::string, uint64 >::const_iterator it = size_per_set.begin(); it != size_per_set.end(); ++it)
+    result += it->second;
   
   if (parent)
     return result + parent->total_size();

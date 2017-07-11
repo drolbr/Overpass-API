@@ -52,6 +52,7 @@ public:
 private:
   Runtime_Stack_Frame* parent;
   std::map< std::string, Set > sets;
+  std::map< std::string, uint64 > size_per_set;
 };
 
 
@@ -82,6 +83,10 @@ public:
   const Set* get_set(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
   void clear_sets();
+
+  void push_reference(const Set& set_);
+  void pop_reference();
+  void count_loop();
   
   Area_Usage_Listener* area_updater()
   {
@@ -89,10 +94,6 @@ public:
   }
 
   Parsed_Query& get_global_settings() const { return *global_settings; }
-
-  void push_reference(const Set& set_);
-  void pop_reference();
-  void count_loop();
 
   void log_and_display_error(std::string message);
 
