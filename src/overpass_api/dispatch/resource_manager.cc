@@ -17,6 +17,7 @@
  */
 
 #include "resource_manager.h"
+#include "../data/abstract_processing.h"
 #include "../data/utils.h"
 #include "../statements/statement.h"
 
@@ -129,6 +130,122 @@ void Runtime_Stack_Frame::clear_sets()
 }
 
 
+void Runtime_Stack_Frame::copy_outward(const std::string& inner_set_name, const std::string& top_set_name)
+{
+  Set* from = 0;
+  
+  if (parent)
+    from = parent->get_set(inner_set_name);
+  
+  if (from)
+  {
+    size_per_set[top_set_name] = eval_set(*from);
+    sets[top_set_name] = *from;
+  }
+  else
+  {
+    size_per_set[top_set_name] = 0;
+    sets[top_set_name];
+  }
+}
+
+
+void Runtime_Stack_Frame::move_outward(const std::string& inner_set_name, const std::string& top_set_name)
+{
+  if (parent)
+  {
+    size_per_set[top_set_name] = parent->size_per_set[inner_set_name];
+    sets[top_set_name].clear();
+    parent->swap_set(inner_set_name, sets[top_set_name]);
+  }
+}
+
+
+void Runtime_Stack_Frame::clear_inside(const std::string& inner_set_name)
+{
+  if (parent)
+  {
+    parent->sets.erase(inner_set_name);
+    parent->size_per_set[inner_set_name] = 0;
+  }
+}
+
+
+bool Runtime_Stack_Frame::union_inward(const std::string& top_set_name, const std::string& inner_set_name)
+{
+  bool new_elements_found = false;
+  Set* source = get_set(top_set_name);
+  
+  if (source && parent)
+  {
+    Set& target = parent->sets[inner_set_name];
+
+    new_elements_found |= indexed_set_union(target.nodes, source->nodes);
+    new_elements_found |= indexed_set_union(target.attic_nodes, source->attic_nodes);
+
+    new_elements_found |= indexed_set_union(target.ways, source->ways);
+    new_elements_found |= indexed_set_union(target.attic_ways, source->attic_ways);
+
+    new_elements_found |= indexed_set_union(target.relations, source->relations);
+    new_elements_found |= indexed_set_union(target.attic_relations, source->attic_relations);
+
+    new_elements_found |= indexed_set_union(target.areas, source->areas);
+    new_elements_found |= indexed_set_union(target.deriveds, source->deriveds);
+    
+    parent->size_per_set[inner_set_name] = eval_set(target);
+  }
+  
+  return new_elements_found;
+}
+
+
+void Runtime_Stack_Frame::substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name)
+{
+  Set* source = get_set(top_set_name);
+  
+  if (source && parent)
+  {
+    Set& target = parent->sets[inner_set_name];
+
+    indexed_set_difference(target.nodes, source->nodes);
+    indexed_set_difference(target.ways, source->ways);
+    indexed_set_difference(target.relations, source->relations);
+    
+    indexed_set_difference(target.attic_nodes, source->attic_nodes);
+    indexed_set_difference(target.attic_ways, source->attic_ways);
+    indexed_set_difference(target.attic_relations, source->attic_relations);
+    
+    indexed_set_difference(target.areas, source->areas);
+    indexed_set_difference(target.deriveds, source->deriveds);
+    
+    parent->size_per_set[inner_set_name] = eval_set(target);
+  }
+}
+
+
+void Runtime_Stack_Frame::move_all_inward()
+{
+  if (parent)
+  {
+    for (std::map< std::string, Set >::iterator it = sets.begin(); it != sets.end(); ++it)
+      parent->swap_set(it->first, it->second);
+  }
+}
+
+
+void Runtime_Stack_Frame::move_all_inward_except(const std::string& set_name)
+{
+  if (parent)
+  {
+    for (std::map< std::string, Set >::iterator it = sets.begin(); it != sets.end(); ++it)
+    {
+      if (it->first != set_name)
+        parent->swap_set(it->first, it->second);
+    }
+  }
+}
+
+
 uint64 Runtime_Stack_Frame::total_size()
 {
   uint64 result = 0;
@@ -138,6 +255,18 @@ uint64 Runtime_Stack_Frame::total_size()
   
   if (parent)
     return result + parent->total_size();
+  
+  return result;
+}
+
+
+std::vector< std::pair< uint, uint > > Runtime_Stack_Frame::stack_progress() const
+{
+  std::vector< std::pair< uint, uint > > result;
+  if (parent)
+    parent->stack_progress().swap(result);
+  
+  result.push_back(std::make_pair(loop_count, loop_size));
   
   return result;
 }
@@ -159,7 +288,7 @@ Resource_Manager::Resource_Manager(
     global_settings_owned = true;
   }
   
-  runtime_stack.push_back(Runtime_Stack_Frame());
+  runtime_stack.push_back(new Runtime_Stack_Frame());
 }
 
 
@@ -168,24 +297,104 @@ const Set* Resource_Manager::get_set(const std::string& set_name)
   if (runtime_stack.empty())
     return 0;
   
-  return runtime_stack.back().get_set(set_name);
+  return runtime_stack.back()->get_set(set_name);
 }
 
 
 void Resource_Manager::swap_set(const std::string& set_name, Set& set_)
 {
   if (runtime_stack.empty())
-    runtime_stack.push_back(Runtime_Stack_Frame());
+    runtime_stack.push_back(new Runtime_Stack_Frame());
   
   sort(set_);
-  runtime_stack.back().swap_set(set_name, set_);
+  runtime_stack.back()->swap_set(set_name, set_);
 }
 
 
 void Resource_Manager::clear_sets()
 {
   if (!runtime_stack.empty())
-    runtime_stack.back().clear_sets();
+    runtime_stack.back()->clear_sets();
+}
+
+
+  
+void Resource_Manager::push_stack_frame()
+{
+  runtime_stack.push_back(new Runtime_Stack_Frame(runtime_stack.empty() ? 0 : runtime_stack.back()));
+}
+
+
+void Resource_Manager::copy_outward(const std::string& inner_set_name, const std::string& top_set_name)
+{
+  if (runtime_stack.empty())
+    return;
+  
+  runtime_stack.back()->copy_outward(inner_set_name, top_set_name);
+}
+
+
+void Resource_Manager::move_outward(const std::string& inner_set_name, const std::string& top_set_name)
+{
+  if (runtime_stack.empty())
+    return;
+  
+  runtime_stack.back()->move_outward(inner_set_name, top_set_name);
+}
+
+
+void Resource_Manager::clear_inside(const std::string& inner_set_name)
+{
+  if (runtime_stack.empty())
+    return;
+  
+  runtime_stack.back()->clear_inside(inner_set_name);
+}
+
+
+bool Resource_Manager::union_inward(const std::string& top_set_name, const std::string& inner_set_name)
+{
+  if (runtime_stack.empty())
+    return false;
+  
+  return runtime_stack.back()->union_inward(top_set_name, inner_set_name);
+}
+
+
+void Resource_Manager::substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name)
+{
+  if (runtime_stack.empty())
+    return;
+  
+  runtime_stack.back()->substract_from_inward(top_set_name, inner_set_name);
+}
+
+
+void Resource_Manager::move_all_inward()
+{
+  if (runtime_stack.empty())
+    return;
+  
+  runtime_stack.back()->move_all_inward();
+}
+
+
+void Resource_Manager::move_all_inward_except(const std::string& set_name)
+{
+  if (runtime_stack.empty())
+    return;
+  
+  runtime_stack.back()->move_all_inward_except(set_name);
+}
+
+
+void Resource_Manager::pop_stack_frame()
+{
+  if (!runtime_stack.empty())
+  {
+    delete runtime_stack.back();
+    runtime_stack.pop_back();
+  }
 }
 
 
@@ -220,25 +429,12 @@ uint count_set(const Set& set_)
 }
 
 
-void Resource_Manager::push_reference(const Set& set_)
-{
-  set_stack.push_back(&set_);
-  stack_progress.push_back(std::make_pair(0, count_set(set_)));
-  set_stack_sizes.push_back(eval_set(set_));
-}
-
-
-void Resource_Manager::pop_reference()
-{
-  set_stack.pop_back();
-  stack_progress.pop_back();
-  set_stack_sizes.pop_back();
-}
-
-
 void Resource_Manager::count_loop()
 {
-  ++stack_progress.back().first;
+  if (runtime_stack.empty())
+    return;
+  
+  runtime_stack.back()->count_loop();
 }
 
 
@@ -270,7 +466,7 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
       {
         error_output->display_statement_progress
             (elapsed_time, stmt.get_name(), stmt.get_progress(), stmt.get_line_number(),
-	     stack_progress);
+	     runtime_stack.back()->stack_progress());
       }
       last_report_time = elapsed_time;
     }
@@ -281,11 +477,7 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
   {
     size = extra_space;
     if (!runtime_stack.empty())
-      size += runtime_stack.back().total_size();
-
-    for (std::vector< long long >::const_iterator it = set_stack_sizes.begin();
-        it != set_stack_sizes.end(); ++it)
-      size += *it;
+      size += runtime_stack.back()->total_size();
   }
 
   if (elapsed_time > max_allowed_time)
@@ -294,7 +486,7 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
     {
       error_output->display_statement_progress
           (elapsed_time, stmt.get_name(), stmt.get_progress(), stmt.get_line_number(),
-           stack_progress);
+           runtime_stack.back()->stack_progress());
     }
 
     Resource_Error* error = new Resource_Error();
@@ -319,7 +511,7 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
     {
       error_output->display_statement_progress
           (elapsed_time, stmt.get_name(), stmt.get_progress(), stmt.get_line_number(),
-           stack_progress);
+           runtime_stack.back()->stack_progress());
     }
 
     Resource_Error* error = new Resource_Error();

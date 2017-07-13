@@ -33,7 +33,7 @@ class Foreach_Statement : public Statement
                       Parsed_Query& global_settings);
     virtual void add_statement(Statement* statement, std::string text);
     virtual std::string get_name() const { return "foreach"; }
-    virtual std::string get_result_name() const { return ""; }
+    virtual std::string get_result_name() const { return output; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Foreach_Statement() {}
 

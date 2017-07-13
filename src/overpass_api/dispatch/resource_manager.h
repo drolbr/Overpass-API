@@ -39,7 +39,7 @@ struct Watchdog_Callback
 class Runtime_Stack_Frame
 {
 public:
-  Runtime_Stack_Frame(Runtime_Stack_Frame* parent_ = 0) : parent(parent_) {}
+  Runtime_Stack_Frame(Runtime_Stack_Frame* parent_ = 0) : parent(parent_), loop_count(0), loop_size(0) {}
   
   // Returns the used RAM including the used RAM of parent frames
   uint64 total_used_space() const;
@@ -47,12 +47,26 @@ public:
   Set* get_set(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
   void clear_sets();
+  
+  void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
+  void move_outward(const std::string& inner_set_name, const std::string& top_set_name);
+  void clear_inside(const std::string& inner_set_name);
+  bool union_inward(const std::string& top_set_name, const std::string& inner_set_name);
+  void substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name);
+  void move_all_inward();
+  void move_all_inward_except(const std::string& set_name);
+  
   uint64 total_size();
+  std::vector< std::pair< uint, uint > > stack_progress() const;
+  void set_loop_size(uint loop_size_) { loop_size = loop_size_; }
+  void count_loop() { ++loop_count; }
     
 private:
   Runtime_Stack_Frame* parent;
   std::map< std::string, Set > sets;
   std::map< std::string, uint64 > size_per_set;
+  uint loop_count;
+  uint loop_size;
 };
 
 
@@ -71,10 +85,17 @@ public:
 	watchdog(watchdog_), global_settings(&global_settings_), global_settings_owned(false),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
 	max_allowed_time(0), max_allowed_space(0),
-	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW) {}
+	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW)
+  {
+    runtime_stack.push_back(new Runtime_Stack_Frame());
+  }
 	
   ~Resource_Manager()
   {
+    for (std::vector< Runtime_Stack_Frame* >::iterator it = runtime_stack.begin();
+        it != runtime_stack.end(); ++it)
+      delete *it;
+    
     if (global_settings_owned)
       delete global_settings;
     delete area_updater_;
@@ -83,9 +104,17 @@ public:
   const Set* get_set(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
   void clear_sets();
+  
+  void push_stack_frame();
+  void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
+  void move_outward(const std::string& inner_set_name, const std::string& top_set_name);
+  void clear_inside(const std::string& inner_set_name);
+  bool union_inward(const std::string& top_set_name, const std::string& inner_set_name);
+  void substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name);
+  void move_all_inward();
+  void move_all_inward_except(const std::string& set_name);
+  void pop_stack_frame();
 
-  void push_reference(const Set& set_);
-  void pop_reference();
   void count_loop();
   
   Area_Usage_Listener* area_updater()
@@ -123,10 +152,8 @@ public:
   const std::vector< uint64 >& cpu_time() const { return cpu_runtime; }
 
 private:
-  std::vector< Runtime_Stack_Frame > runtime_stack;
-  std::vector< const Set* > set_stack;
-  std::vector< std::pair< uint, uint > > stack_progress;
-  std::vector< long long > set_stack_sizes;
+  std::vector< Runtime_Stack_Frame* > runtime_stack;
+  
   Transaction* transaction;
   Error_Output* error_output;
   Transaction* area_transaction;

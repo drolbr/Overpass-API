@@ -55,8 +55,8 @@ void evaluate_grid(double south, double north, double west, double east,
 	std::string s_lat = v_lat.str();
 	std::string s_lon = v_lon.str();
 	const char* attributes[] = { "lat", s_lat.c_str(), "lon", s_lon.c_str(), 0 };
-	Coord_Query_Statement* stmt1 = new Coord_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-        stmt1->execute(rman);
+	Coord_Query_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
+        stmt1.execute(rman);
       }
       uint area_count = 0;
       const Set* default_ = rman.get_set("_");
@@ -72,8 +72,8 @@ void evaluate_grid(double south, double north, double west, double east,
 	areas_printed = true;
 	
 	const char* attributes[] = { 0 };
-	Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-	stmt1->execute(rman);
+	Print_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
+	stmt1.execute(rman);
       }
     }
   }

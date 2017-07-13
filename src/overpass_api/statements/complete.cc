@@ -67,38 +67,23 @@ void Complete_Statement::add_statement(Statement* statement, std::string text)
 void Complete_Statement::execute(Resource_Manager& rman)
 {
   bool new_elements_found = false;
-  const Set* result_ref = rman.get_set(input);
-  Set result_set = result_ref ? *result_ref : Set();
 
+  rman.push_stack_frame();
+  
   do
   {
-    rman.swap_set(get_result_name(), result_set);
-    result_set = *rman.get_set(get_result_name());
+    rman.copy_outward(input, get_result_name());
     
     for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
-    {
-      rman.push_reference(result_set);
       (*it)->execute(rman);
-      rman.pop_reference();
-    }
-
-    const Set& growth_set = *rman.get_set(input);
     
-    new_elements_found = indexed_set_union(result_set.nodes, growth_set.nodes);
-    new_elements_found |= indexed_set_union(result_set.attic_nodes, growth_set.attic_nodes);
-
-    new_elements_found |= indexed_set_union(result_set.ways, growth_set.ways);
-    new_elements_found |= indexed_set_union(result_set.attic_ways, growth_set.attic_ways);
-
-    new_elements_found |= indexed_set_union(result_set.relations, growth_set.relations);
-    new_elements_found |= indexed_set_union(result_set.attic_relations, growth_set.attic_relations);
-
-    new_elements_found |= indexed_set_union(result_set.areas, growth_set.areas);
-    new_elements_found |= indexed_set_union(result_set.deriveds, growth_set.deriveds);
+    new_elements_found = rman.union_inward(input, input);
   }
   while (new_elements_found);
-
-  transfer_output(rman, result_set);
+  
+  rman.copy_outward(input, get_result_name());
+  rman.move_all_inward();
+  rman.pop_stack_frame();
 
   rman.health_check(*this);
 }

@@ -65,33 +65,18 @@ void Union_Statement::add_statement(Statement* statement, std::string text)
 
 void Union_Statement::execute(Resource_Manager& rman)
 {
-  Set base_set;
-
+  rman.push_stack_frame();
+  rman.move_outward(get_result_name(), get_result_name());
+  
   for (std::vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
-    rman.push_reference(base_set);
     (*it)->execute(rman);
-    rman.pop_reference();
-
-    const Set* summand = rman.get_set((*it)->get_result_name());
-    
-    if (summand)
-    {
-      indexed_set_union(base_set.nodes, summand->nodes);
-      indexed_set_union(base_set.attic_nodes, summand->attic_nodes);
-
-      indexed_set_union(base_set.ways, summand->ways);
-      indexed_set_union(base_set.attic_ways, summand->attic_ways);
-
-      indexed_set_union(base_set.relations, summand->relations);
-      indexed_set_union(base_set.attic_relations, summand->attic_relations);
-
-      indexed_set_union(base_set.areas, summand->areas);
-      indexed_set_union(base_set.deriveds, summand->deriveds);
-    }
+    rman.union_inward((*it)->get_result_name(), get_result_name());
   }
-
-  transfer_output(rman, base_set);
+  
+  rman.move_all_inward_except(get_result_name());
+  rman.pop_stack_frame();
+  
   rman.health_check(*this);
 }
