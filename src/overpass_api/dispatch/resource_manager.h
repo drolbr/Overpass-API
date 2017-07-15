@@ -39,7 +39,11 @@ struct Watchdog_Callback
 class Runtime_Stack_Frame
 {
 public:
-  Runtime_Stack_Frame(Runtime_Stack_Frame* parent_ = 0) : parent(parent_), loop_count(0), loop_size(0) {}
+  Runtime_Stack_Frame(Runtime_Stack_Frame* parent_ = 0)
+    : parent(parent_), loop_count(0), loop_size(0),
+    desired_timestamp(parent_ ? parent_->desired_timestamp : NOW),
+    diff_from_timestamp(parent_ ? parent_->diff_from_timestamp : NOW),
+    diff_to_timestamp(parent_ ? parent_->diff_to_timestamp : NOW) {}
   
   // Returns the used RAM including the used RAM of parent frames
   uint64 total_used_space() const;
@@ -56,6 +60,14 @@ public:
   void move_all_inward();
   void move_all_inward_except(const std::string& set_name);
   
+  uint64 get_desired_timestamp() const { return desired_timestamp; }
+  uint64 get_diff_from_timestamp() const { return diff_from_timestamp; }
+  uint64 get_diff_to_timestamp() const { return diff_to_timestamp; }
+
+  void set_desired_timestamp(uint64 timestamp) { desired_timestamp = (timestamp == 0 ? NOW : timestamp); }
+  void set_diff_from_timestamp(uint64 timestamp) { diff_from_timestamp = timestamp; }
+  void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
+
   uint64 total_size();
   std::vector< std::pair< uint, uint > > stack_progress() const;
   void set_loop_size(uint loop_size_) { loop_size = loop_size_; }
@@ -67,6 +79,10 @@ private:
   std::map< std::string, uint64 > size_per_set;
   uint loop_count;
   uint loop_size;
+  
+  uint64 desired_timestamp;
+  uint64 diff_from_timestamp;
+  uint64 diff_to_timestamp;
 };
 
 
@@ -78,17 +94,7 @@ public:
 
   Resource_Manager(Transaction& transaction_, Parsed_Query& global_settings_, Error_Output* error_output_,
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
-		   Area_Usage_Listener* area_updater__)
-      : transaction(&transaction_), error_output(error_output_),
-        area_transaction(&area_transaction_),
-        area_updater_(area_updater__),
-	watchdog(watchdog_), global_settings(&global_settings_), global_settings_owned(false),
-	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0),
-	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW)
-  {
-    runtime_stack.push_back(new Runtime_Stack_Frame());
-  }
+		   Area_Usage_Listener* area_updater__);
 	
   ~Resource_Manager()
   {
@@ -137,13 +143,13 @@ public:
   Transaction* get_transaction() { return transaction; }
   Transaction* get_area_transaction() { return area_transaction; }
 
-  uint64 get_desired_timestamp() const { return desired_timestamp; }
-  uint64 get_diff_from_timestamp() const { return diff_from_timestamp; }
-  uint64 get_diff_to_timestamp() const { return diff_to_timestamp; }
+  uint64 get_desired_timestamp() const;
+  uint64 get_diff_from_timestamp() const;
+  uint64 get_diff_to_timestamp() const;
 
-  void set_desired_timestamp(uint64 timestamp) { desired_timestamp = (timestamp == 0 ? NOW : timestamp); }
-  void set_diff_from_timestamp(uint64 timestamp) { diff_from_timestamp = timestamp; }
-  void set_diff_to_timestamp(uint64 timestamp) { diff_to_timestamp = timestamp; }
+  void set_desired_timestamp(uint64 timestamp);
+  void set_diff_from_timestamp(uint64 timestamp);
+  void set_diff_to_timestamp(uint64 timestamp);
 
   const std::map< uint32, std::string >& users() { return user_data_cache.users(*transaction); }
 
@@ -167,10 +173,6 @@ private:
   uint32 last_report_time;
   uint32 max_allowed_time;
   uint64 max_allowed_space;
-
-  uint64 desired_timestamp;
-  uint64 diff_from_timestamp;
-  uint64 diff_to_timestamp;
 
   std::vector< clock_t > cpu_start_time;
   std::vector< uint64 > cpu_runtime;

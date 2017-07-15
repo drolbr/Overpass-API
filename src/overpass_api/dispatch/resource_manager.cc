@@ -279,8 +279,7 @@ Resource_Manager::Resource_Manager(
         area_transaction(0), area_updater_(0),
         watchdog(watchdog_), global_settings(global_settings_), global_settings_owned(false),
 	start_time(time(NULL)), last_ping_time(0), last_report_time(0),
-	max_allowed_time(0), max_allowed_space(0),
-	desired_timestamp(NOW), diff_from_timestamp(NOW), diff_to_timestamp(NOW)
+	max_allowed_time(0), max_allowed_space(0)
 {
   if (!global_settings)
   {
@@ -288,6 +287,19 @@ Resource_Manager::Resource_Manager(
     global_settings_owned = true;
   }
   
+  runtime_stack.push_back(new Runtime_Stack_Frame());
+}
+
+
+Resource_Manager::Resource_Manager(
+    Transaction& transaction_, Parsed_Query& global_settings_, Error_Output* error_output_,
+    Transaction& area_transaction_, Watchdog_Callback* watchdog_, Area_Usage_Listener* area_updater__)
+    : transaction(&transaction_), error_output(error_output_),
+      area_transaction(&area_transaction_), area_updater_(area_updater__),
+      watchdog(watchdog_), global_settings(&global_settings_), global_settings_owned(false),
+      start_time(time(NULL)), last_ping_time(0), last_report_time(0),
+      max_allowed_time(0), max_allowed_space(0)
+{
   runtime_stack.push_back(new Runtime_Stack_Frame());
 }
 
@@ -529,6 +541,45 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
 
     throw *error;
   }
+}
+
+
+uint64 Resource_Manager::get_desired_timestamp() const
+{
+  return runtime_stack.empty() ? NOW : runtime_stack.back()->get_desired_timestamp();
+}
+
+
+uint64 Resource_Manager::get_diff_from_timestamp() const
+{
+  return runtime_stack.empty() ? NOW : runtime_stack.back()->get_diff_from_timestamp();
+}
+
+
+uint64 Resource_Manager::get_diff_to_timestamp() const
+{
+  return runtime_stack.empty() ? NOW : runtime_stack.back()->get_diff_to_timestamp();
+}
+
+
+void Resource_Manager::set_desired_timestamp(uint64 timestamp)
+{
+  if (!runtime_stack.empty())
+    runtime_stack.back()->set_desired_timestamp(timestamp);
+}
+
+
+void Resource_Manager::set_diff_from_timestamp(uint64 timestamp)
+{
+  if (!runtime_stack.empty())
+    runtime_stack.back()->set_diff_from_timestamp(timestamp);
+}
+
+
+void Resource_Manager::set_diff_to_timestamp(uint64 timestamp)
+{
+  if (!runtime_stack.empty())
+    runtime_stack.back()->set_diff_to_timestamp(timestamp);
 }
 
 

@@ -1334,6 +1334,9 @@
   <relation id="2608" version="2" timestamp="2013-07-01T09:02:28Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="2608" role=""/>
   </relation>
+  <marker id="1">
+    <tag k="test" v="output styles"/>
+  </marker>
   <node id="11011"/>
   <relation id="1332"/>
   <node id="11012"/>
@@ -2469,6 +2472,9 @@
     <tag k="foo" v="bar_1332"/>
     <tag k="foo_1332" v="bar"/>
   </relation>
+  <marker id="2">
+    <tag k="test" v="bbox queries"/>
+  </marker>
   <node id="1101" lat="10.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1101"/>
     <tag k="foo_1101" v="bar"/>
@@ -6535,6 +6541,9 @@
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
   </node>
+  <marker id="3">
+    <tag k="test" v="tag queries"/>
+  </marker>
   <node id="11011"/>
   <node id="1101" lat="10.0000000" lon="1.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1101"/>

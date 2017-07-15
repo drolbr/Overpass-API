@@ -3,5 +3,14 @@
 <note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
 <meta osm_base=""/>
 
+  <marker id="1">
+    <tag k="test" v="output styles"/>
+  </marker>
+  <marker id="2">
+    <tag k="test" v="bbox queries"/>
+  </marker>
+  <marker id="3">
+    <tag k="test" v="tag queries"/>
+  </marker>
 
 </osm>

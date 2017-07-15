@@ -218,6 +218,14 @@ TStatement* create_if_statement(typename TStatement::Factory& stmt_factory, uint
 
 
 template< class TStatement >
+TStatement* create_retro_statement(typename TStatement::Factory& stmt_factory, uint line_nr)
+{
+  std::map< std::string, std::string > attr;
+  return stmt_factory.create_statement("retro", line_nr, attr);
+}
+
+
+template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
                                    std::string from, std::string mode, std::string order, std::string limit, std::string geometry,
                                    std::string south, std::string north, std::string west, std::string east,
@@ -656,6 +664,29 @@ TStatement* parse_if(typename TStatement::Factory& stmt_factory, Parsed_Query& p
       collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
 
   TStatement* statement = create_if_statement< TStatement >(stmt_factory, line_col.first);
+  statement->add_statement(condition, "");
+  for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    statement->add_statement(*it, "");
+  return statement;
+}
+
+
+template< class TStatement >
+TStatement* parse_retro(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
+              Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
+{
+  std::pair< uint, uint > line_col = token.line_col();
+  ++token;
+
+  clear_until_after(token, error_output, "(");
+  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
+      Statement::evaluator_expected, true);
+  clear_until_after(token, error_output, ")");
+  std::vector< TStatement* > substatements =
+      collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
+
+  TStatement* statement = create_retro_statement< TStatement >(stmt_factory, line_col.first);
   statement->add_statement(condition, "");
   for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
       it != substatements.end(); ++it)
@@ -1521,6 +1552,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
     return parse_complete< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
   else if (*token == "if")
     return parse_if< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
+  else if (*token == "retro")
+    return parse_retro< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
   else if (*token == "timeline")
     return parse_timeline< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
 

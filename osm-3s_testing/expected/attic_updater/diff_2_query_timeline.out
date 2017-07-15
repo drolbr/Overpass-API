@@ -1947,5 +1947,1178 @@
     <tag k="refversion" v="2"/>
     <tag k="created" v="2013-07-01T09:02:11Z"/>
   </timeline>
+  <marker id="300">
+    <tag k="retro" v="2013-07-01T09:02:00Z"/>
+  </marker>
+  <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1401"/>
+    <tag k="foo_1401" v="bar"/>
+  </node>
+  <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </node>
+  <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1403"/>
+    <tag k="foo_1403" v="bar"/>
+  </node>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+  <node id="14011" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14013" lat="10.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14021" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="14022" lat="10.0010000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="14023" lat="10.0020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="14031" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14032" lat="10.0010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14033" lat="10.0020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="14043" lat="10.0020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <way id="1601" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0100000" maxlat="10.0020000" maxlon="6.0100000"/>
+    <nd ref="16011" lat="10.0000000" lon="6.0100000"/>
+    <nd ref="16012" lat="10.0010000" lon="6.0100000"/>
+    <nd ref="16013" lat="10.0020000" lon="6.0100000"/>
+    <tag k="foo" v="bar_1601"/>
+    <tag k="foo_1601" v="bar"/>
+  </way>
+  <way id="1602" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0200000" maxlat="10.0020000" maxlon="6.0200000"/>
+    <nd ref="16021" lat="10.0000000" lon="6.0200000"/>
+    <nd ref="16022" lat="10.0010000" lon="6.0200000"/>
+    <nd ref="16023" lat="10.0020000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1602"/>
+    <tag k="foo_1602" v="bar"/>
+  </way>
+  <way id="1603" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0300000" maxlat="10.0020000" maxlon="6.0300000"/>
+    <nd ref="16031" lat="10.0000000" lon="6.0300000"/>
+    <nd ref="16032" lat="10.0010000" lon="6.0300000"/>
+    <nd ref="16033" lat="10.0020000" lon="6.0300000"/>
+    <tag k="foo" v="bar_1603"/>
+    <tag k="foo_1603" v="bar"/>
+  </way>
+  <relation id="1611" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0100000" maxlat="10.1020000" maxlon="6.0100000"/>
+    <member type="node" ref="161110" role="" lat="10.1010000" lon="6.0100000"/>
+    <member type="node" ref="161120" role="" lat="10.1020000" lon="6.0100000"/>
+    <tag k="foo" v="bar_1611"/>
+    <tag k="foo_1611" v="bar"/>
+  </relation>
+  <relation id="1612" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0200000" maxlat="10.1020000" maxlon="6.0200000"/>
+    <member type="node" ref="161210" role="" lat="10.1010000" lon="6.0200000"/>
+    <member type="node" ref="161220" role="" lat="10.1020000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1612"/>
+    <tag k="foo_1612" v="bar"/>
+  </relation>
+  <relation id="1613" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0300000" maxlat="10.1020000" maxlon="6.0300000"/>
+    <member type="node" ref="161310" role="" lat="10.1010000" lon="6.0300000"/>
+    <member type="node" ref="161320" role="" lat="10.1020000" lon="6.0300000"/>
+    <tag k="foo" v="bar_1613"/>
+    <tag k="foo_1613" v="bar"/>
+  </relation>
+  <relation id="1621" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0101000" maxlat="10.2020000" maxlon="6.0102000"/>
+    <member type="way" ref="16211" role="">
+      <nd lat="10.2010000" lon="6.0101000"/>
+      <nd lat="10.2010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16212" role="">
+      <nd lat="10.2020000" lon="6.0101000"/>
+      <nd lat="10.2020000" lon="6.0102000"/>
+    </member>
+    <tag k="foo" v="bar_1621"/>
+    <tag k="foo_1621" v="bar"/>
+  </relation>
+  <relation id="1622" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0201000" maxlat="10.2020000" maxlon="6.0202000"/>
+    <member type="way" ref="16221" role="">
+      <nd lat="10.2010000" lon="6.0201000"/>
+      <nd lat="10.2010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16222" role="">
+      <nd lat="10.2020000" lon="6.0201000"/>
+      <nd lat="10.2020000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1622"/>
+    <tag k="foo_1622" v="bar"/>
+  </relation>
+  <relation id="1623" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0301000" maxlat="10.2020000" maxlon="6.0302000"/>
+    <member type="way" ref="16231" role="">
+      <nd lat="10.2010000" lon="6.0301000"/>
+      <nd lat="10.2010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16232" role="">
+      <nd lat="10.2020000" lon="6.0301000"/>
+      <nd lat="10.2020000" lon="6.0302000"/>
+    </member>
+    <tag k="foo" v="bar_1623"/>
+    <tag k="foo_1623" v="bar"/>
+  </relation>
+  <relation id="1631" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0100000" maxlat="10.3020000" maxlon="6.0102000"/>
+    <member type="node" ref="163110" role="" lat="10.3010000" lon="6.0100000"/>
+    <member type="node" ref="163120" role="" lat="10.3020000" lon="6.0100000"/>
+    <member type="way" ref="16311" role="">
+      <nd lat="10.3010000" lon="6.0101000"/>
+      <nd lat="10.3010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16312" role="">
+      <nd lat="10.3020000" lon="6.0101000"/>
+      <nd lat="10.3020000" lon="6.0102000"/>
+    </member>
+    <tag k="foo" v="bar_1631"/>
+    <tag k="foo_1631" v="bar"/>
+  </relation>
+  <relation id="1632" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0200000" maxlat="10.3020000" maxlon="6.0202000"/>
+    <member type="node" ref="163210" role="" lat="10.3010000" lon="6.0200000"/>
+    <member type="node" ref="163220" role="" lat="10.3020000" lon="6.0200000"/>
+    <member type="way" ref="16321" role="">
+      <nd lat="10.3010000" lon="6.0201000"/>
+      <nd lat="10.3010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16322" role="">
+      <nd lat="10.3020000" lon="6.0201000"/>
+      <nd lat="10.3020000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1632"/>
+    <tag k="foo_1632" v="bar"/>
+  </relation>
+  <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0300000" maxlat="10.3020000" maxlon="6.0302000"/>
+    <member type="node" ref="163310" role="" lat="10.3010000" lon="6.0300000"/>
+    <member type="node" ref="163320" role="" lat="10.3020000" lon="6.0300000"/>
+    <member type="way" ref="16331" role="">
+      <nd lat="10.3010000" lon="6.0301000"/>
+      <nd lat="10.3010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16332" role="">
+      <nd lat="10.3020000" lon="6.0301000"/>
+      <nd lat="10.3020000" lon="6.0302000"/>
+    </member>
+    <tag k="foo" v="bar_1633"/>
+    <tag k="foo_1633" v="bar"/>
+  </relation>
+  <relation id="1671" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0100000" maxlat="10.7020000" maxlon="6.0102000"/>
+    <member type="node" ref="167110" role="" lat="10.7010000" lon="6.0100000"/>
+    <member type="node" ref="167120" role="" lat="10.7020000" lon="6.0100000"/>
+    <member type="way" ref="16711" role="">
+      <nd lat="10.7010000" lon="6.0101000"/>
+      <nd lat="10.7010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16712" role="">
+      <nd lat="10.7020000" lon="6.0101000"/>
+      <nd lat="10.7020000" lon="6.0102000"/>
+    </member>
+    <member type="relation" ref="16711" role=""/>
+    <member type="relation" ref="16712" role=""/>
+    <tag k="foo" v="bar_1671"/>
+    <tag k="foo_1671" v="bar"/>
+  </relation>
+  <relation id="1672" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0200000" maxlat="10.7020000" maxlon="6.0202000"/>
+    <member type="node" ref="167210" role="" lat="10.7010000" lon="6.0200000"/>
+    <member type="node" ref="167220" role="" lat="10.7020000" lon="6.0200000"/>
+    <member type="way" ref="16721" role="">
+      <nd lat="10.7010000" lon="6.0201000"/>
+      <nd lat="10.7010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16722" role="">
+      <nd lat="10.7020000" lon="6.0201000"/>
+      <nd lat="10.7020000" lon="6.0202000"/>
+    </member>
+    <member type="relation" ref="16721" role=""/>
+    <member type="relation" ref="16722" role=""/>
+    <tag k="foo" v="bar_1672"/>
+    <tag k="foo_1672" v="bar"/>
+  </relation>
+  <relation id="1673" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0300000" maxlat="10.7020000" maxlon="6.0302000"/>
+    <member type="node" ref="167310" role="" lat="10.7010000" lon="6.0300000"/>
+    <member type="node" ref="167320" role="" lat="10.7020000" lon="6.0300000"/>
+    <member type="way" ref="16731" role="">
+      <nd lat="10.7010000" lon="6.0301000"/>
+      <nd lat="10.7010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16732" role="">
+      <nd lat="10.7020000" lon="6.0301000"/>
+      <nd lat="10.7020000" lon="6.0302000"/>
+    </member>
+    <member type="relation" ref="16731" role=""/>
+    <member type="relation" ref="16732" role=""/>
+    <tag k="foo" v="bar_1673"/>
+    <tag k="foo_1673" v="bar"/>
+  </relation>
+  <marker id="301">
+    <tag k="retro" v="2013-07-01T09:03:00Z"/>
+  </marker>
+  <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1403"/>
+    <tag k="foo_1403" v="bar"/>
+  </node>
+  <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14013" lat="10.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14023" lat="10.0020000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="14031" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14032" lat="10.0010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14033" lat="10.0020000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14043" lat="10.0020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <way id="1402" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="4.0200000" maxlat="10.0020000" maxlon="14.0200000"/>
+    <nd ref="14021" lat="10.0000000" lon="14.0200000"/>
+    <nd ref="14022" lat="10.0010000" lon="14.0200000"/>
+    <nd ref="14023" lat="10.0020000" lon="4.0200000"/>
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </way>
+  <way id="1404" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="4.0400000" maxlat="10.0020000" maxlon="14.0400000"/>
+    <nd ref="14041" lat="10.0000000" lon="14.0400000"/>
+    <nd ref="14042" lat="10.0010000" lon="14.0400000"/>
+    <nd ref="14043" lat="10.0020000" lon="4.0400000"/>
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </way>
+  <way id="1601" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0100000" maxlat="10.0030000" maxlon="6.0100000"/>
+    <nd ref="16011" lat="10.0000000" lon="6.0100000"/>
+    <nd ref="16012" lat="10.0010000" lon="6.0100000"/>
+    <nd ref="16014" lat="10.0030000" lon="6.0100000"/>
+    <tag k="foo" v="bar_1601"/>
+    <tag k="foo_1601" v="bar"/>
+  </way>
+  <way id="1602" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0200000" maxlat="10.0030000" maxlon="6.0200000"/>
+    <nd ref="16021" lat="10.0000000" lon="6.0200000"/>
+    <nd ref="16022" lat="10.0010000" lon="6.0200000"/>
+    <nd ref="16024" lat="10.0030000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1602"/>
+    <tag k="foo_1602" v="bar"/>
+  </way>
+  <way id="1603" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0300000" maxlat="10.0020000" maxlon="6.0300000"/>
+    <nd ref="16031" lat="10.0000000" lon="6.0300000"/>
+    <nd ref="16032" lat="10.0010000" lon="6.0300000"/>
+    <nd ref="16033" lat="10.0020000" lon="6.0300000"/>
+    <tag k="foo" v="bar_1603"/>
+    <tag k="foo_1603" v="bar"/>
+  </way>
+  <relation id="1425" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="4.0501000" maxlat="10.2020000" maxlon="14.0502000"/>
+    <member type="way" ref="14251" role="">
+      <nd lat="10.2010000" lon="14.0501000"/>
+      <nd lat="10.2010000" lon="4.0502000"/>
+    </member>
+    <member type="way" ref="14252" role="">
+      <nd lat="10.2020000" lon="4.0501000"/>
+      <nd lat="10.2020000" lon="14.0502000"/>
+    </member>
+    <tag k="foo" v="bar_1425"/>
+    <tag k="foo_1425" v="bar"/>
+  </relation>
+  <relation id="1427" version="1" timestamp="2013-07-01T09:01:17Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="4.0701000" maxlat="10.2020000" maxlon="14.0702000"/>
+    <member type="way" ref="14271" role="">
+      <nd lat="10.2010000" lon="14.0701000"/>
+      <nd lat="10.2010000" lon="4.0702000"/>
+    </member>
+    <member type="way" ref="14272" role="">
+      <nd lat="10.2020000" lon="4.0701000"/>
+      <nd lat="10.2020000" lon="14.0702000"/>
+    </member>
+    <tag k="foo" v="bar_1427"/>
+    <tag k="foo_1427" v="bar"/>
+  </relation>
+  <relation id="1611" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0100000" maxlat="10.1030000" maxlon="6.0100000"/>
+    <member type="node" ref="161110" role="" lat="10.1010000" lon="6.0100000"/>
+    <member type="node" ref="161130" role="" lat="10.1030000" lon="6.0100000"/>
+    <tag k="foo" v="bar_1611"/>
+    <tag k="foo_1611" v="bar"/>
+  </relation>
+  <relation id="1612" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0200000" maxlat="10.1030000" maxlon="6.0200000"/>
+    <member type="node" ref="161210" role="" lat="10.1010000" lon="6.0200000"/>
+    <member type="node" ref="161230" role="" lat="10.1030000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1612"/>
+    <tag k="foo_1612" v="bar"/>
+  </relation>
+  <relation id="1613" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0300000" maxlat="10.1020000" maxlon="6.0300000"/>
+    <member type="node" ref="161310" role="" lat="10.1010000" lon="6.0300000"/>
+    <member type="node" ref="161320" role="" lat="10.1020000" lon="6.0300000"/>
+    <tag k="foo" v="bar_1613"/>
+    <tag k="foo_1613" v="bar"/>
+  </relation>
+  <relation id="1621" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0101000" maxlat="10.2030000" maxlon="6.0102000"/>
+    <member type="way" ref="16211" role="">
+      <nd lat="10.2010000" lon="6.0101000"/>
+      <nd lat="10.2010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16213" role="">
+      <nd lat="10.2030000" lon="6.0101000"/>
+      <nd lat="10.2030000" lon="6.0102000"/>
+    </member>
+    <tag k="foo" v="bar_1621"/>
+    <tag k="foo_1621" v="bar"/>
+  </relation>
+  <relation id="1622" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0201000" maxlat="10.2030000" maxlon="6.0202000"/>
+    <member type="way" ref="16221" role="">
+      <nd lat="10.2010000" lon="6.0201000"/>
+      <nd lat="10.2010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16223" role="">
+      <nd lat="10.2030000" lon="6.0201000"/>
+      <nd lat="10.2030000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1622"/>
+    <tag k="foo_1622" v="bar"/>
+  </relation>
+  <relation id="1623" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0301000" maxlat="10.2020000" maxlon="6.0302000"/>
+    <member type="way" ref="16231" role="">
+      <nd lat="10.2010000" lon="6.0301000"/>
+      <nd lat="10.2010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16232" role="">
+      <nd lat="10.2020000" lon="6.0301000"/>
+      <nd lat="10.2020000" lon="6.0302000"/>
+    </member>
+    <tag k="foo" v="bar_1623"/>
+    <tag k="foo_1623" v="bar"/>
+  </relation>
+  <relation id="1631" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0100000" maxlat="10.3030000" maxlon="6.0102000"/>
+    <member type="node" ref="163110" role="" lat="10.3010000" lon="6.0100000"/>
+    <member type="node" ref="163130" role="" lat="10.3030000" lon="6.0100000"/>
+    <member type="way" ref="16311" role="">
+      <nd lat="10.3010000" lon="6.0101000"/>
+      <nd lat="10.3010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16313" role="">
+      <nd lat="10.3030000" lon="6.0101000"/>
+      <nd lat="10.3030000" lon="6.0102000"/>
+    </member>
+    <tag k="foo" v="bar_1631"/>
+    <tag k="foo_1631" v="bar"/>
+  </relation>
+  <relation id="1632" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0200000" maxlat="10.3030000" maxlon="6.0202000"/>
+    <member type="node" ref="163210" role="" lat="10.3010000" lon="6.0200000"/>
+    <member type="node" ref="163230" role="" lat="10.3030000" lon="6.0200000"/>
+    <member type="way" ref="16321" role="">
+      <nd lat="10.3010000" lon="6.0201000"/>
+      <nd lat="10.3010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16323" role="">
+      <nd lat="10.3030000" lon="6.0201000"/>
+      <nd lat="10.3030000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1632"/>
+    <tag k="foo_1632" v="bar"/>
+  </relation>
+  <relation id="1633" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0300000" maxlat="10.3020000" maxlon="6.0302000"/>
+    <member type="node" ref="163310" role="" lat="10.3010000" lon="6.0300000"/>
+    <member type="node" ref="163320" role="" lat="10.3020000" lon="6.0300000"/>
+    <member type="way" ref="16331" role="">
+      <nd lat="10.3010000" lon="6.0301000"/>
+      <nd lat="10.3010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16332" role="">
+      <nd lat="10.3020000" lon="6.0301000"/>
+      <nd lat="10.3020000" lon="6.0302000"/>
+    </member>
+    <tag k="foo" v="bar_1633"/>
+    <tag k="foo_1633" v="bar"/>
+  </relation>
+  <relation id="1671" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0100000" maxlat="10.7030000" maxlon="6.0102000"/>
+    <member type="node" ref="167110" role="" lat="10.7010000" lon="6.0100000"/>
+    <member type="node" ref="167130" role="" lat="10.7030000" lon="6.0100000"/>
+    <member type="way" ref="16711" role="">
+      <nd lat="10.7010000" lon="6.0101000"/>
+      <nd lat="10.7010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16713" role="">
+      <nd lat="10.7030000" lon="6.0101000"/>
+      <nd lat="10.7030000" lon="6.0102000"/>
+    </member>
+    <member type="relation" ref="16711" role=""/>
+    <member type="relation" ref="16713" role=""/>
+    <tag k="foo" v="bar_1671"/>
+    <tag k="foo_1671" v="bar"/>
+  </relation>
+  <relation id="1672" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0200000" maxlat="10.7030000" maxlon="6.0202000"/>
+    <member type="node" ref="167210" role="" lat="10.7010000" lon="6.0200000"/>
+    <member type="node" ref="167230" role="" lat="10.7030000" lon="6.0200000"/>
+    <member type="way" ref="16721" role="">
+      <nd lat="10.7010000" lon="6.0201000"/>
+      <nd lat="10.7010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16723" role="">
+      <nd lat="10.7030000" lon="6.0201000"/>
+      <nd lat="10.7030000" lon="6.0202000"/>
+    </member>
+    <member type="relation" ref="16721" role=""/>
+    <member type="relation" ref="16723" role=""/>
+    <tag k="foo" v="bar_1672"/>
+    <tag k="foo_1672" v="bar"/>
+  </relation>
+  <relation id="1673" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0300000" maxlat="10.7020000" maxlon="6.0302000"/>
+    <member type="node" ref="167310" role="" lat="10.7010000" lon="6.0300000"/>
+    <member type="node" ref="167320" role="" lat="10.7020000" lon="6.0300000"/>
+    <member type="way" ref="16731" role="">
+      <nd lat="10.7010000" lon="6.0301000"/>
+      <nd lat="10.7010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16732" role="">
+      <nd lat="10.7020000" lon="6.0301000"/>
+      <nd lat="10.7020000" lon="6.0302000"/>
+    </member>
+    <member type="relation" ref="16731" role=""/>
+    <member type="relation" ref="16732" role=""/>
+    <tag k="foo" v="bar_1673"/>
+    <tag k="foo_1673" v="bar"/>
+  </relation>
+  <marker id="302">
+    <tag k="retro" v="2013-07-01T09:04:00Z"/>
+  </marker>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+  <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14013" lat="10.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14031" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14032" lat="10.0010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="14043" lat="10.0020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <way id="1403" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="4.0300000" maxlat="10.0020000" maxlon="24.0300000"/>
+    <nd ref="14031" lat="10.0000000" lon="4.0300000"/>
+    <nd ref="14032" lat="10.0010000" lon="4.0300000"/>
+    <nd ref="14033" lat="10.0020000" lon="24.0300000"/>
+    <tag k="foo" v="bar_1403"/>
+    <tag k="foo_1403" v="bar"/>
+  </way>
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="5.0400000" maxlat="10.0030000" maxlon="15.0400000"/>
+    <nd ref="15041" lat="10.0000000" lon="5.0400000"/>
+    <nd ref="15042" lat="10.0010000" lon="5.0400000"/>
+    <nd ref="15044" lat="10.0030000" lon="15.0400000"/>
+    <tag k="foo" v="bar_1504"/>
+    <tag k="foo_1504" v="bar"/>
+  </way>
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
+    <nd ref="15051" lat="10.0000000" lon="5.0500000"/>
+    <nd ref="15052" lat="10.0010000" lon="5.0500000"/>
+    <nd ref="15054" lat="10.0020000" lon="15.0500000"/>
+    <tag k="foo" v="bar_1505"/>
+    <tag k="foo_1505" v="bar"/>
+  </way>
+  <way id="1601" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0100000" maxlat="10.0030000" maxlon="6.0100000"/>
+    <nd ref="16011" lat="10.0000000" lon="6.0100000"/>
+    <nd ref="16012" lat="10.0010000" lon="6.0100000"/>
+    <nd ref="16014" lat="10.0030000" lon="6.0100000"/>
+    <tag k="foo" v="bar_1601"/>
+    <tag k="foo_1601" v="bar"/>
+  </way>
+  <way id="1602" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0200000" maxlat="10.0040000" maxlon="6.0200000"/>
+    <nd ref="16021" lat="10.0000000" lon="6.0200000"/>
+    <nd ref="16022" lat="10.0010000" lon="6.0200000"/>
+    <nd ref="16025" lat="10.0040000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1602"/>
+    <tag k="foo_1602" v="bar"/>
+  </way>
+  <way id="1603" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0300000" maxlat="10.0040000" maxlon="6.0300000"/>
+    <nd ref="16031" lat="10.0000000" lon="6.0300000"/>
+    <nd ref="16032" lat="10.0010000" lon="6.0300000"/>
+    <nd ref="16035" lat="10.0040000" lon="6.0300000"/>
+    <tag k="foo" v="bar_1603"/>
+    <tag k="foo_1603" v="bar"/>
+  </way>
+  <relation id="1433" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="4.0301000" maxlat="20.3020000" maxlon="14.0304000"/>
+    <member type="node" ref="143310" role="" lat="20.3010000" lon="14.0300000"/>
+    <member type="node" ref="143320" role="" lat="20.3020000" lon="14.0300000"/>
+    <member type="way" ref="14331" role="">
+      <nd lat="10.3010000" lon="4.0301000"/>
+      <nd lat="10.3010000" lon="4.0302000"/>
+      <nd lat="10.3010000" lon="14.0303000"/>
+      <nd lat="10.3010000" lon="14.0304000"/>
+    </member>
+    <member type="way" ref="14332" role="">
+      <nd lat="10.3020000" lon="4.0301000"/>
+      <nd lat="10.3020000" lon="4.0302000"/>
+      <nd lat="10.3020000" lon="14.0303000"/>
+      <nd lat="10.3020000" lon="14.0304000"/>
+    </member>
+    <tag k="foo" v="bar_1433"/>
+    <tag k="foo_1433" v="bar"/>
+  </relation>
+  <relation id="1611" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0100000" maxlat="10.1030000" maxlon="6.0100000"/>
+    <member type="node" ref="161110" role="" lat="10.1010000" lon="6.0100000"/>
+    <member type="node" ref="161130" role="" lat="10.1030000" lon="6.0100000"/>
+    <tag k="foo" v="bar_1611"/>
+    <tag k="foo_1611" v="bar"/>
+  </relation>
+  <relation id="1612" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0200000" maxlat="10.1040000" maxlon="6.0200000"/>
+    <member type="node" ref="161210" role="" lat="10.1010000" lon="6.0200000"/>
+    <member type="node" ref="161240" role="" lat="10.1040000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1612"/>
+    <tag k="foo_1612" v="bar"/>
+  </relation>
+  <relation id="1613" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0300000" maxlat="10.1040000" maxlon="6.0300000"/>
+    <member type="node" ref="161310" role="" lat="10.1010000" lon="6.0300000"/>
+    <member type="node" ref="161340" role="" lat="10.1040000" lon="6.0300000"/>
+    <tag k="foo" v="bar_1613"/>
+    <tag k="foo_1613" v="bar"/>
+  </relation>
+  <relation id="1621" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0101000" maxlat="10.2030000" maxlon="6.0102000"/>
+    <member type="way" ref="16211" role="">
+      <nd lat="10.2010000" lon="6.0101000"/>
+      <nd lat="10.2010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16213" role="">
+      <nd lat="10.2030000" lon="6.0101000"/>
+      <nd lat="10.2030000" lon="6.0102000"/>
+    </member>
+    <tag k="foo" v="bar_1621"/>
+    <tag k="foo_1621" v="bar"/>
+  </relation>
+  <relation id="1622" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0201000" maxlat="10.2040000" maxlon="6.0202000"/>
+    <member type="way" ref="16221" role="">
+      <nd lat="10.2010000" lon="6.0201000"/>
+      <nd lat="10.2010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16224" role="">
+      <nd lat="10.2040000" lon="6.0201000"/>
+      <nd lat="10.2040000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1622"/>
+    <tag k="foo_1622" v="bar"/>
+  </relation>
+  <relation id="1623" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0301000" maxlat="10.2040000" maxlon="6.0302000"/>
+    <member type="way" ref="16231" role="">
+      <nd lat="10.2010000" lon="6.0301000"/>
+      <nd lat="10.2010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16234" role="">
+      <nd lat="10.2040000" lon="6.0301000"/>
+      <nd lat="10.2040000" lon="6.0302000"/>
+    </member>
+    <tag k="foo" v="bar_1623"/>
+    <tag k="foo_1623" v="bar"/>
+  </relation>
+  <relation id="1631" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0100000" maxlat="10.3030000" maxlon="6.0102000"/>
+    <member type="node" ref="163110" role="" lat="10.3010000" lon="6.0100000"/>
+    <member type="node" ref="163130" role="" lat="10.3030000" lon="6.0100000"/>
+    <member type="way" ref="16311" role="">
+      <nd lat="10.3010000" lon="6.0101000"/>
+      <nd lat="10.3010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16313" role="">
+      <nd lat="10.3030000" lon="6.0101000"/>
+      <nd lat="10.3030000" lon="6.0102000"/>
+    </member>
+    <tag k="foo" v="bar_1631"/>
+    <tag k="foo_1631" v="bar"/>
+  </relation>
+  <relation id="1632" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0200000" maxlat="10.3040000" maxlon="6.0202000"/>
+    <member type="node" ref="163210" role="" lat="10.3010000" lon="6.0200000"/>
+    <member type="node" ref="163240" role="" lat="10.3040000" lon="6.0200000"/>
+    <member type="way" ref="16321" role="">
+      <nd lat="10.3010000" lon="6.0201000"/>
+      <nd lat="10.3010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16324" role="">
+      <nd lat="10.3040000" lon="6.0201000"/>
+      <nd lat="10.3040000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1632"/>
+    <tag k="foo_1632" v="bar"/>
+  </relation>
+  <relation id="1633" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0300000" maxlat="10.3040000" maxlon="6.0302000"/>
+    <member type="node" ref="163310" role="" lat="10.3010000" lon="6.0300000"/>
+    <member type="node" ref="163340" role="" lat="10.3040000" lon="6.0300000"/>
+    <member type="way" ref="16331" role="">
+      <nd lat="10.3010000" lon="6.0301000"/>
+      <nd lat="10.3010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16334" role="">
+      <nd lat="10.3040000" lon="6.0301000"/>
+      <nd lat="10.3040000" lon="6.0302000"/>
+    </member>
+    <tag k="foo" v="bar_1633"/>
+    <tag k="foo_1633" v="bar"/>
+  </relation>
+  <relation id="1671" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0100000" maxlat="10.7030000" maxlon="6.0102000"/>
+    <member type="node" ref="167110" role="" lat="10.7010000" lon="6.0100000"/>
+    <member type="node" ref="167130" role="" lat="10.7030000" lon="6.0100000"/>
+    <member type="way" ref="16711" role="">
+      <nd lat="10.7010000" lon="6.0101000"/>
+      <nd lat="10.7010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16713" role="">
+      <nd lat="10.7030000" lon="6.0101000"/>
+      <nd lat="10.7030000" lon="6.0102000"/>
+    </member>
+    <member type="relation" ref="16711" role=""/>
+    <member type="relation" ref="16713" role=""/>
+    <tag k="foo" v="bar_1671"/>
+    <tag k="foo_1671" v="bar"/>
+  </relation>
+  <relation id="1672" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0200000" maxlat="10.7040000" maxlon="6.0202000"/>
+    <member type="node" ref="167210" role="" lat="10.7010000" lon="6.0200000"/>
+    <member type="node" ref="167240" role="" lat="10.7040000" lon="6.0200000"/>
+    <member type="way" ref="16721" role="">
+      <nd lat="10.7010000" lon="6.0201000"/>
+      <nd lat="10.7010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16724" role="">
+      <nd lat="10.7040000" lon="6.0201000"/>
+      <nd lat="10.7040000" lon="6.0202000"/>
+    </member>
+    <member type="relation" ref="16721" role=""/>
+    <member type="relation" ref="16724" role=""/>
+    <tag k="foo" v="bar_1672"/>
+    <tag k="foo_1672" v="bar"/>
+  </relation>
+  <relation id="1673" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0300000" maxlat="10.7040000" maxlon="6.0302000"/>
+    <member type="node" ref="167310" role="" lat="10.7010000" lon="6.0300000"/>
+    <member type="node" ref="167340" role="" lat="10.7040000" lon="6.0300000"/>
+    <member type="way" ref="16731" role="">
+      <nd lat="10.7010000" lon="6.0301000"/>
+      <nd lat="10.7010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16734" role="">
+      <nd lat="10.7040000" lon="6.0301000"/>
+      <nd lat="10.7040000" lon="6.0302000"/>
+    </member>
+    <member type="relation" ref="16731" role=""/>
+    <member type="relation" ref="16734" role=""/>
+    <tag k="foo" v="bar_1673"/>
+    <tag k="foo_1673" v="bar"/>
+  </relation>
+  <marker id="303">
+    <tag k="retro" v="2013-07-01T09:05:00Z"/>
+  </marker>
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1404"/>
+    <tag k="foo_1404" v="bar"/>
+  </node>
+  <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14013" lat="10.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="14031" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14032" lat="10.0010000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="14041" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="14042" lat="10.0010000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="14043" lat="10.0020000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo"/>
+  <way id="1403" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="4.0300000" maxlat="10.0020000" maxlon="24.0300000"/>
+    <nd ref="14031" lat="10.0000000" lon="4.0300000"/>
+    <nd ref="14032" lat="10.0010000" lon="4.0300000"/>
+    <nd ref="14033" lat="10.0020000" lon="24.0300000"/>
+    <tag k="foo" v="bar_1403"/>
+    <tag k="foo_1403" v="bar"/>
+  </way>
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="5.0400000" maxlat="10.0030000" maxlon="15.0400000"/>
+    <nd ref="15041" lat="10.0000000" lon="5.0400000"/>
+    <nd ref="15042" lat="10.0010000" lon="5.0400000"/>
+    <nd ref="15044" lat="10.0030000" lon="15.0400000"/>
+    <tag k="foo" v="bar_1504"/>
+    <tag k="foo_1504" v="bar"/>
+  </way>
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
+    <nd ref="15051" lat="10.0000000" lon="5.0500000"/>
+    <nd ref="15052" lat="10.0010000" lon="5.0500000"/>
+    <nd ref="15054" lat="10.0020000" lon="15.0500000"/>
+    <tag k="foo" v="bar_1505"/>
+    <tag k="foo_1505" v="bar"/>
+  </way>
+  <way id="1601" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0100000" maxlat="10.0030000" maxlon="6.0100000"/>
+    <nd ref="16011" lat="10.0000000" lon="6.0100000"/>
+    <nd ref="16012" lat="10.0010000" lon="6.0100000"/>
+    <nd ref="16014" lat="10.0030000" lon="6.0100000"/>
+    <tag k="foo" v="bar_1601"/>
+    <tag k="foo_1601" v="bar"/>
+  </way>
+  <way id="1602" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0200000" maxlat="10.0040000" maxlon="6.0200000"/>
+    <nd ref="16021" lat="10.0000000" lon="6.0200000"/>
+    <nd ref="16022" lat="10.0010000" lon="6.0200000"/>
+    <nd ref="16025" lat="10.0040000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1602"/>
+    <tag k="foo_1602" v="bar"/>
+  </way>
+  <way id="1603" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0300000" maxlat="10.0040000" maxlon="6.0300000"/>
+    <nd ref="16031" lat="10.0000000" lon="6.0300000"/>
+    <nd ref="16032" lat="10.0010000" lon="6.0300000"/>
+    <nd ref="16035" lat="10.0040000" lon="6.0300000"/>
+    <tag k="foo" v="bar_1603"/>
+    <tag k="foo_1603" v="bar"/>
+  </way>
+  <relation id="1433" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="4.0301000" maxlat="20.3020000" maxlon="14.0304000"/>
+    <member type="node" ref="143310" role="" lat="20.3010000" lon="14.0300000"/>
+    <member type="node" ref="143320" role="" lat="20.3020000" lon="14.0300000"/>
+    <member type="way" ref="14331" role="">
+      <nd lat="10.3010000" lon="4.0301000"/>
+      <nd lat="10.3010000" lon="4.0302000"/>
+      <nd lat="10.3010000" lon="14.0303000"/>
+      <nd lat="10.3010000" lon="14.0304000"/>
+    </member>
+    <member type="way" ref="14332" role="">
+      <nd lat="10.3020000" lon="4.0301000"/>
+      <nd lat="10.3020000" lon="4.0302000"/>
+      <nd lat="10.3020000" lon="14.0303000"/>
+      <nd lat="10.3020000" lon="14.0304000"/>
+    </member>
+    <tag k="foo" v="bar_1433"/>
+    <tag k="foo_1433" v="bar"/>
+  </relation>
+  <relation id="1611" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0100000" maxlat="10.1030000" maxlon="6.0100000"/>
+    <member type="node" ref="161110" role="" lat="10.1010000" lon="6.0100000"/>
+    <member type="node" ref="161130" role="" lat="10.1030000" lon="6.0100000"/>
+    <tag k="foo" v="bar_1611"/>
+    <tag k="foo_1611" v="bar"/>
+  </relation>
+  <relation id="1612" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0200000" maxlat="10.1040000" maxlon="6.0200000"/>
+    <member type="node" ref="161210" role="" lat="10.1010000" lon="6.0200000"/>
+    <member type="node" ref="161240" role="" lat="10.1040000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1612"/>
+    <tag k="foo_1612" v="bar"/>
+  </relation>
+  <relation id="1613" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.1010000" minlon="6.0300000" maxlat="10.1040000" maxlon="6.0300000"/>
+    <member type="node" ref="161310" role="" lat="10.1010000" lon="6.0300000"/>
+    <member type="node" ref="161340" role="" lat="10.1040000" lon="6.0300000"/>
+    <tag k="foo" v="bar_1613"/>
+    <tag k="foo_1613" v="bar"/>
+  </relation>
+  <relation id="1621" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0101000" maxlat="10.2030000" maxlon="6.0102000"/>
+    <member type="way" ref="16211" role="">
+      <nd lat="10.2010000" lon="6.0101000"/>
+      <nd lat="10.2010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16213" role="">
+      <nd lat="10.2030000" lon="6.0101000"/>
+      <nd lat="10.2030000" lon="6.0102000"/>
+    </member>
+    <tag k="foo" v="bar_1621"/>
+    <tag k="foo_1621" v="bar"/>
+  </relation>
+  <relation id="1622" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0201000" maxlat="10.2040000" maxlon="6.0202000"/>
+    <member type="way" ref="16221" role="">
+      <nd lat="10.2010000" lon="6.0201000"/>
+      <nd lat="10.2010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16224" role="">
+      <nd lat="10.2040000" lon="6.0201000"/>
+      <nd lat="10.2040000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1622"/>
+    <tag k="foo_1622" v="bar"/>
+  </relation>
+  <relation id="1623" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.2010000" minlon="6.0301000" maxlat="10.2040000" maxlon="6.0302000"/>
+    <member type="way" ref="16231" role="">
+      <nd lat="10.2010000" lon="6.0301000"/>
+      <nd lat="10.2010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16234" role="">
+      <nd lat="10.2040000" lon="6.0301000"/>
+      <nd lat="10.2040000" lon="6.0302000"/>
+    </member>
+    <tag k="foo" v="bar_1623"/>
+    <tag k="foo_1623" v="bar"/>
+  </relation>
+  <relation id="1631" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0100000" maxlat="10.3030000" maxlon="6.0102000"/>
+    <member type="node" ref="163110" role="" lat="10.3010000" lon="6.0100000"/>
+    <member type="node" ref="163130" role="" lat="10.3030000" lon="6.0100000"/>
+    <member type="way" ref="16311" role="">
+      <nd lat="10.3010000" lon="6.0101000"/>
+      <nd lat="10.3010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16313" role="">
+      <nd lat="10.3030000" lon="6.0101000"/>
+      <nd lat="10.3030000" lon="6.0102000"/>
+    </member>
+    <tag k="foo" v="bar_1631"/>
+    <tag k="foo_1631" v="bar"/>
+  </relation>
+  <relation id="1632" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0200000" maxlat="10.3040000" maxlon="6.0202000"/>
+    <member type="node" ref="163210" role="" lat="10.3010000" lon="6.0200000"/>
+    <member type="node" ref="163240" role="" lat="10.3040000" lon="6.0200000"/>
+    <member type="way" ref="16321" role="">
+      <nd lat="10.3010000" lon="6.0201000"/>
+      <nd lat="10.3010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16324" role="">
+      <nd lat="10.3040000" lon="6.0201000"/>
+      <nd lat="10.3040000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1632"/>
+    <tag k="foo_1632" v="bar"/>
+  </relation>
+  <relation id="1633" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0300000" maxlat="10.3040000" maxlon="6.0302000"/>
+    <member type="node" ref="163310" role="" lat="10.3010000" lon="6.0300000"/>
+    <member type="node" ref="163340" role="" lat="10.3040000" lon="6.0300000"/>
+    <member type="way" ref="16331" role="">
+      <nd lat="10.3010000" lon="6.0301000"/>
+      <nd lat="10.3010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16334" role="">
+      <nd lat="10.3040000" lon="6.0301000"/>
+      <nd lat="10.3040000" lon="6.0302000"/>
+    </member>
+    <tag k="foo" v="bar_1633"/>
+    <tag k="foo_1633" v="bar"/>
+  </relation>
+  <relation id="1671" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0100000" maxlat="10.7030000" maxlon="6.0102000"/>
+    <member type="node" ref="167110" role="" lat="10.7010000" lon="6.0100000"/>
+    <member type="node" ref="167130" role="" lat="10.7030000" lon="6.0100000"/>
+    <member type="way" ref="16711" role="">
+      <nd lat="10.7010000" lon="6.0101000"/>
+      <nd lat="10.7010000" lon="6.0102000"/>
+    </member>
+    <member type="way" ref="16713" role="">
+      <nd lat="10.7030000" lon="6.0101000"/>
+      <nd lat="10.7030000" lon="6.0102000"/>
+    </member>
+    <member type="relation" ref="16711" role=""/>
+    <member type="relation" ref="16713" role=""/>
+    <tag k="foo" v="bar_1671"/>
+    <tag k="foo_1671" v="bar"/>
+  </relation>
+  <relation id="1672" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0200000" maxlat="10.7040000" maxlon="6.0202000"/>
+    <member type="node" ref="167210" role="" lat="10.7010000" lon="6.0200000"/>
+    <member type="node" ref="167240" role="" lat="10.7040000" lon="6.0200000"/>
+    <member type="way" ref="16721" role="">
+      <nd lat="10.7010000" lon="6.0201000"/>
+      <nd lat="10.7010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16724" role="">
+      <nd lat="10.7040000" lon="6.0201000"/>
+      <nd lat="10.7040000" lon="6.0202000"/>
+    </member>
+    <member type="relation" ref="16721" role=""/>
+    <member type="relation" ref="16724" role=""/>
+    <tag k="foo" v="bar_1672"/>
+    <tag k="foo_1672" v="bar"/>
+  </relation>
+  <relation id="1673" version="3" timestamp="2013-07-01T09:03:23Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.7010000" minlon="6.0300000" maxlat="10.7040000" maxlon="6.0302000"/>
+    <member type="node" ref="167310" role="" lat="10.7010000" lon="6.0300000"/>
+    <member type="node" ref="167340" role="" lat="10.7040000" lon="6.0300000"/>
+    <member type="way" ref="16731" role="">
+      <nd lat="10.7010000" lon="6.0301000"/>
+      <nd lat="10.7010000" lon="6.0302000"/>
+    </member>
+    <member type="way" ref="16734" role="">
+      <nd lat="10.7040000" lon="6.0301000"/>
+      <nd lat="10.7040000" lon="6.0302000"/>
+    </member>
+    <member type="relation" ref="16731" role=""/>
+    <member type="relation" ref="16734" role=""/>
+    <tag k="foo" v="bar_1673"/>
+    <tag k="foo_1673" v="bar"/>
+  </relation>
+  <marker id="304">
+    <tag k="full_history" v="node 1402"/>
+  </marker>
+  <timeline id="305">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1402"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+    <tag k="expired" v="2013-07-01T09:02:12Z"/>
+  </timeline>
+  <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </node>
+  <timeline id="306">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1402"/>
+    <tag k="refversion" v="2"/>
+    <tag k="created" v="2013-07-01T09:02:12Z"/>
+    <tag k="expired" v="2013-07-01T09:03:12Z"/>
+  </timeline>
+  <node id="1402" lat="10.0000000" lon="14.0200000" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </node>
+  <timeline id="307">
+    <tag k="reftype" v="node"/>
+    <tag k="ref" v="1402"/>
+    <tag k="refversion" v="3"/>
+    <tag k="created" v="2013-07-01T09:03:12Z"/>
+  </timeline>
+  <node id="1402" lat="20.0000000" lon="14.0200000" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <tag k="foo" v="bar_1402"/>
+    <tag k="foo_1402" v="bar"/>
+  </node>
+  <marker id="308">
+    <tag k="full_history" v="way 1505"/>
+  </marker>
+  <timeline id="309">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1505"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:15Z"/>
+    <tag k="expired" v="2013-07-01T09:02:15Z"/>
+  </timeline>
+  <way id="1505" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="5.0500000"/>
+    <nd ref="15051" lat="10.0000000" lon="5.0500000"/>
+    <nd ref="15052" lat="10.0010000" lon="5.0500000"/>
+    <nd ref="15053" lat="10.0020000" lon="5.0500000"/>
+    <tag k="foo" v="bar_1505"/>
+    <tag k="foo_1505" v="bar"/>
+  </way>
+  <node id="15051" lat="10.0000000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="15052" lat="10.0010000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="15053" lat="10.0020000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <timeline id="310">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1505"/>
+    <tag k="refversion" v="2"/>
+    <tag k="created" v="2013-07-01T09:02:15Z"/>
+    <tag k="expired" v="2013-07-01T09:03:15Z"/>
+  </timeline>
+  <timeline id="311">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1505"/>
+    <tag k="refversion" v="3"/>
+    <tag k="created" v="2013-07-01T09:03:15Z"/>
+  </timeline>
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
+    <nd ref="15051" lat="10.0000000" lon="5.0500000"/>
+    <nd ref="15052" lat="10.0010000" lon="5.0500000"/>
+    <nd ref="15054" lat="10.0020000" lon="15.0500000"/>
+    <tag k="foo" v="bar_1505"/>
+    <tag k="foo_1505" v="bar"/>
+  </way>
+  <node id="15051" lat="10.0000000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="15052" lat="10.0010000" lon="5.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <node id="15054" lat="10.0020000" lon="15.0500000" version="1" timestamp="2013-07-01T09:01:15Z" changeset="496" uid="42" user="foo"/>
+  <marker id="312">
+    <tag k="full_history" v="way 1602"/>
+  </marker>
+  <timeline id="313">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1602"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+    <tag k="expired" v="2013-07-01T09:02:12Z"/>
+  </timeline>
+  <way id="1602" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0200000" maxlat="10.0020000" maxlon="6.0200000"/>
+    <nd ref="16021" lat="10.0000000" lon="6.0200000"/>
+    <nd ref="16022" lat="10.0010000" lon="6.0200000"/>
+    <nd ref="16023" lat="10.0020000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1602"/>
+    <tag k="foo_1602" v="bar"/>
+  </way>
+  <node id="16021" lat="10.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="16022" lat="10.0010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="16023" lat="10.0020000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <timeline id="314">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1602"/>
+    <tag k="refversion" v="2"/>
+    <tag k="created" v="2013-07-01T09:02:12Z"/>
+    <tag k="expired" v="2013-07-01T09:03:12Z"/>
+  </timeline>
+  <way id="1602" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0200000" maxlat="10.0030000" maxlon="6.0200000"/>
+    <nd ref="16021" lat="10.0000000" lon="6.0200000"/>
+    <nd ref="16022" lat="10.0010000" lon="6.0200000"/>
+    <nd ref="16024" lat="10.0030000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1602"/>
+    <tag k="foo_1602" v="bar"/>
+  </way>
+  <node id="16021" lat="10.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="16022" lat="10.0010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="16024" lat="10.0030000" lon="6.0200000" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <timeline id="315">
+    <tag k="reftype" v="way"/>
+    <tag k="ref" v="1602"/>
+    <tag k="refversion" v="3"/>
+    <tag k="created" v="2013-07-01T09:03:12Z"/>
+  </timeline>
+  <way id="1602" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="6.0200000" maxlat="10.0040000" maxlon="6.0200000"/>
+    <nd ref="16021" lat="10.0000000" lon="6.0200000"/>
+    <nd ref="16022" lat="10.0010000" lon="6.0200000"/>
+    <nd ref="16025" lat="10.0040000" lon="6.0200000"/>
+    <tag k="foo" v="bar_1602"/>
+    <tag k="foo_1602" v="bar"/>
+  </way>
+  <node id="16021" lat="10.0000000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="16022" lat="10.0010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="16025" lat="10.0040000" lon="6.0200000" version="1" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo"/>
+  <marker id="316">
+    <tag k="full_history" v="rel 1632"/>
+  </marker>
+  <timeline id="317">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1632"/>
+    <tag k="refversion" v="1"/>
+    <tag k="created" v="2013-07-01T09:01:12Z"/>
+    <tag k="expired" v="2013-07-01T09:02:12Z"/>
+  </timeline>
+  <relation id="1632" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0200000" maxlat="10.3020000" maxlon="6.0202000"/>
+    <member type="node" ref="163210" role="" lat="10.3010000" lon="6.0200000"/>
+    <member type="node" ref="163220" role="" lat="10.3020000" lon="6.0200000"/>
+    <member type="way" ref="16321" role="">
+      <nd lat="10.3010000" lon="6.0201000"/>
+      <nd lat="10.3010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16322" role="">
+      <nd lat="10.3020000" lon="6.0201000"/>
+      <nd lat="10.3020000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1632"/>
+    <tag k="foo_1632" v="bar"/>
+  </relation>
+  <node id="163210" lat="10.3010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163211" lat="10.3010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163212" lat="10.3010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163220" lat="10.3020000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163221" lat="10.3020000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163222" lat="10.3020000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <way id="16321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <center lat="10.3010000" lon="6.0201500"/>
+    <nd ref="163211"/>
+    <nd ref="163212"/>
+  </way>
+  <way id="16322" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <center lat="10.3020000" lon="6.0201500"/>
+    <nd ref="163221"/>
+    <nd ref="163222"/>
+  </way>
+  <timeline id="318">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1632"/>
+    <tag k="refversion" v="2"/>
+    <tag k="created" v="2013-07-01T09:02:12Z"/>
+    <tag k="expired" v="2013-07-01T09:03:12Z"/>
+  </timeline>
+  <relation id="1632" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0200000" maxlat="10.3030000" maxlon="6.0202000"/>
+    <member type="node" ref="163210" role="" lat="10.3010000" lon="6.0200000"/>
+    <member type="node" ref="163230" role="" lat="10.3030000" lon="6.0200000"/>
+    <member type="way" ref="16321" role="">
+      <nd lat="10.3010000" lon="6.0201000"/>
+      <nd lat="10.3010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16323" role="">
+      <nd lat="10.3030000" lon="6.0201000"/>
+      <nd lat="10.3030000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1632"/>
+    <tag k="foo_1632" v="bar"/>
+  </relation>
+  <node id="163210" lat="10.3010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163211" lat="10.3010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163212" lat="10.3010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163230" lat="10.3030000" lon="6.0200000" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163231" lat="10.3030000" lon="6.0201000" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163232" lat="10.3030000" lon="6.0202000" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
+  <way id="16321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <center lat="10.3010000" lon="6.0201500"/>
+    <nd ref="163211"/>
+    <nd ref="163212"/>
+  </way>
+  <way id="16323" version="1" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo">
+    <center lat="10.3030000" lon="6.0201500"/>
+    <nd ref="163231"/>
+    <nd ref="163232"/>
+  </way>
+  <timeline id="319">
+    <tag k="reftype" v="relation"/>
+    <tag k="ref" v="1632"/>
+    <tag k="refversion" v="3"/>
+    <tag k="created" v="2013-07-01T09:03:12Z"/>
+  </timeline>
+  <relation id="1632" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.3010000" minlon="6.0200000" maxlat="10.3040000" maxlon="6.0202000"/>
+    <member type="node" ref="163210" role="" lat="10.3010000" lon="6.0200000"/>
+    <member type="node" ref="163240" role="" lat="10.3040000" lon="6.0200000"/>
+    <member type="way" ref="16321" role="">
+      <nd lat="10.3010000" lon="6.0201000"/>
+      <nd lat="10.3010000" lon="6.0202000"/>
+    </member>
+    <member type="way" ref="16324" role="">
+      <nd lat="10.3040000" lon="6.0201000"/>
+      <nd lat="10.3040000" lon="6.0202000"/>
+    </member>
+    <tag k="foo" v="bar_1632"/>
+    <tag k="foo_1632" v="bar"/>
+  </relation>
+  <node id="163210" lat="10.3010000" lon="6.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163211" lat="10.3010000" lon="6.0201000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163212" lat="10.3010000" lon="6.0202000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163240" lat="10.3040000" lon="6.0200000" version="1" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163241" lat="10.3040000" lon="6.0201000" version="1" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="163242" lat="10.3040000" lon="6.0202000" version="1" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo"/>
+  <way id="16321" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+    <center lat="10.3010000" lon="6.0201500"/>
+    <nd ref="163211"/>
+    <nd ref="163212"/>
+  </way>
+  <way id="16324" version="1" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+    <center lat="10.3040000" lon="6.0201500"/>
+    <nd ref="163241"/>
+    <nd ref="163242"/>
+  </way>
 
 </osm>

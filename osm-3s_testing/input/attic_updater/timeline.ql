@@ -147,3 +147,78 @@ timeline(rel,1911);out;
 timeline(rel,1921);out;
 timeline(rel,1922);out;
 timeline(rel,1941);out;
+
+make marker retro="2013-07-01T09:02:00Z"; out;
+retro("2013-07-01T09:02:00Z")
+(
+  node(10,4,10.1,4.1); out meta geom;
+  way(10,6,10.1,6.1); out meta geom;
+  rel(10,6,10.8,6.1); out meta geom;
+);
+
+make marker retro="2013-07-01T09:03:00Z"; out;
+retro("2013-07-01T09:03:00Z")
+(
+  node(10,4,10.1,4.1); out meta geom;
+  way(10,6,10.1,6.1); out meta geom;
+  rel(10,6,10.8,6.1); out meta geom;
+);
+
+make marker retro="2013-07-01T09:04:00Z"; out;
+retro("2013-07-01T09:04:00Z")
+(
+  node(10,4,10.1,4.1); out meta geom;
+  way(10,6,10.1,6.1); out meta geom;
+  rel(10,6,10.8,6.1); out meta geom;
+);
+
+make marker retro="2013-07-01T09:05:00Z"; out;
+retro("2013-07-01T09:05:00Z")
+(
+  node(10,4,10.1,4.1); out meta geom;
+  way(10,6,10.1,6.1); out meta geom;
+  rel(10,6,10.8,6.1); out meta geom;
+);
+
+make marker full_history="node 1402"; out;
+timeline(node,1402);
+foreach(
+  out;
+  retro(u(t[created]))
+  (
+    node(1402); out meta;
+  );
+);
+
+make marker full_history="way 1505"; out;
+timeline(way,1505);
+foreach(
+  out;
+  retro(u(t[created]))
+  (
+    way(1505); out geom meta;
+    >; out meta;
+  );
+);
+
+make marker full_history="way 1602"; out;
+timeline(way,1602);
+foreach(
+  out;
+  retro(u(t[created]))
+  (
+    way(1602); out geom meta;
+    >; out meta;
+  );
+);
+
+make marker full_history="rel 1632"; out;
+timeline(rel,1632);
+foreach(
+  out;
+  retro(u(t[created]))
+  (
+    rel(1632); out geom meta;
+    >; out center meta;
+  );
+);

@@ -118,6 +118,7 @@ statements_cc = \
   overpass_api/statements/print.cc \
   overpass_api/statements/query.cc \
   overpass_api/statements/recurse.cc \
+  overpass_api/statements/retro.cc \
   overpass_api/statements/set_prop.cc \
   overpass_api/statements/statement.cc \
   overpass_api/statements/tag_value.cc \
@@ -280,6 +281,7 @@ nobase_dist_HEADERS = \
   overpass_api/statements/print.h\
   overpass_api/statements/query.h\
   overpass_api/statements/recurse.h\
+  overpass_api/statements/retro.h\
   overpass_api/statements/set_prop.h\
   overpass_api/statements/statement_dump.h\
   overpass_api/statements/statement.h\

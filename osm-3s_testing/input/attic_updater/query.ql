@@ -307,6 +307,8 @@ rel(2607);out meta;
 rel(2608);out meta;
 
 
+make marker test="output styles";out;
+
 node(11011);out ids;
 rel(1332);out ids;
 node(11012);out ids;
@@ -453,6 +455,8 @@ rel(1332);out geom(-90,-180,90,180);
 rel(1332);out geom(10,3.02001,11,3.02011);
 
 
+make marker test="bbox queries";out;
+
 node(0,0,30,40);out meta;
 way(0,0,30,40); out meta;
 rel(0,0,30,40); out meta;
@@ -546,6 +550,8 @@ rel(20,5,20.1,5.1); out meta;
 node(20,14,20.1,14.1);out meta;
 way(20,14,20.1,14.1); out meta;
 
+
+make marker test="tag queries";out;
 
 node(11011);out ids;
 node["foo"="bar_1101"];out meta;
