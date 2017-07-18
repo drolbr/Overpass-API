@@ -1799,7 +1799,7 @@ void Collection_Print_Target::clear_nodes(Resource_Manager& rman, bool add_delet
 	std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->elem.id);
 	different_nodes.push_back(std::make_pair(*it,
-	    Node_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfeu : 0xffu,
+	    Node_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
 		Node_Skeleton(it->elem.id),
 	        meta_it != found_meta.end() ? meta_it->second
 		    : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
@@ -1823,7 +1823,7 @@ void Collection_Print_Target::clear_nodes(Resource_Manager& rman, bool add_delet
   for (std::vector< std::pair< Node_Entry, Node_Entry > >::const_iterator it = different_nodes.begin();
       it != different_nodes.end(); ++it)
   {
-    if ((it->second.idx.val() | 1) == 0xffu)
+    if ((it->second.idx.val() | 2) == 0xffu)
     {
       if (add_deletion_information)
       {
@@ -1834,7 +1834,7 @@ void Collection_Print_Target::clear_nodes(Resource_Manager& rman, bool add_delet
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             extra_data->get_users(), output_mode,
-            it->second.idx.val() == 0xfeu ? Output_Handler::push_away : Output_Handler::erase,
+            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
       else
@@ -1845,7 +1845,7 @@ void Collection_Print_Target::clear_nodes(Resource_Manager& rman, bool add_delet
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             extra_data->get_users(), output_mode, Output_Handler::erase);
     }
-    else if (it->first.idx.val() != 0xffu)
+    else if ((it->first.idx.val() | 2) != 0xffu)
     {
       // The elements differ
       Point_Geometry new_geom(::lat(it->second.idx.val(), it->second.elem.ll_lower),
@@ -1940,7 +1940,7 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
 	std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->elem.id);
 	different_ways.push_back(std::make_pair(*it,
-	    Way_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfeu : 0xffu,
+	    Way_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
 		Way_Skeleton(it->elem.id),
 		std::vector< Quad_Coord >(),
 	        meta_it != found_meta.end() ? meta_it->second
@@ -1966,7 +1966,7 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
   for (std::vector< std::pair< Way_Entry, Way_Entry > >::const_iterator it = different_ways.begin();
       it != different_ways.end(); ++it)
   {
-    if ((it->second.idx.val() | 1) == 0xffu)
+    if ((it->second.idx.val() | 2) == 0xffu)
     {
       Double_Coords double_coords(it->first.geometry);
       Geometry_Broker broker;
@@ -1979,7 +1979,7 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             extra_data->get_users(), output_mode,
-            it->second.idx.val() == 0xfeu ? Output_Handler::push_away : Output_Handler::erase,
+            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
       else
@@ -1990,7 +1990,7 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             extra_data->get_users(), output_mode, Output_Handler::erase);
     }
-    else if (it->first.idx.val() != 0xffu)
+    else if ((it->first.idx.val() | 2) != 0xffu)
     {
       // The elements differ
       Double_Coords double_coords(it->first.geometry);
@@ -2094,7 +2094,7 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
 	std::map< Relation_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Relation::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->elem.id);
 	different_relations.push_back(std::make_pair(*it,
-	    Relation_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfeu : 0xffu,
+	    Relation_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
 		Relation_Skeleton(it->elem.id),
 		std::vector< std::vector< Quad_Coord > >(),
 	        meta_it != found_meta.end() ? meta_it->second
@@ -2120,7 +2120,7 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
   for (std::vector< std::pair< Relation_Entry, Relation_Entry > >::const_iterator it = different_relations.begin();
       it != different_relations.end(); ++it)
   {
-    if ((it->second.idx.val() | 1) == 0xffu)
+    if ((it->second.idx.val() | 2) == 0xffu)
     {
       Double_Coords double_coords(it->first.geometry);
       Geometry_Broker broker;
@@ -2133,7 +2133,7 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             extra_data->roles, extra_data->get_users(), output_mode,
-            it->second.idx.val() == 0xfeu ? Output_Handler::push_away : Output_Handler::erase,
+            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
       else
@@ -2144,7 +2144,7 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
             extra_data->roles, extra_data->get_users(), output_mode, Output_Handler::erase);
     }
-    else if (it->first.idx.val() != 0xffu)
+    else if ((it->first.idx.val() | 2) != 0xffu)
     {
       // The elements differ
       Double_Coords double_coords(it->first.geometry);

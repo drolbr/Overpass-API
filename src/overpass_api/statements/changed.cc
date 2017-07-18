@@ -221,15 +221,21 @@ Changed_Statement::Changed_Statement
   if (!behave_trivial && ((attributes["since"] == "auto") ^ (attributes["until"] == "auto")))
   {
     std::ostringstream temp;
-    temp<<"The attributes \"since\" and \"until\" must be std::set either both or none.";
+    temp<<"The attributes \"since\" and \"until\" must be set either both or none.";
     add_static_error(temp.str());
   }
 
-  since = Timestamp(attributes["since"]).timestamp;
+  std::string timestamp = attributes["since"];
+  if (timestamp.size() >= 19)
+    since = Timestamp(timestamp).timestamp;
+  
   if (!behave_trivial && attributes["since"] != "auto" && (since == 0 || since == NOW))
     add_static_error("The attribute \"since\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".");
 
-  until = Timestamp(attributes["until"]).timestamp;
+  timestamp = attributes["until"];
+  if (timestamp.size() >= 19)
+    until = Timestamp(timestamp).timestamp;
+  
   if (!behave_trivial && attributes["until"] != "auto" && (until == 0 || until == NOW))
     add_static_error("The attribute \"until\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".");
 }
