@@ -2,7 +2,7 @@
 
 node(10,3,10.1,3.1); out meta geom;
 way(10,3,10.1,3.1); out meta geom;
-rel(10,3,10.1,3.1); out meta geom;
+rel(10,3,11,3.1); out meta geom;
 node(10,4,10.1,4.1); out meta geom;
 way(10,4,10.1,4.1); out meta geom;
 rel(10,4,10.1,4.1); out meta geom;
@@ -15,7 +15,7 @@ rel(10,14,10.1,14.1); out meta geom;
 
 node(10,3,10.1,3.1); out meta bb;
 way(10,3,10.1,3.1); out meta bb;
-rel(10,3,10.1,3.1); out meta bb;
+rel(10,3,11,3.1); out meta bb;
 node(10,4,10.1,4.1); out meta bb;
 way(10,4,10.1,4.1); out meta bb;
 rel(10,4,10.1,4.1); out meta bb;
@@ -28,7 +28,7 @@ rel(10,14,10.1,14.1); out meta bb;
 
 node(10,3,10.1,3.1); out meta center;
 way(10,3,10.1,3.1); out meta center;
-rel(10,3,10.1,3.1); out meta center;
+rel(10,3,11,3.1); out meta center;
 node(10,4,10.1,4.1); out meta center;
 way(10,4,10.1,4.1); out meta center;
 rel(10,4,10.1,4.1); out meta center;
@@ -41,7 +41,7 @@ rel(10,14,10.1,14.1); out meta center;
 
 node(10,3,10.1,3.1); out meta;
 way(10,3,10.1,3.1); out meta;
-rel(10,3,10.1,3.1); out meta;
+rel(10,3,11,3.1); out meta;
 node(10,4,10.1,4.1); out meta;
 way(10,4,10.1,4.1); out meta;
 rel(10,4,10.1,4.1); out meta;
@@ -54,7 +54,7 @@ rel(10,14,10.1,14.1); out meta;
 
 node(10,3,10.1,3.1); out geom;
 way(10,3,10.1,3.1); out geom;
-rel(10,3,10.1,3.1); out geom;
+rel(10,3,11,3.1); out geom;
 node(10,4,10.1,4.1); out geom;
 way(10,4,10.1,4.1); out geom;
 rel(10,4,10.1,4.1); out geom;
@@ -67,7 +67,7 @@ rel(10,14,10.1,14.1); out geom;
 
 node(10,3,10.1,3.1); out;
 way(10,3,10.1,3.1); out;
-rel(10,3,10.1,3.1); out;
+rel(10,3,11,3.1); out;
 node(10,4,10.1,4.1); out;
 way(10,4,10.1,4.1); out;
 rel(10,4,10.1,4.1); out;
@@ -80,7 +80,7 @@ rel(10,14,10.1,14.1); out;
 
 node(10,3,10.1,3.1); out skel;
 way(10,3,10.1,3.1); out skel;
-rel(10,3,10.1,3.1); out skel;
+rel(10,3,11,3.1); out skel;
 node(10,4,10.1,4.1); out skel;
 way(10,4,10.1,4.1); out skel;
 rel(10,4,10.1,4.1); out skel;
@@ -93,7 +93,7 @@ rel(10,14,10.1,14.1); out skel;
 
 node(10,3,10.1,3.1); out ids bb;
 way(10,3,10.1,3.1); out ids bb;
-rel(10,3,10.1,3.1); out ids bb;
+rel(10,3,11,3.1); out ids bb;
 node(10,4,10.1,4.1); out ids bb;
 way(10,4,10.1,4.1); out ids bb;
 rel(10,4,10.1,4.1); out ids bb;
@@ -106,7 +106,7 @@ rel(10,14,10.1,14.1); out ids bb;
 
 node(10,3,10.1,3.1); out ids center;
 way(10,3,10.1,3.1); out ids center;
-rel(10,3,10.1,3.1); out ids center;
+rel(10,3,11,3.1); out ids center;
 node(10,4,10.1,4.1); out ids center;
 way(10,4,10.1,4.1); out ids center;
 rel(10,4,10.1,4.1); out ids center;
@@ -119,7 +119,7 @@ rel(10,14,10.1,14.1); out ids center;
 
 node(10,3,10.1,3.1); out ids;
 way(10,3,10.1,3.1); out ids;
-rel(10,3,10.1,3.1); out ids;
+rel(10,3,11,3.1); out ids;
 node(10,4,10.1,4.1); out ids;
 way(10,4,10.1,4.1); out ids;
 rel(10,4,10.1,4.1); out ids;
