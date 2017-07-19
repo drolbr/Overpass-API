@@ -1648,20 +1648,20 @@ void tags_quadtile_attic
 
 template< typename Index, typename Skeleton >
 std::vector< typename Skeleton::Id_Type > find_still_existing_skeletons
-    (Resource_Manager& rman, const std::vector< Index >& req,
+    (Resource_Manager& rman, uint64 timestamp, const std::vector< Index >& req,
      const std::vector< typename Skeleton::Id_Type >& searched_ids)
 {
   std::vector< typename Skeleton::Id_Type > found_ids;
   std::map< Index, std::vector< Skeleton > > current_result;
   std::map< Index, std::vector< Attic< Skeleton > > > attic_result;
-  if (rman.get_desired_timestamp() == NOW)
+  if (timestamp == NOW)
     collect_items_discrete(0, rman, *current_skeleton_file_properties< Skeleton >(), req,
         Id_Predicate< Skeleton >(searched_ids), current_result);
   else
   {
     collect_items_discrete_by_timestamp(0, rman, req,
-        Id_Predicate< Skeleton >(searched_ids), current_result, attic_result);
-    filter_attic_elements(rman, rman.get_desired_timestamp(), current_result, attic_result);
+        Id_Predicate< Skeleton >(searched_ids), timestamp, current_result, attic_result);
+    filter_attic_elements(rman, timestamp, current_result, attic_result);
   }
   for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current_result.begin();
        it != current_result.end(); ++it)
@@ -1788,7 +1788,8 @@ void Collection_Print_Target::clear_nodes(Resource_Manager& rman, bool add_delet
 
     std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, rman, true);
     std::vector< Node_Skeleton::Id_Type > found_ids
-        = find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(rman, req, searched_ids);
+        = find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(
+            rman, rman.get_desired_timestamp(), req, searched_ids);
     std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > > found_meta
         = find_meta_elements< Uint32_Index, Node_Skeleton >(rman, req, searched_ids);
 
@@ -1929,7 +1930,8 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
 
     std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(searched_ids, rman, true);
     std::vector< Way_Skeleton::Id_Type > found_ids
-        = find_still_existing_skeletons< Uint31_Index, Way_Skeleton >(rman, req, searched_ids);
+        = find_still_existing_skeletons< Uint31_Index, Way_Skeleton >(
+            rman, rman.get_desired_timestamp(), req, searched_ids);
     std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > > found_meta
         = find_meta_elements< Uint31_Index, Way_Skeleton >(rman, req, searched_ids);
 
@@ -2083,7 +2085,8 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
 
     std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, rman, true);
     std::vector< Relation_Skeleton::Id_Type > found_ids
-        = find_still_existing_skeletons< Uint31_Index, Relation_Skeleton >(rman, req, searched_ids);
+        = find_still_existing_skeletons< Uint31_Index, Relation_Skeleton >(
+            rman, rman.get_desired_timestamp(), req, searched_ids);
     std::map< Relation_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Relation::Id_Type > > found_meta
         = find_meta_elements< Uint31_Index, Relation_Skeleton >(rman, req, searched_ids);
 
