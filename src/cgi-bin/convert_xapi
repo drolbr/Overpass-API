@@ -86,13 +86,13 @@ else
   {
     echo "Your query in pretty OverpassQL:"
     echo
-    ../bin/osm3s_query --dump-pretty-map-ql <$REQUEST_FILE
+    ../bin/osm3s_query --dump-pretty-ql <$REQUEST_FILE
   };
   elif [[ $OUTPUT_TYPE == "compact" ]]; then
   {
     echo "Your query in compact OverpassQL:"
     echo
-    ../bin/osm3s_query --dump-compact-map-ql <$REQUEST_FILE
+    ../bin/osm3s_query --dump-compact-ql <$REQUEST_FILE
     echo
   };
   fi

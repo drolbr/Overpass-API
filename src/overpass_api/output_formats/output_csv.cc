@@ -3,28 +3,6 @@
 #include "output_csv.h"
 
 
-namespace
-{
-  struct Object_Type
-  {
-    enum _ { invalid, node, way, relation, area };
-    
-    static std::string name(Object_Type::_ otype)
-    {
-      if (otype == Object_Type::node)
-        return "node";
-      else if (otype == Object_Type::way)
-        return "way";
-      else if (otype == Object_Type::relation)
-        return "relation";
-      else if (otype == Object_Type::area)
-        return "area";
-      return "unknown object";
-    }
-  };
-}
-
-
 bool Output_CSV::write_http_headers()
 {
   std::cout<<"Content-type: text/csv\n";
@@ -122,8 +100,44 @@ std::string Output_CSV::dump_config() const
 }
 
 
+template< typename OSM_Element_Metadata_Skeleton >
+void print_meta(const std::string& keyfield,
+    const OSM_Element_Metadata_Skeleton& meta, const std::map< uint32, std::string >* users)
+{
+  if (keyfield == "version")
+    std::cout<<meta.version;
+  else if (keyfield == "timestamp")
+    std::cout<<Timestamp(meta.timestamp).str();
+  else if (keyfield == "changeset")
+    std::cout<<meta.changeset;
+  else if (keyfield == "uid")
+    std::cout<<meta.user_id;
+  else if (users && keyfield == "user")
+  {
+    std::map< uint32, std::string >::const_iterator uit = users->find(meta.user_id);
+    if (uit != users->end())
+      std::cout<<uit->second;
+  }
+}
+
+
+template< >
+void print_meta< int >(const std::string& keyfield,
+    const int& meta, const std::map< uint32, std::string >* users) {}
+
+std::string get_count_tag(const std::vector< std::pair< std::string, std::string> >* tags, std::string tag)
+{
+  if (tags)
+    for (std::vector< std::pair< std::string, std::string> >::const_iterator it_tags = tags->begin();
+         it_tags != tags->end(); ++it_tags)
+      if (it_tags->first == tag)
+        return it_tags->second;
+  return "0";
+}
+
+
 template< typename Id_Type, typename OSM_Element_Metadata_Skeleton >
-void process_csv_line(Object_Type::_ otype, Id_Type id, const Opaque_Geometry& geometry,
+void process_csv_line(int otype, const std::string& type, Id_Type id, const Opaque_Geometry& geometry,
     const OSM_Element_Metadata_Skeleton* meta,
     const std::vector< std::pair< std::string, std::string> >* tags,
     const std::map< uint32, std::string >* users,
@@ -151,22 +165,7 @@ void process_csv_line(Object_Type::_ otype, Id_Type id, const Opaque_Geometry& g
     else
     {
       if (meta)
-      {
-        if (it->first == "version")
-          std::cout<<meta->version;
-        else if (it->first == "timestamp")
-          std::cout<<Timestamp(meta->timestamp).str();
-        else if (it->first == "changeset")
-          std::cout<<meta->changeset;
-        else if (it->first == "uid")
-          std::cout<<meta->user_id;
-        else if (it->first == "user")
-        {
-          std::map< uint32, std::string >::const_iterator uit = users->find(meta->user_id);
-          if (uit != users->end())
-            std::cout<<uit->second;
-        }
-      }
+        print_meta(it->first, *meta, users);
 
       if (it->first == "id")
       {
@@ -174,9 +173,9 @@ void process_csv_line(Object_Type::_ otype, Id_Type id, const Opaque_Geometry& g
           std::cout<<id.val();
       }
       else if (it->first == "otype")
-        std::cout<<int(otype);
+        std::cout<<otype;
       else if (it->first == "type")
-	std::cout<<Object_Type::name(otype);
+	std::cout<<type;
       else if (it->first == "lat")
       {
         if ((mode.mode & (Output_Mode::COORDS | Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
@@ -188,6 +187,19 @@ void process_csv_line(Object_Type::_ otype, Id_Type id, const Opaque_Geometry& g
         if ((mode.mode & (Output_Mode::COORDS | Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
 	    && geometry.has_center())
           std::cout<<std::fixed<<std::setprecision(7)<<geometry.center_lon();
+      }
+      if (type == "count")
+      {
+        if (it->first == "count")
+          std::cout << get_count_tag(tags, "total");
+        else if (it->first == "count:nodes")
+          std::cout << get_count_tag(tags, "nodes");
+        else if (it->first == "count:ways")
+          std::cout << get_count_tag(tags, "ways");
+        else if (it->first == "count:relations")
+          std::cout << get_count_tag(tags, "relations");
+        else if (it->first == "count:areas")
+          std::cout << get_count_tag(tags, "areas");
       }
     }
       
@@ -211,7 +223,7 @@ void Output_CSV::print_item(const Node_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta)
 {
-  process_csv_line(Object_Type::node, skel.id, geometry, meta, tags, users, csv_settings, mode);
+  process_csv_line(1, "node", skel.id, geometry, meta, tags, users, csv_settings, mode);
 }
 
 
@@ -227,7 +239,7 @@ void Output_CSV::print_item(const Way_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
 {
-  process_csv_line(Object_Type::way, skel.id, geometry, meta, tags, users, csv_settings, mode);
+  process_csv_line(2, "way", skel.id, geometry, meta, tags, users, csv_settings, mode);
 }
 
 
@@ -244,7 +256,7 @@ void Output_CSV::print_item(const Relation_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta)
 {
-  process_csv_line(Object_Type::relation, skel.id, geometry, meta, tags, users, csv_settings, mode);
+  process_csv_line(3, "relation", skel.id, geometry, meta, tags, users, csv_settings, mode);
 }
 
 
@@ -253,5 +265,6 @@ void Output_CSV::print_item(const Derived_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* tags,
       Output_Mode mode)
 {
-  //TODO
+  process_csv_line< Derived_Skeleton::Id_Type, int >(
+      4, skel.type_name, skel.id, geometry, 0, tags, 0, csv_settings, mode);
 }

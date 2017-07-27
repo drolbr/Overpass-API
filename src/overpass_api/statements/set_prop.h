@@ -80,7 +80,7 @@ public:
   {
     virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("set-prop")
+    Statement_Maker() : Generic_Statement_Maker< Set_Prop_Statement >("set-prop")
     {
       Statement::maker_by_token()["="].push_back(this);
       Statement::maker_by_token()["!"].push_back(this);

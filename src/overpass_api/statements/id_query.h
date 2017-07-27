@@ -38,8 +38,8 @@ class Id_Query_Statement : public Output_Statement
     static Generic_Statement_Maker< Id_Query_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
-    Uint64 get_lower() const { return lower; }
-    Uint64 get_upper() const { return upper; }
+    
+    const std::vector< uint64 >& get_refs() { return refs; }
     int get_type() const { return type; }
 
     static bool area_query_exists() { return area_query_exists_; }
@@ -58,12 +58,15 @@ class Id_Query_Statement : public Output_Statement
 
     virtual std::string dump_xml(const std::string& indent) const
     {
-      return indent + "<id-query"
-          + std::string(" type=\"") + to_string(type) + "\""
-          + (lower.val() == upper.val()-1 ? std::string(" ref=\"") + ::to_string(lower.val()) + "\"" : "")
-          + (lower.val() != upper.val()-1 ? std::string(" lower=\"") + ::to_string(lower.val()) + "\"" : "")
-          + (lower.val() != upper.val()-1 ? std::string(" upper=\"") + ::to_string(upper.val()-1) + "\"" : "")
-          + dump_xml_result_name() + "/>\n";
+      std::vector< uint64 >::const_iterator it = refs.begin();
+      
+      std::string result = indent + "<id-query" + std::string(" type=\"") + to_string(type) + "\"";
+      if (!refs.empty())
+        result += " ref=\"" + ::to_string(refs[0]) + "\"";
+      for (uint i = 1; i < refs.size(); ++i)
+        result += " ref_" + ::to_string(i) + "=\"" + ::to_string(refs[i]) + "\"";
+      
+      return result + dump_xml_result_name() + "/>\n";
     }
 
     virtual std::string dump_compact_ql(const std::string&) const
@@ -73,14 +76,22 @@ class Id_Query_Statement : public Output_Statement
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
     virtual std::string dump_ql_in_query(const std::string& indent) const
     {
-      return std::string("(")
-          + (lower.val() == upper.val()-1 ? ::to_string(lower.val()) : "")
-          + ")";
+      std::vector< uint64 >::const_iterator it = refs.begin();
+        
+      std::string result = "(";
+      if (it != refs.end())
+        result += ::to_string(*it++);
+      while (it != refs.end())
+        result += "," + ::to_string(*it++);
+      result += ")";
+        
+      return result;
     }
 
   private:
     int type;
-    Uint64 ref, lower, upper;
+
+    std::vector< uint64 > refs;
     std::vector< Query_Constraint* > constraints;
 
     static bool area_query_exists_;

@@ -351,7 +351,7 @@ public:
   {
     virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker("eval-set-count")
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Set_Count >("eval-set-count")
     { Statement::maker_by_func_name()["count"].push_back(this); }
   };
   static Statement_Maker statement_maker;

@@ -1278,19 +1278,21 @@ class Collection_Print_Target
     void clear_relations(Resource_Manager& rman, bool add_deletion_information = false);
 
   private:
+    
+    typedef std::vector< std::pair< std::string, std::string > > Tag_Container;
 
     struct Node_Entry
     {
       Uint31_Index idx;
       Node_Skeleton elem;
       OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta;
-      std::vector< std::pair< std::string, std::string > > tags;
+      Tag_Container tags;
 
       Node_Entry(Uint31_Index idx_, Node_Skeleton elem_,
             OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta_
                 = OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
-            std::vector< std::pair< std::string, std::string > > tags_
-                = std::vector< std::pair< std::string, std::string > >())
+            Tag_Container tags_
+                = Tag_Container())
           : idx(idx_), elem(elem_), meta(meta_), tags(tags_) {}
 
       bool operator<(const Node_Entry& e) const
@@ -1308,15 +1310,15 @@ class Collection_Print_Target
       Uint31_Index idx;
       Way_Skeleton elem;
       OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
-      std::vector< std::pair< std::string, std::string > > tags;
+      Tag_Container tags;
       std::vector< Quad_Coord > geometry;
 
       Way_Entry(Uint31_Index idx_, Way_Skeleton elem_,
             const std::vector< Quad_Coord >& geometry_,
             OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta_
                 = OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
-            std::vector< std::pair< std::string, std::string > > tags_
-                = std::vector< std::pair< std::string, std::string > >())
+            Tag_Container tags_
+                = Tag_Container())
           : idx(idx_), elem(elem_), meta(meta_), tags(tags_), geometry(geometry_) {}
 
       bool operator<(const Way_Entry& e) const
@@ -1334,15 +1336,15 @@ class Collection_Print_Target
       Uint31_Index idx;
       Relation_Skeleton elem;
       OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta;
-      std::vector< std::pair< std::string, std::string > > tags;
+      Tag_Container tags;
       std::vector< std::vector< Quad_Coord > > geometry;
 
       Relation_Entry(Uint31_Index idx_, Relation_Skeleton elem_,
             const std::vector< std::vector< Quad_Coord > >& geometry_,
             OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta_
                 = OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
-            std::vector< std::pair< std::string, std::string > > tags_
-                = std::vector< std::pair< std::string, std::string > >())
+            Tag_Container tags_
+                = Tag_Container())
           : idx(idx_), elem(elem_), meta(meta_), tags(tags_), geometry(geometry_) {}
 
       bool operator<(const Relation_Entry& e) const

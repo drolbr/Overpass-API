@@ -35,15 +35,17 @@ struct Data_By_Id
 {
   struct Entry
   {
+    typedef std::vector< std::pair< std::string, std::string > > Tag_Container;
+    
     Uint31_Index idx;
     Element_Skeleton elem;
     OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > meta;
-    std::vector< std::pair< std::string, std::string > > tags;
+    Tag_Container tags;
 
     Entry(Uint31_Index idx_, Element_Skeleton elem_,
         OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > meta_,
-        std::vector< std::pair< std::string, std::string > > tags_
-            = std::vector< std::pair< std::string, std::string > >())
+        Tag_Container tags_
+            = Tag_Container())
         : idx(idx_), elem(elem_), meta(meta_), tags(tags_) {}
 
     bool operator<(const Entry& e) const

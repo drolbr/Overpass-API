@@ -89,8 +89,8 @@
 <pre>nohup bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;</pre>
 <p>This should start to fill the directory <em>&quot;diffs/&quot;</em> with subdirectories which have three digits as name and finally contain files ending in <em>osc.gz</em> and <em>state.txt</em>.</p>
 
-<pre>nohup bin/apply_osc_to_db.sh &quot;db/&quot; &quot;diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
-<p>(with <em>--meta=no</em> instead if you have not processed meta data)</p>
+<pre>nohup bin/apply_osc_to_db.sh &quot;diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
+<p>(with <em>--meta=no</em> instead if you have not processed meta data or <em>--meta=attic</em> if you want to work with museum data)</p>
 <p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. If you have obtained your database by cloning, you find the replicate id in the file <em>replicate_id</em> in the database directory. If you have imported the database from an OSM file, search on <a href="http://planet.openstreetmap.org/replication/minute/">http://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
 
 <p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: 
