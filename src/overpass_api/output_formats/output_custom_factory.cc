@@ -42,7 +42,7 @@ Output_Handler* Output_Custom_Generator::new_output_handler(const std::map< std:
 
   std::map< std::string, std::string >::const_iterator url_it = input_params.find("url");
   std::string url = (url_it == input_params.end() ?
-      "http://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}" : url_it->second);
+      "https://www.openstreetmap.org/browse/{{{type}}}/{{{id}}}" : url_it->second);
 
   std::map< std::string, std::string >::const_iterator template_it = input_params.find("template");
   std::string template_name = (template_it == input_params.end() ? "default.wiki" : template_it->second);

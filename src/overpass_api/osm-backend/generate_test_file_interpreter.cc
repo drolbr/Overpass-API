@@ -702,9 +702,9 @@ int main(int argc, char* args[])
   {
     std::cout<<"Status: 302 Moved\n";
     if (std::string(args[2]) == "interpreter_39")
-      std::cout<<"Location: http://www.openstreetmap.org/browse/way/1\n\n";
+      std::cout<<"Location: https://www.openstreetmap.org/browse/way/1\n\n";
     else if (std::string(args[2]) == "interpreter_40" || std::string(args[2]) == "interpreter_41")
-      std::cout<<"Location: http://www.openstreetmap.org/?way=1\n\n";
+      std::cout<<"Location: https://www.openstreetmap.org/?way=1\n\n";
   }
   else if (std::string(args[2]) == "interpreter_24" || std::string(args[2]) == "interpreter_25"
     || std::string(args[2]) == "interpreter_26" || std::string(args[2]) == "interpreter_27"

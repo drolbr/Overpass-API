@@ -18,13 +18,14 @@
 
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
 #include "../output_formats/output_xml.h"
 #include "around.h"
 #include "id_query.h"
 #include "print.h"
+#include "query.h"
+#include "testing_tools.h"
 #include "union.h"
 
 
@@ -37,25 +38,10 @@ void perform_around_print(uint pattern_size, std::string radius, uint64 global_n
   try
   {
     Resource_Manager rman(transaction, &global_settings);
-    {
-      std::ostringstream buf;
-      buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
-      std::string buf_ = buf.str();
-
-      const char* attributes[] = { "type", "node", "ref", buf_.c_str(), 0 };
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "radius", radius.c_str(), 0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
+    Id_Query_Statement(0, Attr()("type", "node")("ref", to_string(
+        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs(), global_settings).execute(rman);
+    Around_Statement(0, Attr()("radius", radius).kvs(), global_settings).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
   }
   catch (File_Error e)
   {
@@ -80,15 +66,52 @@ void perform_coord_print(uint pattern_size, std::string radius, uint64 global_no
       buf<<std::setprecision(14)<<(-0.2 + 0.2/pattern_size);
       std::string lon = buf.str();
 
-      const char* attributes[] = { "radius", radius.c_str(), "lat", lat.c_str(), "lon", lon.c_str(),  0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
+      Around_Statement(0, Attr()("radius", radius)("lat", lat)("lon", lon).kvs(), global_settings).execute(rman);
     }
-    {
-      const char* attributes[] = { "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
+    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_polyline_print(uint pattern_size, std::string polyline,
+    uint64 global_node_offset, Transaction& transaction)
+{
+  Parsed_Query global_settings;
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  try
+  {
+    std::string radius = to_string(200000./pattern_size);
+
+    Resource_Manager rman(transaction, &global_settings);
+    Around_Statement(0, Attr()("radius", radius)("polyline", polyline).kvs(),
+                     global_settings).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
+void perform_polyline_in_query_print(std::string radius, std::string type, std::string polyline,
+    uint64 global_node_offset, Transaction& transaction)
+{
+  Parsed_Query global_settings;
+  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  Statement_Container stmt_cont(global_settings);
+  try
+  {
+    Resource_Manager rman(transaction, &global_settings);
+    Query_Statement query(0, Attr()("type", type).kvs(), global_settings);
+    stmt_cont.add_stmt(new Around_Statement(0, Attr()("radius", radius)("polyline", polyline).kvs(),
+                     global_settings), &query);
+    query.execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
   }
   catch (File_Error e)
   {
@@ -126,83 +149,33 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
     Resource_Manager rman(transaction, &global_settings);
-    {
-      std::ostringstream buf;
-      buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
-      std::string buf_ = buf.str();
-
-      const char* attributes[] = { "type", "node", "into", "foo", "ref", buf_.c_str(), 0 };
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "radius", "200.1", "from", "foo", 0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
+    Id_Query_Statement(0, Attr()("type", "node")("into", "foo")("ref", to_string(
+        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs(), global_settings).execute(rman);
+    Around_Statement(0, Attr()("radius", "200.1")("from", "foo").kvs(), global_settings).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
   }
   if ((test_to_execute == "") || (test_to_execute == "5"))
   {
     Resource_Manager rman(transaction, &global_settings);
-    {
-      std::ostringstream buf;
-      buf<<(2*pattern_size*pattern_size + 1 + global_node_offset);
-      std::string buf_ = buf.str();
-
-      const char* attributes[] = { "type", "node", "ref", buf_.c_str(), 0 };
-      Id_Query_Statement* stmt1 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "radius", "200.1", "into", "foo", 0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "order", "id", "from", "foo", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
+    Id_Query_Statement(0, Attr()("type", "node")("ref", to_string(
+        2*pattern_size*pattern_size + 1 + global_node_offset)).kvs(), global_settings).execute(rman);
+    Around_Statement(0, Attr()("radius", "200.1")("into", "foo").kvs(), global_settings).execute(rman);
+    Print_Statement(0, Attr()("order", "id")("from", "foo").kvs(), global_settings).execute(rman);
   }
   if ((test_to_execute == "") || (test_to_execute == "6"))
   {
     Resource_Manager rman(transaction, &global_settings);
+    Statement_Container stmt_cont(global_settings);
     {
-      std::ostringstream buf1, buf2;
-      buf1<<(2*pattern_size*pattern_size + 1 + global_node_offset);
-      buf2<<(3*pattern_size*pattern_size + global_node_offset);
-      std::string buf1_ = buf1.str();
-      std::string buf2_ = buf2.str();
-
-      const char* attributes[] = { 0 };
-      Union_Statement* stmt1 = new Union_Statement(0, convert_c_pairs(attributes), global_settings);
-      {
-	const char* attributes[] = { "type", "node", "ref", buf1_.c_str(), 0 };
-	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-	stmt1->add_statement(stmt2, "");
-      }
-      {
-	const char* attributes[] = { "type", "node", "ref", buf2_.c_str(), 0 };
-	Id_Query_Statement* stmt2 = new Id_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-	stmt1->add_statement(stmt2, "");
-      }
-      stmt1->execute(rman);
+      Union_Statement stmt1(0, Attr().kvs(), global_settings);
+      stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "node")("ref", to_string(
+          2*pattern_size*pattern_size + 1 + global_node_offset)).kvs(), global_settings), &stmt1);
+      stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "node")("ref", to_string(
+          3*pattern_size*pattern_size + global_node_offset)).kvs(), global_settings), &stmt1);
+      stmt1.execute(rman);
     }
-    {
-      const char* attributes[] = { "radius", "200.1", 0 };
-      Around_Statement* stmt1 = new Around_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
+    Around_Statement(0, Attr()("radius", "200.1").kvs(), global_settings).execute(rman);
+    Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
   }
 
   if ((test_to_execute == "") || (test_to_execute == "7"))
@@ -211,6 +184,31 @@ int main(int argc, char* args[])
     perform_coord_print(pattern_size, "200.1", global_node_offset, transaction);
   if ((test_to_execute == "") || (test_to_execute == "9"))
     perform_coord_print(pattern_size, "2001", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "10"))
+    perform_polyline_print(pattern_size, "51.1,6.9,50.9,7.1", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "11"))
+    perform_polyline_print(pattern_size, "51.,7.,50.9,6.9", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "12"))
+    perform_polyline_print(pattern_size, "50.95,6.9,51.,7.,50.9,6.95", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "13"))
+    perform_polyline_print(pattern_size, "50.9,6.9,51.,7.", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+    perform_polyline_print(pattern_size, "51.1,6.9,50.9,7.1,50.8,7.1,50.7,7.05", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    perform_polyline_print(pattern_size, "51.1,6.8,51.1,6.9,50.9,7.1,50.8,7.1", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+    perform_polyline_print(pattern_size, "51.05,6.7,51.1,6.8,51.1,6.9,50.9,7.1", global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "17"))
+    perform_polyline_in_query_print(to_string(200000./pattern_size), "way", "51.1,6.9,50.9,7.1",
+        global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "18"))
+    perform_polyline_in_query_print(to_string(200000./pattern_size), "relation", "51.1,6.9,50.9,7.1",
+        global_node_offset, transaction);
+  if ((test_to_execute == "") || (test_to_execute == "19"))
+    perform_polyline_in_query_print("0.", "way",
+        to_string(51.+1./pattern_size) + "," + to_string(7.+1./pattern_size) + ","
+        + to_string(51.+2./pattern_size) + "," + to_string(7.+1./pattern_size),
+        global_node_offset, transaction);
 
   std::cout<<"</osm>\n";
   return 0;

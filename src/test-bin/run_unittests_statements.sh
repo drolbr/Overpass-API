@@ -175,9 +175,9 @@ date +%T
 perform_test_loop bbox_query 8 "$DATA_SIZE ../../input/update_database/"
 
 # Test the bbox_query statement
-prepare_test_loop around 9 $DATA_SIZE
+prepare_test_loop around 19 $DATA_SIZE
 date +%T
-perform_test_loop around 9 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+perform_test_loop around 19 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the query statement
 prepare_test_loop query 159 $DATA_SIZE

@@ -2908,6 +2908,80 @@ struct Accept_Around_1 : public Accept_All_Tags
     double north, south, west, east;
 };
 
+
+struct Accept_Around_10 : public Accept_All_Tags
+{
+  Accept_Around_10(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const
+  { return id == 1 || id == 2 || id == 3 || id == pattern_size + 1 || id == pattern_size + 2
+       || id == 2*pattern_size + 1; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+private:
+  uint pattern_size;
+};
+
+
+struct Accept_Around_11 : public Accept_All_Tags
+{
+  Accept_Around_11(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const
+  { return id == 1 || id == 2 || id == 3 || id == pattern_size + 1 || id == pattern_size + 2; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+private:
+  uint pattern_size;
+};
+
+
+struct Accept_Around_17 : public Accept_All_Tags
+{
+  Accept_Around_17(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const
+  { return id == 1 || id == 2 || id == pattern_size/2+1
+      || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
+      || id == pattern_size*pattern_size/4 - pattern_size/2 + 2
+      || id == pattern_size*pattern_size/4; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+private:
+  uint pattern_size;
+};
+
+
+struct Accept_Around_18 : public Accept_All_Tags
+{
+  Accept_Around_18(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const
+  { return id <= 11 && id != 5 && id != 7 && id != 9; }
+
+private:
+  uint pattern_size;
+};
+
+
+struct Accept_Around_19 : public Accept_All_Tags
+{
+  Accept_Around_19(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return id == 1; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+private:
+  uint pattern_size;
+};
+
+
 std::vector< std::pair< std::string, std::string > > collect_tags(std::string prefix, uint id)
 {
   std::vector< std::pair< std::string, std::string > > tags;
@@ -3693,6 +3767,18 @@ int main(int argc, char* args[])
       modifier = new Accept_Around_1(pattern_size, 200.1);
     else if (std::string(args[2]) == "around_9")
       modifier = new Accept_Around_1(pattern_size, 2001);
+    else if (std::string(args[2]) == "around_10" || std::string(args[2]) == "around_14"
+        || std::string(args[2]) == "around_15" || std::string(args[2]) == "around_16" )
+      modifier = new Accept_Around_10(pattern_size);
+    else if (std::string(args[2]) == "around_11" || std::string(args[2]) == "around_12"
+        || std::string(args[2]) == "around_13")
+      modifier = new Accept_Around_11(pattern_size);
+    else if (std::string(args[2]) == "around_17")
+      modifier = new Accept_Around_17(pattern_size);
+    else if (std::string(args[2]) == "around_18")
+      modifier = new Accept_Around_18(pattern_size);
+    else if (std::string(args[2]) == "around_19")
+      modifier = new Accept_Around_19(pattern_size);
     else if (std::string(args[2]) == "polygon_query_1")
       modifier = new Accept_Polygon_1(pattern_size);
     else if (std::string(args[2]) == "polygon_query_2")
