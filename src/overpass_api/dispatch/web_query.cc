@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
       if (error_output.http_method == http_get
           || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". The server is probably too busy to handle your request.\n";
+            <<". The server is probably too busy to handle your request.";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
@@ -136,7 +136,12 @@ int main(int argc, char *argv[])
       if (error_output.http_method == http_get
           || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". Please check /api/status for the quota of your IP address.\n";
+            <<". Please check /api/status for the quota of your IP address.";
+    }
+    else if (e.origin == "Dispatcher_Client::1")
+    {
+      error_output.write_html_header("", "", 504, false);
+      temp<<"The dispatcher (i.e. the database management system) is turned off.";
     }
     else
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
