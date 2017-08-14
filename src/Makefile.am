@@ -4,6 +4,7 @@ bin_script_mandatory = \
   bin/apply_osc_to_db.sh\
   bin/download_clone.sh\
   bin/fetch_osc.sh\
+  bin/reboot.sh\
   bin/rules_delta_loop.sh\
   bin/rules_loop.sh
 cgi_bin_mandatory = cgi-bin/interpreter cgi-bin/timestamp
