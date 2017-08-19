@@ -181,6 +181,7 @@ bool parse_and_validate
         for (std::vector< Statement_Dump* >::iterator it = statement_stack< Statement_Dump >().begin();
             it != statement_stack< Statement_Dump >().end(); ++it)
           delete *it;
+        stmt_dump_factory_global = 0;
       }
       else
       {
@@ -196,12 +197,18 @@ bool parse_and_validate
     }
     catch(Parse_Error parse_error)
     {
+      stmt_factory_global = 0;
+      stmt_dump_factory_global = 0;
+
       if (error_output)
         error_output->add_parse_error(parse_error.message,
 				      xml_parser->current_line_number());
     }
     catch(File_Error e)
     {
+      stmt_factory_global = 0;
+      stmt_dump_factory_global = 0;
+
       std::ostringstream temp;
       temp<<"open: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
       if (error_output)
@@ -256,14 +263,6 @@ void initialize()
 {
   // initializes all static variables which are used throughout the application
   // this way, we can safely reuse the existing interpreter process via fastcgi
-  if (stmt_factory_global != NULL)
-    delete stmt_factory_global;
-
-  if (stmt_dump_factory_global != NULL)
-    delete stmt_dump_factory_global;
-
-  stmt_factory_global = 0;
-  stmt_dump_factory_global = 0;
   xml_parser = 0;
 
   statement_stack_.clear();
