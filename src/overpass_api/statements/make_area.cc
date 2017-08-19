@@ -35,7 +35,7 @@
 #include "print.h"
 
 
-bool Make_Area_Statement::is_used_ = false;
+int Make_Area_Statement::make_area_stmt_ref_counter_ = 0;
 
 Generic_Statement_Maker< Make_Area_Statement > Make_Area_Statement::statement_maker("make-area");
 
@@ -43,7 +43,7 @@ Make_Area_Statement::Make_Area_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Output_Statement(line_number_)
 {
-  is_used_ = true;
+  ++make_area_stmt_ref_counter_;
 
   std::map< std::string, std::string > attributes;
 
