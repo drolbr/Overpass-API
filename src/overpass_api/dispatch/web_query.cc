@@ -242,7 +242,10 @@ int main(int argc, char *argv[])
   }
   else
   {
-    // Backup the stdio streambufs
+    int request_counter = 0;
+    time_t start_time = time(0);
+
+    // Backup the stdio streambuffers
     std::streambuf * cin_streambuf  = std::cin.rdbuf();
     std::streambuf * cout_streambuf = std::cout.rdbuf();
     std::streambuf * cerr_streambuf = std::cerr.rdbuf();
@@ -279,9 +282,16 @@ int main(int argc, char *argv[])
 
       int ret = handle_request(content, FCGX_IsCGI(), &ic);
 
+      // Restart process after error or a certain number of time / requests
+      time_t elapsed_time = time(NULL) - start_time;
+      if (ret < 0 || ++request_counter > 1000 || elapsed_time > 900)       //TODO: add configuration option
+      {
+        FCGX_Finish_r(&request);
+        break;
+      }
     }
 
-    // restore stdio streambufs
+    // restore stdio streambuffers
     std::cin.rdbuf(cin_streambuf);
     std::cout.rdbuf(cout_streambuf);
     std::cerr.rdbuf(cerr_streambuf);
