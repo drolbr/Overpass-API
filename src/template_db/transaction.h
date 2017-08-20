@@ -31,6 +31,18 @@ class Index_Cache
 
 public:
   Index_Cache() : replicate_id("") {};
+  ~Index_Cache() {
+
+    for (std::map< const File_Properties*, File_Blocks_Index_Base* >::iterator
+        it = data_files.begin(); it != data_files.end(); ++it)
+      delete it->second;
+    for (std::map< const File_Properties*, Random_File_Index* >::iterator
+        it = random_files.begin(); it != random_files.end(); ++it)
+      delete it->second;
+
+    data_files.clear();
+    random_files.clear();
+  }
 
 private:
   std::map< const File_Properties*, File_Blocks_Index_Base* >
