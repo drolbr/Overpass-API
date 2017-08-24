@@ -11,6 +11,7 @@ statements_cc = \
   ../overpass_api/core/geometry.cc \
   ../overpass_api/data/bbox_filter.cc \
   ../overpass_api/data/collect_members.cc \
+  ../overpass_api/data/geometry_from_quad_coords.cc \
   ../overpass_api/data/relation_geometry_store.cc \
   ../overpass_api/data/way_geometry_store.cc \
   ../overpass_api/frontend/output_handler_parser.cc \

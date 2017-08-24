@@ -19,6 +19,7 @@
 #include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/geometry_from_quad_coords.h"
 #include "../data/meta_collector.h"
 #include "../data/relation_geometry_store.h"
 #include "../data/tag_store.h"
@@ -241,216 +242,6 @@ Extra_Data::~Extra_Data()
 }
 
 
-struct Geometry_Broker
-{
-  Geometry_Broker() : geom(0) {}
-  ~Geometry_Broker() { delete geom; }
-
-  const Opaque_Geometry& make_way_geom(const Way_Skeleton& skel, unsigned int mode, Way_Bbox_Geometry_Store* store);
-  const Opaque_Geometry& make_relation_geom(
-      const Relation_Skeleton& skel, unsigned int mode, Relation_Geometry_Store* store);
-
-  const Opaque_Geometry& make_way_geom(
-      const std::vector< Quad_Coord >* geometry, const std::pair< Quad_Coord, Quad_Coord* >* bounds);
-  const Opaque_Geometry& make_relation_geom(
-      const std::vector< std::vector< Quad_Coord > >* geometry, const std::pair< Quad_Coord, Quad_Coord* >* bounds);
-
-private:
-  Opaque_Geometry* geom;
-};
-
-
-const Opaque_Geometry& Geometry_Broker::make_way_geom(
-    const Way_Skeleton& skel, unsigned int mode, Way_Bbox_Geometry_Store* store)
-{
-  delete geom;
-  geom = 0;
-
-  if (store && (mode & Output_Mode::GEOMETRY))
-  {
-    //geom = new_opaque_geometry(geometry);
-    
-    std::vector< Quad_Coord > geometry = store->get_geometry(skel);
-
-    bool is_complete = true;
-    for (std::vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
-      is_complete &= (it->ll_upper != 0 || it->ll_lower != 0);
-
-    if (is_complete)
-    {
-      std::vector< Point_Double > coords;
-      for (std::vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
-        coords.push_back(Point_Double(::lat(it->ll_upper, it->ll_lower), ::lon(it->ll_upper, it->ll_lower)));
-      geom = new Linestring_Geometry(coords);
-    }
-    else
-    {
-      Partial_Way_Geometry* pw_geom = new Partial_Way_Geometry();
-      geom = pw_geom;
-      for (std::vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
-      {
-        if (it->ll_upper != 0 || it->ll_lower != 0)
-          pw_geom->add_point(Point_Double(::lat(it->ll_upper, it->ll_lower), ::lon(it->ll_upper, it->ll_lower)));
-        else
-          pw_geom->add_point(Point_Double(100., 200.));
-      }
-    }
-  }
-  else if (store && ((mode & Output_Mode::BOUNDS) || (mode & Output_Mode::CENTER)))
-  {
-    std::vector< Quad_Coord > geometry = store->get_geometry(skel);
-
-    double min_lat = 100.;
-    double max_lat = -100.;
-    double min_lon = 200.;
-    double max_lon = -200.;
-
-    for (std::vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
-    {
-      double lat = ::lat(it->ll_upper, it->ll_lower);
-      min_lat = std::min(min_lat, lat);
-      max_lat = std::max(max_lat, lat);
-      double lon = ::lon(it->ll_upper, it->ll_lower);
-      min_lon = std::min(min_lon, lon);
-      max_lon = std::max(max_lon, lon);
-    }
-
-    if (mode & Output_Mode::BOUNDS)
-      geom = new Bbox_Geometry(min_lat, min_lon, max_lat, max_lon);
-    else
-      geom = new Point_Geometry((min_lat + max_lat) / 2., (min_lon + max_lon) / 2.);
-  }
-  else
-    geom = new Null_Geometry();
-
-  return *geom;
-}
-
-
-const Opaque_Geometry& Geometry_Broker::make_relation_geom(
-    const Relation_Skeleton& skel, unsigned int mode, Relation_Geometry_Store* store)
-{
-  delete geom;
-  geom = 0;
-
-  if (store && (mode & Output_Mode::GEOMETRY))
-  {
-    std::vector< std::vector< Quad_Coord > > geometry = store->get_geometry(skel);
-
-    bool is_complete = true;
-    for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
-        it != geometry.end(); ++it)
-    {
-      if (it->empty())
-        is_complete = false;
-      else if (it->size() == 1)
-        is_complete &= ((*it)[0].ll_upper != 0 || (*it)[0].ll_lower != 0);
-      else
-      {
-        for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-          is_complete &= (it2->ll_upper != 0 || it2->ll_lower != 0);
-      }
-    }
-
-    if (is_complete)
-    {
-      Compound_Geometry* cp_geom = new Compound_Geometry();
-      geom = cp_geom;
-      for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
-          it != geometry.end(); ++it)
-      {
-        if (it->empty())
-          cp_geom->add_component(new Null_Geometry());
-        else if (it->size() == 1)
-          cp_geom->add_component(new Point_Geometry(
-              ::lat(it->front().ll_upper, it->front().ll_lower),
-              ::lon(it->front().ll_upper, it->front().ll_lower)));
-        else
-        {
-          std::vector< Point_Double > coords;
-          for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-            coords.push_back(Point_Double(::lat(it2->ll_upper, it2->ll_lower), ::lon(it2->ll_upper, it2->ll_lower)));
-          cp_geom->add_component(new Linestring_Geometry(coords));
-        }
-      }
-    }
-    else if (geometry.empty())
-      geom = new Null_Geometry();
-    else
-    {
-      Partial_Relation_Geometry* pr_geom = new Partial_Relation_Geometry();
-      geom = pr_geom;
-      for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
-          it != geometry.end(); ++it)
-      {
-        if (it->empty())
-          pr_geom->add_placeholder();
-        else if (it->size() == 1 && ((*it)[0].ll_upper != 0 || (*it)[0].ll_lower != 0))
-          pr_geom->add_point(Point_Double(
-                ::lat(it->front().ll_upper, it->front().ll_lower),
-                ::lon(it->front().ll_upper, it->front().ll_lower)));
-        else
-        {
-          pr_geom->start_way();
-          for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-          {
-            if (it2->ll_upper != 0 || it2->ll_lower != 0)
-              pr_geom->add_way_point(
-                  Point_Double(::lat(it2->ll_upper, it2->ll_lower), ::lon(it2->ll_upper, it2->ll_lower)));
-            else
-              pr_geom->add_way_placeholder();
-          }
-        }
-      }
-    }
-  }
-  else if (store && ((mode & Output_Mode::BOUNDS) || (mode & Output_Mode::CENTER)))
-  {
-    std::vector< std::vector< Quad_Coord > > geometry = store->get_geometry(skel);
-
-    double min_lat = 100.;
-    double max_lat = -100.;
-    double min_lon = 200.;
-    double max_lon = -200.;
-
-    for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
-        it != geometry.end(); ++it)
-    {
-      if (it->size() == 1)
-      {
-        double lat = ::lat((*it)[0].ll_upper, (*it)[0].ll_lower);
-        min_lat = std::min(min_lat, lat);
-        max_lat = std::max(max_lat, lat);
-        double lon = ::lon((*it)[0].ll_upper, (*it)[0].ll_lower);
-        min_lon = std::min(min_lon, lon);
-        max_lon = std::max(max_lon, lon);
-      }
-      else if (!it->empty())
-      {
-        for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-        {
-          double lat = ::lat(it2->ll_upper, it2->ll_lower);
-          min_lat = std::min(min_lat, lat);
-          max_lat = std::max(max_lat, lat);
-          double lon = ::lon(it2->ll_upper, it2->ll_lower);
-          min_lon = std::min(min_lon, lon);
-          max_lon = std::max(max_lon, lon);
-        }
-      }
-    }
-
-    if (mode & Output_Mode::BOUNDS)
-      geom = new Bbox_Geometry(min_lat, min_lon, max_lat, max_lon);
-    else
-      geom = new Point_Geometry((min_lat + max_lat) / 2., (min_lon + max_lon) / 2.);
-  }
-  else
-    geom = new Null_Geometry();
-
-  return *geom;
-}
-
-
 void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Node_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0)
@@ -464,7 +255,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0)
 {
-  Geometry_Broker broker;
+  Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_way_geom(skel, extra_data.mode, extra_data.way_geometry_store),
       tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode));
@@ -475,7 +266,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0)
 {
-  Geometry_Broker broker;
+  Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_way_geom(skel, extra_data.mode, extra_data.attic_way_geometry_store),
       tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode));
@@ -486,7 +277,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0)
 {
-  Geometry_Broker broker;
+  Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_relation_geom(skel, extra_data.mode, extra_data.relation_geometry_store),
       tags, meta, extra_data.roles, extra_data.get_users(), Output_Mode(extra_data.mode));
@@ -497,7 +288,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0)
 {
-  Geometry_Broker broker;
+  Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_relation_geom(skel, extra_data.mode, extra_data.attic_relation_geometry_store),
       tags, meta, extra_data.roles, extra_data.get_users(), Output_Mode(extra_data.mode));
@@ -1084,149 +875,6 @@ void Print_Statement::execute(Resource_Manager& rman)
   }
 
   rman.health_check(*this);
-}
-
-
-const Opaque_Geometry& Geometry_Broker::make_way_geom(
-    const std::vector< Quad_Coord >* geometry, const std::pair< Quad_Coord, Quad_Coord* >* bounds)
-{
-  delete geom;
-  geom = 0;
-
-  if (geometry && !geometry->empty())
-  {
-    bool is_complete = true;
-    for (std::vector< Quad_Coord >::const_iterator it = geometry->begin(); it != geometry->end(); ++it)
-      is_complete &= (it->ll_upper != 0 || it->ll_lower != 0);
-
-    if (is_complete)
-    {
-      std::vector< Point_Double > coords;
-      for (std::vector< Quad_Coord >::const_iterator it = geometry->begin(); it != geometry->end(); ++it)
-        coords.push_back(Point_Double(::lat(it->ll_upper, it->ll_lower), ::lon(it->ll_upper, it->ll_lower)));
-      geom = new Linestring_Geometry(coords);
-    }
-    else
-    {
-      Partial_Way_Geometry* pw_geom = new Partial_Way_Geometry();
-      geom = pw_geom;
-      for (std::vector< Quad_Coord >::const_iterator it = geometry->begin(); it != geometry->end(); ++it)
-      {
-        if (it->ll_upper != 0 || it->ll_lower != 0)
-          pw_geom->add_point(Point_Double(::lat(it->ll_upper, it->ll_lower), ::lon(it->ll_upper, it->ll_lower)));
-        else
-          pw_geom->add_point(Point_Double(100., 200.));
-      }
-    }
-  }
-  else if (bounds && (bounds->first.ll_upper | bounds->first.ll_lower))
-  {
-    if (bounds->second)
-      geom = new Bbox_Geometry(::lat(bounds->first.ll_upper, bounds->first.ll_lower),
-                           ::lon(bounds->first.ll_upper, bounds->first.ll_lower),
-                           ::lat(bounds->second->ll_upper, bounds->second->ll_lower),
-                           ::lon(bounds->second->ll_upper, bounds->second->ll_lower));
-    else
-      geom = new Point_Geometry(::lat(bounds->first.ll_upper, bounds->first.ll_lower),
-                            ::lon(bounds->first.ll_upper, bounds->first.ll_lower));
-  }
-  else
-    geom = new Null_Geometry();
-
-  return *geom;
-}
-
-
-const Opaque_Geometry& Geometry_Broker::make_relation_geom(
-    const std::vector< std::vector< Quad_Coord > >* geometry, const std::pair< Quad_Coord, Quad_Coord* >* bounds)
-{
-  delete geom;
-  geom = 0;
-
-  if (geometry)
-  {
-    bool is_complete = true;
-    for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry->begin();
-        it != geometry->end(); ++it)
-    {
-      if (it->empty())
-        is_complete = false;
-      else if (it->size() == 1)
-        is_complete &= ((*it)[0].ll_upper != 0 || (*it)[0].ll_lower != 0);
-      else
-      {
-        for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-          is_complete &= (it2->ll_upper != 0 || it2->ll_lower != 0);
-      }
-    }
-
-    if (is_complete)
-    {
-      Compound_Geometry* cp_geom = new Compound_Geometry();
-      geom = cp_geom;
-      for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry->begin();
-          it != geometry->end(); ++it)
-      {
-        if (it->empty())
-          cp_geom->add_component(new Null_Geometry());
-        else if (it->size() == 1)
-          cp_geom->add_component(new Point_Geometry(
-              ::lat(it->front().ll_upper, it->front().ll_lower),
-              ::lon(it->front().ll_upper, it->front().ll_lower)));
-        else
-        {
-          std::vector< Point_Double > coords;
-          for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-            coords.push_back(Point_Double(::lat(it2->ll_upper, it2->ll_lower), ::lon(it2->ll_upper, it2->ll_lower)));
-          cp_geom->add_component(new Linestring_Geometry(coords));
-        }
-      }
-    }
-    else if (geometry->empty())
-      geom = new Null_Geometry();
-    else
-    {
-      Partial_Relation_Geometry* pr_geom = new Partial_Relation_Geometry();
-      geom = pr_geom;
-      for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry->begin();
-          it != geometry->end(); ++it)
-      {
-        if (it->empty())
-          pr_geom->add_placeholder();
-        else if (it->size() == 1 && ((*it)[0].ll_upper != 0 || (*it)[0].ll_lower != 0))
-          pr_geom->add_point(Point_Double(
-                ::lat(it->front().ll_upper, it->front().ll_lower),
-                ::lon(it->front().ll_upper, it->front().ll_lower)));
-        else
-        {
-          pr_geom->start_way();
-          for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-          {
-            if (it2->ll_upper != 0 || it2->ll_lower != 0)
-              pr_geom->add_way_point(
-                  Point_Double(::lat(it2->ll_upper, it2->ll_lower), ::lon(it2->ll_upper, it2->ll_lower)));
-            else
-              pr_geom->add_way_placeholder();
-          }
-        }
-      }
-    }
-  }
-  else if (bounds)
-  {
-    if (bounds->second)
-      geom = new Bbox_Geometry(::lat(bounds->first.ll_upper, bounds->first.ll_lower),
-          ::lon(bounds->first.ll_upper, bounds->first.ll_lower),
-          ::lat(bounds->second->ll_upper, bounds->second->ll_lower),
-          ::lon(bounds->second->ll_upper, bounds->second->ll_lower));
-    else
-      geom = new Point_Geometry(::lat(bounds->first.ll_upper, bounds->first.ll_lower),
-          ::lon(bounds->first.ll_upper, bounds->first.ll_lower));
-  }
-  else
-    geom = new Null_Geometry();
-
-  return *geom;
 }
 
 
@@ -2032,7 +1680,7 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
     if ((it->second.idx.val() | 2) == 0xffu)
     {
       Double_Coords double_coords(it->first.geometry);
-      Geometry_Broker broker;
+      Geometry_From_Quad_Coords broker;
       if (add_deletion_information)
       {
         Way_Skeleton new_skel(it->first.elem.id);
@@ -2058,8 +1706,8 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
       // The elements differ
       Double_Coords double_coords(it->first.geometry);
       Double_Coords double_coords_new(it->second.geometry);
-      Geometry_Broker broker;
-      Geometry_Broker new_broker;
+      Geometry_From_Quad_Coords broker;
+      Geometry_From_Quad_Coords new_broker;
       output->print_item(it->first.elem,
           broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
               bound_variant(double_coords, output_mode)),
@@ -2076,7 +1724,7 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
     {
       // No old element exists
       Double_Coords double_coords(it->second.geometry);
-      Geometry_Broker broker;
+      Geometry_From_Quad_Coords broker;
       output->print_item(it->second.elem,
           broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
               bound_variant(double_coords, output_mode)),
@@ -2219,7 +1867,7 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
     if ((it->second.idx.val() | 2) == 0xffu)
     {
       Double_Coords double_coords(it->first.geometry);
-      Geometry_Broker broker;
+      Geometry_From_Quad_Coords broker;
       if (add_deletion_information)
       {
         Relation_Skeleton new_skel(it->first.elem.id);
@@ -2245,8 +1893,8 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
       // The elements differ
       Double_Coords double_coords(it->first.geometry);
       Double_Coords double_coords_new(it->second.geometry);
-      Geometry_Broker broker;
-      Geometry_Broker new_broker;
+      Geometry_From_Quad_Coords broker;
+      Geometry_From_Quad_Coords new_broker;
       output->print_item(it->first.elem,
           broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
               bound_variant(double_coords, output_mode)),
@@ -2263,7 +1911,7 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
     {
       // No old element exists
       Double_Coords double_coords(it->second.geometry);
-      Geometry_Broker broker;
+      Geometry_From_Quad_Coords broker;
       output->print_item(it->second.elem,
           broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
               bound_variant(double_coords, output_mode)),
