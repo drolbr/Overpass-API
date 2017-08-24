@@ -345,6 +345,7 @@ class Evaluator_Set_Count : public Evaluator
 public:
   enum Objects { nothing, nodes, ways, relations, deriveds };
   static std::string to_string(Objects objects);
+  static bool try_parse_object_type(const std::string& input, Evaluator_Set_Count::Objects& result);
 
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Count >
   {

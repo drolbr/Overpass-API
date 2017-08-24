@@ -324,6 +324,22 @@ std::string Evaluator_Set_Value::Aggregator::get_value()
 Evaluator_Set_Count::Statement_Maker Evaluator_Set_Count::statement_maker;
 
 
+bool Evaluator_Set_Count::try_parse_object_type(const std::string& input, Evaluator_Set_Count::Objects& result)
+{
+  if (input == "nodes")
+    result = Evaluator_Set_Count::nodes;
+  else if (input == "ways")
+    result = Evaluator_Set_Count::ways;
+  else if (input == "relations")
+    result = Evaluator_Set_Count::relations;
+  else if (input == "deriveds")
+    result = Evaluator_Set_Count::deriveds;
+  else
+    return false;
+  return true;
+}
+
+
 Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
@@ -344,8 +360,16 @@ Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
     attributes["from"] = tree_it.lhs()->token;
     attributes["type"] = tree_it.rhs().rhs()->token;
   }
+  
+  Objects to_count;
+  if (try_parse_object_type(attributes["type"], to_count))
+    return new Evaluator_Set_Count(tree_it->line_col.first, attributes, global_settings);
+  else if (error_output)
+    error_output->add_parse_error(
+        "\"count\" accepts only one of \"nodes\", \"ways\", \"relations\", or \"deriveds\" as type argument.",
+        tree_it->line_col.first);
 
-  return new Evaluator_Set_Count(tree_it->line_col.first, attributes, global_settings);
+  return 0;
 }
 
 
@@ -376,18 +400,10 @@ Evaluator_Set_Count::Evaluator_Set_Count
 
   input = attributes["from"];
 
-  if (attributes["type"] == "nodes")
-    to_count = nodes;
-  else if (attributes["type"] == "ways")
-    to_count = ways;
-  else if (attributes["type"] == "relations")
-    to_count = relations;
-  else if (attributes["type"] == "deriveds")
-    to_count = deriveds;
-  else
+  if (!try_parse_object_type(attributes["type"], to_count))
   {
     std::ostringstream temp("");
-    temp<<"For the attribute \"type\" of the element \"eval-std::set-count\""
+    temp<<"For the attribute \"type\" of the element \"eval-set-count\""
         <<" the only allowed values are \"nodes\", \"ways\", \"relations\", or \"deriveds\" strings.";
     add_static_error(temp.str());
   }
