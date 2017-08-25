@@ -165,7 +165,7 @@ void Output_JSON::print_item(const Way_Skeleton& skel,
     std::cout<<"\n  ]";
   }
 
-  if ((mode.mode & Output_Mode::GEOMETRY) != 0 && geometry.has_line_geometry())
+  if ((mode.mode & Output_Mode::GEOMETRY) != 0 && geometry.has_faithful_way_geometry())
   {
     std::cout<<",\n  \"geometry\": [";
     for (uint i = 0; i < geometry.way_size(); ++i) 

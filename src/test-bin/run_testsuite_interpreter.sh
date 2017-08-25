@@ -105,7 +105,7 @@ prepare_test_interpreter()
 
 # Prepare testing the statements
 mkdir -p input/update_database/
-rm -f input/update_database/*
+rm -fR input/update_database/*
 mkdir -p input/update_database/templates/
 cp -p $BASEDIR/templates/* input/update_database/templates/
 $BASEDIR/test-bin/generate_test_file $DATA_SIZE >input/update_database/stdin.log
@@ -117,7 +117,7 @@ $BASEDIR/bin/dispatcher --osm-base --meta --db-dir=input/update_database/ &
 sleep 1
 
 II=1
-while [[ $II -lt 45 ]]; do
+while [[ $II -lt 46 ]]; do
 {
   mkdir -p input/interpreter_$II/
   II=$(($II + 1))
@@ -177,8 +177,10 @@ echo "data=[out:custom];node(1);out;&redirect=no&template=base.wiki" >input/inte
 echo "data=[out:custom];(node(1);way(1);rel(1););out geom;&template=base%2Ewiki" >input/interpreter_43/stdin.log
 echo "data=[out:custom];(node(1);node($(($DATA_SIZE * 3 + 3)));way(1);way(2);rel(1);rel(9););out geom;&template=base.wiki" >input/interpreter_44/stdin.log
 
+echo "data=[out:json];(node(1);rel(7);way(r););out geom (51.5,7.5,52,8);" >input/interpreter_45/stdin.log
+
 II=1
-while [[ $II -lt 45 ]]; do
+while [[ $II -lt 46 ]]; do
 {
   prepare_test_interpreter $II
   perform_test_interpreter $II
@@ -204,18 +206,18 @@ date +%T
 $BASEDIR/bin/dispatcher --osm-base --meta --db-dir=input/update_database/ &
 sleep 1
 
-II=45
-while [[ $II -lt 47 ]]; do
+II=46
+while [[ $II -lt 48 ]]; do
 {
   mkdir -p input/interpreter_$II/
   II=$(($II + 1))
 }; done
 
-echo "data=[out:json];(node(7);way(1);rel(1););out meta;" >input/interpreter_45/stdin.log
-echo "data=[out:custom];(node(7);way(1);rel(1););out meta;" >input/interpreter_46/stdin.log
+echo "data=[out:json];(node(7);way(1);rel(1););out meta;" >input/interpreter_46/stdin.log
+echo "data=[out:custom];(node(7);way(1);rel(1););out meta;" >input/interpreter_47/stdin.log
 
-II=45
-while [[ $II -lt 47 ]]; do
+II=46
+while [[ $II -lt 48 ]]; do
 {
   prepare_test_interpreter $II
   perform_test_interpreter $II
