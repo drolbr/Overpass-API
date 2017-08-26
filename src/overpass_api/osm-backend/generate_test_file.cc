@@ -2627,6 +2627,18 @@ struct Accept_Difference_5 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Difference_6 : public Accept_All_Tags
+{
+  Accept_Difference_6(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return (id == 1); }
+  virtual bool admit_relation(uint id) const { return false; }
+
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Complete_1 : public Accept_All_Tags
 {
   Accept_Complete_1(uint pattern_size_) : pattern_size(pattern_size_) {}
@@ -3616,6 +3628,8 @@ int main(int argc, char* args[])
       modifier = new Accept_Difference_4(pattern_size);
     else if (std::string(args[2]) == "difference_5")
       modifier = new Accept_Difference_5(pattern_size);
+    else if (std::string(args[2]) == "difference_6")
+      modifier = new Accept_Difference_6(pattern_size);
     else if (std::string(args[2]) == "complete_1")
       modifier = new Accept_Complete_1(pattern_size);
     else if (std::string(args[2]) == "complete_2")

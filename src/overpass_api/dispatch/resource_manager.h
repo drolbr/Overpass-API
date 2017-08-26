@@ -54,8 +54,8 @@ public:
   
   void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
   void move_outward(const std::string& inner_set_name, const std::string& top_set_name);
-  void clear_inside(const std::string& inner_set_name);
   bool union_inward(const std::string& top_set_name, const std::string& inner_set_name);
+  void copy_inward(const std::string& top_set_name, const std::string& inner_set_name);
   void substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name);
   void move_all_inward();
   void move_all_inward_except(const std::string& set_name);
@@ -114,8 +114,8 @@ public:
   void push_stack_frame();
   void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
   void move_outward(const std::string& inner_set_name, const std::string& top_set_name);
-  void clear_inside(const std::string& inner_set_name);
   bool union_inward(const std::string& top_set_name, const std::string& inner_set_name);
+  void copy_inward(const std::string& top_set_name, const std::string& inner_set_name);
   void substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name);
   void move_all_inward();
   void move_all_inward_except(const std::string& set_name);

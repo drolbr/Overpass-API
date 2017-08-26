@@ -161,16 +161,6 @@ void Runtime_Stack_Frame::move_outward(const std::string& inner_set_name, const 
 }
 
 
-void Runtime_Stack_Frame::clear_inside(const std::string& inner_set_name)
-{
-  if (parent)
-  {
-    parent->sets.erase(inner_set_name);
-    parent->size_per_set[inner_set_name] = 0;
-  }
-}
-
-
 bool Runtime_Stack_Frame::union_inward(const std::string& top_set_name, const std::string& inner_set_name)
 {
   bool new_elements_found = false;
@@ -196,6 +186,23 @@ bool Runtime_Stack_Frame::union_inward(const std::string& top_set_name, const st
   }
   
   return new_elements_found;
+}
+
+
+void Runtime_Stack_Frame::copy_inward(const std::string& top_set_name, const std::string& inner_set_name)
+{
+  if (!parent)
+    return;
+  
+  std::map< std::string, Set >::iterator it = sets.find(top_set_name);
+  if (it == sets.end())
+  {
+    Set* source = parent->get_set(top_set_name);
+    if (source != &parent->sets[inner_set_name])
+      parent->sets[inner_set_name] = *source;
+  }
+  else
+    parent->sets[inner_set_name] = it->second;
 }
 
 
@@ -339,28 +346,15 @@ void Resource_Manager::push_stack_frame()
 
 void Resource_Manager::copy_outward(const std::string& inner_set_name, const std::string& top_set_name)
 {
-  if (runtime_stack.empty())
-    return;
-  
-  runtime_stack.back()->copy_outward(inner_set_name, top_set_name);
+  if (!runtime_stack.empty())
+    runtime_stack.back()->copy_outward(inner_set_name, top_set_name);
 }
 
 
 void Resource_Manager::move_outward(const std::string& inner_set_name, const std::string& top_set_name)
 {
-  if (runtime_stack.empty())
-    return;
-  
-  runtime_stack.back()->move_outward(inner_set_name, top_set_name);
-}
-
-
-void Resource_Manager::clear_inside(const std::string& inner_set_name)
-{
-  if (runtime_stack.empty())
-    return;
-  
-  runtime_stack.back()->clear_inside(inner_set_name);
+  if (!runtime_stack.empty())
+    runtime_stack.back()->move_outward(inner_set_name, top_set_name);
 }
 
 
@@ -373,30 +367,31 @@ bool Resource_Manager::union_inward(const std::string& top_set_name, const std::
 }
 
 
+void Resource_Manager::copy_inward(const std::string& top_set_name, const std::string& inner_set_name)
+{
+  if (!runtime_stack.empty())
+    runtime_stack.back()->copy_inward(top_set_name, inner_set_name);
+}
+
+
 void Resource_Manager::substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name)
 {
-  if (runtime_stack.empty())
-    return;
-  
-  runtime_stack.back()->substract_from_inward(top_set_name, inner_set_name);
+  if (!runtime_stack.empty())
+    runtime_stack.back()->substract_from_inward(top_set_name, inner_set_name);
 }
 
 
 void Resource_Manager::move_all_inward()
 {
-  if (runtime_stack.empty())
-    return;
-  
-  runtime_stack.back()->move_all_inward();
+  if (!runtime_stack.empty())
+    runtime_stack.back()->move_all_inward();
 }
 
 
 void Resource_Manager::move_all_inward_except(const std::string& set_name)
 {
-  if (runtime_stack.empty())
-    return;
-  
-  runtime_stack.back()->move_all_inward_except(set_name);
+  if (!runtime_stack.empty())
+    runtime_stack.back()->move_all_inward_except(set_name);
 }
 
 

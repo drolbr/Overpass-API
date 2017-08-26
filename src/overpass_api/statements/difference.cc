@@ -75,8 +75,7 @@ void Difference_Statement::execute(Resource_Manager& rman)
   std::vector< Statement* >::iterator it = substatements.begin();
   (*it)->execute(rman);
   
-  rman.clear_inside(get_result_name());
-  rman.union_inward((*it)->get_result_name(), get_result_name());
+  rman.copy_inward((*it)->get_result_name(), get_result_name());
 
   ++it;
   if (it != substatements.end())

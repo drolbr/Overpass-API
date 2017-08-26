@@ -195,9 +195,9 @@ date +%T
 perform_test_loop union 6 "../../input/update_database/ $NODE_OFFSET"
 
 # Test the difference statement
-prepare_test_loop difference 5 $DATA_SIZE
+prepare_test_loop difference 6 $DATA_SIZE
 date +%T
-perform_test_loop difference 5 "../../input/update_database/ $NODE_OFFSET"
+perform_test_loop difference 6 "../../input/update_database/ $NODE_OFFSET"
 
 # Test the difference statement
 prepare_test_loop complete 7 $DATA_SIZE

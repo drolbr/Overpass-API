@@ -251,6 +251,44 @@ int main(int argc, char* args[])
       <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
   }
+  if ((test_to_execute == "") || (test_to_execute == "6"))
+  {
+    // Test whether copy omission works
+    try
+    {
+      {
+        Nonsynced_Transaction transaction(false, false, args[2], "");
+        Resource_Manager rman(transaction, &global_settings);
+        
+        const char* attributes0[] = { "type", "way", "ref", "1", 0 };
+        Id_Query_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
+        stmt0.execute(rman);
+
+        const char* attributes[] = { 0 };
+        Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+
+        const char* attributes1[] = { 0 };
+        Item_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
+        stmt.add_statement(&stmt1, "");
+
+        const char* attributes2[] = { "type", "way", "ref", "2", 0 };
+        Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
+        stmt.add_statement(&stmt2, "");
+
+        stmt.execute(rman);
+        {
+          const char* attributes[] = { 0 };
+          Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+          stmt.execute(rman);
+        }
+      }
+    }
+    catch (File_Error e)
+    {
+      std::cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
 
   std::cout<<"</osm>\n";
   return 0;
