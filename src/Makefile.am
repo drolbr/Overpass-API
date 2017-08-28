@@ -121,8 +121,10 @@ statements_cc = \
   overpass_api/statements/retro.cc \
   overpass_api/statements/set_prop.cc \
   overpass_api/statements/statement.cc \
+  overpass_api/statements/string_endomorphisms.cc \
   overpass_api/statements/tag_value.cc \
   overpass_api/statements/timeline.cc \
+  overpass_api/statements/unary_functions.cc \
   overpass_api/statements/unary_operators.cc \
   overpass_api/statements/union.cc \
   overpass_api/statements/user.cc \
@@ -286,8 +288,10 @@ nobase_dist_HEADERS = \
   overpass_api/statements/set_prop.h\
   overpass_api/statements/statement_dump.h\
   overpass_api/statements/statement.h\
+  overpass_api/statements/string_endomorphisms.h\
   overpass_api/statements/tag_value.h\
   overpass_api/statements/timeline.h\
+  overpass_api/statements/unary_functions.h\
   overpass_api/statements/unary_operators.h\
   overpass_api/statements/union.h\
   overpass_api/statements/user.h\

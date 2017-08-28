@@ -24,6 +24,7 @@
 #include "make.h"
 #include "print.h"
 #include "set_prop.h"
+#include "string_endomorphisms.h"
 #include "tag_value.h"
 #include "unary_operators.h"
 #include "union.h"

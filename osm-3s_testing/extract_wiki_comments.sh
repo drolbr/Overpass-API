@@ -9,6 +9,7 @@ for i in \
   aggregators.h \
   binary_operators.h \
   unary_operators.h \
+  string_endomorphisms.h \
 ; do
   cat ../src/overpass_api/statements/$i | awk -f extract_wiki_comments.awk
 done
