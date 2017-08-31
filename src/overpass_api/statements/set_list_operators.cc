@@ -24,9 +24,6 @@
 
 std::string trim(const std::string& input)
 {
-  if (input.empty())
-    return input;
-  
   std::string::size_type from = 0;
   while (from < input.size() && isspace(input[from]))
     ++from;
@@ -76,6 +73,9 @@ Binary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_In > Evaluator_Lrs_In::s
 
 std::string Evaluator_Lrs_In::process(const std::string& first_s, const std::string& second_s) const
 {
+  if (second_s.empty())
+    return "0";
+  
   std::string first = trim(first_s);
   
   std::string::size_type from = 0;
