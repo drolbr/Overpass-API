@@ -67,4 +67,52 @@ private:
 };
 
 
+class Evaluator_Binary_Function : public Evaluator
+{
+public:
+  Evaluator_Binary_Function(int line_number_);
+  virtual void add_statement(Statement* statement, std::string text);
+  virtual void execute(Resource_Manager& rman) {}
+  virtual std::string get_result_name() const { return ""; }
+
+  virtual Requested_Context request_context() const;
+  virtual Eval_Task* get_task(Prepare_Task_Context& context);
+
+  virtual std::string process(const std::string& first_result, const std::string& second_result) const = 0;
+  static bool needs_an_element_to_eval() { return false; }
+
+protected:
+  Evaluator* first;
+  Evaluator* second;
+};
+
+
+struct Binary_Func_Eval_Task : public Eval_Task
+{
+  Binary_Func_Eval_Task(Eval_Task* first_, Eval_Task* second_, Evaluator_Binary_Function* evaluator_)
+      : first(first_), second(second_), evaluator(evaluator_) {}
+  ~Binary_Func_Eval_Task()
+  {
+    delete first;
+    delete second;
+  }
+
+  virtual std::string eval(const std::string* key) const;
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const;
+
+private:
+  Eval_Task* first;
+  Eval_Task* second;
+  Evaluator_Binary_Function* evaluator;
+};
+
+
 #endif

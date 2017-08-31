@@ -23,6 +23,7 @@
 #include "id_query.h"
 #include "make.h"
 #include "print.h"
+#include "set_list_operators.h"
 #include "set_prop.h"
 #include "string_endomorphisms.h"
 #include "tag_value.h"
@@ -1050,6 +1051,413 @@ void suffix_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+Statement* add_stmt(Statement* stmt, Statement* parent, std::vector< Statement* >& stmt_cont)
+{
+  stmt_cont.push_back(stmt);
+  parent->add_statement(stmt, "");
+  return stmt;
+}
+
+
+Statement* add_prop_stmt(const std::string& value, Statement* parent, Parsed_Query& global_settings,
+    std::vector< Statement* >& stmt_cont)
+{
+  std::map< std::string, std::string > attributes;
+  attributes["k"] = value;
+  return add_stmt(new Set_Prop_Statement(0, attributes, global_settings), parent, stmt_cont);
+}
+
+
+Statement* add_fixed_stmt(const std::string& value, Statement* parent, Parsed_Query& global_settings,
+    std::vector< Statement* >& stmt_cont)
+{
+  std::map< std::string, std::string > attributes;
+  attributes["v"] = value;
+  return add_stmt(new Evaluator_Fixed(0, attributes, global_settings), parent, stmt_cont);
+}
+
+
+void lrs_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+
+  std::vector< Statement* > stmt_cont;
+  std::map< std::string, std::string > attributes;
+  
+  attributes["type"] = type;
+  Make_Statement stmt(0, attributes, global_settings);
+
+  Statement* subs = add_prop_stmt("lrs_in_1_positive", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_1_negative", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("z", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_2_positive_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_2_positive_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_2_negative", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("z", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_3_positive_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a  ", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_3_positive_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_3_positive_3", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("  c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_3_negative", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("z", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_space_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;  ;c", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_space_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("  ", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;;c", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_space_3", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("  ", subs, global_settings, stmt_cont);
+  add_fixed_stmt("\t", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_in_space_4", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_In(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("  ", subs, global_settings, stmt_cont);
+  add_fixed_stmt("", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_11", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt(" foo", subs, global_settings, stmt_cont);
+  add_fixed_stmt("foo ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_12", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("\t", subs, global_settings, stmt_cont);
+  add_fixed_stmt("\n", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_21", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("b;a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_22", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a ; b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("b ; a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_23", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt(" a;b ", subs, global_settings, stmt_cont);
+  add_fixed_stmt(" b;a ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_24", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;a", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_31", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("b;c;a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_32", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt(" a; b;c ", subs, global_settings, stmt_cont);
+  add_fixed_stmt(" c;a ;b ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_self_33", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("b;a;a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_zero_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("c;d", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_zero_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_one_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("d;a;e", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_one_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("d;b;e", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_two_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("c;d;b", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_isect_two_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Isect(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a; ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_11", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt(" foo", subs, global_settings, stmt_cont);
+  add_fixed_stmt("foo ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_12", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("\t", subs, global_settings, stmt_cont);
+  add_fixed_stmt("\n", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_21", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("b;a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_22", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a ; b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("b ; a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_23", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt(" a;b ", subs, global_settings, stmt_cont);
+  add_fixed_stmt(" b;a ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_24", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;a", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a;a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_31", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("b;c;a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_32", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt(" a; b;c ", subs, global_settings, stmt_cont);
+  add_fixed_stmt(" c;a ;b ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_self_33", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("b;a;a", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_disjoint_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("c;d", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_zero_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_one_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("d;a;e", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_one_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("d;b;e", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_two_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+  add_fixed_stmt("c;d;b", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_union_two_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Union(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+  add_fixed_stmt("a; ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_one_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("  foo", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_one_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("foo  ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_one_3", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("1e3", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_one_4", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("100000000000000001", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_two_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_two_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("9;10", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_two_3", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("1e-2;1e-1", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_two_4", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("9 bis;10 bis", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_three_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_max_three_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Max(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt(".;9;10", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_one_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("  foo", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_one_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("foo  ", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_one_3", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("1e3", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_one_4", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("100000000000000001", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_two_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_two_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("9;10", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_two_3", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("1e-2;1e-1", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_two_4", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("9 bis;10 bis", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_three_1", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;b;c", subs, global_settings, stmt_cont);
+
+  subs = add_prop_stmt("lrs_min_three_2", &stmt, global_settings, stmt_cont);
+  attributes.clear();
+  subs = add_stmt(new Evaluator_Lrs_Min(0, attributes, global_settings), subs, stmt_cont);
+  add_fixed_stmt("a;9;10", subs, global_settings, stmt_cont);
+
+  stmt.execute(rman);
+  {
+    const char* attributes[] = { 0 };
+    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    stmt.execute(rman);
+  }
+  
+  for (std::vector< Statement* >::iterator it = stmt_cont.begin(); it != stmt_cont.end(); ++it)
+    delete *it;
+}
+
+
 void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string from, uint64 ref, uint64 global_node_offset)
 {
@@ -1279,6 +1687,8 @@ int main(int argc, char* args[])
       date_test(global_settings, transaction, "test-date", global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "81"))
       suffix_test(global_settings, transaction, "test-suffix", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "82"))
+      lrs_test(global_settings, transaction, "test-lrs", global_node_offset);
 
     std::cout<<"</osm>\n";
   }
