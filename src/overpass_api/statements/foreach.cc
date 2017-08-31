@@ -61,13 +61,17 @@ void Foreach_Statement::add_statement(Statement* statement, std::string text)
 
 void Foreach_Statement::execute(Resource_Manager& rman)
 {
+  Set base_result_set;
+  rman.swap_set(get_result_name(), base_result_set);
+  
   rman.push_stack_frame();
   
-  const Set* base_set_ref = rman.get_set(input);
-  Set base_set = base_set_ref ? *base_set_ref : Set();
+  const Set* base_set = (input == get_result_name() ? &base_result_set : rman.get_set(input));
+  if (!base_set)
+    base_set = &base_result_set;
   
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator
-      it(base_set.nodes.begin()); it != base_set.nodes.end(); ++it)
+      it(base_set->nodes.begin()); it != base_set->nodes.end(); ++it)
   {
     for (std::vector< Node_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
@@ -86,7 +90,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   }
 
   for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
-      it(base_set.attic_nodes.begin()); it != base_set.attic_nodes.end(); ++it)
+      it(base_set->attic_nodes.begin()); it != base_set->attic_nodes.end(); ++it)
   {
     for (std::vector< Attic< Node_Skeleton > >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
@@ -105,7 +109,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   }
 
   for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
-    it(base_set.ways.begin()); it != base_set.ways.end(); ++it)
+    it(base_set->ways.begin()); it != base_set->ways.end(); ++it)
   {
     for (std::vector< Way_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
@@ -124,7 +128,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   }
 
   for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
-    it(base_set.attic_ways.begin()); it != base_set.attic_ways.end(); ++it)
+    it(base_set->attic_ways.begin()); it != base_set->attic_ways.end(); ++it)
   {
     for (std::vector< Attic< Way_Skeleton > >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
@@ -143,7 +147,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   }
 
   for (std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-    it(base_set.relations.begin()); it != base_set.relations.end(); ++it)
+    it(base_set->relations.begin()); it != base_set->relations.end(); ++it)
   {
     for (std::vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
@@ -162,7 +166,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   }
 
   for (std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-    it(base_set.attic_relations.begin()); it != base_set.attic_relations.end(); ++it)
+    it(base_set->attic_relations.begin()); it != base_set->attic_relations.end(); ++it)
   {
     for (std::vector< Attic< Relation_Skeleton > >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
@@ -181,7 +185,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   }
 
   for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
-    it(base_set.areas.begin()); it != base_set.areas.end(); ++it)
+    it(base_set->areas.begin()); it != base_set->areas.end(); ++it)
   {
     for (std::vector< Area_Skeleton >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
@@ -200,7 +204,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   }
 
   for (std::map< Uint31_Index, std::vector< Derived_Structure > >::const_iterator
-    it(base_set.deriveds.begin()); it != base_set.deriveds.end(); ++it)
+    it(base_set->deriveds.begin()); it != base_set->deriveds.end(); ++it)
   {
     for (std::vector< Derived_Structure >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
