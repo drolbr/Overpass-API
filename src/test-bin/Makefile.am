@@ -48,6 +48,7 @@ statements_cc = \
   ../overpass_api/statements/statement.cc \
   ../overpass_api/statements/string_endomorphisms.cc \
   ../overpass_api/statements/tag_value.cc \
+  ../overpass_api/statements/testing_tools.cc \
   ../overpass_api/statements/timeline.cc \
   ../overpass_api/statements/unary_functions.cc \
   ../overpass_api/statements/unary_operators.cc \

@@ -24,6 +24,7 @@
 #include "foreach.h"
 #include "id_query.h"
 #include "print.h"
+#include "testing_tools.h"
 
 
 Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uint64 id)
@@ -32,17 +33,8 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uin
   global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   std::ostringstream buf("");
   buf<<id;
-  std::string id_ = buf.str();
 
-  const char* attributes[5];
-  attributes[0] = "type";
-  attributes[1] = type.c_str();
-  attributes[2] = "ref";
-  attributes[3] = id_.c_str();
-  attributes[4] = 0;
-
-  Id_Query_Statement stmt(1, convert_c_pairs(attributes), global_settings);
-  stmt.execute(rman);
+  Id_Query_Statement(1, Attr()("type", type)("ref", buf.str()).kvs(), global_settings).execute(rman);
 
   return rman;
 }
@@ -105,106 +97,56 @@ int main(int argc, char* args[])
   uint64 global_node_offset = atoll(args[4]);
   Parsed_Query global_settings;
   global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  Statement_Container stmt_cont(global_settings);
 
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
   "<osm>\n";
 
-  if ((test_to_execute == "") || (test_to_execute == "1"))
+  try
   {
-    try
+    if ((test_to_execute == "") || (test_to_execute == "1"))
     {
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
-      {
-	const char* attributes[] = { 0 };
-	Foreach_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
-	
-	const char* attributes_print[] = { 0 };
-	Print_Statement stmt2(0, convert_c_pairs(attributes_print), global_settings);
-	stmt1.add_statement(&stmt2, "");
-	
-	stmt1.execute(rman);
-      }
+
+      Foreach_Statement stmt(0, Attr().kvs(), global_settings);
+      stmt_cont.add_stmt(new Print_Statement(0, Attr().kvs(), global_settings), &stmt);
+      stmt.execute(rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
-  }
-  if ((test_to_execute == "") || (test_to_execute == "2"))
-  {
-    try
+    if ((test_to_execute == "") || (test_to_execute == "2"))
     {
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
-      {
-	const char* attributes[] = { 0 };
-	Foreach_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
-	stmt1.execute(rman);
-      }
-      {
-	const char* attributes_print[] = { 0 };
-	Print_Statement stmt(0, convert_c_pairs(attributes_print), global_settings);
-	stmt.execute(rman);
-      }
+      
+      Foreach_Statement(0, Attr().kvs(), global_settings).execute(rman);
+      Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
-  }
-  if ((test_to_execute == "") || (test_to_execute == "3"))
-  {
-    try
+    if ((test_to_execute == "") || (test_to_execute == "3"))
     {
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
-      {
-	const char* attributes[] = { "from", "A", "into", "B", 0 };
-	Foreach_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
-	
-	const char* attributes_print[] = { "from", "B", 0 };
-	Print_Statement stmt2(0, convert_c_pairs(attributes_print), global_settings);
-	stmt1.add_statement(&stmt2, "");
-	
-	stmt1.execute(rman);
-      }
+
+      Foreach_Statement stmt(0, Attr()("from", "A")("into", "B").kvs(), global_settings);
+      stmt_cont.add_stmt(new Print_Statement(0, Attr()("from", "B").kvs(), global_settings), &stmt);
+      stmt.execute(rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
-  }
-  if ((test_to_execute == "") || (test_to_execute == "4"))
-  {
-    try
+    if ((test_to_execute == "") || (test_to_execute == "4"))
     {
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
-      {
-	const char* attributes[] = { "from", "A", "into", "B", 0 };
-	Foreach_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
-	stmt1.execute(rman);
-      }
-      {
-	const char* attributes[] = { "from", "A", 0 };
-	Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
+      
+      Foreach_Statement(0, Attr()("from", "A")("into", "B").kvs(), global_settings).execute(rman);
+      Print_Statement(0, Attr()("from", "A").kvs(), global_settings).execute(rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 
   std::cout<<"</osm>\n";
