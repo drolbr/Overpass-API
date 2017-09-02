@@ -23,7 +23,7 @@ if [ ! -d /db/db ] ; then
 
     if [ "$OVERPASS_MODE" = "init" ]; then
         lftp -c "get -c \"$OVERPASS_PLANET_URL\" -o /db/planet; exit" \
-        && /app/bin/init_osm3s.sh /db/planet /db/db /app "--meta=$OVERPASS_META" "--compresion-method=$OVERPASS_COMPRESSION" \
+        && /app/bin/init_osm3s.sh /db/planet /db/db /app "--meta=$OVERPASS_META" "--compression-method=$OVERPASS_COMPRESSION" \
         && echo $OVERPASS_PLANET_SEQUENCE_ID > /db/db/replicate_id \
         && rm /db/planet \
         && cp -r /app/src/rules /db/db \
