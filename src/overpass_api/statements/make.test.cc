@@ -362,6 +362,12 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
       global_settings), subs);
   subs = stmt_cont.add_stmt(new Evaluator_Type(0, Attr().kvs(), global_settings), subs);
 
+  subs = add_prop_stmt("is_closed", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
+      from == "_" ? Attr().kvs() : Attr()("from", from).kvs(),
+      global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Is_Closed(0, Attr().kvs(), global_settings), subs);
+
   stmt.execute(rman);
   Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
 }

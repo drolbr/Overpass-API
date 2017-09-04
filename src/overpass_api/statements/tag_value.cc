@@ -141,6 +141,36 @@ Evaluator_Type::Evaluator_Type
 //-----------------------------------------------------------------------------
 
 
+Evaluator_Is_Closed::Statement_Maker Evaluator_Is_Closed::statement_maker;
+
+
+Statement* Evaluator_Is_Closed::Statement_Maker::create_statement(
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+      || !tree_it.assert_has_arguments(error_output, false)
+      || !assert_element_in_context(error_output, tree_it, tree_context))
+    return 0;
+  
+  std::map< std::string, std::string > attributes;
+  return new Evaluator_Is_Closed(tree_it->line_col.first, attributes, global_settings);
+}
+
+
+Evaluator_Is_Closed::Evaluator_Is_Closed
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 std::string find_value(const std::vector< std::pair< std::string, std::string > >* tags, const std::string& key)
 {
   if (!tags)

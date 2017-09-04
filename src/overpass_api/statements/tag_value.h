@@ -200,6 +200,69 @@ public:
 };
 
 
+/* === Closedness ===
+
+The operator <em>is_closed</em> returns whether the element is a closed way.
+The operator is undefined for any other type of element.
+For ways, it returns "1" if the first member of the way is equal to the last member of the way
+and "0" otherwise.
+The operators takes no parameters.
+
+The syntax is
+
+  is_closed()
+*/
+
+struct Is_Closed_Eval_Task : public Eval_Task
+{
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return "NaW"; }
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return "NaW"; }
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return !data.object->nds.empty() && data.object->nds.front() == data.object->nds.back() ? "1" : "0"; }
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return !data.object->nds.empty() && data.object->nds.front() == data.object->nds.back() ? "1" : "0"; }
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return "NaW"; }
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return "NaW"; }
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return "NaW"; }
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return "NaW"; }
+};
+
+
+class Evaluator_Is_Closed : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Is_Closed >
+  {
+    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Is_Closed >("eval-is-closed") { Statement::maker_by_func_name()["is_closed"].push_back(this); }
+  };
+  static Statement_Maker statement_maker;
+
+  virtual std::string dump_xml(const std::string& indent) const { return indent + "<eval-is-closed/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return "is_closed()"; }
+
+  Evaluator_Is_Closed(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-is-closed"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Is_Closed() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
+
+  virtual Eval_Task* get_task(Prepare_Task_Context& context) { return new Is_Closed_Eval_Task(); }
+};
+
+
 /* === Tag Value and Generic Value Operators ===
 
 The tag operator returns the value of the tag of the given key.
