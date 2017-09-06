@@ -246,8 +246,8 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
     Statement* stmt = create_non_dump_stmt(stmt_factory);
     if (stmt)
       result += stmt->dump_compact_ql(
-          name_ == "complete" || name_ == "difference" || name_ == "foreach"
-          || name_ == "query" || name_ == "union" ? "(bbox)" : "");
+          name_ == "complete" || name_ == "difference" || name_ == "for" || name_ == "foreach"
+          || name_ == "if" || name_ == "query" || name_ == "union" ? "(bbox)" : "");
     else
       result += "(" + name_ + ":)";
   }

@@ -167,13 +167,13 @@ TStatement* create_difference_statement(typename TStatement::Factory& stmt_facto
 }
 
 template< class TStatement >
-TStatement* create_foreach_statement(typename TStatement::Factory& stmt_factory,
-				     std::string from, std::string into, uint line_nr)
+TStatement* create_for_statement(typename TStatement::Factory& stmt_factory,
+				     std::string stmt_name, std::string from, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["from"] = from;
   attr["into"] = into;
-  return stmt_factory.create_statement("foreach", line_nr, attr);
+  return stmt_factory.create_statement(stmt_name, line_nr, attr);
 }
 
 
@@ -607,6 +607,7 @@ TStatement* parse_union(typename TStatement::Factory& stmt_factory, Parsed_Query
   }
 }
 
+
 template< class TStatement >
 TStatement* parse_foreach(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
 			  Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
@@ -619,8 +620,35 @@ TStatement* parse_foreach(typename TStatement::Factory& stmt_factory, Parsed_Que
   std::vector< TStatement* > substatements =
       collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth+1);
 
-  TStatement* statement = create_foreach_statement< TStatement >
-      (stmt_factory, from, into, line_col.first);
+  TStatement* statement = create_for_statement< TStatement >
+      (stmt_factory, "foreach", from, into, line_col.first);
+  for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    statement->add_statement(*it, "");
+  return statement;
+}
+
+
+template< class TStatement >
+TStatement* parse_for(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
+			  Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
+{
+  std::pair< uint, uint > line_col = token.line_col();
+  ++token;
+
+  std::string from = probe_from(token, error_output);
+  std::string into = probe_into(token, error_output);
+
+  clear_until_after(token, error_output, "(");
+  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
+      Statement::elem_eval_possible, true);
+  clear_until_after(token, error_output, ")");
+  std::vector< TStatement* > substatements =
+      collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth+1);
+
+  TStatement* statement = create_for_statement< TStatement >
+      (stmt_factory, "for", from, into, line_col.first);
+  statement->add_statement(condition, "");
   for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
       it != substatements.end(); ++it)
     statement->add_statement(*it, "");
@@ -1546,6 +1574,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
 
   if (*token == "(")
     return parse_union< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
+  else if (*token == "for")
+    return parse_for< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
   else if (*token == "foreach")
     return parse_foreach< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
   else if (*token == "complete")
