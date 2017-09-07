@@ -953,3 +953,8 @@ out;
 rel(id:1333,1433,1673,1773,1873,1922);
 convert geometry ::id=id(), type=type(), length=length();
 out;
+
+(node[foo];way[foo];rel[foo];);
+for(version())
+( make for_test ver=u(version()),refs=set("{"+type()+","+id()+"}"); );
+out;
