@@ -162,6 +162,20 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
 }
 
 
+std::string strip_quotation_marks(const std::string& input)
+{
+  if (input.empty())
+    return input;
+  
+  if (input[0] == '\"' && input[input.size()-1] == '\"')
+    return input.substr(1, input.size()-2);
+  if (input[0] == '\'' && input[input.size()-1] == '\'')
+    return input.substr(1, input.size()-2);
+  
+  return input;
+}
+
+
 template< class TStatement >
 TStatement* create_union_statement(typename TStatement::Factory& stmt_factory,
 				   std::string into, uint line_nr)
@@ -214,15 +228,13 @@ TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory, 
 
 template< class TStatement >
 TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory,
-    Tokenizer_Wrapper& token, Error_Output* error_output, uint line_nr)
+    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
 {
   TStatement* filter = 0;
-  ++token;
-  if (*token == ":")
+  
+  if (tree_it->token == ":" && tree_it->rhs)
   {
-    ++token;
-    TStatement* criterion = parse_value_tree< TStatement >(stmt_factory, token, error_output,
-        Statement::elem_eval_possible, true);
+    TStatement* criterion = stmt_factory.create_statement(tree_it.rhs(), Statement::elem_eval_possible);
     if (criterion)
     {
       filter = create_filter_statement< TStatement >(stmt_factory, line_nr);
@@ -230,7 +242,7 @@ TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory,
         filter->add_statement(criterion, "");
     }
   }
-        clear_until_after(token, error_output, ")");
+
   return filter;
 }
 
@@ -480,14 +492,17 @@ TStatement* create_newer_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_newer_statement(typename TStatement::Factory& stmt_factory,
-    Tokenizer_Wrapper& token, Error_Output* error_output, uint line_nr)
+    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
 {
-  ++token;
-  clear_until_after(token, error_output, ":");
-  std::string date = get_text_token(token, error_output, "\"YYYY-MM-DDThh:mm:ssZ\"");
-  clear_until_after(token, error_output, ")");
+  TStatement* filter = 0;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    std::string date = strip_quotation_marks(tree_it.rhs()->token);
+    filter = create_newer_statement< TStatement >(stmt_factory, date, line_nr);
+  }
 
-  return create_newer_statement< TStatement >(stmt_factory, date, line_nr);
+  return filter;
 }
 
 
@@ -548,31 +563,37 @@ TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
-    Tokenizer_Wrapper& token, Error_Output* error_output, uint line_nr)
+    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
 {
-  ++token;
-  clear_until_after(token, error_output, ":", ")", false);
-        std::string since;
-        std::string until;
-  if (*token == ":")
+  std::string since;
+  std::string until;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
   {
-    ++token;
-    since = get_text_token(token, error_output, "\"YYYY-MM-DDThh:mm:ssZ\"");
-    clear_until_after(token, error_output, ",", ")", false);
-    if (*token == ",")
-    {
-      ++token;
-      until = get_text_token(token, error_output, "\"YYYY-MM-DDThh:mm:ssZ\"");
-    }
-    else
-      until = since;
+    since = strip_quotation_marks(tree_it.rhs()->token);
+    until = since;
   }
-  else
+  else if (tree_it->token == "," && tree_it->lhs && tree_it.lhs()->token == ":" && tree_it.lhs()->rhs
+      && tree_it->rhs)
+  {
+    since = strip_quotation_marks(tree_it.lhs().rhs()->token);
+    until = strip_quotation_marks(tree_it.rhs()->token);
+  }
+  else if (tree_it->token == "changed")
   {
     since = "auto";
     until = "auto";
   }
-  clear_until_after(token, error_output, ")");
+  else if (tree_it->token == ":")
+  {
+    if (error_output)
+      error_output->add_parse_error("Date required after \"changed\" with colon",
+          tree_it->line_col.first);
+  }
+  else
+    if (error_output)
+      error_output->add_parse_error("Unexpected token \"" + tree_it->token + "\" after \"changed\"",
+          tree_it->line_col.first);
 
   return create_changed_statement< TStatement >(stmt_factory, since, until, line_nr);
 }
@@ -1178,6 +1199,35 @@ TStatement* parse_map_to_area(typename TStatement::Factory& stmt_factory,
 }
 
 
+Token_Node_Ptr find_leftmost_token(Token_Node_Ptr tree_it)
+{
+  while (tree_it->lhs)
+    tree_it = tree_it.lhs();
+  
+  return tree_it;
+}
+
+
+template< class TStatement >
+TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
+    const Token_Node_Ptr& tree_it, Error_Output* error_output)
+{
+  Token_Node_Ptr criterion = find_leftmost_token(tree_it);
+  uint line_nr = criterion->line_col.first;
+  
+  if (criterion->token == "changed")
+    return create_changed_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
+  else if (criterion->token == "if")
+    return create_filter_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
+  else if (criterion->token == "newer")
+    return create_newer_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
+
+  if (error_output)
+    error_output->add_parse_error("Unknown query clause", line_nr);
+  return 0;
+}
+
+
 template< class TStatement >
 TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
 			const std::string& type, const std::string& from, Tokenizer_Wrapper& token,
@@ -1309,7 +1359,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	break;
       }
 
-      uint line_nr = token.line_col().first;
       TStatement* filter = 0;
       if (*token == "around")
       {
@@ -1468,17 +1517,13 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	  clauses.push_back(clause);
 	}
       }
-      else if (*token == "changed")
-        filter = create_changed_statement< TStatement >(stmt_factory, token, error_output, line_nr);
-      else if (*token == "if")
-        filter = create_filter_statement< TStatement >(stmt_factory, token, error_output, line_nr);
-      else if (*token == "newer")
-        filter = create_newer_statement< TStatement >(stmt_factory, token, error_output, line_nr);
       else
       {
-	if (error_output)
-	  error_output->add_parse_error("Unknown query clause", token.line_col().first);
-	clear_until_after(token, error_output, ")");
+        Token_Tree tree(token, error_output, true);
+        clear_until_after(token, error_output, ")");
+        
+        filter = create_query_criterion< TStatement >(stmt_factory,
+            Token_Node_Ptr(tree, tree.tree[0].rhs), error_output);
       }
       if (filter)
         substmts.push_back(filter);
@@ -1494,7 +1539,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
   std::string into = probe_into(token, error_output);
 
   TStatement* statement = 0;
-  if (clauses.size() == 0 && substmts.empty())
+  if (clauses.empty() && substmts.empty())
   {
     if (from == "")
     {
