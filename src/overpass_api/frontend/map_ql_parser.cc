@@ -404,6 +404,7 @@ TStatement* create_around_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("around", line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
 				     std::string type, std::string from, std::string into, uint line_nr)
@@ -414,6 +415,7 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
   attr["type"] = type;
   return stmt_factory.create_statement("recurse", line_nr, attr);
 }
+
 
 template< class TStatement >
 TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
@@ -427,6 +429,37 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
   attr["role-restricted"] = "yes";
   return stmt_factory.create_statement("recurse", line_nr, attr);
 }
+
+
+template< class TStatement >
+TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
+    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
+{
+  std::string type = tree_it->token;
+  std::string from = "_";
+  if (tree_it->rhs)
+  {
+    if (tree_it.rhs()->rhs)
+      from = tree_it.rhs().rhs()->token;
+    else if (tree_it->token == "." && tree_it->lhs)
+    {
+      type = tree_it.lhs()->token;
+      from = tree_it.rhs()->token;
+    }
+  }
+
+  if (type == ">")
+    return create_recurse_statement< TStatement >(stmt_factory, "down", from, "_", line_nr);
+  else if (type == ">>")
+    return create_recurse_statement< TStatement >(stmt_factory, "down-rel", from, "_", line_nr);
+  else if (type == "<")
+    return create_recurse_statement< TStatement >(stmt_factory, "up", from, "_", line_nr);
+  else if (type == "<<")
+    return create_recurse_statement< TStatement >(stmt_factory, "up-rel", from, "_", line_nr);
+
+  return 0;
+}
+
 
 template< class TStatement >
 TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
@@ -494,15 +527,13 @@ template< class TStatement >
 TStatement* create_newer_statement(typename TStatement::Factory& stmt_factory,
     const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
 {
-  TStatement* filter = 0;
-  
   if (tree_it->token == ":" && tree_it->rhs)
   {
     std::string date = strip_quotation_marks(tree_it.rhs()->token);
-    filter = create_newer_statement< TStatement >(stmt_factory, date, line_nr);
+    return create_newer_statement< TStatement >(stmt_factory, date, line_nr);
   }
 
-  return filter;
+  return 0;
 }
 
 
@@ -1210,17 +1241,21 @@ Token_Node_Ptr find_leftmost_token(Token_Node_Ptr tree_it)
 
 template< class TStatement >
 TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output)
+    const Token_Node_Ptr& tree_it, Error_Output* error_output, bool& can_standalone, const std::string& into)
 {
   Token_Node_Ptr criterion = find_leftmost_token(tree_it);
   uint line_nr = criterion->line_col.first;
   
+  can_standalone = false;
   if (criterion->token == "changed")
     return create_changed_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
   else if (criterion->token == "if")
     return create_filter_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
   else if (criterion->token == "newer")
     return create_newer_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
+  else if (criterion->token == ">" || criterion->token == ">>"
+      || criterion->token == "<" || criterion->token == "<<")
+    return create_recurse_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
 
   if (error_output)
     error_output->add_parse_error("Unknown query clause", line_nr);
@@ -1236,7 +1271,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
   std::pair< uint, uint > query_line_col = token.line_col();
 
   std::vector< Statement_Text > clauses;
-  std::vector< TStatement* > substmts;
+  std::vector< Token_Tree > subtrees;
   while (token.good() && (*token == "[" || *token == "(" || *token == "."))
   {
     if (*token == "[")
@@ -1359,7 +1394,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	break;
       }
 
-      TStatement* filter = 0;
       if (*token == "around")
       {
 	Statement_Text clause("around", token.line_col());
@@ -1482,15 +1516,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
         clear_until_after(token, error_output, ")");
         clauses.push_back(clause);
       }
-      else if (*token == ">" || *token == ">>" || *token == "<" || *token == "<<")
-      {
-	Statement_Text clause("recurse", token.line_col());
-	clause.attributes.push_back(*token);
-	++token;
-	clause.attributes.push_back(probe_from(token, error_output));
-	clear_until_after(token, error_output, ")");
-	clauses.push_back(clause);
-      }
       else if (isdigit((*token)[0]) ||
 	       ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1])))
       {
@@ -1519,14 +1544,9 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
       }
       else
       {
-        Token_Tree tree(token, error_output, true);
+        subtrees.push_back(Token_Tree(token, error_output, true));
         clear_until_after(token, error_output, ")");
-        
-        filter = create_query_criterion< TStatement >(stmt_factory,
-            Token_Node_Ptr(tree, tree.tree[0].rhs), error_output);
       }
-      if (filter)
-        substmts.push_back(filter);
     }
     else
     {
@@ -1539,7 +1559,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
   std::string into = probe_into(token, error_output);
 
   TStatement* statement = 0;
-  if (clauses.empty() && substmts.empty())
+  if (clauses.empty() && subtrees.empty())
   {
     if (from == "")
     {
@@ -1564,7 +1584,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
       }
     }
   }
-  else if (clauses.size() == 1 && from == "" && substmts.empty())
+  else if (clauses.size() == 1 && from == "" && subtrees.empty())
   {
     if (clauses.front().statement == "has-kv"
        || clauses.front().statement == "has-kv_regex"
@@ -1575,10 +1595,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
        || (clauses.front().statement == "around" && type != "node")
        || (clauses.front().statement == "pivot" && type != "node")
        || (clauses.front().statement == "polygon" && type != "node")
-       || (clauses.front().statement == "bbox-query" && type != "node")
-       || (clauses.front().statement == "recurse" &&
-           (clauses.front().attributes[0] == "<" || clauses.front().attributes[0] == "<<"
-	   || clauses.front().attributes[0] == ">" || clauses.front().attributes[0] == ">>")))
+       || (clauses.front().statement == "bbox-query" && type != "node"))
     {
       statement = create_query_statement< TStatement >
           (stmt_factory, type, into, query_line_col.first);
@@ -1591,6 +1608,22 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
     {
       statement = create_query_substatement< TStatement >
           (stmt_factory, token, error_output, clauses.front(), type, from, into);
+    }
+  }
+  else if (clauses.empty() && from == "" && subtrees.size() == 1)
+  {
+    bool can_standalone = false;
+    TStatement* filter = create_query_criterion< TStatement >(stmt_factory,
+        Token_Node_Ptr(subtrees[0], subtrees[0].tree[0].rhs), error_output, can_standalone, into);
+    if (filter)
+    {
+      if (can_standalone)
+        statement = filter;
+      else
+      {
+        statement = create_query_statement< TStatement >(stmt_factory, type, into, query_line_col.first);
+        statement->add_statement(filter, "");
+      }
     }
   }
   else
@@ -1615,8 +1648,14 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
       if (substatement)
 	statement->add_statement(substatement, "");
     }
-    for (typename std::vector< TStatement* >::const_iterator it = substmts.begin(); it != substmts.end(); ++it)
-      statement->add_statement(*it, "");
+    for (typename std::vector< Token_Tree >::const_iterator it = subtrees.begin(); it != subtrees.end(); ++it)
+    {
+      bool can_standalone = false;
+      TStatement* filter = create_query_criterion< TStatement >(stmt_factory,
+          Token_Node_Ptr(*it, it->tree[0].rhs), error_output, can_standalone, into);
+      if (filter)
+        statement->add_statement(filter, "");
+    }
   }
 
   return statement;
