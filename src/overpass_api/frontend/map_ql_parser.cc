@@ -570,6 +570,7 @@ TStatement* create_map_to_area_statement(typename TStatement::Factory& stmt_fact
   return stmt_factory.create_statement("map-to-area", line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
                                    std::string from, std::string into, uint line_nr)
@@ -578,6 +579,18 @@ TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
   attr["from"] = (from == "" ? "_" : from);
   attr["into"] = into;
   return stmt_factory.create_statement("pivot", line_nr, attr);
+}
+
+
+template< class TStatement >
+TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
+    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
+{
+  std::string from = "_";
+  if (tree_it->rhs && tree_it->token == ".")
+      from = tree_it.rhs()->token;
+  
+  return create_pivot_statement< TStatement >(stmt_factory, from, into, line_nr);
 }
 
 
@@ -1159,9 +1172,6 @@ TStatement* create_query_substatement
     return create_area_statement< TStatement >
         (stmt_factory, clause.attributes.size() <= 1 ? "" : clause.attributes[1],
 	 clause.attributes[0], into, clause.line_col.first);
-  else if (clause.statement == "pivot")
-    return create_pivot_statement< TStatement >
-        (stmt_factory, clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "item")
     return create_item_statement< TStatement >
         (stmt_factory, clause.attributes[0], "_", clause.line_col.first);
@@ -1241,10 +1251,15 @@ Token_Node_Ptr find_leftmost_token(Token_Node_Ptr tree_it)
 
 template< class TStatement >
 TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output, bool& can_standalone, const std::string& into)
+    const Token_Node_Ptr& tree_it, Error_Output* error_output,
+    const std::string& type, bool& can_standalone, const std::string& into)
 {
   Token_Node_Ptr criterion = find_leftmost_token(tree_it);
   uint line_nr = criterion->line_col.first;
+  
+  can_standalone = (type == "node");
+  if (criterion->token == "pivot")
+    return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   
   can_standalone = false;
   if (criterion->token == "changed")
@@ -1508,14 +1523,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
-      else if (*token == "pivot")
-      {
-        Statement_Text clause("pivot", token.line_col());
-        ++token;
-        clause.attributes.push_back(probe_from(token, error_output));
-        clear_until_after(token, error_output, ")");
-        clauses.push_back(clause);
-      }
       else if (isdigit((*token)[0]) ||
 	       ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1])))
       {
@@ -1614,7 +1621,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
   {
     bool can_standalone = false;
     TStatement* filter = create_query_criterion< TStatement >(stmt_factory,
-        Token_Node_Ptr(subtrees[0], subtrees[0].tree[0].rhs), error_output, can_standalone, into);
+        Token_Node_Ptr(subtrees[0], subtrees[0].tree[0].rhs), error_output, type, can_standalone, into);
     if (filter)
     {
       if (can_standalone)
@@ -1652,7 +1659,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
     {
       bool can_standalone = false;
       TStatement* filter = create_query_criterion< TStatement >(stmt_factory,
-          Token_Node_Ptr(*it, it->tree[0].rhs), error_output, can_standalone, into);
+          Token_Node_Ptr(*it, it->tree[0].rhs), error_output, type, can_standalone, "_");
       if (filter)
         statement->add_statement(filter, "");
     }
