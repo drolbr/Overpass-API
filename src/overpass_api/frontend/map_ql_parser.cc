@@ -548,6 +548,27 @@ TStatement* create_area_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("area-query", line_nr, attr);
 }
 
+
+template< class TStatement >
+TStatement* create_area_statement(typename TStatement::Factory& stmt_factory,
+    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
+{
+  std::string from = "_";
+  std::string ref;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    ref = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+  }
+  
+  if (tree_it->token == "." && tree_it->rhs)
+    from = tree_it.rhs()->token;
+
+  return create_area_statement< TStatement >(stmt_factory, ref, from, into, line_nr);
+}
+
+
 template< class TStatement >
 TStatement* create_coord_query_statement(typename TStatement::Factory& stmt_factory,
 				     std::string lat, std::string lon, std::string from, std::string into, uint line_nr)
@@ -1168,10 +1189,6 @@ TStatement* create_query_substatement
         (stmt_factory,
 	 clause.attributes[0], clause.attributes[2], clause.attributes[1], clause.attributes[3],
 	 into, clause.line_col.first);
-  else if (clause.statement == "area")
-    return create_area_statement< TStatement >
-        (stmt_factory, clause.attributes.size() <= 1 ? "" : clause.attributes[1],
-	 clause.attributes[0], into, clause.line_col.first);
   else if (clause.statement == "item")
     return create_item_statement< TStatement >
         (stmt_factory, clause.attributes[0], "_", clause.line_col.first);
@@ -1258,6 +1275,8 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
   uint line_nr = criterion->line_col.first;
   
   can_standalone = (type == "node");
+  if (criterion->token == "area")
+    return create_area_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   if (criterion->token == "pivot")
     return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   
@@ -1507,19 +1526,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
           ++token;
           clause.attributes.push_back(get_text_token(token, error_output, "Role"));
         }
-	clear_until_after(token, error_output, ")");
-	clauses.push_back(clause);
-      }
-      else if (*token == "area")
-      {
-	Statement_Text clause("area", token.line_col());
-	++token;
-	clause.attributes.push_back(probe_from(token, error_output));
-	if (*token == ":")
-	{
-	  ++token;
-	  clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
-	}
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
