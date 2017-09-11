@@ -345,6 +345,7 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("has-kv", line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory,
     std::string type, const std::vector< std::string >& ref, std::string into, uint line_nr)
@@ -366,6 +367,29 @@ TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory
 
   return stmt_factory.create_statement("id-query", line_nr, attr);
 }
+
+
+template< class TStatement >
+TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory,
+    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr,
+    const std::string& type, const std::string& into)
+{
+  std::vector< std::string > ref;
+  
+  while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
+  {
+    ref.push_back(tree_it.rhs()->token);
+    tree_it = tree_it.lhs();
+  }
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+    ref.push_back(tree_it.rhs()->token);
+  
+  std::reverse(ref.begin(), ref.end());
+
+  return create_id_query_statement< TStatement >(stmt_factory, type, ref, into, line_nr);
+}
+
 
 template< class TStatement >
 TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
@@ -1274,6 +1298,10 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
   Token_Node_Ptr criterion = find_leftmost_token(tree_it);
   uint line_nr = criterion->line_col.first;
   
+  can_standalone = true;
+  if (criterion->token == "id")
+    return create_id_query_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
+  
   can_standalone = (type == "node");
   if (criterion->token == "area")
     return create_area_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
@@ -1495,24 +1523,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
           clear_until_after(token, error_output, ")");
         }
 	clauses.push_back(clause);
-      }
-      else if (*token == "id")
-      {
-        Statement_Text clause("id-query", token.line_col());
-        ++token;
-        clear_until_after(token, error_output, ":", false);
-        if (*token == ":")
-        {
-          do
-          {
-            ++token;
-            clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
-            clear_until_after(token, error_output, ",", ")", false);
-          } while (token.good() && *token == ",");
-
-          clear_until_after(token, error_output, ")");
-        }
-        clauses.push_back(clause);
       }
       else if (*token == "r" || *token == "w"
 	    || *token == "bn" || *token == "bw" || *token == "br")
