@@ -81,6 +81,27 @@ void remove_time_inconsistent_versions(Data_By_Id< Skeleton >& new_data)
     *to_it = *from_it;
     ++from_it;
   }
+  if (!new_data.data.empty())
+    new_data.data.erase(++to_it, new_data.data.end());
+}
+
+
+template< typename Skeleton >
+void deduplicate_data(Data_By_Id< Skeleton >& new_data)
+{
+  typename std::vector< typename Data_By_Id< Skeleton >::Entry >::iterator from_it = new_data.data.begin();
+  typename std::vector< typename Data_By_Id< Skeleton >::Entry >::iterator to_it = new_data.data.begin();
+  if (from_it != new_data.data.end())
+    ++from_it;
+  while (from_it != new_data.data.end())
+  {
+    if (!(to_it->elem.id == from_it->elem.id))
+      ++to_it;
+    *to_it = *from_it;
+    ++from_it;
+  }
+  if (!new_data.data.empty())
+    new_data.data.erase(++to_it, new_data.data.end());
 }
 
 
