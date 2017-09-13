@@ -116,12 +116,8 @@ apply_minute_diffs()
 update_state()
 {
   get_replicate_filename $TARGET
+  printf -v TARGET_FILE %09u $TARGET
   TIMESTAMP_LINE=`grep "^timestamp" <"$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"`
-  while [[ -z $TIMESTAMP_LINE ]]; do
-  {
-    sleep 5
-    TIMESTAMP_LINE=`grep "^timestamp" <"$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"`
-  }; done
   DATA_VERSION=${TIMESTAMP_LINE:10}
 };
 
