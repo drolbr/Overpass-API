@@ -482,7 +482,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
 
   // Prepare collecting all data of existing skeletons
-  std::sort(new_data.data.begin(), new_data.data.end());
+  std::stable_sort(new_data.data.begin(), new_data.data.end());
   if (meta == keep_attic)
     remove_time_inconsistent_versions(new_data);
   else

@@ -443,7 +443,7 @@ void compute_geometry
         if (it2 != new_node_idx_by_id.end())
           member_idxs.push_back(it2->second.ll_upper);
         else
-          std::cerr<<"Node "<<nit->ref.val()<<" used in relation "<<it->elem.id.val()<<" not found.\n";
+          std::cerr<<"compute_geometry: Node "<<nit->ref.val()<<" used in relation "<<it->elem.id.val()<<" not found.\n";
       }
       else if (nit->type == Relation_Entry::WAY)
       {
@@ -452,7 +452,7 @@ void compute_geometry
         if (it2 != new_way_idx_by_id.end())
           member_idxs.push_back(it2->second.val());
         else
-          std::cerr<<"Way "<<nit->ref.val()<<" used in relation "<<it->elem.id.val()<<" not found.\n";
+          std::cerr<<"compute_geometry: Way "<<nit->ref.val()<<" used in relation "<<it->elem.id.val()<<" not found.\n";
       }
     }
 
@@ -517,7 +517,7 @@ void compute_idx_and_geometry
           // Otherwise the node has expired before our relation - something has gone wrong seriously.
         }
         else
-          std::cerr<<"Node "<<mit->ref.val()<<" used in relation "<<skeleton.id.val()<<" not found.\n";
+          std::cerr<<"compute_idx_and_geometry: Node "<<mit->ref.val()<<" used in relation "<<skeleton.id.val()<<" not found.\n";
         // Otherwise the node is not contained in our list - something has gone wrong seriously.
       }
       else if (mit->type == Relation_Entry::WAY)
@@ -536,7 +536,7 @@ void compute_idx_and_geometry
           // Otherwise the way has expired before our relation - something has gone wrong seriously.
         }
         else
-          std::cerr<<"Way "<<mit->ref.val()<<" used in relation "<<skeleton.id.val()<<" not found.\n";
+          std::cerr<<"compute_idx_and_geometry: Way "<<mit->ref.val()<<" used in relation "<<skeleton.id.val()<<" not found.\n";
         // Otherwise the way is not contained in our list - something has gone wrong seriously.
       }
   }
@@ -1071,7 +1071,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
 
   // Prepare collecting all data of existing skeletons
-  std::sort(new_data.data.begin(), new_data.data.end());
+  std::stable_sort(new_data.data.begin(), new_data.data.end());
   if (meta == keep_attic)
     remove_time_inconsistent_versions(new_data);
   else

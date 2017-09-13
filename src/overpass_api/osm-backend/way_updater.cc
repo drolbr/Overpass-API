@@ -84,7 +84,7 @@ void compute_idx_and_geometry
       // Otherwise the node has expired before our way - something has gone wrong seriously.
     }
     else
-      std::cerr<<"Node "<<it->val()<<" used in way "<<skeleton.id.val()<<" not found.\n";
+      std::cerr<<"compute_idx_and_geometry: Node "<<it->val()<<" used in way "<<skeleton.id.val()<<" not found.\n";
     // Otherwise the node is not contained in our list - something has gone wrong seriously.
   }
 
@@ -605,7 +605,7 @@ void compute_geometry
       if (it2 != new_node_idx_by_id.end())
         nd_idxs.push_back(it2->second.ll_upper);
       else
-        std::cerr<<"Node "<<nit->val()<<" used in way "<<it->elem.id.val()<<" not found.\n";
+        std::cerr<<"compute_geometry: Node "<<nit->val()<<" used in way "<<it->elem.id.val()<<" not found.\n";
     }
 
     Uint31_Index index = Way::calc_index(nd_idxs);
@@ -662,7 +662,7 @@ void new_implicit_skeletons
         if (it3 != new_node_idx_by_id.end())
           nd_idxs.push_back(it3->second.ll_upper);
         else
-          std::cerr<<"Node "<<nit->val()<<" used in way "<<it2->id.val()<<" not found.\n";
+          std::cerr<<"new_implicit_skeletons: Node "<<nit->val()<<" used in way "<<it2->id.val()<<" not found.\n";
       }
 
       Uint31_Index index = Way::calc_index(nd_idxs);
@@ -800,7 +800,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
 
   // Prepare collecting all data of existing skeletons
-  std::sort(new_data.data.begin(), new_data.data.end());
+  std::stable_sort(new_data.data.begin(), new_data.data.end());
   if (meta == keep_attic)
     remove_time_inconsistent_versions(new_data);
   else
