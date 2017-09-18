@@ -92,6 +92,11 @@ int main(int argc, char *argv[])
       if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
 	clone_db_dir += '/';
     }
+    else if (!(strcmp(argv[argpos], "--version")))
+    {
+      std::cout<<"Overpass API version "<<basic_settings().version<<" "<<basic_settings().source_hash<<"\n";
+      return 0;
+    }
     else
     {
       std::cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
@@ -108,7 +113,8 @@ int main(int argc, char *argv[])
       "  --quiet: Don't print anything on stderr.\n"
       "  --concise: Print concise information on stderr.\n"
       "  --progress: Print also progress information on stderr.\n"
-      "  --verbose: Print everything that happens on stderr.\n";
+      "  --verbose: Print everything that happens on stderr.\n"
+      "  --version: Print version and exit.\n";
 
       return 0;
     }

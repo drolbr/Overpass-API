@@ -4,6 +4,7 @@ bin_script_mandatory = \
   bin/apply_osc_to_db.sh\
   bin/download_clone.sh\
   bin/fetch_osc.sh\
+  bin/fix_system_settings.sh\
   bin/reboot.sh\
   bin/rules_delta_loop.sh\
   bin/rules_loop.sh

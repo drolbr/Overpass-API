@@ -1,5 +1,6 @@
 
 #include "../../expat/escape_json.h"
+#include "../core/settings.h"
 #include "../frontend/basic_formats.h"
 #include "output_json.h"
 
@@ -19,7 +20,8 @@ void Output_JSON::write_payload_header
     
   std::cout<<"{\n"
         "  \"version\": 0.6,\n"
-        "  \"generator\": \"Overpass API\",\n"
+        "  \"generator\": \"Overpass API "<<basic_settings().version<<" "
+            <<basic_settings().source_hash.substr(0, 8)<<"\",\n"
         "  \"osm3s\": {\n"
 	"    \"timestamp_osm_base\": \""<<timestamp<<"\",\n";
   if (area_timestamp != "")

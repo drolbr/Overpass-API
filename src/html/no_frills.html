@@ -28,8 +28,9 @@ The comands are explained afterwards:</p>
 <pre>wget http://dev.overpass-api.de/releases/osm-3s_v0.7.54.tar.gz
 gunzip &lt;osm-3s_v0.7.54.tar.gz | tar xvf -
 cd osm-3s_v0.7.54/
-./configure --prefix=&quot;`pwd`&quot;
-make</pre>
+./configure
+make
+chmod 755 bin/*.sh cgi-bin/*.sh</pre>
 
 <p><a href="#clone">Clone the database</a> or <a href="#startup">import a planet file</a>:</p>
 <pre>mkdir -p db</pre>

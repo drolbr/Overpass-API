@@ -1,5 +1,6 @@
 
 #include "../../expat/escape_xml.h"
+#include "../core/settings.h"
 #include "../frontend/basic_formats.h"
 #include "output_xml.h"
 
@@ -15,7 +16,8 @@ void Output_XML::write_payload_header
     (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp)
 {
   std::cout<<
-  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\" generator=\"Overpass API\">\n"
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\""
+  " generator=\"Overpass API "<<basic_settings().version<<" "<<basic_settings().source_hash.substr(0, 8)<<"\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
   "The data is made available under ODbL.</note>\n";
   std::cout<<"<meta osm_base=\""<<timestamp<<'\"';
