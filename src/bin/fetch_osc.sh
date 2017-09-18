@@ -39,7 +39,7 @@ if [[ ! -d $LOCAL_DIR ]];
 fi
 
 if [[ $REPLICATE_ID == "auto" ]] ; then
-    REPLICATE_ID=`find $LOCAL_DIR -type f -name '*state.txt' | sort | tail -n 1 | sed -e "s#^$LOCAL_DIR##" -e 's#[./]##g' -e 's#statetxt##' -e 's/^0\+//g'`
+    REPLICATE_ID=`find $LOCAL_DIR -type f -name '*state.txt' -not -size 0 | sort | tail -n 1 | sed -e "s#^$LOCAL_DIR##" -e 's#[./]##g' -e 's#statetxt##' -e 's/^0\+//g'`
 
     EXEC_DIR="`dirname $0`/"
     DB_DIR=`$EXEC_DIR/dispatcher --show-dir`
