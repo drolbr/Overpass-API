@@ -58,8 +58,6 @@ class Id_Query_Statement : public Output_Statement
 
     virtual std::string dump_xml(const std::string& indent) const
     {
-      std::vector< uint64 >::const_iterator it = refs.begin();
-      
       std::string result = indent + "<id-query" + std::string(" type=\"") + to_string(type) + "\"";
       if (!refs.empty())
         result += " ref=\"" + ::to_string(refs[0]) + "\"";
