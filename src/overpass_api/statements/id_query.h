@@ -38,7 +38,7 @@ class Id_Query_Statement : public Output_Statement
     static Generic_Statement_Maker< Id_Query_Statement > statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
-    
+
     const std::vector< uint64 >& get_refs() { return refs; }
     int get_type() const { return type; }
 
@@ -63,7 +63,7 @@ class Id_Query_Statement : public Output_Statement
         result += " ref=\"" + ::to_string(refs[0]) + "\"";
       for (uint i = 1; i < refs.size(); ++i)
         result += " ref_" + ::to_string(i) + "=\"" + ::to_string(refs[i]) + "\"";
-      
+
       return result + dump_xml_result_name() + "/>\n";
     }
 
@@ -75,14 +75,14 @@ class Id_Query_Statement : public Output_Statement
     virtual std::string dump_ql_in_query(const std::string& indent) const
     {
       std::vector< uint64 >::const_iterator it = refs.begin();
-        
-      std::string result = "(";
+
+      std::string result = (refs.size() > 1) ? "(id:" : "(";
       if (it != refs.end())
         result += ::to_string(*it++);
       while (it != refs.end())
         result += "," + ::to_string(*it++);
       result += ")";
-        
+
       return result;
     }
 
