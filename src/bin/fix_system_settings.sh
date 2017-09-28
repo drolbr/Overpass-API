@@ -24,5 +24,6 @@ fi
 
 if [[ -s /etc/systemd/logind.conf ]]; then
   cat /etc/systemd/logind.conf | grep -vE 'RemoveIPC' >_
+  echo "RemoveIPC=no" >>_
   mv _ /etc/systemd/logind.conf
 fi
