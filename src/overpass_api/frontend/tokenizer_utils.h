@@ -29,7 +29,7 @@
 
 std::string decode_to_utf8(const std::string& token, std::string::size_type& pos, Error_Output* error_output);
 
-std::string decode_json(std::string result, Error_Output* error_output);
+std::string decode_json(const std::string& input, Error_Output* error_output);
 
 std::string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
 		      std::string type_of_token);

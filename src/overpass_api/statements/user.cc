@@ -189,7 +189,7 @@ User_Statement::User_Statement
   if (!(user_ids.empty() ^ user_names.empty()))
   {
     std::ostringstream temp;
-    temp<<"Exactly one of the two attributes \"name\" and \"uid\" must be std::set.";
+    temp<<"Exactly one of the two attributes \"name\" and \"uid\" must be set.";
     add_static_error(temp.str());
   }
 

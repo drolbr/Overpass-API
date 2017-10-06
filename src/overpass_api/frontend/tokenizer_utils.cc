@@ -20,7 +20,8 @@
 #include "tokenizer_utils.h"
 
 
-void decode_to_utf8(std::string& result, std::string::size_type& from, std::string::size_type& to,
+void decode_to_utf8(const std::string& input, std::string& result,
+                    std::string::size_type& from, std::string::size_type& to,
                     Error_Output* error_output)
 {
   std::string::size_type limit = from + 4;
@@ -31,12 +32,12 @@ void decode_to_utf8(std::string& result, std::string::size_type& from, std::stri
   while (from < limit)
   {
     val *= 16;
-    if (result[from] <= '9' && result[from] >= '0')
-      val += (result[from] - '0');
-    else if (result[from] >= 'a' && result[from] <= 'f')
-      val += (result[from] - ('a' - 10));
-    else if (result[from] >= 'A' && result[from] <= 'F')
-      val += (result[from] - ('A' - 10));
+    if (input[from] <= '9' && input[from] >= '0')
+      val += (input[from] - '0');
+    else if (input[from] >= 'a' && input[from] <= 'f')
+      val += (input[from] - ('a' - 10));
+    else if (input[from] >= 'A' && input[from] <= 'F')
+      val += (input[from] - ('A' - 10));
     else
       break;
     ++from;
@@ -62,31 +63,32 @@ void decode_to_utf8(std::string& result, std::string::size_type& from, std::stri
 }
 
 
-std::string decode_json(std::string result, Error_Output* error_output)
+std::string decode_json(const std::string& input, Error_Output* error_output)
 {
-  if (result[0] != '\"' && result[0] != '\'')
-    return result;
+  if (input[0] != '\"' && input[0] != '\'')
+    return input;
   
   std::string::size_type j = 0;
-  for (std::string::size_type i = 1; i < result.size()-1; ++i)
+  std::string result(input.size(), '\x0');
+  for (std::string::size_type i = 1; i < input.size()-1; ++i)
   {
-    if (result[i] == '\\')
+    if (input[i] == '\\')
     {
       ++i;
-      if (result[i] == 'n')
+      if (input[i] == 'n')
         result[j++] = '\n';
-      else if (result[i] == 't')
+      else if (input[i] == 't')
         result[j++] = '\t';
-      else if (result[i] == 'u')
+      else if (input[i] == 'u')
       {
-        decode_to_utf8(result, ++i, j, error_output);
+        decode_to_utf8(input, result, ++i, j, error_output);
         --i;
       }
       else
-        result[j++] = result[i];
+        result[j++] = input[i];
     }
     else
-      result[j++] = result[i];
+      result[j++] = input[i];
   }
   result.resize(j);
     

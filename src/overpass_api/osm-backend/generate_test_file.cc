@@ -4157,6 +4157,7 @@ int main(int argc, char* args[])
       "  <id-and-type id=\"1\">\n"
       "    <tag k=\"id\" v=\"1;"<<global_node_offset + 1<<";"<<global_node_offset + 2<<"\"/>\n"
       "    <tag k=\"type\" v=\"node;relation;way\"/>\n"
+      "    <tag k=\"is_closed\" v=\"0;NaW\"/>\n"
       "  </id-and-type>\n";
     if (std::string(args[2]) == "make_77")
       std::cout<<

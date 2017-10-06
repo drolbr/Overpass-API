@@ -498,10 +498,10 @@ TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
 template< class TStatement >
 TStatement* create_user_statement
     (typename TStatement::Factory& stmt_factory,
-     std::string type, std::vector< std::string > name, std::vector< std::string > uid, std::string into, uint line_nr)
+     std::string type, const std::vector< std::string >& name, const std::vector< std::string >& uid, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
-  std::vector< std::string >::iterator it;
+  std::vector< std::string >::const_iterator it;
   int i;
 
   attr["into"] = into;
@@ -534,6 +534,36 @@ TStatement* create_user_statement
 
   attr["type"] = type;
   return stmt_factory.create_statement("user", line_nr, attr);
+}
+
+
+template< class TStatement >
+TStatement* create_user_statement(typename TStatement::Factory& stmt_factory,
+    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr,
+    const std::string& type, const std::string& into)
+{
+  std::vector< std::string > users;
+  
+  while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
+  {
+    users.push_back(tree_it.rhs()->token);
+    tree_it = tree_it.lhs();
+  }
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+    users.push_back(tree_it.rhs()->token);
+  
+  std::reverse(users.begin(), users.end());
+
+  if (tree_it->lhs && tree_it.lhs()->token == "user")
+  {
+    for (std::vector< std::string >::iterator it = users.begin(); it != users.end(); ++it)
+      *it = decode_json(*it, error_output);
+    return create_user_statement< TStatement >(
+        stmt_factory, type, users, std::vector< std::string >(), into, line_nr);
+  }
+  return create_user_statement< TStatement >(
+      stmt_factory, type, std::vector< std::string >(), users, into, line_nr);
 }
 
 
@@ -1301,11 +1331,13 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
   can_standalone = true;
   if (criterion->token == "id")
     return create_id_query_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
+  else if (criterion->token == "uid" || criterion->token == "user")
+    return create_user_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
   
   can_standalone = (type == "node");
   if (criterion->token == "area")
     return create_area_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
-  if (criterion->token == "pivot")
+  else if (criterion->token == "pivot")
     return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   
   can_standalone = false;
@@ -1488,42 +1520,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	clear_until_after(token, error_output, ")");
 	clauses.push_back(clause);
       }
-      else if (*token == "user")
-      {
-	Statement_Text clause("user", token.line_col());
-	++token;
-	clear_until_after(token, error_output, ":", false);
-        if (*token == ":")
-	{
-	  do
-	  {
-	    ++token;
-	    clause.attributes.push_back(get_text_token(token, error_output, "User name"));
-	    clear_until_after(token, error_output, ",", ")", false);
-	  } while (token.good() && *token == ",");
-
-          clear_until_after(token, error_output, ")");
-        }
-	clauses.push_back(clause);
-      }
-      else if (*token == "uid")
-      {
-	Statement_Text clause("uid", token.line_col());
-	++token;
-	clear_until_after(token, error_output, ":", false);
-        if (*token == ":")
-        {
-          do
-          {
-            ++token;
-            clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
-	    clear_until_after(token, error_output, ",", ")", false);
-          } while (token.good() && *token == ",");
-
-          clear_until_after(token, error_output, ")");
-        }
-	clauses.push_back(clause);
-      }
       else if (*token == "r" || *token == "w"
 	    || *token == "bn" || *token == "bw" || *token == "br")
       {
@@ -1614,9 +1610,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
        || clauses.front().statement == "has-kv_keyregex"
        || clauses.front().statement == "has-kv_icase"
        || clauses.front().statement == "has-kv_keyregex_icase"
-       || (clauses.front().statement == "area" && type != "node")
        || (clauses.front().statement == "around" && type != "node")
-       || (clauses.front().statement == "pivot" && type != "node")
        || (clauses.front().statement == "polygon" && type != "node")
        || (clauses.front().statement == "bbox-query" && type != "node"))
     {
@@ -1683,6 +1677,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 
   return statement;
 }
+
 
 template< class TStatement >
 TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
