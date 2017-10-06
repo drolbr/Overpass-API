@@ -162,20 +162,6 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
 }
 
 
-std::string strip_quotation_marks(const std::string& input)
-{
-  if (input.empty())
-    return input;
-  
-  if (input[0] == '\"' && input[input.size()-1] == '\"')
-    return input.substr(1, input.size()-2);
-  if (input[0] == '\'' && input[input.size()-1] == '\'')
-    return input.substr(1, input.size()-2);
-  
-  return input;
-}
-
-
 template< class TStatement >
 TStatement* create_union_statement(typename TStatement::Factory& stmt_factory,
 				   std::string into, uint line_nr)
@@ -414,6 +400,7 @@ TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("bbox-query", line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_around_statement(typename TStatement::Factory& stmt_factory,
 				    std::string radius, std::string lat, std::string lon,
@@ -426,6 +413,47 @@ TStatement* create_around_statement(typename TStatement::Factory& stmt_factory,
   attr["lat"] = lat;
   attr["lon"] = lon;
   return stmt_factory.create_statement("around", line_nr, attr);
+}
+
+
+template< class TStatement >
+TStatement* create_around_statement(typename TStatement::Factory& stmt_factory,
+    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
+{
+  std::string lat;
+  std::string lon;
+  
+  if (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
+  {
+    lon = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+    
+    if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
+    {
+      if (error_output)
+        error_output->add_parse_error("around requires one or three arguments", line_nr);
+      return 0;
+    }
+    
+    lat = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+  }
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    std::string radius = decode_json(tree_it.rhs()->token, error_output);
+    
+    tree_it = tree_it.lhs();
+    std::string from = "_";
+    if (tree_it->token == "." && tree_it->rhs)
+      from = tree_it.rhs()->token;
+    
+    return create_around_statement< TStatement >(stmt_factory, radius, lat, lon, from, into, line_nr);
+  }
+  else if (error_output)
+    error_output->add_parse_error("around requires the radius as first argument", line_nr);
+
+  return 0;
 }
 
 
@@ -494,6 +522,21 @@ TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
   attr["into"] = into;
   return stmt_factory.create_statement("polygon-query", line_nr, attr);
 }
+
+
+template< class TStatement >
+TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
+    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
+{
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    std::string bounds = decode_json(tree_it.rhs()->token, error_output);
+    return create_polygon_statement< TStatement >(stmt_factory, bounds, into, line_nr);
+  }
+
+  return 0;
+}
+
 
 template< class TStatement >
 TStatement* create_user_statement
@@ -583,7 +626,7 @@ TStatement* create_newer_statement(typename TStatement::Factory& stmt_factory,
 {
   if (tree_it->token == ":" && tree_it->rhs)
   {
-    std::string date = strip_quotation_marks(tree_it.rhs()->token);
+    std::string date = decode_json(tree_it.rhs()->token, error_output);
     return create_newer_statement< TStatement >(stmt_factory, date, line_nr);
   }
 
@@ -689,14 +732,14 @@ TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
   
   if (tree_it->token == ":" && tree_it->rhs)
   {
-    since = strip_quotation_marks(tree_it.rhs()->token);
+    since = decode_json(tree_it.rhs()->token, error_output);
     until = since;
   }
   else if (tree_it->token == "," && tree_it->lhs && tree_it.lhs()->token == ":" && tree_it.lhs()->rhs
       && tree_it->rhs)
   {
-    since = strip_quotation_marks(tree_it.lhs().rhs()->token);
-    until = strip_quotation_marks(tree_it.rhs()->token);
+    since = decode_json(tree_it.lhs().rhs()->token, error_output);
+    until = decode_json(tree_it.rhs()->token, error_output);
   }
   else if (tree_it->token == "changed")
   {
@@ -1209,19 +1252,6 @@ TStatement* create_query_substatement
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_regex, haskv_regex,
 	 (clause.attributes[2] == ""), clause.line_col.first);
-  else if (clause.statement == "around")
-    return create_around_statement< TStatement >
-        (stmt_factory, clause.attributes[1], clause.attributes[2], clause.attributes[3],
-         clause.attributes[0], into, clause.line_col.first);
-  else if (clause.statement == "polygon")
-    return create_polygon_statement< TStatement >
-        (stmt_factory, clause.attributes[0], into, clause.line_col.first);
-  else if (clause.statement == "user")
-    return create_user_statement< TStatement >
-        (stmt_factory, type, clause.attributes, std::vector<std::string>(), into, clause.line_col.first);
-  else if (clause.statement == "uid")
-    return create_user_statement< TStatement >
-        (stmt_factory, type, std::vector<std::string>(), clause.attributes, into, clause.line_col.first);
   else if (clause.statement == "recurse")
   {
     if (clause.attributes.size() == 2)
@@ -1337,7 +1367,11 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
   can_standalone = (type == "node");
   if (criterion->token == "area")
     return create_area_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
+  else if (criterion->token == "around")
+    return create_around_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   else if (criterion->token == "pivot")
+    return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
+  else if (criterion->token == "poly")
     return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   
   can_standalone = false;
@@ -1488,39 +1522,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	break;
       }
 
-      if (*token == "around")
-      {
-	Statement_Text clause("around", token.line_col());
-	++token;
-	clause.attributes.push_back(probe_from(token, error_output));
-	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
-	clear_until_after(token, error_output, ",", ")", false);
-        if (*token == ",")
-        {
-          ++token;
-          clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
-          clear_until_after(token, error_output, ",");
-          clause.attributes.push_back(get_text_token(token, error_output, "Floating point number"));
-        }
-        else
-        {
-          clause.attributes.push_back("");
-          clause.attributes.push_back("");
-        }
-	clauses.push_back(clause);
-        clear_until_after(token, error_output, ")");
-      }
-      else if (*token == "poly")
-      {
-	Statement_Text clause("polygon", token.line_col());
-	++token;
-	clear_until_after(token, error_output, ":");
-	clause.attributes.push_back(get_text_token(token, error_output, "list of coordinates"));
-	clear_until_after(token, error_output, ")");
-	clauses.push_back(clause);
-      }
-      else if (*token == "r" || *token == "w"
+      if (*token == "r" || *token == "w"
 	    || *token == "bn" || *token == "bw" || *token == "br")
       {
 	Statement_Text clause("recurse", token.line_col());
@@ -1610,8 +1612,6 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
        || clauses.front().statement == "has-kv_keyregex"
        || clauses.front().statement == "has-kv_icase"
        || clauses.front().statement == "has-kv_keyregex_icase"
-       || (clauses.front().statement == "around" && type != "node")
-       || (clauses.front().statement == "polygon" && type != "node")
        || (clauses.front().statement == "bbox-query" && type != "node"))
     {
       statement = create_query_statement< TStatement >
