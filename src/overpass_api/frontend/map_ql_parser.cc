@@ -485,20 +485,27 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
+    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr, const std::string& result_type,
+    const std::string& into)
 {
-  std::string type = tree_it->token;
   std::string from = "_";
-  if (tree_it->rhs)
+  std::string role;
+  bool role_found = false;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
   {
-    if (tree_it.rhs()->rhs)
-      from = tree_it.rhs().rhs()->token;
-    else if (tree_it->token == "." && tree_it->lhs)
-    {
-      type = tree_it.lhs()->token;
-      from = tree_it.rhs()->token;
-    }
+    role_found = true;
+    role = decode_json(tree_it.rhs()->token, error_output);
+    tree_it = tree_it.lhs();
   }
+
+  if (tree_it->token == "." && tree_it->rhs)
+  {
+    from = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+  }
+  
+  std::string type = tree_it->token;
 
   if (type == ">")
     return create_recurse_statement< TStatement >(stmt_factory, "down", from, "_", line_nr);
@@ -508,8 +515,53 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
     return create_recurse_statement< TStatement >(stmt_factory, "up", from, "_", line_nr);
   else if (type == "<<")
     return create_recurse_statement< TStatement >(stmt_factory, "up-rel", from, "_", line_nr);
+  else if (type == "r")
+  {
+    if (result_type == "node")
+      type = "relation-node";
+    else if (result_type == "way")
+      type = "relation-way";
+    else if (result_type == "relation")
+      type = "relation-relation";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'r' produces nodes, ways, or relations.", line_nr);
+  }
+  else if (type == "w")
+  {
+    if (result_type == "node")
+      type = "way-node";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'w' produces nodes.", line_nr);
+  }
+  else if (type == "br")
+  {
+    if (result_type == "relation")
+      type = "relation-backwards";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'br' produces relations.", line_nr);
+  }
+  else if (type == "bw")
+  {
+    if (result_type == "relation")
+      type = "way-relation";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'bw' produces relations.", line_nr);
+  }
+  else if (type == "bn")
+  {
+    if (result_type == "way")
+      type = "node-way";
+    else if (result_type == "relation")
+      type = "node-relation";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'bn' produces ways or relations.", line_nr);
+  }
+  else
+    return 0;
 
-  return 0;
+  if (role_found)
+    return create_recurse_statement< TStatement >(stmt_factory, type, from, role, into, line_nr);
+  return create_recurse_statement< TStatement >(stmt_factory, type, from, into, line_nr);
 }
 
 
@@ -1144,77 +1196,6 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
 }
 
 
-std::string determine_recurse_type(std::string flag, std::string type, Error_Output* error_output,
-			      const std::pair< uint, uint >& line_col)
-{
-  std::string recurse_type;
-  if (flag == "r")
-  {
-    if (type == "node")
-      recurse_type = "relation-node";
-    else if (type == "way")
-      recurse_type = "relation-way";
-    else if (type == "relation")
-      recurse_type = "relation-relation";
-  }
-  else if (flag == "w")
-  {
-    if (type == "node")
-      recurse_type = "way-node";
-    else
-    {
-      if (error_output)
-	error_output->add_parse_error("A recursion from type 'w' produces nodes.",
-				      line_col.first);
-    }
-  }
-  else if (flag == "bn")
-  {
-    if (type == "node")
-    {
-      if (error_output)
-	error_output->add_parse_error("A recursion from type 'bn' produces ways or relations.",
-				      line_col.first);
-    }
-    else if (type == "way")
-      recurse_type = "node-way";
-    else if (type == "relation")
-      recurse_type = "node-relation";
-  }
-  else if (flag == "bw")
-  {
-    if (type == "node" || type == "way")
-    {
-      if (error_output)
-	error_output->add_parse_error("A recursion from type 'bw' produces relations.",
-				      line_col.first);
-    }
-    else if (type == "relation")
-      recurse_type = "way-relation";
-  }
-  else if (flag == "br")
-  {
-    if (type == "node" || type == "way")
-    {
-      if (error_output)
-	error_output->add_parse_error("A recursion from type 'br' produces relations.",
-				      line_col.first);
-    }
-    else if (type == "relation")
-      recurse_type = "relation-backwards";
-  }
-  else if (flag == ">")
-    recurse_type = "down";
-  else if (flag == ">>")
-    recurse_type = "down-rel";
-  else if (flag == "<")
-    recurse_type = "up";
-  else if (flag == "<<")
-    recurse_type = "up-rel";
-
-  return recurse_type;
-}
-
 struct Statement_Text
 {
   Statement_Text(std::string statement_ = "",
@@ -1252,19 +1233,6 @@ TStatement* create_query_substatement
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_regex, haskv_regex,
 	 (clause.attributes[2] == ""), clause.line_col.first);
-  else if (clause.statement == "recurse")
-  {
-    if (clause.attributes.size() == 2)
-      return create_recurse_statement< TStatement >
-          (stmt_factory,
-	   determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
-	   clause.attributes[1], into, clause.line_col.first);
-    else
-      return create_recurse_statement< TStatement >
-          (stmt_factory,
-           determine_recurse_type(clause.attributes[0], type, error_output, clause.line_col),
-           clause.attributes[1], clause.attributes[2], into, clause.line_col.first);
-  }
   else if (clause.statement == "id-query")
     return create_id_query_statement< TStatement >
         (stmt_factory, type, clause.attributes, into, clause.line_col.first);
@@ -1363,6 +1331,9 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
     return create_id_query_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
   else if (criterion->token == "uid" || criterion->token == "user")
     return create_user_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
+  else if (criterion->token == "r" || criterion->token == "w"
+      || criterion->token == "bn" || criterion->token == "bw" || criterion->token == "br")
+    return create_recurse_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
   
   can_standalone = (type == "node");
   if (criterion->token == "area")
@@ -1372,7 +1343,7 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
   else if (criterion->token == "pivot")
     return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   else if (criterion->token == "poly")
-    return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
+    return create_polygon_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   
   can_standalone = false;
   if (criterion->token == "changed")
@@ -1383,7 +1354,7 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
     return create_newer_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
   else if (criterion->token == ">" || criterion->token == ">>"
       || criterion->token == "<" || criterion->token == "<<")
-    return create_recurse_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
+    return create_recurse_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, "_");
 
   if (error_output)
     error_output->add_parse_error("Unknown query clause", line_nr);
@@ -1522,22 +1493,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	break;
       }
 
-      if (*token == "r" || *token == "w"
-	    || *token == "bn" || *token == "bw" || *token == "br")
-      {
-	Statement_Text clause("recurse", token.line_col());
-	clause.attributes.push_back(get_identifier_token(token, error_output, "Recurse type"));
-	clause.attributes.push_back(probe_from(token, error_output));
-        clear_until_after(token, error_output, ":", ")", false);
-        if (*token == ":")
-        {
-          ++token;
-          clause.attributes.push_back(get_text_token(token, error_output, "Role"));
-        }
-	clear_until_after(token, error_output, ")");
-	clauses.push_back(clause);
-      }
-      else if (isdigit((*token)[0]) ||
+      if (isdigit((*token)[0]) ||
 	       ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1])))
       {
 	std::string first_number = get_text_token(token, error_output, "Number");
@@ -1800,10 +1756,9 @@ void generic_parse_and_validate_map_ql
   {
     TStatement* statement = parse_statement< TStatement >(stmt_factory, parsed_query, token, error_output, 0);
     if (statement)
-    {
       base_statement->add_statement(statement, "");
-      clear_until_after(token, error_output, ";");
-    }
+    
+    clear_until_after(token, error_output, ";");
   }
 
   stmt_seq.push_back(base_statement);
