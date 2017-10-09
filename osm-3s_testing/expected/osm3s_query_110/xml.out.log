@@ -1,6 +1,6 @@
 <osm-script>
   <foreach from="in" into="out">
-    <recurse from="_" into="_" type="way-node"/>
+    <recurse type="way-node"/>
     <print e="" from="_" geometry="skeleton" limit="" mode="body" n="" order="id" s="" w=""/>
   </foreach>
 </osm-script>

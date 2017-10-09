@@ -1,3 +1,3 @@
 <osm-script>
-  <user into="out" name="Username" type="node" uid=""/>
+  <user type="node" name="Username" into="out"/>
 </osm-script>

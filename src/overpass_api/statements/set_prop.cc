@@ -89,7 +89,7 @@ Statement* Set_Prop_Statement::Statement_Maker::create_statement(
   Statement* result = new Set_Prop_Statement(tree_it->line_col.first, attributes, global_settings);
   if (result)
   {
-    Statement* rhs = stmt_factory.create_statement(tree_it.rhs(),
+    Statement* rhs = stmt_factory.create_evaluator(tree_it.rhs(),
         tree_context == Statement::in_convert ? Statement::elem_eval_possible : Statement::evaluator_expected);
     if (rhs)
       result->add_statement(rhs, "");

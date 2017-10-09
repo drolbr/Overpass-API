@@ -39,7 +39,9 @@ class Statement_Dump
       
       Statement_Dump* create_statement(std::string element, int line_number,
 				       const std::map< std::string, std::string >& attributes);
-      Statement_Dump* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context);
+      Statement_Dump* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context);
+      Statement_Dump* create_criterion(const Token_Node_Ptr& tree_it,
+                                  const std::string& type, bool& can_standalone, const std::string& into);
       
       int bbox_limitation;
       Statement::Factory* stmt_factory;

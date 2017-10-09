@@ -1,5 +1,5 @@
 <osm-script>
   <query into="_" type="way">
-    <around from="_" into="_" lat="" lon="" radius="100"/>
+    <around radius="100"/>
   </query>
 </osm-script>

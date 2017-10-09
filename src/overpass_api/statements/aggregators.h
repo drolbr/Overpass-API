@@ -89,7 +89,7 @@ struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     if (result)
     {
-      Statement* rhs = stmt_factory.create_statement(
+      Statement* rhs = stmt_factory.create_evaluator(
           input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::elem_eval_possible);
       if (rhs)
         result->add_statement(rhs, "");

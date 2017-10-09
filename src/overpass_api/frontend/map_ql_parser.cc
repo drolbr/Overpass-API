@@ -158,7 +158,7 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
   if (tree.tree.empty())
     return 0;
 
-  return stmt_factory.create_statement(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context);
+  return stmt_factory.create_evaluator(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context);
 }
 
 
@@ -201,35 +201,6 @@ TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
   attr["into"] = into;
   attr["type"] = type;
   return stmt_factory.create_statement(strategy, line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  return stmt_factory.create_statement("filter", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_filter_statement(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
-{
-  TStatement* filter = 0;
-  
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    TStatement* criterion = stmt_factory.create_statement(tree_it.rhs(), Statement::elem_eval_possible);
-    if (criterion)
-    {
-      filter = create_filter_statement< TStatement >(stmt_factory, line_nr);
-      if (filter)
-        filter->add_statement(criterion, "");
-    }
-  }
-
-  return filter;
 }
 
 
@@ -303,7 +274,9 @@ TStatement* create_query_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("query", line_nr, attr);
 }
 
+
 typedef enum { haskv_plain, haskv_regex, haskv_icase } haskv_type;
+
 
 template< class TStatement >
 TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
@@ -333,53 +306,6 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
-TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory,
-    std::string type, const std::vector< std::string >& ref, std::string into, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-
-  attr["type"] = type;
-  attr["into"] = into;
-
-  for (uint i = 0; i < ref.size(); ++i)
-  {
-    std::stringstream id;
-    if (i == 0)
-      id << "ref";
-    else
-      id << "ref_" << i;
-    attr[id.str()] = ref[i];
-  }
-
-  return stmt_factory.create_statement("id-query", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory,
-    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr,
-    const std::string& type, const std::string& into)
-{
-  std::vector< std::string > ref;
-  
-  while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
-  {
-    ref.push_back(tree_it.rhs()->token);
-    tree_it = tree_it.lhs();
-  }
-  
-  if (tree_it->token == ":" && tree_it->rhs)
-    ref.push_back(tree_it.rhs()->token);
-  else
-    ref.push_back(tree_it->token);
-  
-  std::reverse(ref.begin(), ref.end());
-
-  return create_id_query_statement< TStatement >(stmt_factory, type, ref, into, line_nr);
-}
-
-
-template< class TStatement >
 TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
 				  std::string from, std::string into, uint line_nr)
 {
@@ -387,114 +313,6 @@ TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
   attr["from"] = from;
   attr["into"] = into;
   return stmt_factory.create_statement("item", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
-  std::string south, std::string north, std::string west, std::string east, std::string into, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  attr["s"] = south;
-  attr["n"] = north;
-  attr["w"] = west;
-  attr["e"] = east;
-  attr["into"] = into;
-  return stmt_factory.create_statement("bbox-query", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
-    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
-{
-  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("bbox requires four arguments", line_nr);
-    return 0;
-  }
-  
-  std::string east = tree_it.rhs()->token;
-  tree_it = tree_it.lhs();
-  
-  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("bbox requires four arguments", line_nr);
-    return 0;
-  }
-  
-  std::string north = tree_it.rhs()->token;
-  tree_it = tree_it.lhs();
-  
-  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("bbox requires four arguments", line_nr);
-    return 0;
-  }
-  
-  std::string west = tree_it.rhs()->token;
-  std::string south = tree_it.lhs()->token;
-  
-  return create_bbox_statement< TStatement >(stmt_factory, south, north, west, east, into, line_nr);
-}
-
-
-template< class TStatement >
-TStatement* create_around_statement(typename TStatement::Factory& stmt_factory,
-				    std::string radius, std::string lat, std::string lon,
-                                    std::string from, std::string into, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  attr["from"] = from;
-  attr["into"] = into;
-  attr["radius"] = radius;
-  attr["lat"] = lat;
-  attr["lon"] = lon;
-  return stmt_factory.create_statement("around", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_around_statement(typename TStatement::Factory& stmt_factory,
-    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
-{
-  std::string lat;
-  std::string lon;
-  
-  if (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
-  {
-    lon = tree_it.rhs()->token;
-    tree_it = tree_it.lhs();
-    
-    if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
-    {
-      if (error_output)
-        error_output->add_parse_error("around requires one or three arguments", line_nr);
-      return 0;
-    }
-    
-    lat = tree_it.rhs()->token;
-    tree_it = tree_it.lhs();
-  }
-  
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    std::string radius = decode_json(tree_it.rhs()->token, error_output);
-    
-    tree_it = tree_it.lhs();
-    std::string from = "_";
-    if (tree_it->token == "." && tree_it->rhs)
-      from = tree_it.rhs()->token;
-    
-    return create_around_statement< TStatement >(stmt_factory, radius, lat, lon, from, into, line_nr);
-  }
-  else if (error_output)
-    error_output->add_parse_error("around requires the radius as first argument", line_nr);
-
-  return 0;
 }
 
 
@@ -507,255 +325,6 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
   attr["into"] = into;
   attr["type"] = type;
   return stmt_factory.create_statement("recurse", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
-                                     std::string type, std::string from, std::string role, std::string into, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  attr["from"] = (from == "" ? "_" : from);
-  attr["into"] = into;
-  attr["type"] = type;
-  attr["role"] = role;
-  attr["role-restricted"] = "yes";
-  return stmt_factory.create_statement("recurse", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
-    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr, const std::string& result_type,
-    const std::string& into)
-{
-  std::string from = "_";
-  std::string role;
-  bool role_found = false;
-  
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    role_found = true;
-    role = decode_json(tree_it.rhs()->token, error_output);
-    tree_it = tree_it.lhs();
-  }
-
-  if (tree_it->token == "." && tree_it->rhs)
-  {
-    from = tree_it.rhs()->token;
-    tree_it = tree_it.lhs();
-  }
-  
-  std::string type = tree_it->token;
-
-  if (type == ">")
-    return create_recurse_statement< TStatement >(stmt_factory, "down", from, "_", line_nr);
-  else if (type == ">>")
-    return create_recurse_statement< TStatement >(stmt_factory, "down-rel", from, "_", line_nr);
-  else if (type == "<")
-    return create_recurse_statement< TStatement >(stmt_factory, "up", from, "_", line_nr);
-  else if (type == "<<")
-    return create_recurse_statement< TStatement >(stmt_factory, "up-rel", from, "_", line_nr);
-  else if (type == "r")
-  {
-    if (result_type == "node")
-      type = "relation-node";
-    else if (result_type == "way")
-      type = "relation-way";
-    else if (result_type == "relation")
-      type = "relation-relation";
-    else if (error_output)
-      error_output->add_parse_error("A recursion from type 'r' produces nodes, ways, or relations.", line_nr);
-  }
-  else if (type == "w")
-  {
-    if (result_type == "node")
-      type = "way-node";
-    else if (error_output)
-      error_output->add_parse_error("A recursion from type 'w' produces nodes.", line_nr);
-  }
-  else if (type == "br")
-  {
-    if (result_type == "relation")
-      type = "relation-backwards";
-    else if (error_output)
-      error_output->add_parse_error("A recursion from type 'br' produces relations.", line_nr);
-  }
-  else if (type == "bw")
-  {
-    if (result_type == "relation")
-      type = "way-relation";
-    else if (error_output)
-      error_output->add_parse_error("A recursion from type 'bw' produces relations.", line_nr);
-  }
-  else if (type == "bn")
-  {
-    if (result_type == "way")
-      type = "node-way";
-    else if (result_type == "relation")
-      type = "node-relation";
-    else if (error_output)
-      error_output->add_parse_error("A recursion from type 'bn' produces ways or relations.", line_nr);
-  }
-  else
-    return 0;
-
-  if (role_found)
-    return create_recurse_statement< TStatement >(stmt_factory, type, from, role, into, line_nr);
-  return create_recurse_statement< TStatement >(stmt_factory, type, from, into, line_nr);
-}
-
-
-template< class TStatement >
-TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
-				   std::string bounds, std::string into, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  attr["bounds"] = bounds;
-  attr["into"] = into;
-  return stmt_factory.create_statement("polygon-query", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_polygon_statement(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
-{
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    std::string bounds = decode_json(tree_it.rhs()->token, error_output);
-    return create_polygon_statement< TStatement >(stmt_factory, bounds, into, line_nr);
-  }
-
-  return 0;
-}
-
-
-template< class TStatement >
-TStatement* create_user_statement
-    (typename TStatement::Factory& stmt_factory,
-     std::string type, const std::vector< std::string >& name, const std::vector< std::string >& uid, std::string into, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  std::vector< std::string >::const_iterator it;
-  int i;
-
-  attr["into"] = into;
-
-  if (uid.empty())
-    attr["uid"] = "";
-
-  if (name.empty())
-    attr["name"] = "";
-
-  for(it = name.begin(), i = 0; it != name.end(); ++it, ++i)
-  {
-    std::stringstream id;
-    if (i == 0)
-      id << "name";
-    else
-      id << "name_" << i;
-    attr[id.str()] = *it;
-  }
-
-  for(it = uid.begin(), i = 0; it != uid.end(); ++it, ++i)
-  {
-    std::stringstream id;
-    if (i == 0)
-      id << "uid";
-    else
-      id << "uid_" << i;
-    attr[id.str()] = *it;
-  }
-
-  attr["type"] = type;
-  return stmt_factory.create_statement("user", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_user_statement(typename TStatement::Factory& stmt_factory,
-    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr,
-    const std::string& type, const std::string& into)
-{
-  std::vector< std::string > users;
-  
-  while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
-  {
-    users.push_back(tree_it.rhs()->token);
-    tree_it = tree_it.lhs();
-  }
-  
-  if (tree_it->token == ":" && tree_it->rhs)
-    users.push_back(tree_it.rhs()->token);
-  
-  std::reverse(users.begin(), users.end());
-
-  if (tree_it->lhs && tree_it.lhs()->token == "user")
-  {
-    for (std::vector< std::string >::iterator it = users.begin(); it != users.end(); ++it)
-      *it = decode_json(*it, error_output);
-    return create_user_statement< TStatement >(
-        stmt_factory, type, users, std::vector< std::string >(), into, line_nr);
-  }
-  return create_user_statement< TStatement >(
-      stmt_factory, type, std::vector< std::string >(), users, into, line_nr);
-}
-
-
-template< class TStatement >
-TStatement* create_newer_statement(typename TStatement::Factory& stmt_factory,
-				   std::string than, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  attr["than"] = than;
-  return stmt_factory.create_statement("newer", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_newer_statement(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
-{
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    std::string date = decode_json(tree_it.rhs()->token, error_output);
-    return create_newer_statement< TStatement >(stmt_factory, date, line_nr);
-  }
-
-  return 0;
-}
-
-
-template< class TStatement >
-TStatement* create_area_statement(typename TStatement::Factory& stmt_factory,
-				   std::string ref, std::string from, std::string into, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  attr["from"] = (from == "" ? "_" : from);
-  attr["into"] = into;
-  attr["ref"] = ref;
-  return stmt_factory.create_statement("area-query", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_area_statement(typename TStatement::Factory& stmt_factory,
-    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
-{
-  std::string from = "_";
-  std::string ref;
-  
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    ref = tree_it.rhs()->token;
-    tree_it = tree_it.lhs();
-  }
-  
-  if (tree_it->token == "." && tree_it->rhs)
-    from = tree_it.rhs()->token;
-
-  return create_area_statement< TStatement >(stmt_factory, ref, from, into, line_nr);
 }
 
 
@@ -779,78 +348,6 @@ TStatement* create_map_to_area_statement(typename TStatement::Factory& stmt_fact
   attr["from"] = (from == "" ? "_" : from);
   attr["into"] = into;
   return stmt_factory.create_statement("map-to-area", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
-                                   std::string from, std::string into, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  attr["from"] = (from == "" ? "_" : from);
-  attr["into"] = into;
-  return stmt_factory.create_statement("pivot", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_pivot_statement(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
-{
-  std::string from = "_";
-  if (tree_it->rhs && tree_it->token == ".")
-      from = tree_it.rhs()->token;
-  
-  return create_pivot_statement< TStatement >(stmt_factory, from, into, line_nr);
-}
-
-
-template< class TStatement >
-TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
-				   std::string since, std::string until, uint line_nr)
-{
-  std::map< std::string, std::string > attr;
-  attr["since"] = since;
-  attr["until"] = until;
-  return stmt_factory.create_statement("changed", line_nr, attr);
-}
-
-
-template< class TStatement >
-TStatement* create_changed_statement(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output, uint line_nr)
-{
-  std::string since;
-  std::string until;
-  
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    since = decode_json(tree_it.rhs()->token, error_output);
-    until = since;
-  }
-  else if (tree_it->token == "," && tree_it->lhs && tree_it.lhs()->token == ":" && tree_it.lhs()->rhs
-      && tree_it->rhs)
-  {
-    since = decode_json(tree_it.lhs().rhs()->token, error_output);
-    until = decode_json(tree_it.rhs()->token, error_output);
-  }
-  else if (tree_it->token == "changed")
-  {
-    since = "auto";
-    until = "auto";
-  }
-  else if (tree_it->token == ":")
-  {
-    if (error_output)
-      error_output->add_parse_error("Date required after \"changed\" with colon",
-          tree_it->line_col.first);
-  }
-  else
-    if (error_output)
-      error_output->add_parse_error("Unexpected token \"" + tree_it->token + "\" after \"changed\"",
-          tree_it->line_col.first);
-
-  return create_changed_statement< TStatement >(stmt_factory, since, until, line_nr);
 }
 
 
@@ -1208,7 +705,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
       {
         if (tree_it->rhs)
         {
-          TStatement* stmt = stmt_factory.create_statement(tree_it.rhs(), tree_context);
+          TStatement* stmt = stmt_factory.create_evaluator(tree_it.rhs(), tree_context);
           if (stmt)
             evaluators.push_back(stmt);
         }
@@ -1216,7 +713,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
         tree_it = tree_it.lhs();
       }
       
-      TStatement* stmt = stmt_factory.create_statement(tree_it, tree_context);
+      TStatement* stmt = stmt_factory.create_evaluator(tree_it, tree_context);
       if (stmt)
         evaluators.push_back(stmt);
       
@@ -1274,14 +771,6 @@ TStatement* create_query_substatement
     return create_has_kv_statement< TStatement >
         (stmt_factory, clause.attributes[0], clause.attributes[1], haskv_regex, haskv_regex,
 	 (clause.attributes[2] == ""), clause.line_col.first);
-  else if (clause.statement == "id-query")
-    return create_id_query_statement< TStatement >
-        (stmt_factory, type, clause.attributes, into, clause.line_col.first);
-  else if (clause.statement == "bbox-query")
-    return create_bbox_statement< TStatement >
-        (stmt_factory,
-	 clause.attributes[0], clause.attributes[2], clause.attributes[1], clause.attributes[3],
-	 into, clause.line_col.first);
   else if (clause.statement == "item")
     return create_item_statement< TStatement >
         (stmt_factory, clause.attributes[0], "_", clause.line_col.first);
@@ -1347,65 +836,6 @@ TStatement* parse_map_to_area(typename TStatement::Factory& stmt_factory,
   std::string into = probe_into(token, error_output);
 
   return create_map_to_area_statement< TStatement >(stmt_factory, from, into, line_col);
-}
-
-
-Token_Node_Ptr find_leftmost_token(Token_Node_Ptr tree_it)
-{
-  while (tree_it->lhs)
-    tree_it = tree_it.lhs();
-  
-  return tree_it;
-}
-
-
-template< class TStatement >
-TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
-    const Token_Node_Ptr& tree_it, Error_Output* error_output,
-    const std::string& type, bool& can_standalone, const std::string& into)
-{
-  Token_Node_Ptr criterion = find_leftmost_token(tree_it);
-  uint line_nr = criterion->line_col.first;
-  
-  bool criterion_is_number = (!criterion->token.empty()
-      && (isdigit(criterion->token[0])
-          || (criterion->token[0] == '-' && criterion->token.size() > 1 && isdigit(criterion->token[1]))));
-  
-  can_standalone = true;
-  if (criterion->token == "id" || (criterion_is_number && tree_it->token != ","))
-    return create_id_query_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
-  else if (criterion->token == "uid" || criterion->token == "user")
-    return create_user_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
-  else if (criterion->token == "r" || criterion->token == "w"
-      || criterion->token == "bn" || criterion->token == "bw" || criterion->token == "br")
-    return create_recurse_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
-  
-  can_standalone = (type == "node");
-  if (criterion->token == "area")
-    return create_area_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
-  else if (criterion->token == "around")
-    return create_around_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
-  else if (criterion->token == "pivot")
-    return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
-  else if (criterion->token == "poly")
-    return create_polygon_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
-  else if (criterion_is_number && tree_it->token == ",")
-    return create_bbox_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
-  
-  can_standalone = false;
-  if (criterion->token == "changed")
-    return create_changed_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
-  else if (criterion->token == "if")
-    return create_filter_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
-  else if (criterion->token == "newer")
-    return create_newer_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr);
-  else if (criterion->token == ">" || criterion->token == ">>"
-      || criterion->token == "<" || criterion->token == "<<")
-    return create_recurse_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, "_");
-
-  if (error_output)
-    error_output->add_parse_error("Unknown query clause", line_nr);
-  return 0;
 }
 
 
@@ -1585,8 +1015,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
        || clauses.front().statement == "has-kv_regex"
        || clauses.front().statement == "has-kv_keyregex"
        || clauses.front().statement == "has-kv_icase"
-       || clauses.front().statement == "has-kv_keyregex_icase"
-       || (clauses.front().statement == "bbox-query" && type != "node"))
+       || clauses.front().statement == "has-kv_keyregex_icase")
     {
       statement = create_query_statement< TStatement >
           (stmt_factory, type, into, query_line_col.first);
@@ -1604,8 +1033,8 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
   else if (clauses.empty() && from == "" && subtrees.size() == 1)
   {
     bool can_standalone = false;
-    TStatement* filter = create_query_criterion< TStatement >(stmt_factory,
-        Token_Node_Ptr(subtrees[0], subtrees[0].tree[0].rhs), error_output, type, can_standalone, into);
+    TStatement* filter = stmt_factory.create_criterion(
+        Token_Node_Ptr(subtrees[0], subtrees[0].tree[0].rhs), type, can_standalone, into);
     if (filter)
     {
       if (can_standalone)
@@ -1642,8 +1071,8 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
     for (typename std::vector< Token_Tree >::const_iterator it = subtrees.begin(); it != subtrees.end(); ++it)
     {
       bool can_standalone = false;
-      TStatement* filter = create_query_criterion< TStatement >(stmt_factory,
-          Token_Node_Ptr(*it, it->tree[0].rhs), error_output, type, can_standalone, "_");
+      TStatement* filter = stmt_factory.create_criterion(
+          Token_Node_Ptr(*it, it->tree[0].rhs), type, can_standalone, "_");
       if (filter)
         statement->add_statement(filter, "");
     }

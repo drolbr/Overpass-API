@@ -95,7 +95,9 @@ class Statement
 
       Statement* create_statement(std::string element, int line_number,
 				  const std::map< std::string, std::string >& attributes);
-      Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context);
+      Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context);
+      Statement* create_criterion(const Token_Node_Ptr& tree_it,
+                                  const std::string& type, bool& can_standalone, const std::string& into);
 
       std::vector< Statement* > created_statements;
       Error_Output* error_output_;
@@ -212,7 +214,7 @@ class Output_Statement : public Statement
     virtual std::string get_result_name() const { return output; }
 
     std::string dump_ql_result_name() const { return output != "_" ? std::string("->.") + output : ""; }
-    std::string dump_xml_result_name() const { return output != "_" ? std::string("into=\"") + output + "\"" : ""; }
+    std::string dump_xml_result_name() const { return output != "_" ? std::string(" into=\"") + output + "\"" : ""; }
 
   protected:
     void set_output(std::string output_) { output = output_; }

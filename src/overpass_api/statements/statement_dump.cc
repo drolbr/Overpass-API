@@ -334,10 +334,21 @@ Statement_Dump* Statement_Dump::Factory::create_statement
 }
 
 
-Statement_Dump* Statement_Dump::Factory::create_statement(
+Statement_Dump* Statement_Dump::Factory::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context)
 {
-  Statement* stmt = stmt_factory->create_statement(tree_it, tree_context);
+  Statement* stmt = stmt_factory->create_evaluator(tree_it, tree_context);
+  if (stmt)
+    return new Statement_Dump("universal_dump", std::map< std::string, std::string >(), tree_it->line_col.first, stmt);
+  
+  return 0;
+}
+
+
+Statement_Dump* Statement_Dump::Factory::create_criterion(const Token_Node_Ptr& tree_it,
+    const std::string& type, bool& can_standalone, const std::string& into)
+{
+  Statement* stmt = stmt_factory->create_criterion(tree_it, type, can_standalone, into);
   if (stmt)
     return new Statement_Dump("universal_dump", std::map< std::string, std::string >(), tree_it->line_col.first, stmt);
   

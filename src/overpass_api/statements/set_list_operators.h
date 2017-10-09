@@ -61,7 +61,7 @@ struct Unary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker<
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     if (result)
     {
-      Statement* rhs = stmt_factory.create_statement(tree_it.rhs(), tree_context);
+      Statement* rhs = stmt_factory.create_evaluator(tree_it.rhs(), tree_context);
       if (rhs)
         result->add_statement(rhs, "");
       else if (error_output)
@@ -120,14 +120,14 @@ struct Binary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker
     {
       if (tree_it.rhs()->token == "," && tree_it.rhs()->lhs && tree_it.rhs()->rhs)
       {
-        Statement* first = stmt_factory.create_statement(tree_it.rhs().lhs(), tree_context);
+        Statement* first = stmt_factory.create_evaluator(tree_it.rhs().lhs(), tree_context);
         if (first)
           result->add_statement(first, "");
         else if (error_output)
           error_output->add_parse_error("First argument of " + Evaluator_::stmt_func_name()
               + "(...) must be an evualator", tree_it->line_col.first);
 
-        Statement* second = stmt_factory.create_statement(tree_it.rhs().rhs(), tree_context);
+        Statement* second = stmt_factory.create_evaluator(tree_it.rhs().rhs(), tree_context);
         if (second)
           result->add_statement(second, "");
         else if (error_output)

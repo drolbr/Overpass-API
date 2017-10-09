@@ -51,10 +51,10 @@ class Bbox_Query_Statement : public Output_Statement
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<bbox-query"
-          + " south=\"" + to_string(south) + "\""
-          + " west=\"" + to_string(west) + "\""
-          + " north=\"" + to_string(north) + "\""
-          + " east=\"" + to_string(east) + "\""
+          + " s=\"" + to_string(south) + "\""
+          + " w=\"" + to_string(west) + "\""
+          + " n=\"" + to_string(north) + "\""
+          + " e=\"" + to_string(east) + "\""
           + dump_xml_result_name() + "/>\n";
     }
 

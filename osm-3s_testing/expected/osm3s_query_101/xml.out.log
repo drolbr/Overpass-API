@@ -1,12 +1,12 @@
 <osm-script>
   <query into="_" type="node">
     <has-kv k="key" modv="" v="value"/>
-    <bbox-query e="10.0" into="_" n="55.0" s="50.0" w="5.0"/>
-    <id-query into="_" ref="496" type="node"/>
-    <recurse from="_" into="_" type="way-node"/>
-    <around from="_" into="_" lat="" lon="" radius="100"/>
-    <user into="_" name="Username" type="node" uid=""/>
-    <user into="_" name="" type="node" uid="8128"/>
+    <bbox-query s="50" w="5" n="55" e="10"/>
+    <id-query type="node" ref="496"/>
+    <recurse type="way-node"/>
+    <around radius="100"/>
+    <user type="node" name="Username"/>
+    <user type="node" uid="8128"/>
     <newer than="2011-02-03T04:05:06Z"/>
   </query>
 </osm-script>

@@ -1,3 +1,3 @@
 <osm-script>
-  <id-query into="_" ref="496" type="node"/>
+  <id-query type="node" ref="496"/>
 </osm-script>

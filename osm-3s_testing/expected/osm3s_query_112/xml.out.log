@@ -1,5 +1,5 @@
 <osm-script>
   <foreach from="_" into="_">
-    <recurse from="_" into="_" type="way-node"/>
+    <recurse type="way-node"/>
   </foreach>
 </osm-script>
