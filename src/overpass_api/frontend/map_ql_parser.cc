@@ -370,6 +370,8 @@ TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory
   
   if (tree_it->token == ":" && tree_it->rhs)
     ref.push_back(tree_it.rhs()->token);
+  else
+    ref.push_back(tree_it->token);
   
   std::reverse(ref.begin(), ref.end());
 
@@ -387,6 +389,7 @@ TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
   return stmt_factory.create_statement("item", line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
   std::string south, std::string north, std::string west, std::string east, std::string into, uint line_nr)
@@ -398,6 +401,44 @@ TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
   attr["e"] = east;
   attr["into"] = into;
   return stmt_factory.create_statement("bbox-query", line_nr, attr);
+}
+
+
+template< class TStatement >
+TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
+    Token_Node_Ptr tree_it, Error_Output* error_output, uint line_nr, const std::string& into)
+{
+  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("bbox requires four arguments", line_nr);
+    return 0;
+  }
+  
+  std::string east = tree_it.rhs()->token;
+  tree_it = tree_it.lhs();
+  
+  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("bbox requires four arguments", line_nr);
+    return 0;
+  }
+  
+  std::string north = tree_it.rhs()->token;
+  tree_it = tree_it.lhs();
+  
+  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("bbox requires four arguments", line_nr);
+    return 0;
+  }
+  
+  std::string west = tree_it.rhs()->token;
+  std::string south = tree_it.lhs()->token;
+  
+  return create_bbox_statement< TStatement >(stmt_factory, south, north, west, east, into, line_nr);
 }
 
 
@@ -1326,8 +1367,12 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
   Token_Node_Ptr criterion = find_leftmost_token(tree_it);
   uint line_nr = criterion->line_col.first;
   
+  bool criterion_is_number = (!criterion->token.empty()
+      && (isdigit(criterion->token[0])
+          || (criterion->token[0] == '-' && criterion->token.size() > 1 && isdigit(criterion->token[1]))));
+  
   can_standalone = true;
-  if (criterion->token == "id")
+  if (criterion->token == "id" || (criterion_is_number && tree_it->token != ","))
     return create_id_query_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
   else if (criterion->token == "uid" || criterion->token == "user")
     return create_user_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, type, into);
@@ -1344,6 +1389,8 @@ TStatement* create_query_criterion(typename TStatement::Factory& stmt_factory,
     return create_pivot_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   else if (criterion->token == "poly")
     return create_polygon_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
+  else if (criterion_is_number && tree_it->token == ",")
+    return create_bbox_statement< TStatement >(stmt_factory, tree_it, error_output, line_nr, into);
   
   can_standalone = false;
   if (criterion->token == "changed")
@@ -1493,37 +1540,8 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	break;
       }
 
-      if (isdigit((*token)[0]) ||
-	       ((*token)[0] == '-' && (*token).size() > 1 && isdigit((*token)[1])))
-      {
-	std::string first_number = get_text_token(token, error_output, "Number");
-	clear_until_after(token, error_output, ",", ")", false);
-	if (*token == ")")
-	{
-	  Statement_Text clause("id-query", token.line_col());
-	  clause.attributes.push_back(first_number);
-	  clear_until_after(token, error_output, ")");
-	  clauses.push_back(clause);
-	}
-	else
-	{
-	  Statement_Text clause("bbox-query", token.line_col());
-	  clause.attributes.push_back(first_number);
-	  clear_until_after(token, error_output, ",");
-	  clause.attributes.push_back(get_text_token(token, error_output, "Number"));
-	  clear_until_after(token, error_output, ",");
-	  clause.attributes.push_back(get_text_token(token, error_output, "Number"));
-	  clear_until_after(token, error_output, ",");
-	  clause.attributes.push_back(get_text_token(token, error_output, "Number"));
-	  clear_until_after(token, error_output, ")");
-	  clauses.push_back(clause);
-	}
-      }
-      else
-      {
-        subtrees.push_back(Token_Tree(token, error_output, true));
-        clear_until_after(token, error_output, ")");
-      }
+      subtrees.push_back(Token_Tree(token, error_output, true));
+      clear_until_after(token, error_output, ")");
     }
     else
     {
