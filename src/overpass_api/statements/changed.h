@@ -36,7 +36,15 @@ class Changed_Statement : public Output_Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Changed_Statement();
 
-    static Generic_Statement_Maker< Changed_Statement > statement_maker;
+    struct Statement_Maker : public Generic_Statement_Maker< Changed_Statement >
+    {
+      virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
+          const std::string& type, const std::string& into,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+      Statement_Maker() : Generic_Statement_Maker< Changed_Statement >("changed")
+      { Statement::maker_by_ql_criterion()["changed"] = this; }
+    };
+    static Statement_Maker statement_maker;
 
     virtual Query_Constraint* get_query_constraint();
     uint64 get_since(Resource_Manager& rman) const;
@@ -55,8 +63,8 @@ class Changed_Statement : public Output_Statement
 
     virtual std::string dump_compact_ql(const std::string&) const
     {
-      return std::string("(changed:")
-          + (since != NOW ? std::string("\"") + iso_string(since) + "\"" : "")
+      return std::string("(changed")
+          + (since != NOW ? std::string(":\"") + iso_string(since) + "\"" : "")
           + (until != NOW ? std::string(",\"") + iso_string(until) + "\"" : "")
           + ")" + dump_ql_result_name();
     }

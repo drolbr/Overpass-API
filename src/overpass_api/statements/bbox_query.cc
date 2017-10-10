@@ -93,7 +93,52 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 
 //-----------------------------------------------------------------------------
 
-Generic_Statement_Maker< Bbox_Query_Statement > Bbox_Query_Statement::statement_maker("bbox-query");
+
+Bbox_Query_Statement::Statement_Maker Bbox_Query_Statement::statement_maker;
+
+
+Statement* Bbox_Query_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+    const std::string& result_type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  Token_Node_Ptr tree_it = input_tree;
+  uint line_nr = tree_it->line_col.first;
+  std::map< std::string, std::string > attributes;
+  
+  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("bbox requires four arguments", line_nr);
+    return 0;
+  }
+  
+  attributes["e"] = tree_it.rhs()->token;
+  tree_it = tree_it.lhs();
+  
+  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("bbox requires four arguments", line_nr);
+    return 0;
+  }
+  
+  attributes["n"] = tree_it.rhs()->token;
+  tree_it = tree_it.lhs();
+  
+  if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
+  {
+    if (error_output)
+      error_output->add_parse_error("bbox requires four arguments", line_nr);
+    return 0;
+  }
+  
+  attributes["w"] = tree_it.rhs()->token;
+  attributes["s"] = tree_it.lhs()->token;
+  
+  attributes["into"] = into;
+  return new Bbox_Query_Statement(line_nr, attributes, global_settings);
+}
+
 
 Bbox_Query_Statement::Bbox_Query_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)

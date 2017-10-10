@@ -76,7 +76,7 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
 template< typename Evaluator_ >
 struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
-  virtual Statement* create_statement(
+  virtual Statement* create_evaluator(
       const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
@@ -349,7 +349,7 @@ public:
 
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Count >
   {
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Set_Count >("eval-set-count")
     { Statement::maker_by_func_name()["count"].push_back(this); }

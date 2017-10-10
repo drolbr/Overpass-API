@@ -127,7 +127,25 @@ void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Se
 
 //-----------------------------------------------------------------------------
 
-Generic_Statement_Maker< Newer_Statement > Newer_Statement::statement_maker("newer");
+Newer_Statement::Statement_Maker Newer_Statement::statement_maker;
+
+
+Statement* Newer_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+    const std::string& type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  uint line_nr = tree_it->line_col.first;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    std::map< std::string, std::string > attributes;
+    attributes["than"] = decode_json(tree_it.rhs()->token, error_output);
+    return new Newer_Statement(line_nr, attributes, global_settings);
+  }
+
+  return 0;
+}
+
 
 Newer_Statement::Newer_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)

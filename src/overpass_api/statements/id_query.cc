@@ -16,7 +16,6 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sstream>
 
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
@@ -26,10 +25,52 @@
 #include "../data/filenames.h"
 #include "id_query.h"
 
+#include <sstream>
+
 
 bool Id_Query_Statement::area_query_exists_ = false;
 
-Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_maker("id-query");
+
+Id_Query_Statement::Statement_Maker Id_Query_Statement::statement_maker;
+
+
+Statement* Id_Query_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+    const std::string& result_type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  Token_Node_Ptr tree_it = input_tree;
+  uint line_nr = tree_it->line_col.first;
+  std::vector< std::string > ref;
+  
+  while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
+  {
+    ref.push_back(tree_it.rhs()->token);
+    tree_it = tree_it.lhs();
+  }
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+    ref.push_back(tree_it.rhs()->token);
+  else
+    ref.push_back(tree_it->token);
+  
+  std::reverse(ref.begin(), ref.end());
+
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = result_type;
+  attributes["into"] = into;
+
+  for (uint i = 0; i < ref.size(); ++i)
+  {
+    std::ostringstream id;
+    if (i == 0)
+      id << "ref";
+    else
+      id << "ref_" << i;
+    attributes[id.str()] = ref[i];
+  }
+
+  return new Id_Query_Statement(line_nr, attributes, global_settings);
+}
 
 
 void collect_elems_flat(Resource_Manager& rman,

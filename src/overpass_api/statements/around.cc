@@ -526,7 +526,57 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 
 //-----------------------------------------------------------------------------
 
-Generic_Statement_Maker< Around_Statement > Around_Statement::statement_maker("around");
+Around_Statement::Statement_Maker Around_Statement::statement_maker;
+
+
+Statement* Around_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+    const std::string& type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  Token_Node_Ptr tree_it = input_tree;
+  uint line_nr = tree_it->line_col.first;
+  std::string lat;
+  std::string lon;
+  
+  if (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
+  {
+    lon = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+    
+    if (tree_it->token != "," || !tree_it->rhs || !tree_it->lhs)
+    {
+      if (error_output)
+        error_output->add_parse_error("around requires one or three arguments", line_nr);
+      return 0;
+    }
+    
+    lat = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+  }
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    std::string radius = decode_json(tree_it.rhs()->token, error_output);
+    
+    tree_it = tree_it.lhs();
+    std::string from = "_";
+    if (tree_it->token == "." && tree_it->rhs)
+      from = tree_it.rhs()->token;
+    
+    std::map< std::string, std::string > attributes;
+    attributes["from"] = from;
+    attributes["into"] = into;
+    attributes["radius"] = radius;
+    attributes["lat"] = lat;
+    attributes["lon"] = lon;
+    return new Around_Statement(line_nr, attributes, global_settings);
+  }
+  else if (error_output)
+    error_output->add_parse_error("around requires the radius as first argument", line_nr);
+
+  return 0;
+}
+
 
 Around_Statement::Around_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)

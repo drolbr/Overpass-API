@@ -136,7 +136,54 @@ void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< User_Statement > User_Statement::statement_maker("user");
+User_Statement::Statement_Maker User_Statement::statement_maker;
+
+
+Statement* User_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+    const std::string& result_type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  Token_Node_Ptr tree_it = input_tree;
+  uint line_nr = tree_it->line_col.first;
+  std::vector< std::string > users;
+  
+  while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
+  {
+    users.push_back(tree_it.rhs()->token);
+    tree_it = tree_it.lhs();
+  }
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+    users.push_back(tree_it.rhs()->token);
+  
+  std::reverse(users.begin(), users.end());
+  
+  std::map< std::string, std::string > attributes;
+  attributes["into"] = into;
+  attributes["type"] = result_type;
+  
+  std::string prefix;
+  if (tree_it->lhs && tree_it.lhs()->token == "user")
+  {
+    for (std::vector< std::string >::iterator it = users.begin(); it != users.end(); ++it)
+      *it = decode_json(*it, error_output);
+    prefix = "name";
+  }
+  else
+    prefix = "uid";
+  
+  std::vector< std::string >::const_iterator it = users.begin();
+  if (it != users.end())
+    attributes[prefix] = *it;
+  for (uint i = 0; it != users.end(); ++it)
+  {
+    std::ostringstream id;
+    id<<prefix<<"_"<<++i;
+    attributes[id.str()] = *it;
+  }
+
+  return new User_Statement(line_nr, attributes, global_settings);
+}
 
 
 User_Statement::User_Statement

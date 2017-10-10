@@ -192,7 +192,35 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 
 bool Area_Query_Statement::is_used_ = false;
 
-Generic_Statement_Maker< Area_Query_Statement > Area_Query_Statement::statement_maker("area-query");
+
+Area_Query_Statement::Statement_Maker Area_Query_Statement::statement_maker;
+
+
+Statement* Area_Query_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+    const std::string& type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  Token_Node_Ptr tree_it = input_tree;
+  uint line_nr = tree_it->line_col.first;
+  std::string from = "_";
+  std::string ref;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    ref = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+  }
+  
+  if (tree_it->token == "." && tree_it->rhs)
+    from = tree_it.rhs()->token;
+
+  std::map< std::string, std::string > attributes;
+  attributes["from"] = from;
+  attributes["into"] = into;
+  attributes["ref"] = ref;
+  return new Area_Query_Statement(line_nr, attributes, global_settings);
+}
+
 
 Area_Query_Statement::Area_Query_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)

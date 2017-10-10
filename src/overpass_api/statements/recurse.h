@@ -37,7 +37,38 @@ class Recurse_Statement : public Output_Statement
     virtual std::string get_name() const { return "recurse"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Recurse_Statement();
-    static Generic_Statement_Maker< Recurse_Statement > statement_maker;
+    
+    struct Statement_Maker_1 : public Generic_Statement_Maker< Recurse_Statement >
+    {
+      virtual bool can_standalone(const std::string& type) { return true; }
+      virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
+          const std::string& type, const std::string& into,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+      Statement_Maker_1() : Generic_Statement_Maker< Recurse_Statement >("recurse")
+      {
+        Statement::maker_by_ql_criterion()["w"] = this;
+        Statement::maker_by_ql_criterion()["r"] = this;
+        Statement::maker_by_ql_criterion()["bn"] = this;
+        Statement::maker_by_ql_criterion()["bw"] = this;
+        Statement::maker_by_ql_criterion()["br"] = this;
+      }
+    };
+    static Statement_Maker_1 statement_maker_1;
+    
+    struct Statement_Maker_2 : public Generic_Statement_Maker< Recurse_Statement >
+    {
+      virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
+          const std::string& type, const std::string& into,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+      Statement_Maker_2() : Generic_Statement_Maker< Recurse_Statement >("recurse")
+      {
+        Statement::maker_by_ql_criterion()["<"] = this;
+        Statement::maker_by_ql_criterion()["<<"] = this;
+        Statement::maker_by_ql_criterion()[">"] = this;
+        Statement::maker_by_ql_criterion()[">>"] = this;
+      }
+    };
+    static Statement_Maker_2 statement_maker_2;
 
     virtual Query_Constraint* get_query_constraint();
     unsigned int get_type() const { return type; }

@@ -25,7 +25,7 @@
 Set_Prop_Statement::Statement_Maker Set_Prop_Statement::statement_maker;
 
 
-Statement* Set_Prop_Statement::Statement_Maker::create_statement(
+Statement* Set_Prop_Statement::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

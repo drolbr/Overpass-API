@@ -30,42 +30,50 @@
 
 class Newer_Statement : public Statement
 {
-  public:
-    Newer_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
+public:
+  Newer_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                     Parsed_Query& global_settings);
-    virtual std::string get_name() const { return "newer"; }
-    virtual std::string get_result_name() const { return ""; }
-    virtual void execute(Resource_Manager& rman);
-    virtual ~Newer_Statement();
+  virtual std::string get_name() const { return "newer"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman);
+  virtual ~Newer_Statement();
 
-    static Generic_Statement_Maker< Newer_Statement > statement_maker;
+  struct Statement_Maker : public Generic_Statement_Maker< Newer_Statement >
+  {
+    virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
+        const std::string& type, const std::string& into,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker< Newer_Statement >("newer")
+    { Statement::maker_by_ql_criterion()["newer"] = this; }
+  };
+  static Statement_Maker statement_maker;
 
-    virtual Query_Constraint* get_query_constraint();
+  virtual Query_Constraint* get_query_constraint();
 
-    uint64 get_timestamp() const { return than_timestamp; }
+  uint64 get_timestamp() const { return than_timestamp; }
 
-    virtual std::string dump_xml(const std::string& indent) const
-    {
-      return indent + "<newer"
-          + (than_timestamp != NOW ? std::string(" than=\"") + iso_string(than_timestamp) + "\"" : "")
-          + "/>\n";
-    }
+  virtual std::string dump_xml(const std::string& indent) const
+  {
+    return indent + "<newer"
+        + (than_timestamp != NOW ? std::string(" than=\"") + iso_string(than_timestamp) + "\"" : "")
+        + "/>\n";
+  }
 
-    virtual std::string dump_compact_ql(const std::string&) const
-    {
-      return "all" + dump_ql_in_query("");
-    }
-    virtual std::string dump_ql_in_query(const std::string&) const
-    {
-      return std::string("(newer:")
-          + (than_timestamp != NOW ? std::string("\"") + iso_string(than_timestamp) + "\"" : "")
-          + ")";
-    }
-    virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
+  virtual std::string dump_compact_ql(const std::string&) const
+  {
+    return "all" + dump_ql_in_query("");
+  }
+  virtual std::string dump_ql_in_query(const std::string&) const
+  {
+    return std::string("(newer:")
+        + (than_timestamp != NOW ? std::string("\"") + iso_string(than_timestamp) + "\"" : "")
+        + ")";
+  }
+  virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
 
-  private:
-    uint64 than_timestamp;
-    std::vector< Query_Constraint* > constraints;
+private:
+  uint64 than_timestamp;
+  std::vector< Query_Constraint* > constraints;
 };
 
 #endif

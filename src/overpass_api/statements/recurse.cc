@@ -45,7 +45,126 @@ const unsigned int RECURSE_DOWN_REL = 10;
 const unsigned int RECURSE_UP = 11;
 const unsigned int RECURSE_UP_REL = 12;
 
-Generic_Statement_Maker< Recurse_Statement > Recurse_Statement::statement_maker("recurse");
+
+Recurse_Statement::Statement_Maker_1 Recurse_Statement::statement_maker_1;
+Recurse_Statement::Statement_Maker_2 Recurse_Statement::statement_maker_2;
+
+
+Statement* Recurse_Statement::Statement_Maker_1::create_criterion(const Token_Node_Ptr& input_tree,
+    const std::string& result_type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  Token_Node_Ptr tree_it = input_tree;
+  uint line_nr = tree_it->line_col.first;
+  
+  std::string from = "_";
+  std::string role;
+  bool role_found = false;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    role_found = true;
+    role = decode_json(tree_it.rhs()->token, error_output);
+    tree_it = tree_it.lhs();
+  }
+
+  if (tree_it->token == "." && tree_it->rhs)
+  {
+    from = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+  }
+  
+  std::string type = tree_it->token;
+  std::map< std::string, std::string > attributes;
+  attributes["from"] = from;
+  attributes["into"] = into;
+
+  if (type == "r")
+  {
+    if (result_type == "node")
+      attributes["type"] = "relation-node";
+    else if (result_type == "way")
+      attributes["type"] = "relation-way";
+    else if (result_type == "relation")
+      attributes["type"] = "relation-relation";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'r' produces nodes, ways, or relations.", line_nr);
+  }
+  else if (type == "w")
+  {
+    if (result_type == "node")
+      attributes["type"] = "way-node";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'w' produces nodes.", line_nr);
+  }
+  else if (type == "br")
+  {
+    if (result_type == "relation")
+      attributes["type"] = "relation-backwards";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'br' produces relations.", line_nr);
+  }
+  else if (type == "bw")
+  {
+    if (result_type == "relation")
+      attributes["type"] = "way-relation";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'bw' produces relations.", line_nr);
+  }
+  else if (type == "bn")
+  {
+    if (result_type == "way")
+      attributes["type"] = "node-way";
+    else if (result_type == "relation")
+      attributes["type"] = "node-relation";
+    else if (error_output)
+      error_output->add_parse_error("A recursion from type 'bn' produces ways or relations.", line_nr);
+  }
+  else
+    return 0;
+
+  if (role_found)
+  {
+    attributes["role"] = role;
+    attributes["role-restricted"] = "yes";
+  }
+  return new Recurse_Statement(line_nr, attributes, global_settings);
+}
+
+
+Statement* Recurse_Statement::Statement_Maker_2::create_criterion(const Token_Node_Ptr& input_tree,
+    const std::string& result_type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  Token_Node_Ptr tree_it = input_tree;
+  uint line_nr = tree_it->line_col.first;
+  
+  std::string from = "_";
+
+  if (tree_it->token == "." && tree_it->rhs)
+  {
+    from = tree_it.rhs()->token;
+    tree_it = tree_it.lhs();
+  }
+  
+  std::string type = tree_it->token;
+  std::map< std::string, std::string > attributes;
+  attributes["from"] = from;
+  attributes["into"] = into;
+
+  if (type == ">")
+    attributes["type"] = "down";
+  else if (type == ">>")
+    attributes["type"] = "down-rel";
+  else if (type == "<")
+    attributes["type"] = "up";
+  else if (type == "<<")
+    attributes["type"] = "up-rel";
+  else
+    return 0;
+
+  return new Recurse_Statement(line_nr, attributes, global_settings);
+}
 
 
 //-----------------------------------------------------------------------------

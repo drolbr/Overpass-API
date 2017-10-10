@@ -60,8 +60,16 @@ public:
   virtual void execute(Resource_Manager& rman);
   virtual ~If_Statement() {}
     
-  static Generic_Statement_Maker< If_Statement > statement_maker;
-    
+  struct Statement_Maker : public Generic_Statement_Maker< If_Statement >
+  {
+    virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
+        const std::string& type, const std::string& into,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Statement_Maker() : Generic_Statement_Maker< If_Statement >("if")
+    { Statement::maker_by_ql_criterion()["if"] = this; }
+  };
+  static Statement_Maker statement_maker;
+
   virtual std::string dump_xml(const std::string& indent) const
   {
     std::string result = indent + "<if>\n"

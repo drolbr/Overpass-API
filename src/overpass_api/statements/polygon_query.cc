@@ -222,7 +222,26 @@ void add_segment_blocks(std::vector< Aligned_Segment >& segments)
   }
 }
 
-Generic_Statement_Maker< Polygon_Query_Statement > Polygon_Query_Statement::statement_maker("polygon-query");
+
+Polygon_Query_Statement::Statement_Maker Polygon_Query_Statement::statement_maker;
+
+
+Statement* Polygon_Query_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+    const std::string& type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  uint line_nr = tree_it->line_col.first;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    std::map< std::string, std::string > attributes;
+    attributes["bounds"] = decode_json(tree_it.rhs()->token, error_output);
+    attributes["into"] = into;
+    return new Polygon_Query_Statement(line_nr, attributes, global_settings);
+  }
+
+  return 0;
+}
 
 
 bool covers_large_area(const std::vector< std::pair< double, double > >& edges)

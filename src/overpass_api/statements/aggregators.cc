@@ -340,7 +340,7 @@ bool Evaluator_Set_Count::try_parse_object_type(const std::string& input, Evalua
 }
 
 
-Statement* Evaluator_Set_Count::Statement_Maker::create_statement(
+Statement* Evaluator_Set_Count::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

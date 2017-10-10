@@ -25,7 +25,7 @@
 Evaluator_Fixed::Statement_Maker Evaluator_Fixed::statement_maker;
 
 
-Statement* Evaluator_Fixed::Statement_Maker::create_statement(
+Statement* Evaluator_Fixed::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -84,7 +84,7 @@ std::string Evaluator_Fixed::dump_compact_ql(const std::string&) const
 Evaluator_Id::Statement_Maker Evaluator_Id::statement_maker;
 
 
-Statement* Evaluator_Id::Statement_Maker::create_statement(
+Statement* Evaluator_Id::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -114,7 +114,7 @@ Evaluator_Id::Evaluator_Id
 Evaluator_Type::Statement_Maker Evaluator_Type::statement_maker;
 
 
-Statement* Evaluator_Type::Statement_Maker::create_statement(
+Statement* Evaluator_Type::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -144,7 +144,7 @@ Evaluator_Type::Evaluator_Type
 Evaluator_Is_Closed::Statement_Maker Evaluator_Is_Closed::statement_maker;
 
 
-Statement* Evaluator_Is_Closed::Statement_Maker::create_statement(
+Statement* Evaluator_Is_Closed::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -190,7 +190,7 @@ std::string find_value(const std::vector< std::pair< std::string, std::string > 
 Evaluator_Value::Statement_Maker Evaluator_Value::statement_maker;
 
 
-Statement* Evaluator_Value::Statement_Maker::create_statement(
+Statement* Evaluator_Value::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -258,7 +258,7 @@ std::string exists_value(const std::vector< std::pair< std::string, std::string 
 Evaluator_Is_Tag::Statement_Maker Evaluator_Is_Tag::statement_maker;
 
 
-Statement* Evaluator_Is_Tag::Statement_Maker::create_statement(
+Statement* Evaluator_Is_Tag::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -299,7 +299,7 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
 Evaluator_Length::Statement_Maker Evaluator_Length::statement_maker;
 
 
-Statement* Evaluator_Length::Statement_Maker::create_statement(
+Statement* Evaluator_Length::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -327,7 +327,7 @@ Evaluator_Length::Evaluator_Length
 Evaluator_Version::Statement_Maker Evaluator_Version::statement_maker;
 
 
-Statement* Evaluator_Version::Statement_Maker::create_statement(
+Statement* Evaluator_Version::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -352,7 +352,7 @@ Evaluator_Version::Evaluator_Version
 Evaluator_Timestamp::Statement_Maker Evaluator_Timestamp::statement_maker;
 
 
-Statement* Evaluator_Timestamp::Statement_Maker::create_statement(
+Statement* Evaluator_Timestamp::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -377,7 +377,7 @@ Evaluator_Timestamp::Evaluator_Timestamp
 Evaluator_Changeset::Statement_Maker Evaluator_Changeset::statement_maker;
 
 
-Statement* Evaluator_Changeset::Statement_Maker::create_statement(
+Statement* Evaluator_Changeset::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -402,7 +402,7 @@ Evaluator_Changeset::Evaluator_Changeset
 Evaluator_Uid::Statement_Maker Evaluator_Uid::statement_maker;
 
 
-Statement* Evaluator_Uid::Statement_Maker::create_statement(
+Statement* Evaluator_Uid::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -427,7 +427,7 @@ Evaluator_Uid::Evaluator_Uid
 Evaluator_User::Statement_Maker Evaluator_User::statement_maker;
 
 
-Statement* Evaluator_User::Statement_Maker::create_statement(
+Statement* Evaluator_User::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -455,7 +455,7 @@ Evaluator_User::Evaluator_User
 Evaluator_Generic::Statement_Maker Evaluator_Generic::statement_maker;
 
 
-Statement* Evaluator_Generic::Statement_Maker::create_statement(
+Statement* Evaluator_Generic::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -482,7 +482,7 @@ Evaluator_Generic::Evaluator_Generic
 Evaluator_Properties_Count::Statement_Maker Evaluator_Properties_Count::statement_maker;
 
 
-Statement* Evaluator_Properties_Count::Statement_Maker::create_statement(
+Statement* Evaluator_Properties_Count::Statement_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

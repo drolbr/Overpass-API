@@ -29,7 +29,54 @@
 
 bool Changed_Statement::area_query_exists_ = false;
 
-Generic_Statement_Maker< Changed_Statement > Changed_Statement::statement_maker("changed");
+
+Changed_Statement::Statement_Maker Changed_Statement::statement_maker;
+
+
+Statement* Changed_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+    const std::string& type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  std::string since;
+  std::string until;
+  uint line_nr = tree_it->line_col.first;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    since = decode_json(tree_it.rhs()->token, error_output);
+    until = since;
+  }
+  else if (tree_it->token == "," && tree_it->lhs && tree_it.lhs()->token == ":" && tree_it.lhs()->rhs
+      && tree_it->rhs)
+  {
+    since = decode_json(tree_it.lhs().rhs()->token, error_output);
+    until = decode_json(tree_it.rhs()->token, error_output);
+  }
+  else if (tree_it->token == "changed")
+  {
+    since = "auto";
+    until = "auto";
+  }
+  else if (tree_it->token == ":")
+  {
+    if (error_output)
+      error_output->add_parse_error("Date required after \"changed\" with colon",
+          tree_it->line_col.first);
+    return 0;
+  }
+  else
+  {
+    if (error_output)
+      error_output->add_parse_error("Unexpected token \"" + tree_it->token + "\" after \"changed\"",
+          tree_it->line_col.first);
+    return 0;
+  }
+
+  std::map< std::string, std::string > attributes;
+  attributes["since"] = since;
+  attributes["until"] = until;  
+  return new Changed_Statement(line_nr, attributes, global_settings);
+}
 
 
 template< class TIndex, class TObject >

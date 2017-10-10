@@ -108,12 +108,17 @@ class Statement
     {
       virtual Statement* create_statement
           (int line_number, const std::map< std::string, std::string >& attributes, Parsed_Query& global_settings) = 0;
-      virtual Statement* create_statement(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+      virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output) = 0;
+      virtual bool can_standalone(const std::string& type) = 0;
+      virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
+          const std::string& type, const std::string& into,
           Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output) = 0;
       virtual ~Statement_Maker() {}
     };
 
     static std::map< std::string, Statement_Maker* >& maker_by_name();
+    static std::map< std::string, Statement_Maker* >& maker_by_ql_criterion();
     static std::map< std::string, std::vector< Statement_Maker* > >& maker_by_token();
     static std::map< std::string, std::vector< Statement_Maker* > >& maker_by_func_name();
 
@@ -195,12 +200,24 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
       return new TStatement(line_number, attributes, global_settings);
     }
 
-    virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
     {
       return 0;
     }
 
+    virtual bool can_standalone(const std::string& type)
+    {
+      return false;
+    }
+    
+    virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
+          const std::string& type, const std::string& into,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+    {
+      return 0;
+    }
+          
     Generic_Statement_Maker(const std::string& name) { Statement::maker_by_name()[name] = this; }
     virtual ~Generic_Statement_Maker() {}
 };

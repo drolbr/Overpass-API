@@ -50,7 +50,7 @@ This means that the order of list elements does no matter.
 template< typename Evaluator_ >
 struct Unary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
-  virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+  virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
     if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
@@ -107,7 +107,7 @@ struct Evaluator_Unary_Set_List_Operator_Syntax : public Evaluator_Unary_Functio
 template< typename Evaluator_ >
 struct Binary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
-  virtual Statement* create_statement(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+  virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
     if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)

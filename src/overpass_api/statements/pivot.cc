@@ -25,7 +25,23 @@
 #include "query.h"
 
 
-Generic_Statement_Maker< Pivot_Statement > Pivot_Statement::statement_maker("pivot");
+Pivot_Statement::Statement_Maker Pivot_Statement::statement_maker;
+
+
+Statement* Pivot_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+    const std::string& type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  uint line_nr = tree_it->line_col.first;
+  std::string from = "_";
+  if (tree_it->rhs && tree_it->token == ".")
+      from = tree_it.rhs()->token;
+  
+  std::map< std::string, std::string > attributes;
+  attributes["from"] = from;
+  attributes["into"] = into;
+  return new Pivot_Statement(line_nr, attributes, global_settings);
+}
 
 
 template< class TIndex, class TObject >
