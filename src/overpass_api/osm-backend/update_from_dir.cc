@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
   }
   else
   {
-    report_file_error(File_Error(errno, source_dir, "update_from_dir:opendir"));
+    report_file_error(File_Error(errno, source_dir, "update_from_dir::opendir"));
     return -1;
   }
   std::sort(source_file_names.begin(), source_file_names.end());
