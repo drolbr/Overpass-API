@@ -76,6 +76,13 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
 template< typename Evaluator_ >
 struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
+  Aggregator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+};
+
+
+template< typename Evaluator_ >
+struct Aggregator_Evaluator_Maker : Statement::Evaluator_Maker
+{
   virtual Statement* create_evaluator(
       const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
@@ -100,7 +107,7 @@ struct Aggregator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
     return result;
   }
 
-  Aggregator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
+  Aggregator_Evaluator_Maker()
   {
     Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this);
   }
@@ -164,6 +171,7 @@ class Evaluator_Union_Value : public Evaluator_Aggregator_Syntax< Evaluator_Unio
 {
 public:
   static Aggregator_Statement_Maker< Evaluator_Union_Value > statement_maker;
+  static Aggregator_Evaluator_Maker< Evaluator_Union_Value > evaluator_maker;
   static std::string stmt_func_name() { return "u"; }
   static std::string stmt_name() { return "eval-union"; }
 
@@ -185,6 +193,7 @@ class Evaluator_Set_Value : public Evaluator_Aggregator_Syntax< Evaluator_Set_Va
 {
 public:
   static Aggregator_Statement_Maker< Evaluator_Set_Value > statement_maker;
+  static Aggregator_Evaluator_Maker< Evaluator_Set_Value > evaluator_maker;
   static std::string stmt_func_name() { return "set"; }
   static std::string stmt_name() { return "eval-set"; }
 
@@ -232,6 +241,7 @@ class Evaluator_Min_Value : public Evaluator_Aggregator_Syntax< Evaluator_Min_Va
 {
 public:
   static Aggregator_Statement_Maker< Evaluator_Min_Value > statement_maker;
+  static Aggregator_Evaluator_Maker< Evaluator_Min_Value > evaluator_maker;
   static std::string stmt_func_name() { return "min"; }
   static std::string stmt_name() { return "eval-min"; }
 
@@ -258,6 +268,7 @@ class Evaluator_Max_Value : public Evaluator_Aggregator_Syntax< Evaluator_Max_Va
 {
 public:
   static Aggregator_Statement_Maker< Evaluator_Max_Value > statement_maker;
+  static Aggregator_Evaluator_Maker< Evaluator_Max_Value > evaluator_maker;
   static std::string stmt_func_name() { return "max"; }
   static std::string stmt_name() { return "eval-umax"; }
 
@@ -299,6 +310,7 @@ class Evaluator_Sum_Value : public Evaluator_Aggregator_Syntax< Evaluator_Sum_Va
 {
 public:
   static Aggregator_Statement_Maker< Evaluator_Sum_Value > statement_maker;
+  static Aggregator_Evaluator_Maker< Evaluator_Sum_Value > evaluator_maker;
   static std::string stmt_func_name() { return "sum"; }
   static std::string stmt_name() { return "eval-sum"; }
 
@@ -349,12 +361,17 @@ public:
 
   struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Set_Count >
   {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker< Evaluator_Set_Count >("eval-set-count")
-    { Statement::maker_by_func_name()["count"].push_back(this); }
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Set_Count >("eval-set-count") {}
   };
   static Statement_Maker statement_maker;
+    
+  struct Evaluator_Maker : public Statement::Evaluator_Maker
+  {
+    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Evaluator_Maker() { Statement::maker_by_func_name()["count"].push_back(this); }
+  };
+  static Evaluator_Maker evaluator_maker;
 
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-set-count from=\"" + input + "\" type=\"" + to_string(to_count) + "\"/>\n"; }

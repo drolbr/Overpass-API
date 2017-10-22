@@ -95,9 +95,10 @@ void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 
 
 Bbox_Query_Statement::Statement_Maker Bbox_Query_Statement::statement_maker;
+Bbox_Query_Statement::Criterion_Maker Bbox_Query_Statement::criterion_maker;
 
 
-Statement* Bbox_Query_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+Statement* Bbox_Query_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& result_type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

@@ -26,9 +26,10 @@
 
 
 Pivot_Statement::Statement_Maker Pivot_Statement::statement_maker;
+Pivot_Statement::Criterion_Maker Pivot_Statement::criterion_maker;
 
 
-Statement* Pivot_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+Statement* Pivot_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
     const std::string& type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

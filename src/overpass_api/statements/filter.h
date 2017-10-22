@@ -56,7 +56,22 @@ class Filter_Statement : public Output_Statement
     virtual void add_statement(Statement* statement, std::string text);
     virtual void execute(Resource_Manager& rman);
     virtual ~Filter_Statement();
-    static Generic_Statement_Maker< Filter_Statement > statement_maker;
+    
+    struct Statement_Maker : public Generic_Statement_Maker< Filter_Statement >
+    {
+      Statement_Maker() : Generic_Statement_Maker< Filter_Statement >("filter") {}
+    };
+    static Statement_Maker statement_maker;
+    
+    struct Criterion_Maker : public Statement::Criterion_Maker
+    {
+      virtual bool can_standalone(const std::string& type) { return false; }
+      virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
+          const std::string& type, const std::string& into,
+          Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+      Criterion_Maker() { Statement::maker_by_ql_criterion()["if"] = this; }
+    };
+    static Criterion_Maker criterion_maker;
 
     virtual Query_Constraint* get_query_constraint();
 

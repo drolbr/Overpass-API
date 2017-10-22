@@ -38,13 +38,19 @@ class Recurse_Statement : public Output_Statement
     virtual void execute(Resource_Manager& rman);
     virtual ~Recurse_Statement();
     
-    struct Statement_Maker_1 : public Generic_Statement_Maker< Recurse_Statement >
+    struct Statement_Maker : public Generic_Statement_Maker< Recurse_Statement >
+    {
+      Statement_Maker() : Generic_Statement_Maker< Recurse_Statement >("recurse") {}
+    };
+    static Statement_Maker statement_maker;
+    
+    struct Criterion_Maker_1 : public Statement::Criterion_Maker
     {
       virtual bool can_standalone(const std::string& type) { return true; }
       virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
           const std::string& type, const std::string& into,
           Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-      Statement_Maker_1() : Generic_Statement_Maker< Recurse_Statement >("recurse")
+      Criterion_Maker_1()
       {
         Statement::maker_by_ql_criterion()["w"] = this;
         Statement::maker_by_ql_criterion()["r"] = this;
@@ -53,14 +59,15 @@ class Recurse_Statement : public Output_Statement
         Statement::maker_by_ql_criterion()["br"] = this;
       }
     };
-    static Statement_Maker_1 statement_maker_1;
+    static Criterion_Maker_1 criterion_maker_1;
     
-    struct Statement_Maker_2 : public Generic_Statement_Maker< Recurse_Statement >
+    struct Criterion_Maker_2 : public Statement::Criterion_Maker
     {
+      virtual bool can_standalone(const std::string& type) { return false; }
       virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
           const std::string& type, const std::string& into,
           Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-      Statement_Maker_2() : Generic_Statement_Maker< Recurse_Statement >("recurse")
+      Criterion_Maker_2()
       {
         Statement::maker_by_ql_criterion()["<"] = this;
         Statement::maker_by_ql_criterion()["<<"] = this;
@@ -68,7 +75,7 @@ class Recurse_Statement : public Output_Statement
         Statement::maker_by_ql_criterion()[">>"] = this;
       }
     };
-    static Statement_Maker_2 statement_maker_2;
+    static Criterion_Maker_2 criterion_maker_2;
 
     virtual Query_Constraint* get_query_constraint();
     unsigned int get_type() const { return type; }

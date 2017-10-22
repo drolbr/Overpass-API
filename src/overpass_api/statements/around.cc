@@ -527,9 +527,10 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 //-----------------------------------------------------------------------------
 
 Around_Statement::Statement_Maker Around_Statement::statement_maker;
+Around_Statement::Criterion_Maker Around_Statement::criterion_maker;
 
 
-Statement* Around_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+Statement* Around_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

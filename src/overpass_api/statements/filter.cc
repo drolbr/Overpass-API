@@ -98,7 +98,31 @@ void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, S
 //-----------------------------------------------------------------------------
 
 
-Generic_Statement_Maker< Filter_Statement > Filter_Statement::statement_maker("filter");
+Filter_Statement::Statement_Maker Filter_Statement::statement_maker;
+Filter_Statement::Criterion_Maker Filter_Statement::criterion_maker;
+
+
+Statement* Filter_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+    const std::string& type, const std::string& into,
+    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+{
+  Statement* filter = 0;
+  uint line_nr = tree_it->line_col.first;
+  
+  if (tree_it->token == ":" && tree_it->rhs)
+  {
+    Statement* criterion = stmt_factory.create_evaluator(tree_it.rhs(), Statement::elem_eval_possible);
+    if (criterion)
+    {
+      std::map< std::string, std::string > attributes;
+      filter = new Filter_Statement(line_nr, attributes, global_settings);
+      if (filter)
+        filter->add_statement(criterion, "");
+    }
+  }
+
+  return filter;
+}
 
 
 Filter_Statement::Filter_Statement

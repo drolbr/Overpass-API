@@ -38,14 +38,19 @@ class Bbox_Query_Statement : public Output_Statement
     
     struct Statement_Maker : public Generic_Statement_Maker< Bbox_Query_Statement >
     {
+      Statement_Maker() : Generic_Statement_Maker< Bbox_Query_Statement >("bbox-query") {}
+    };
+    static Statement_Maker statement_maker;
+    
+    struct Criterion_Maker : public Statement::Criterion_Maker
+    {
       virtual bool can_standalone(const std::string& type) { return type == "node"; }
       virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
           const std::string& type, const std::string& into,
           Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-      Statement_Maker() : Generic_Statement_Maker< Bbox_Query_Statement >("bbox-query")
-      { Statement::maker_by_ql_criterion()["bbox"] = this; }
+      Criterion_Maker() { Statement::maker_by_ql_criterion()["bbox"] = this; }
     };
-    static Statement_Maker statement_maker;
+    static Criterion_Maker criterion_maker;
 
     virtual Query_Constraint* get_query_constraint();
 

@@ -70,15 +70,21 @@ class Set_Prop_Statement : public Statement
 public:
   struct Statement_Maker : public Generic_Statement_Maker< Set_Prop_Statement >
   {
+    Statement_Maker() : Generic_Statement_Maker< Set_Prop_Statement >("set-prop") {}
+  };
+  static Statement_Maker statement_maker;
+
+  struct Evaluator_Maker : public Statement::Evaluator_Maker
+  {
     virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
         Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Statement_Maker() : Generic_Statement_Maker< Set_Prop_Statement >("set-prop")
+    Evaluator_Maker()
     {
       Statement::maker_by_token()["="].push_back(this);
       Statement::maker_by_token()["!"].push_back(this);
     }
   };
-  static Statement_Maker statement_maker;
+  static Evaluator_Maker evaluator_maker;
 
   virtual std::string dump_xml(const std::string& indent) const;
   virtual std::string dump_compact_ql(const std::string&) const;

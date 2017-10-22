@@ -46,6 +46,7 @@ void Evaluator_Prefix_Operator::add_substatements(Statement* result, const std::
 
 
 Operator_Stmt_Maker< Evaluator_Not > Evaluator_Not::statement_maker;
+Operator_Eval_Maker< Evaluator_Not > Evaluator_Not::evaluator_maker;
 
 
 std::string Evaluator_Not::process(const std::string& rhs_s) const
@@ -62,6 +63,7 @@ std::string Evaluator_Not::process(const std::string& rhs_s) const
 
 
 Operator_Stmt_Maker< Evaluator_Negate > Evaluator_Negate::statement_maker;
+Operator_Eval_Maker< Evaluator_Negate > Evaluator_Negate::evaluator_maker;
 
 
 std::string Evaluator_Negate::process(const std::string& rhs_s) const

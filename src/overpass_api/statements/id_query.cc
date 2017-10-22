@@ -32,9 +32,10 @@ bool Id_Query_Statement::area_query_exists_ = false;
 
 
 Id_Query_Statement::Statement_Maker Id_Query_Statement::statement_maker;
+Id_Query_Statement::Criterion_Maker Id_Query_Statement::criterion_maker;
 
 
-Statement* Id_Query_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+Statement* Id_Query_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& result_type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

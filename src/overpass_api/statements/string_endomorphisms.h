@@ -43,6 +43,13 @@ Their syntax is always
 template< typename Evaluator_ >
 struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
+  String_Endom_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+};
+
+
+template< typename Evaluator_ >
+struct String_Endom_Evaluator_Maker : public Statement::Evaluator_Maker
+{
   virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
@@ -64,7 +71,7 @@ struct String_Endom_Statement_Maker : public Generic_Statement_Maker< Evaluator_
     return result;
   }
 
-  String_Endom_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
+  String_Endom_Evaluator_Maker()
   {
     Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this);
   }
@@ -125,6 +132,7 @@ class Evaluator_Number : public Evaluator_String_Endom_Syntax< Evaluator_Number 
 {
 public:
   static String_Endom_Statement_Maker< Evaluator_Number > statement_maker;
+  static String_Endom_Evaluator_Maker< Evaluator_Number > evaluator_maker;
   static std::string stmt_func_name() { return "number"; }
   static std::string stmt_name() { return "eval-number"; }
 
@@ -139,6 +147,7 @@ class Evaluator_Is_Num : public Evaluator_String_Endom_Syntax< Evaluator_Is_Num 
 {
 public:
   static String_Endom_Statement_Maker< Evaluator_Is_Num > statement_maker;
+  static String_Endom_Evaluator_Maker< Evaluator_Is_Num > evaluator_maker;
   static std::string stmt_func_name() { return "is_number"; }
   static std::string stmt_name() { return "eval-is-number"; }
 
@@ -153,6 +162,7 @@ class Evaluator_Suffix : public Evaluator_String_Endom_Syntax< Evaluator_Suffix 
 {
 public:
   static String_Endom_Statement_Maker< Evaluator_Suffix > statement_maker;
+  static String_Endom_Evaluator_Maker< Evaluator_Suffix > evaluator_maker;
   static std::string stmt_func_name() { return "suffix"; }
   static std::string stmt_name() { return "eval-suffix"; }
 
@@ -197,6 +207,7 @@ class Evaluator_Date : public Evaluator_String_Endom_Syntax< Evaluator_Date >
 {
 public:
   static String_Endom_Statement_Maker< Evaluator_Date > statement_maker;
+  static String_Endom_Evaluator_Maker< Evaluator_Date > evaluator_maker;
   static std::string stmt_func_name() { return "date"; }
   static std::string stmt_name() { return "eval-date"; }
 
@@ -211,6 +222,7 @@ class Evaluator_Is_Date : public Evaluator_String_Endom_Syntax< Evaluator_Is_Dat
 {
 public:
   static String_Endom_Statement_Maker< Evaluator_Is_Date > statement_maker;
+  static String_Endom_Evaluator_Maker< Evaluator_Is_Date > evaluator_maker;
   static std::string stmt_func_name() { return "is_date"; }
   static std::string stmt_name() { return "eval-is-date"; }
 

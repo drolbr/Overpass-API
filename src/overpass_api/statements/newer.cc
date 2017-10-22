@@ -128,9 +128,10 @@ void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Se
 //-----------------------------------------------------------------------------
 
 Newer_Statement::Statement_Maker Newer_Statement::statement_maker;
+Newer_Statement::Criterion_Maker Newer_Statement::criterion_maker;
 
 
-Statement* Newer_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+Statement* Newer_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
     const std::string& type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

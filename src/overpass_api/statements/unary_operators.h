@@ -120,6 +120,7 @@ class Evaluator_Not : public Evaluator_Prefix_Operator_Syntax< Evaluator_Not >
 {
 public:
   static Operator_Stmt_Maker< Evaluator_Not > statement_maker;
+  static Operator_Eval_Maker< Evaluator_Not > evaluator_maker;
   static std::string stmt_operator() { return "!"; }
   static std::string stmt_name() { return "eval-not"; }
 
@@ -147,6 +148,7 @@ class Evaluator_Negate : public Evaluator_Prefix_Operator_Syntax< Evaluator_Nega
 {
 public:
   static Operator_Stmt_Maker< Evaluator_Negate > statement_maker;
+  static Operator_Eval_Maker< Evaluator_Negate > evaluator_maker;
   static std::string stmt_operator() { return "-"; }
   static std::string stmt_name() { return "eval-negate"; }
 

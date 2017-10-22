@@ -46,11 +46,12 @@ const unsigned int RECURSE_UP = 11;
 const unsigned int RECURSE_UP_REL = 12;
 
 
-Recurse_Statement::Statement_Maker_1 Recurse_Statement::statement_maker_1;
-Recurse_Statement::Statement_Maker_2 Recurse_Statement::statement_maker_2;
+Recurse_Statement::Statement_Maker Recurse_Statement::statement_maker;
+Recurse_Statement::Criterion_Maker_1 Recurse_Statement::criterion_maker_1;
+Recurse_Statement::Criterion_Maker_2 Recurse_Statement::criterion_maker_2;
 
 
-Statement* Recurse_Statement::Statement_Maker_1::create_criterion(const Token_Node_Ptr& input_tree,
+Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& result_type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -132,7 +133,7 @@ Statement* Recurse_Statement::Statement_Maker_1::create_criterion(const Token_No
 }
 
 
-Statement* Recurse_Statement::Statement_Maker_2::create_criterion(const Token_Node_Ptr& input_tree,
+Statement* Recurse_Statement::Criterion_Maker_2::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& result_type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

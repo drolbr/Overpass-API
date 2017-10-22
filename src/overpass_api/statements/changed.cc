@@ -31,9 +31,10 @@ bool Changed_Statement::area_query_exists_ = false;
 
 
 Changed_Statement::Statement_Maker Changed_Statement::statement_maker;
+Changed_Statement::Criterion_Maker Changed_Statement::criterion_maker;
 
 
-Statement* Changed_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+Statement* Changed_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
     const std::string& type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

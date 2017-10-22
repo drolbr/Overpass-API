@@ -145,6 +145,7 @@ Requested_Context Evaluator_Pair_Operator::request_context() const
 
 
 Operator_Stmt_Maker< Evaluator_And > Evaluator_And::statement_maker;
+Operator_Eval_Maker< Evaluator_And > Evaluator_And::evaluator_maker;
 
 
 std::string Evaluator_And::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -162,6 +163,7 @@ std::string Evaluator_And::process(const std::string& lhs_s, const std::string& 
 
 
 Operator_Stmt_Maker< Evaluator_Or > Evaluator_Or::statement_maker;
+Operator_Eval_Maker< Evaluator_Or > Evaluator_Or::evaluator_maker;
 
 
 std::string Evaluator_Or::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -179,6 +181,7 @@ std::string Evaluator_Or::process(const std::string& lhs_s, const std::string& r
 
 
 Operator_Stmt_Maker< Evaluator_Equal > Evaluator_Equal::statement_maker;
+Operator_Eval_Maker< Evaluator_Equal > Evaluator_Equal::evaluator_maker;
 
 
 std::string Evaluator_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -201,6 +204,7 @@ std::string Evaluator_Equal::process(const std::string& lhs_s, const std::string
 
 
 Operator_Stmt_Maker< Evaluator_Not_Equal > Evaluator_Not_Equal::statement_maker;
+Operator_Eval_Maker< Evaluator_Not_Equal > Evaluator_Not_Equal::evaluator_maker;
 
 
 std::string Evaluator_Not_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -223,6 +227,7 @@ std::string Evaluator_Not_Equal::process(const std::string& lhs_s, const std::st
 
 
 Operator_Stmt_Maker< Evaluator_Less > Evaluator_Less::statement_maker;
+Operator_Eval_Maker< Evaluator_Less > Evaluator_Less::evaluator_maker;
 
 
 std::string Evaluator_Less::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -245,6 +250,7 @@ std::string Evaluator_Less::process(const std::string& lhs_s, const std::string&
 
 
 Operator_Stmt_Maker< Evaluator_Less_Equal > Evaluator_Less_Equal::statement_maker;
+Operator_Eval_Maker< Evaluator_Less_Equal > Evaluator_Less_Equal::evaluator_maker;
 
 
 std::string Evaluator_Less_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -267,6 +273,7 @@ std::string Evaluator_Less_Equal::process(const std::string& lhs_s, const std::s
 
 
 Operator_Stmt_Maker< Evaluator_Greater > Evaluator_Greater::statement_maker;
+Operator_Eval_Maker< Evaluator_Greater > Evaluator_Greater::evaluator_maker;
 
 
 std::string Evaluator_Greater::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -289,6 +296,7 @@ std::string Evaluator_Greater::process(const std::string& lhs_s, const std::stri
 
 
 Operator_Stmt_Maker< Evaluator_Greater_Equal > Evaluator_Greater_Equal::statement_maker;
+Operator_Eval_Maker< Evaluator_Greater_Equal > Evaluator_Greater_Equal::evaluator_maker;
 
 
 std::string Evaluator_Greater_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -311,6 +319,7 @@ std::string Evaluator_Greater_Equal::process(const std::string& lhs_s, const std
 
 
 Operator_Stmt_Maker< Evaluator_Plus > Evaluator_Plus::statement_maker;
+Operator_Eval_Maker< Evaluator_Plus > Evaluator_Plus::evaluator_maker;
 
 
 std::string Evaluator_Plus::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -333,6 +342,7 @@ std::string Evaluator_Plus::process(const std::string& lhs_s, const std::string&
 
 
 Operator_Stmt_Maker< Evaluator_Minus > Evaluator_Minus::statement_maker;
+Operator_Eval_Maker< Evaluator_Minus > Evaluator_Minus::evaluator_maker;
 
 
 std::string Evaluator_Minus::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -355,6 +365,7 @@ std::string Evaluator_Minus::process(const std::string& lhs_s, const std::string
 
 
 Operator_Stmt_Maker< Evaluator_Times > Evaluator_Times::statement_maker;
+Operator_Eval_Maker< Evaluator_Times > Evaluator_Times::evaluator_maker;
 
 
 std::string Evaluator_Times::process(const std::string& lhs_s, const std::string& rhs_s) const
@@ -377,6 +388,7 @@ std::string Evaluator_Times::process(const std::string& lhs_s, const std::string
 
 
 Operator_Stmt_Maker< Evaluator_Divided > Evaluator_Divided::statement_maker;
+Operator_Eval_Maker< Evaluator_Divided > Evaluator_Divided::evaluator_maker;
 
 
 std::string Evaluator_Divided::process(const std::string& lhs_s, const std::string& rhs_s) const

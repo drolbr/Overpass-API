@@ -32,23 +32,23 @@ std::map< std::string, Statement::Statement_Maker* >& Statement::maker_by_name()
 }
 
 
-std::map< std::string, Statement::Statement_Maker* >& Statement::maker_by_ql_criterion()
+std::map< std::string, Statement::Criterion_Maker* >& Statement::maker_by_ql_criterion()
 {
-  static std::map< std::string, Statement::Statement_Maker* > makers;
+  static std::map< std::string, Statement::Criterion_Maker* > makers;
   return makers;
 }
 
 
-std::map< std::string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_token()
+std::map< std::string, std::vector< Statement::Evaluator_Maker* > >& Statement::maker_by_token()
 {
-  static std::map< std::string, std::vector< Statement::Statement_Maker* > > makers;
+  static std::map< std::string, std::vector< Statement::Evaluator_Maker* > > makers;
   return makers;
 }
 
 
-std::map< std::string, std::vector< Statement::Statement_Maker* > >& Statement::maker_by_func_name()
+std::map< std::string, std::vector< Statement::Evaluator_Maker* > >& Statement::maker_by_func_name()
 {
-  static std::map< std::string, std::vector< Statement::Statement_Maker* > > makers;
+  static std::map< std::string, std::vector< Statement::Evaluator_Maker* > > makers;
   return makers;
 }
 
@@ -147,12 +147,12 @@ Statement* Statement::Factory::create_statement
 
 
 Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    const std::vector< Statement::Statement_Maker* >& makers, Statement::Factory& stmt_factory,
+    const std::vector< Statement::Evaluator_Maker* >& makers, Statement::Factory& stmt_factory,
     Parsed_Query& global_settings, Error_Output* error_output)
 {
   Statement* statement = 0;
 
-  std::vector< Statement::Statement_Maker* >::const_iterator maker_it = makers.begin();
+  std::vector< Statement::Evaluator_Maker* >::const_iterator maker_it = makers.begin();
 
   while (!statement && maker_it != makers.end())
   {
@@ -187,7 +187,7 @@ Statement* Statement::Factory::create_evaluator(const Token_Node_Ptr& tree_it, S
   {
     if (tree_it->lhs)
     {
-      std::map< std::string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+      std::map< std::string, std::vector< Statement::Evaluator_Maker* > >::iterator all_it =
           Statement::maker_by_func_name().find(tree_it.lhs()->token);
       if (all_it != Statement::maker_by_func_name().end())
         statement = stmt_from_tree_node(tree_it, tree_context,
@@ -208,7 +208,7 @@ Statement* Statement::Factory::create_evaluator(const Token_Node_Ptr& tree_it, S
   {
     if (tree_it->lhs && tree_it->rhs && tree_it.rhs()->token == "(" && tree_it.rhs()->lhs)
     {
-      std::map< std::string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+      std::map< std::string, std::vector< Statement::Evaluator_Maker* > >::iterator all_it =
           Statement::maker_by_func_name().find(tree_it.rhs().lhs()->token);
       if (all_it != Statement::maker_by_func_name().end())
         statement = stmt_from_tree_node(tree_it, tree_context,
@@ -222,7 +222,7 @@ Statement* Statement::Factory::create_evaluator(const Token_Node_Ptr& tree_it, S
     error_output->add_parse_error("Evaluator expected, but empty token found.", tree_it->line_col.first);
   else
   {
-    std::map< std::string, std::vector< Statement::Statement_Maker* > >::iterator all_it =
+    std::map< std::string, std::vector< Statement::Evaluator_Maker* > >::iterator all_it =
         Statement::maker_by_token().find(tree_it->token);
     if (all_it != Statement::maker_by_token().end())
       statement = stmt_from_tree_node(tree_it, tree_context,
@@ -286,7 +286,7 @@ Statement* Statement::Factory::create_criterion(const Token_Node_Ptr& tree_it,
           || (criterion_s[0] == '-' && criterion_s.size() > 1 && isdigit(criterion_s[1]))))
     criterion_s = (tree_it->token == "," ? "bbox" : "id");
   
-  std::map< std::string, Statement_Maker* >::iterator it = Statement::maker_by_ql_criterion().find(criterion_s);
+  std::map< std::string, Criterion_Maker* >::iterator it = Statement::maker_by_ql_criterion().find(criterion_s);
   if (it != Statement::maker_by_ql_criterion().end() && it->second)
   {
     can_standalone = it->second->can_standalone(type);

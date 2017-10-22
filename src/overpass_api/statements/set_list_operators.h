@@ -50,6 +50,13 @@ This means that the order of list elements does no matter.
 template< typename Evaluator_ >
 struct Unary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
+  Unary_Set_List_Operator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+};
+
+
+template< typename Evaluator_ >
+struct Unary_Set_List_Operator_Evaluator_Maker : public Statement::Evaluator_Maker
+{
   virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
@@ -71,7 +78,7 @@ struct Unary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker<
     return result;
   }
 
-  Unary_Set_List_Operator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
+  Unary_Set_List_Operator_Evaluator_Maker()
   {
     Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this);
   }
@@ -107,6 +114,13 @@ struct Evaluator_Unary_Set_List_Operator_Syntax : public Evaluator_Unary_Functio
 template< typename Evaluator_ >
 struct Binary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
+  Binary_Set_List_Operator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
+};
+
+
+template< typename Evaluator_ >
+struct Binary_Set_List_Operator_Evaluator_Maker : public Statement::Evaluator_Maker
+{
   virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
@@ -141,7 +155,7 @@ struct Binary_Set_List_Operator_Statement_Maker : public Generic_Statement_Maker
     return result;
   }
 
-  Binary_Set_List_Operator_Statement_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name())
+  Binary_Set_List_Operator_Evaluator_Maker()
   {
     Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this);
   }
@@ -205,6 +219,7 @@ class Evaluator_Lrs_In : public Evaluator_Binary_Set_List_Operator_Syntax< Evalu
 {
 public:
   static Binary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_In > statement_maker;
+  static Binary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_In > evaluator_maker;
   static std::string stmt_func_name() { return "lrs_in"; }
   static std::string stmt_name() { return "eval-lrs-in"; }
 
@@ -219,6 +234,7 @@ class Evaluator_Lrs_Isect : public Evaluator_Binary_Set_List_Operator_Syntax< Ev
 {
 public:
   static Binary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_Isect > statement_maker;
+  static Binary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_Isect > evaluator_maker;
   static std::string stmt_func_name() { return "lrs_isect"; }
   static std::string stmt_name() { return "eval-lrs-isect"; }
 
@@ -233,6 +249,7 @@ class Evaluator_Lrs_Union : public Evaluator_Binary_Set_List_Operator_Syntax< Ev
 {
 public:
   static Binary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_Union > statement_maker;
+  static Binary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_Union > evaluator_maker;
   static std::string stmt_func_name() { return "lrs_union"; }
   static std::string stmt_name() { return "eval-lrs-union"; }
 
@@ -265,6 +282,7 @@ class Evaluator_Lrs_Max : public Evaluator_Unary_Set_List_Operator_Syntax< Evalu
 {
 public:
   static Unary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_Max > statement_maker;
+  static Unary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_Max > evaluator_maker;
   static std::string stmt_func_name() { return "lrs_max"; }
   static std::string stmt_name() { return "eval-lrs-max"; }
 
@@ -279,6 +297,7 @@ class Evaluator_Lrs_Min : public Evaluator_Unary_Set_List_Operator_Syntax< Evalu
 {
 public:
   static Unary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_Min > statement_maker;
+  static Unary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_Min > evaluator_maker;
   static std::string stmt_func_name() { return "lrs_min"; }
   static std::string stmt_name() { return "eval-lrs-min"; }
 

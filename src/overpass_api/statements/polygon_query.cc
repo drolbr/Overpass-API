@@ -224,9 +224,10 @@ void add_segment_blocks(std::vector< Aligned_Segment >& segments)
 
 
 Polygon_Query_Statement::Statement_Maker Polygon_Query_Statement::statement_maker;
+Polygon_Query_Statement::Criterion_Maker Polygon_Query_Statement::criterion_maker;
 
 
-Statement* Polygon_Query_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
+Statement* Polygon_Query_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& tree_it,
     const std::string& type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

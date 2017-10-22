@@ -137,9 +137,10 @@ void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 
 
 User_Statement::Statement_Maker User_Statement::statement_maker;
+User_Statement::Criterion_Maker User_Statement::criterion_maker;
 
 
-Statement* User_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+Statement* User_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& result_type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

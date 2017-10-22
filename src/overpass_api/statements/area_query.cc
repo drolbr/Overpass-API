@@ -194,9 +194,10 @@ bool Area_Query_Statement::is_used_ = false;
 
 
 Area_Query_Statement::Statement_Maker Area_Query_Statement::statement_maker;
+Area_Query_Statement::Criterion_Maker Area_Query_Statement::criterion_maker;
 
 
-Statement* Area_Query_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& input_tree,
+Statement* Area_Query_Statement::Criterion_Maker::create_criterion(const Token_Node_Ptr& input_tree,
     const std::string& type, const std::string& into,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

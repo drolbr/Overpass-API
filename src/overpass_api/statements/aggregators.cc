@@ -148,6 +148,7 @@ bool try_parse_input_set(const Token_Node_Ptr& tree_it, Error_Output* error_outp
 
 
 Aggregator_Statement_Maker< Evaluator_Union_Value > Evaluator_Union_Value::statement_maker;
+Aggregator_Evaluator_Maker< Evaluator_Union_Value > Evaluator_Union_Value::evaluator_maker;
 
 
 void Evaluator_Union_Value::Aggregator::update_value(const std::string& value)
@@ -161,6 +162,7 @@ void Evaluator_Union_Value::Aggregator::update_value(const std::string& value)
 
 
 Aggregator_Statement_Maker< Evaluator_Min_Value > Evaluator_Min_Value::statement_maker;
+Aggregator_Evaluator_Maker< Evaluator_Min_Value > Evaluator_Min_Value::evaluator_maker;
 
 
 void Evaluator_Min_Value::Aggregator::update_value(const std::string& value)
@@ -208,6 +210,7 @@ std::string Evaluator_Min_Value::Aggregator::get_value()
 
 
 Aggregator_Statement_Maker< Evaluator_Max_Value > Evaluator_Max_Value::statement_maker;
+Aggregator_Evaluator_Maker< Evaluator_Max_Value > Evaluator_Max_Value::evaluator_maker;
 
 
 void Evaluator_Max_Value::Aggregator::update_value(const std::string& value)
@@ -255,6 +258,7 @@ std::string Evaluator_Max_Value::Aggregator::get_value()
 
 
 Aggregator_Statement_Maker< Evaluator_Sum_Value > Evaluator_Sum_Value::statement_maker;
+Aggregator_Evaluator_Maker< Evaluator_Sum_Value > Evaluator_Sum_Value::evaluator_maker;
 
 
 void Evaluator_Sum_Value::Aggregator::update_value(const std::string& value)
@@ -294,6 +298,7 @@ std::string Evaluator_Sum_Value::Aggregator::get_value()
 
 
 Aggregator_Statement_Maker< Evaluator_Set_Value > Evaluator_Set_Value::statement_maker;
+Aggregator_Evaluator_Maker< Evaluator_Set_Value > Evaluator_Set_Value::evaluator_maker;
 
 
 void Evaluator_Set_Value::Aggregator::update_value(const std::string& value)
@@ -322,6 +327,7 @@ std::string Evaluator_Set_Value::Aggregator::get_value()
 
 
 Evaluator_Set_Count::Statement_Maker Evaluator_Set_Count::statement_maker;
+Evaluator_Set_Count::Evaluator_Maker Evaluator_Set_Count::evaluator_maker;
 
 
 bool Evaluator_Set_Count::try_parse_object_type(const std::string& input, Evaluator_Set_Count::Objects& result)
@@ -340,7 +346,7 @@ bool Evaluator_Set_Count::try_parse_object_type(const std::string& input, Evalua
 }
 
 
-Statement* Evaluator_Set_Count::Statement_Maker::create_evaluator(
+Statement* Evaluator_Set_Count::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {

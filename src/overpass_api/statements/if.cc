@@ -24,29 +24,6 @@
 If_Statement::Statement_Maker If_Statement::statement_maker;
 
 
-Statement* If_Statement::Statement_Maker::create_criterion(const Token_Node_Ptr& tree_it,
-    const std::string& type, const std::string& into,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  Statement* filter = 0;
-  uint line_nr = tree_it->line_col.first;
-  
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    Statement* criterion = stmt_factory.create_evaluator(tree_it.rhs(), Statement::elem_eval_possible);
-    if (criterion)
-    {
-      std::map< std::string, std::string > attributes;
-      filter = new If_Statement(line_nr, attributes, global_settings);
-      if (filter)
-        filter->add_statement(criterion, "");
-    }
-  }
-
-  return filter;
-}
-
-
 If_Statement::If_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_), criterion(0)
