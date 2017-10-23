@@ -51,11 +51,7 @@ Operator_Eval_Maker< Evaluator_Not > Evaluator_Not::evaluator_maker;
 
 std::string Evaluator_Not::process(const std::string& rhs_s) const
 {
-  double rhs_d = 0;  
-  if (try_double(rhs_s, rhs_d))
-    return !rhs_d ? "1" : "0";
-  
-  return rhs_s == "" ? "1" : "0";
+  return string_represents_boolean_true(rhs_s) ? "0" : "1";
 }
 
 

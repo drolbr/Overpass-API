@@ -150,12 +150,7 @@ Operator_Eval_Maker< Evaluator_And > Evaluator_And::evaluator_maker;
 
 std::string Evaluator_And::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  double lhs_d = 0;
-  double rhs_d = 0;  
-  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
-    return lhs_d && rhs_d ? "1" : "0";
-  
-  return (lhs_s != "") && (rhs_s != "") ? "1" : "0";
+  return string_represents_boolean_true(lhs_s) && string_represents_boolean_true(rhs_s) ? "1" : "0";
 }
 
 
@@ -168,12 +163,7 @@ Operator_Eval_Maker< Evaluator_Or > Evaluator_Or::evaluator_maker;
 
 std::string Evaluator_Or::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  double lhs_d = 0;
-  double rhs_d = 0;  
-  if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
-    return lhs_d || rhs_d ? "1" : "0";
-  
-  return (lhs_s != "") || (rhs_s != "") ? "1" : "0";
+  return string_represents_boolean_true(lhs_s) || string_represents_boolean_true(rhs_s) ? "1" : "0";
 }
 
 

@@ -85,15 +85,6 @@ Eval_Task* Ternary_Evaluator::get_task(Prepare_Task_Context& context)
 }
 
 
-bool string_represents_boolean_true(const std::string& val)
-{
-  double val_d = 0;
-  if (try_double(val, val_d))
-    return val_d != 0;
-  return !val.empty();
-}
-
-
 std::string Ternary_Eval_Task::eval(const std::string* key) const
 {
   if (!condition)

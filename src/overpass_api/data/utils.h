@@ -121,6 +121,15 @@ inline bool try_int64(const std::string& input, int64& result)
 }
 
 
+inline bool string_represents_boolean_true(const std::string& val)
+{
+  double val_d = 0;
+  if (try_double(val, val_d))
+    return val_d != 0;
+  return !val.empty();
+}
+
+
 template< typename T >
 struct Array
 {
