@@ -38,7 +38,6 @@ public:
   virtual Eval_Task* get_task(Prepare_Task_Context& context);
 
   virtual std::string process(const std::string& rhs_result) const = 0;
-  static bool needs_an_element_to_eval() { return false; }
 
 protected:
   Evaluator* rhs;

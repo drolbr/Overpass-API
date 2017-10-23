@@ -125,6 +125,7 @@ statements_cc = \
   overpass_api/statements/statement.cc \
   overpass_api/statements/string_endomorphisms.cc \
   overpass_api/statements/tag_value.cc \
+  overpass_api/statements/ternary_operator.cc \
   overpass_api/statements/timeline.cc \
   overpass_api/statements/unary_functions.cc \
   overpass_api/statements/unary_operators.cc \
@@ -294,6 +295,7 @@ nobase_dist_HEADERS = \
   overpass_api/statements/statement.h\
   overpass_api/statements/string_endomorphisms.h\
   overpass_api/statements/tag_value.h\
+  overpass_api/statements/ternary_operator.h\
   overpass_api/statements/timeline.h\
   overpass_api/statements/unary_functions.h\
   overpass_api/statements/unary_operators.h\

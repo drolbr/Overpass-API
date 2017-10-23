@@ -27,6 +27,7 @@
 #include "set_prop.h"
 #include "string_endomorphisms.h"
 #include "tag_value.h"
+#include "ternary_operator.h"
 #include "testing_tools.h"
 #include "unary_operators.h"
 #include "union.h"
@@ -158,6 +159,25 @@ void pair_test(Parsed_Query& global_settings, Transaction& transaction,
 
   Statement* subs = add_prop_stmt(key, &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Pair(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt(value1, subs, stmt_cont);
+  add_fixed_stmt(value2, subs, stmt_cont);
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+}
+
+
+void triple_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string key, std::string condition, std::string value1, std::string value2)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  Statement_Container stmt_cont(global_settings);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = add_prop_stmt(key, &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Ternary_Evaluator(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt(condition, subs, stmt_cont);
   add_fixed_stmt(value1, subs, stmt_cont);
   add_fixed_stmt(value2, subs, stmt_cont);
 
@@ -1041,6 +1061,14 @@ int main(int argc, char* args[])
       suffix_test(global_settings, transaction, "test-suffix", global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "82"))
       lrs_test(global_settings, transaction, "test-lrs", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "83"))
+      triple_test(global_settings, transaction, "test-ternary", "ternary", "1", "A", "B");
+    if ((test_to_execute == "") || (test_to_execute == "84"))
+      triple_test(global_settings, transaction, "test-ternary", "ternary", "false", "A", "B");
+    if ((test_to_execute == "") || (test_to_execute == "85"))
+      triple_test(global_settings, transaction, "test-ternary", "ternary", "0", "A", "B");
+    if ((test_to_execute == "") || (test_to_execute == "86"))
+      triple_test(global_settings, transaction, "test-ternary", "ternary", "", "A", "B");
 
     std::cout<<"</osm>\n";
   }

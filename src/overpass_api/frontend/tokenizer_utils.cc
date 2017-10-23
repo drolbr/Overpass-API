@@ -332,8 +332,8 @@ int operator_priority(const std::string& operator_name, bool unary)
   {
     priority[","] = 1;
     priority["="] = 2;
-    priority[":"] = 3;
-    priority["?"] = 4;
+    priority["?"] = 3;
+    priority[":"] = 4;
     priority["||"] = 5;
     priority["&&"] = 6;
     priority["=="] = 7;

@@ -55,6 +55,7 @@ is evaluated to <em>2 + 12</em>, then finally <em>14</em>.
 is evaluated to <em>5 * 4</em>, then finally <em>20</em>.
 
 The order of precedence is as follows, ordered weak to strong binding:
+* the ternary operator
 * logical disjunction
 * logical conjunction
 * equality, inequality
@@ -84,7 +85,6 @@ public:
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const = 0;
 
   static bool applicable_by_subtree_structure(const Token_Node_Ptr& tree_it) { return tree_it->lhs && tree_it->rhs; }
-  static bool needs_an_element_to_eval() { return false; }
   static void add_substatements(Statement* result, const std::string& operator_name, const Token_Node_Ptr& tree_it,
       Statement::QL_Context tree_context, Statement::Factory& stmt_factory, Error_Output* error_output);
 
