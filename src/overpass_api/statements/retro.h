@@ -32,7 +32,7 @@
 ''since v0.7.55''
 
 The block statement <em>retro</em> executes its substatements
-for the date given in the expression.
+for the date given in the evaluator.
 
 It is currently undefined
 whether the content of variables from outside the block is available within the block and vice versa.

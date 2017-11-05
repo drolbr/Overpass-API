@@ -891,10 +891,10 @@ struct Optional
 class Collection_Print_Target
 {
   public:
-    Collection_Print_Target(uint32 mode_, Transaction& transaction,
-        Extra_Data* extra_data_, Output_Handler* output_)
-        : final_target(0), extra_data(extra_data_), output(output_),
-        output_mode(mode_) {}
+    Collection_Print_Target(uint32 mode_, Transaction& transaction, Output_Handler* output_,
+        const Set& lhs_set, uint64 lhs_timestamp)
+        : final_target(0), output(output_), output_mode(mode_),
+        lhs_set_(lhs_set), lhs_timestamp_(lhs_timestamp) {}
 
     virtual ~Collection_Print_Target() {}
 
@@ -923,9 +923,12 @@ class Collection_Print_Target
 
     void set_target(bool target);
 
-    void clear_nodes(Resource_Manager& rman, bool add_deletion_information = false);
-    void clear_ways(Resource_Manager& rman, bool add_deletion_information = false);
-    void clear_relations(Resource_Manager& rman, bool add_deletion_information = false);
+    void clear_nodes(Resource_Manager& rman, Extra_Data* extra_data, bool add_deletion_information = false);
+    void clear_ways(Resource_Manager& rman, Extra_Data* extra_data, bool add_deletion_information = false);
+    void clear_relations(Resource_Manager& rman, Extra_Data* extra_data, bool add_deletion_information = false);
+    
+    const Set& lhs_set() const { return lhs_set_; }
+    uint64 lhs_timestamp() const { return lhs_timestamp_; }
 
   private:
     
@@ -1014,9 +1017,10 @@ class Collection_Print_Target
     std::vector< std::pair< Node_Entry, Node_Entry > > different_nodes;
     std::vector< std::pair< Way_Entry, Way_Entry > > different_ways;
     std::vector< std::pair< Relation_Entry, Relation_Entry > > different_relations;
-    Extra_Data* extra_data;
     Output_Handler* output;
     Output_Mode output_mode;
+    Set lhs_set_;
+    uint64 lhs_timestamp_;
 };
 
 
@@ -1422,7 +1426,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
 }
 
 
-void Collection_Print_Target::clear_nodes(Resource_Manager& rman, bool add_deletion_information)
+void Collection_Print_Target::clear_nodes(Resource_Manager& rman, Extra_Data* extra_data, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -1597,7 +1601,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 }
 
 
-void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deletion_information)
+void Collection_Print_Target::clear_ways(Resource_Manager& rman, Extra_Data* extra_data, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -1781,7 +1785,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
 }
 
 
-void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_deletion_information)
+void Collection_Print_Target::clear_relations(Resource_Manager& rman, Extra_Data* extra_data, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -1930,57 +1934,80 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
   if (!input_set)
     return;
 
-  Extra_Data extra_data(rman, *this, *input_set, Output_Mode::ID
+  if (collection_mode == collect_lhs)
+  {
+    delete collection_print_target;
+    collection_print_target = new Collection_Print_Target(
+        mode, *rman.get_transaction(), rman.get_global_settings().get_output_handler(), *input_set,
+        rman.get_desired_timestamp());
+  }
+  else
+  {
+    uint64 rhs_timestamp = rman.get_desired_timestamp();
+    rman.set_desired_timestamp(collection_print_target->lhs_timestamp());
+    
+    Extra_Data extra_data_lhs(rman, *this, collection_print_target->lhs_set(), Output_Mode::ID
         | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
         | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
         | Output_Mode::GEOMETRY, south, north, west, east);
 
-  if (collection_mode == collect_lhs)
-    collection_print_target = new Collection_Print_Target(
-        mode, *rman.get_transaction(), &extra_data, rman.get_global_settings().get_output_handler());
-  else
+    tags_quadtile(extra_data_lhs, collection_print_target->lhs_set().nodes,
+		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
+
+    if (rman.get_desired_timestamp() != NOW)
+      tags_quadtile_attic(extra_data_lhs, collection_print_target->lhs_set().attic_nodes,
+                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
+
+    tags_quadtile(extra_data_lhs, collection_print_target->lhs_set().ways,
+		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
+
+    if (rman.get_desired_timestamp() != NOW)
+      tags_quadtile_attic(extra_data_lhs, collection_print_target->lhs_set().attic_ways,
+                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
+
+    tags_quadtile(extra_data_lhs, collection_print_target->lhs_set().relations,
+		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
+
+    if (rman.get_desired_timestamp() != NOW)
+      tags_quadtile_attic(extra_data_lhs, collection_print_target->lhs_set().attic_relations,
+                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
+    
+    rman.set_desired_timestamp(rhs_timestamp);
+      
     collection_print_target->set_target(true);
+    
+    Extra_Data extra_data_rhs(rman, *this, *input_set, Output_Mode::ID
+        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+        | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+        | Output_Mode::GEOMETRY, south, north, west, east);
 
-  uint32 outer_mode = mode;
-  mode = Output_Mode::ID
-      | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
-      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
-      | Output_Mode::GEOMETRY;
-
-  {
-    tags_quadtile(extra_data, input_set->nodes,
+    tags_quadtile(extra_data_rhs, input_set->nodes,
 		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data, input_set->attic_nodes,
+      tags_quadtile_attic(extra_data_rhs, input_set->attic_nodes,
                       *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
-    if (collection_mode == collect_rhs)
-      collection_print_target->clear_nodes(rman, add_deletion_information);
+    collection_print_target->clear_nodes(rman, &extra_data_rhs, add_deletion_information);
 
-    tags_quadtile(extra_data, input_set->ways,
+    tags_quadtile(extra_data_rhs, input_set->ways,
 		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data, input_set->attic_ways,
+      tags_quadtile_attic(extra_data_rhs, input_set->attic_ways,
                       *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
-    if (collection_mode == collect_rhs)
-      collection_print_target->clear_ways(rman, add_deletion_information);
+    collection_print_target->clear_ways(rman, &extra_data_rhs, add_deletion_information);
 
-    tags_quadtile(extra_data, input_set->relations,
+    tags_quadtile(extra_data_rhs, input_set->relations,
 		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
     if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data, input_set->attic_relations,
+      tags_quadtile_attic(extra_data_rhs, input_set->attic_relations,
                       *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
 
-    if (collection_mode == collect_rhs)
-      collection_print_target->clear_relations(rman, add_deletion_information);
+    collection_print_target->clear_relations(rman, &extra_data_rhs, add_deletion_information);
   }
-
-  if (collection_mode == collect_lhs)
-    mode = outer_mode;
 
   rman.health_check(*this);
 }
