@@ -178,7 +178,7 @@ Print_Statement::Print_Statement
 struct Extra_Data
 {
   Extra_Data(
-      Resource_Manager& rman, const Print_Statement& stmt, const Set& to_print, unsigned int mode_,
+      Resource_Manager& rman, const Statement& stmt, const Set& to_print, unsigned int mode_,
       double south, double north, double west, double east);
   ~Extra_Data();
 
@@ -195,7 +195,7 @@ struct Extra_Data
 
 
 Extra_Data::Extra_Data(
-    Resource_Manager& rman, const Print_Statement& stmt, const Set& to_print, unsigned int mode_,
+    Resource_Manager& rman, const Statement& stmt, const Set& to_print, unsigned int mode_,
     double south, double north, double west, double east)
     : mode(mode_), way_geometry_store(0), attic_way_geometry_store(0),
     relation_geometry_store(0), attic_relation_geometry_store(0), roles(0), users(0)
@@ -878,31 +878,44 @@ void Print_Statement::execute(Resource_Manager& rman)
 }
 
 
-template < typename T >
-struct Optional
+class Set_Comparison
 {
-  Optional(T* obj_) : obj(obj_) {}
-  ~Optional() { delete obj; }
+public:
+  Set_Comparison(Transaction& transaction, const Set& lhs_set, uint64 lhs_timestamp)
+      : final_target(0), lhs_set_(lhs_set), lhs_timestamp_(lhs_timestamp) {}
 
-  T* obj;
-};
+  void compare_to_lhs(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
+      double south, double north, double west, double east, bool add_deletion_information);
 
+  void print_nodes(uint32 output_mode, Output_Handler* output, const std::map< uint32, std::string >& users,
+      bool add_deletion_information);
+  void print_ways(uint32 output_mode, Output_Handler* output, const std::map< uint32, std::string >& users,
+      bool add_deletion_information);
+  void print_relations(uint32 output_mode, Output_Handler* output,
+      const std::map< uint32, std::string >& users, const std::map< uint32, std::string >& roles,
+      bool add_deletion_information);
 
-class Collection_Print_Target
-{
-  public:
-    Collection_Print_Target(Transaction& transaction, const Set& lhs_set, uint64 lhs_timestamp)
-        : final_target(0), lhs_set_(lhs_set), lhs_timestamp_(lhs_timestamp) {}
-
-    virtual ~Collection_Print_Target() {}
-
-    virtual void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+private:
+  void print_item(Extra_Data& extra_data, uint32 ll_upper, const Node_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users);
+    void print_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags = 0,
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
                             const Output_Handler::Feature_Action& action = Output_Handler::keep,
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta = 0);
-    virtual void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+
+  void print_item(Extra_Data& extra_data, uint32 ll_upper, const Way_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users);
+  void print_item(Extra_Data& extra_data, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users);
+    void print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
@@ -910,7 +923,16 @@ class Collection_Print_Target
                             const std::map< uint32, std::string >* users = 0,
                             const Output_Handler::Feature_Action& action = Output_Handler::keep,
                             const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta = 0);
-    virtual void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+
+  void print_item(Extra_Data& extra_data, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users);
+  void print_item(Extra_Data& extra_data, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users);
+    void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
@@ -924,19 +946,18 @@ class Collection_Print_Target
     void clear_nodes(Resource_Manager& rman, bool add_deletion_information = false);
     void clear_ways(Resource_Manager& rman, bool add_deletion_information = false);
     void clear_relations(Resource_Manager& rman, bool add_deletion_information = false);
-
-    void print_nodes(uint32 output_mode, Output_Handler* output, Extra_Data* extra_data,
-        bool add_deletion_information = false);
-    void print_ways(uint32 output_mode, Output_Handler* output, Extra_Data* extra_data,
-        bool add_deletion_information = false);
-    void print_relations(uint32 output_mode, Output_Handler* output, Extra_Data* extra_data,
-        bool add_deletion_information = false);
     
     const Set& lhs_set() const { return lhs_set_; }
     uint64 lhs_timestamp() const { return lhs_timestamp_; }
 
-  private:
-    
+  template< class Index, class Object >
+  void tags_quadtile
+      (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items, Resource_Manager& rman);
+  template< class Index, class Object >
+  void tags_quadtile_attic
+      (Extra_Data& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
+      Resource_Manager& rman);
+
     typedef std::vector< std::pair< std::string, std::string > > Tag_Container;
 
     struct Node_Entry
@@ -1027,7 +1048,7 @@ class Collection_Print_Target
 };
 
 
-void Collection_Print_Target::set_target(bool target)
+void Set_Comparison::set_target(bool target)
 {
   final_target = target;
   std::sort(nodes.begin(), nodes.end());
@@ -1036,12 +1057,12 @@ void Collection_Print_Target::set_target(bool target)
 }
 
 
-void print_item(Extra_Data& extra_data, Collection_Print_Target& target, uint32 ll_upper, const Node_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0,
-                    const std::map< uint32, std::string >* users = 0)
+void Set_Comparison::print_item(Extra_Data& extra_data, uint32 ll_upper, const Node_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users)
 {
-  target.print_item(ll_upper, skel, tags, meta, users);
+  print_item(ll_upper, skel, tags, meta, users);
 }
 
 
@@ -1135,85 +1156,85 @@ const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_
 }
 
 
-void print_item(Extra_Data& extra_data, Collection_Print_Target& target, uint32 ll_upper, const Way_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const std::map< uint32, std::string >* users = 0)
+void Set_Comparison::print_item(Extra_Data& extra_data, uint32 ll_upper, const Way_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users)
 {
   if (extra_data.way_geometry_store)
   {
     std::vector< Quad_Coord > geometry = extra_data.way_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    target.print_item(ll_upper, skel, tags,
+    print_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
         ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
         meta, users);
   }
   else
-    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+    print_item(ll_upper, skel, tags, 0, 0, meta, users);
 }
 
 
-void print_item(Extra_Data& extra_data, Collection_Print_Target& target, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta = 0,
-                    const std::map< uint32, std::string >* users = 0)
+void Set_Comparison::print_item(Extra_Data& extra_data, uint32 ll_upper, const Attic< Way_Skeleton >& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users)
 {
   if (extra_data.attic_way_geometry_store)
   {
     std::vector< Quad_Coord > geometry = extra_data.attic_way_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    target.print_item(ll_upper, skel, tags,
+    print_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
         ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
         meta, users);
   }
   else
-    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+    print_item(ll_upper, skel, tags, 0, 0, meta, users);
 }
 
 
-void print_item(Extra_Data& extra_data, Collection_Print_Target& target, uint32 ll_upper, const Relation_Skeleton& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const std::map< uint32, std::string >* users = 0)
+void Set_Comparison::print_item(Extra_Data& extra_data, uint32 ll_upper, const Relation_Skeleton& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users)
 {
   if (extra_data.relation_geometry_store)
   {
     std::vector< std::vector< Quad_Coord > > geometry = extra_data.relation_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    target.print_item(ll_upper, skel, tags,
+    print_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
         ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
         meta, users);
   }
   else
-    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+    print_item(ll_upper, skel, tags, 0, 0, meta, users);
 }
 
 
-void print_item(Extra_Data& extra_data, Collection_Print_Target& target, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
-                    const std::vector< std::pair< std::string, std::string > >* tags = 0,
-                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta = 0,
-                    const std::map< uint32, std::string >* users = 0)
+void Set_Comparison::print_item(Extra_Data& extra_data, uint32 ll_upper, const Attic< Relation_Skeleton >& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users)
 {
   if (extra_data.attic_relation_geometry_store)
   {
     std::vector< std::vector< Quad_Coord > > geometry = extra_data.attic_relation_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    target.print_item(ll_upper, skel, tags,
+    print_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
         ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
         meta, users);
   }
   else
-    target.print_item(ll_upper, skel, tags, 0, 0, meta, users);
+    print_item(ll_upper, skel, tags, 0, 0, meta, users);
 }
 
 
 template< class TIndex, class TObject >
 void quadtile
-    (const std::map< TIndex, std::vector< TObject > >& items, Collection_Print_Target& target,
+    (const std::map< TIndex, std::vector< TObject > >& items, Set_Comparison& target,
      Transaction& transaction, Extra_Data& extra_data, uint32 limit, uint32& element_count)
 {
   typename std::map< TIndex, std::vector< TObject > >::const_iterator
@@ -1234,16 +1255,14 @@ void quadtile
 
 
 template< class Index, class Object >
-void tags_quadtile
-    (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items,
-     Collection_Print_Target& target,
-     Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
+void Set_Comparison::tags_quadtile
+    (Extra_Data& extra_data, const std::map< Index, std::vector< Object > >& items, Resource_Manager& rman)
 {
   Tag_Store< Index, Object > tag_store(*rman.get_transaction());
   tag_store.prefetch_all(items);
 
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
+  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
       (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
 
   typename std::map< Index, std::vector< Object > >::const_iterator
@@ -1254,9 +1273,7 @@ void tags_quadtile
     for (typename std::vector< Object >::const_iterator it2(item_it->second.begin());
         it2 != item_it->second.end(); ++it2)
     {
-      if (++element_count > limit)
-        return;
-      print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
+      print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
           meta_printer.get(item_it->first, it2->id), extra_data.users);
     }
     ++item_it;
@@ -1265,19 +1282,18 @@ void tags_quadtile
 
 
 template< class Index, class Object >
-void tags_quadtile_attic
+void Set_Comparison::tags_quadtile_attic
     (Extra_Data& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
-     Collection_Print_Target& target,
-     Resource_Manager& rman, Transaction& transaction, uint32 limit, uint32& element_count)
+     Resource_Manager& rman)
 {
-  Tag_Store< Index, Object > tag_store(transaction);
+  Tag_Store< Index, Object > tag_store(*rman.get_transaction());
   tag_store.prefetch_all(items);
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, transaction,
+      (items, *rman.get_transaction(),
       (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
   Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, transaction,
+      (items, *rman.get_transaction(),
       (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
@@ -1287,13 +1303,11 @@ void tags_quadtile_attic
     for (typename std::vector< Attic< Object > >::const_iterator it2(item_it->second.begin());
         it2 != item_it->second.end(); ++it2)
     {
-      if (++element_count > limit)
-        return;
       const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
           = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
       if (!meta)
         meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-      print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
+      print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
                  meta, extra_data.users);
     }
     ++item_it;
@@ -1392,7 +1406,7 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
 }
 
 
-void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& skel,
+void Set_Comparison::print_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
                             const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
@@ -1429,7 +1443,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Node_Skeleton& s
 }
 
 
-void Collection_Print_Target::clear_nodes(Resource_Manager& rman, bool add_deletion_information)
+void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -1506,8 +1520,9 @@ void Collection_Print_Target::clear_nodes(Resource_Manager& rman, bool add_delet
 }
 
 
-void Collection_Print_Target::print_nodes(
-    uint32 output_mode, Output_Handler* output, Extra_Data* extra_data, bool add_deletion_information)
+void Set_Comparison::print_nodes(
+    uint32 output_mode, Output_Handler* output,
+    const std::map< uint32, std::string >& users, bool add_deletion_information)
 {
   std::sort(different_nodes.begin(), different_nodes.end());
   for (std::vector< std::pair< Node_Entry, Node_Entry > >::const_iterator it = different_nodes.begin();
@@ -1523,7 +1538,7 @@ void Collection_Print_Target::print_nodes(
                 ::lon(it->first.idx.val(), it->first.elem.ll_lower)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            extra_data->get_users(), output_mode,
+            &users, output_mode,
             it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
@@ -1533,7 +1548,7 @@ void Collection_Print_Target::print_nodes(
                 ::lon(it->first.idx.val(), it->first.elem.ll_lower)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            extra_data->get_users(), output_mode, Output_Handler::erase);
+            &users, output_mode, Output_Handler::erase);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -1549,7 +1564,7 @@ void Collection_Print_Target::print_nodes(
       output->print_item(it->first.elem, *old_opaque,
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          extra_data->get_users(), output_mode, Output_Handler::modify,
+          &users, output_mode, Output_Handler::modify,
           &it->second.elem, &new_geom,
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0);
@@ -1561,12 +1576,12 @@ void Collection_Print_Target::print_nodes(
               ::lon(it->second.idx.val(), it->second.elem.ll_lower)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          extra_data->get_users(), output_mode, Output_Handler::create);
+          &users, output_mode, Output_Handler::create);
   }
 }
 
 
-void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& skel,
+void Set_Comparison::print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< Quad_Coord >* geometry,
@@ -1610,7 +1625,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Way_Skeleton& sk
 }
 
 
-void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deletion_information)
+void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -1688,8 +1703,9 @@ void Collection_Print_Target::clear_ways(Resource_Manager& rman, bool add_deleti
 }
 
 
-void Collection_Print_Target::print_ways(
-    uint32 output_mode, Output_Handler* output, Extra_Data* extra_data, bool add_deletion_information)
+void Set_Comparison::print_ways(
+    uint32 output_mode, Output_Handler* output,
+    const std::map< uint32, std::string >& users, bool add_deletion_information)
 {
   std::sort(different_ways.begin(), different_ways.end());
   for (std::vector< std::pair< Way_Entry, Way_Entry > >::const_iterator it = different_ways.begin();
@@ -1707,7 +1723,7 @@ void Collection_Print_Target::print_ways(
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            extra_data->get_users(), output_mode,
+            &users, output_mode,
             it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
@@ -1717,7 +1733,7 @@ void Collection_Print_Target::print_ways(
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            extra_data->get_users(), output_mode, Output_Handler::erase);
+            &users, output_mode, Output_Handler::erase);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -1731,7 +1747,7 @@ void Collection_Print_Target::print_ways(
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          extra_data->get_users(), output_mode, Output_Handler::modify,
+          &users, output_mode, Output_Handler::modify,
           &it->second.elem,
           &new_broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
               bound_variant(double_coords_new, output_mode)),
@@ -1748,13 +1764,13 @@ void Collection_Print_Target::print_ways(
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          extra_data->get_users(), output_mode, Output_Handler::create);
+          &users, output_mode, Output_Handler::create);
     }
   }
 }
 
 
-void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+void Set_Comparison::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< std::vector< Quad_Coord > >* geometry,
@@ -1799,7 +1815,7 @@ void Collection_Print_Target::print_item(uint32 ll_upper, const Relation_Skeleto
 }
 
 
-void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_deletion_information)
+void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -1880,8 +1896,10 @@ void Collection_Print_Target::clear_relations(Resource_Manager& rman, bool add_d
 }
 
 
-void Collection_Print_Target::print_relations(
-    uint32 output_mode, Output_Handler* output, Extra_Data* extra_data, bool add_deletion_information)
+void Set_Comparison::print_relations(
+    uint32 output_mode, Output_Handler* output,
+    const std::map< uint32, std::string >& users, const std::map< uint32, std::string >& roles,
+    bool add_deletion_information)
 {
   std::sort(different_relations.begin(), different_relations.end());
   for (std::vector< std::pair< Relation_Entry, Relation_Entry > >::const_iterator it = different_relations.begin();
@@ -1899,7 +1917,7 @@ void Collection_Print_Target::print_relations(
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            extra_data->roles, extra_data->get_users(), output_mode,
+            &roles, &users, output_mode,
             it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
             &new_skel, 0, 0, &it->second.meta);
       }
@@ -1909,7 +1927,7 @@ void Collection_Print_Target::print_relations(
                 bound_variant(double_coords, output_mode)),
             (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
             (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            extra_data->roles, extra_data->get_users(), output_mode, Output_Handler::erase);
+            &roles, &users, output_mode, Output_Handler::erase);
     }
     else if (it->first.idx.val() != 0xffu)
     {
@@ -1923,7 +1941,7 @@ void Collection_Print_Target::print_relations(
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
           (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          extra_data->roles, extra_data->get_users(), output_mode, Output_Handler::modify,
+          &roles, &users, output_mode, Output_Handler::modify,
           &it->second.elem,
           &new_broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
               bound_variant(double_coords_new, output_mode)),
@@ -1940,89 +1958,84 @@ void Collection_Print_Target::print_relations(
               bound_variant(double_coords, output_mode)),
           (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
           (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          extra_data->roles, extra_data->get_users(), output_mode, Output_Handler::create);
+          &roles, &users, output_mode, Output_Handler::create);
     }
   }
+}
+
+
+void Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement& stmt,
+    const Set& input_set, double south, double north, double west, double east, bool add_deletion_information)
+{
+  uint64 rhs_timestamp = rman.get_desired_timestamp();
+  rman.set_desired_timestamp(lhs_timestamp_);
+    
+  Extra_Data extra_data_lhs(rman, stmt, lhs_set_, Output_Mode::ID
+      | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+      | Output_Mode::GEOMETRY, south, north, west, east);
+
+  tags_quadtile(extra_data_lhs, lhs_set_.nodes, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_lhs, lhs_set_.attic_nodes, rman);
+
+  tags_quadtile(extra_data_lhs, lhs_set_.ways, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_lhs, lhs_set_.attic_ways, rman);
+
+  tags_quadtile(extra_data_lhs, lhs_set_.relations, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_lhs, lhs_set_.attic_relations, rman);
+    
+  rman.set_desired_timestamp(rhs_timestamp);
+      
+  set_target(true);
+    
+  Extra_Data extra_data_rhs(rman, stmt, input_set, Output_Mode::ID
+      | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+      | Output_Mode::GEOMETRY, south, north, west, east);
+
+  tags_quadtile(extra_data_rhs, input_set.nodes, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_rhs, input_set.attic_nodes, rman);
+  clear_nodes(rman, add_deletion_information);
+
+  tags_quadtile(extra_data_rhs, input_set.ways, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_rhs, input_set.attic_ways, rman);
+  clear_ways(rman, add_deletion_information);
+
+  tags_quadtile(extra_data_rhs, input_set.relations, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, rman);
+  clear_relations(rman, add_deletion_information);
 }
 
 
 void Print_Statement::execute_comparison(Resource_Manager& rman)
 {
   const Set* input_set = rman.get_set(input);
-  uint32 element_count = 0;
   if (!input_set)
     return;
 
   if (collection_mode == collect_lhs)
   {
     delete collection_print_target;
-    collection_print_target = new Collection_Print_Target(
+    collection_print_target = new Set_Comparison(
         *rman.get_transaction(), *input_set, rman.get_desired_timestamp());
   }
   else
   {
-    uint64 rhs_timestamp = rman.get_desired_timestamp();
-    rman.set_desired_timestamp(collection_print_target->lhs_timestamp());
-    
-    Extra_Data extra_data_lhs(rman, *this, collection_print_target->lhs_set(), Output_Mode::ID
-        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
-        | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
-        | Output_Mode::GEOMETRY, south, north, west, east);
-
-    tags_quadtile(extra_data_lhs, collection_print_target->lhs_set().nodes,
-		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data_lhs, collection_print_target->lhs_set().attic_nodes,
-                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-
-    tags_quadtile(extra_data_lhs, collection_print_target->lhs_set().ways,
-		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data_lhs, collection_print_target->lhs_set().attic_ways,
-                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-
-    tags_quadtile(extra_data_lhs, collection_print_target->lhs_set().relations,
-		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data_lhs, collection_print_target->lhs_set().attic_relations,
-                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    
-    rman.set_desired_timestamp(rhs_timestamp);
-      
-    collection_print_target->set_target(true);
-    
-    Extra_Data extra_data_rhs(rman, *this, *input_set, Output_Mode::ID
-        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
-        | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
-        | Output_Mode::GEOMETRY, south, north, west, east);
-
-    tags_quadtile(extra_data_rhs, input_set->nodes,
-		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data_rhs, input_set->attic_nodes,
-                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    collection_print_target->clear_nodes(rman, add_deletion_information);
-
-    tags_quadtile(extra_data_rhs, input_set->ways,
-		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data_rhs, input_set->attic_ways,
-                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    collection_print_target->clear_ways(rman, add_deletion_information);
-
-    tags_quadtile(extra_data_rhs, input_set->relations,
-		    *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    if (rman.get_desired_timestamp() != NOW)
-      tags_quadtile_attic(extra_data_rhs, input_set->attic_relations,
-                      *collection_print_target, rman, *rman.get_transaction(), limit, element_count);
-    collection_print_target->clear_relations(rman, add_deletion_information);
+    collection_print_target->compare_to_lhs(rman, *this, *input_set,
+        south, north, west, east, add_deletion_information);
     
     collection_print_target->print_nodes(mode, rman.get_global_settings().get_output_handler(),
-        &extra_data_rhs, add_deletion_information);
+        rman.users(), add_deletion_information);
     collection_print_target->print_ways(mode, rman.get_global_settings().get_output_handler(),
-        &extra_data_rhs, add_deletion_information);
+        rman.users(), add_deletion_information);
     collection_print_target->print_relations(mode, rman.get_global_settings().get_output_handler(),
-        &extra_data_rhs, add_deletion_information);
+        rman.users(), relation_member_roles(*rman.get_transaction()), add_deletion_information);
   }
 
   rman.health_check(*this);

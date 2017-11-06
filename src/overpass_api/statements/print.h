@@ -28,7 +28,7 @@
 #include "statement.h"
 
 
-class Collection_Print_Target;
+class Set_Comparison;
 
 
 class Print_Statement : public Statement
@@ -141,7 +141,7 @@ class Print_Statement : public Statement
     Output_Mode mode;
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
-    Collection_Print_Target* collection_print_target;
+    Set_Comparison* collection_print_target;
     enum { dont_collect, collect_lhs, collect_rhs } collection_mode;
     bool add_deletion_information;
 
