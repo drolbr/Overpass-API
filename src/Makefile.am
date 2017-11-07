@@ -148,7 +148,7 @@ output_formats_cc = \
 
 libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
-libdata_la_SOURCES = overpass_api/data/collect_members.cc overpass_api/data/geometry_from_quad_coords.cc overpass_api/data/relation_geometry_store.cc overpass_api/data/set_comparison.cc overpass_api/data/way_geometry_store.cc
+libdata_la_SOURCES = overpass_api/data/collect_members.cc overpass_api/data/diff_set.cc overpass_api/data/geometry_from_quad_coords.cc overpass_api/data/relation_geometry_store.cc overpass_api/data/set_comparison.cc overpass_api/data/way_geometry_store.cc
 libdata_la_LIBADD =
 libdispatcher_la_SOURCES = template_db/dispatcher_client.cc overpass_api/dispatch/resource_manager.cc overpass_api/osm-backend/area_updater.cc
 libdispatcher_la_LIBADD =
@@ -223,6 +223,7 @@ nobase_dist_HEADERS = \
   overpass_api/data/bbox_filter.h\
   overpass_api/data/collect_items.h\
   overpass_api/data/collect_members.h\
+  overpass_api/data/diff_set.h\
   overpass_api/data/filenames.h\
   overpass_api/data/filter_by_tags.h\
   overpass_api/data/filter_ids_by_tags.h\

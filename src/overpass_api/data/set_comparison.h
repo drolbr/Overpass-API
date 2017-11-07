@@ -21,6 +21,7 @@
 
 
 #include "collect_members.h"
+#include "diff_set.h"
 #include "geometry_from_quad_coords.h"
 #include "meta_collector.h"
 #include "relation_geometry_store.h"
@@ -58,7 +59,7 @@ public:
   Set_Comparison(Transaction& transaction, const Set& lhs_set, uint64 lhs_timestamp)
       : final_target(0), lhs_set_(lhs_set), lhs_timestamp_(lhs_timestamp) {}
 
-  void compare_to_lhs(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
+  Diff_Set compare_to_lhs(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
       double south, double north, double west, double east, bool add_deletion_information);
 
   void print_nodes(uint32 output_mode, Output_Handler* output, const std::map< uint32, std::string >& users,
@@ -132,93 +133,14 @@ private:
       (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
       Resource_Manager& rman);
 
-    typedef std::vector< std::pair< std::string, std::string > > Tag_Container;
+  bool final_target;
+  std::vector< Node_With_Context > nodes;
+  std::vector< Way_With_Context > ways;
+  std::vector< Relation_With_Context > relations;
+  Set lhs_set_;
+  uint64 lhs_timestamp_;
 
-    struct Node_Entry
-    {
-      Uint31_Index idx;
-      Node_Skeleton elem;
-      OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta;
-      Tag_Container tags;
-
-      Node_Entry(Uint31_Index idx_, Node_Skeleton elem_,
-            OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta_
-                = OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
-            Tag_Container tags_
-                = Tag_Container())
-          : idx(idx_), elem(elem_), meta(meta_), tags(tags_) {}
-
-      bool operator<(const Node_Entry& e) const
-      {
-        if (this->elem.id < e.elem.id)
-          return true;
-        if (e.elem.id < this->elem.id)
-          return false;
-        return (this->meta.version < e.meta.version);
-      }
-    };
-
-    struct Way_Entry
-    {
-      Uint31_Index idx;
-      Way_Skeleton elem;
-      OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
-      Tag_Container tags;
-      std::vector< Quad_Coord > geometry;
-
-      Way_Entry(Uint31_Index idx_, Way_Skeleton elem_,
-            const std::vector< Quad_Coord >& geometry_,
-            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta_
-                = OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
-            Tag_Container tags_
-                = Tag_Container())
-          : idx(idx_), elem(elem_), meta(meta_), tags(tags_), geometry(geometry_) {}
-
-      bool operator<(const Way_Entry& e) const
-      {
-        if (this->elem.id < e.elem.id)
-          return true;
-        if (e.elem.id < this->elem.id)
-          return false;
-        return (this->meta.version < e.meta.version);
-      }
-    };
-
-    struct Relation_Entry
-    {
-      Uint31_Index idx;
-      Relation_Skeleton elem;
-      OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta;
-      Tag_Container tags;
-      std::vector< std::vector< Quad_Coord > > geometry;
-
-      Relation_Entry(Uint31_Index idx_, Relation_Skeleton elem_,
-            const std::vector< std::vector< Quad_Coord > >& geometry_,
-            OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta_
-                = OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
-            Tag_Container tags_
-                = Tag_Container())
-          : idx(idx_), elem(elem_), meta(meta_), tags(tags_), geometry(geometry_) {}
-
-      bool operator<(const Relation_Entry& e) const
-      {
-        if (this->elem.id < e.elem.id)
-          return true;
-        if (e.elem.id < this->elem.id)
-          return false;
-        return (this->meta.version < e.meta.version);
-      }
-    };
-
-    bool final_target;
-    std::vector< Node_Entry > nodes;
-    std::vector< Way_Entry > ways;
-    std::vector< Relation_Entry > relations;
-    std::vector< std::pair< Node_Entry, Node_Entry > > different_nodes;
-    std::vector< std::pair< Way_Entry, Way_Entry > > different_ways;
-    std::vector< std::pair< Relation_Entry, Relation_Entry > > different_relations;
-    Set lhs_set_;
-    uint64 lhs_timestamp_;
+  Diff_Set result;
 };
 
 

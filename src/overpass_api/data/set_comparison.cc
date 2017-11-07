@@ -91,96 +91,6 @@ void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper
 }
 
 
-struct Double_Coords
-{
-public:
-  explicit Double_Coords(const std::vector< Quad_Coord >& geometry)
-    : min_lat(100.0), max_lat(-100.0), min_lon(200.0), max_lon(-200.0)
-  {
-    for (std::vector< Quad_Coord >::const_iterator it = geometry.begin(); it != geometry.end(); ++it)
-    {
-      if (it->ll_upper != 0 || it->ll_lower != 0)
-      {
-        double lat = ::lat(it->ll_upper, it->ll_lower);
-        double lon = ::lon(it->ll_upper, it->ll_lower);
-        min_lat = std::min(min_lat, lat);
-        max_lat = std::max(max_lat, lat);
-        min_lon = std::min(min_lon, lon);
-        max_lon = std::max(max_lon, lon);
-      }
-    }
-  }
-
-  explicit Double_Coords(const std::vector< std::vector< Quad_Coord > >& geometry)
-    : min_lat(100.0), max_lat(-100.0), min_lon(200.0), max_lon(-200.0)
-  {
-    for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
-         it != geometry.end(); ++it)
-    {
-      for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
-      {
-        if (it2->ll_upper != 0 || it2->ll_lower != 0)
-        {
-          double lat = ::lat(it2->ll_upper, it2->ll_lower);
-          double lon = ::lon(it2->ll_upper, it2->ll_lower);
-          min_lat = std::min(min_lat, lat);
-          max_lat = std::max(max_lat, lat);
-          min_lon = std::min(min_lon, lon);
-          max_lon = std::max(max_lon, lon);
-        }
-      }
-    }
-  }
-
-  const std::pair< Quad_Coord, Quad_Coord* >& bounds()
-  {
-    if (max_lat > -100.0)
-    {
-      max = Quad_Coord(::ll_upper_(max_lat, max_lon), ::ll_lower(max_lat, max_lon));
-      bounds_ = std::make_pair(Quad_Coord(::ll_upper_(min_lat, min_lon), ::ll_lower(min_lat, min_lon)), &max);
-    }
-    else
-    {
-      max = Quad_Coord(0u, 0u);
-      bounds_ = std::make_pair(Quad_Coord(0u, 0u), &max);
-    }
-    return bounds_;
-  }
-
-  const std::pair< Quad_Coord, Quad_Coord* >& center()
-  {
-    if (max_lat > -100.0)
-      center_ = std::make_pair(Quad_Coord(
-          ::ll_upper_((min_lat + max_lat) / 2, (min_lon + max_lon) / 2),
-          ::ll_lower((min_lat + max_lat) / 2, (min_lon + max_lon) / 2)
-          ), (Quad_Coord*)0);
-    else
-      center_ = std::make_pair(Quad_Coord(0u, 0u), (Quad_Coord*)0);
-    return center_;
-  }
-
-private:
-  double min_lat;
-  double max_lat;
-  double min_lon;
-  double max_lon;
-  std::pair< Quad_Coord, Quad_Coord* > bounds_;
-  std::pair< Quad_Coord, Quad_Coord* > center_;
-  Quad_Coord max;
-};
-
-
-const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_coords, unsigned int mode)
-{
-  if (mode & Output_Mode::BOUNDS)
-    return &double_coords.bounds();
-  else if (mode & Output_Mode::CENTER)
-    return &double_coords.center();
-
-  return 0;
-}
-
-
 void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper, const Way_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
@@ -439,22 +349,22 @@ void Set_Comparison::print_item(uint32 ll_upper, const Node_Skeleton& skel,
 {
   if (final_target)
   {
-    std::vector< Node_Entry >::iterator nodes_it
-        = std::lower_bound(nodes.begin(), nodes.end(), Node_Entry(ll_upper, skel));
+    std::vector< Node_With_Context >::iterator nodes_it
+        = std::lower_bound(nodes.begin(), nodes.end(), Node_With_Context(ll_upper, skel));
 
     if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
-      different_nodes.push_back(std::make_pair(
-	  Node_Entry(0xffu, Node_Skeleton(skel.id),
+      result.different_nodes.push_back(std::make_pair(
+	  Node_With_Context(0xffu, Node_Skeleton(skel.id),
 	      OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
 	      std::vector< std::pair< std::string, std::string > >()),
-	  Node_Entry(ll_upper, skel,
+	  Node_With_Context(ll_upper, skel,
               meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
     else
     {
       if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem.ll_lower == skel.ll_lower) ||
           (tags && !(nodes_it->tags == *tags)) || (meta && !(nodes_it->meta.timestamp == meta->timestamp)))
-	different_nodes.push_back(std::make_pair(*nodes_it, Node_Entry(ll_upper, skel,
+	result.different_nodes.push_back(std::make_pair(*nodes_it, Node_With_Context(ll_upper, skel,
                   meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
                   tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
 	
@@ -462,7 +372,7 @@ void Set_Comparison::print_item(uint32 ll_upper, const Node_Skeleton& skel,
     }
   }
   else
-    nodes.push_back(Node_Entry(ll_upper, skel,
+    nodes.push_back(Node_With_Context(ll_upper, skel,
         meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
         tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
 }
@@ -473,7 +383,7 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
   if (add_deletion_information)
   {
     std::vector< Node_Skeleton::Id_Type > searched_ids;
-    for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+    for (std::vector< Node_With_Context >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
 	searched_ids.push_back(it->elem.id);
@@ -486,14 +396,14 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
     std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > > found_meta
         = find_meta_elements< Uint32_Index, Node_Skeleton >(rman, rman.get_diff_to_timestamp(), req, searched_ids);
 
-    for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+    for (std::vector< Node_With_Context >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
       {
 	std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->elem.id);
-	different_nodes.push_back(std::make_pair(*it,
-	    Node_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
+	result.different_nodes.push_back(std::make_pair(*it,
+	    Node_With_Context(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
 		Node_Skeleton(it->elem.id),
 	        meta_it != found_meta.end() ? meta_it->second
 		    : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
@@ -502,8 +412,8 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
     }
     
     searched_ids.clear();
-    for (std::vector< std::pair< Node_Entry, Node_Entry > >::const_iterator
-        it = different_nodes.begin(); it != different_nodes.end(); ++it)
+    for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator
+        it = result.different_nodes.begin(); it != result.different_nodes.end(); ++it)
     {
       if (it->first.idx.val() == 0xffu)
         searched_ids.push_back(it->second.elem.id);
@@ -515,8 +425,8 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
     find_meta_elements< Uint32_Index, Node_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
-    for (std::vector< std::pair< Node_Entry, Node_Entry > >::iterator
-        it = different_nodes.begin(); it != different_nodes.end(); ++it)
+    for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::iterator
+        it = result.different_nodes.begin(); it != result.different_nodes.end(); ++it)
     {
       if (it->first.idx.val() == 0xffu)
       {
@@ -532,77 +442,17 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
   }
   else
   {
-    for (std::vector< Node_Entry >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+    for (std::vector< Node_With_Context >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
-	different_nodes.push_back(std::make_pair(*it,
-	    Node_Entry(0xffu, Node_Skeleton(it->elem.id),
+	result.different_nodes.push_back(std::make_pair(*it,
+	    Node_With_Context(0xffu, Node_Skeleton(it->elem.id),
 	        OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
     }
   }
 
-}
-
-
-void Set_Comparison::print_nodes(
-    uint32 output_mode, Output_Handler* output,
-    const std::map< uint32, std::string >& users, bool add_deletion_information)
-{
-  std::sort(different_nodes.begin(), different_nodes.end());
-  for (std::vector< std::pair< Node_Entry, Node_Entry > >::const_iterator it = different_nodes.begin();
-      it != different_nodes.end(); ++it)
-  {
-    if ((it->second.idx.val() | 2) == 0xffu)
-    {
-      if (add_deletion_information)
-      {
-        Node_Skeleton new_skel(it->first.elem.id);
-        output->print_item(it->first.elem,
-            Point_Geometry(::lat(it->first.idx.val(), it->first.elem.ll_lower),
-                ::lon(it->first.idx.val(), it->first.elem.ll_lower)),
-            (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-            (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode,
-            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
-            &new_skel, 0, 0, &it->second.meta);
-      }
-      else
-        output->print_item(it->first.elem,
-            Point_Geometry(::lat(it->first.idx.val(), it->first.elem.ll_lower),
-                ::lon(it->first.idx.val(), it->first.elem.ll_lower)),
-            (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-            (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode, Output_Handler::erase);
-    }
-    else if (it->first.idx.val() != 0xffu)
-    {
-      // The elements differ
-      Null_Geometry null_geom;
-      Point_Geometry old_geom(::lat(it->first.idx.val(), it->first.elem.ll_lower),
-          ::lon(it->first.idx.val(), it->first.elem.ll_lower));
-      Point_Geometry new_geom(::lat(it->second.idx.val(), it->second.elem.ll_lower),
-          ::lon(it->second.idx.val(), it->second.elem.ll_lower));
-      Opaque_Geometry* old_opaque = &null_geom;
-      if (it->first.idx.val() != 0xfdu)
-        old_opaque = &old_geom;
-      output->print_item(it->first.elem, *old_opaque,
-          (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &users, output_mode, Output_Handler::modify,
-          &it->second.elem, &new_geom,
-          (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0);
-    }
-    else
-      // No old element exists
-      output->print_item(it->second.elem,
-          Point_Geometry(::lat(it->second.idx.val(), it->second.elem.ll_lower),
-              ::lon(it->second.idx.val(), it->second.elem.ll_lower)),
-          (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &users, output_mode, Output_Handler::create);
-  }
+  std::sort(result.different_nodes.begin(), result.different_nodes.end());
 }
 
 
@@ -616,16 +466,16 @@ void Set_Comparison::print_item(uint32 ll_upper, const Way_Skeleton& skel,
 {
   if (final_target)
   {
-    std::vector< Way_Entry >::iterator ways_it
-        = std::lower_bound(ways.begin(), ways.end(), Way_Entry(ll_upper, skel, std::vector< Quad_Coord >()));
+    std::vector< Way_With_Context >::iterator ways_it
+        = std::lower_bound(ways.begin(), ways.end(), Way_With_Context(ll_upper, skel, std::vector< Quad_Coord >()));
 
     if (ways_it == ways.end() || skel.id < ways_it->elem.id)
-      different_ways.push_back(std::make_pair(
-	  Way_Entry(0xffu, Way_Skeleton(skel.id),
+      result.different_ways.push_back(std::make_pair(
+	  Way_With_Context(0xffu, Way_Skeleton(skel.id),
 	      std::vector< Quad_Coord >(),
 	      OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
 	      std::vector< std::pair< std::string, std::string > >()),
-	  Way_Entry(ll_upper, skel,
+	  Way_With_Context(ll_upper, skel,
               geometry ? *geometry : std::vector< Quad_Coord >(),
               meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
@@ -634,7 +484,7 @@ void Set_Comparison::print_item(uint32 ll_upper, const Way_Skeleton& skel,
       if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem.nds == skel.nds) ||
           (geometry && !(ways_it->geometry == *geometry)) ||
           (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
-	different_ways.push_back(std::make_pair(*ways_it, Way_Entry(ll_upper, skel,
+	result.different_ways.push_back(std::make_pair(*ways_it, Way_With_Context(ll_upper, skel,
               geometry ? *geometry : std::vector< Quad_Coord >(),
               meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
@@ -643,7 +493,7 @@ void Set_Comparison::print_item(uint32 ll_upper, const Way_Skeleton& skel,
     }
   }
   else
-    ways.push_back(Way_Entry(ll_upper, skel,
+    ways.push_back(Way_With_Context(ll_upper, skel,
         geometry ? *geometry : std::vector< Quad_Coord >(),
         meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
         tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
@@ -655,7 +505,7 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
   if (add_deletion_information)
   {
     std::vector< Way_Skeleton::Id_Type > searched_ids;
-    for (std::vector< Way_Entry >::const_iterator it = ways.begin(); it != ways.end(); ++it)
+    for (std::vector< Way_With_Context >::const_iterator it = ways.begin(); it != ways.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
 	searched_ids.push_back(it->elem.id);
@@ -668,14 +518,14 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
     std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > > found_meta
         = find_meta_elements< Uint31_Index, Way_Skeleton >(rman, rman.get_diff_to_timestamp(), req, searched_ids);
 
-    for (std::vector< Way_Entry >::const_iterator it = ways.begin(); it != ways.end(); ++it)
+    for (std::vector< Way_With_Context >::const_iterator it = ways.begin(); it != ways.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
       {
 	std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->elem.id);
-	different_ways.push_back(std::make_pair(*it,
-	    Way_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
+	result.different_ways.push_back(std::make_pair(*it,
+	    Way_With_Context(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
 		Way_Skeleton(it->elem.id),
 		std::vector< Quad_Coord >(),
 	        meta_it != found_meta.end() ? meta_it->second
@@ -685,8 +535,8 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
     }
     
     searched_ids.clear();
-    for (std::vector< std::pair< Way_Entry, Way_Entry > >::const_iterator
-        it = different_ways.begin(); it != different_ways.end(); ++it)
+    for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::const_iterator
+        it = result.different_ways.begin(); it != result.different_ways.end(); ++it)
     {
       if (it->first.idx.val() == 0xffu)
         searched_ids.push_back(it->second.elem.id);
@@ -698,8 +548,8 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
     find_meta_elements< Uint31_Index, Way_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
-    for (std::vector< std::pair< Way_Entry, Way_Entry > >::iterator
-        it = different_ways.begin(); it != different_ways.end(); ++it)
+    for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::iterator
+        it = result.different_ways.begin(); it != result.different_ways.end(); ++it)
     {
       if (it->first.idx.val() == 0xffu)
       {
@@ -715,83 +565,18 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
   }
   else
   {
-    for (std::vector< Way_Entry >::const_iterator it = ways.begin(); it != ways.end(); ++it)
+    for (std::vector< Way_With_Context >::const_iterator it = ways.begin(); it != ways.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
-	different_ways.push_back(std::make_pair(*it,
-	    Way_Entry(0xffu, Way_Skeleton(it->elem.id),
+	result.different_ways.push_back(std::make_pair(*it,
+	    Way_With_Context(0xffu, Way_Skeleton(it->elem.id),
 		std::vector< Quad_Coord >(),
 	        OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
     }
   }
-}
-
-
-void Set_Comparison::print_ways(
-    uint32 output_mode, Output_Handler* output,
-    const std::map< uint32, std::string >& users, bool add_deletion_information)
-{
-  std::sort(different_ways.begin(), different_ways.end());
-  for (std::vector< std::pair< Way_Entry, Way_Entry > >::const_iterator it = different_ways.begin();
-      it != different_ways.end(); ++it)
-  {
-    if ((it->second.idx.val() | 2) == 0xffu)
-    {
-      Double_Coords double_coords(it->first.geometry);
-      Geometry_From_Quad_Coords broker;
-      if (add_deletion_information)
-      {
-        Way_Skeleton new_skel(it->first.elem.id);
-        output->print_item(it->first.elem,
-            broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
-                bound_variant(double_coords, output_mode)),
-            (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-            (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode,
-            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
-            &new_skel, 0, 0, &it->second.meta);
-      }
-      else
-        output->print_item(it->first.elem,
-            broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
-                bound_variant(double_coords, output_mode)),
-            (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-            (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &users, output_mode, Output_Handler::erase);
-    }
-    else if (it->first.idx.val() != 0xffu)
-    {
-      // The elements differ
-      Double_Coords double_coords(it->first.geometry);
-      Double_Coords double_coords_new(it->second.geometry);
-      Geometry_From_Quad_Coords broker;
-      Geometry_From_Quad_Coords new_broker;
-      output->print_item(it->first.elem,
-          broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
-              bound_variant(double_coords, output_mode)),
-          (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &users, output_mode, Output_Handler::modify,
-          &it->second.elem,
-          &new_broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
-              bound_variant(double_coords_new, output_mode)),
-          (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0);
-    }
-    else
-    {
-      // No old element exists
-      Double_Coords double_coords(it->second.geometry);
-      Geometry_From_Quad_Coords broker;
-      output->print_item(it->second.elem,
-          broker.make_way_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
-              bound_variant(double_coords, output_mode)),
-          (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &users, output_mode, Output_Handler::create);
-    }
-  }
+  
+  std::sort(result.different_ways.begin(), result.different_ways.end());
 }
 
 
@@ -805,17 +590,17 @@ void Set_Comparison::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
 {
   if (final_target)
   {
-    std::vector< Relation_Entry >::iterator relations_it
+    std::vector< Relation_With_Context >::iterator relations_it
         = std::lower_bound(relations.begin(), relations.end(),
-	    Relation_Entry(ll_upper, skel, std::vector< std::vector< Quad_Coord > >()));
+	    Relation_With_Context(ll_upper, skel, std::vector< std::vector< Quad_Coord > >()));
 
     if (relations_it == relations.end() || skel.id < relations_it->elem.id)
-      different_relations.push_back(std::make_pair(
-	  Relation_Entry(0xffu, Relation_Skeleton(skel.id),
+      result.different_relations.push_back(std::make_pair(
+	  Relation_With_Context(0xffu, Relation_Skeleton(skel.id),
 	      std::vector< std::vector< Quad_Coord > >(),
 	      OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
 	      std::vector< std::pair< std::string, std::string > >()),
-	  Relation_Entry(ll_upper, skel,
+	  Relation_With_Context(ll_upper, skel,
               geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
               meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
@@ -824,7 +609,7 @@ void Set_Comparison::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
       if (!(relations_it->idx.val() == ll_upper) || !(relations_it->elem.members == skel.members) ||
 	  (geometry && !(relations_it->geometry == *geometry)) ||
 	  (tags && !(relations_it->tags == *tags)) || (meta && !(relations_it->meta.timestamp == meta->timestamp)))
-	different_relations.push_back(std::make_pair(*relations_it, Relation_Entry(ll_upper, skel,
+	result.different_relations.push_back(std::make_pair(*relations_it, Relation_With_Context(ll_upper, skel,
               geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
               meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
@@ -833,7 +618,7 @@ void Set_Comparison::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
     }
   }
   else
-    relations.push_back(Relation_Entry(ll_upper, skel,
+    relations.push_back(Relation_With_Context(ll_upper, skel,
         geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
         meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
         tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
@@ -845,7 +630,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
   if (add_deletion_information)
   {
     std::vector< Relation_Skeleton::Id_Type > searched_ids;
-    for (std::vector< Relation_Entry >::const_iterator it = relations.begin(); it != relations.end(); ++it)
+    for (std::vector< Relation_With_Context >::const_iterator it = relations.begin(); it != relations.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
 	searched_ids.push_back(it->elem.id);
@@ -859,14 +644,14 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
         = find_meta_elements< Uint31_Index, Relation_Skeleton >(
             rman, rman.get_diff_to_timestamp(), req, searched_ids);
 
-    for (std::vector< Relation_Entry >::const_iterator it = relations.begin(); it != relations.end(); ++it)
+    for (std::vector< Relation_With_Context >::const_iterator it = relations.begin(); it != relations.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
       {
 	std::map< Relation_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Relation::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->elem.id);
-	different_relations.push_back(std::make_pair(*it,
-	    Relation_Entry(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
+	result.different_relations.push_back(std::make_pair(*it,
+	    Relation_With_Context(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
 		Relation_Skeleton(it->elem.id),
 		std::vector< std::vector< Quad_Coord > >(),
 	        meta_it != found_meta.end() ? meta_it->second
@@ -878,8 +663,8 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
     }
     
     searched_ids.clear();
-    for (std::vector< std::pair< Relation_Entry, Relation_Entry > >::const_iterator
-        it = different_relations.begin(); it != different_relations.end(); ++it)
+    for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::const_iterator
+        it = result.different_relations.begin(); it != result.different_relations.end(); ++it)
     {
       if (it->first.idx.val() == 0xffu)
         searched_ids.push_back(it->second.elem.id);
@@ -891,8 +676,8 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
     find_meta_elements< Uint31_Index, Relation_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
-    for (std::vector< std::pair< Relation_Entry, Relation_Entry > >::iterator
-        it = different_relations.begin(); it != different_relations.end(); ++it)
+    for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::iterator
+        it = result.different_relations.begin(); it != result.different_relations.end(); ++it)
     {
       if (it->first.idx.val() == 0xffu)
       {
@@ -908,90 +693,26 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
   }
   else
   {
-    for (std::vector< Relation_Entry >::const_iterator it = relations.begin(); it != relations.end(); ++it)
+    for (std::vector< Relation_With_Context >::const_iterator it = relations.begin(); it != relations.end(); ++it)
     {
       if (it->idx.val() != 0xffu)
-	different_relations.push_back(std::make_pair(*it,
-	    Relation_Entry(0xffu, Relation_Skeleton(it->elem.id),
+	result.different_relations.push_back(std::make_pair(*it,
+	    Relation_With_Context(0xffu, Relation_Skeleton(it->elem.id),
 		std::vector< std::vector< Quad_Coord > >(),
 	        OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
     }
   }
+  
+  std::sort(result.different_relations.begin(), result.different_relations.end());
 }
 
 
-void Set_Comparison::print_relations(
-    uint32 output_mode, Output_Handler* output,
-    const std::map< uint32, std::string >& users, const std::map< uint32, std::string >& roles,
-    bool add_deletion_information)
-{
-  std::sort(different_relations.begin(), different_relations.end());
-  for (std::vector< std::pair< Relation_Entry, Relation_Entry > >::const_iterator it = different_relations.begin();
-      it != different_relations.end(); ++it)
-  {
-    if ((it->second.idx.val() | 2) == 0xffu)
-    {
-      Double_Coords double_coords(it->first.geometry);
-      Geometry_From_Quad_Coords broker;
-      if (add_deletion_information)
-      {
-        Relation_Skeleton new_skel(it->first.elem.id);
-        output->print_item(it->first.elem,
-            broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
-                bound_variant(double_coords, output_mode)),
-            (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-            (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &roles, &users, output_mode,
-            it->second.idx.val() == 0xfdu ? Output_Handler::push_away : Output_Handler::erase,
-            &new_skel, 0, 0, &it->second.meta);
-      }
-      else
-        output->print_item(it->first.elem,
-            broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
-                bound_variant(double_coords, output_mode)),
-            (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-            (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-            &roles, &users, output_mode, Output_Handler::erase);
-    }
-    else if (it->first.idx.val() != 0xffu)
-    {
-      // The elements differ
-      Double_Coords double_coords(it->first.geometry);
-      Double_Coords double_coords_new(it->second.geometry);
-      Geometry_From_Quad_Coords broker;
-      Geometry_From_Quad_Coords new_broker;
-      output->print_item(it->first.elem,
-          broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->first.geometry : 0,
-              bound_variant(double_coords, output_mode)),
-          (output_mode & Output_Mode::TAGS) ? &it->first.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->first.meta : 0,
-          &roles, &users, output_mode, Output_Handler::modify,
-          &it->second.elem,
-          &new_broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
-              bound_variant(double_coords_new, output_mode)),
-          (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0);
-    }
-    else
-    {
-      // No old element exists
-      Double_Coords double_coords(it->second.geometry);
-      Geometry_From_Quad_Coords broker;
-      output->print_item(it->second.elem,
-          broker.make_relation_geom((output_mode & Output_Mode::GEOMETRY) ? &it->second.geometry : 0,
-              bound_variant(double_coords, output_mode)),
-          (output_mode & Output_Mode::TAGS) ? &it->second.tags : 0,
-          (output_mode & Output_Mode::META) ? &it->second.meta : 0,
-          &roles, &users, output_mode, Output_Handler::create);
-    }
-  }
-}
-
-
-void Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement& stmt,
+Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement& stmt,
     const Set& input_set, double south, double north, double west, double east, bool add_deletion_information)
 {
+  result.clear();
+  
   uint64 rhs_timestamp = rman.get_desired_timestamp();
   rman.set_desired_timestamp(lhs_timestamp_);
     
@@ -1035,4 +756,8 @@ void Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement& stm
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, rman);
   clear_relations(rman, add_deletion_information);
+  
+  Diff_Set local_result;
+  local_result.swap(result);
+  return local_result;
 }

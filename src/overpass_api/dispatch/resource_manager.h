@@ -23,6 +23,7 @@
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/parsed_query.h"
+#include "../data/diff_set.h"
 #include "../data/user_data_cache.h"
 #include "../osm-backend/area_updater.h"
 

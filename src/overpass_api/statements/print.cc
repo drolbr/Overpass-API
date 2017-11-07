@@ -893,14 +893,10 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
   }
   else
   {
-    collection_print_target->compare_to_lhs(rman, *this, *input_set,
+    Diff_Set result = collection_print_target->compare_to_lhs(rman, *this, *input_set,
         south, north, west, east, add_deletion_information);
     
-    collection_print_target->print_nodes(mode, rman.get_global_settings().get_output_handler(),
-        rman.users(), add_deletion_information);
-    collection_print_target->print_ways(mode, rman.get_global_settings().get_output_handler(),
-        rman.users(), add_deletion_information);
-    collection_print_target->print_relations(mode, rman.get_global_settings().get_output_handler(),
+    print_diff_set(result, mode, rman.get_global_settings().get_output_handler(),
         rman.users(), relation_member_roles(*rman.get_transaction()), add_deletion_information);
   }
 
