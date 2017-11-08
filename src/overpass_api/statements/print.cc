@@ -881,6 +881,14 @@ void Print_Statement::execute(Resource_Manager& rman)
 
 void Print_Statement::execute_comparison(Resource_Manager& rman)
 {
+  const Diff_Set* input_diff_set = rman.get_diff_set(input);
+  if (input_diff_set)
+  {
+    print_diff_set(*input_diff_set, mode, rman.get_global_settings().get_output_handler(),
+        rman.users(), relation_member_roles(*rman.get_transaction()), add_deletion_information);
+    return;
+  }
+  
   const Set* input_set = rman.get_set(input);
   if (!input_set)
     return;

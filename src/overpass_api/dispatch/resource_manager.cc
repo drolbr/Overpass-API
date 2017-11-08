@@ -115,10 +115,30 @@ Set* Runtime_Stack_Frame::get_set(const std::string& set_name)
 }
 
 
+Diff_Set* Runtime_Stack_Frame::get_diff_set(const std::string& set_name)
+{
+  std::map< std::string, Diff_Set >::iterator it = diff_sets.find(set_name);
+  if (it != diff_sets.end())
+    return &it->second;
+  
+  if (parent)
+    return parent->get_diff_set(set_name);
+  
+  return 0;
+}
+
+
 void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
 {
   Set& to_swap = sets[set_name];
+  set_.swap(to_swap);
   size_per_set[set_name] = eval_set(to_swap);
+}
+
+
+void Runtime_Stack_Frame::swap_diff_set(const std::string& set_name, Diff_Set& set_)
+{
+  Diff_Set& to_swap = diff_sets[set_name];
   set_.swap(to_swap);
 }
 
@@ -126,6 +146,7 @@ void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
 void Runtime_Stack_Frame::clear_sets()
 {
   sets.clear();
+  diff_sets.clear();
   size_per_set.clear();
 }
 
@@ -145,8 +166,9 @@ void Runtime_Stack_Frame::copy_outward(const std::string& inner_set_name, const 
   else
   {
     size_per_set[top_set_name] = 0;
-    sets[top_set_name];
+    sets[top_set_name].clear();
   }
+  diff_sets.erase(top_set_name);
 }
 
 
@@ -158,6 +180,7 @@ void Runtime_Stack_Frame::move_outward(const std::string& inner_set_name, const 
     sets[top_set_name].clear();
     parent->swap_set(inner_set_name, sets[top_set_name]);
   }
+  diff_sets.erase(top_set_name);
 }
 
 
@@ -184,6 +207,7 @@ bool Runtime_Stack_Frame::union_inward(const std::string& top_set_name, const st
     
     parent->size_per_set[inner_set_name] = eval_set(target);
   }
+  parent->diff_sets.erase(inner_set_name);
   
   return new_elements_found;
 }
@@ -203,6 +227,8 @@ void Runtime_Stack_Frame::copy_inward(const std::string& top_set_name, const std
   }
   else
     parent->sets[inner_set_name] = it->second;
+  
+  parent->diff_sets.erase(inner_set_name);
 }
 
 
@@ -227,6 +253,7 @@ void Runtime_Stack_Frame::substract_from_inward(const std::string& top_set_name,
     
     parent->size_per_set[inner_set_name] = eval_set(target);
   }
+  parent->diff_sets.erase(inner_set_name);
 }
 
 
@@ -235,7 +262,10 @@ void Runtime_Stack_Frame::move_all_inward()
   if (parent)
   {
     for (std::map< std::string, Set >::iterator it = sets.begin(); it != sets.end(); ++it)
+    {
       parent->swap_set(it->first, it->second);
+      parent->diff_sets.erase(it->first);
+    }
   }
 }
 
@@ -247,7 +277,10 @@ void Runtime_Stack_Frame::move_all_inward_except(const std::string& set_name)
     for (std::map< std::string, Set >::iterator it = sets.begin(); it != sets.end(); ++it)
     {
       if (it->first != set_name)
+      {
         parent->swap_set(it->first, it->second);
+        parent->diff_sets.erase(it->first);
+      }
     }
   }
 }
@@ -320,6 +353,15 @@ const Set* Resource_Manager::get_set(const std::string& set_name)
 }
 
 
+const Diff_Set* Resource_Manager::get_diff_set(const std::string& set_name)
+{
+  if (runtime_stack.empty())
+    return 0;
+  
+  return runtime_stack.back()->get_diff_set(set_name);
+}
+
+
 void Resource_Manager::swap_set(const std::string& set_name, Set& set_)
 {
   if (runtime_stack.empty())
@@ -327,6 +369,15 @@ void Resource_Manager::swap_set(const std::string& set_name, Set& set_)
   
   sort(set_);
   runtime_stack.back()->swap_set(set_name, set_);
+}
+
+
+void Resource_Manager::swap_diff_set(const std::string& set_name, Diff_Set& set_)
+{
+  if (runtime_stack.empty())
+    runtime_stack.push_back(new Runtime_Stack_Frame());
+  
+  runtime_stack.back()->swap_diff_set(set_name, set_);
 }
 
 

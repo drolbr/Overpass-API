@@ -50,7 +50,9 @@ public:
   uint64 total_used_space() const;
     
   Set* get_set(const std::string& set_name);
+  Diff_Set* get_diff_set(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
+  void swap_diff_set(const std::string& set_name, Diff_Set& set_);
   void clear_sets();
   
   void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
@@ -77,6 +79,7 @@ public:
 private:
   Runtime_Stack_Frame* parent;
   std::map< std::string, Set > sets;
+  std::map< std::string, Diff_Set > diff_sets;
   std::map< std::string, uint64 > size_per_set;
   uint loop_count;
   uint loop_size;
@@ -109,7 +112,9 @@ public:
   }
 
   const Set* get_set(const std::string& set_name);
+  const Diff_Set* get_diff_set(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
+  void swap_diff_set(const std::string& set_name, Diff_Set& set_);
   void clear_sets();
   
   void push_stack_frame();
