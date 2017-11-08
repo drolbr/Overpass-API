@@ -265,6 +265,17 @@ TStatement* create_timeline_statement(typename TStatement::Factory& stmt_factory
 
 
 template< class TStatement >
+TStatement* create_compare_statement(typename TStatement::Factory& stmt_factory, uint line_nr,
+    const std::string& from, const std::string& into)
+{
+  std::map< std::string, std::string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  return stmt_factory.create_statement("compare", line_nr, attr);
+}
+
+
+template< class TStatement >
 TStatement* create_query_statement(typename TStatement::Factory& stmt_factory,
 				   std::string type, std::string into, uint line_nr)
 {
@@ -570,8 +581,8 @@ TStatement* parse_retro(typename TStatement::Factory& stmt_factory, Parsed_Query
 
 
 template< class TStatement >
-TStatement* parse_timeline(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
-              Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
+TStatement* parse_timeline(typename TStatement::Factory& stmt_factory,
+              Tokenizer_Wrapper& token, Error_Output* error_output)
 {
   std::pair< uint, uint > line_col = token.line_col();
   ++token;
@@ -595,6 +606,18 @@ TStatement* parse_timeline(typename TStatement::Factory& stmt_factory, Parsed_Qu
   std::string into = probe_into(token, error_output);
 
   return create_timeline_statement< TStatement >(stmt_factory, line_col.first, type, ref, version, into);
+}
+
+
+template< class TStatement >
+TStatement* parse_compare(typename TStatement::Factory& stmt_factory,
+    Tokenizer_Wrapper& token, const std::string& from, Error_Output* error_output)
+{
+  uint line_col = token.line_col().first;
+  ++token;
+  std::string into = probe_into(token, error_output);
+
+  return create_compare_statement< TStatement >(stmt_factory, line_col, from, into);
 }
 
 
@@ -1109,7 +1132,7 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
   else if (*token == "retro")
     return parse_retro< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
   else if (*token == "timeline")
-    return parse_timeline< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
+    return parse_timeline< TStatement >(stmt_factory, token, error_output);
 
   std::string from = "";
   if (token.good() && *token == ".")
@@ -1124,16 +1147,18 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
 
   if (token.good() && *token == "out")
     return parse_output< TStatement >(stmt_factory, from, token, error_output);
-  if (token.good() && *token == "convert")
+  else if (token.good() && *token == "convert")
     return parse_make< TStatement >(stmt_factory, from, token, error_output, "convert");
-  if (token.good() && *token == "make")
+  else if (token.good() && *token == "make")
     return parse_make< TStatement >(stmt_factory, from, token, error_output, "make");
-  if (token.good() && (*token == "<" || *token == "<<" || *token == ">" || *token == ">>"))
+  else if (token.good() && (*token == "<" || *token == "<<" || *token == ">" || *token == ">>"))
     return parse_full_recurse< TStatement >(stmt_factory, token, from, error_output);
-  if (token.good() && *token == "is_in")
+  else if (token.good() && *token == "is_in")
     return parse_coord_query< TStatement >(stmt_factory, token, from, error_output);
-  if (token.good() && *token == "map_to_area")
+  else if (token.good() && *token == "map_to_area")
     return parse_map_to_area< TStatement >(stmt_factory, token, from, error_output);
+  else if (*token == "compare")
+    return parse_compare< TStatement >(stmt_factory, token, from, error_output);
 
   std::string type = "";
   if (*token != "out" && from == "")

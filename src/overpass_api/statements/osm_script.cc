@@ -214,11 +214,7 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
   {
     for (std::vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
-    {
-      Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
-      if (print)
-        print->set_collect_lhs();
-    }
+      (*it)->set_collect_lhs();
 
     rman.set_diff_from_timestamp(comparison_timestamp);
     rman.set_diff_to_timestamp(desired_timestamp);
@@ -230,11 +226,7 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
 
     for (std::vector< Statement* >::iterator it = factory->created_statements.begin();
         it != factory->created_statements.end(); ++it)
-    {
-      Print_Statement* print = dynamic_cast< Print_Statement* >(*it);
-      if (print)
-        print->set_collect_rhs(add_deletion_information);
-    }
+      (*it)->set_collect_rhs(add_deletion_information);
 
     rman.clear_sets();
     rman.set_desired_timestamp(desired_timestamp);

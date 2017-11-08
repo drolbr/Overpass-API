@@ -26,6 +26,7 @@
 #include "../core/datatypes.h"
 #include "../core/parsed_query.h"
 #include "../core/settings.h"
+#include "../data/diff_set.h"
 #include "../dispatch/resource_manager.h"
 #include "../frontend/tokenizer_utils.h"
 #include "../osm-backend/area_updater.h"
@@ -144,6 +145,9 @@ class Statement
     // object.
     virtual Query_Constraint* get_query_constraint() { return 0; }
 
+    virtual void set_collect_lhs() {}
+    virtual void set_collect_rhs(bool add_deletion_information) {}
+
     virtual ~Statement() {}
 
     int get_progress() const { return progress; }
@@ -229,6 +233,7 @@ class Output_Statement : public Statement
     void set_output(std::string output_) { output = output_; }
 
     void transfer_output(Resource_Manager& rman, Set& into) const;
+    void transfer_output(Resource_Manager& rman, Diff_Set& into) const;
 
   private:
     std::string output;

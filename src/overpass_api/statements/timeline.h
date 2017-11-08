@@ -16,8 +16,8 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__COMPLETE_H
-#define DE__OSM3S___OVERPASS_API__STATEMENTS__COMPLETE_H
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__TIMELINE_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__TIMELINE_H
 
 #include <map>
 #include <string>

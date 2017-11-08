@@ -344,3 +344,10 @@ void Output_Statement::transfer_output(Resource_Manager& rman, Set& into) const
   rman.swap_set(output, into);
   into.clear();
 }
+
+
+void Output_Statement::transfer_output(Resource_Manager& rman, Diff_Set& into) const
+{
+  rman.swap_diff_set(output, into);
+  into.clear();
+}

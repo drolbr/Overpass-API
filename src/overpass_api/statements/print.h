@@ -42,8 +42,8 @@ class Print_Statement : public Statement
 
     static Generic_Statement_Maker< Print_Statement > statement_maker;
 
-    void set_collect_lhs();
-    void set_collect_rhs(bool add_deletion_information);
+    virtual void set_collect_lhs();
+    virtual void set_collect_rhs(bool add_deletion_information);
 
     static std::string mode_string_xml(Output_Mode mode)
     {

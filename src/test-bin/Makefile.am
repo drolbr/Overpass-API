@@ -24,6 +24,7 @@ statements_cc = \
   ../overpass_api/statements/bbox_query.cc \
   ../overpass_api/statements/binary_operators.cc \
   ../overpass_api/statements/changed.cc \
+  ../overpass_api/statements/compare.cc \
   ../overpass_api/statements/complete.cc \
   ../overpass_api/statements/convert.cc \
   ../overpass_api/statements/coord_query.cc \
