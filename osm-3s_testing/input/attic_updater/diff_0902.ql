@@ -129,3 +129,7 @@ rel(10,5,10.1,5.1); out ids;
 node(10,14,10.1,14.1); out ids;
 way(10,14,10.1,14.1); out ids;
 rel(10,14,10.1,14.1); out ids;
+
+(node(id:1102,1302,1502);way(id:1102,1302,1502);rel(id:1132,1332,1502););compare;out geom meta;
+(node(id:1102,1302,1502);way(id:1102,1302,1502);rel(id:1132,1332,1502);)->.a;.a compare->.b;.b out geom meta;
+(node(id:1102,1302,1502);way(id:1102,1302,1502);rel(id:1132,1332,1502););compare;out ids center;
