@@ -39,6 +39,10 @@ and in future versions it might be a syntax error to have it elsewhere.
 
 In the first run of a diff query it returns an empty set.
 In the second run of a diff query it returns the difference of the elements.
+If the statement gets an evaluator as argument
+then only those elements that have different values on both timestamps are returned.
+If the element does not exist on one of the timstamps
+then its value is regarded as the empty string.
 Currently, the only purpose of such a difference is to feed it into an output statement.
 
 The base syntax is
@@ -48,6 +52,14 @@ The base syntax is
 In addition, an input and/or output set can be specified:
 
   .<Set> compare->.<Set>;
+
+With the evaluator, the syntax becomes
+
+  compare(delta:<Evaluator>);
+
+resp.
+
+  .<Set> compare->.<Set>(delta:<Evaluator>);
 
 */
 
