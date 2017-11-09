@@ -54,10 +54,8 @@ void eval_elems(std::map< Index, std::vector< Maybe_Attic > >& items,
     for (typename std::vector< Maybe_Attic >::const_iterator it_elem = it_idx->second.begin();
         it_elem != it_idx->second.end(); ++it_elem)
     {
-      std::string valuation = task.eval(into_context.get_context(it_idx->first, *it_elem), 0);
-
-      double val_d = 0;
-      if (valuation != "" && (!try_double(valuation, val_d) || val_d != 0))
+      if (string_represents_boolean_true(
+          task.eval(into_context.get_context(it_idx->first, *it_elem), 0)))
         local_into.push_back(*it_elem);
     }
 

@@ -16,6 +16,7 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../statements/evaluator.h"
 #include "set_comparison.h"
 
 #include <algorithm>
@@ -167,28 +168,6 @@ void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper
 }
 
 
-template< class TIndex, class TObject >
-void quadtile
-    (const std::map< TIndex, std::vector< TObject > >& items, Set_Comparison& target,
-     Transaction& transaction, Extra_Data_For_Diff& extra_data, uint32 limit, uint32& element_count)
-{
-  typename std::map< TIndex, std::vector< TObject > >::const_iterator
-      item_it(items.begin());
-  // print the result
-  while (item_it != items.end())
-  {
-    for (typename std::vector< TObject >::const_iterator it2(item_it->second.begin());
-        it2 != item_it->second.end(); ++it2)
-    {
-      if (++element_count > limit)
-        return;
-      print_item(extra_data, target, item_it->first.val(), *it2);
-    }
-    ++item_it;
-  }
-}
-
-
 template< class Index, class Object >
 void Set_Comparison::tags_quadtile
     (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Object > >& items, Resource_Manager& rman)
@@ -244,6 +223,72 @@ void Set_Comparison::tags_quadtile_attic
         meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
       print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
                  meta, extra_data.users);
+    }
+    ++item_it;
+  }
+}
+
+
+template< class Index, class Object >
+void Set_Comparison::tags_quadtile
+    (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Object > >& items,
+    const std::vector< typename Object::Id_Type >& id_list, Resource_Manager& rman)
+{
+  Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+  tag_store.prefetch_all(items);
+
+  // formulate meta query if meta data shall be printed
+  Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
+      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+
+  typename std::map< Index, std::vector< Object > >::const_iterator
+      item_it(items.begin());
+  // print the result
+  while (item_it != items.end())
+  {
+    for (typename std::vector< Object >::const_iterator it2(item_it->second.begin());
+        it2 != item_it->second.end(); ++it2)
+    {
+      if (std::binary_search(id_list.begin(), id_list.end(), it2->id))
+        print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
+            meta_printer.get(item_it->first, it2->id), extra_data.users);
+    }
+    ++item_it;
+  }
+}
+
+
+template< class Index, class Object >
+void Set_Comparison::tags_quadtile_attic
+    (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
+    const std::vector< typename Object::Id_Type >& id_list, Resource_Manager& rman)
+{
+  Tag_Store< Index, Object > tag_store(*rman.get_transaction());
+  tag_store.prefetch_all(items);
+  // formulate meta query if meta data shall be printed
+  Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
+      (items, *rman.get_transaction(),
+      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+  Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
+      (items, *rman.get_transaction(),
+      (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
+
+  typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
+      item_it(items.begin());
+  while (item_it != items.end())
+  {
+    for (typename std::vector< Attic< Object > >::const_iterator it2(item_it->second.begin());
+        it2 != item_it->second.end(); ++it2)
+    {
+      if (std::binary_search(id_list.begin(), id_list.end(), it2->id))
+      {
+        const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
+            = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
+        if (!meta)
+          meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
+        print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
+                 meta, extra_data.users);
+      }
     }
     ++item_it;
   }
@@ -755,6 +800,197 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
   tags_quadtile(extra_data_rhs, input_set.relations, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, rman);
+  clear_relations(rman, add_deletion_information);
+  
+  Diff_Set local_result;
+  local_result.swap(result);
+  return local_result;
+}
+
+
+template< typename A, typename B >
+struct First_Comparator
+{
+  bool operator()(const std::pair< A, B >& lhs, const std::pair< A, B >& rhs)
+  {
+    return lhs.first < rhs.first;
+  }
+};
+
+
+template< typename Index, typename Id_Type, typename Maybe_Attic >
+void eval_lhs_elems(const std::map< Index, std::vector< Maybe_Attic > >& items,
+    std::vector< std::pair< Id_Type, std::string > >& result, Set_With_Context& into_context, Eval_Task& task)
+{
+  for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
+      it_idx != items.end(); ++it_idx)
+  {
+    for (typename std::vector< Maybe_Attic >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+      result.push_back(std::make_pair(
+          it_elem->id, task.eval(into_context.get_context(it_idx->first, *it_elem), 0)));
+  }
+  
+  std::sort(result.begin(), result.end(), First_Comparator< Id_Type, std::string >());
+}
+
+
+template< typename Index, typename Id_Type, typename Maybe_Attic >
+void eval_rhs_elems(const std::map< Index, std::vector< Maybe_Attic > >& items,
+    std::vector< std::pair< Id_Type, std::string > >& lhs_set, std::vector< Id_Type >& result,
+    Set_With_Context& into_context, Eval_Task& task)
+{
+  for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
+      it_idx != items.end(); ++it_idx)
+  {
+    for (typename std::vector< Maybe_Attic >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+    {
+      std::string rhs_val = task.eval(into_context.get_context(it_idx->first, *it_elem), 0);
+      typename std::vector< std::pair< Id_Type, std::string > >::iterator it_lhs = 
+          std::lower_bound(lhs_set.begin(), lhs_set.end(), std::make_pair(it_elem->id, ""),
+              First_Comparator< Id_Type, std::string >());
+
+      if (it_lhs == lhs_set.end() || !(it_lhs->first == it_elem->id))
+      {
+        if (!rhs_val.empty())
+          result.push_back(it_elem->id);
+      }
+      else
+      {
+        if (rhs_val != it_lhs->second)
+          result.push_back(it_elem->id);
+        
+        it_lhs->second.clear();
+      }
+    }
+  }
+}
+
+
+template< typename Id_Type >
+void clear_elems(std::vector< std::pair< Id_Type, std::string > >& lhs_set, std::vector< Id_Type >& result)
+{
+  for (typename std::vector< std::pair< Id_Type, std::string > >::const_iterator it_lhs = lhs_set.begin();
+      it_lhs != lhs_set.end(); ++it_lhs)
+  {
+    if (!it_lhs->second.empty())
+      result.push_back(it_lhs->first);
+  }
+  
+  lhs_set.clear();
+  std::sort(result.begin(), result.end());
+}
+
+
+Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement& stmt,
+    const Set& input_set, Evaluator* evaluator, bool add_deletion_information)
+{
+  result.clear();
+  
+  uint64 rhs_timestamp = rman.get_desired_timestamp();
+  rman.set_desired_timestamp(lhs_timestamp_);
+  
+  {
+    Requested_Context requested_context = evaluator->request_context();
+    Prepare_Task_Context context(requested_context, stmt, rman);
+
+    Owner< Eval_Task > task(evaluator->get_task(context));
+
+    Set_With_Context into_context;
+    into_context.name = "";
+    into_context.parent = &context;
+    into_context.prefetch(requested_context.object_usage, lhs_set_, stmt, rman);
+
+    if (task)
+    {
+      node_values.clear();
+      eval_lhs_elems(lhs_set_.nodes, node_values, into_context, *task);
+      eval_lhs_elems(lhs_set_.attic_nodes, node_values, into_context, *task);
+      
+      way_values.clear();
+      eval_lhs_elems(lhs_set_.ways, way_values, into_context, *task);
+      eval_lhs_elems(lhs_set_.attic_ways, way_values, into_context, *task);
+      
+      relation_values.clear();
+      eval_lhs_elems(lhs_set_.relations, relation_values, into_context, *task);
+      eval_lhs_elems(lhs_set_.attic_relations, relation_values, into_context, *task);
+    }
+  }
+  
+  rman.set_desired_timestamp(rhs_timestamp);
+  
+  std::vector< Node_Skeleton::Id_Type > changed_nodes;
+  std::vector< Way_Skeleton::Id_Type > changed_ways;
+  std::vector< Relation_Skeleton::Id_Type > changed_relations;
+  {
+    Requested_Context requested_context = evaluator->request_context();
+    Prepare_Task_Context context(requested_context, stmt, rman);
+
+    Owner< Eval_Task > task(evaluator->get_task(context));
+
+    Set_With_Context into_context;
+    into_context.name = "";
+    into_context.parent = &context;
+    into_context.prefetch(requested_context.object_usage, input_set, stmt, rman);
+
+    if (task)
+    {
+      eval_rhs_elems(input_set.nodes, node_values, changed_nodes, into_context, *task);
+      eval_rhs_elems(input_set.attic_nodes, node_values, changed_nodes, into_context, *task);
+      clear_elems(node_values, changed_nodes);
+      
+      eval_rhs_elems(input_set.ways, way_values, changed_ways, into_context, *task);
+      eval_rhs_elems(input_set.attic_ways, way_values, changed_ways, into_context, *task);
+      clear_elems(way_values, changed_ways);
+      
+      eval_rhs_elems(input_set.relations, relation_values, changed_relations, into_context, *task);
+      eval_rhs_elems(input_set.attic_relations, relation_values, changed_relations, into_context, *task);
+      clear_elems(relation_values, changed_relations);
+    }
+  }
+  
+  rman.set_desired_timestamp(lhs_timestamp_);
+    
+  Extra_Data_For_Diff extra_data_lhs(rman, stmt, lhs_set_, Output_Mode::ID
+      | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+      | Output_Mode::GEOMETRY, 1., 0., 0., 0.);
+
+  tags_quadtile(extra_data_lhs, lhs_set_.nodes, changed_nodes, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_lhs, lhs_set_.attic_nodes, changed_nodes, rman);
+
+  tags_quadtile(extra_data_lhs, lhs_set_.ways, changed_ways, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_lhs, lhs_set_.attic_ways, changed_ways, rman);
+
+  tags_quadtile(extra_data_lhs, lhs_set_.relations, changed_relations, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_lhs, lhs_set_.attic_relations, changed_relations, rman);
+    
+  rman.set_desired_timestamp(rhs_timestamp);
+      
+  set_target(true);
+    
+  Extra_Data_For_Diff extra_data_rhs(rman, stmt, input_set, Output_Mode::ID
+      | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+      | Output_Mode::GEOMETRY, 1., 0., 0., 0.);
+
+  tags_quadtile(extra_data_rhs, input_set.nodes, changed_nodes, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_rhs, input_set.attic_nodes, changed_nodes, rman);
+  clear_nodes(rman, add_deletion_information);
+
+  tags_quadtile(extra_data_rhs, input_set.ways, changed_ways, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_rhs, input_set.attic_ways, changed_ways, rman);
+  clear_ways(rman, add_deletion_information);
+
+  tags_quadtile(extra_data_rhs, input_set.relations, changed_relations, rman);
+  if (rman.get_desired_timestamp() != NOW)
+    tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, changed_relations, rman);
   clear_relations(rman, add_deletion_information);
   
   Diff_Set local_result;

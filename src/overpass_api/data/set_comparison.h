@@ -53,6 +53,9 @@ struct Extra_Data_For_Diff
 };
 
 
+class Evaluator;
+
+
 class Set_Comparison
 {
 public:
@@ -61,21 +64,15 @@ public:
 
   Diff_Set compare_to_lhs(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
       double south, double north, double west, double east, bool add_deletion_information);
-
-  void print_nodes(uint32 output_mode, Output_Handler* output, const std::map< uint32, std::string >& users,
-      bool add_deletion_information);
-  void print_ways(uint32 output_mode, Output_Handler* output, const std::map< uint32, std::string >& users,
-      bool add_deletion_information);
-  void print_relations(uint32 output_mode, Output_Handler* output,
-      const std::map< uint32, std::string >& users, const std::map< uint32, std::string >& roles,
-      bool add_deletion_information);
+  Diff_Set compare_to_lhs(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
+      Evaluator* evaluator, bool add_deletion_information);
 
 private:
   void print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper, const Node_Skeleton& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users);
-    void print_item(uint32 ll_upper, const Node_Skeleton& skel,
+  void print_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags = 0,
                             const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta = 0,
                             const std::map< uint32, std::string >* users = 0,
@@ -90,7 +87,7 @@ private:
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users);
-    void print_item(uint32 ll_upper, const Way_Skeleton& skel,
+  void print_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< Quad_Coord >* geometry = 0,
@@ -107,7 +104,7 @@ private:
                     const std::vector< std::pair< std::string, std::string > >* tags,
                     const OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users);
-    void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+  void print_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags = 0,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds = 0,
                             const std::vector< std::vector< Quad_Coord > >* geometry = 0,
@@ -116,27 +113,44 @@ private:
                             const Output_Handler::Feature_Action& action = Output_Handler::keep,
                             const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta = 0);
 
-    void set_target(bool target);
+  void set_target(bool target);
 
-    void clear_nodes(Resource_Manager& rman, bool add_deletion_information = false);
-    void clear_ways(Resource_Manager& rman, bool add_deletion_information = false);
-    void clear_relations(Resource_Manager& rman, bool add_deletion_information = false);
+  void clear_nodes(Resource_Manager& rman, bool add_deletion_information = false);
+  void clear_ways(Resource_Manager& rman, bool add_deletion_information = false);
+  void clear_relations(Resource_Manager& rman, bool add_deletion_information = false);
     
-    const Set& lhs_set() const { return lhs_set_; }
-    uint64 lhs_timestamp() const { return lhs_timestamp_; }
+  const Set& lhs_set() const { return lhs_set_; }
+  uint64 lhs_timestamp() const { return lhs_timestamp_; }
 
   template< class Index, class Object >
   void tags_quadtile
-      (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Object > >& items, Resource_Manager& rman);
+      (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Object > >& items,
+      Resource_Manager& rman);
   template< class Index, class Object >
   void tags_quadtile_attic
       (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
       Resource_Manager& rman);
+  template< class Index, class Object >
+  void tags_quadtile
+      (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Object > >& items,
+      const std::vector< typename Object::Id_Type >& id_list,
+      Resource_Manager& rman);
+  template< class Index, class Object >
+  void tags_quadtile_attic
+      (Extra_Data_For_Diff& extra_data, const std::map< Index, std::vector< Attic< Object > > >& items,
+      const std::vector< typename Object::Id_Type >& id_list,
+      Resource_Manager& rman);
 
   bool final_target;
+  
   std::vector< Node_With_Context > nodes;
   std::vector< Way_With_Context > ways;
   std::vector< Relation_With_Context > relations;
+  
+  std::vector< std::pair< Node_Skeleton::Id_Type, std::string > > node_values;
+  std::vector< std::pair< Way_Skeleton::Id_Type, std::string > > way_values;
+  std::vector< std::pair< Relation_Skeleton::Id_Type, std::string > > relation_values;
+  
   Set lhs_set_;
   uint64 lhs_timestamp_;
 

@@ -58,6 +58,7 @@ public:
                      Parsed_Query& global_settings);
   virtual ~Compare_Statement();
   virtual std::string get_name() const { return "compare"; }
+  virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman);
 
   virtual void set_collect_lhs();
@@ -68,24 +69,31 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   {
     std::string result = indent + "<compare"
-      + (input != "_" ? std::string(" from=\"") + input + "\"" : "");
+      + (input != "_" ? std::string(" from=\"") + input + "\"" : "")
+      + dump_xml_result_name();
       
-    return result + dump_xml_result_name() + "/>\n";
+    if (criterion)
+      return result + ">\n" + criterion->dump_xml(indent + "  ") + indent + "</criterion>\n";
+    
+    return result + "/>\n";
   }
 
   virtual std::string dump_compact_ql(const std::string& indent) const
   {
     return (input != "_" ? std::string(".") + input + " " : "")
-        + "compare" + dump_ql_result_name();
+        + "compare" + dump_ql_result_name()
+        + (criterion ? "(delta:" + criterion->dump_compact_ql(indent) + ")" : "");
   }
 
   virtual std::string dump_pretty_ql(const std::string& indent) const
   {
     return indent + (input != "_" ? std::string(".") + input + " " : "")
-        + "compare" + dump_ql_result_name();
+        + "compare" + dump_ql_result_name()
+        + (criterion ? "(delta:" + criterion->dump_compact_ql(indent) + ")" : "");
   }
 
 private:
+  Evaluator* criterion;
   std::string input;
   Set_Comparison* set_comparison;
   enum { dont_collect, collect_lhs, collect_rhs } collection_mode;

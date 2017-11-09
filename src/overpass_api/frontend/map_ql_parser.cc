@@ -613,11 +613,26 @@ template< class TStatement >
 TStatement* parse_compare(typename TStatement::Factory& stmt_factory,
     Tokenizer_Wrapper& token, const std::string& from, Error_Output* error_output)
 {
-  uint line_col = token.line_col().first;
+  std::pair< uint, uint > line_col = token.line_col();
   ++token;
+
+  TStatement* condition = 0;
+  if (*token == "(")
+  {
+    clear_until_after(token, error_output, "(");
+    clear_until_after(token, error_output, "delta");
+    clear_until_after(token, error_output, ":");
+    condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
+        Statement::elem_eval_possible, true);
+    clear_until_after(token, error_output, ")");
+  }
   std::string into = probe_into(token, error_output);
 
-  return create_compare_statement< TStatement >(stmt_factory, line_col, from, into);
+  TStatement* statement = create_compare_statement< TStatement >(stmt_factory, line_col.first, from, into);
+  if (condition)
+    statement->add_statement(condition, "");
+  
+  return statement;
 }
 
 

@@ -27,7 +27,7 @@ Generic_Statement_Maker< Compare_Statement > Compare_Statement::statement_maker(
 
 Compare_Statement::Compare_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_), set_comparison(0), collection_mode(dont_collect)
+    : Output_Statement(line_number_), criterion(0), set_comparison(0), collection_mode(dont_collect)
 {
   std::map< std::string, std::string > attributes;
 
@@ -38,6 +38,23 @@ Compare_Statement::Compare_Statement
 
   input = attributes["from"];
   set_output(attributes["into"]);
+}
+
+
+void Compare_Statement::add_statement(Statement* statement, std::string text)
+{
+  assure_no_text(text, this->get_name());
+  
+  if (!criterion)
+  {
+    Evaluator* tag_value = dynamic_cast< Evaluator* >(statement);
+    if (tag_value)
+      criterion = tag_value;
+    else
+      add_static_error("A compact statement must have an Evaluator as first sub-statement.");
+  }
+  else
+    add_static_error("A compact statement can have only one sub-statement.");
 }
 
 
@@ -59,10 +76,18 @@ void Compare_Statement::execute(Resource_Manager& rman)
   }
   else if (collection_mode == collect_rhs)
   {
-    Diff_Set into = set_comparison->compare_to_lhs(rman, *this, *input_set,
-        1., 0., 0., 0., add_deletion_information);
-    
-    transfer_output(rman, into);
+    if (criterion)
+    {
+      Diff_Set into = set_comparison->compare_to_lhs(rman, *this, *input_set,
+          criterion, add_deletion_information);
+      transfer_output(rman, into);
+    }
+    else
+    {
+      Diff_Set into = set_comparison->compare_to_lhs(rman, *this, *input_set,
+          1., 0., 0., 0., add_deletion_information);
+      transfer_output(rman, into);
+    }
     rman.health_check(*this);
   }
   else

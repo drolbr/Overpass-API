@@ -133,3 +133,5 @@ rel(10,14,10.1,14.1); out ids;
 (node(id:1102,1302,1502);way(id:1102,1302,1502);rel(id:1132,1332,1502););compare;out geom meta;
 (node(id:1102,1302,1502);way(id:1102,1302,1502);rel(id:1132,1332,1502);)->.a;.a compare->.b;.b out geom meta;
 (node(id:1102,1302,1502);way(id:1102,1302,1502);rel(id:1132,1332,1502););compare;out ids center;
+(node(id:2301,2302);way(id:2301,2302);rel(id:2301,2302););compare(delta:t[foo_1])->.b;.b out geom meta;
+(node(id:1102,1302,1502);way(id:1102,1302,1502);rel(id:1132,1332,1502););compare(delta:id());out geom meta;
