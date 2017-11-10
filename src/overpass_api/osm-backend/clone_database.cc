@@ -39,8 +39,6 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 		    Transaction& transaction, std::string dest_db_dir, const Clone_Settings& clone_settings)
 
 {
-  //TODO: alte Variante erhalten
-  
   try
   {
     if (src_file_prop.get_block_size() * src_file_prop.get_compression_factor()
@@ -87,8 +85,6 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 template< typename Key, typename TIndex >
 void clone_map_file(const File_Properties& file_prop, Transaction& transaction, std::string dest_db_dir, Clone_Settings clone_settings)
 {
-  //TODO: alte Variante erhalten
-  
   try
   {
     Random_File_Index& src_idx = *transaction.random_index(&file_prop);
