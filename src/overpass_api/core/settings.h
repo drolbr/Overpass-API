@@ -134,13 +134,9 @@ struct Clone_Settings
   uint32 compression_method;
   uint32 map_compression_method;
 
-  bool has_compression_method;
-  bool has_map_compression_method;
-
-  Clone_Settings() : compression_method(0),
-                     map_compression_method(0),
-                     has_compression_method(false),
-                     has_map_compression_method(false) {}
+  Clone_Settings()
+      : compression_method(File_Blocks_Index_Base::USE_DEFAULT),
+      map_compression_method(File_Blocks_Index_Base::USE_DEFAULT) {}
 };
 
 

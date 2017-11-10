@@ -24,6 +24,8 @@
 
 #include <string>
 
-void clone_database(Transaction& transaction, std::string dest_db_dir,  Clone_Settings clone_settings);
+
+void clone_database(Transaction& transaction, const std::string& dest_db_dir, const Clone_Settings& clone_settings);
+
 
 #endif

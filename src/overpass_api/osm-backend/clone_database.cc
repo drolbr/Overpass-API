@@ -36,9 +36,11 @@ void zero_out_tails(void* buf, uint32 block_size)
 
 template< class TIndex >
 void clone_bin_file(const File_Properties& src_file_prop, const File_Properties& dest_file_prop,
-		    Transaction& transaction, std::string dest_db_dir, Clone_Settings clone_settings)
+		    Transaction& transaction, std::string dest_db_dir, const Clone_Settings& clone_settings)
 
 {
+  //TODO: alte Variante erhalten
+  
   try
   {
     if (src_file_prop.get_block_size() * src_file_prop.get_compression_factor()
@@ -53,9 +55,8 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
     File_Blocks< TIndex, typename std::set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
 	src_file(&src_idx);
 
-    File_Blocks_Index< TIndex > dest_idx(dest_file_prop, true, false, dest_db_dir, "");
-    if (clone_settings.has_compression_method)
-      dest_idx.set_compression_method(clone_settings.compression_method);
+    File_Blocks_Index< TIndex > dest_idx(dest_file_prop, true, false, dest_db_dir, "",
+        clone_settings.compression_method);
     File_Blocks< TIndex, typename std::set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
 	dest_file(&dest_idx);
 
@@ -86,14 +87,14 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 template< typename Key, typename TIndex >
 void clone_map_file(const File_Properties& file_prop, Transaction& transaction, std::string dest_db_dir, Clone_Settings clone_settings)
 {
+  //TODO: alte Variante erhalten
+  
   try
   {
     Random_File_Index& src_idx = *transaction.random_index(&file_prop);
     Random_File< Key, TIndex > src_file(&src_idx);
 
-    Random_File_Index dest_idx(file_prop, true, false, dest_db_dir, "");
-    if (clone_settings.has_map_compression_method)
-      dest_idx.set_compression_method(clone_settings.map_compression_method);
+    Random_File_Index dest_idx(file_prop, true, false, dest_db_dir, "", clone_settings.map_compression_method);
     Random_File< Key, TIndex > dest_file(&dest_idx);
 
     for (std::vector< uint32 >::size_type i = 0; i < src_idx.get_blocks().size(); ++i)
@@ -117,7 +118,7 @@ void clone_map_file(const File_Properties& file_prop, Transaction& transaction, 
 }
 
 
-void clone_database(Transaction& transaction, std::string dest_db_dir, Clone_Settings clone_settings)
+void clone_database(Transaction& transaction, const std::string& dest_db_dir, const Clone_Settings& clone_settings)
 {
   clone_bin_file< Uint32_Index >(*osm_base_settings().NODES, *osm_base_settings().NODES,
 				 transaction, dest_db_dir, clone_settings);

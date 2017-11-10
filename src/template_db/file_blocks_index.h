@@ -57,7 +57,8 @@ struct File_Blocks_Index : public File_Blocks_Index_Base
 public:
   File_Blocks_Index(const File_Properties& file_prop,
 	      bool writeable, bool use_shadow,
-	      const std::string& db_dir, const std::string& file_name_extension);
+	      const std::string& db_dir, const std::string& file_name_extension,
+              int compression_method_ = USE_DEFAULT);
   virtual ~File_Blocks_Index();
   bool writeable() const { return (empty_index_file_name != ""); }
   const std::string& file_name_extension() const { return file_name_extension_; }
@@ -66,7 +67,6 @@ public:
   uint64 get_block_size() const { return block_size_; }
   uint32 get_compression_factor() const { return compression_factor; }
   uint32 get_compression_method() const { return compression_method; }
-  void set_compression_method(int compression_method_) { compression_method = compression_method_; }
     
   std::list< File_Block_Index_Entry< TIndex > >& get_blocks()
   {
@@ -82,9 +82,6 @@ public:
   }
     
   static const int FILE_FORMAT_VERSION = 7512;
-  static const int NO_COMPRESSION = 0;
-  static const int ZLIB_COMPRESSION = 1;
-  static const int LZ4_COMPRESSION = 2;
     
 private:
   std::string index_file_name;
@@ -120,7 +117,8 @@ std::vector< bool > get_data_index_footprint(const File_Properties& file_prop,
 template< class TIndex >
 File_Blocks_Index< TIndex >::File_Blocks_Index
     (const File_Properties& file_prop, bool writeable, bool use_shadow,
-     const std::string& db_dir, const std::string& file_name_extension) :
+     const std::string& db_dir, const std::string& file_name_extension,
+     int compression_method_) :
      index_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()
          + file_prop.get_index_suffix()
@@ -135,7 +133,8 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
      void_blocks_initialized(false),
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
      compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
-     compression_method(file_prop.get_compression_method()), // can be overwritten by index file
+     compression_method(compression_method_ == USE_DEFAULT ?
+        file_prop.get_compression_method() : compression_method_), // can be overwritten by index file
      block_count(0)
 {
   try

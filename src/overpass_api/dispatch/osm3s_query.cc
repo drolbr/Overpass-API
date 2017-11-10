@@ -95,7 +95,6 @@ int main(int argc, char *argv[])
     }
     else if (!(strncmp(argv[argpos], "--clone-compression=", 20)))
     {
-      clone_settings.has_compression_method = true;
       if (std::string(argv[argpos]).substr(20) == "no")
         clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
       else if (std::string(argv[argpos]).substr(20) == "gz")
@@ -116,7 +115,6 @@ int main(int argc, char *argv[])
     }
     else if (!(strncmp(argv[argpos], "--clone-map-compression=", 24)))
     {
-      clone_settings.has_map_compression_method = true;
       if (std::string(argv[argpos]).substr(24) == "no")
         clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
       else if (std::string(argv[argpos]).substr(24) == "gz")
@@ -134,6 +132,7 @@ int main(int argc, char *argv[])
 #endif
         return 0;
       }
+    }
     else if (!(strcmp(argv[argpos], "--version")))
     {
       std::cout<<"Overpass API version "<<basic_settings().version<<" "<<basic_settings().source_hash<<"\n";
