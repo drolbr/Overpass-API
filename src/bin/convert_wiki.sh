@@ -19,7 +19,7 @@
 
 echo "Overpass QL:"
 echo "<source lang=cpp>"
-echo "$1" | ./osm3s_query --dump-pretty-map-ql --concise
+echo "$1" | ./osm3s_query --dump-pretty-ql --concise
 echo "</source>"
 echo
 echo "XML:"

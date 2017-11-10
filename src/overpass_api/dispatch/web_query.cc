@@ -100,11 +100,10 @@ int main(int argc, char *argv[])
       error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(),
  	  area_level > 0 ? dispatcher.get_area_timestamp() : "", true);
 
-      dispatcher.resource_manager().start_cpu_timer(0);
+      Cpu_Timer(dispatcher.resource_manager(), 0);
       for (std::vector< Statement* >::const_iterator it(get_statement_stack()->begin());
 	   it != get_statement_stack()->end(); ++it)
         (*it)->execute(dispatcher.resource_manager());
-      dispatcher.resource_manager().stop_cpu_timer(0);
 
     //TODO
 //       if (osm_script && osm_script->get_type() == "popup")
@@ -129,7 +128,7 @@ int main(int argc, char *argv[])
       if (error_output.http_method == http_get
           || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". The server is probably too busy to handle your request.\n";
+            <<". The server is probably too busy to handle your request.";
     }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
@@ -137,7 +136,12 @@ int main(int argc, char *argv[])
       if (error_output.http_method == http_get
           || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". Please check /api/status for the quota of your IP address.\n";
+            <<". Please check /api/status for the quota of your IP address.";
+    }
+    else if (e.origin == "Dispatcher_Client::1")
+    {
+      error_output.write_html_header("", "", 504, false);
+      temp<<"The dispatcher (i.e. the database management system) is turned off.";
     }
     else
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;

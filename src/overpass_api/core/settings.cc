@@ -1,5 +1,5 @@
 /** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
- *
+ * 
  * This file is part of Overpass_API.
  *
  * Overpass_API is free software: you can redistribute it and/or modify
@@ -97,6 +97,8 @@ Basic_Settings::Basic_Settings()
   base_directory("./"),
   logfile_name("transactions.log"),
   shared_name_base("/osm3s_v0.7.54"),
+  version("0.7.54.10"),
+  source_hash("2e325488658602cec828226b6a7fc1d0ca81a5f1"),
 #ifdef HAVE_LZ4
   compression_method(File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION),
 #else

@@ -35,15 +35,17 @@ struct Data_By_Id
 {
   struct Entry
   {
+    typedef std::vector< std::pair< std::string, std::string > > Tag_Container;
+    
     Uint31_Index idx;
     Element_Skeleton elem;
     OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > meta;
-    std::vector< std::pair< std::string, std::string > > tags;
+    Tag_Container tags;
 
     Entry(Uint31_Index idx_, Element_Skeleton elem_,
         OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > meta_,
-        std::vector< std::pair< std::string, std::string > > tags_
-            = std::vector< std::pair< std::string, std::string > >())
+        Tag_Container tags_
+            = Tag_Container())
         : idx(idx_), elem(elem_), meta(meta_), tags(tags_) {}
 
     bool operator<(const Entry& e) const
@@ -79,6 +81,27 @@ void remove_time_inconsistent_versions(Data_By_Id< Skeleton >& new_data)
     *to_it = *from_it;
     ++from_it;
   }
+  if (!new_data.data.empty())
+    new_data.data.erase(++to_it, new_data.data.end());
+}
+
+
+template< typename Skeleton >
+void deduplicate_data(Data_By_Id< Skeleton >& new_data)
+{
+  typename std::vector< typename Data_By_Id< Skeleton >::Entry >::iterator from_it = new_data.data.begin();
+  typename std::vector< typename Data_By_Id< Skeleton >::Entry >::iterator to_it = new_data.data.begin();
+  if (from_it != new_data.data.end())
+    ++from_it;
+  while (from_it != new_data.data.end())
+  {
+    if (!(to_it->elem.id == from_it->elem.id))
+      ++to_it;
+    *to_it = *from_it;
+    ++from_it;
+  }
+  if (!new_data.data.empty())
+    new_data.data.erase(++to_it, new_data.data.end());
 }
 
 
@@ -1188,6 +1211,18 @@ std::map< Way_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Wa
     collect_ways_by_id(
         const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons,
         const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id);
+
+
+struct Cpu_Stopwatch
+{
+  void start_cpu_timer(uint index);
+  void stop_cpu_timer(uint index);
+  const std::vector< uint64 >& cpu_time() const { return cpu_runtime; }
+  
+private:
+  std::vector< clock_t > cpu_start_time;
+  std::vector< uint64 > cpu_runtime;
+};
 
 
 #endif

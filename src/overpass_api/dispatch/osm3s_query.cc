@@ -134,6 +134,10 @@ int main(int argc, char *argv[])
 #endif
         return 0;
       }
+    else if (!(strcmp(argv[argpos], "--version")))
+    {
+      std::cout<<"Overpass API version "<<basic_settings().version<<" "<<basic_settings().source_hash<<"\n";
+      return 0;
     }
     else
     {
@@ -153,7 +157,8 @@ int main(int argc, char *argv[])
       "  --quiet: Don't print anything on stderr.\n"
       "  --concise: Print concise information on stderr.\n"
       "  --progress: Print also progress information on stderr.\n"
-      "  --verbose: Print everything that happens on stderr.\n";
+      "  --verbose: Print everything that happens on stderr.\n"
+      "  --version: Print version and exit.\n";
 
       return 0;
     }
@@ -277,14 +282,20 @@ int main(int argc, char *argv[])
   }
   catch(File_Error e)
   {
-    std::ostringstream temp;
     if (e.origin != "Dispatcher_Stub::Dispatcher_Stub::1")
     {
-      temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
+      std::ostringstream temp;
+      
+      if (e.origin == "Dispatcher_Client::1")
+        temp<<"The dispatcher (i.e. the database management system) is turned off.";
+      else if (e.error_number == 0)
+        temp<<"open64: "<<e.filename<<' '<<e.origin;
+      else
+        temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
+      
       if (error_output)
         error_output->runtime_error(temp.str());
     }
-
     return 1;
   }
   catch(Resource_Error e)

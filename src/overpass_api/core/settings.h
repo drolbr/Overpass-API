@@ -36,6 +36,9 @@ struct Basic_Settings
   std::string logfile_name;
   std::string shared_name_base;
   
+  std::string version;
+  std::string source_hash;
+  
   uint32 compression_method;
   uint32 map_compression_method;
   

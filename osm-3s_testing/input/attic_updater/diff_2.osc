@@ -239,6 +239,8 @@
 </create>
 <modify>
   <node id="18035" lat="10.004" lon="8.030001" version="2" timestamp="2013-07-01T09:03:24" changeset="496" uid="42" user="foo"/>
+  
+  <node id="18112" lat="10.001001" lon="8.01" version="2" timestamp="2013-07-01T09:03:11" changeset="496" uid="42" user="foo"/>
 </modify>
 
 <modify>

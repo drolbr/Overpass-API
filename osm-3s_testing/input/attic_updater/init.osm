@@ -99,6 +99,8 @@
        1801  created, then drastically changed updated way (exchanged a node, nodes change asynchronously)
        1802  created, then multiple times drastically changed updated way (exchanged a node, nodes change asynchronously)
        1803  created, then in an update several times drastically changed updated way (exchanged a node, nodes change asynchronously)
+  
+       1811  created, then changed way. Then further change on referred nodes only. This checks correct meta data selection.
        
        2101  2 extra tags created successively
        2102  2 extra tags created at once
@@ -589,6 +591,9 @@
   <node id="18031" lat="10.0" lon="8.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>    
   <node id="18032" lat="10.001" lon="8.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
   <node id="18033" lat="10.002" lon="8.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo"/>
+
+  <node id="18111" lat="10.0" lon="8.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>    
+  <node id="18112" lat="10.001" lon="8.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
 
   <node id="21011" lat="11.0" lon="1.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>    
   <node id="21012" lat="11.001" lon="1.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
@@ -1333,6 +1338,13 @@
     <nd ref="18033"/>
     <tag k="foo" v="bar_1803"/>
     <tag k="foo_1803" v="bar"/>
+  </way>
+
+  <way id="1811" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+    <nd ref="18111"/>
+    <nd ref="18112"/>
+    <tag k="foo" v="bar_1811"/>
+    <tag k="foo_1811" v="bar"/>
   </way>
 
   <way id="2101" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">

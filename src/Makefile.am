@@ -4,6 +4,8 @@ bin_script_mandatory = \
   bin/apply_osc_to_db.sh\
   bin/download_clone.sh\
   bin/fetch_osc.sh\
+  bin/fix_system_settings.sh\
+  bin/reboot.sh\
   bin/rules_delta_loop.sh\
   bin/rules_loop.sh
 cgi_bin_mandatory = cgi-bin/interpreter cgi-bin/timestamp
@@ -23,7 +25,6 @@ cgi_bin_augmented_diffs =
 cgi_bin_script_augmented_diffs = cgi-bin/augmented_diff cgi-bin/augmented_diff_status cgi-bin/augmented_state_by_date
 
 bin_xapi_layer = bin/translate_xapi
-bin_script_xapi_layer = bin/cleanup_xapi_tmp.sh
 cgi_bin_xapi_layer = 
 cgi_bin_script_xapi_layer = cgi-bin/convert_xapi cgi-bin/xapi cgi-bin/xapi_meta
 
@@ -134,6 +135,7 @@ output_formats_cc = \
   overpass_api/output_formats/output_json_factory.cc \
   overpass_api/output_formats/output_xml.cc \
   overpass_api/output_formats/output_xml_factory.cc \
+  overpass_api/output_formats/output_popup.cc \
   overpass_api/output_formats/output_popup_factory.cc
 
 libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
@@ -317,5 +319,5 @@ EXTRA_DIST = \
   rules/areas_delta.osm3s
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-#SUBDIRS = test-bin
-SUBDIRS =
+SUBDIRS = test-bin
+#SUBDIRS =

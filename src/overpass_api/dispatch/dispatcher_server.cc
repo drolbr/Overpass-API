@@ -441,7 +441,8 @@ int main(int argc, char* argv[])
 
   {
     Logger log(db_dir);
-    log.annotated_log("Dispatcher just started.");
+    log.annotated_log("Dispatcher version " + basic_settings().version + " "
+        + basic_settings().source_hash + " just started.");
   }
   int chmod_res = chmod((db_dir + basic_settings().logfile_name).c_str(), S_666);
   if (chmod_res)

@@ -21,6 +21,8 @@
 #include <sys/un.h>
 #include "types.h"
 
+#include <cstring>
+
 
 void copy_file(const std::string& source, const std::string& dest)
 {

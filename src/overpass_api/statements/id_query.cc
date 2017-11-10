@@ -32,58 +32,8 @@ bool Id_Query_Statement::area_query_exists_ = false;
 Generic_Statement_Maker< Id_Query_Statement > Id_Query_Statement::statement_maker("id-query");
 
 
-template< class TIndex, class TObject >
-void collect_elems(Resource_Manager& rman, const File_Properties& prop,
-		   Uint64 lower, Uint64 upper,
-		   std::map< TIndex, std::vector< TObject > >& elems)
-{
-  std::set< TIndex > req;
-  {
-    Random_File< uint64, TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (Uint64 i = lower; i < upper; ++i)
-      req.insert(random.get(i.val()));
-  }
-  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
-  for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
-      it(elems_db.discrete_begin(req.begin(), req.end()));
-      !(it == elems_db.discrete_end()); ++it)
-  {
-    if (it.object().id.val() >= lower.val() && it.object().id.val() < upper.val())
-      elems[it.index()].push_back(it.object());
-  }
-}
-
-
-template< class TIndex, class TObject >
-void collect_elems(Resource_Manager& rman, const File_Properties& prop,
-		   Uint64 lower, Uint64 upper,
-		   const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
-		   std::map< TIndex, std::vector< TObject > >& elems)
-{
-  std::set< TIndex > req;
-  {
-    Random_File< uint64, TIndex > random(rman.get_transaction()->random_index(&prop));
-    for (typename TObject::Id_Type i = lower.val(); i.val() < upper.val(); ++i)
-    {
-      if (binary_search(ids.begin(), ids.end(), i) ^ invert_ids)
-        req.insert(random.get(i.val()));
-    }
-  }
-  Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
-  for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
-      it(elems_db.discrete_begin(req.begin(), req.end()));
-      !(it == elems_db.discrete_end()); ++it)
-  {
-    if (!(it.object().id.val() < lower.val()) && it.object().id.val() < upper.val()
-        && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
-      elems[it.index()].push_back(it.object());
-  }
-}
-
-
 void collect_elems_flat(Resource_Manager& rman,
-		   Area_Skeleton::Id_Type lower, Area_Skeleton::Id_Type upper,
-		   const std::vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
+                   const std::vector< uint64 >& ids,
 		   std::map< Uint31_Index, std::vector< Area_Skeleton > >& elems)
 {
   Block_Backend< Uint31_Index, Area_Skeleton > elems_db
@@ -91,15 +41,14 @@ void collect_elems_flat(Resource_Manager& rman,
   for (Block_Backend< Uint31_Index, Area_Skeleton >::Flat_Iterator
       it = elems_db.flat_begin(); !(it == elems_db.flat_end()); ++it)
   {
-    if (!(it.object().id < lower) && it.object().id < upper
-        && (binary_search(ids.begin(), ids.end(), it.object().id) ^ invert_ids))
+    if (std::binary_search(ids.begin(), ids.end(), it.object().id.val()))
       elems[it.index()].push_back(it.object());
   }
 }
 
 
 template< class TIndex, class TObject >
-void filter_elems(Uint64 lower, Uint64 upper,
+void filter_elems(const std::vector< uint64 > & ids,
 		  std::map< TIndex, std::vector< TObject > >& elems)
 {
   for (typename std::map< TIndex, std::vector< TObject > >::iterator it = elems.begin();
@@ -109,7 +58,7 @@ void filter_elems(Uint64 lower, Uint64 upper,
     for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
-      if (iit->id.val() >= lower.val() && iit->id.val() < upper.val())
+      if (std::binary_search(ids.begin(), ids.end(), iit->id.val()))
 	local_into.push_back(*iit);
     }
     it->second.swap(local_into);
@@ -150,10 +99,8 @@ bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node
 {
   ids.clear();
   if (stmt->get_type() == Statement::NODE)
-  {
-    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
-      ids.push_back(i);
-  }
+    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+  
   return true;
 }
 
@@ -162,10 +109,8 @@ bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_S
 {
   ids.clear();
   if (stmt->get_type() == Statement::WAY)
-  {
-    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
-      ids.push_back(i);
-  }
+    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+  
   return true;
 }
 
@@ -174,10 +119,8 @@ bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< 
 {
   ids.clear();
   if (stmt->get_type() == Statement::RELATION)
-  {
-    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
-      ids.push_back(i);
-  }
+    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+  
   return true;
 }
 
@@ -185,8 +128,8 @@ bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< 
 bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
 {
   std::vector< Node_Skeleton::Id_Type > ids;
-  for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
-    ids.push_back(i);
+  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+  
   std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
 
   ranges.clear();
@@ -203,15 +146,13 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair
   if (stmt->get_type() == Statement::WAY)
   {
     std::vector< Way_Skeleton::Id_Type > ids;
-    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
-      ids.push_back(i);
+    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
     get_indexes_< Uint31_Index, Way_Skeleton >(ids, rman).swap(req);
   }
   else
   {
     std::vector< Relation_Skeleton::Id_Type > ids;
-    for (uint64 i = stmt->get_lower().val(); i < stmt->get_upper().val(); ++i)
-      ids.push_back(i);
+    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
     get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman).swap(req);
   }
 
@@ -227,30 +168,30 @@ void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into, uint64 times
 {
   if (stmt->get_type() == Statement::NODE)
   {
-    filter_elems(stmt->get_lower(), stmt->get_upper(), into.nodes);
-    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_nodes);
+    filter_elems(stmt->get_refs(), into.nodes);
+    filter_elems(stmt->get_refs(), into.attic_nodes);
   }
   else
     into.nodes.clear();
 
   if (stmt->get_type() == Statement::WAY)
   {
-    filter_elems(stmt->get_lower(), stmt->get_upper(), into.ways);
-    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_ways);
+    filter_elems(stmt->get_refs(), into.ways);
+    filter_elems(stmt->get_refs(), into.attic_ways);
   }
   else
     into.ways.clear();
 
   if (stmt->get_type() == Statement::RELATION)
   {
-    filter_elems(stmt->get_lower(), stmt->get_upper(), into.relations);
-    filter_elems(stmt->get_lower(), stmt->get_upper(), into.attic_relations);
+    filter_elems(stmt->get_refs(), into.relations);
+    filter_elems(stmt->get_refs(), into.attic_relations);
   }
   else
     into.relations.clear();
 
   if (stmt->get_type() == Statement::AREA)
-    filter_elems(stmt->get_lower(), stmt->get_upper(), into.areas);
+    filter_elems(stmt->get_refs(), into.areas);
   else
     into.areas.clear();
 }
@@ -268,6 +209,13 @@ Id_Query_Statement::Id_Query_Statement
   attributes["ref"] = "";
   attributes["lower"] = "";
   attributes["upper"] = "";
+  
+  for (std::map<std::string, std::string>::const_iterator it = input_attributes.begin();
+      it != input_attributes.end(); ++it)
+  {
+    if (it->first.find("ref_") == 0)
+      attributes[it->first] = "";
+  }
 
   Statement::eval_attributes_array(get_name(), attributes, input_attributes);
 
@@ -293,12 +241,28 @@ Id_Query_Statement::Id_Query_Statement
     add_static_error(temp.str());
   }
 
-  ref = atoll(attributes["ref"].c_str());
-  lower = atoll(attributes["lower"].c_str());
-  upper = atoll(attributes["upper"].c_str());
-  if (ref.val() <= 0)
+  uint64 ref = atoll(attributes["ref"].c_str());
+
+  if (ref > 0)
+    refs.push_back(ref);
+
+  for (std::map< std::string, std::string >::iterator it = attributes.begin();
+      it != attributes.end(); ++it)
   {
-    if (lower.val() == 0 || upper.val() == 0)
+    if (it->first.find("ref_") == 0)
+    {
+      ref = atoll(it->second.c_str());
+      if (ref > 0)
+        refs.push_back(ref);
+    }
+  }
+
+  uint64 lower = atoll(attributes["lower"].c_str());
+  uint64 upper = atoll(attributes["upper"].c_str());
+
+  if (ref <= 0)
+  {
+    if (lower == 0 || upper == 0)
     {
       std::ostringstream temp;
       temp<<"For the attribute \"ref\" of the element \"id-query\""
@@ -312,6 +276,15 @@ Id_Query_Statement::Id_Query_Statement
     lower = ref;
     upper = ++ref;
   }
+
+  if (lower > 0 && upper > 0)
+  {
+    for (uint64 i = lower; i < upper; ++i)
+      refs.push_back(i);
+  }
+  
+  std::sort(refs.begin(), refs.end());
+  refs.erase(std::unique(refs.begin(), refs.end()), refs.end());
 }
 
 
@@ -369,13 +342,12 @@ struct Attic_Skeleton_By_Id
 
 
 template< typename Index, typename Skeleton >
-void get_elements(uint64 lower, uint64 upper, Statement* stmt, Resource_Manager& rman,
+void get_elements(const std::vector< uint64 >& refs, Statement* stmt, Resource_Manager& rman,
     std::map< Index, std::vector< Skeleton > >& current_result,
     std::map< Index, std::vector< Attic< Skeleton > > >& attic_result)
 {
   std::vector< typename Skeleton::Id_Type > ids;
-  for (uint64 i = lower; i < upper; ++i)
-    ids.push_back(i);
+  ids.assign(refs.begin(), refs.end());
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
 
   if (rman.get_desired_timestamp() == NOW)
@@ -395,13 +367,13 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   Set into;
 
   if (type == NODE)
-    get_elements(lower.val(), upper.val(), this, rman, into.nodes, into.attic_nodes);
+    get_elements(refs, this, rman, into.nodes, into.attic_nodes);
   else if (type == WAY)
-    get_elements(lower.val(), upper.val(), this, rman, into.ways, into.attic_ways);
+    get_elements(refs, this, rman, into.ways, into.attic_ways);
   else if (type == RELATION)
-    get_elements(lower.val(), upper.val(), this, rman, into.relations, into.attic_relations);
+    get_elements(refs, this, rman, into.relations, into.attic_relations);
   else if (type == AREA)
-    collect_elems_flat(rman, lower.val(), upper.val(), std::vector< Area_Skeleton::Id_Type >(), true, into.areas);
+    collect_elems_flat(rman, refs, into.areas);
 
   transfer_output(rman, into);
   rman.health_check(*this);

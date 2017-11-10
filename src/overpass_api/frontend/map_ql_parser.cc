@@ -256,12 +256,23 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_id_query_statement(typename TStatement::Factory& stmt_factory,
-				      std::string type, std::string ref, std::string into, uint line_nr)
+    std::string type, const std::vector< std::string >& ref, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
+
   attr["type"] = type;
-  attr["ref"] = ref;
   attr["into"] = into;
+
+  for (uint i = 0; i < ref.size(); ++i)
+  {
+    std::stringstream id;
+    if (i == 0)
+      id << "ref";
+    else
+      id << "ref_" << i;
+    attr[id.str()] = ref[i];
+  }
+
   return stmt_factory.create_statement("id-query", line_nr, attr);
 }
 
@@ -276,8 +287,7 @@ TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_bbox_statement(typename TStatement::Factory& stmt_factory,
-				  std::string south, std::string north, std::string west, std::string east,
-				 std::string into, uint line_nr)
+  std::string south, std::string north, std::string west, std::string east, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["s"] = south;
@@ -836,7 +846,7 @@ TStatement* create_query_substatement
   }
   else if (clause.statement == "id-query")
     return create_id_query_statement< TStatement >
-        (stmt_factory, type, clause.attributes[0], into, clause.line_col.first);
+        (stmt_factory, type, clause.attributes, into, clause.line_col.first);
   else if (clause.statement == "bbox-query")
     return create_bbox_statement< TStatement >
         (stmt_factory,
@@ -1118,6 +1128,24 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
           clear_until_after(token, error_output, ")");
         }
 	clauses.push_back(clause);
+      }
+      else if (*token == "id")
+      {
+        Statement_Text clause("id-query", token.line_col());
+        ++token;
+        clear_until_after(token, error_output, ":", false);
+        if (*token == ":")
+        {
+          do
+          {
+            ++token;
+            clause.attributes.push_back(get_text_token(token, error_output, "Positive integer"));
+            clear_until_after(token, error_output, ",", ")", false);
+          } while (token.good() && *token == ",");
+
+          clear_until_after(token, error_output, ")");
+        }
+        clauses.push_back(clause);
       }
       else if (*token == "newer")
       {

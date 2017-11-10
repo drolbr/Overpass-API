@@ -310,6 +310,12 @@
     <tag k="foo" v="bar_1802"/>
     <tag k="foo_1802" v="bar"/>
   </way>
+  <way id="1811" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="18111"/>
+    <nd ref="18112"/>
+    <tag k="foo" v="bar_1811"/>
+    <tag k="foo_1811" v="bar"/>
+  </way>
   <way id="2101" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="21011"/>
     <nd ref="21012"/>

@@ -100,6 +100,7 @@ download_file()
   retry_fetch_file "$REMOTE_DIR/$1.idx" "$CLONE_DIR/$1.idx"
 }
 
+mkdir -p "$CLONE_DIR"
 fetch_file "$SOURCE/trigger_clone" "$CLONE_DIR/base-url"
 
 REMOTE_DIR=`cat <"$CLONE_DIR/base-url"`
