@@ -123,7 +123,7 @@ inline Random_File_Index::Random_File_Index
     block_size_(file_prop.get_map_block_size()),
     compression_factor(file_prop.get_map_compression_factor()),
     compression_method(compression_method_ == File_Blocks_Index_Base::USE_DEFAULT ?
-        file_prop.get_compression_method() : compression_method_),
+        file_prop.get_map_compression_method() : compression_method_),
     block_count(0)
 {
   uint64 file_size = 0;
@@ -172,7 +172,7 @@ inline Random_File_Index::Random_File_Index
 
           blocks.push_back(entry);
           
-          if (entry.size > guessed_compression_factor)
+          if (entry.size > guessed_compression_factor * 2) // increased buffer size for lz4
           {
             read_old_format = true;
             break;
