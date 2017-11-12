@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+if [[ "$1" = "config" ]]; then
+{
+  echo 'graph_title Dispatcher granted runtime'
+  echo 'graph_vlabel seconds'
+  echo "osm_timeout_status.label osm_timeout"
+  echo "osm_timeout_status.warning 120000"
+  echo "osm_timeout_status.critical 200000"
+  exit 0
+}; fi
+
+GRANTED=`/opt/osm-3s/v0.7.54/bin/dispatcher --osm-base --status | grep -E "^Average claimed time units:" | awk '{ print $5; }'`
+
+echo "osm_timeout_status.value $GRANTED"
+
