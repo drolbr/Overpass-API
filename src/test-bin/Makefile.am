@@ -65,7 +65,7 @@ statements_cc = \
 
 output_formats_dir = ../overpass_api/output_formats
 
-testenv_cc = ${settings_cc} ../overpass_api/dispatch/resource_manager.cc ../overpass_api/frontend/console_output.cc ../overpass_api/frontend/user_interface.cc ../overpass_api/frontend/output.cc ../overpass_api/frontend/basic_formats.cc ../overpass_api/frontend/cgi-helper.cc ../overpass_api/frontend/output_handler.cc ../overpass_api/frontend/tokenizer_utils.cc ../expat/map_ql_input.cc ${output_formats_dir}/output_xml.cc ${output_formats_dir}/output_xml_factory.cc
+testenv_cc = ${settings_cc} ../overpass_api/dispatch/resource_manager.cc ../overpass_api/frontend/console_output.cc ../overpass_api/frontend/user_interface.cc ../overpass_api/frontend/output.cc ../overpass_api/frontend/basic_formats.cc ../overpass_api/frontend/cgi-helper.cc ../overpass_api/frontend/decode_text.cc ../overpass_api/frontend/output_handler.cc ../overpass_api/frontend/tokenizer_utils.cc ../expat/map_ql_input.cc ${output_formats_dir}/output_xml.cc ${output_formats_dir}/output_xml_factory.cc
 
 file_blocks_SOURCES = ../template_db/file_blocks.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 file_blocks_LDADD = @COMPRESS_LIBS@

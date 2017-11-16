@@ -20,16 +20,13 @@
 #ifndef DE__OSM3S___OVERPASS_API__FRONTEND__TOKENIZER_UTILS_H
 #define DE__OSM3S___OVERPASS_API__FRONTEND__TOKENIZER_UTILS_H
 
+#include "decode_text.h"
 #include "../core/datatypes.h"
 #include "../../expat/map_ql_input.h"
 
 
 #include <string>
 
-
-std::string decode_to_utf8(const std::string& token, std::string::size_type& pos, Error_Output* error_output);
-
-std::string decode_json(const std::string& input, Error_Output* error_output);
 
 std::string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
 		      std::string type_of_token);

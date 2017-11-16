@@ -102,14 +102,29 @@ uint64 eval_set(const Set& set_)
 }
 
 
-Set* Runtime_Stack_Frame::get_set(const std::string& set_name)
+Set* Runtime_Stack_Frame::get_set(const std::string& set_name, uint64 timestamp)
 {
   std::map< std::string, Set >::iterator it = sets.find(set_name);
   if (it != sets.end())
     return &it->second;
   
+  std::map< std::string, Diff_Set >::iterator it_diff = diff_sets.find(set_name);
+  if (it_diff != diff_sets.end())
+  {
+    if (timestamp == get_diff_from_timestamp())
+    {
+      it = sets.insert(std::make_pair(set_name, it_diff->second.make_from_set())).first;
+      return &it->second;
+    }
+    else if (timestamp == get_diff_to_timestamp())
+    {
+      it = sets.insert(std::make_pair(set_name, it_diff->second.make_to_set())).first;
+      return &it->second;
+    }
+  }
+  
   if (parent)
-    return parent->get_set(set_name);
+    return parent->get_set(set_name, timestamp);
   
   return 0;
 }
@@ -156,7 +171,7 @@ void Runtime_Stack_Frame::copy_outward(const std::string& inner_set_name, const 
   Set* from = 0;
   
   if (parent)
-    from = parent->get_set(inner_set_name);
+    from = parent->get_set(inner_set_name, desired_timestamp);
   
   if (from)
   {
@@ -187,7 +202,7 @@ void Runtime_Stack_Frame::move_outward(const std::string& inner_set_name, const 
 bool Runtime_Stack_Frame::union_inward(const std::string& top_set_name, const std::string& inner_set_name)
 {
   bool new_elements_found = false;
-  Set* source = get_set(top_set_name);
+  Set* source = get_set(top_set_name, desired_timestamp);
   
   if (source && parent)
   {
@@ -221,7 +236,7 @@ void Runtime_Stack_Frame::copy_inward(const std::string& top_set_name, const std
   std::map< std::string, Set >::iterator it = sets.find(top_set_name);
   if (it == sets.end())
   {
-    Set* source = parent->get_set(top_set_name);
+    Set* source = parent->get_set(top_set_name, desired_timestamp);
     if (source != &parent->sets[inner_set_name])
       parent->sets[inner_set_name] = *source;
   }
@@ -234,7 +249,7 @@ void Runtime_Stack_Frame::copy_inward(const std::string& top_set_name, const std
 
 void Runtime_Stack_Frame::substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name)
 {
-  Set* source = get_set(top_set_name);
+  Set* source = get_set(top_set_name, desired_timestamp);
   
   if (source && parent)
   {
@@ -349,7 +364,7 @@ const Set* Resource_Manager::get_set(const std::string& set_name)
   if (runtime_stack.empty())
     return 0;
   
-  return runtime_stack.back()->get_set(set_name);
+  return runtime_stack.back()->get_set(set_name, get_desired_timestamp());
 }
 
 

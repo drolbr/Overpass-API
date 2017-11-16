@@ -35,14 +35,15 @@ struct Node_With_Context
 {
   Uint31_Index idx;
   Node_Skeleton elem;
+  uint64 expiration_date;
   OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta;
   Tag_Container tags;
 
   Node_With_Context(Uint31_Index idx_, Node_Skeleton elem_,
-      OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta_
+      uint64 expiration_date_, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > meta_
           = OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
       Tag_Container tags_ = Tag_Container())
-  : idx(idx_), elem(elem_), meta(meta_), tags(tags_) {}
+  : idx(idx_), elem(elem_), expiration_date(expiration_date_), meta(meta_), tags(tags_) {}
 
   bool operator<(const Node_With_Context& e) const
   {
@@ -59,15 +60,16 @@ struct Way_With_Context
 {
   Uint31_Index idx;
   Way_Skeleton elem;
+  uint64 expiration_date;
   OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
   Tag_Container tags;
   std::vector< Quad_Coord > geometry;
 
   Way_With_Context(Uint31_Index idx_, Way_Skeleton elem_, const std::vector< Quad_Coord >& geometry_,
-      OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta_
+      uint64 expiration_date_, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta_
           = OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
       Tag_Container tags_ = Tag_Container())
-  : idx(idx_), elem(elem_), meta(meta_), tags(tags_), geometry(geometry_) {}
+  : idx(idx_), elem(elem_), expiration_date(expiration_date_), meta(meta_), tags(tags_), geometry(geometry_) {}
 
   bool operator<(const Way_With_Context& e) const
   {
@@ -84,16 +86,17 @@ struct Relation_With_Context
 {
   Uint31_Index idx;
   Relation_Skeleton elem;
+  uint64 expiration_date;
   OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta;
   Tag_Container tags;
   std::vector< std::vector< Quad_Coord > > geometry;
 
   Relation_With_Context(Uint31_Index idx_, Relation_Skeleton elem_,
       const std::vector< std::vector< Quad_Coord > >& geometry_,
-      OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta_
+      uint64 expiration_date_, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type > meta_
           = OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
       Tag_Container tags_ = Tag_Container())
-  : idx(idx_), elem(elem_), meta(meta_), tags(tags_), geometry(geometry_) {}
+  : idx(idx_), elem(elem_), expiration_date(expiration_date_), meta(meta_), tags(tags_), geometry(geometry_) {}
 
   bool operator<(const Relation_With_Context& e) const
   {
@@ -127,6 +130,9 @@ struct Diff_Set
     
     return *this;
   }
+  
+  Set make_from_set() const;
+  Set make_to_set() const;
 };
 
 

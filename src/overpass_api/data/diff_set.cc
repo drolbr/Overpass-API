@@ -21,6 +21,100 @@
 #include "../frontend/output_handler.h"
 
 
+Set Diff_Set::make_from_set() const
+{
+  Set result;
+  
+  for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator
+      it = different_nodes.begin(); it != different_nodes.end(); ++it)
+  {
+    if (it->first.idx.val() != 0xffu)
+    {
+      if (it->first.expiration_date == NOW)
+        result.nodes[it->first.idx].push_back(it->first.elem);
+      else
+        result.attic_nodes[it->first.idx].push_back(
+            Attic< Node_Skeleton >(it->first.elem, it->first.expiration_date));
+    }
+  }
+  
+  for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::const_iterator it = different_ways.begin();
+      it != different_ways.end(); ++it)
+  {
+    if (it->first.idx.val() != 0xffu)
+    {
+      if (it->first.expiration_date == NOW)
+        result.ways[it->first.idx].push_back(it->first.elem);
+      else
+        result.attic_ways[it->first.idx].push_back(
+            Attic< Way_Skeleton >(it->first.elem, it->first.expiration_date));
+    }
+  }
+  
+  for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::const_iterator it = different_relations.begin();
+      it != different_relations.end(); ++it)
+  {
+    if (it->first.idx.val() != 0xffu)
+    {
+      if (it->first.expiration_date == NOW)
+        result.relations[it->first.idx].push_back(it->first.elem);
+      else
+        result.attic_relations[it->first.idx].push_back(
+            Attic< Relation_Skeleton >(it->first.elem, it->first.expiration_date));
+    }
+  }
+  
+  return result;
+}
+
+
+Set Diff_Set::make_to_set() const
+{
+  Set result;
+  
+  for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator
+      it = different_nodes.begin(); it != different_nodes.end(); ++it)
+  {
+    if ((it->second.idx.val() | 2) != 0xffu)
+    {
+      if (it->second.expiration_date == NOW)
+        result.nodes[it->second.idx].push_back(it->second.elem);
+      else
+        result.attic_nodes[it->second.idx].push_back(
+            Attic< Node_Skeleton >(it->second.elem, it->second.expiration_date));
+    }
+  }
+  
+  for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::const_iterator it = different_ways.begin();
+      it != different_ways.end(); ++it)
+  {
+    if ((it->second.idx.val() | 2) != 0xffu)
+    {
+      if (it->second.expiration_date == NOW)
+        result.ways[it->second.idx].push_back(it->second.elem);
+      else
+        result.attic_ways[it->second.idx].push_back(
+            Attic< Way_Skeleton >(it->second.elem, it->second.expiration_date));
+    }
+  }
+  
+  for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::const_iterator it = different_relations.begin();
+      it != different_relations.end(); ++it)
+  {
+    if ((it->second.idx.val() | 2) != 0xffu)
+    {
+      if (it->second.expiration_date == NOW)
+        result.relations[it->second.idx].push_back(it->second.elem);
+      else
+        result.attic_relations[it->second.idx].push_back(
+            Attic< Relation_Skeleton >(it->second.elem, it->second.expiration_date));
+    }
+  }
+  
+  return result;
+}
+
+
 const std::pair< Quad_Coord, Quad_Coord* >* bound_variant(Double_Coords& double_coords, unsigned int mode)
 {
   if (mode & Output_Mode::BOUNDS)
@@ -36,8 +130,8 @@ void print_nodes(const std::vector< std::pair< Node_With_Context, Node_With_Cont
     uint32 output_mode, Output_Handler* output,
     const std::map< uint32, std::string >& users, bool add_deletion_information)
 {
-  for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator it = different_nodes.begin();
-      it != different_nodes.end(); ++it)
+  for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator
+      it = different_nodes.begin(); it != different_nodes.end(); ++it)
   {
     if ((it->second.idx.val() | 2) == 0xffu)
     {

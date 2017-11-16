@@ -16,8 +16,14 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "dispatcher_stub.h"
+
+#include "../core/settings.h"
+#include "../frontend/tokenizer_utils.h"
 #include "../frontend/web_output.h"
+#include "../../template_db/dispatcher_client.h"
+
+
+#include <fstream>
 
 
 class Output_Timestamp : public Output_Handler
@@ -94,7 +100,6 @@ void Output_Timestamp::write_payload_header
 
 int main(int argc, char *argv[])
 {
-  Parsed_Query global_settings;
   Output_Timestamp output;
   Web_Output error_output(Error_Output::ASSISTING);
   error_output.set_output_handler(&output);
@@ -107,8 +112,17 @@ int main(int argc, char *argv[])
     else
     {
       // open read transaction and log this.
-      Dispatcher_Stub dispatcher("", &error_output, "-- db-timestamp --", only_data, 0, 5, 256, global_settings);
-      error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(), "", true);
+      Dispatcher_Client dispatcher_client(osm_base_settings().shared_name);
+      Logger logger(dispatcher_client.get_db_dir());
+      logger.annotated_log("\n-- db-timestamp --");
+
+      std::string timestamp;
+      {
+        std::ifstream version((dispatcher_client.get_db_dir() + "osm_base_version").c_str());
+        getline(version, timestamp);
+        timestamp = decode_json(timestamp, 0, 0);
+      }
+      error_output.write_payload_header(dispatcher_client.get_db_dir(), timestamp, "", true);
     }
   }
   catch(File_Error e)
@@ -134,18 +148,6 @@ int main(int argc, char *argv[])
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
     error_output.runtime_error(temp.str());
   }
-  catch(Resource_Error e)
-  {
-    std::ostringstream temp;
-    if (e.timed_out)
-      temp<<"Query timed out in \""<<e.stmt_name<<"\" at line "<<e.line_number
-          <<" after "<<e.runtime<<" seconds.";
-    else
-      temp<<"Query run out of memory in \""<<e.stmt_name<<"\" at line "
-          <<e.line_number<<" using about "<<e.size/(1024*1024)<<" MB of RAM.";
-    error_output.runtime_error(temp.str());
-  }
-  catch(Exit_Error e) {}
 
   return 0;
 }

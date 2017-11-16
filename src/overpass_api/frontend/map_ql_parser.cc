@@ -610,8 +610,8 @@ TStatement* parse_timeline(typename TStatement::Factory& stmt_factory,
 
 
 template< class TStatement >
-TStatement* parse_compare(typename TStatement::Factory& stmt_factory,
-    Tokenizer_Wrapper& token, const std::string& from, Error_Output* error_output)
+TStatement* parse_compare(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
+    Tokenizer_Wrapper& token, const std::string& from, Error_Output* error_output, int depth)
 {
   std::pair< uint, uint > line_col = token.line_col();
   ++token;
@@ -628,9 +628,17 @@ TStatement* parse_compare(typename TStatement::Factory& stmt_factory,
   }
   std::string into = probe_into(token, error_output);
 
+  std::vector< TStatement* > substatements;
+  if (*token == "(")
+    collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth)
+        .swap(substatements);
+
   TStatement* statement = create_compare_statement< TStatement >(stmt_factory, line_col.first, from, into);
   if (condition)
     statement->add_statement(condition, "");
+  for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
+      it != substatements.end(); ++it)
+    statement->add_statement(*it, "");
   
   return statement;
 }
@@ -1172,8 +1180,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
     return parse_coord_query< TStatement >(stmt_factory, token, from, error_output);
   else if (token.good() && *token == "map_to_area")
     return parse_map_to_area< TStatement >(stmt_factory, token, from, error_output);
-  else if (*token == "compare")
-    return parse_compare< TStatement >(stmt_factory, token, from, error_output);
+  else if (token.good() && *token == "compare")
+    return parse_compare< TStatement >(stmt_factory, parsed_query, token, from, error_output, depth);
 
   std::string type = "";
   if (*token != "out" && from == "")

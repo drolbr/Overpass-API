@@ -88,7 +88,22 @@ void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
                     const std::map< uint32, std::string >* users)
 {
-  print_item(ll_upper, skel, tags, meta, users);
+  if (final_target)
+    compare_item(ll_upper, skel, tags, NOW, meta, users);
+  else
+    store_item(ll_upper, skel, tags, NOW, meta, users);
+}
+
+
+void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper, const Attic< Node_Skeleton >& skel,
+                    const std::vector< std::pair< std::string, std::string > >* tags,
+                    const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta,
+                    const std::map< uint32, std::string >* users)
+{
+  if (final_target)
+    compare_item(ll_upper, skel, tags, skel.timestamp, meta, users);
+  else
+    store_item(ll_upper, skel, tags, skel.timestamp, meta, users);
 }
 
 
@@ -101,13 +116,24 @@ void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper
   {
     std::vector< Quad_Coord > geometry = extra_data.way_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    print_item(ll_upper, skel, tags,
-        geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
-        ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
-        meta, users);
+    if (final_target)
+      compare_item(ll_upper, skel, tags,
+          geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+          ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+          NOW, meta, users);
+    else
+      store_item(ll_upper, skel, tags,
+          geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+          ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+          NOW, meta, users);
   }
   else
-    print_item(ll_upper, skel, tags, 0, 0, meta, users);
+  {
+    if (final_target)
+      compare_item(ll_upper, skel, tags, 0, 0, NOW, meta, users);
+    else
+      store_item(ll_upper, skel, tags, 0, 0, NOW, meta, users);
+  }
 }
 
 
@@ -120,13 +146,24 @@ void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper
   {
     std::vector< Quad_Coord > geometry = extra_data.attic_way_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    print_item(ll_upper, skel, tags,
-        geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
-        ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
-        meta, users);
+    if (final_target)
+      compare_item(ll_upper, skel, tags,
+          geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+          ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+          skel.timestamp, meta, users);
+    else
+      store_item(ll_upper, skel, tags,
+          geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+          ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.nds.size()) ? &geometry : 0,
+          skel.timestamp, meta, users);
   }
   else
-    print_item(ll_upper, skel, tags, 0, 0, meta, users);
+  {
+    if (final_target)
+      compare_item(ll_upper, skel, tags, 0, 0, skel.timestamp, meta, users);
+    else
+      store_item(ll_upper, skel, tags, 0, 0, skel.timestamp, meta, users);
+  }
 }
 
 
@@ -139,13 +176,24 @@ void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper
   {
     std::vector< std::vector< Quad_Coord > > geometry = extra_data.relation_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    print_item(ll_upper, skel, tags,
-        geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
-        ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
-        meta, users);
+    if (final_target)
+      compare_item(ll_upper, skel, tags,
+          geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+          ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+          NOW, meta, users);
+    else
+      store_item(ll_upper, skel, tags,
+          geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+          ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+          NOW, meta, users);
   }
   else
-    print_item(ll_upper, skel, tags, 0, 0, meta, users);
+  {
+    if (final_target)
+      compare_item(ll_upper, skel, tags, 0, 0, NOW, meta, users);
+    else
+      store_item(ll_upper, skel, tags, 0, 0, NOW, meta, users);
+  }
 }
 
 
@@ -158,13 +206,24 @@ void Set_Comparison::print_item(Extra_Data_For_Diff& extra_data, uint32 ll_upper
   {
     std::vector< std::vector< Quad_Coord > > geometry = extra_data.attic_relation_geometry_store->get_geometry(skel);
     Double_Coords double_coords(geometry);
-    print_item(ll_upper, skel, tags,
+    if (final_target)
+      compare_item(ll_upper, skel, tags,
         geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
         ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
-        meta, users);
+        skel.timestamp, meta, users);
+    else
+      store_item(ll_upper, skel, tags,
+        geometry.empty() ? 0 : bound_variant(double_coords, extra_data.mode),
+        ((extra_data.mode & Output_Mode::GEOMETRY) && geometry.size() == skel.members.size()) ? &geometry : 0,
+        skel.timestamp, meta, users);
   }
   else
-    print_item(ll_upper, skel, tags, 0, 0, meta, users);
+  {
+    if (final_target)
+      compare_item(ll_upper, skel, tags, 0, 0, skel.timestamp, meta, users);
+    else
+      store_item(ll_upper, skel, tags, 0, 0, skel.timestamp, meta, users);
+  }
 }
 
 
@@ -386,40 +445,45 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
 }
 
 
-void Set_Comparison::print_item(uint32 ll_upper, const Node_Skeleton& skel,
+void Set_Comparison::store_item(uint32 ll_upper, const Node_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
-                            const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+                            uint64 timestamp, const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
                             const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta)
 {
-  if (final_target)
-  {
-    std::vector< Node_With_Context >::iterator nodes_it
-        = std::lower_bound(nodes.begin(), nodes.end(), Node_With_Context(ll_upper, skel));
+  nodes.push_back(Node_With_Context(ll_upper, skel, timestamp,
+      meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
+      tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
+}
 
-    if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
-      result.different_nodes.push_back(std::make_pair(
-	  Node_With_Context(0xffu, Node_Skeleton(skel.id),
+
+void Set_Comparison::compare_item(uint32 ll_upper, const Node_Skeleton& skel,
+                            const std::vector< std::pair< std::string, std::string > >* tags,
+                            uint64 timestamp, const OSM_Element_Metadata_Skeleton< Node::Id_Type >* meta,
+                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+			    const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta)
+{
+  std::vector< Node_With_Context >::iterator nodes_it
+      = std::lower_bound(nodes.begin(), nodes.end(), Node_With_Context(ll_upper, skel, 0));
+
+  if (nodes_it == nodes.end() || skel.id < nodes_it->elem.id)
+    result.different_nodes.push_back(std::make_pair(
+	  Node_With_Context(0xffu, Node_Skeleton(skel.id), 0,
 	      OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
 	      std::vector< std::pair< std::string, std::string > >()),
-	  Node_With_Context(ll_upper, skel,
+	  Node_With_Context(ll_upper, skel, timestamp,
               meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
-    else
-    {
-      if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem.ll_lower == skel.ll_lower) ||
+  else
+  {
+    if (!(nodes_it->idx.val() == ll_upper) || !(nodes_it->elem.ll_lower == skel.ll_lower) ||
           (tags && !(nodes_it->tags == *tags)) || (meta && !(nodes_it->meta.timestamp == meta->timestamp)))
-	result.different_nodes.push_back(std::make_pair(*nodes_it, Node_With_Context(ll_upper, skel,
+      result.different_nodes.push_back(std::make_pair(*nodes_it, Node_With_Context(ll_upper, skel, timestamp,
                   meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
                   tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
-	
-      nodes_it->idx = 0xffu;
-    }
+
+    nodes_it->idx = 0xffu;
   }
-  else
-    nodes.push_back(Node_With_Context(ll_upper, skel,
-        meta ? *meta : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
-        tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
 }
 
 
@@ -449,7 +513,7 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
 	    meta_it = found_meta.find(it->elem.id);
 	result.different_nodes.push_back(std::make_pair(*it,
 	    Node_With_Context(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
-		Node_Skeleton(it->elem.id),
+		Node_Skeleton(it->elem.id), 0,
 	        meta_it != found_meta.end() ? meta_it->second
 		    : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
@@ -491,7 +555,7 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
     {
       if (it->idx.val() != 0xffu)
 	result.different_nodes.push_back(std::make_pair(*it,
-	    Node_With_Context(0xffu, Node_Skeleton(it->elem.id),
+	    Node_With_Context(0xffu, Node_Skeleton(it->elem.id), 0,
 	        OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
     }
@@ -501,47 +565,55 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
 }
 
 
-void Set_Comparison::print_item(uint32 ll_upper, const Way_Skeleton& skel,
+void Set_Comparison::store_item(uint32 ll_upper, const Way_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< Quad_Coord >* geometry,
-                            const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+                            uint64 timestamp, const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
                             const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
 {
-  if (final_target)
-  {
-    std::vector< Way_With_Context >::iterator ways_it
-        = std::lower_bound(ways.begin(), ways.end(), Way_With_Context(ll_upper, skel, std::vector< Quad_Coord >()));
+  ways.push_back(Way_With_Context(ll_upper, skel,
+      geometry ? *geometry : std::vector< Quad_Coord >(),
+      timestamp, meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+      tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
+}
 
-    if (ways_it == ways.end() || skel.id < ways_it->elem.id)
-      result.different_ways.push_back(std::make_pair(
+
+void Set_Comparison::compare_item(uint32 ll_upper, const Way_Skeleton& skel,
+                            const std::vector< std::pair< std::string, std::string > >* tags,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                            const std::vector< Quad_Coord >* geometry,
+                            uint64 timestamp, const OSM_Element_Metadata_Skeleton< Way::Id_Type >* meta,
+                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+			    const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
+{
+  std::vector< Way_With_Context >::iterator ways_it
+      = std::lower_bound(ways.begin(), ways.end(),
+          Way_With_Context(ll_upper, skel, std::vector< Quad_Coord >(), timestamp));
+
+  if (ways_it == ways.end() || skel.id < ways_it->elem.id)
+    result.different_ways.push_back(std::make_pair(
 	  Way_With_Context(0xffu, Way_Skeleton(skel.id),
 	      std::vector< Quad_Coord >(),
-	      OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+	      0, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
 	      std::vector< std::pair< std::string, std::string > >()),
 	  Way_With_Context(ll_upper, skel,
               geometry ? *geometry : std::vector< Quad_Coord >(),
-              meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+              timestamp, meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
-    else
-    {
-      if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem.nds == skel.nds) ||
+  else
+  {
+    if (!(ways_it->idx.val() == ll_upper) || !(ways_it->elem.nds == skel.nds) ||
           (geometry && !(ways_it->geometry == *geometry)) ||
           (tags && !(ways_it->tags == *tags)) || (meta && !(ways_it->meta.timestamp == meta->timestamp)))
-	result.different_ways.push_back(std::make_pair(*ways_it, Way_With_Context(ll_upper, skel,
+      result.different_ways.push_back(std::make_pair(*ways_it, Way_With_Context(ll_upper, skel,
               geometry ? *geometry : std::vector< Quad_Coord >(),
-              meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+              timestamp, meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
 	
-      ways_it->idx = 0xffu;
-    }
+    ways_it->idx = 0xffu;
   }
-  else
-    ways.push_back(Way_With_Context(ll_upper, skel,
-        geometry ? *geometry : std::vector< Quad_Coord >(),
-        meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
-        tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
 }
 
 
@@ -573,7 +645,7 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
 	    Way_With_Context(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
 		Way_Skeleton(it->elem.id),
 		std::vector< Quad_Coord >(),
-	        meta_it != found_meta.end() ? meta_it->second
+	        0, meta_it != found_meta.end() ? meta_it->second
 		    : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
       }
@@ -616,7 +688,7 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
 	result.different_ways.push_back(std::make_pair(*it,
 	    Way_With_Context(0xffu, Way_Skeleton(it->elem.id),
 		std::vector< Quad_Coord >(),
-	        OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
+	        0, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
     }
   }
@@ -625,48 +697,55 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
 }
 
 
-void Set_Comparison::print_item(uint32 ll_upper, const Relation_Skeleton& skel,
+void Set_Comparison::store_item(uint32 ll_upper, const Relation_Skeleton& skel,
                             const std::vector< std::pair< std::string, std::string > >* tags,
                             const std::pair< Quad_Coord, Quad_Coord* >* bounds,
                             const std::vector< std::vector< Quad_Coord > >* geometry,
-                            const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+                            uint64 timestamp, const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
                             const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
 			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta)
 {
-  if (final_target)
-  {
-    std::vector< Relation_With_Context >::iterator relations_it
-        = std::lower_bound(relations.begin(), relations.end(),
-	    Relation_With_Context(ll_upper, skel, std::vector< std::vector< Quad_Coord > >()));
+  relations.push_back(Relation_With_Context(ll_upper, skel,
+      geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
+      timestamp, meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
+      tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
+}
 
-    if (relations_it == relations.end() || skel.id < relations_it->elem.id)
+
+void Set_Comparison::compare_item(uint32 ll_upper, const Relation_Skeleton& skel,
+                            const std::vector< std::pair< std::string, std::string > >* tags,
+                            const std::pair< Quad_Coord, Quad_Coord* >* bounds,
+                            const std::vector< std::vector< Quad_Coord > >* geometry,
+                            uint64 timestamp, const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* meta,
+                            const std::map< uint32, std::string >* users, const Output_Handler::Feature_Action& action,
+			    const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta)
+{
+  std::vector< Relation_With_Context >::iterator relations_it
+      = std::lower_bound(relations.begin(), relations.end(),
+          Relation_With_Context(ll_upper, skel, std::vector< std::vector< Quad_Coord > >(), 0));
+
+  if (relations_it == relations.end() || skel.id < relations_it->elem.id)
       result.different_relations.push_back(std::make_pair(
 	  Relation_With_Context(0xffu, Relation_Skeleton(skel.id),
 	      std::vector< std::vector< Quad_Coord > >(),
-	      OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
+	      0, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
 	      std::vector< std::pair< std::string, std::string > >()),
 	  Relation_With_Context(ll_upper, skel,
               geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
-              meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
+              timestamp, meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
-    else
-    {
-      if (!(relations_it->idx.val() == ll_upper) || !(relations_it->elem.members == skel.members) ||
+  else
+  {
+    if (!(relations_it->idx.val() == ll_upper) || !(relations_it->elem.members == skel.members) ||
 	  (geometry && !(relations_it->geometry == *geometry)) ||
 	  (tags && !(relations_it->tags == *tags)) || (meta && !(relations_it->meta.timestamp == meta->timestamp)))
-	result.different_relations.push_back(std::make_pair(*relations_it, Relation_With_Context(ll_upper, skel,
+      result.different_relations.push_back(std::make_pair(*relations_it, Relation_With_Context(ll_upper, skel,
               geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
-              meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
+              timestamp, meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
 	
-      relations_it->idx = 0xffu;
-    }
+    relations_it->idx = 0xffu;
   }
-  else
-    relations.push_back(Relation_With_Context(ll_upper, skel,
-        geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
-        meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
-        tags ? *tags : std::vector< std::pair< std::string, std::string > >()));
 }
 
 
@@ -699,7 +778,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
 	    Relation_With_Context(std::binary_search(found_ids.begin(), found_ids.end(), it->elem.id) ? 0xfdu : 0xffu,
 		Relation_Skeleton(it->elem.id),
 		std::vector< std::vector< Quad_Coord > >(),
-	        meta_it != found_meta.end() ? meta_it->second
+	        0, meta_it != found_meta.end() ? meta_it->second
 		    : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
       }
@@ -744,7 +823,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
 	result.different_relations.push_back(std::make_pair(*it,
 	    Relation_With_Context(0xffu, Relation_Skeleton(it->elem.id),
 		std::vector< std::vector< Quad_Coord > >(),
-	        OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
+	        0, OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
 		std::vector< std::pair< std::string, std::string > >())));
     }
   }

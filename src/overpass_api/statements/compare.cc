@@ -54,7 +54,12 @@ void Compare_Statement::add_statement(Statement* statement, std::string text)
       add_static_error("A compact statement must have an Evaluator as first sub-statement.");
   }
   else
-    add_static_error("A compact statement can have only one sub-statement.");
+  {
+    if (statement->get_name() == "newer")
+      add_static_error("\"newer\" can appear only inside \"query\" statements.");
+
+    substatements.push_back(statement);
+  }
 }
 
 
@@ -88,7 +93,27 @@ void Compare_Statement::execute(Resource_Manager& rman)
           1., 0., 0., 0., add_deletion_information);
       transfer_output(rman, into);
     }
-    rman.health_check(*this);
+
+    if (!substatements.empty())
+    {
+      rman.push_stack_frame();
+      rman.set_desired_timestamp(rman.get_diff_from_timestamp());
+  
+      for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
+        (*it)->execute(rman);
+
+      rman.pop_stack_frame();
+
+      rman.push_stack_frame();
+      rman.set_desired_timestamp(rman.get_diff_to_timestamp());
+  
+      for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
+        (*it)->execute(rman);
+
+      rman.pop_stack_frame();
+
+      rman.health_check(*this);
+    }
   }
   else
   {

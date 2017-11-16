@@ -19,7 +19,7 @@
 #ifndef DE__OSM3S___OVERPASS_API__DISPATCH__DISPATCHER_STUB_H
 #define DE__OSM3S___OVERPASS_API__DISPATCH__DISPATCHER_STUB_H
 
-#include "../statements/statement.h"
+#include "../dispatch/resource_manager.h"
 #include "../../template_db/dispatcher_client.h"
 
 #include <errno.h>

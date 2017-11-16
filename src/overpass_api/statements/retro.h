@@ -97,7 +97,7 @@ public:
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
       result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
-    result += indent + "\n)";
+    result += "\n" + indent + ")";
 
     return result;
   }

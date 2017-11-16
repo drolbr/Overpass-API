@@ -88,7 +88,7 @@ dist_cgibin_SCRIPTS = \
 templatesdir = ${prefix}/templates
 dist_templates_DATA = templates/default.wiki templates/base.wiki
 
-noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la libweboutput.la
+noinst_LTLIBRARIES = libcore.la libdata.la libdispatcher.la libdispatcherclient.la libexpatwrapper.la libfrontend.la liboutput.la libsettings.la
 
 statements_cc = \
   overpass_api/data/bbox_filter.cc \
@@ -148,11 +148,13 @@ output_formats_cc = \
   overpass_api/output_formats/output_popup_factory.cc
 
 libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
-libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libweboutput.la
+libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libfrontend.la
 libdata_la_SOURCES = overpass_api/data/collect_members.cc overpass_api/data/diff_set.cc overpass_api/data/geometry_from_quad_coords.cc overpass_api/data/relation_geometry_store.cc overpass_api/data/set_comparison.cc overpass_api/data/way_geometry_store.cc
 libdata_la_LIBADD =
-libdispatcher_la_SOURCES = template_db/dispatcher_client.cc overpass_api/dispatch/resource_manager.cc overpass_api/osm-backend/area_updater.cc
-libdispatcher_la_LIBADD =
+libdispatcherclient_la_SOURCES = template_db/dispatcher_client.cc
+libdispatcherclient_la_LIBADD =
+libdispatcher_la_SOURCES = overpass_api/dispatch/resource_manager.cc overpass_api/osm-backend/area_updater.cc
+libdispatcher_la_LIBADD = libdispatcherclient.la
 libexpatwrapper_la_SOURCES = expat/expat_justparse_interface.cc
 libexpatwrapper_la_LIBADD = -lexpat
 libfrontend_la_SOURCES = overpass_api/frontend/cgi-helper.cc overpass_api/frontend/user_interface.cc
@@ -161,10 +163,6 @@ liboutput_la_SOURCES = overpass_api/frontend/output.cc
 liboutput_la_LIBADD =
 libsettings_la_SOURCES = overpass_api/core/settings.cc
 libsettings_la_LIBADD =
-# libstatements_la_SOURCES = ${statements_cc}
-# libstatements_la_LIBADD = libdata.la
-libweboutput_la_SOURCES = overpass_api/frontend/web_output.cc
-libweboutput_la_LIBADD = libfrontend.la
 
 osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backend/basic_updater.cc overpass_api/osm-backend/node_updater.cc overpass_api/osm-backend/way_updater.cc overpass_api/osm-backend/relation_updater.cc overpass_api/osm-backend/osm_updater.cc overpass_api/core/geometry.cc expat/escape_xml.cc
 
@@ -173,15 +171,17 @@ bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_
 bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
 bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_from_dir.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_update_from_dir_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
-bin_osm3s_query_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/output_handler.cc overpass_api/frontend/console_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+bin_osm3s_query_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/output_handler.cc overpass_api/frontend/console_output.cc overpass_api/frontend/web_output.cc overpass_api/dispatch/osm3s_query.cc overpass_api/osm-backend/clone_database.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_osm3s_query_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
 bin_dispatcher_SOURCES = template_db/dispatcher.cc template_db/file_tools.cc template_db/transaction_insulator.cc template_db/types.cc overpass_api/dispatch/dispatcher_server.cc
 bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
-cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/output_handler.cc overpass_api/dispatch/web_query.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/output_handler.cc overpass_api/dispatch/web_query.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc overpass_api/frontend/web_output.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 cgi_bin_interpreter_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
-cgi_bin_timestamp_SOURCES = overpass_api/frontend/basic_formats.cc overpass_api/dispatch/db_timestamp.cc overpass_api/core/geometry.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
-cgi_bin_timestamp_LDADD = libdispatcher.la libsettings.la libweboutput.la @COMPRESS_LIBS@
+cgi_bin_timestamp_SOURCES = overpass_api/dispatch/db_timestamp.cc overpass_api/frontend/basic_formats.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/web_output.cc template_db/types.cc
+cgi_bin_timestamp_LDADD = libdispatcherclient.la libsettings.la
+#cgi_bin_timestamp_SOURCES = overpass_api/frontend/basic_formats.cc overpass_api/dispatch/db_timestamp.cc overpass_api/core/geometry.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+#cgi_bin_timestamp_LDADD = libdispatcher.la libsettings.la libweboutput.la @COMPRESS_LIBS@
 
 
 escape_xml_cc = expat/escape_xml.cc

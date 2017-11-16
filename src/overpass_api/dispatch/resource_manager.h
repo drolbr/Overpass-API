@@ -25,7 +25,6 @@
 #include "../core/parsed_query.h"
 #include "../data/diff_set.h"
 #include "../data/user_data_cache.h"
-#include "../osm-backend/area_updater.h"
 
 
 class Statement;
@@ -49,7 +48,7 @@ public:
   // Returns the used RAM including the used RAM of parent frames
   uint64 total_used_space() const;
     
-  Set* get_set(const std::string& set_name);
+  Set* get_set(const std::string& set_name, uint64 timestamp);
   Diff_Set* get_diff_set(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
   void swap_diff_set(const std::string& set_name, Diff_Set& set_);
