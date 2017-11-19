@@ -42,9 +42,6 @@ class Print_Statement : public Statement
 
     static Generic_Statement_Maker< Print_Statement > statement_maker;
 
-    virtual void set_collect_lhs();
-    virtual void set_collect_rhs(bool add_deletion_information);
-
     static std::string mode_string_xml(Output_Mode mode)
     {
       if ((mode & (Output_Mode::VERSION | Output_Mode::META)) == (Output_Mode::VERSION | Output_Mode::META))
@@ -142,8 +139,6 @@ class Print_Statement : public Statement
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
     Set_Comparison* collection_print_target;
-    enum { dont_collect, collect_lhs, collect_rhs } collection_mode;
-    bool add_deletion_information;
 
     double south;
     double north;

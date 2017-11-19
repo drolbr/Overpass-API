@@ -51,7 +51,7 @@ Print_Statement::Print_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_),
       mode(0), order(order_by_id), limit(std::numeric_limits< unsigned int >::max()),
-      collection_print_target(0), collection_mode(dont_collect), add_deletion_information(false),
+      collection_print_target(0),
       south(1.0), north(0.0), west(0.0), east(0.0)
 {
   std::map< std::string, std::string > attributes;
@@ -179,13 +179,15 @@ Print_Statement::Print_Statement
 struct Extra_Data
 {
   Extra_Data(
-      Resource_Manager& rman, const Statement& stmt, const Set& to_print, unsigned int mode_,
+      Resource_Manager& rman, const Statement& stmt, const Set& to_print,
+      unsigned int mode_, Output_Handler::Feature_Action action_,
       double south, double north, double west, double east);
   ~Extra_Data();
 
   const std::map< uint32, std::string >* get_users() const;
 
   unsigned int mode;
+  Output_Handler::Feature_Action action;
   Way_Bbox_Geometry_Store* way_geometry_store;
   Way_Bbox_Geometry_Store* attic_way_geometry_store;
   Relation_Geometry_Store* relation_geometry_store;
@@ -196,9 +198,10 @@ struct Extra_Data
 
 
 Extra_Data::Extra_Data(
-    Resource_Manager& rman, const Statement& stmt, const Set& to_print, unsigned int mode_,
+    Resource_Manager& rman, const Statement& stmt, const Set& to_print,
+    unsigned int mode_, Output_Handler::Feature_Action action_,
     double south, double north, double west, double east)
-    : mode(mode_), way_geometry_store(0), attic_way_geometry_store(0),
+    : mode(mode_), action(action_), way_geometry_store(0), attic_way_geometry_store(0),
     relation_geometry_store(0), attic_relation_geometry_store(0), roles(0), users(0)
 {
   if (mode & (Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
@@ -248,7 +251,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
                     const OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >* meta = 0)
 {
   output.print_item(skel, Point_Geometry(::lat(ll_upper, skel.ll_lower), ::lon(ll_upper, skel.ll_lower)),
-      tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode));
+      tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
@@ -259,7 +262,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
   Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_way_geom(skel, extra_data.mode, extra_data.way_geometry_store),
-      tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode));
+      tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
@@ -270,7 +273,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
   Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_way_geom(skel, extra_data.mode, extra_data.attic_way_geometry_store),
-      tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode));
+      tags, meta, extra_data.get_users(), Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
@@ -281,7 +284,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
   Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_relation_geom(skel, extra_data.mode, extra_data.relation_geometry_store),
-      tags, meta, extra_data.roles, extra_data.get_users(), Output_Mode(extra_data.mode));
+      tags, meta, extra_data.roles, extra_data.get_users(), Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
@@ -292,7 +295,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
   Geometry_From_Quad_Coords broker;
   output.print_item(skel,
       broker.make_relation_geom(skel, extra_data.mode, extra_data.attic_relation_geometry_store),
-      tags, meta, extra_data.roles, extra_data.get_users(), Output_Mode(extra_data.mode));
+      tags, meta, extra_data.roles, extra_data.get_users(), Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
@@ -301,7 +304,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
                     const OSM_Element_Metadata_Skeleton< Area_Skeleton::Id_Type >* meta = 0)
 {
   Derived_Skeleton derived("area", Uint64(skel.id.val()));
-  output.print_item(derived, Null_Geometry(), tags, Output_Mode(extra_data.mode));
+  output.print_item(derived, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
@@ -309,7 +312,7 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0)
 {
-  output.print_item(skel, Null_Geometry(), tags, Output_Mode(extra_data.mode));
+  output.print_item(skel, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
@@ -757,13 +760,16 @@ std::vector< std::pair< std::string, std::string > > make_count_tags(const Set& 
 
 void Print_Statement::execute(Resource_Manager& rman)
 {
-  if (collection_mode != dont_collect)
+  Diff_Action::_ action = rman.get_desired_action();
+  
+  if (action == Diff_Action::collect_lhs
+      || action == Diff_Action::collect_rhs_no_del || action == Diff_Action::collect_rhs_with_del)
   {
     execute_comparison(rman);
     return;
   }
-
-  if (rman.area_updater())
+  
+  if (action == Diff_Action::positive && rman.area_updater())
     rman.area_updater()->flush();
 
   const Set* input_set = rman.get_set(input);
@@ -785,7 +791,13 @@ void Print_Statement::execute(Resource_Manager& rman)
     output_items = input_set;
   }
 
-  Extra_Data extra_data(rman, *this, *output_items, mode, south, north, west, east);
+  Output_Handler::Feature_Action feature_action = Output_Handler::keep;
+  if (action == Diff_Action::show_old)
+    feature_action = Output_Handler::show_from;
+  else if (action == Diff_Action::show_new)
+    feature_action = Output_Handler::show_to;
+
+  Extra_Data extra_data(rman, *this, *output_items, mode, feature_action, south, north, west, east);
   Output_Handler& output_handler = *rman.get_global_settings().get_output_handler();
   uint32 element_count = 0;
 
@@ -881,11 +893,13 @@ void Print_Statement::execute(Resource_Manager& rman)
 
 void Print_Statement::execute_comparison(Resource_Manager& rman)
 {
+  Diff_Action::_ action = rman.get_desired_action();
+  
   const Diff_Set* input_diff_set = rman.get_diff_set(input);
   if (input_diff_set)
   {
     print_diff_set(*input_diff_set, mode, rman.get_global_settings().get_output_handler(),
-        rman.users(), relation_member_roles(*rman.get_transaction()), add_deletion_information);
+        rman.users(), relation_member_roles(*rman.get_transaction()), action == Diff_Action::collect_rhs_with_del);
     return;
   }
   
@@ -893,7 +907,7 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
   if (!input_set)
     return;
 
-  if (collection_mode == collect_lhs)
+  if (action == Diff_Action::collect_lhs)
   {
     delete collection_print_target;
     collection_print_target = new Set_Comparison(
@@ -902,10 +916,10 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
   else
   {
     Diff_Set result = collection_print_target->compare_to_lhs(rman, *this, *input_set,
-        south, north, west, east, add_deletion_information);
+        south, north, west, east, action == Diff_Action::collect_rhs_with_del);
     
     print_diff_set(result, mode, rman.get_global_settings().get_output_handler(),
-        rman.users(), relation_member_roles(*rman.get_transaction()), add_deletion_information);
+        rman.users(), relation_member_roles(*rman.get_transaction()), action == Diff_Action::collect_rhs_with_del);
   }
 
   rman.health_check(*this);
@@ -915,17 +929,4 @@ void Print_Statement::execute_comparison(Resource_Manager& rman)
 Print_Statement::~Print_Statement()
 {
   delete collection_print_target;
-}
-
-
-void Print_Statement::set_collect_lhs()
-{
-  collection_mode = collect_lhs;
-}
-
-
-void Print_Statement::set_collect_rhs(bool add_deletion_information_)
-{
-  collection_mode = collect_rhs;
-  add_deletion_information = add_deletion_information_;
 }

@@ -74,7 +74,8 @@ public:
   virtual void print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode);
+      Output_Mode mode,
+      const Feature_Action& action = keep);
       
 private:
   Csv_Settings csv_settings;

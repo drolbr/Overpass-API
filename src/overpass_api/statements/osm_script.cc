@@ -212,24 +212,13 @@ void Osm_Script_Statement::execute(Resource_Manager& rman)
 
   if (comparison_timestamp > 0)
   {
-    for (std::vector< Statement* >::iterator it = factory->created_statements.begin();
-        it != factory->created_statements.end(); ++it)
-      (*it)->set_collect_lhs();
-
-    rman.set_diff_from_timestamp(comparison_timestamp);
-    rman.set_diff_to_timestamp(desired_timestamp);
-    rman.set_desired_timestamp(comparison_timestamp);
+    rman.start_diff(comparison_timestamp, desired_timestamp);
 
     for (std::vector< Statement* >::iterator it(substatements.begin());
         it != substatements.end(); ++it)
       (*it)->execute(rman);
 
-    for (std::vector< Statement* >::iterator it = factory->created_statements.begin();
-        it != factory->created_statements.end(); ++it)
-      (*it)->set_collect_rhs(add_deletion_information);
-
-    rman.clear_sets();
-    rman.set_desired_timestamp(desired_timestamp);
+    rman.switch_diff_rhs(add_deletion_information);
   }
 
   for (std::vector< Statement* >::iterator it(substatements.begin());

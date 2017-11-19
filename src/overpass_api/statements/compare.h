@@ -33,7 +33,12 @@ class Set_Comparison;
 The statement <em>compare</em> computes the diff of the data of two timestamps.
 That diff can consist of any elements as well as only those with specific properties.
 
-It can only be used in diff mode.
+The statement can have a block of substatements.
+The block of substatements is executed after computing the diff in the second run,
+once for the old timestamp and then again for the new timestamp.
+This allows to do extra computations based on the diff results.
+
+The statement can only be used in diff mode.
 In other modes its behaviour is undefined,
 and in future versions it might be a syntax error to have it elsewhere.
 
@@ -47,11 +52,11 @@ Currently, the only purpose of such a difference is to feed it into an output st
 
 The base syntax is
 
-  compare;
+  compare();
 
 In addition, an input and/or output set can be specified:
 
-  .<Set> compare->.<Set>;
+  .<Set> compare()->.<Set>;
 
 With the evaluator, the syntax becomes
 
@@ -60,6 +65,20 @@ With the evaluator, the syntax becomes
 resp.
 
   .<Set> compare->.<Set>(delta:<Evaluator>);
+
+In all syntax variants a block of substatements can be attached:
+
+  compare()
+  (
+    <List of Substatements>
+  );
+
+resp.
+
+  .<Set> compare(delta:<Evaluator>)->.<Set>;
+  (
+    <List of Substatements>
+  );
 
 */
 
@@ -73,9 +92,6 @@ public:
   virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman);
 
-  virtual void set_collect_lhs();
-  virtual void set_collect_rhs(bool add_deletion_information);
-    
   static Generic_Statement_Maker< Compare_Statement > statement_maker;
 
   virtual std::string dump_xml(const std::string& indent) const
@@ -136,8 +152,6 @@ private:
   std::vector< Statement* > substatements;
   std::string input;
   Set_Comparison* set_comparison;
-  enum { dont_collect, collect_lhs, collect_rhs } collection_mode;
-  bool add_deletion_information;
 };
 
 

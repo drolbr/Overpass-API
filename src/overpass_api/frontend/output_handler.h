@@ -33,7 +33,7 @@ const std::string& member_type_name(uint32 type);
 class Output_Handler
 {
 public:
-  enum Feature_Action { keep, modify, push_away, pull_in, erase, create };
+  enum Feature_Action { keep, show_from, show_to, modify, push_away, pull_in, erase, create };
   
   // shall return true if it really has written a content declaration
   virtual bool write_http_headers() = 0;
@@ -86,7 +86,8 @@ public:
   virtual void print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode) = 0;
+      Output_Mode mode,
+      const Feature_Action& action = keep) = 0;
       
   virtual std::string dump_config() const { return ""; }
 

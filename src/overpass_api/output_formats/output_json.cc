@@ -263,7 +263,8 @@ void Output_JSON::print_item(const Relation_Skeleton& skel,
 void Output_JSON::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode)
+      Output_Mode mode,
+      const Feature_Action& action)
 {
   handle_first_elem(first_elem);  
   std::cout<<"{\n"

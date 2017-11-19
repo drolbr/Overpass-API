@@ -620,10 +620,13 @@ TStatement* parse_compare(typename TStatement::Factory& stmt_factory, Parsed_Que
   if (*token == "(")
   {
     clear_until_after(token, error_output, "(");
-    clear_until_after(token, error_output, "delta");
-    clear_until_after(token, error_output, ":");
-    condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
-        Statement::elem_eval_possible, true);
+    if (*token == "delta")
+    {
+      clear_until_after(token, error_output, "delta");
+      clear_until_after(token, error_output, ":");
+      condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
+          Statement::elem_eval_possible, true);
+    }
     clear_until_after(token, error_output, ")");
   }
   std::string into = probe_into(token, error_output);

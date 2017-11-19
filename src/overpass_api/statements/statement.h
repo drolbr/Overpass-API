@@ -145,9 +145,6 @@ class Statement
     // object.
     virtual Query_Constraint* get_query_constraint() { return 0; }
 
-    virtual void set_collect_lhs() {}
-    virtual void set_collect_rhs(bool add_deletion_information) {}
-
     virtual ~Statement() {}
 
     int get_progress() const { return progress; }

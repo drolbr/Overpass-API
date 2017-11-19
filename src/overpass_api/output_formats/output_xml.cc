@@ -66,16 +66,24 @@ void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 }
 
 
-void prepend_action(const Output_Handler::Feature_Action& action)
+void prepend_action(const Output_Handler::Feature_Action& action, bool allow_delta = true)
 {
   if (action == Output_Handler::keep)
     ;
-  else if (action == Output_Handler::modify)
-    std::cout<<"<action type=\"modify\">\n<old>\n";
-  else if (action == Output_Handler::create)
-    std::cout<<"<action type=\"create\">\n";
-  else if (action == Output_Handler::erase || action == Output_Handler::push_away)
-    std::cout<<"<action type=\"delete\">\n<old>\n";
+  else if (action == Output_Handler::show_from)
+    std::cout<<"<action type=\"show_initial\">\n";
+  else if (action == Output_Handler::show_to)
+    std::cout<<"<action type=\"show_final\">\n";
+  
+  if (allow_delta)
+  {
+    if (action == Output_Handler::modify)
+      std::cout<<"<action type=\"modify\">\n<old>\n";
+    else if (action == Output_Handler::create)
+      std::cout<<"<action type=\"create\">\n";
+    else if (action == Output_Handler::erase || action == Output_Handler::push_away)
+      std::cout<<"<action type=\"delete\">\n<old>\n";
+  }
 }
 
 
@@ -83,25 +91,32 @@ void insert_action(const Output_Handler::Feature_Action& action)
 {
   if (action == Output_Handler::keep)
     ;
-  else if (action == Output_Handler::modify || action == Output_Handler::erase || action == Output_Handler::push_away)
+  else if (action == Output_Handler::modify
+      || action == Output_Handler::erase || action == Output_Handler::push_away)
     std::cout<<"</old>\n<new>\n";
 }
 
 
-void append_action(const Output_Handler::Feature_Action& action, bool is_new = false)
+void append_action(const Output_Handler::Feature_Action& action, bool is_new = false, bool allow_delta = true)
 {
   if (action == Output_Handler::keep)
     ;
-  else if (action == Output_Handler::modify)
-    std::cout<<"</new>\n</action>\n";
-  else if (action == Output_Handler::create)
+  else if (action == Output_Handler::show_from || action == Output_Handler::show_to)
     std::cout<<"</action>\n";
-  else if (action == Output_Handler::erase || action == Output_Handler::push_away)
+  
+  if (allow_delta)
   {
-    if (is_new)
+    if (action == Output_Handler::modify)
       std::cout<<"</new>\n</action>\n";
-    else
-      std::cout<<"</old>\n</action>\n";
+    else if (action == Output_Handler::create)
+      std::cout<<"</action>\n";
+    else if (action == Output_Handler::erase || action == Output_Handler::push_away)
+    {
+      if (is_new)
+        std::cout<<"</new>\n</action>\n";
+      else
+        std::cout<<"</old>\n</action>\n";
+    }
   }
 }
 
@@ -425,8 +440,11 @@ void Output_XML::print_item(const Relation_Skeleton& skel,
 void Output_XML::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode)
+      Output_Mode mode,
+      const Feature_Action& action)
 {
+  prepend_action(action, false);
+  
   std::cout<<"  <"<<skel.type_name;
   if (mode.mode & Output_Mode::ID)
     std::cout<<" id=\""<<skel.id.val()<<'\"';
@@ -438,4 +456,6 @@ void Output_XML::print_item(const Derived_Skeleton& skel,
     std::cout<<"/>\n";
   else
     std::cout<<"  </"<<skel.type_name<<">\n";
+  
+  append_action(action, false, false);
 }

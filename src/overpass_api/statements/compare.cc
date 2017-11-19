@@ -27,7 +27,7 @@ Generic_Statement_Maker< Compare_Statement > Compare_Statement::statement_maker(
 
 Compare_Statement::Compare_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_), criterion(0), set_comparison(0), collection_mode(dont_collect)
+    : Output_Statement(line_number_), criterion(0), set_comparison(0)
 {
   std::map< std::string, std::string > attributes;
 
@@ -49,27 +49,28 @@ void Compare_Statement::add_statement(Statement* statement, std::string text)
   {
     Evaluator* tag_value = dynamic_cast< Evaluator* >(statement);
     if (tag_value)
+    {
       criterion = tag_value;
-    else
-      add_static_error("A compact statement must have an Evaluator as first sub-statement.");
+      return;
+    }
   }
-  else
-  {
-    if (statement->get_name() == "newer")
-      add_static_error("\"newer\" can appear only inside \"query\" statements.");
 
-    substatements.push_back(statement);
-  }
+  if (statement->get_name() == "newer")
+    add_static_error("\"newer\" can appear only inside \"query\" statements.");
+
+  substatements.push_back(statement);
 }
 
 
 void Compare_Statement::execute(Resource_Manager& rman)
 {
+  Diff_Action::_ action = rman.get_desired_action();
+  
   const Set* input_set = rman.get_set(input);
   if (!input_set)
     return;
 
-  if (collection_mode == collect_lhs)
+  if (action == Diff_Action::collect_lhs)
   {
     delete set_comparison;
     set_comparison = new Set_Comparison(
@@ -79,25 +80,25 @@ void Compare_Statement::execute(Resource_Manager& rman)
     transfer_output(rman, into);
     rman.health_check(*this);
   }
-  else if (collection_mode == collect_rhs)
+  else if (action == Diff_Action::collect_rhs_no_del || action == Diff_Action::collect_rhs_with_del)
   {
     if (criterion)
     {
       Diff_Set into = set_comparison->compare_to_lhs(rman, *this, *input_set,
-          criterion, add_deletion_information);
+          criterion, action == Diff_Action::collect_rhs_with_del);
       transfer_output(rman, into);
     }
     else
     {
       Diff_Set into = set_comparison->compare_to_lhs(rman, *this, *input_set,
-          1., 0., 0., 0., add_deletion_information);
+          1., 0., 0., 0., action == Diff_Action::collect_rhs_with_del);
       transfer_output(rman, into);
     }
 
     if (!substatements.empty())
     {
       rman.push_stack_frame();
-      rman.set_desired_timestamp(rman.get_diff_from_timestamp());
+      rman.switch_diff_show_from(get_result_name());
   
       for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
         (*it)->execute(rman);
@@ -105,7 +106,7 @@ void Compare_Statement::execute(Resource_Manager& rman)
       rman.pop_stack_frame();
 
       rman.push_stack_frame();
-      rman.set_desired_timestamp(rman.get_diff_to_timestamp());
+      rman.switch_diff_show_to(get_result_name());
   
       for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
         (*it)->execute(rman);
@@ -127,17 +128,4 @@ void Compare_Statement::execute(Resource_Manager& rman)
 Compare_Statement::~Compare_Statement()
 {
   delete set_comparison;
-}
-
-
-void Compare_Statement::set_collect_lhs()
-{
-  collection_mode = collect_lhs;
-}
-
-
-void Compare_Statement::set_collect_rhs(bool add_deletion_information_)
-{
-  collection_mode = collect_rhs;
-  add_deletion_information = add_deletion_information_;
 }

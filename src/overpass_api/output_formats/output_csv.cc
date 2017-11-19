@@ -263,7 +263,8 @@ void Output_CSV::print_item(const Relation_Skeleton& skel,
 void Output_CSV::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
-      Output_Mode mode)
+      Output_Mode mode,
+      const Feature_Action& action)
 {
   process_csv_line< Derived_Skeleton::Id_Type, int >(
       4, skel.type_name, skel.id, geometry, 0, tags, 0, csv_settings, mode);
