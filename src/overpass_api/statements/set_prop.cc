@@ -103,7 +103,7 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
 
 Set_Prop_Statement::Set_Prop_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Statement(line_number_), set_id(false), tag_value(0)
+    : Statement(line_number_), key(0), set_id(false), tag_value(0)
 {
   std::map< std::string, std::string > attributes;
 
@@ -115,7 +115,7 @@ Set_Prop_Statement::Set_Prop_Statement
   if (attributes["keytype"] == "tag")
   {
     if (attributes["k"] != "")
-      keys.push_back(attributes["k"]);
+      key = new std::string(attributes["k"]);
     else
       add_static_error("For the statement \"set-prop\" in mode \"keytype\"=\"tag\", "
           "the attribute \"k\" must be nonempty.");
@@ -143,15 +143,15 @@ void Set_Prop_Statement::add_statement(Statement* statement, std::string text)
 std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
 {
   if (!tag_value)
-    return indent + "<set-prop keytype=\"tag\" k=\"" + keys.front() + "\"/>\n";
+    return indent + "<set-prop keytype=\"tag\" k=\"" + (key ? *key : "") + "\"/>\n";
 
   std::string attributes;
   if (set_id)
     attributes = " keytype=\"id\"";
-  else if (keys.empty())
+  else if (!key)
     attributes = " keytype=\"generic\"";
   else
-    attributes = std::string(" keytype=\"tag\" k=\"") + keys.front() + "\"";
+    attributes = std::string(" keytype=\"tag\" k=\"") + (key ? *key : "") + "\"";
   return indent + "<set-prop" + attributes + ">\n"
       + tag_value->dump_xml(indent + "  ")
       + indent + "</set-prop>\n";
@@ -161,9 +161,9 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
 std::string Set_Prop_Statement::dump_compact_ql(const std::string&) const
 {
   if (tag_value)
-    return escape_cstr(keys.empty() ? "" : keys.front()) + "=" + tag_value->dump_compact_ql("");
+    return escape_cstr(key ? *key : "") + "=" + tag_value->dump_compact_ql("");
   else
-    return std::string("!") + (keys.empty() ? "" : keys.front());
+    return std::string("!") + (key ? *key : "");
 }
 
 
@@ -186,8 +186,8 @@ Requested_Context Set_Prop_Statement::request_context() const
 Set_Prop_Task* Set_Prop_Statement::get_task(Prepare_Task_Context& context)
 {
   Eval_Task* rhs_task = tag_value ? tag_value->get_task(context) : 0;
-  return new Set_Prop_Task(rhs_task, keys.empty() ? "" : keys.front(),
-      set_id ? Set_Prop_Task::set_id : keys.empty() ? Set_Prop_Task::generic : Set_Prop_Task::single_key);
+  return new Set_Prop_Task(rhs_task, key ? *key : "",
+      set_id ? Set_Prop_Task::set_id : key ? Set_Prop_Task::single_key : Set_Prop_Task::generic);
 }
 
 

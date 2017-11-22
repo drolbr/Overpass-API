@@ -96,19 +96,19 @@ public:
   virtual std::string get_result_name() const { return ""; }
   virtual void add_statement(Statement* statement, std::string text);
   virtual void execute(Resource_Manager& rman) {}
-  virtual ~Set_Prop_Statement() {}
+  virtual ~Set_Prop_Statement() { delete key; }
 
   virtual Requested_Context request_context() const;
 
   Set_Prop_Task* get_task(Prepare_Task_Context& context);
 
-  const std::string* get_key() const { return input != "" ? 0 : &keys.front(); }
+  const std::string* get_key() const { return key; }
   bool has_value() const { return tag_value; }
   bool should_set_id() const { return set_id; }
 
 private:
   std::string input;
-  std::vector< std::string > keys;
+  std::string* key;
   bool set_id;
   Evaluator* tag_value;
 };
