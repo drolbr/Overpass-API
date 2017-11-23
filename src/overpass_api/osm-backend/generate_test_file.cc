@@ -4291,6 +4291,35 @@ int main(int argc, char* args[])
       "  <test-ternary id=\"1\">\n"
       "    <tag k=\"ternary\" v=\"B\"/>\n"
       "  </test-ternary>\n";
+    if (std::string(args[2]) == "make_87" || std::string(args[2]) == "make_88")
+      std::cout<<
+      "  <generic-key id=\"1\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key\" v=\"way_few\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </generic-key>\n";
+    if (std::string(args[2]) == "make_89")
+      std::cout<<
+      "  <generic-key id=\"1\">\n"
+      "    <tag k=\"node_key\" v=\"node_few\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"node_value_1;node_value_2\"/>\n"
+      "    <tag k=\"relation_key\" v=\"relation_few\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"relation_value_1\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"way_value_1\"/>\n"
+      "  </generic-key>\n";
+    if (std::string(args[2]) == "make_90")
+      std::cout<<
+      "  <generic-key id=\"1\">\n"
+      "    <tag k=\"node_key\" v=\"...\"/>\n"
+      "    <tag k=\"node_key_7\" v=\"...\"/>\n"
+      "    <tag k=\"relation_key\" v=\"...\"/>\n"
+      "    <tag k=\"relation_key_7\" v=\"...\"/>\n"
+      "    <tag k=\"way_key\" v=\"...\"/>\n"
+      "    <tag k=\"way_key_7\" v=\"...\"/>\n"
+      "  </generic-key>\n";
 
     std::cout<<"</osm>\n";
   }

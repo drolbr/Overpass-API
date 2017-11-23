@@ -360,6 +360,38 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void generic_key_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string from, uint64 ref1, uint64 ref2,
+    bool set_value_const, bool exclude_a_key,
+    uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_value_test(global_settings, rman, from, ref1, ref2, global_node_offset);
+  Statement_Container stmt_cont(global_settings);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(
+      Attr()("keytype", "generic")("from", from).kvs(), &stmt);
+  
+  if (set_value_const)
+    add_fixed_stmt("...", subs, stmt_cont);
+  else
+  {
+    subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
+        (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
+    subs = stmt_cont.add_stmt(new Evaluator_Generic(0, Attr().kvs(), global_settings), subs);
+  }
+  
+  if (exclude_a_key)
+    subs = stmt_cont.create_stmt< Set_Prop_Statement >(
+      Attr()("keytype", "tag")("k", "way_key").kvs(), &stmt);
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+}
+
+
 void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, std::string from, uint64 ref, uint64 global_node_offset)
 {
@@ -1069,6 +1101,14 @@ int main(int argc, char* args[])
       triple_test(global_settings, transaction, "test-ternary", "ternary", "0", "A", "B");
     if ((test_to_execute == "") || (test_to_execute == "86"))
       triple_test(global_settings, transaction, "test-ternary", "ternary", "", "A", "B");
+    if ((test_to_execute == "") || (test_to_execute == "87"))
+      generic_key_test(global_settings, transaction, "generic-key", "_", 7, 14, false, false, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "88"))
+      generic_key_test(global_settings, transaction, "generic-key", "foo", 7, 14, false, false, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "89"))
+      generic_key_test(global_settings, transaction, "generic-key", "_", 7, 14, false, true, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "90"))
+      generic_key_test(global_settings, transaction, "generic-key", "_", 7, 14, true, false, global_node_offset);
 
     std::cout<<"</osm>\n";
   }

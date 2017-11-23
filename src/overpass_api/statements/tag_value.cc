@@ -674,7 +674,7 @@ Requested_Context Evaluator_Properties_Count::request_context() const
 }
 
 
-Eval_Task* Evaluator_Properties_Count::get_task(Prepare_Task_Context& context)
+Eval_Task* Evaluator_Properties_Count::get_task(Prepare_Task_Context& context, const std::string* key)
 {
   if (to_count == Evaluator_Properties_Count::by_role || to_count == Evaluator_Properties_Count::distinct_by_role)
     return new Prop_Count_Eval_Task(to_count, type_to_count, context.get_role_id(role));

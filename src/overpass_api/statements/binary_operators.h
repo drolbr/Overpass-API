@@ -80,7 +80,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context);
+  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key);
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const = 0;
 

@@ -83,6 +83,15 @@ void Make_Statement::add_statement(Statement* statement, std::string text)
 
 void Make_Statement::execute(Resource_Manager& rman)
 {
+  std::vector< std::string > declared_keys;
+  for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
+  {
+    if ((*it)->get_key())
+      declared_keys.push_back(*(*it)->get_key());
+  }
+  std::sort(declared_keys.begin(), declared_keys.end());
+  declared_keys.erase(std::unique(declared_keys.begin(), declared_keys.end()), declared_keys.end());
+  
   Requested_Context requested_context;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     requested_context.add((*it)->request_context());
@@ -91,7 +100,7 @@ void Make_Statement::execute(Resource_Manager& rman)
   
   Owning_Array< Set_Prop_Task* > tasks;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
-    tasks.push_back((*it)->get_task(context));
+    tasks.push_back((*it)->get_task(context, declared_keys));
   
   Derived_Structure result(type, 0ull);
   bool id_fixed = false;

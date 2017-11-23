@@ -68,6 +68,11 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
       else if (error_output)
         error_output->add_parse_error("The only allowed special property is \"id\"", tree_it->line_col.first);
     }
+    else if (tree_it.lhs()->lhs)
+    {
+      attributes["keytype"] = "generic";
+      attributes["from"] = tree_it.lhs().lhs()->token;
+    }
     else if (tree_context == Statement::in_convert)
       attributes["keytype"] = "generic";
     else if (error_output)
@@ -109,6 +114,7 @@ Set_Prop_Statement::Set_Prop_Statement
 
   attributes["k"] = "";
   attributes["keytype"] = "tag";
+  attributes["from"] = "";
 
   eval_attributes_array(get_name(), attributes, input_attributes);
 
@@ -125,6 +131,15 @@ Set_Prop_Statement::Set_Prop_Statement
   else if (attributes["keytype"] != "generic")
     add_static_error("For the attribute \"keytype\" of the element \"set-prop\""
         " the only allowed values are \"tag\", \"id\", or \"generic\".");
+    
+  if (!attributes["from"].empty())
+  {
+    if (attributes["keytype"] == "generic")
+      input = attributes["from"];
+    else
+      add_static_error("The attribute \"from\" of the element \"set-prop\""
+          " can only be set to a non-empty value if \"keytype\" is \"generic\".");
+  }
 }
 
 
@@ -152,6 +167,10 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
     attributes = " keytype=\"generic\"";
   else
     attributes = std::string(" keytype=\"tag\" k=\"") + (key ? *key : "") + "\"";
+  
+  if (!input.empty())
+    attributes += " from=\"" + input + "\"";
+  
   return indent + "<set-prop" + attributes + ">\n"
       + tag_value->dump_xml(indent + "  ")
       + indent + "</set-prop>\n";
@@ -160,10 +179,20 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
 
 std::string Set_Prop_Statement::dump_compact_ql(const std::string&) const
 {
-  if (tag_value)
-    return escape_cstr(key ? *key : "") + "=" + tag_value->dump_compact_ql("");
+  std::string result;
+  if (set_id)
+    result = "::id=";
+  else if (!key)
+    result = input + "::=";
+  else if (!tag_value)
+    return std::string("!") + escape_cstr(key ? *key : "");
   else
-    return std::string("!") + (key ? *key : "");
+    result = escape_cstr(key ? *key : "") + "=";
+  
+  if (tag_value)
+    return result + tag_value->dump_compact_ql("");
+  
+  return result;
 }
 
 
@@ -173,7 +202,11 @@ Requested_Context Set_Prop_Statement::request_context() const
   if (tag_value)
   {
     Requested_Context result = tag_value->request_context();
-    result.object_usage |= Set_Usage::TAGS;
+    if (input.empty())
+      result.add_usage(Set_Usage::TAGS);
+    else
+      result.add_usage(input, Set_Usage::TAGS);
+
     return result;
   }
 
@@ -183,15 +216,92 @@ Requested_Context Set_Prop_Statement::request_context() const
 }
 
 
-Set_Prop_Task* Set_Prop_Statement::get_task(Prepare_Task_Context& context)
+template< typename Index, typename Maybe_Attic >
+void eval_elems(std::set< std::string >& existing_keys, Set_With_Context& input_set,
+    const std::map< Index, std::vector< Maybe_Attic > >& elems,
+    const std::vector< std::string >& otherwise_set_keys)
 {
-  Eval_Task* rhs_task = tag_value ? tag_value->get_task(context) : 0;
-  return new Set_Prop_Task(rhs_task, key ? *key : "",
-      set_id ? Set_Prop_Task::set_id : key ? Set_Prop_Task::single_key : Set_Prop_Task::generic);
+  for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator idx_it = elems.begin();
+      idx_it != elems.end(); ++idx_it)
+  {
+    for (typename std::vector< Maybe_Attic >::const_iterator elem_it = idx_it->second.begin();
+        elem_it != idx_it->second.end(); ++elem_it)
+    {
+      Element_With_Context< Maybe_Attic > data = input_set.get_context(idx_it->first, *elem_it);
+      if (data.tags)
+      {
+        for (std::vector< std::pair< std::string, std::string > >::const_iterator it_keys = data.tags->begin();
+            it_keys != data.tags->end(); ++it_keys)
+        {
+          if (!std::binary_search(otherwise_set_keys.begin(), otherwise_set_keys.end(), it_keys->first))
+            existing_keys.insert(it_keys->first);
+        }
+      }
+    }
+  }
 }
 
 
-void Set_Prop_Task::process(Derived_Structure& result, bool& id_set) const
+void eval_elems(std::set< std::string >& existing_keys, Set_With_Context& input_set,
+    const std::map< Uint31_Index, std::vector< Derived_Structure > >& elems,
+    const std::vector< std::string >& otherwise_set_keys)
+{
+  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::const_iterator idx_it = elems.begin();
+      idx_it != elems.end(); ++idx_it)
+  {
+    for (std::vector< Derived_Structure >::const_iterator elem_it = idx_it->second.begin();
+        elem_it != idx_it->second.end(); ++elem_it)
+    {
+      Element_With_Context< Derived_Skeleton > data = input_set.get_context(idx_it->first, *elem_it);
+      if (data.tags)
+      {
+        for (std::vector< std::pair< std::string, std::string > >::const_iterator it_keys = data.tags->begin();
+            it_keys != data.tags->end(); ++it_keys)
+        {
+          if (!std::binary_search(otherwise_set_keys.begin(), otherwise_set_keys.end(), it_keys->first))
+            existing_keys.insert(it_keys->first);
+        }
+      }
+    }
+  }
+}
+
+
+Set_Prop_Task* Set_Prop_Statement::get_task(
+    Prepare_Task_Context& context, const std::vector< std::string >& otherwise_set_keys)
+{
+  if (input.empty())
+  {
+    Eval_Task* rhs_task = tag_value ? tag_value->get_task(context, key) : 0;
+    return new Set_Prop_Plain_Task(rhs_task, key ? *key : "",
+        set_id ? Set_Prop_Task::set_id : key ? Set_Prop_Task::single_key : Set_Prop_Task::generic);
+  }
+  
+  Set_Prop_Generic_Task* result = new Set_Prop_Generic_Task();
+  
+  Set_With_Context* input_set = context.get_set(input);
+  if (input_set && input_set->base)
+  {
+    std::set< std::string > existing_keys;
+    
+    eval_elems(existing_keys, *input_set, input_set->base->nodes, otherwise_set_keys);
+    eval_elems(existing_keys, *input_set, input_set->base->attic_nodes, otherwise_set_keys);
+    eval_elems(existing_keys, *input_set, input_set->base->ways, otherwise_set_keys);
+    eval_elems(existing_keys, *input_set, input_set->base->attic_ways, otherwise_set_keys);
+    eval_elems(existing_keys, *input_set, input_set->base->relations, otherwise_set_keys);
+    eval_elems(existing_keys, *input_set, input_set->base->attic_relations, otherwise_set_keys);
+    eval_elems(existing_keys, *input_set, input_set->base->areas, otherwise_set_keys);
+    eval_elems(existing_keys, *input_set, input_set->base->deriveds, otherwise_set_keys);
+    
+    for (std::set< std::string >::const_iterator it = existing_keys.begin(); it != existing_keys.end(); ++it)
+      result->add_key(*it, tag_value ? tag_value->get_task(context, &*it) : 0);
+  }
+  
+  return result;
+}
+
+
+void Set_Prop_Plain_Task::process(Derived_Structure& result, bool& id_set) const
 {
   if (!rhs)
     return;
@@ -217,7 +327,7 @@ void process(const std::string& key, Set_Prop_Task::Mode mode, Eval_Task* rhs,
     return;
 
   if (mode == Set_Prop_Task::single_key)
-    result.tags.push_back(std::make_pair(key, rhs->eval(data, 0)));
+    result.tags.push_back(std::make_pair(key, rhs->eval(data, &key)));
   else if (mode == Set_Prop_Task::generic)
   {
     if (data.tags)
@@ -246,57 +356,136 @@ void process(const std::string& key, Set_Prop_Task::Mode mode, Eval_Task* rhs,
 }
 
 
-void Set_Prop_Task::process(const Element_With_Context< Node_Skeleton>& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Node_Skeleton>& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);
 }
 
 
-void Set_Prop_Task::process(const Element_With_Context< Attic< Node_Skeleton > >& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Attic< Node_Skeleton > >& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);
 }
 
 
-void Set_Prop_Task::process(const Element_With_Context< Way_Skeleton >& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Way_Skeleton >& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);
 }
 
 
-void Set_Prop_Task::process(const Element_With_Context< Attic< Way_Skeleton > >& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Attic< Way_Skeleton > >& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);
 }
 
 
-void Set_Prop_Task::process(const Element_With_Context< Relation_Skeleton >& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Relation_Skeleton >& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);
 }
 
 
-void Set_Prop_Task::process(const Element_With_Context< Attic< Relation_Skeleton > >& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Attic< Relation_Skeleton > >& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);
 }
 
 
-void Set_Prop_Task::process(const Element_With_Context< Area_Skeleton >& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Area_Skeleton >& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);
 }
 
 
-void Set_Prop_Task::process(const Element_With_Context< Derived_Skeleton >& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Derived_Skeleton >& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);
+}
+
+
+void Set_Prop_Generic_Task::add_key(const std::string& key, Eval_Task* task)
+{
+  keys.push_back(key);
+  rhs.push_back(task);
+}
+
+
+void Set_Prop_Generic_Task::process(Derived_Structure& result, bool& id_set) const
+{
+  for (unsigned int i = 0; i < keys.size(); ++i)
+    result.tags.push_back(std::make_pair(keys[i], rhs[i]->eval(&keys[i])));
+}
+
+
+template< typename Object >
+void process_generic(const Owning_Array< Eval_Task* >& rhs, const std::vector< std::string >& keys,
+    const Element_With_Context< Object >& data, Derived_Structure& result)
+{
+  for (unsigned int i = 0; i < keys.size(); ++i)
+    result.tags.push_back(std::make_pair(keys[i], rhs[i]->eval(data, &keys[i])));
+}
+
+
+void Set_Prop_Generic_Task::process(const Element_With_Context< Node_Skeleton>& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  ::process_generic(rhs, keys, data, result);
+}
+
+
+void Set_Prop_Generic_Task::process(const Element_With_Context< Attic< Node_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  ::process_generic(rhs, keys, data, result);
+}
+
+
+void Set_Prop_Generic_Task::process(const Element_With_Context< Way_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  ::process_generic(rhs, keys, data, result);
+}
+
+
+void Set_Prop_Generic_Task::process(const Element_With_Context< Attic< Way_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  ::process_generic(rhs, keys, data, result);
+}
+
+
+void Set_Prop_Generic_Task::process(const Element_With_Context< Relation_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  ::process_generic(rhs, keys, data, result);
+}
+
+
+void Set_Prop_Generic_Task::process(const Element_With_Context< Attic< Relation_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  ::process_generic(rhs, keys, data, result);
+}
+
+
+void Set_Prop_Generic_Task::process(const Element_With_Context< Area_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  ::process_generic(rhs, keys, data, result);
+}
+
+
+void Set_Prop_Generic_Task::process(const Element_With_Context< Derived_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  ::process_generic(rhs, keys, data, result);
 }

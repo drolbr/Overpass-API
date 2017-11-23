@@ -78,7 +78,7 @@ void For_Statement::execute(Resource_Manager& rman)
   
   Prepare_Task_Context context(requested_context, *this, rman);
   
-  Owner< Eval_Task > task(evaluator->get_task(context));
+  Owner< Eval_Task > task(evaluator->get_task(context, 0));
   Set_With_Context* context_from = context.get_set(input);
   if (!context_from)
     return;

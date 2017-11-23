@@ -252,7 +252,7 @@ struct Evaluator : public Statement
 
   virtual Requested_Context request_context() const = 0;
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context) = 0;
+  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key) = 0;
 
   virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   virtual int get_operator_priority() const { return std::numeric_limits< int >::max(); }

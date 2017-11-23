@@ -72,7 +72,7 @@ void Filter_Constraint::filter(const Statement& query, Resource_Manager& rman, S
   Requested_Context requested_context = stmt->get_criterion()->request_context();
   Prepare_Task_Context context(requested_context, query, rman);
 
-  Owner< Eval_Task > task(stmt->get_criterion()->get_task(context));
+  Owner< Eval_Task > task(stmt->get_criterion()->get_task(context, 0));
 
   Set_With_Context into_context;
   into_context.name = "";

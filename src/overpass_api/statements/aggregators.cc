@@ -48,24 +48,25 @@ void Evaluator_Aggregator::add_statement(Statement* statement, std::string text)
 
 template< typename Index, typename Maybe_Attic >
 void eval_elems(Value_Aggregator& aggregator, Eval_Task& task,
-    const std::map< Index, std::vector< Maybe_Attic > >& elems, Set_With_Context& input_set)
+    const std::map< Index, std::vector< Maybe_Attic > >& elems, Set_With_Context& input_set,
+    const std::string* key)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator idx_it = elems.begin();
       idx_it != elems.end(); ++idx_it)
   {
     for (typename std::vector< Maybe_Attic >::const_iterator elem_it = idx_it->second.begin();
         elem_it != idx_it->second.end(); ++elem_it)
-      aggregator.update_value(task.eval(input_set.get_context(idx_it->first, *elem_it), 0));
+      aggregator.update_value(task.eval(input_set.get_context(idx_it->first, *elem_it), key));
   }
 }
 
 
-Eval_Task* Evaluator_Aggregator::get_task(Prepare_Task_Context& context)
+Eval_Task* Evaluator_Aggregator::get_task(Prepare_Task_Context& context, const std::string* key)
 {
   if (!rhs)
     return 0;
 
-  Owner< Eval_Task > rhs_task(rhs->get_task(context));
+  Owner< Eval_Task > rhs_task(rhs->get_task(context, key));
   if (!rhs_task)
     return 0;
 
@@ -77,14 +78,14 @@ Eval_Task* Evaluator_Aggregator::get_task(Prepare_Task_Context& context)
   if (!value_agg)
     return 0;
 
-  eval_elems(*value_agg, *rhs_task, input_set->base->nodes, *input_set);
-  eval_elems(*value_agg, *rhs_task, input_set->base->attic_nodes, *input_set);
-  eval_elems(*value_agg, *rhs_task, input_set->base->ways, *input_set);
-  eval_elems(*value_agg, *rhs_task, input_set->base->attic_ways, *input_set);
-  eval_elems(*value_agg, *rhs_task, input_set->base->relations, *input_set);
-  eval_elems(*value_agg, *rhs_task, input_set->base->attic_relations, *input_set);
-  eval_elems(*value_agg, *rhs_task, input_set->base->areas, *input_set);
-  eval_elems(*value_agg, *rhs_task, input_set->base->deriveds, *input_set);
+  eval_elems(*value_agg, *rhs_task, input_set->base->nodes, *input_set, key);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_nodes, *input_set, key);
+  eval_elems(*value_agg, *rhs_task, input_set->base->ways, *input_set, key);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_ways, *input_set, key);
+  eval_elems(*value_agg, *rhs_task, input_set->base->relations, *input_set, key);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_relations, *input_set, key);
+  eval_elems(*value_agg, *rhs_task, input_set->base->areas, *input_set, key);
+  eval_elems(*value_agg, *rhs_task, input_set->base->deriveds, *input_set, key);
 
   return new Const_Eval_Task((*value_agg).get_value());
 }
@@ -426,7 +427,7 @@ Requested_Context Evaluator_Set_Count::request_context() const
 }
 
 
-Eval_Task* Evaluator_Set_Count::get_task(Prepare_Task_Context& context)
+Eval_Task* Evaluator_Set_Count::get_task(Prepare_Task_Context& context, const std::string* key)
 {
   const Set_With_Context* set = context.get_set(input);
 
