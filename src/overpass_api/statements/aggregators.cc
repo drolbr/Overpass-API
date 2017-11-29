@@ -61,12 +61,12 @@ void eval_elems(Value_Aggregator& aggregator, Eval_Task& task,
 }
 
 
-Eval_Task* Evaluator_Aggregator::get_task(Prepare_Task_Context& context, const std::string* key)
+Eval_Task* Evaluator_Aggregator::get_string_task(Prepare_Task_Context& context, const std::string* key)
 {
   if (!rhs)
     return 0;
 
-  Owner< Eval_Task > rhs_task(rhs->get_task(context, key));
+  Owner< Eval_Task > rhs_task(rhs->get_string_task(context, key));
   if (!rhs_task)
     return 0;
 
@@ -427,7 +427,7 @@ Requested_Context Evaluator_Set_Count::request_context() const
 }
 
 
-Eval_Task* Evaluator_Set_Count::get_task(Prepare_Task_Context& context, const std::string* key)
+Eval_Task* Evaluator_Set_Count::get_string_task(Prepare_Task_Context& context, const std::string* key)
 {
   const Set_With_Context* set = context.get_set(input);
 

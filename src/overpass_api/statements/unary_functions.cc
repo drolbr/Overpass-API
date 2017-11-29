@@ -35,9 +35,9 @@ void Evaluator_Unary_Function::add_statement(Statement* statement, std::string t
 }
 
 
-Eval_Task* Evaluator_Unary_Function::get_task(Prepare_Task_Context& context, const std::string* key)
+Eval_Task* Evaluator_Unary_Function::get_string_task(Prepare_Task_Context& context, const std::string* key)
 {
-  Eval_Task* rhs_task = rhs ? rhs->get_task(context, key) : 0;
+  Eval_Task* rhs_task = rhs ? rhs->get_string_task(context, key) : 0;
   return new Unary_Eval_Task(rhs_task, this);
 }
 
@@ -125,10 +125,10 @@ void Evaluator_Binary_Function::add_statement(Statement* statement, std::string 
 }
 
 
-Eval_Task* Evaluator_Binary_Function::get_task(Prepare_Task_Context& context, const std::string* key)
+Eval_Task* Evaluator_Binary_Function::get_string_task(Prepare_Task_Context& context, const std::string* key)
 {
-  Eval_Task* first_task = first ? first->get_task(context, key) : 0;
-  Eval_Task* second_task = second ? second->get_task(context, key) : 0;
+  Eval_Task* first_task = first ? first->get_string_task(context, key) : 0;
+  Eval_Task* second_task = second ? second->get_string_task(context, key) : 0;
   return new Binary_Func_Eval_Task(first_task, second_task, this);
 }
 

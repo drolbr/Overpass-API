@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "basic_types.h"
+#include "geometry.h"
 #include "type_node.h"
 #include "type_way.h"
 #include "type_relation.h"
@@ -161,6 +162,95 @@ const TObject* binary_pair_search(const std::vector< std::pair< Id_Type, TObject
 }
 
 
+template< typename T >
+struct Array
+{
+  Array(unsigned int size) : ptr(0), size_(size)
+  {
+    if (size > 0)
+      ptr = new T[size];
+  }
+  ~Array() { delete[] ptr; }
+  
+  const T& operator[](unsigned int i) const { return ptr[i]; }  
+  T& operator[](unsigned int i) { return ptr[i]; }  
+  unsigned int size() const { return size_; }
+  
+private:
+  T* ptr;
+  unsigned int size_;
+};
+
+
+template< typename Object >
+struct Owner
+{
+  Owner(Object* ptr_) : ptr(ptr_) {}
+  ~Owner() { delete ptr; }
+  
+  operator bool() const { return ptr; }
+  Object& operator*() const { return *ptr; }
+  
+private:
+  Owner(const Owner&);
+  Owner& operator=(const Owner&);
+  
+  Object* ptr;
+};
+
+
+template< typename Object >
+struct Clonable_Owner
+{
+  Clonable_Owner(Object* ptr_) : ptr(ptr_) {}
+  Clonable_Owner(const Clonable_Owner& rhs) : ptr(rhs.ptr ? rhs.ptr->clone() : 0) {}
+  Clonable_Owner& operator=(const Clonable_Owner& rhs)
+  {
+    if (this != &rhs)
+    {
+      delete ptr;
+      ptr = rhs.ptr ? rhs.ptr->clone() : 0;
+    }
+    return *this;
+  }
+  ~Clonable_Owner() { delete ptr; }
+  
+  operator bool() const { return ptr; }
+  Object& operator*() const { return *ptr; }
+  void acquire(Object* ptr_)
+  {
+    delete ptr;
+    ptr = ptr_;
+  }
+  
+private:
+  
+  Object* ptr;
+};
+
+
+template< typename Pointer >
+struct Owning_Array
+{
+  Owning_Array() {}
+  ~Owning_Array()
+  {
+    for (typename std::vector< Pointer >::iterator it = content.begin(); it != content.end(); ++it)
+      delete *it;
+  }
+  
+  const Pointer& operator[](uint i) const { return content[i]; }
+  void push_back(Pointer ptr) { content.push_back(ptr); }
+  uint size() const { return content.size(); }
+  
+private:
+  Owning_Array(const Owning_Array&);
+  Owning_Array& operator=(const Owning_Array&);
+  
+  std::vector< Pointer > content;
+};
+
+
 struct Derived_Skeleton
 {
   typedef Uint64 Id_Type;
@@ -175,12 +265,18 @@ struct Derived_Skeleton
 struct Derived_Structure : public Derived_Skeleton
 {
   Derived_Structure(const std::string& type_name_, Id_Type id_)
-      : Derived_Skeleton(type_name_, id_) {}
+      : Derived_Skeleton(type_name_, id_), geometry(0) {}
   Derived_Structure(const std::string& type_name_, Id_Type id_,
-		    const std::vector< std::pair< std::string, std::string > >& tags_)
-      : Derived_Skeleton(type_name_, id_), tags(tags_) {}
+      const std::vector< std::pair< std::string, std::string > >& tags_, Opaque_Geometry* geometry_)
+      : Derived_Skeleton(type_name_, id_), tags(tags_), geometry(geometry_) {}
   
   std::vector< std::pair< std::string, std::string > > tags;
+  
+  const Opaque_Geometry* get_geometry() const { return &*geometry; }
+  const void acquire_geometry(Opaque_Geometry* geometry_)
+  {
+    geometry.acquire(geometry_);
+  }
   
   bool operator<(const Derived_Structure& a) const
   {
@@ -191,6 +287,9 @@ struct Derived_Structure : public Derived_Skeleton
   {
     return this->id.val() == a.id.val();
   }
+  
+private:
+  Clonable_Owner< Opaque_Geometry > geometry;
 };
 
 

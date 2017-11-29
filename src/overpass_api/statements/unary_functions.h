@@ -35,7 +35,7 @@ public:
   virtual std::string get_result_name() const { return ""; }
 
   virtual Requested_Context request_context() const;
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key);
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
 
   virtual std::string process(const std::string& rhs_result) const = 0;
 
@@ -75,7 +75,7 @@ public:
   virtual std::string get_result_name() const { return ""; }
 
   virtual Requested_Context request_context() const;
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key);
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
 
   virtual std::string process(const std::string& first_result, const std::string& second_result) const = 0;
   static bool needs_an_element_to_eval() { return false; }

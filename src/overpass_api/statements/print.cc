@@ -308,11 +308,14 @@ void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper,
 }
 
 
-void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Derived_Skeleton& skel,
+void print_item(Extra_Data& extra_data, Output_Handler& output, uint32 ll_upper, const Derived_Structure& skel,
                     const std::vector< std::pair< std::string, std::string > >* tags = 0,
                     const OSM_Element_Metadata_Skeleton< Derived_Skeleton::Id_Type >* meta = 0)
 {
-  output.print_item(skel, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
+  if (skel.get_geometry())
+    output.print_item(skel, *skel.get_geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
+  else
+    output.print_item(skel, Null_Geometry(), tags, Output_Mode(extra_data.mode), extra_data.action);
 }
 
 
@@ -779,7 +782,7 @@ void Print_Statement::execute(Resource_Manager& rman)
   if (mode & Output_Mode::COUNT)
   {
     count_set.deriveds[Uint31_Index(0u)].push_back(Derived_Structure("count", Uint64(0ull),
-        make_count_tags(input_set ? *input_set : Set(), rman.get_area_transaction())));
+        make_count_tags(input_set ? *input_set : Set(), rman.get_area_transaction()), 0));
     output_items = &count_set;
     mode = mode | Output_Mode::TAGS;
   }

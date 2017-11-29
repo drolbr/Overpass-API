@@ -246,13 +246,39 @@ private:
 };
 
 
+struct Eval_Geometry_Task
+{
+  virtual ~Eval_Geometry_Task() {}
+
+  virtual Opaque_Geometry* eval() const = 0;
+
+  virtual Opaque_Geometry* eval(const Element_With_Context< Node_Skeleton >& data) const
+      { return eval(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Node_Skeleton > >& data) const
+      { return eval(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Way_Skeleton >& data) const
+      { return eval(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Way_Skeleton > >& data) const
+      { return eval(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Relation_Skeleton >& data) const
+      { return eval(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Relation_Skeleton > >& data) const
+      { return eval(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Area_Skeleton >& data) const
+      { return eval(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& data) const
+      { return eval(); }
+};
+
+
 struct Evaluator : public Statement
 {
   Evaluator(int line_number) : Statement(line_number) {}
 
   virtual Requested_Context request_context() const = 0;
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key) = 0;
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) = 0;
+  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context) { return 0; }
 
   virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   virtual int get_operator_priority() const { return std::numeric_limits< int >::max(); }

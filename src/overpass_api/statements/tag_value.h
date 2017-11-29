@@ -72,7 +72,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context(); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Const_Eval_Task(value); }
 
 private:
@@ -159,7 +159,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key) { return new Id_Eval_Task(); }
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) { return new Id_Eval_Task(); }
 };
 
 
@@ -215,7 +215,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Type_Eval_Task(); }
 };
 
@@ -285,7 +285,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Is_Closed_Eval_Task(); }
 };
 
@@ -376,7 +376,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* target_key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* target_key)
   { return new Value_Eval_Task(key); }
 
 private:
@@ -446,7 +446,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* target_key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* target_key)
   { return new Is_Tag_Eval_Task(key); }
 
 private:
@@ -507,7 +507,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Generic_Eval_Task(); }
 };
 
@@ -575,7 +575,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Length_Eval_Task(); }
 };
 
@@ -667,7 +667,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Version_Eval_Task(); }
 };
 
@@ -728,7 +728,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Timestamp_Eval_Task(); }
 };
 
@@ -789,7 +789,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Changeset_Eval_Task(); }
 };
 
@@ -850,7 +850,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Uid_Eval_Task(); }
 };
 
@@ -912,7 +912,7 @@ public:
   virtual Requested_Context request_context() const
   { return Requested_Context().add_usage(Set_Usage::META).add_user_names(); }
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key)
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new User_Eval_Task(); }
 };
 
@@ -1000,7 +1000,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
-  virtual Eval_Task* get_task(Prepare_Task_Context& context, const std::string* key);
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
 
 private:
   Objects to_count;

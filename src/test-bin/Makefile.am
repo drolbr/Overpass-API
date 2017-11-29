@@ -30,6 +30,7 @@ statements_cc = \
   ../overpass_api/statements/coord_query.cc \
   ../overpass_api/statements/difference.cc \
   ../overpass_api/statements/evaluator.cc \
+  ../overpass_api/statements/explicit_geometry.cc \
   ../overpass_api/statements/filter.cc \
   ../overpass_api/statements/for.cc \
   ../overpass_api/statements/foreach.cc \

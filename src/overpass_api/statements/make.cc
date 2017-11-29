@@ -113,8 +113,8 @@ void Make_Statement::execute(Resource_Manager& rman)
   
   if (!id_fixed)
     result.id = rman.get_global_settings().dispense_derived_id();
-      
-  Set into;  
+  
+  Set into;
   into.deriveds[Uint31_Index(0u)].push_back(result);
   
   transfer_output(rman, into);

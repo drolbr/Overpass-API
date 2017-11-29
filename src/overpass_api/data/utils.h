@@ -130,65 +130,6 @@ inline bool string_represents_boolean_true(const std::string& val)
 }
 
 
-template< typename T >
-struct Array
-{
-  Array(unsigned int size) : ptr(0), size_(size)
-  {
-    if (size > 0)
-      ptr = new T[size];
-  }
-  ~Array() { delete[] ptr; }
-  
-  const T& operator[](unsigned int i) const { return ptr[i]; }  
-  T& operator[](unsigned int i) { return ptr[i]; }  
-  unsigned int size() const { return size_; }
-  
-private:
-  T* ptr;
-  unsigned int size_;
-};
-
-
-template< typename Object >
-struct Owner
-{
-  Owner(Object* ptr_) : ptr(ptr_) {}
-  ~Owner() { delete ptr; }
-  
-  operator bool() const { return ptr; }
-  Object& operator*() const { return *ptr; }
-  
-private:
-  Owner(const Owner&);
-  Owner& operator=(const Owner&);
-  
-  Object* ptr;
-};
-
-
-template< typename Pointer >
-struct Owning_Array
-{
-  Owning_Array() {}
-  ~Owning_Array()
-  {
-    for (typename std::vector< Pointer >::iterator it = content.begin(); it != content.end(); ++it)
-      delete *it;
-  }
-  
-  const Pointer& operator[](uint i) const { return content[i]; }
-  void push_back(Pointer ptr) { content.push_back(ptr); }
-  uint size() const { return content.size(); }
-  
-private:
-  Owning_Array(const Owning_Array&);
-  Owning_Array& operator=(const Owning_Array&);
-  
-  std::vector< Pointer > content;
-};
-
-
 template< typename Index, typename Object >
 void sort_second(std::map< Index, std::vector< Object > >& items)
 {

@@ -34,7 +34,7 @@
 
 struct Set_Prop_Task
 {
-  enum Mode { single_key, set_id, generic };
+  enum Mode { single_key, set_id, set_geometry, generic };
 
   virtual ~Set_Prop_Task() {}
 
@@ -122,6 +122,38 @@ private:
 };
 
 
+struct Set_Prop_Geometry_Task : public Set_Prop_Task
+{
+  Set_Prop_Geometry_Task(Eval_Geometry_Task* rhs_) : rhs(rhs_) {}
+  virtual ~Set_Prop_Geometry_Task() { delete rhs; }
+
+  virtual void process(Derived_Structure& result, bool& id_set) const;
+
+  virtual void process(const Element_With_Context< Node_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  virtual void process(const Element_With_Context< Attic< Node_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  virtual void process(const Element_With_Context< Way_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  virtual void process(const Element_With_Context< Attic< Way_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  virtual void process(const Element_With_Context< Relation_Skeleton>& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  virtual void process(const Element_With_Context< Attic< Relation_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  virtual void process(const Element_With_Context< Area_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+  virtual void process(const Element_With_Context< Derived_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const;
+
+private:
+  Set_Prop_Geometry_Task(const Set_Prop_Plain_Task&);
+  const Set_Prop_Geometry_Task& operator=(const Set_Prop_Plain_Task&);
+  
+  Eval_Geometry_Task* rhs;
+};
+
+
 class Set_Prop_Statement : public Statement
 {
 public:
@@ -161,12 +193,12 @@ public:
 
   const std::string* get_key() const { return key; }
   bool has_value() const { return tag_value; }
-  bool should_set_id() const { return set_id; }
+  bool should_set_id() const { return mode == Set_Prop_Task::set_id; }
 
 private:
   std::string input;
   std::string* key;
-  bool set_id;
+  Set_Prop_Task::Mode mode;
   Evaluator* tag_value;
 };
 

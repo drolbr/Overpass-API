@@ -76,11 +76,11 @@ void Ternary_Evaluator::add_substatements(Statement* result, const std::string& 
 }
 
 
-Eval_Task* Ternary_Evaluator::get_task(Prepare_Task_Context& context, const std::string* key)
+Eval_Task* Ternary_Evaluator::get_string_task(Prepare_Task_Context& context, const std::string* key)
 {
-  Eval_Task* cond_task = condition ? condition->get_task(context, key) : 0;
-  Eval_Task* lhs_task = lhs ? lhs->get_task(context, key) : 0;
-  Eval_Task* rhs_task = rhs ? rhs->get_task(context, key) : 0;
+  Eval_Task* cond_task = condition ? condition->get_string_task(context, key) : 0;
+  Eval_Task* lhs_task = lhs ? lhs->get_string_task(context, key) : 0;
+  Eval_Task* rhs_task = rhs ? rhs->get_string_task(context, key) : 0;
   return new Ternary_Eval_Task(cond_task, lhs_task, rhs_task);
 }
 

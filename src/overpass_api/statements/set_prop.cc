@@ -65,6 +65,8 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
     {
       if (tree_it.lhs().rhs()->token == "id")
         attributes["keytype"] = "id";
+      else if (tree_it.lhs().rhs()->token == "geom")
+        attributes["keytype"] = "geometry";
       else if (error_output)
         error_output->add_parse_error("The only allowed special property is \"id\"", tree_it->line_col.first);
     }
@@ -108,7 +110,7 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
 
 Set_Prop_Statement::Set_Prop_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Statement(line_number_), key(0), set_id(false), tag_value(0)
+    : Statement(line_number_), key(0), mode(Set_Prop_Task::single_key), tag_value(0)
 {
   std::map< std::string, std::string > attributes;
 
@@ -127,10 +129,14 @@ Set_Prop_Statement::Set_Prop_Statement
           "the attribute \"k\" must be nonempty.");
   }
   else if (attributes["keytype"] == "id")
-    set_id = true;
-  else if (attributes["keytype"] != "generic")
+    mode = Set_Prop_Task::set_id;
+  else if (attributes["keytype"] == "geometry")
+    mode = Set_Prop_Task::set_geometry;
+  else if (attributes["keytype"] == "generic")
+    mode = Set_Prop_Task::generic;
+  else
     add_static_error("For the attribute \"keytype\" of the element \"set-prop\""
-        " the only allowed values are \"tag\", \"id\", or \"generic\".");
+        " the only allowed values are \"tag\", \"id\", \"geometry\", or \"generic\".");
     
   if (!attributes["from"].empty())
   {
@@ -161,8 +167,10 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
     return indent + "<set-prop keytype=\"tag\" k=\"" + (key ? *key : "") + "\"/>\n";
 
   std::string attributes;
-  if (set_id)
+  if (mode == Set_Prop_Task::set_id)
     attributes = " keytype=\"id\"";
+  if (mode == Set_Prop_Task::set_geometry)
+    attributes = " keytype=\"geometry\"";
   else if (!key)
     attributes = " keytype=\"generic\"";
   else
@@ -180,8 +188,10 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
 std::string Set_Prop_Statement::dump_compact_ql(const std::string&) const
 {
   std::string result;
-  if (set_id)
+  if (mode == Set_Prop_Task::set_id)
     result = "::id=";
+  if (mode == Set_Prop_Task::set_geometry)
+    result = "::geom=";
   else if (!key)
     result = input + "::=";
   else if (!tag_value)
@@ -272,9 +282,11 @@ Set_Prop_Task* Set_Prop_Statement::get_task(
 {
   if (input.empty())
   {
-    Eval_Task* rhs_task = tag_value ? tag_value->get_task(context, key) : 0;
-    return new Set_Prop_Plain_Task(rhs_task, key ? *key : "",
-        set_id ? Set_Prop_Task::set_id : key ? Set_Prop_Task::single_key : Set_Prop_Task::generic);
+    if (mode == Set_Prop_Task::set_geometry)
+      return new Set_Prop_Geometry_Task(tag_value ? tag_value->get_geometry_task(context) : 0);
+    
+    return new Set_Prop_Plain_Task(tag_value ? tag_value->get_string_task(context, key) : 0,
+        key ? *key : "", mode);
   }
   
   Set_Prop_Generic_Task* result = new Set_Prop_Generic_Task();
@@ -294,7 +306,7 @@ Set_Prop_Task* Set_Prop_Statement::get_task(
     eval_elems(existing_keys, *input_set, input_set->base->deriveds, otherwise_set_keys);
     
     for (std::set< std::string >::const_iterator it = existing_keys.begin(); it != existing_keys.end(); ++it)
-      result->add_key(*it, tag_value ? tag_value->get_task(context, &*it) : 0);
+      result->add_key(*it, tag_value ? tag_value->get_string_task(context, &*it) : 0);
   }
   
   return result;
@@ -308,12 +320,15 @@ void Set_Prop_Plain_Task::process(Derived_Structure& result, bool& id_set) const
 
   if (mode == single_key)
     result.tags.push_back(std::make_pair(key, rhs->eval(0)));
-  else if (mode == set_id && !id_set)
+  else if (mode == set_id)
   {
-    int64 id = 0;
-    id_set |= try_int64(rhs->eval(0), id);
-    if (id_set)
-      result.id = Uint64(id);
+    if (!id_set)
+    {
+      int64 id = 0;
+      id_set |= try_int64(rhs->eval(0), id);
+      if (id_set)
+        result.id = Uint64(id);
+    }
   }
 }
 
@@ -346,12 +361,15 @@ void process(const std::string& key, Set_Prop_Task::Mode mode, Eval_Task* rhs,
         result.tags.push_back(std::make_pair(*it_keys, rhs->eval(data, &*it_keys)));
     }
   }
-  else if (!id_set)
+  else if (mode == Set_Prop_Task::set_id)
   {
-    int64 id = 0;
-    id_set |= try_int64(rhs->eval(data, 0), id);
-    if (id_set)
-      result.id = Uint64(id);
+    if (!id_set)
+    {
+      int64 id = 0;
+      id_set |= try_int64(rhs->eval(data, 0), id);
+      if (id_set)
+        result.id = Uint64(id);
+    }
   }
 }
 
@@ -488,4 +506,75 @@ void Set_Prop_Generic_Task::process(const Element_With_Context< Derived_Skeleton
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process_generic(rhs, keys, data, result);
+}
+
+
+void Set_Prop_Geometry_Task::process(Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval());
+}
+
+
+void Set_Prop_Geometry_Task::process(const Element_With_Context< Node_Skeleton>& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval(data));
+}
+
+
+void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Node_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval(data));
+}
+
+
+void Set_Prop_Geometry_Task::process(const Element_With_Context< Way_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval(data));
+}
+
+
+void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Way_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval(data));
+}
+
+
+void Set_Prop_Geometry_Task::process(const Element_With_Context< Relation_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval(data));
+}
+
+
+void Set_Prop_Geometry_Task::process(const Element_With_Context< Attic< Relation_Skeleton > >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval(data));
+}
+
+
+void Set_Prop_Geometry_Task::process(const Element_With_Context< Area_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval(data));
+}
+
+
+void Set_Prop_Geometry_Task::process(const Element_With_Context< Derived_Skeleton >& data,
+    const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
+{
+  if (rhs)
+    result.acquire_geometry(rhs->eval(data));
 }

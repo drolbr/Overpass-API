@@ -65,7 +65,7 @@ void decode_to_utf8(const std::string& input, std::string& result,
 
 std::string decode_json(const std::string& input, Error_Output* error_output, uint frame_size)
 {
-  if (frame_size > 0 && (input.empty() || input[0] != '\"' && input[0] != '\''))
+  if (frame_size > 0 && (input.empty() || (input[0] != '\"' && input[0] != '\'')))
     return input;
   
   std::string::size_type j = 0;

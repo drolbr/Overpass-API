@@ -423,7 +423,7 @@ Element_With_Context< Derived_Skeleton > Set_With_Context::get_context(
     const Uint31_Index& index, const Derived_Structure& elem)
 {
   return Element_With_Context< Derived_Skeleton >(&elem,
-      tag_store_deriveds ? tag_store_deriveds->get(index, elem) : 0, 0, 0, 0);
+      tag_store_deriveds ? tag_store_deriveds->get(index, elem) : 0, elem.get_geometry(), 0, 0);
 }
 
 

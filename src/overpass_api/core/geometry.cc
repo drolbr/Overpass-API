@@ -256,6 +256,15 @@ void Partial_Way_Geometry::add_point(const Point_Double& point)
 }
 
 
+Opaque_Geometry* Compound_Geometry::clone() const
+{
+  std::vector< Opaque_Geometry* > cloned;
+  for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
+    cloned.push_back((*it)->clone());
+  return new Compound_Geometry(cloned);
+}
+
+
 Bbox_Double* calc_bounds(const std::vector< Opaque_Geometry* >& components)
 {
   double south = 100.0;

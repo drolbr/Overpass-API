@@ -59,7 +59,7 @@ void Retro_Statement::add_statement(Statement* statement, std::string text)
 uint64 eval_timestamp(Evaluator& criterion, const Statement& stmt, Resource_Manager& rman)
 {
   Prepare_Task_Context context(criterion.request_context(), stmt, rman);
-  Owner< Eval_Task > task(criterion.get_task(context, 0));  
+  Owner< Eval_Task > task(criterion.get_string_task(context, 0));  
   std::string valuation = (*task).eval(0);
   
   return Timestamp(valuation).timestamp;

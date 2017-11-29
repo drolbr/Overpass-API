@@ -44,6 +44,7 @@ class Opaque_Geometry
 {
 public:
   virtual ~Opaque_Geometry() {}
+  virtual Opaque_Geometry* clone() const = 0;
   
   virtual bool has_center() const = 0;
   virtual double center_lat() const = 0;
@@ -90,6 +91,7 @@ class Null_Geometry : public Opaque_Geometry
 {
 public:
   Null_Geometry() {}
+  virtual Opaque_Geometry* clone() const { return new Null_Geometry(); }
   
   virtual bool has_center() const { return false; }
   virtual double center_lat() const { return 0; }
@@ -126,6 +128,7 @@ class Point_Geometry : public Opaque_Geometry
 {
 public:
   Point_Geometry(double lat_, double lon_) : pt(lat_, lon_) {}
+  virtual Opaque_Geometry* clone() const { return new Point_Geometry(pt.lat, pt.lon); }
   
   virtual bool has_center() const { return true; }
   virtual double center_lat() const { return pt.lat; }
@@ -165,6 +168,8 @@ class Bbox_Geometry : public Opaque_Geometry
 {
 public:
   Bbox_Geometry(double south, double west, double north, double east) : bbox(south, west, north, east) {}
+  Bbox_Geometry(const Bbox_Double& bbox_) : bbox(bbox_) {}
+  virtual Opaque_Geometry* clone() const { return new Bbox_Geometry(bbox); }
   
   virtual bool has_center() const { return true; }
   virtual double center_lat() const { return bbox.center_lat(); }
@@ -205,6 +210,7 @@ class Linestring_Geometry : public Opaque_Geometry
 public:
   Linestring_Geometry(const std::vector< Point_Double >& points_) : points(points_), bounds(0) {}
   virtual ~Linestring_Geometry() { delete bounds; }
+  virtual Opaque_Geometry* clone() const { return new Linestring_Geometry(points); }
   
   virtual bool has_center() const { return true; }
   virtual double center_lat() const;
@@ -247,7 +253,14 @@ class Partial_Way_Geometry : public Opaque_Geometry
 {
 public:
   Partial_Way_Geometry() : bounds(0), has_coords(false) {}
+  Partial_Way_Geometry(const std::vector< Point_Double >& points_)
+      : points(points_), bounds(0), has_coords(false)
+  {
+    for (std::vector< Point_Double >::const_iterator it = points.begin(); it != points.end() && !has_coords; ++it)
+      has_coords |= (it->lat < 100.);
+  }
   virtual ~Partial_Way_Geometry() { delete bounds; }
+  virtual Opaque_Geometry* clone() const { return new Partial_Way_Geometry(points); }
   
   virtual bool has_center() const { return has_coords; }
   virtual double center_lat() const;
@@ -293,12 +306,14 @@ class Compound_Geometry : public Opaque_Geometry
 {
 public:
   Compound_Geometry() : bounds(0) {}
+  Compound_Geometry(const std::vector< Opaque_Geometry* >& components_) : components(components_), bounds(0) {}
   virtual ~Compound_Geometry()
   {
     delete bounds;
     for (std::vector< Opaque_Geometry* >::iterator it = components.begin(); it != components.end(); ++it)
       delete *it;
   }
+  virtual Opaque_Geometry* clone() const;
   
   virtual bool has_center() const;
   virtual double center_lat() const;
@@ -313,7 +328,6 @@ public:
   virtual bool has_line_geometry() const { return false; }
   
   virtual bool has_multiline_geometry() const { return true; }
-  //virtual const std::vector< std::vector< Point_Double > >* get_multiline_geometry() const;
 
   virtual bool has_components() const { return true; }
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }
@@ -338,20 +352,33 @@ public:
 private:
   std::vector< Opaque_Geometry* > components;
   mutable Bbox_Double* bounds;
-  mutable std::vector< std::vector< Point_Double > >* linestrings;
 };
 
 
 class Partial_Relation_Geometry : public Opaque_Geometry
 {
 public:
-  Partial_Relation_Geometry() : bounds(0) {}
+  Partial_Relation_Geometry() : bounds(0), has_coords(false) {}
+  Partial_Relation_Geometry(const std::vector< Opaque_Geometry* >& components_)
+      : components(components_), bounds(0), has_coords(false)
+  {
+    for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin();
+        it != components.end() && !has_coords; ++it)
+    {
+      Point_Geometry* pt = dynamic_cast< Point_Geometry* >(*it);
+      has_coords |= (bool)pt;
+      Partial_Way_Geometry* way = dynamic_cast< Partial_Way_Geometry* >(*it);
+      if (way)
+        has_coords |= way->has_center();
+    }
+  }
   virtual ~Partial_Relation_Geometry()
   {
     delete bounds;
     for (std::vector< Opaque_Geometry* >::iterator it = components.begin(); it != components.end(); ++it)
       delete *it;
   }
+  virtual Opaque_Geometry* clone() const { return new Partial_Relation_Geometry(components); }
   
   virtual bool has_center() const;
   virtual double center_lat() const;
@@ -366,7 +393,6 @@ public:
   virtual bool has_line_geometry() const { return false; }
   
   virtual bool has_multiline_geometry() const { return true; }
-  //virtual const std::vector< std::vector< Point_Double > >* get_multiline_geometry() const;
 
   virtual bool has_components() const { return true; }
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }
@@ -395,7 +421,6 @@ public:
 private:
   std::vector< Opaque_Geometry* > components;
   mutable Bbox_Double* bounds;
-  //mutable std::vector< std::vector< Point_Double > >* linestrings;
   bool has_coords;
 };
 

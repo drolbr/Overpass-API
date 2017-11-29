@@ -169,6 +169,68 @@ void print_bounds(const Opaque_Geometry& geometry, Output_Mode mode, bool& inner
 }
 
 
+void print_geometry(const Opaque_Geometry& geometry, Output_Mode mode, bool& inner_tags_printed,
+    const std::string& indent)
+{
+  if ((mode.mode & Output_Mode::GEOMETRY) && geometry.has_components())
+  {
+    if (!inner_tags_printed)
+    {
+      std::cout<<">\n";
+      inner_tags_printed = true;
+    }
+    const std::vector< Opaque_Geometry* >* components = geometry.get_components();
+    for (std::vector< Opaque_Geometry* >::const_iterator it = components->begin(); it != components->end(); ++it)
+    {
+      if (*it)
+      {
+        std::cout<<indent<<"<group>\n";
+        print_geometry(**it, mode, inner_tags_printed, indent + "  ");
+        std::cout<<indent<<"</group>\n";
+      }
+    }
+  }
+  else if ((mode.mode & Output_Mode::GEOMETRY) && geometry.has_line_geometry())
+  {
+    if (!inner_tags_printed)
+    {
+      std::cout<<">\n";
+      inner_tags_printed = true;
+    }
+    const std::vector< Point_Double >* line = geometry.get_line_geometry();
+    for (std::vector< Point_Double >::const_iterator it = line->begin(); it != line->end(); ++it)
+      std::cout<<indent<<"<vertex"
+          " lat=\""<<std::fixed<<std::setprecision(7)<<it->lat<<"\""
+          " lon=\""<<std::fixed<<std::setprecision(7)<<it->lon<<"\""
+          "/>\n";
+  }
+  else if ((mode.mode & Output_Mode::GEOMETRY) && geometry.has_center())
+  {
+    if (!inner_tags_printed)
+    {
+      std::cout<<">\n";
+      inner_tags_printed = true;
+    }
+    std::cout<<indent<<"<point"
+        " lat=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lat()<<"\""
+        " lon=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<"\""
+        "/>\n";
+  }
+  else if ((mode.mode & Output_Mode::CENTER) && geometry.has_center())
+  {
+    if (!inner_tags_printed)
+    {
+      std::cout<<">\n";
+      inner_tags_printed = true;
+    }
+    std::cout<<indent<<"<center"
+        " lat=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lat()<<"\""
+        " lon=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<"\""
+        "/>\n";
+  }
+}
+
+
 void print_members(const Way_Skeleton& skel, const Opaque_Geometry& geometry,
 		   Output_Mode mode, bool& inner_tags_printed)
 {
@@ -450,7 +512,7 @@ void Output_XML::print_item(const Derived_Skeleton& skel,
     std::cout<<" id=\""<<skel.id.val()<<'\"';
   
   bool inner_tags_printed = false;
-  print_bounds(geometry, mode, inner_tags_printed);
+  print_geometry(geometry, mode, inner_tags_printed, "    ");
   print_tags(tags, mode, inner_tags_printed);
   if (!inner_tags_printed)
     std::cout<<"/>\n";
