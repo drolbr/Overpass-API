@@ -58,7 +58,7 @@ void Evaluator_Pair_Operator::add_substatements(Statement* result, const std::st
     else if (error_output)
       error_output->add_parse_error(std::string("Operator \"") + operator_name
           + "\" needs a right-hand-side argument", tree_it->line_col.first);
-  }  
+  }
 }
 
 

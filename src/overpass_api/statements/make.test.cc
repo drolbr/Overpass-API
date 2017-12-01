@@ -20,6 +20,7 @@
 #include "../data/utils.h"
 #include "aggregators.h"
 #include "binary_operators.h"
+#include "explicit_geometry.h"
 #include "id_query.h"
 #include "make.h"
 #include "print.h"
@@ -908,6 +909,36 @@ void key_id_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void make_point_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 ref, const std::string& lat, const std::string& lon, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_value_test(global_settings, rman, "_", ref, ref, global_node_offset);
+  Statement_Container stmt_cont(global_settings);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  subs = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+  if (lon.empty())
+  {
+    add_fixed_stmt(lat, subs, stmt_cont);
+    subs = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt(".0000001", subs, stmt_cont);
+    subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), subs);
+    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), subs);
+  }
+  else
+  {
+    add_fixed_stmt(lat, subs, stmt_cont);
+    add_fixed_stmt(lon, subs, stmt_cont);
+  }
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -1109,6 +1140,16 @@ int main(int argc, char* args[])
       generic_key_test(global_settings, transaction, "generic-key", "_", 7, 14, false, true, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "90"))
       generic_key_test(global_settings, transaction, "generic-key", "_", 7, 14, true, false, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "91"))
+      make_point_test(global_settings, transaction, "make-point", 7, "51.25", "7.15", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "92"))
+      make_point_test(global_settings, transaction, "make-point-invalid-north", 7, "91.25", "7.15",
+          global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "93"))
+      make_point_test(global_settings, transaction, "make-point-invalid-east", 7,  "51.25", "187.15",
+          global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "94"))
+      make_point_test(global_settings, transaction, "make-point-dependencies", 34, "51.25", "", global_node_offset);
 
     std::cout<<"</osm>\n";
   }

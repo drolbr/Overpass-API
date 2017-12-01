@@ -4320,6 +4320,23 @@ int main(int argc, char* args[])
       "    <tag k=\"way_key\" v=\"...\"/>\n"
       "    <tag k=\"way_key_7\" v=\"...\"/>\n"
       "  </generic-key>\n";
+    if (std::string(args[2]) == "make_91")
+      std::cout<<
+      "  <make-point id=\"1\">\n"
+      "    <point lat=\"51.2500000\" lon=\"7.1500000\"/>\n"
+      "  </make-point>\n";
+    if (std::string(args[2]) == "make_92")
+      std::cout<<
+      "  <make-point-invalid-north id=\"1\"/>\n";
+    if (std::string(args[2]) == "make_93")
+      std::cout<<
+      "  <make-point-invalid-east id=\"1\"/>\n";
+    if (std::string(args[2]) == "make_94")
+      std::cout<<
+      "  <make-point-dependencies id=\"1\">\n"
+      "    <point lat=\"51.2500000\" lon=\""<<std::fixed<<std::setprecision(7)
+          <<.1/pattern_size/9.*cos((51.+(pattern_size < 70 ? 2.5 : 1.5)/pattern_size)/90.*acos(0))<<"\"/>\n"
+      "  </make-point-dependencies>\n";
 
     std::cout<<"</osm>\n";
   }
