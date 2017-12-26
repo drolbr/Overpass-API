@@ -52,13 +52,13 @@ Statement* Evaluator_Point::Evaluator_Maker::create_evaluator(
     if (first)
       result->add_statement(first, "");
     else if (error_output)
-      error_output->add_parse_error("First argument of pt(...) must be an evualator", tree_it->line_col.first);
+      error_output->add_parse_error("First argument of pt(...) must be an evaluator", tree_it->line_col.first);
 
     Statement* second = stmt_factory.create_evaluator(tree_it.rhs().rhs(), tree_context);
     if (second)
       result->add_statement(second, "");
     else if (error_output)
-      error_output->add_parse_error("Second argument of pt(...) must be an evualator", tree_it->line_col.second);
+      error_output->add_parse_error("Second argument of pt(...) must be an evaluator", tree_it->line_col.second);
   }
   else if (error_output)
     error_output->add_parse_error("pt(...) needs two arguments", tree_it->line_col.first);
@@ -89,7 +89,7 @@ void Evaluator_Point::add_statement(Statement* statement, std::string text)
     add_static_error(get_name() + " must have exactly two evaluator substatements.");
 }
 
-    
+
 Requested_Context Evaluator_Point::request_context() const
 {
   if (lat && lon)

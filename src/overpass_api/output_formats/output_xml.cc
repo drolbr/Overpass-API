@@ -216,6 +216,20 @@ void print_geometry(const Opaque_Geometry& geometry, Output_Mode mode, bool& inn
         " lon=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<"\""
         "/>\n";
   }
+  else if ((mode.mode & Output_Mode::BOUNDS) && geometry.has_bbox())
+  {
+    if (!inner_tags_printed)
+    {
+      std::cout<<">\n";
+      inner_tags_printed = true;
+    }
+    std::cout<<"    <bounds"
+        " minlat=\""<<std::fixed<<std::setprecision(7)<<geometry.south()<<"\""
+        " minlon=\""<<std::fixed<<std::setprecision(7)<<geometry.west()<<"\""
+        " maxlat=\""<<std::fixed<<std::setprecision(7)<<geometry.north()<<"\""
+        " maxlon=\""<<std::fixed<<std::setprecision(7)<<geometry.east()<<"\""
+        "/>\n";
+  }
   else if ((mode.mode & Output_Mode::CENTER) && geometry.has_center())
   {
     if (!inner_tags_printed)
