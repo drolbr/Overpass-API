@@ -279,6 +279,7 @@ struct Evaluator : public Statement
 
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) = 0;
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context) { return 0; }
+  virtual bool returns_geometry() const { return false; }
 
   virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   virtual int get_operator_priority() const { return std::numeric_limits< int >::max(); }

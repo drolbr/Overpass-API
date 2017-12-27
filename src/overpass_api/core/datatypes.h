@@ -190,6 +190,7 @@ struct Owner
   
   operator bool() const { return ptr; }
   Object& operator*() const { return *ptr; }
+  Object* operator->() const { return ptr; }
   
 private:
   Owner(const Owner&);

@@ -939,6 +939,51 @@ void make_point_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void make_linestring_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 ref, uint num_points, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_value_test(global_settings, rman, "_", ref, ref, global_node_offset);
+  Statement_Container stmt_cont(global_settings);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), subs);
+  
+  if (num_points > 0)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.1", pt, stmt_cont);
+    add_fixed_stmt("7.1", pt, stmt_cont);
+  }
+  if (num_points > 1)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.2", pt, stmt_cont);
+    add_fixed_stmt("7.2", pt, stmt_cont);
+  }
+  if (num_points > 2)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.3", pt, stmt_cont);
+    add_fixed_stmt("7.3", pt, stmt_cont);
+  }
+  if (num_points > 3)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.4", pt, stmt_cont);
+    subs = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), pt);
+    add_fixed_stmt(".0000001", subs, stmt_cont);
+    subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), subs);
+    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), subs);
+  }
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -1150,6 +1195,16 @@ int main(int argc, char* args[])
           global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "94"))
       make_point_test(global_settings, transaction, "make-point-dependencies", 34, "51.25", "", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "95"))
+      make_linestring_test(global_settings, transaction, "make-linestring", 7, 0, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "96"))
+      make_linestring_test(global_settings, transaction, "make-linestring", 7, 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "97"))
+      make_linestring_test(global_settings, transaction, "make-linestring", 7, 2, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "98"))
+      make_linestring_test(global_settings, transaction, "make-linestring", 7, 3, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "99"))
+      make_linestring_test(global_settings, transaction, "make-linestring", 34, 4, global_node_offset);
 
     std::cout<<"</osm>\n";
   }

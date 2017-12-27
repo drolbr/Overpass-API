@@ -4337,6 +4337,37 @@ int main(int argc, char* args[])
       "    <point lat=\"51.2500000\" lon=\""<<std::fixed<<std::setprecision(7)
           <<.1/pattern_size/9.*cos((51.+(pattern_size < 70 ? 2.5 : 1.5)/pattern_size)/90.*acos(0))<<"\"/>\n"
       "  </make-point-dependencies>\n";
+    if (std::string(args[2]) == "make_95")
+      std::cout<<
+      "  <make-linestring id=\"1\">\n"
+      "  </make-linestring>\n";
+    if (std::string(args[2]) == "make_96")
+      std::cout<<
+      "  <make-linestring id=\"1\">\n"
+      "    <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "  </make-linestring>\n";
+    if (std::string(args[2]) == "make_97")
+      std::cout<<
+      "  <make-linestring id=\"1\">\n"
+      "    <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "    <vertex lat=\"51.2000000\" lon=\"7.2000000\"/>\n"
+      "  </make-linestring>\n";
+    if (std::string(args[2]) == "make_98")
+      std::cout<<
+      "  <make-linestring id=\"1\">\n"
+      "    <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "    <vertex lat=\"51.2000000\" lon=\"7.2000000\"/>\n"
+      "    <vertex lat=\"51.3000000\" lon=\"7.3000000\"/>\n"
+      "  </make-linestring>\n";
+    if (std::string(args[2]) == "make_99")
+      std::cout<<
+      "  <make-linestring id=\"1\">\n"
+      "    <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "    <vertex lat=\"51.2000000\" lon=\"7.2000000\"/>\n"
+      "    <vertex lat=\"51.3000000\" lon=\"7.3000000\"/>\n"
+      "    <vertex lat=\"51.4000000\" lon=\""<<std::fixed<<std::setprecision(7)
+          <<.1/pattern_size/9.*cos((51.+(pattern_size < 70 ? 2.5 : 1.5)/pattern_size)/90.*acos(0))<<"\"/>\n"
+      "  </make-linestring>\n";
 
     std::cout<<"</osm>\n";
   }
