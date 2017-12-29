@@ -1104,6 +1104,11 @@ inline double lat(uint32 ll_upper, uint32 ll_lower)
   return ((double)ilat(ll_upper, ll_lower))/10000000 - 91.0;
 }
 
+inline double lat(uint32 ilat)
+{
+  return ((double)ilat)/10000000 - 91.0;
+}
+
 
 // convert interleaved coordinates to plain integers
 inline int32 ilon(uint32 ll_upper, uint32 ll_lower)
@@ -1128,6 +1133,11 @@ inline int32 ilon(uint32 ll_upper, uint32 ll_lower)
 inline double lon(uint32 ll_upper, uint32 ll_lower)
 {
   return ((double)ilon(ll_upper, ll_lower))/10000000;
+}
+
+inline double lon(int32 ilon)
+{
+  return ((double)ilon)/10000000;
 }
 
 
