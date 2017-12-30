@@ -984,6 +984,73 @@ void make_linestring_test(Parsed_Query& global_settings, Transaction& transactio
 }
 
 
+void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 ref, uint num_points, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_value_test(global_settings, rman, "_", ref, ref, global_node_offset);
+  Statement_Container stmt_cont(global_settings);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  
+  if (num_points > 0)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt(num_points <= 4 ? "51.1" : "51.101", pt, stmt_cont);
+    add_fixed_stmt("7.1", pt, stmt_cont);
+  }
+  if (num_points > 1)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.4", pt, stmt_cont);
+    add_fixed_stmt("7.2", pt, stmt_cont);
+  }
+  if (num_points > 2)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.3", pt, stmt_cont);
+    add_fixed_stmt("7.3", pt, stmt_cont);
+  }
+  if (num_points > 3)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("41.4", pt, stmt_cont);
+    subs = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), pt);
+    add_fixed_stmt(".0000001", subs, stmt_cont);
+    subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), subs);
+    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), subs);
+  }
+  if (num_points > 4)
+  {
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.101", pt, stmt_cont);
+    add_fixed_stmt("7.1", pt, stmt_cont);
+  }
+  
+  if (num_points > 5)
+  {
+    subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+    
+    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.31", pt, stmt_cont);
+    add_fixed_stmt("7.2", pt, stmt_cont);
+    pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.29", pt, stmt_cont);
+    add_fixed_stmt("7.19", pt, stmt_cont);
+    pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("51.29", pt, stmt_cont);
+    add_fixed_stmt("7.21", pt, stmt_cont);
+  }
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -1205,6 +1272,20 @@ int main(int argc, char* args[])
       make_linestring_test(global_settings, transaction, "make-linestring", 7, 3, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "99"))
       make_linestring_test(global_settings, transaction, "make-linestring", 34, 4, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "100"))
+      make_polygon_test(global_settings, transaction, "make-polygon", 7, 0, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "101"))
+      make_polygon_test(global_settings, transaction, "make-polygon", 7, 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "102"))
+      make_polygon_test(global_settings, transaction, "make-polygon", 7, 2, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "103"))
+      make_polygon_test(global_settings, transaction, "make-polygon", 7, 3, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "104"))
+      make_polygon_test(global_settings, transaction, "make-polygon", 34, 4, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "105"))
+      make_polygon_test(global_settings, transaction, "make-polygon", 34, 5, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "106"))
+      make_polygon_test(global_settings, transaction, "make-polygon", 34, 6, global_node_offset);
 
     std::cout<<"</osm>\n";
   }

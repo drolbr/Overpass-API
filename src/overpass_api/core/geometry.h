@@ -12,6 +12,9 @@ public:
   
   double lat;
   double lon;
+  
+  bool operator==(const Point_Double& rhs) const { return lat == rhs.lat && lon == rhs.lon; }
+  bool operator!=(const Point_Double& rhs) const { return !(*this == rhs); }
 };
 
 
@@ -65,7 +68,7 @@ public:
   virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
   
   virtual bool has_multiline_geometry() const = 0;
-  //virtual const std::vector< std::vector< Point_Double > >* get_multiline_geometry() const { return 0; }
+  virtual const std::vector< std::vector< Point_Double > >* get_multiline_geometry() const { return 0; }
   
   virtual bool has_components() const = 0;
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return 0; }
@@ -275,7 +278,7 @@ public:
   virtual bool has_line_geometry() const { return false; }
   virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
   
-  virtual bool has_multiline_geometry() const { return has_coords; }
+  virtual bool has_multiline_geometry() const { return false; }
   virtual bool has_components() const { return false; }
   
   virtual unsigned int way_size() const { return points.size(); }
@@ -299,6 +302,52 @@ private:
   std::vector< Point_Double > points;
   mutable Bbox_Double* bounds;
   bool has_coords;
+};
+
+
+class Free_Polygon_Geometry : public Opaque_Geometry
+{
+public:
+  Free_Polygon_Geometry() : bounds(0) {}
+  Free_Polygon_Geometry(const std::vector< std::vector< Point_Double > >& linestrings_) : linestrings(linestrings_), bounds(0) {}
+  virtual ~Free_Polygon_Geometry() { delete bounds; }
+  virtual Opaque_Geometry* clone() const { return new Free_Polygon_Geometry(linestrings); }
+  
+  virtual bool has_center() const { return true; }
+  virtual double center_lat() const;
+  virtual double center_lon() const;
+  
+  virtual bool has_bbox() const { return true; }
+  virtual double south() const;
+  virtual double north() const;
+  virtual double west() const;
+  virtual double east() const;
+  
+  virtual bool has_line_geometry() const { return false; }
+  virtual bool has_multiline_geometry() const { return true; }
+  virtual const std::vector< std::vector< Point_Double > >* get_multiline_geometry() const { return &linestrings; }
+  virtual bool has_components() const { return false; }
+  
+  virtual unsigned int way_size() const { return 0; }
+  virtual bool has_faithful_way_geometry() const { return false; }
+  virtual bool way_pos_is_valid(unsigned int pos) const { return false; }
+  virtual double way_pos_lat(unsigned int pos) const { return 0; }
+  virtual double way_pos_lon(unsigned int pos) const { return 0; }
+  
+  virtual bool has_faithful_relation_geometry() const { return false; }
+  virtual bool relation_pos_is_valid(unsigned int member_pos) const { return false; }
+  virtual double relation_pos_lat(unsigned int member_pos) const { return 0; }
+  virtual double relation_pos_lon(unsigned int member_pos) const { return 0; }
+  virtual unsigned int relation_way_size(unsigned int member_pos) const { return 0; }
+  virtual bool relation_pos_is_valid(unsigned int member_pos, unsigned int nd_pos) const { return false; }
+  virtual double relation_pos_lat(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  virtual double relation_pos_lon(unsigned int member_pos, unsigned int nd_pos) const { return 0; }
+  
+  void add_linestring(const std::vector< Point_Double >& linestring);
+  
+private:
+  std::vector< std::vector< Point_Double > > linestrings;
+  mutable Bbox_Double* bounds;
 };
 
 
@@ -327,7 +376,7 @@ public:
   
   virtual bool has_line_geometry() const { return false; }
   
-  virtual bool has_multiline_geometry() const { return true; }
+  virtual bool has_multiline_geometry() const { return false; }
 
   virtual bool has_components() const { return true; }
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }
@@ -392,7 +441,7 @@ public:
   
   virtual bool has_line_geometry() const { return false; }
   
-  virtual bool has_multiline_geometry() const { return true; }
+  virtual bool has_multiline_geometry() const { return false; }
 
   virtual bool has_components() const { return true; }
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }

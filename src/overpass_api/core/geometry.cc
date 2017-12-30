@@ -251,8 +251,132 @@ double Partial_Way_Geometry::east() const
 void Partial_Way_Geometry::add_point(const Point_Double& point)
 {
   delete bounds;
+  bounds = 0;
   has_coords |= (point.lat < 100.);
   points.push_back(point);
+}
+
+
+Bbox_Double* calc_bounds(const std::vector< std::vector< Point_Double > >& linestrings)
+{
+  double south = 100.0;
+  double west = 200.0;
+  double north = -100.0;
+  double east = -200.0;
+  
+  for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
+      iti != linestrings.end(); ++iti)
+  {
+    for (std::vector< Point_Double >::const_iterator it = iti->begin(); it != iti->end(); ++it)
+    {
+      if (it->lat < 100.)
+      {
+        south = std::min(south, it->lat);
+        west = std::min(west, it->lon);
+        north = std::max(north, it->lat);
+        east = std::max(east, it->lon);
+      }
+    }
+  }
+  
+  if (north == -100.0)
+    return new Bbox_Double(Bbox_Double::invalid);
+  else if (east - west > 180.0)
+    // In this special case we should check whether the bounding box should rather cross the date line
+  {
+    double wrapped_west = 180.0;
+    double wrapped_east = -180.0;
+    
+    for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
+        iti != linestrings.end(); ++iti)
+    {
+      for (std::vector< Point_Double >::const_iterator it = iti->begin(); it != iti->end(); ++it)
+      {
+        if (it->lat < 100.)
+        {
+          if (it->lon > 0)
+            wrapped_west = std::min(wrapped_west, it->lon);
+          else
+            wrapped_east = std::max(wrapped_east, it->lon);
+        }
+      }
+    }
+    
+    if (wrapped_west - wrapped_east > 180.0)
+      return new Bbox_Double(south, wrapped_west, north, wrapped_east);
+    else
+      // The points go around the world, hence a bounding box limit doesn't make sense.
+      return new Bbox_Double(south, -180.0, north, 180.0);
+  }
+  else
+    return new Bbox_Double(south, west, north, east);
+}
+
+
+double Free_Polygon_Geometry::center_lat() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->center_lat();
+}
+
+
+double Free_Polygon_Geometry::center_lon() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->center_lon();
+}
+
+
+double Free_Polygon_Geometry::south() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->south;
+}
+
+
+double Free_Polygon_Geometry::north() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->north;
+}
+
+
+double Free_Polygon_Geometry::west() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->west;
+}
+
+
+double Free_Polygon_Geometry::east() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->east;
+}
+
+
+void Free_Polygon_Geometry::add_linestring(const std::vector< Point_Double >& linestring)
+{
+  if (linestring.size() < 2)
+    return;
+  
+  delete bounds;
+  bounds = 0;
+  linestrings.push_back(linestring);
+  if (linestrings.back().front() != linestrings.back().back())
+    linestrings.back().push_back(linestrings.back().front());
 }
 
 

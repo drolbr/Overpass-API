@@ -4368,6 +4368,75 @@ int main(int argc, char* args[])
       "    <vertex lat=\"51.4000000\" lon=\""<<std::fixed<<std::setprecision(7)
           <<.1/pattern_size/9.*cos((51.+(pattern_size < 70 ? 2.5 : 1.5)/pattern_size)/90.*acos(0))<<"\"/>\n"
       "  </make-linestring>\n";
+    if (std::string(args[2]) == "make_100")
+      std::cout<<
+      "  <make-polygon id=\"1\">\n"
+      "  </make-polygon>\n";
+    if (std::string(args[2]) == "make_101")
+      std::cout<<
+      "  <make-polygon id=\"1\">\n"
+      "  </make-polygon>\n";
+    if (std::string(args[2]) == "make_102")
+      std::cout<<
+      "  <make-polygon id=\"1\">\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "      <vertex lat=\"51.4000000\" lon=\"7.2000000\"/>\n"
+      "      <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "    </linestring>\n"
+      "  </make-polygon>\n";
+    if (std::string(args[2]) == "make_103")
+      std::cout<<
+      "  <make-polygon id=\"1\">\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "      <vertex lat=\"51.4000000\" lon=\"7.2000000\"/>\n"
+      "      <vertex lat=\"51.3000000\" lon=\"7.3000000\"/>\n"
+      "      <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "    </linestring>\n"
+      "  </make-polygon>\n";
+    if (std::string(args[2]) == "make_104")
+      std::cout<<
+      "  <make-polygon id=\"1\">\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "      <vertex lat=\"51.4000000\" lon=\"7.2000000\"/>\n"
+      "      <vertex lat=\"51.3000000\" lon=\"7.3000000\"/>\n"
+      "      <vertex lat=\"41.4000000\" lon=\""<<std::fixed<<std::setprecision(7)
+          <<.1/pattern_size/9.*cos((51.+(pattern_size < 70 ? 2.5 : 1.5)/pattern_size)/90.*acos(0))<<"\"/>\n"
+      "      <vertex lat=\"51.1000000\" lon=\"7.1000000\"/>\n"
+      "    </linestring>\n"
+      "  </make-polygon>\n";
+    if (std::string(args[2]) == "make_105")
+      std::cout<<
+      "  <make-polygon id=\"1\">\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.1010000\" lon=\"7.1000000\"/>\n"
+      "      <vertex lat=\"51.4000000\" lon=\"7.2000000\"/>\n"
+      "      <vertex lat=\"51.3000000\" lon=\"7.3000000\"/>\n"
+      "      <vertex lat=\"41.4000000\" lon=\""<<std::fixed<<std::setprecision(7)
+          <<.1/pattern_size/9.*cos((51.+(pattern_size < 70 ? 2.5 : 1.5)/pattern_size)/90.*acos(0))<<"\"/>\n"
+      "      <vertex lat=\"51.1010000\" lon=\"7.1000000\"/>\n"
+      "    </linestring>\n"
+      "  </make-polygon>\n";
+    if (std::string(args[2]) == "make_106")
+      std::cout<<
+      "  <make-polygon id=\"1\">\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.1010000\" lon=\"7.1000000\"/>\n"
+      "      <vertex lat=\"51.4000000\" lon=\"7.2000000\"/>\n"
+      "      <vertex lat=\"51.3000000\" lon=\"7.3000000\"/>\n"
+      "      <vertex lat=\"41.4000000\" lon=\""<<std::fixed<<std::setprecision(7)
+          <<.1/pattern_size/9.*cos((51.+(pattern_size < 70 ? 2.5 : 1.5)/pattern_size)/90.*acos(0))<<"\"/>\n"
+      "      <vertex lat=\"51.1010000\" lon=\"7.1000000\"/>\n"
+      "    </linestring>\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.3100000\" lon=\"7.2000000\"/>\n"
+      "      <vertex lat=\"51.2900000\" lon=\"7.1900000\"/>\n"
+      "      <vertex lat=\"51.2900000\" lon=\"7.2100000\"/>\n"
+      "      <vertex lat=\"51.3100000\" lon=\"7.2000000\"/>\n"
+      "    </linestring>\n"
+      "  </make-polygon>\n";
 
     std::cout<<"</osm>\n";
   }
