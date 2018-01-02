@@ -1051,6 +1051,35 @@ void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void make_polygon_date_line_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  Statement_Container stmt_cont(global_settings);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  
+  Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("45", pt, stmt_cont);
+  add_fixed_stmt("179.99", pt, stmt_cont);
+  
+  pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("44.99", pt, stmt_cont);
+  add_fixed_stmt("-179.99", pt, stmt_cont);
+  
+  pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("44.98", pt, stmt_cont);
+  add_fixed_stmt("179.99", pt, stmt_cont);
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -1286,6 +1315,8 @@ int main(int argc, char* args[])
       make_polygon_test(global_settings, transaction, "make-polygon", 34, 5, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "106"))
       make_polygon_test(global_settings, transaction, "make-polygon", 34, 6, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "107"))
+      make_polygon_date_line_test(global_settings, transaction, "make-polygon", global_node_offset);
 
     std::cout<<"</osm>\n";
   }

@@ -23,8 +23,8 @@ struct Four_Field_Index
 {
   Four_Field_Index() : base_lat(0), base_lon(2000000000), base_significant_bits(0) {}
   
-  void add_point(double lat, double lon);
-  void add_segment(double lhs_lat, double lhs_lon, double rhs_lat, double rhs_lon);
+  int32 add_point(double lat, double lon, int32 val = 1);
+  Four_Field_Entry add_segment(double lhs_lat, double lhs_lon, double rhs_lat, double rhs_lon, int32 val = 1);
   
   // Only for testing the structure
   std::string to_string() const;

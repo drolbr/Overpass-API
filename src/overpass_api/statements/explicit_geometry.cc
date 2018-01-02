@@ -215,14 +215,14 @@ Requested_Context Evaluator_Linestring::request_context() const
 
 Opaque_Geometry* Eval_Polygon_Geometry_Task::make_polygon(const std::vector< Eval_Geometry_Task* >& tasks)
 {
-  Free_Polygon_Geometry* result = new Free_Polygon_Geometry();
+  Free_Polygon_Geometry polygon;
   for (std::vector< Eval_Geometry_Task* >::const_iterator it = tasks.begin(); it != tasks.end(); ++it)
   {
     Owner< Opaque_Geometry > geom((*it)->eval());
     if (geom && geom->has_line_geometry())
-      result->add_linestring(*geom->get_line_geometry());
+      polygon.add_linestring(*geom->get_line_geometry());
   }
-  return result;
+  return new RHR_Polygon_Geometry(polygon);
 }
 
 
@@ -230,14 +230,14 @@ template< typename Context >
 Opaque_Geometry* Eval_Polygon_Geometry_Task::make_polygon(
       const std::vector< Eval_Geometry_Task* >& tasks, const Context& data)
 {
-  Free_Polygon_Geometry* result = new Free_Polygon_Geometry();
+  Free_Polygon_Geometry polygon;
   for (std::vector< Eval_Geometry_Task* >::const_iterator it = tasks.begin(); it != tasks.end(); ++it)
   {
     Owner< Opaque_Geometry > geom((*it)->eval(data));
     if (geom && geom->has_line_geometry())
-      result->add_linestring(*geom->get_line_geometry());
+      polygon.add_linestring(*geom->get_line_geometry());
   }
-  return result;
+  return new RHR_Polygon_Geometry(polygon);
 }
 
 

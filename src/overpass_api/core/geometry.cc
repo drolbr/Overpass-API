@@ -1,3 +1,4 @@
+#include "four_field_index.h"
 #include "geometry.h"
 
 #include <cmath>
@@ -377,6 +378,196 @@ void Free_Polygon_Geometry::add_linestring(const std::vector< Point_Double >& li
   linestrings.push_back(linestring);
   if (linestrings.back().front() != linestrings.back().back())
     linestrings.back().push_back(linestrings.back().front());
+}
+
+
+Point_Double interpolation_point(
+    double orth_x, double orth_y, double orth_z,
+    double lhs_gc_x, double lhs_gc_z, double factor, double lhs_lon)
+{
+  static const double deg_to_arc = acos(0)/90.;
+  
+  double sin_factor = sin(factor);
+  double cos_factor = cos(factor);
+  double new_x = sin_factor * orth_x + cos_factor * lhs_gc_x;
+  double new_y = sin_factor * orth_y;
+  double new_z = sin_factor * orth_z + cos_factor * lhs_gc_z;
+      
+  double new_lat = asin(new_x)/deg_to_arc;
+  double new_lon = atan2(new_y, new_z)/deg_to_arc + lhs_lon;
+  if (new_lon < -180.)
+    new_lon += 360.;
+  else if (new_lon > 180.)
+    new_lon -= 360.;
+      
+  return Point_Double(new_lat, new_lon);
+}
+
+
+void interpolate_segment(double lhs_lat, double lhs_lon, double rhs_lat, double rhs_lon,
+    std::vector< Point_Double >& target)
+{
+  static const double deg_to_arc = acos(0)/90.;
+  
+  if (fabs(rhs_lat - lhs_lat) < .0065536 && fabs(rhs_lon - lhs_lon) < .0065536)
+    target.push_back(Point_Double(rhs_lat, rhs_lon));
+  else
+  {
+    if (fabs(rhs_lon - lhs_lon) > 180.)
+      rhs_lon = (lhs_lon < 0 ? rhs_lon - 360. : rhs_lon + 360.);
+  
+    double lhs_cos = cos(lhs_lat * deg_to_arc);
+    double lhs_gc_x = sin(lhs_lat * deg_to_arc);
+    double lhs_gc_z = lhs_cos;
+    
+    double rhs_cos = cos(rhs_lat * deg_to_arc);
+    double rhs_gc_x = sin(rhs_lat * deg_to_arc);
+    double rhs_gc_y = sin((rhs_lon - lhs_lon) * deg_to_arc) * rhs_cos;
+    double rhs_gc_z = cos((rhs_lon - lhs_lon) * deg_to_arc) * rhs_cos;
+    
+    double prod = lhs_gc_x * rhs_gc_x + lhs_gc_z * rhs_gc_z;
+    
+    double orth_x = rhs_gc_x - prod * lhs_gc_x;
+    double orth_y = rhs_gc_y;
+    double orth_z = rhs_gc_z - prod * lhs_gc_z;
+    double lg_orth = sqrt(orth_x * orth_x + orth_y * orth_y + orth_z * orth_z);
+    orth_x /= lg_orth;
+    orth_y /= lg_orth;
+    orth_z /= lg_orth;
+    
+    double dist = acos(prod);
+    double ex_lat = (lhs_gc_x == 0 ? dist : atan(orth_x/lhs_gc_x));
+    if (ex_lat > dist)
+      ex_lat = dist;
+    if (ex_lat < 0)
+      ex_lat = 0;
+    
+    Point_Double ex_pt = interpolation_point(orth_x, orth_y, orth_z,
+          lhs_gc_x, lhs_gc_z, ex_lat, lhs_lon);
+    double acceptable_max_length = .0065536*cos(ex_pt.lat * deg_to_arc);
+    if (acceptable_max_length < .0000256)
+      acceptable_max_length = .0000256;
+    acceptable_max_length *= deg_to_arc;
+    
+    int num_sections_l = (int)(ex_lat/acceptable_max_length)+1;
+    int num_sections_r = (int)((dist - ex_lat)/acceptable_max_length)+1;
+    
+    for (int j = 1; j < num_sections_l; ++j)
+      target.push_back(interpolation_point(orth_x, orth_y, orth_z,
+          lhs_gc_x, lhs_gc_z, ex_lat*j/num_sections_l, lhs_lon));
+
+    if (ex_lat > 0 && ex_lat < dist)
+      target.push_back(ex_pt);
+      
+    for (int j = 1; j < num_sections_r; ++j)
+      target.push_back(interpolation_point(orth_x, orth_y, orth_z,
+          lhs_gc_x, lhs_gc_z, ex_lat + (dist-ex_lat)*j/num_sections_r, lhs_lon));
+
+    if (rhs_lon < -180.)
+      rhs_lon += 360.;
+    else if (rhs_lon > 180.)
+      rhs_lon -= 360.;
+    target.push_back(Point_Double(rhs_lat, rhs_lon));
+  }
+}
+
+
+RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : bounds(0)
+{
+  std::vector< std::vector< Point_Double > > input(*rhs.get_multiline_geometry());
+
+  std::vector< Point_Double > all_segments;
+  std::vector< unsigned int > gap_positions;
+  
+  gap_positions.push_back(0);
+  for (std::vector< std::vector< Point_Double > >::const_iterator iti = input.begin(); iti != input.end(); ++iti)
+  {
+    all_segments.push_back((*iti)[0]);
+    for (unsigned int i = 1; i < iti->size(); ++i)
+      interpolate_segment((*iti)[i-1].lat, (*iti)[i-1].lon, (*iti)[i].lat, (*iti)[i].lon, all_segments);
+    gap_positions.push_back(all_segments.size());
+  }
+  
+  Four_Field_Index four_field_idx;
+
+  std::vector< unsigned int >::const_iterator gap_it = gap_positions.begin();
+  for (unsigned int i = 1; i < all_segments.size(); ++i)
+  {
+    if (*gap_it == i)
+    {
+      ++gap_it;
+      continue;
+    }
+    
+    four_field_idx.add_segment(all_segments[i-1].lat, all_segments[i-1].lon,
+        all_segments[i].lat, all_segments[i].lon);
+  }
+
+  gap_it = gap_positions.begin();
+  for (unsigned int i = 0; i < all_segments.size(); ++i)
+  {
+    if (*gap_it == i)
+    {
+      ++gap_it;
+      linestrings.push_back(std::vector< Point_Double >());
+    }
+    
+    linestrings.back().push_back(all_segments[i]);
+  }
+}
+
+
+double RHR_Polygon_Geometry::center_lat() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->center_lat();
+}
+
+
+double RHR_Polygon_Geometry::center_lon() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->center_lon();
+}
+
+
+double RHR_Polygon_Geometry::south() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->south;
+}
+
+
+double RHR_Polygon_Geometry::north() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->north;
+}
+
+
+double RHR_Polygon_Geometry::west() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->west;
+}
+
+
+double RHR_Polygon_Geometry::east() const
+{
+  if (!bounds)
+    bounds = calc_bounds(linestrings);
+  
+  return bounds->east;
 }
 
 

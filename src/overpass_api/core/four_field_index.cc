@@ -7,113 +7,93 @@
 #include <sstream>
 
 
-void Four_Field_Index::add_point(double lat, double lon)
+namespace
 {
-  if (lat < -90. || lat > 90. || lon < -180. || lon > 180.)
-    return;
-  
-  uint32 ilat = ::ilat(lat);
-  int32 ilon = ::ilon(lon);
-  
-  Four_Field_Entry& entry = make_available(ilat & 0xfffe0000, ilon & 0xfffe0000, 15);
-  
-  if (ilat & 0x00010000)
+  int32 exchange_value(Four_Field_Entry& entry, uint32 ilat, int32 ilon, int32 value)
   {
-    if (ilon & 0x00010000)
-      entry.ne = 1;
+    int32 result;
+  
+    if (ilat & 0x00010000)
+    {
+      if (ilon & 0x00010000)
+      {
+        result = entry.ne;
+        entry.ne = 1;
+      }
+      else
+      {
+        result = entry.nw;
+        entry.nw = 1;
+      }
+    }
     else
-      entry.nw = 1;
-  }
-  else
-  {
-    if (ilon & 0x00010000)
-      entry.se = 1;
-    else
-      entry.sw = 1;
+    {
+      if (ilon & 0x00010000)
+      {
+        result = entry.se;
+        entry.se = 1;
+      }
+      else
+      {
+        result = entry.sw;
+        entry.sw = 1;
+      }
+    }
+  
+    return result;
   }
 }
 
 
-void Four_Field_Index::add_segment(double lhs_lat, double lhs_lon, double rhs_lat, double rhs_lon)
+int32 Four_Field_Index::add_point(double lat, double lon, int32 value)
 {
+  if (lat < -90. || lat > 90. || lon < -180. || lon > 180.)
+    return 0;
+  
+  uint32 ilat = ::ilat(lat);
+  int32 ilon = ::ilon(lon);
+  
+  return exchange_value(make_available(ilat & 0xfffe0000, ilon & 0xfffe0000, 15),
+      ilat, ilon, value);
+}
+
+
+Four_Field_Entry Four_Field_Index::add_segment(
+    double lhs_lat, double lhs_lon, double rhs_lat, double rhs_lon, int32 value)
+{
+  Four_Field_Entry result;
+  
   if (lhs_lat < -90. || lhs_lat > 90. || lhs_lon < -180. || lhs_lon > 180.
       || rhs_lat < -90. || rhs_lat > 90. || rhs_lon < -180. || rhs_lon > 180.)
-    return;
-  if (fabs(lhs_lat - rhs_lat) > .0065535 || fabs(lhs_lon - rhs_lon) > .0065535)
-    return;
+    return result;
+  if (fabs(lhs_lat - rhs_lat) > .0065535)
+    return result;
+  if (fabs(lhs_lon - rhs_lon) > .0065535)
+  {
+    if (fabs(lhs_lon - rhs_lon) - 360 < -.0065535)
+      return result;
+  }
   
   uint32 lhs_ilat = ::ilat(lhs_lat);
   int32 lhs_ilon = ::ilon(lhs_lon);
   uint32 rhs_ilat = ::ilat(rhs_lat);
   int32 rhs_ilon = ::ilon(rhs_lon);
   
-  Four_Field_Entry& entry_sw = make_available(lhs_ilat & 0xfffe0000, lhs_ilon & 0xfffe0000, 15);
-  
-  if (lhs_ilat & 0x00010000)
+  result.sw = exchange_value(make_available(lhs_ilat & 0xfffe0000, lhs_ilon & 0xfffe0000, 15),
+      lhs_ilat, lhs_ilon, value);
+  if ((lhs_ilon & 0xfffe0000) != (rhs_ilon & 0xfffe0000))
+    result.se = exchange_value(make_available(lhs_ilat & 0xfffe0000, rhs_ilon & 0xfffe0000, 15),
+        lhs_ilat, rhs_ilon, value);
+  if ((lhs_ilat & 0xfffe0000) != (rhs_ilat & 0xfffe0000))
   {
-    if (lhs_ilon & 0x00010000)
-      entry_sw.ne = 1;
-    else
-      entry_sw.nw = 1;
-  }
-  else
-  {
-    if (lhs_ilon & 0x00010000)
-      entry_sw.se = 1;
-    else
-      entry_sw.sw = 1;
+    result.nw = exchange_value(make_available(rhs_ilat & 0xfffe0000, lhs_ilon & 0xfffe0000, 15),
+        rhs_ilat, lhs_ilon, value);
+    if ((lhs_ilon & 0xfffe0000) != (rhs_ilon & 0xfffe0000))
+      result.ne = exchange_value(make_available(rhs_ilat & 0xfffe0000, rhs_ilon & 0xfffe0000, 15),
+          rhs_ilat, rhs_ilon, value);
   }
   
-  Four_Field_Entry& entry_se = make_available(lhs_ilat & 0xfffe0000, rhs_ilon & 0xfffe0000, 15);
-  
-  if (lhs_ilat & 0x00010000)
-  {
-    if (rhs_ilon & 0x00010000)
-      entry_se.ne = 1;
-    else
-      entry_se.nw = 1;
-  }
-  else
-  {
-    if (rhs_ilon & 0x00010000)
-      entry_se.se = 1;
-    else
-      entry_se.sw = 1;
-  }
-  
-  Four_Field_Entry& entry_nw = make_available(rhs_ilat & 0xfffe0000, lhs_ilon & 0xfffe0000, 15);
-  
-  if (rhs_ilat & 0x00010000)
-  {
-    if (lhs_ilon & 0x00010000)
-      entry_nw.ne = 1;
-    else
-      entry_nw.nw = 1;
-  }
-  else
-  {
-    if (lhs_ilon & 0x00010000)
-      entry_nw.se = 1;
-    else
-      entry_nw.sw = 1;
-  }
-  
-  Four_Field_Entry& entry_ne = make_available(rhs_ilat & 0xfffe0000, rhs_ilon & 0xfffe0000, 15);
-  
-  if (rhs_ilat & 0x00010000)
-  {
-    if (rhs_ilon & 0x00010000)
-      entry_ne.ne = 1;
-    else
-      entry_ne.nw = 1;
-  }
-  else
-  {
-    if (rhs_ilon & 0x00010000)
-      entry_ne.se = 1;
-    else
-      entry_ne.sw = 1;
-  }
+  return result;
 }
 
 

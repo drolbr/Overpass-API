@@ -8,6 +8,7 @@ output_cc = ../overpass_api/frontend/output.cc
 statements_cc = \
   ../expat/escape_json.cc \
   ../expat/escape_xml.cc \
+  ../overpass_api/core/four_field_index.cc \
   ../overpass_api/core/geometry.cc \
   ../overpass_api/data/bbox_filter.cc \
   ../overpass_api/data/collect_members.cc \
