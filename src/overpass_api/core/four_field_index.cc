@@ -18,12 +18,12 @@ namespace
       if (ilon & 0x00010000)
       {
         result = entry.ne;
-        entry.ne = 1;
+        entry.ne = value;
       }
       else
       {
         result = entry.nw;
-        entry.nw = 1;
+        entry.nw = value;
       }
     }
     else
@@ -31,12 +31,12 @@ namespace
       if (ilon & 0x00010000)
       {
         result = entry.se;
-        entry.se = 1;
+        entry.se = value;
       }
       else
       {
         result = entry.sw;
-        entry.sw = 1;
+        entry.sw = value;
       }
     }
   
@@ -81,14 +81,14 @@ Four_Field_Entry Four_Field_Index::add_segment(
   
   result.sw = exchange_value(make_available(lhs_ilat & 0xfffe0000, lhs_ilon & 0xfffe0000, 15),
       lhs_ilat, lhs_ilon, value);
-  if ((lhs_ilon & 0xfffe0000) != (rhs_ilon & 0xfffe0000))
+  if ((lhs_ilon & 0xffff0000) != (rhs_ilon & 0xffff0000))
     result.se = exchange_value(make_available(lhs_ilat & 0xfffe0000, rhs_ilon & 0xfffe0000, 15),
         lhs_ilat, rhs_ilon, value);
-  if ((lhs_ilat & 0xfffe0000) != (rhs_ilat & 0xfffe0000))
+  if ((lhs_ilat & 0xffff0000) != (rhs_ilat & 0xffff0000))
   {
     result.nw = exchange_value(make_available(rhs_ilat & 0xfffe0000, lhs_ilon & 0xfffe0000, 15),
         rhs_ilat, lhs_ilon, value);
-    if ((lhs_ilon & 0xfffe0000) != (rhs_ilon & 0xfffe0000))
+    if ((lhs_ilon & 0xffff0000) != (rhs_ilon & 0xffff0000))
       result.ne = exchange_value(make_available(rhs_ilat & 0xfffe0000, rhs_ilon & 0xfffe0000, 15),
           rhs_ilat, rhs_ilon, value);
   }
