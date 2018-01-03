@@ -404,6 +404,107 @@ Point_Double interpolation_point(
 }
 
 
+namespace
+{
+  struct Interpolation_Collector
+  {
+    Interpolation_Collector(double orth_x, double orth_y, double orth_z,
+        double lhs_gc_x, double lhs_gc_z, double dist, double lhs_lon, std::vector< Point_Double >& target);
+        
+    void collect_single_point(const Point_Double& pt) { target->push_back(pt); }
+    void collect_single_point(double dist);
+    void collect_sequence(double from, double to, double max_step);
+    void collect_center(double from, double to, int divisor);
+    
+    double orth_x;
+    double orth_y;
+    double orth_z;
+    double lhs_gc_x;
+    double lhs_gc_z;
+    double lhs_lon;
+    double center;
+    Point_Double ex_pt;
+    double ex_gc_pt_lat;
+    double acceptable_max_length;
+    std::vector< Point_Double >* target;
+  };
+  
+  
+  Interpolation_Collector::Interpolation_Collector(double orth_x_, double orth_y_, double orth_z_,
+      double lhs_gc_x_, double lhs_gc_z_, double dist, double lhs_lon_, std::vector< Point_Double >& target_)
+      : orth_x(orth_x_), orth_y(orth_y_), orth_z(orth_z_),
+      lhs_gc_x(lhs_gc_x_), lhs_gc_z(lhs_gc_z_), lhs_lon(lhs_lon_),
+      center(lhs_gc_x == 0 ? dist : atan(orth_x/lhs_gc_x)),
+      ex_pt(interpolation_point(orth_x, orth_y, orth_z, lhs_gc_x, lhs_gc_z,
+          std::max(std::min(center, dist), 0.), lhs_lon)),
+      ex_gc_pt_lat(ex_pt.lat),
+      target(&target_)
+  {
+    static const double deg_to_arc = acos(0)/90.;
+    acceptable_max_length = .0065536*cos(ex_pt.lat * deg_to_arc);
+    
+    double bounded_center = std::max(std::min(center, dist), 0.);
+    if (acceptable_max_length < .0016384 && center != bounded_center)
+    {
+      Point_Double ex_gc_pt = interpolation_point(orth_x, orth_y, orth_z,
+          lhs_gc_x, lhs_gc_z, center, lhs_lon);
+      ex_gc_pt_lat = ex_gc_pt.lat;
+    }
+    center = bounded_center;
+  }
+  
+  
+  void Interpolation_Collector::collect_single_point(double dist)
+  {
+    target->push_back(interpolation_point(orth_x, orth_y, orth_z, lhs_gc_x, lhs_gc_z, dist, lhs_lon));
+  }
+  
+  
+  void Interpolation_Collector::collect_sequence(double from, double to, double max_step)
+  {
+    int num_sections = (int)((to - from)/max_step)+1;
+    for (int j = 1; j < num_sections; ++j)
+      target->push_back(interpolation_point(orth_x, orth_y, orth_z,
+          lhs_gc_x, lhs_gc_z, from + (to - from)*j/num_sections, lhs_lon));
+  }
+  
+  
+  void Interpolation_Collector::collect_center(double from, double to, int divisor)
+  {
+    static const double deg_to_arc = acos(0)/90.;
+    
+    double max_length_threshold = .0065536/divisor;
+    if (acceptable_max_length < max_length_threshold && divisor < 65536)
+    {
+      double dist_ex_s = acos(sqrt(1-1./divisor/divisor)/sin(ex_gc_pt_lat * deg_to_arc));
+      double bound_l = std::max(std::min(center - dist_ex_s, to), from);
+      double bound_r = std::max(std::min(center + dist_ex_s, to), from);
+
+      collect_sequence(from, bound_l, max_length_threshold*deg_to_arc);
+      if (bound_l > 0 && bound_l < to)
+        collect_single_point(bound_l);
+        
+      collect_center(bound_l, bound_r, divisor*4);
+        
+      if (bound_r > 0 && bound_r < to)
+        collect_single_point(bound_r);
+      collect_sequence(bound_r, to, max_length_threshold*deg_to_arc);
+    }
+    else
+    {
+      if (acceptable_max_length < 1e-9)
+        acceptable_max_length = 1e-9;
+      acceptable_max_length *= deg_to_arc;
+      
+      collect_sequence(from, center, acceptable_max_length);
+      if (center > from && center < to)
+        collect_single_point(center);
+      collect_sequence(center, to, acceptable_max_length);
+    }
+  }
+}
+
+
 void interpolate_segment(double lhs_lat, double lhs_lon, double rhs_lat, double rhs_lon,
     std::vector< Point_Double >& target)
 {
@@ -415,53 +516,50 @@ void interpolate_segment(double lhs_lat, double lhs_lon, double rhs_lat, double 
   {
     if (fabs(rhs_lon - lhs_lon) > 180.)
       rhs_lon = (lhs_lon < 0 ? rhs_lon - 360. : rhs_lon + 360.);
-  
-    double lhs_cos = cos(lhs_lat * deg_to_arc);
-    double lhs_gc_x = sin(lhs_lat * deg_to_arc);
-    double lhs_gc_z = lhs_cos;
     
-    double rhs_cos = cos(rhs_lat * deg_to_arc);
-    double rhs_gc_x = sin(rhs_lat * deg_to_arc);
-    double rhs_gc_y = sin((rhs_lon - lhs_lon) * deg_to_arc) * rhs_cos;
-    double rhs_gc_z = cos((rhs_lon - lhs_lon) * deg_to_arc) * rhs_cos;
-    
-    double prod = lhs_gc_x * rhs_gc_x + lhs_gc_z * rhs_gc_z;
-    
-    double orth_x = rhs_gc_x - prod * lhs_gc_x;
-    double orth_y = rhs_gc_y;
-    double orth_z = rhs_gc_z - prod * lhs_gc_z;
-    double lg_orth = sqrt(orth_x * orth_x + orth_y * orth_y + orth_z * orth_z);
-    orth_x /= lg_orth;
-    orth_y /= lg_orth;
-    orth_z /= lg_orth;
-    
-    double dist = acos(prod);
-    double ex_lat = (lhs_gc_x == 0 ? dist : atan(orth_x/lhs_gc_x));
-    if (ex_lat > dist)
-      ex_lat = dist;
-    if (ex_lat < 0)
-      ex_lat = 0;
-    
-    Point_Double ex_pt = interpolation_point(orth_x, orth_y, orth_z,
-          lhs_gc_x, lhs_gc_z, ex_lat, lhs_lon);
-    double acceptable_max_length = .0065536*cos(ex_pt.lat * deg_to_arc);
-    if (acceptable_max_length < .0000256)
-      acceptable_max_length = .0000256;
-    acceptable_max_length *= deg_to_arc;
-    
-    int num_sections_l = (int)(ex_lat/acceptable_max_length)+1;
-    int num_sections_r = (int)((dist - ex_lat)/acceptable_max_length)+1;
-    
-    for (int j = 1; j < num_sections_l; ++j)
-      target.push_back(interpolation_point(orth_x, orth_y, orth_z,
-          lhs_gc_x, lhs_gc_z, ex_lat*j/num_sections_l, lhs_lon));
-
-    if (ex_lat > 0 && ex_lat < dist)
-      target.push_back(ex_pt);
+    if (fabs(rhs_lon - lhs_lon) > 179.999999)
+    {
+      double pole_lat = (lhs_lat + rhs_lat >= 0 ? 90. : -90.);
       
-    for (int j = 1; j < num_sections_r; ++j)
-      target.push_back(interpolation_point(orth_x, orth_y, orth_z,
-          lhs_gc_x, lhs_gc_z, ex_lat + (dist-ex_lat)*j/num_sections_r, lhs_lon));
+      int num_sections = (int)(fabs(pole_lat - lhs_lat)/.0065536)+1;
+      for (int j = 1; j < num_sections; ++j)
+        target.push_back(Point_Double(lhs_lat + (pole_lat - lhs_lat)*j/num_sections, lhs_lon));
+      target.push_back(Point_Double(pole_lat, lhs_lon));
+      
+      num_sections = (int)(fabs(rhs_lon - lhs_lon)/.0065536)+1;
+      for (int j = 1; j < num_sections; ++j)
+        target.push_back(Point_Double(pole_lat, lhs_lon + (rhs_lon - lhs_lon)*j/num_sections));
+      target.push_back(Point_Double(pole_lat, rhs_lon));
+      
+      num_sections = (int)(fabs(rhs_lat - pole_lat)/.0065536)+1;
+      for (int j = 1; j < num_sections; ++j)
+        target.push_back(Point_Double(pole_lat + (rhs_lat - pole_lat)*j/num_sections, rhs_lon));
+    }
+    else
+    {
+      double lhs_cos = cos(lhs_lat * deg_to_arc);
+      double lhs_gc_x = sin(lhs_lat * deg_to_arc);
+      double lhs_gc_z = lhs_cos;
+    
+      double rhs_cos = cos(rhs_lat * deg_to_arc);
+      double rhs_gc_x = sin(rhs_lat * deg_to_arc);
+      double rhs_gc_y = sin((rhs_lon - lhs_lon) * deg_to_arc) * rhs_cos;
+      double rhs_gc_z = cos((rhs_lon - lhs_lon) * deg_to_arc) * rhs_cos;
+    
+      double prod = lhs_gc_x * rhs_gc_x + lhs_gc_z * rhs_gc_z;
+      double dist = acos(prod);
+    
+      double orth_x = rhs_gc_x - prod * lhs_gc_x;
+      double orth_y = rhs_gc_y;
+      double orth_z = rhs_gc_z - prod * lhs_gc_z;
+      double lg_orth = sqrt(orth_x * orth_x + orth_y * orth_y + orth_z * orth_z);
+      orth_x /= lg_orth;
+      orth_y /= lg_orth;
+      orth_z /= lg_orth;
+    
+      Interpolation_Collector collector(orth_x, orth_y, orth_z, lhs_gc_x, lhs_gc_z, dist, lhs_lon, target);
+      collector.collect_center(0, dist, 4);
+    }
 
     if (rhs_lon < -180.)
       rhs_lon += 360.;

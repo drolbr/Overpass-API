@@ -66,11 +66,11 @@ Four_Field_Entry Four_Field_Index::add_segment(
   if (lhs_lat < -90. || lhs_lat > 90. || lhs_lon < -180. || lhs_lon > 180.
       || rhs_lat < -90. || rhs_lat > 90. || rhs_lon < -180. || rhs_lon > 180.)
     return result;
-  if (fabs(lhs_lat - rhs_lat) > .0065535)
+  if (fabs(lhs_lat - rhs_lat) > .0065536)
     return result;
-  if (fabs(lhs_lon - rhs_lon) > .0065535)
+  if (fabs(lhs_lon - rhs_lon) > .0065536)
   {
-    if (fabs(lhs_lon - rhs_lon) - 360 < -.0065535)
+    if (fabs(lhs_lon - rhs_lon) - 360 < -.0065536)
       return result;
   }
   
