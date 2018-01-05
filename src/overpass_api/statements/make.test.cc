@@ -939,6 +939,15 @@ void make_point_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void add_point(const std::string& lat, const std::string& lon,
+    Statement* parent, Statement_Container& stmt_cont)
+{
+  Statement* pt = stmt_cont.create_stmt< Evaluator_Point >(Attr().kvs(), parent);
+  add_fixed_stmt(lat, pt, stmt_cont);
+  add_fixed_stmt(lon, pt, stmt_cont);
+}
+
+
 void make_linestring_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, uint64 ref, uint num_points, uint64 global_node_offset)
 {
@@ -952,23 +961,12 @@ void make_linestring_test(Parsed_Query& global_settings, Transaction& transactio
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), subs);
   
   if (num_points > 0)
-  {
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.1", pt, stmt_cont);
-    add_fixed_stmt("7.1", pt, stmt_cont);
-  }
+    add_point("51.1", "7.1", subs, stmt_cont);
   if (num_points > 1)
-  {
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.2", pt, stmt_cont);
-    add_fixed_stmt("7.2", pt, stmt_cont);
-  }
+    add_point("51.2", "7.2", subs, stmt_cont);
   if (num_points > 2)
-  {
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.3", pt, stmt_cont);
-    add_fixed_stmt("7.3", pt, stmt_cont);
-  }
+    add_point("51.3", "7.3", subs, stmt_cont);
+  
   if (num_points > 3)
   {
     Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
@@ -998,23 +996,12 @@ void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
   
   if (num_points > 0)
-  {
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt(num_points <= 4 ? "51.1" : "51.101", pt, stmt_cont);
-    add_fixed_stmt("7.1", pt, stmt_cont);
-  }
+    add_point(num_points <= 4 ? "51.1" : "51.101", "7.1", subs, stmt_cont);
   if (num_points > 1)
-  {
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.4", pt, stmt_cont);
-    add_fixed_stmt("7.2", pt, stmt_cont);
-  }
+    add_point("51.4", "7.2", subs, stmt_cont);
   if (num_points > 2)
-  {
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.3", pt, stmt_cont);
-    add_fixed_stmt("7.3", pt, stmt_cont);
-  }
+    add_point("51.3", "7.3", subs, stmt_cont);
+  
   if (num_points > 3)
   {
     Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
@@ -1025,25 +1012,14 @@ void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
     stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), subs);
   }
   if (num_points > 4)
-  {
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.101", pt, stmt_cont);
-    add_fixed_stmt("7.1", pt, stmt_cont);
-  }
+    add_point("51.101", "7.1", subs, stmt_cont);
   
   if (num_points > 5)
   {
     subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
-    
-    Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.31", pt, stmt_cont);
-    add_fixed_stmt("7.2", pt, stmt_cont);
-    pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.29", pt, stmt_cont);
-    add_fixed_stmt("7.19", pt, stmt_cont);
-    pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("51.29", pt, stmt_cont);
-    add_fixed_stmt("7.21", pt, stmt_cont);
+    add_point("51.31", "7.2", subs, stmt_cont);
+    add_point("51.29", "7.19", subs, stmt_cont);
+    add_point("51.29", "7.21", subs, stmt_cont);
   }
 
   stmt.execute(rman);
@@ -1061,22 +1037,139 @@ void make_polygon_date_line_test(Parsed_Query& global_settings, Transaction& tra
 
   Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
   Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
+  
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
-  
-  Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-  add_fixed_stmt("45", pt, stmt_cont);
-  add_fixed_stmt("179.99", pt, stmt_cont);
-  
-  pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-  add_fixed_stmt("44.99", pt, stmt_cont);
-  add_fixed_stmt("-179.99", pt, stmt_cont);
-  
-  pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-  add_fixed_stmt("44.98", pt, stmt_cont);
-  add_fixed_stmt("179.99", pt, stmt_cont);
+  add_point("45", "179.99", subs, stmt_cont);
+  add_point("44.99", "-179.99", subs, stmt_cont);
+  add_point("44.98", "179.99", subs, stmt_cont);
 
   stmt.execute(rman);
   Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
+void make_polygon_intersection_test_1(Parsed_Query& global_settings,
+    const std::string& lat_1, const std::string& lon_1,
+    const std::string& lat_2, const std::string& lon_2,
+    const std::string& lat_3, const std::string& lon_3,
+    const std::string& lat_4, const std::string& lon_4,
+    std::string type, Resource_Manager& rman, Statement_Container& stmt_cont)
+{
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
+  
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  add_point(lat_1, lon_1, subs, stmt_cont);
+  add_point(lat_2, lon_2, subs, stmt_cont);
+  add_point(lat_3, lon_3, subs, stmt_cont);
+  add_point(lat_4, lon_4, subs, stmt_cont);
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
+void make_polygon_intersection_test_2(Parsed_Query& global_settings,
+    const std::string& lon_1, const std::string& lon_2, const std::string& lon_3, const std::string& lon_4,
+    std::string type, Resource_Manager& rman, Statement_Container& stmt_cont)
+{
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
+  Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
+  
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  add_point("51.006", "7.0025", subs, stmt_cont);
+  add_point("51.005", lon_1, subs, stmt_cont);
+  add_point("51.005", lon_2, subs, stmt_cont);
+  
+  subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
+  add_point("51.004", "7.0025", subs, stmt_cont);
+  add_point("51.005", lon_3, subs, stmt_cont);
+  add_point("51.005", lon_4, subs, stmt_cont);
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
+void make_polygon_intersection_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  Statement_Container stmt_cont(global_settings);
+  
+  make_polygon_intersection_test_1(global_settings,
+      "51.004", "7.1004",
+      "51.006", "7.1004",
+      "51.004", "7.1006",
+      "51.006", "7.1006",
+      type, rman, stmt_cont);
+  
+  make_polygon_intersection_test_1(global_settings,
+      "51.104", "7.1005",
+      "51.106", "7.1005",
+      "51.105", "7.1006",
+      "51.105", "7.1004",
+      type, rman, stmt_cont);
+  
+  make_polygon_intersection_test_1(global_settings,
+      "51.203", "7.1004",
+      "51.207", "7.1006",
+      "51.206", "7.1007",
+      "51.204", "7.1003",
+      type, rman, stmt_cont);
+  
+  make_polygon_intersection_test_2(global_settings,
+      "7.001", "7.002", "7.003", "7.004", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.001", "7.002", "7.004", "7.003", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.001", "7.003", "7.002", "7.004", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.001", "7.003", "7.004", "7.002", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.001", "7.004", "7.002", "7.003", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.001", "7.004", "7.003", "7.002", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.002", "7.001", "7.003", "7.004", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.002", "7.001", "7.004", "7.003", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.002", "7.003", "7.001", "7.004", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.002", "7.003", "7.004", "7.001", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.002", "7.004", "7.001", "7.003", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.002", "7.004", "7.003", "7.001", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.003", "7.001", "7.002", "7.004", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.003", "7.001", "7.004", "7.002", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.003", "7.002", "7.001", "7.004", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.003", "7.002", "7.004", "7.001", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.003", "7.004", "7.001", "7.002", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.003", "7.004", "7.002", "7.001", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.004", "7.001", "7.002", "7.003", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.004", "7.001", "7.003", "7.002", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.004", "7.002", "7.001", "7.003", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.004", "7.002", "7.003", "7.001", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.004", "7.003", "7.001", "7.002", type, rman, stmt_cont);
+  make_polygon_intersection_test_2(global_settings,
+      "7.004", "7.003", "7.002", "7.001", type, rman, stmt_cont);
 }
 
 
@@ -1317,6 +1410,8 @@ int main(int argc, char* args[])
       make_polygon_test(global_settings, transaction, "make-polygon", 34, 6, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "107"))
       make_polygon_date_line_test(global_settings, transaction, "make-polygon", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "108"))
+      make_polygon_intersection_test(global_settings, transaction, "make-polygon", global_node_offset);
 
     std::cout<<"</osm>\n";
   }

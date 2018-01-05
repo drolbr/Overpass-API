@@ -1,7 +1,9 @@
 #include "four_field_index.h"
 #include "geometry.h"
+#include "index_computations.h"
 
 #include <cmath>
+#include <map>
 
 
 const Bbox_Double Bbox_Double::invalid(100.0, 200.0, 100.0, 200.0);
@@ -570,6 +572,173 @@ void interpolate_segment(double lhs_lat, double lhs_lon, double rhs_lat, double 
 }
 
 
+void add_segment(std::map< uint32, std::vector< unsigned int > >& segments_per_idx,
+    const Point_Double& from, const Point_Double& to, unsigned int pos)
+{
+  uint32 lhs_ilat = ::ilat(from.lat);
+  int32 lhs_ilon = ::ilon(from.lon);
+  uint32 rhs_ilat = ::ilat(to.lat);
+  int32 rhs_ilon = ::ilon(to.lon);
+  
+  segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)].push_back(pos);
+  if ((lhs_ilon & 0xffff0000) != (rhs_ilon & 0xffff0000))
+    segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)].push_back(pos);
+  if ((lhs_ilat & 0xffff0000) != (rhs_ilat & 0xffff0000))
+  {
+    segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)].push_back(pos);
+    if ((lhs_ilon & 0xffff0000) != (rhs_ilon & 0xffff0000))
+      segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)].push_back(pos);
+  }
+}
+
+
+bool try_intersect(const Point_Double& lhs_from, const Point_Double& lhs_to,
+    const Point_Double& rhs_from, const Point_Double& rhs_to, Point_Double& isect)
+{
+  double rfmlt_lat = rhs_from.lat - lhs_to.lat;
+  double rfmlt_lon = rhs_from.lon - lhs_to.lon;
+  
+  //The two segments are connected by a vertex
+  if (!rfmlt_lat && !rfmlt_lon)
+    return false;
+  if (lhs_from == rhs_to || lhs_from == rhs_from || lhs_to == rhs_to)
+    return false;
+  
+  double lfmlt_lat = lhs_from.lat - lhs_to.lat;
+  double lfmlt_lon = lhs_from.lon - lhs_to.lon;
+  double rfmrt_lat = rhs_from.lat - rhs_to.lat;
+  double rfmrt_lon = rhs_from.lon - rhs_to.lon;
+  double det = lfmlt_lat * rfmrt_lon - rfmrt_lat * lfmlt_lon;
+  
+  if (det == 0)
+  {
+    // Segments on parallel but distinct beams
+    if (lfmlt_lat * rfmlt_lon - lfmlt_lon * rfmlt_lat != 0)
+      return false;
+    
+    if (fabs(rfmlt_lat) > fabs(rfmlt_lon))
+    {
+      if (lhs_from.lat < lhs_to.lat)
+      {
+        if (rhs_from.lat < rhs_to.lat)
+        {
+          // Segments are non-overlapping
+          if (lhs_to.lat < rhs_from.lat || rhs_to.lat < lhs_from.lat)
+            return false;
+          
+          if (lhs_from.lat < rhs_from.lat)
+            isect = rhs_from;
+          else
+            isect = lhs_from;
+        }
+        else
+        {
+          // Segments are non-overlapping
+          if (lhs_to.lat < rhs_to.lat || rhs_from.lat < lhs_from.lat)
+            return false;
+          
+          if (lhs_from.lat < rhs_to.lat)
+            isect = rhs_to;
+          else
+            isect = lhs_from;
+        }
+      }
+      else
+      {
+        if (rhs_from.lat < rhs_to.lat)
+        {
+          // Segments are non-overlapping
+          if (lhs_from.lat < rhs_from.lat || rhs_to.lat < lhs_to.lat)
+            return false;
+          
+          if (lhs_to.lat < rhs_from.lat)
+            isect = rhs_from;
+          else
+            isect = lhs_to;
+        }
+        else
+        {
+          // Segments are non-overlapping
+          if (lhs_from.lat < rhs_to.lat || rhs_from.lat < lhs_to.lat)
+            return false;
+          
+          if (lhs_to.lat < rhs_to.lat)
+            isect = rhs_to;
+          else
+            isect = lhs_to;
+        }
+      }
+    }
+    else
+    {
+      if (lhs_from.lon < lhs_to.lon)
+      {
+        if (rhs_from.lon < rhs_to.lon)
+        {
+          // Segments are non-overlapping
+          if (lhs_to.lon < rhs_from.lon || rhs_to.lon < lhs_from.lon)
+            return false;
+          
+          if (lhs_from.lon < rhs_from.lon)
+            isect = rhs_from;
+          else
+            isect = lhs_from;
+        }
+        else
+        {
+          // Segments are non-overlapping
+          if (lhs_to.lon < rhs_to.lon || rhs_from.lon < lhs_from.lon)
+            return false;
+          
+          if (lhs_from.lon < rhs_to.lon)
+            isect = rhs_to;
+          else
+            isect = lhs_from;
+        }
+      }
+      else
+      {
+        if (rhs_from.lon < rhs_to.lon)
+        {
+          // Segments are non-overlapping
+          if (lhs_from.lon < rhs_from.lon || rhs_to.lon < lhs_to.lon)
+            return false;
+          
+          if (lhs_to.lon < rhs_from.lon)
+            isect = rhs_from;
+          else
+            isect = lhs_to;
+        }
+        else
+        {
+          // Segments are non-overlapping
+          if (lhs_from.lon < rhs_to.lon || rhs_from.lon < lhs_to.lon)
+            return false;
+          
+          if (lhs_to.lon < rhs_to.lon)
+            isect = rhs_to;
+          else
+            isect = lhs_to;
+        }
+      }
+    }
+    return true;
+  }
+  
+  double x = (rfmrt_lon * rfmlt_lat - rfmrt_lat * rfmlt_lon)/det;
+  double y = (lfmlt_lat * rfmlt_lon - lfmlt_lon * rfmlt_lat)/det;
+  
+  if (x <= 0 || x >= 1 || y <= 0 || y >= 1)
+    return false;
+  
+  isect.lat = lhs_to.lat + x * lfmlt_lat;
+  isect.lon = lhs_to.lon + x * lfmlt_lon;
+  return true;
+}
+
+
+#include <iomanip>
+#include <iostream>
 RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : bounds(0)
 {
   std::vector< std::vector< Point_Double > > input(*rhs.get_multiline_geometry());
@@ -586,7 +755,7 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
     gap_positions.push_back(all_segments.size());
   }
   
-  Four_Field_Index four_field_idx;
+  std::map< uint32, std::vector< unsigned int > > segments_per_idx;
 
   std::vector< unsigned int >::const_iterator gap_it = gap_positions.begin();
   for (unsigned int i = 1; i < all_segments.size(); ++i)
@@ -597,8 +766,24 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
       continue;
     }
     
-    four_field_idx.add_segment(all_segments[i-1].lat, all_segments[i-1].lon,
-        all_segments[i].lat, all_segments[i].lon);
+    add_segment(segments_per_idx, all_segments[i-1], all_segments[i], i-1);
+  }
+  
+  Point_Double isect(100, 0);
+  for (std::map< uint32, std::vector< unsigned int > >::const_iterator idx_it = segments_per_idx.begin();
+      idx_it != segments_per_idx.end(); ++idx_it)
+  {
+    for (unsigned int i = 1; i < idx_it->second.size(); ++i)
+    {
+      for (unsigned int j = 0; j < i; ++j)
+      {
+        if (try_intersect(all_segments[idx_it->second[j]], all_segments[idx_it->second[j]+1],
+              all_segments[idx_it->second[i]], all_segments[idx_it->second[i]+1], isect))
+          std::cerr<<"Self-intersection: "<<std::fixed<<std::setprecision(8)<<isect.lat<<' '<<isect.lon<<'\n';
+      }
+    }
+    
+    //TODO: 4er/6er-Kreuzungen in Knoten
   }
 
   gap_it = gap_positions.begin();
