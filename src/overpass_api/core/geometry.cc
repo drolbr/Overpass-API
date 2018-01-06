@@ -592,6 +592,57 @@ void add_segment(std::map< uint32, std::vector< unsigned int > >& segments_per_i
 }
 
 
+void replace_segment(std::vector< unsigned int >& segments, unsigned int old_pos, unsigned int new_pos)
+{
+  for (std::vector< unsigned int >::iterator it = segments.begin(); it != segments.end(); ++it)
+  {
+    if (*it == old_pos)
+      *it = new_pos;
+  }
+}
+
+
+void replace_segment(std::map< uint32, std::vector< unsigned int > >& segments_per_idx,
+    const Point_Double& from, const Point_Double& via, const Point_Double& to,
+    unsigned int old_pos, unsigned int new_pos)
+{
+  uint32 lhs_ilat = ::ilat(from.lat);
+  int32 lhs_ilon = ::ilon(from.lon);
+  uint32 rhs_ilat = ::ilat(to.lat);
+  int32 rhs_ilon = ::ilon(to.lon);
+  uint32 via_ilat = ::ilat(via.lat);
+  int32 via_ilon = ::ilon(via.lon);
+  
+  // The upper part is the one that possibly crosses the index boundary
+  if (via_ilat == lhs_ilat && via_ilon == lhs_ilon)
+    ++new_pos;
+  
+  replace_segment(segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)], old_pos, new_pos);
+  if ((lhs_ilon & 0xffff0000) != (rhs_ilon & 0xffff0000))
+    replace_segment(segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)], old_pos, new_pos);
+  if ((lhs_ilat & 0xffff0000) != (rhs_ilat & 0xffff0000))
+  {
+    replace_segment(segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)], old_pos, new_pos);
+    if ((lhs_ilon & 0xffff0000) != (rhs_ilon & 0xffff0000))
+    {
+      if ((via_ilat == lhs_ilat && via_ilon == lhs_ilon) || (via_ilat == rhs_ilat && via_ilon == rhs_ilon))
+        replace_segment(segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)], old_pos, new_pos);
+      else
+      {
+        segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)].push_back(new_pos+1);
+        segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)].push_back(new_pos+1);
+        replace_segment(segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)], old_pos, new_pos+1);
+      }
+    }
+  }
+  
+  if (via_ilat == lhs_ilat && via_ilon == lhs_ilon)
+    segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)].push_back(new_pos);
+  else if (via_ilat == rhs_ilat && via_ilon == rhs_ilon)
+    segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)].push_back(new_pos+1);
+}
+
+
 bool try_intersect(const Point_Double& lhs_from, const Point_Double& lhs_to,
     const Point_Double& rhs_from, const Point_Double& rhs_to, Point_Double& isect)
 {
@@ -728,7 +779,7 @@ bool try_intersect(const Point_Double& lhs_from, const Point_Double& lhs_to,
   double x = (rfmrt_lon * rfmlt_lat - rfmrt_lat * rfmlt_lon)/det;
   double y = (lfmlt_lat * rfmlt_lon - lfmlt_lon * rfmlt_lat)/det;
   
-  if (x <= 0 || x >= 1 || y <= 0 || y >= 1)
+  if (x <= -1e-7 || x >= 1+1e-7 || y <= -1e-7 || y >= 1+1e-7)
     return false;
   
   isect.lat = lhs_to.lat + x * lfmlt_lat;
@@ -779,16 +830,10 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
       add_segment(segments_per_idx, all_segments[i-1], all_segments[i], i-1);
   }
   
-  std::vector< Linestring_Divertion > divertions;
-  for (int i = 1; i < (int)gap_positions.size(); ++i)
-    divertions.push_back(Linestring_Divertion(
-        gap_positions[i]-1, gap_positions[i-1], all_segments[gap_positions[i-1]]));
-  
   Point_Double isect(100, 0);
-  for (std::map< uint32, std::vector< unsigned int > >::const_iterator idx_it = segments_per_idx.begin();
+  for (std::map< uint32, std::vector< unsigned int > >::iterator idx_it = segments_per_idx.begin();
       idx_it != segments_per_idx.end(); ++idx_it)
   {
-    unsigned int start_size = divertions.size();
     for (unsigned int i = 1; i < idx_it->second.size(); ++i)
     {
       for (unsigned int j = 0; j < i; ++j)
@@ -796,30 +841,70 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
         if (try_intersect(all_segments[idx_it->second[j]], all_segments[idx_it->second[j]+1],
               all_segments[idx_it->second[i]], all_segments[idx_it->second[i]+1], isect))
         {
-          bool already_found = false;
-          for (unsigned int k = start_size; k < divertions.size(); ++k)
+          uint32 lhs_ilat = ::ilat(isect.lat);
+          int32 lhs_ilon = ::ilon(isect.lon);
+          
+          if (((lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)) == idx_it->first)
+            // Ensure that the same intersection is processed only once
           {
-            if (divertions[k].isect == isect)
+            std::cerr<<"A "<<idx_it->second[i]<<' '<<std::fixed<<std::setprecision(14)<<idx_it->second[j]<<' '<<isect.lat<<' '<<isect.lon<<'\n';
+            
+            // Avoid rounding artifacts
+            for (unsigned int k = 0; k < idx_it->second.size(); ++k)
             {
-              std::cerr<<"Found again: "<<isect.lat<<' '<<isect.lon<<' '
-                  <<idx_it->second[j]<<' '<<idx_it->second[i]<<'\n';
-              //TODO: 4er/6er-Kreuzungen in Knoten
-              already_found = true;
+              if (fabs(isect.lat - all_segments[idx_it->second[k]].lat) < 1e-7
+                  && fabs(isect.lon - all_segments[idx_it->second[k]].lon) < 1e-7)
+              {
+                isect.lat = all_segments[idx_it->second[k]].lat;
+                isect.lon = all_segments[idx_it->second[k]].lon;
+              }
+              if (fabs(isect.lat - all_segments[idx_it->second[k]+1].lat) < 1e-7
+                  && fabs(isect.lon - all_segments[idx_it->second[k]+1].lon) < 1e-7)
+              {
+                isect.lat = all_segments[idx_it->second[k]+1].lat;
+                isect.lon = all_segments[idx_it->second[k]+1].lon;
+              }
+            }
+            
+            std::cerr<<"B "<<idx_it->second[i]<<' '<<std::fixed<<std::setprecision(14)<<idx_it->second[j]<<' '<<isect.lat<<' '<<isect.lon<<'\n';
+            
+            if (isect != all_segments[idx_it->second[j]] && isect != all_segments[idx_it->second[j]+1])
+            {
+              all_segments.push_back(all_segments[idx_it->second[j]]);
+              all_segments.push_back(isect);
+              all_segments.push_back(all_segments[idx_it->second[j]+1]);
+              gap_positions.insert(std::lower_bound(
+                  gap_positions.begin(), gap_positions.end(), idx_it->second[j]+1), idx_it->second[j]+1);
+              gap_positions.push_back(all_segments.size());
+              
+              replace_segment(segments_per_idx, all_segments[idx_it->second[j]], isect,
+                  all_segments[idx_it->second[j]+1], idx_it->second[j], all_segments.size()-3);
+            }
+            
+            if (isect != all_segments[idx_it->second[i]] && isect != all_segments[idx_it->second[i]+1])
+            {
+              all_segments.push_back(all_segments[idx_it->second[i]]);
+              all_segments.push_back(isect);
+              all_segments.push_back(all_segments[idx_it->second[i]+1]);
+              gap_positions.insert(std::lower_bound(
+                  gap_positions.begin(), gap_positions.end(), idx_it->second[i]+1), idx_it->second[i]+1);
+              gap_positions.push_back(all_segments.size());
+              
+              replace_segment(segments_per_idx, all_segments[idx_it->second[i]], isect,
+                  all_segments[idx_it->second[i]+1], idx_it->second[i], all_segments.size()-3);
             }
           }
-          // Semi-Kombis, Kombis
-          // gemeinsame Segmente: versetzt, innere(s) Segment(e)
-          // echte gemeinsame Segmente
           
-          if (!already_found)
-          {
-            divertions.push_back(Linestring_Divertion(idx_it->second[j], idx_it->second[i]+1, isect));
-            divertions.push_back(Linestring_Divertion(idx_it->second[i], idx_it->second[j]+1, isect));
-          }
+          //TODO: check and track common segments
         }
       }
     }
   }
+  
+  std::vector< Linestring_Divertion > divertions;
+  for (int i = 1; i < (int)gap_positions.size(); ++i)
+    divertions.push_back(Linestring_Divertion(
+        gap_positions[i]-1, gap_positions[i-1], all_segments[gap_positions[i-1]]));
   
   std::sort(divertions.begin(), divertions.end());
   for (std::vector< Linestring_Divertion >::const_iterator it = divertions.begin(); it != divertions.end(); ++it)

@@ -1067,6 +1067,10 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings,
   add_point(lat_2, lon_2, subs, stmt_cont);
   add_point(lat_3, lon_3, subs, stmt_cont);
   add_point(lat_4, lon_4, subs, stmt_cont);
+  if (!lat_5.empty())
+    add_point(lat_5, lon_5, subs, stmt_cont);
+  if (!lat_6.empty())
+    add_point(lat_6, lon_6, subs, stmt_cont);
 
   stmt.execute(rman);
   Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
@@ -1105,75 +1109,93 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.004", "7.1004",
-      "51.006", "7.1004",
-      "51.004", "7.1006",
-      "51.006", "7.1006");
+      "51.004", "7.004",
+      "51.006", "7.004",
+      "51.004", "7.006",
+      "51.006", "7.006");
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.104", "7.1005",
-      "51.106", "7.1005",
-      "51.105", "7.1006",
-      "51.105", "7.1004");
+      "51.104", "7.005",
+      "51.106", "7.005",
+      "51.105", "7.006",
+      "51.105", "7.004");
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.203", "7.1004",
-      "51.207", "7.1006",
-      "51.206", "7.1007",
-      "51.204", "7.1003");
+      "51.203", "7.004",
+      "51.207", "7.006",
+      "51.206", "7.007",
+      "51.204", "7.003");
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.004", "7.1004",
-      "51.006", "7.1004",
-      "51.005", "7.1005",
-      "51.004", "7.1006",
-      "51.006", "7.1006");
+      "51.004", "7.004",
+      "51.006", "7.004",
+      "51.005", "7.005",
+      "51.004", "7.006",
+      "51.006", "7.006");
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.104", "7.1005",
-      "51.106", "7.1005",
-      "51.105", "7.1006",
-      "51.005", "7.1005",
-      "51.105", "7.1004");
+      "51.104", "7.005",
+      "51.106", "7.005",
+      "51.105", "7.006",
+      "51.105", "7.005",
+      "51.105", "7.004");
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.203", "7.1004",
-      "51.207", "7.1006",
-      "51.206", "7.1007",
-      "51.005", "7.1005",
-      "51.204", "7.1003");
+      "51.203", "7.004",
+      "51.207", "7.006",
+      "51.206", "7.007",
+      "51.205", "7.005",
+      "51.204", "7.003");
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.004", "7.1004",
-      "51.006", "7.1004",
-      "51.005", "7.1005",
-      "51.004", "7.1006",
-      "51.006", "7.1006",
-      "51.005", "7.1005");
+      "51.004", "7.004",
+      "51.006", "7.004",
+      "51.005", "7.005",
+      "51.004", "7.006",
+      "51.006", "7.006",
+      "51.005", "7.005");
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.104", "7.1005",
-      "51.005", "7.1005",
-      "51.106", "7.1005",
-      "51.105", "7.1006",
-      "51.005", "7.1005",
-      "51.105", "7.1004");
+      "51.104", "7.005",
+      "51.105", "7.005",
+      "51.106", "7.005",
+      "51.105", "7.006",
+      "51.105", "7.005",
+      "51.105", "7.004");
   
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
-      "51.203", "7.1004",
-      "51.005", "7.1005",
-      "51.207", "7.1006",
-      "51.206", "7.1007",
-      "51.005", "7.1005",
-      "51.204", "7.1003");
+      "51.203", "7.004",
+      "51.205", "7.005",
+      "51.207", "7.006",
+      "51.206", "7.007",
+      "51.205", "7.005",
+      "51.204", "7.003");
+  
+  // Both intersections within the same index bucket
+  make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
+      "51.005", "7.003",
+      "51.006", "7.004",
+      "51.004", "7.005",
+      "51.006", "7.006",
+      "51.005", "7.007");
+  
+  // Two intersections in different index buckets
+  make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
+      "51.005", "7.004",
+      "51.006", "7.005",
+      "51.004", "7.006",
+      "51.006", "7.007",
+      "51.005", "7.008");
 }
 
 
