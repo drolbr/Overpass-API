@@ -1049,11 +1049,13 @@ void make_polygon_date_line_test(Parsed_Query& global_settings, Transaction& tra
 
 
 void make_polygon_intersection_test_1(Parsed_Query& global_settings,
+    std::string type, Resource_Manager& rman, Statement_Container& stmt_cont,
     const std::string& lat_1, const std::string& lon_1,
     const std::string& lat_2, const std::string& lon_2,
     const std::string& lat_3, const std::string& lon_3,
     const std::string& lat_4, const std::string& lon_4,
-    std::string type, Resource_Manager& rman, Statement_Container& stmt_cont)
+    const std::string& lat_5 = "", const std::string& lon_5 = "",
+    const std::string& lat_6 = "", const std::string& lon_6 = "")
 {
   Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
 
@@ -1095,32 +1097,91 @@ void make_polygon_intersection_test_2(Parsed_Query& global_settings,
 }
 
 
-void make_polygon_intersection_test(Parsed_Query& global_settings, Transaction& transaction,
+void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
   
   make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
       "51.004", "7.1004",
       "51.006", "7.1004",
       "51.004", "7.1006",
-      "51.006", "7.1006",
-      type, rman, stmt_cont);
+      "51.006", "7.1006");
   
   make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
       "51.104", "7.1005",
       "51.106", "7.1005",
       "51.105", "7.1006",
-      "51.105", "7.1004",
-      type, rman, stmt_cont);
+      "51.105", "7.1004");
   
   make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
       "51.203", "7.1004",
       "51.207", "7.1006",
       "51.206", "7.1007",
-      "51.204", "7.1003",
-      type, rman, stmt_cont);
+      "51.204", "7.1003");
+  
+  make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
+      "51.004", "7.1004",
+      "51.006", "7.1004",
+      "51.005", "7.1005",
+      "51.004", "7.1006",
+      "51.006", "7.1006");
+  
+  make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
+      "51.104", "7.1005",
+      "51.106", "7.1005",
+      "51.105", "7.1006",
+      "51.005", "7.1005",
+      "51.105", "7.1004");
+  
+  make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
+      "51.203", "7.1004",
+      "51.207", "7.1006",
+      "51.206", "7.1007",
+      "51.005", "7.1005",
+      "51.204", "7.1003");
+  
+  make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
+      "51.004", "7.1004",
+      "51.006", "7.1004",
+      "51.005", "7.1005",
+      "51.004", "7.1006",
+      "51.006", "7.1006",
+      "51.005", "7.1005");
+  
+  make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
+      "51.104", "7.1005",
+      "51.005", "7.1005",
+      "51.106", "7.1005",
+      "51.105", "7.1006",
+      "51.005", "7.1005",
+      "51.105", "7.1004");
+  
+  make_polygon_intersection_test_1(global_settings,
+      type, rman, stmt_cont,
+      "51.203", "7.1004",
+      "51.005", "7.1005",
+      "51.207", "7.1006",
+      "51.206", "7.1007",
+      "51.005", "7.1005",
+      "51.204", "7.1003");
+}
+
+
+void make_polygon_intersection_test_2(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  Statement_Container stmt_cont(global_settings);
   
   make_polygon_intersection_test_2(global_settings,
       "7.001", "7.002", "7.003", "7.004", type, rman, stmt_cont);
@@ -1411,7 +1472,9 @@ int main(int argc, char* args[])
     if ((test_to_execute == "") || (test_to_execute == "107"))
       make_polygon_date_line_test(global_settings, transaction, "make-polygon", global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "108"))
-      make_polygon_intersection_test(global_settings, transaction, "make-polygon", global_node_offset);
+      make_polygon_intersection_test_1(global_settings, transaction, "make-polygon", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "109"))
+      make_polygon_intersection_test_2(global_settings, transaction, "make-polygon", global_node_offset);
 
     std::cout<<"</osm>\n";
   }

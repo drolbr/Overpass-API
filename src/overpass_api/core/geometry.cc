@@ -737,6 +737,19 @@ bool try_intersect(const Point_Double& lhs_from, const Point_Double& lhs_to,
 }
 
 
+struct Linestring_Divertion
+{
+  Linestring_Divertion(unsigned int from_idx_, unsigned int to_idx_, const Point_Double& isect_)
+      : from_idx(from_idx_), to_idx(to_idx_), isect(isect_) {}
+  
+  unsigned int from_idx;
+  unsigned int to_idx;
+  Point_Double isect;
+  
+  bool operator<(const Linestring_Divertion& rhs) const { return from_idx < rhs.from_idx; }
+};
+
+
 #include <iomanip>
 #include <iostream>
 RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : bounds(0)
@@ -758,44 +771,112 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
   std::map< uint32, std::vector< unsigned int > > segments_per_idx;
 
   std::vector< unsigned int >::const_iterator gap_it = gap_positions.begin();
-  for (unsigned int i = 1; i < all_segments.size(); ++i)
+  for (unsigned int i = 0; i < all_segments.size(); ++i)
   {
     if (*gap_it == i)
-    {
       ++gap_it;
-      continue;
-    }
-    
-    add_segment(segments_per_idx, all_segments[i-1], all_segments[i], i-1);
+    else
+      add_segment(segments_per_idx, all_segments[i-1], all_segments[i], i-1);
   }
+  
+  std::vector< Linestring_Divertion > divertions;
+  for (int i = 1; i < (int)gap_positions.size(); ++i)
+    divertions.push_back(Linestring_Divertion(
+        gap_positions[i]-1, gap_positions[i-1], all_segments[gap_positions[i-1]]));
   
   Point_Double isect(100, 0);
   for (std::map< uint32, std::vector< unsigned int > >::const_iterator idx_it = segments_per_idx.begin();
       idx_it != segments_per_idx.end(); ++idx_it)
   {
+    unsigned int start_size = divertions.size();
     for (unsigned int i = 1; i < idx_it->second.size(); ++i)
     {
       for (unsigned int j = 0; j < i; ++j)
       {
         if (try_intersect(all_segments[idx_it->second[j]], all_segments[idx_it->second[j]+1],
               all_segments[idx_it->second[i]], all_segments[idx_it->second[i]+1], isect))
-          std::cerr<<"Self-intersection: "<<std::fixed<<std::setprecision(8)<<isect.lat<<' '<<isect.lon<<'\n';
+        {
+          bool already_found = false;
+          for (unsigned int k = start_size; k < divertions.size(); ++k)
+          {
+            if (divertions[k].isect == isect)
+            {
+              std::cerr<<"Found again: "<<isect.lat<<' '<<isect.lon<<' '
+                  <<idx_it->second[j]<<' '<<idx_it->second[i]<<'\n';
+              //TODO: 4er/6er-Kreuzungen in Knoten
+              already_found = true;
+            }
+          }
+          // Semi-Kombis, Kombis
+          // gemeinsame Segmente: versetzt, innere(s) Segment(e)
+          // echte gemeinsame Segmente
+          
+          if (!already_found)
+          {
+            divertions.push_back(Linestring_Divertion(idx_it->second[j], idx_it->second[i]+1, isect));
+            divertions.push_back(Linestring_Divertion(idx_it->second[i], idx_it->second[j]+1, isect));
+          }
+        }
       }
     }
-    
-    //TODO: 4er/6er-Kreuzungen in Knoten
   }
-
-  gap_it = gap_positions.begin();
-  for (unsigned int i = 0; i < all_segments.size(); ++i)
+  
+  std::sort(divertions.begin(), divertions.end());
+  for (std::vector< Linestring_Divertion >::const_iterator it = divertions.begin(); it != divertions.end(); ++it)
+    std::cerr<<"Div: "<<it->from_idx<<' '<<it->to_idx<<' '<<it->isect.lat<<' '<<it->isect.lon<<'\n';
+  
+  for (std::vector< Linestring_Divertion >::iterator it = divertions.begin(); it != divertions.end(); ++it)
   {
-    if (*gap_it == i)
-    {
-      ++gap_it;
-      linestrings.push_back(std::vector< Point_Double >());
-    }
+    if (it->from_idx <= it->to_idx || it->from_idx == all_segments.size())
+      continue;
     
-    linestrings.back().push_back(all_segments[i]);
+    linestrings.push_back(std::vector< Point_Double >());
+    std::vector< Point_Double >& cur_result = linestrings.back();
+    
+    std::vector< Linestring_Divertion >::iterator jump_it = it;
+    while (jump_it != divertions.begin() && jump_it->from_idx > it->to_idx)
+      --jump_it;
+    while (jump_it->from_idx < it->to_idx || jump_it->from_idx == all_segments.size())
+      ++jump_it;
+    
+    if (it->isect != all_segments[it->to_idx])
+      cur_result.push_back(it->isect);
+    
+    unsigned int idx = it->to_idx;
+    while (idx != it->from_idx)
+    {
+      if (idx == jump_it->from_idx)
+      {
+        if (all_segments[idx] != all_segments[jump_it->to_idx])
+          cur_result.push_back(all_segments[idx]);
+        if (jump_it->isect != all_segments[jump_it->from_idx]
+            && jump_it->isect != all_segments[jump_it->to_idx])
+          cur_result.push_back(jump_it->isect);
+        
+        idx = jump_it->to_idx;
+        if (jump_it->to_idx < jump_it->from_idx)
+        {
+          jump_it->from_idx = all_segments.size();
+          while (jump_it != divertions.begin() && jump_it->from_idx > idx)
+            --jump_it;
+          while (jump_it->from_idx < idx || jump_it->from_idx == all_segments.size())
+            ++jump_it;
+        }
+        else
+        {
+          while (jump_it->from_idx < idx || jump_it->from_idx == all_segments.size())
+            ++jump_it;
+        }
+      }
+      else
+      {
+        cur_result.push_back(all_segments[idx]);
+        ++idx;
+      }
+    }
+    cur_result.push_back(all_segments[idx]);
+    if (cur_result.front() != cur_result.back())
+      cur_result.push_back(cur_result.front());
   }
 }
 
