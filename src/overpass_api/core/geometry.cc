@@ -606,40 +606,40 @@ void replace_segment(std::map< uint32, std::vector< unsigned int > >& segments_p
     const Point_Double& from, const Point_Double& via, const Point_Double& to,
     unsigned int old_pos, unsigned int new_pos)
 {
-  uint32 lhs_ilat = ::ilat(from.lat);
-  int32 lhs_ilon = ::ilon(from.lon);
-  uint32 rhs_ilat = ::ilat(to.lat);
-  int32 rhs_ilon = ::ilon(to.lon);
-  uint32 via_ilat = ::ilat(via.lat);
-  int32 via_ilon = ::ilon(via.lon);
+  uint32 lhs_ilat = ::ilat(from.lat) & 0xffff0000;
+  int32 lhs_ilon = ::ilon(from.lon) & 0xffff0000;
+  uint32 rhs_ilat = ::ilat(to.lat) & 0xffff0000;
+  int32 rhs_ilon = ::ilon(to.lon) & 0xffff0000;
+  uint32 via_ilat = ::ilat(via.lat) & 0xffff0000;
+  int32 via_ilon = ::ilon(via.lon) & 0xffff0000;
   
   // The upper part is the one that possibly crosses the index boundary
   if (via_ilat == lhs_ilat && via_ilon == lhs_ilon)
     ++new_pos;
   
-  replace_segment(segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)], old_pos, new_pos);
-  if ((lhs_ilon & 0xffff0000) != (rhs_ilon & 0xffff0000))
-    replace_segment(segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)], old_pos, new_pos);
-  if ((lhs_ilat & 0xffff0000) != (rhs_ilat & 0xffff0000))
+  replace_segment(segments_per_idx[lhs_ilat | (uint32(lhs_ilon)>>16)], old_pos, new_pos);
+  if (lhs_ilon != rhs_ilon)
+    replace_segment(segments_per_idx[lhs_ilat | (uint32(rhs_ilon)>>16)], old_pos, new_pos);
+  if (lhs_ilat != rhs_ilat)
   {
-    replace_segment(segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)], old_pos, new_pos);
-    if ((lhs_ilon & 0xffff0000) != (rhs_ilon & 0xffff0000))
+    replace_segment(segments_per_idx[rhs_ilat | (uint32(lhs_ilon)>>16)], old_pos, new_pos);
+    if (lhs_ilon != rhs_ilon)
     {
       if ((via_ilat == lhs_ilat && via_ilon == lhs_ilon) || (via_ilat == rhs_ilat && via_ilon == rhs_ilon))
-        replace_segment(segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)], old_pos, new_pos);
+        replace_segment(segments_per_idx[rhs_ilat | (uint32(rhs_ilon)>>16)], old_pos, new_pos);
       else
       {
-        segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)].push_back(new_pos+1);
-        segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)].push_back(new_pos+1);
-        replace_segment(segments_per_idx[(rhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)], old_pos, new_pos+1);
+        segments_per_idx[lhs_ilat | (uint32(rhs_ilon)>>16)].push_back(new_pos+1);
+        segments_per_idx[rhs_ilat | (uint32(lhs_ilon)>>16)].push_back(new_pos+1);
+        replace_segment(segments_per_idx[rhs_ilat | (uint32(rhs_ilon)>>16)], old_pos, new_pos+1);
       }
     }
   }
   
   if (via_ilat == lhs_ilat && via_ilon == lhs_ilon)
-    segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)].push_back(new_pos);
+    segments_per_idx[lhs_ilat | (uint32(lhs_ilon)>>16)].push_back(new_pos-1);
   else if (via_ilat == rhs_ilat && via_ilon == rhs_ilon)
-    segments_per_idx[(lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)].push_back(new_pos+1);
+    segments_per_idx[rhs_ilat | (uint32(rhs_ilon)>>16)].push_back(new_pos+1);
 }
 
 
@@ -788,16 +788,47 @@ bool try_intersect(const Point_Double& lhs_from, const Point_Double& lhs_to,
 }
 
 
-struct Linestring_Divertion
+struct Idx_Per_Point_Double
 {
-  Linestring_Divertion(unsigned int from_idx_, unsigned int to_idx_, const Point_Double& isect_)
-      : from_idx(from_idx_), to_idx(to_idx_), isect(isect_) {}
+  Idx_Per_Point_Double(const Point_Double& pt_, unsigned int idx_, unsigned int remote_idx_)
+      : pt(pt_), idx(idx_), remote_idx(remote_idx_) {}
+  
+  Point_Double pt;
+  unsigned int idx;
+  unsigned int remote_idx;
+  
+  bool operator<(const Idx_Per_Point_Double& rhs) const
+  {
+    if (pt.lat != rhs.pt.lat)
+      return pt.lat < rhs.pt.lat;
+    if (pt.lon != rhs.pt.lon)
+      return pt.lon < rhs.pt.lon;
+    
+    return idx < rhs.idx;
+  }
+};
+
+
+struct Line_Divertion
+{
+  Line_Divertion(const Idx_Per_Point_Double& from_pt, const Idx_Per_Point_Double& to_pt)
+      : from_idx(from_pt.idx), from_remote_idx(from_pt.remote_idx),
+      to_idx(to_pt.idx), to_remote_idx(to_pt.remote_idx) {}
+  Line_Divertion(unsigned int from_idx_, unsigned int to_idx_)
+      : from_idx(from_idx_), from_remote_idx(from_idx_), to_idx(to_idx_), to_remote_idx(to_idx_) {}
   
   unsigned int from_idx;
+  unsigned int from_remote_idx;
   unsigned int to_idx;
-  Point_Double isect;
+  unsigned int to_remote_idx;
   
-  bool operator<(const Linestring_Divertion& rhs) const { return from_idx < rhs.from_idx; }
+  bool operator<(const Line_Divertion& rhs) const
+  {
+    if (from_idx != rhs.from_idx)
+      return from_idx < rhs.from_idx;
+    
+    return from_remote_idx < rhs.from_remote_idx;
+  }
 };
 
 
@@ -824,11 +855,23 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
   std::vector< unsigned int >::const_iterator gap_it = gap_positions.begin();
   for (unsigned int i = 0; i < all_segments.size(); ++i)
   {
+//     std::cerr<<"Pt "<<i<<": "<<all_segments[i].lat<<' '<<all_segments[i].lon<<'\n';
+        
     if (*gap_it == i)
       ++gap_it;
     else
       add_segment(segments_per_idx, all_segments[i-1], all_segments[i], i-1);
   }
+  
+//   for (std::map< uint32, std::vector< unsigned int > >::const_iterator idx_it = segments_per_idx.begin();
+//       idx_it != segments_per_idx.end(); ++idx_it)
+//   {
+//     std::cerr<<"Idx: ";
+//     for (std::vector< unsigned int >::const_iterator seg_it = idx_it->second.begin();
+//         seg_it != idx_it->second.end(); ++seg_it)
+//       std::cerr<<' '<<*seg_it;
+//     std::cerr<<'\n';
+//   }
   
   Point_Double isect(100, 0);
   for (std::map< uint32, std::vector< unsigned int > >::iterator idx_it = segments_per_idx.begin();
@@ -847,7 +890,7 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
           if (((lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)) == idx_it->first)
             // Ensure that the same intersection is processed only once
           {
-            std::cerr<<"A "<<idx_it->second[i]<<' '<<std::fixed<<std::setprecision(14)<<idx_it->second[j]<<' '<<isect.lat<<' '<<isect.lon<<'\n';
+//             std::cerr<<"A "<<idx_it->second[i]<<' '<<std::fixed<<std::setprecision(14)<<idx_it->second[j]<<' '<<isect.lat<<' '<<isect.lon<<'\n';
             
             // Avoid rounding artifacts
             for (unsigned int k = 0; k < idx_it->second.size(); ++k)
@@ -866,7 +909,7 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
               }
             }
             
-            std::cerr<<"B "<<idx_it->second[i]<<' '<<std::fixed<<std::setprecision(14)<<idx_it->second[j]<<' '<<isect.lat<<' '<<isect.lon<<'\n';
+//             std::cerr<<"B "<<idx_it->second[i]<<' '<<std::fixed<<std::setprecision(14)<<idx_it->second[j]<<' '<<isect.lat<<' '<<isect.lon<<'\n';
             
             if (isect != all_segments[idx_it->second[j]] && isect != all_segments[idx_it->second[j]+1])
             {
@@ -901,67 +944,119 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
     }
   }
   
-  std::vector< Linestring_Divertion > divertions;
-  for (int i = 1; i < (int)gap_positions.size(); ++i)
-    divertions.push_back(Linestring_Divertion(
-        gap_positions[i]-1, gap_positions[i-1], all_segments[gap_positions[i-1]]));
+  std::vector< Line_Divertion > divertions;
   
-  std::sort(divertions.begin(), divertions.end());
-  for (std::vector< Linestring_Divertion >::const_iterator it = divertions.begin(); it != divertions.end(); ++it)
-    std::cerr<<"Div: "<<it->from_idx<<' '<<it->to_idx<<' '<<it->isect.lat<<' '<<it->isect.lon<<'\n';
-  
-  for (std::vector< Linestring_Divertion >::iterator it = divertions.begin(); it != divertions.end(); ++it)
+  for (unsigned int i = 0; i < gap_positions.size()-1; ++i)
   {
-    if (it->from_idx <= it->to_idx || it->from_idx == all_segments.size())
+    divertions.push_back(Line_Divertion(gap_positions[i], gap_positions[i]-1));
+    divertions.push_back(Line_Divertion(gap_positions[i]-1, gap_positions[i]));
+  }
+  
+  for (std::map< uint32, std::vector< unsigned int > >::const_iterator idx_it = segments_per_idx.begin();
+      idx_it != segments_per_idx.end(); ++idx_it)
+  {
+    std::vector< Idx_Per_Point_Double > pos_per_pt;
+    
+    for (std::vector< unsigned int >::const_iterator seg_it = idx_it->second.begin();
+        seg_it != idx_it->second.end(); ++seg_it)
+    {
+      uint32 lhs_ilat = ::ilat(all_segments[*seg_it].lat);
+      int32 lhs_ilon = ::ilon(all_segments[*seg_it].lon);
+      if (((lhs_ilat & 0xffff0000) | (uint32(lhs_ilon)>>16)) == idx_it->first)
+        pos_per_pt.push_back(Idx_Per_Point_Double(all_segments[*seg_it], *seg_it, *seg_it+1));
+      
+      uint32 rhs_ilat = ::ilat(all_segments[*seg_it+1].lat);
+      int32 rhs_ilon = ::ilon(all_segments[*seg_it+1].lon);
+      if (((rhs_ilat & 0xffff0000) | (uint32(rhs_ilon)>>16)) == idx_it->first)
+        pos_per_pt.push_back(Idx_Per_Point_Double(all_segments[*seg_it+1], *seg_it+1, *seg_it));
+    }
+    
+    if (pos_per_pt.empty())
       continue;
     
-    linestrings.push_back(std::vector< Point_Double >());
-    std::vector< Point_Double >& cur_result = linestrings.back();
+    std::sort(pos_per_pt.begin(), pos_per_pt.end());
     
-    std::vector< Linestring_Divertion >::iterator jump_it = it;
-    while (jump_it != divertions.begin() && jump_it->from_idx > it->to_idx)
-      --jump_it;
-    while (jump_it->from_idx < it->to_idx || jump_it->from_idx == all_segments.size())
-      ++jump_it;
-    
-    if (it->isect != all_segments[it->to_idx])
-      cur_result.push_back(it->isect);
-    
-    unsigned int idx = it->to_idx;
-    while (idx != it->from_idx)
+    unsigned int same_since = 0;
+    unsigned int i = 0;
+    while (i <= pos_per_pt.size())
     {
-      if (idx == jump_it->from_idx)
+      if (i == pos_per_pt.size() || pos_per_pt[i].pt != pos_per_pt[same_since].pt)
       {
-        if (all_segments[idx] != all_segments[jump_it->to_idx])
-          cur_result.push_back(all_segments[idx]);
-        if (jump_it->isect != all_segments[jump_it->from_idx]
-            && jump_it->isect != all_segments[jump_it->to_idx])
-          cur_result.push_back(jump_it->isect);
-        
-        idx = jump_it->to_idx;
-        if (jump_it->to_idx < jump_it->from_idx)
+        if (i - same_since == 2)
         {
-          jump_it->from_idx = all_segments.size();
-          while (jump_it != divertions.begin() && jump_it->from_idx > idx)
-            --jump_it;
-          while (jump_it->from_idx < idx || jump_it->from_idx == all_segments.size())
-            ++jump_it;
+          divertions.push_back(Line_Divertion(pos_per_pt[same_since], pos_per_pt[same_since+1]));
+          divertions.push_back(Line_Divertion(pos_per_pt[same_since+1], pos_per_pt[same_since]));
         }
         else
         {
-          while (jump_it->from_idx < idx || jump_it->from_idx == all_segments.size())
-            ++jump_it;
+          std::vector< std::pair< double, unsigned int > > line_per_gradient;
+          for (unsigned int j = same_since; j < i; ++j)
+            line_per_gradient.push_back(std::make_pair(
+                atan2(all_segments[pos_per_pt[j].remote_idx].lon - all_segments[pos_per_pt[j].idx].lon,
+                    all_segments[pos_per_pt[j].remote_idx].lat - all_segments[pos_per_pt[j].idx].lat),
+                j));
+            
+          std::sort(line_per_gradient.begin(), line_per_gradient.end());
+          
+          for (unsigned int j = 0; j < line_per_gradient.size(); j += 2)
+          {
+            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j].second],
+                pos_per_pt[line_per_gradient[j+1].second]));
+            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+1].second],
+                pos_per_pt[line_per_gradient[j].second]));
+          }
         }
+        
+        same_since = i;
       }
-      else
-      {
-        cur_result.push_back(all_segments[idx]);
-        ++idx;
-      }
+      ++i;
     }
-    cur_result.push_back(all_segments[idx]);
-    if (cur_result.front() != cur_result.back())
-      cur_result.push_back(cur_result.front());
+  }
+  
+  std::sort(divertions.begin(), divertions.end());
+  
+//   for (std::vector< Line_Divertion >::const_iterator it = divertions.begin(); it != divertions.end(); ++it)
+//     std::cerr<<"Div "<<it->from_remote_idx<<"->"<<it->from_idx<<" to "<<it->to_idx<<"->"<<it->to_remote_idx<<'\n';
+  
+  unsigned int pos = 0;
+  unsigned int count = 0;
+  
+  while (count < all_segments.size()+1-gap_positions.size())
+  {
+    while (divertions[2*pos + 1].from_remote_idx == pos)
+    {
+      ++pos;
+      if (pos == all_segments.size()-1)
+        pos = 0;
+    }
+//     std::cerr<<"A "<<pos<<'\n';
+    
+    linestrings.push_back(std::vector< Point_Double >());
+    std::vector< Point_Double >& cur_target = linestrings.back();
+    
+    int dir = 1;
+    while (divertions[2*pos + dir].from_remote_idx != pos + (dir-1)/2)
+    {
+//       std::cerr<<"B "<<pos<<' '<<dir<<'\n';
+      cur_target.push_back(all_segments[pos]);
+      ++count;
+      divertions[2*pos + dir].from_remote_idx = pos + (dir-1)/2;
+      
+      pos = (int)pos + dir;
+      
+      Line_Divertion& divertion = divertions[2*pos + (1-dir)/2];
+      dir = divertion.to_remote_idx - divertion.to_idx;
+      pos = divertion.to_idx;
+    }
+    
+    ++pos;
+    if (pos == all_segments.size()-1)
+      pos = 0;
+    
+    if (cur_target.empty())
+      linestrings.pop_back();
+    else
+      cur_target.push_back(cur_target.front());
   }
 }
 
