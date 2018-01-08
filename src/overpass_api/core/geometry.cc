@@ -1000,10 +1000,26 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
           
           for (unsigned int j = 0; j < line_per_gradient.size(); j += 2)
           {
-            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j].second],
-                pos_per_pt[line_per_gradient[j+1].second]));
-            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+1].second],
-                pos_per_pt[line_per_gradient[j].second]));
+            if (j+3 < line_per_gradient.size()
+                && line_per_gradient[j+1].first == line_per_gradient[j+2].first)
+            {
+              divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j].second],
+                  pos_per_pt[line_per_gradient[j+3].second]));
+              divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+1].second],
+                  pos_per_pt[line_per_gradient[j+2].second]));
+              divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+2].second],
+                  pos_per_pt[line_per_gradient[j+1].second]));
+              divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+3].second],
+                  pos_per_pt[line_per_gradient[j].second]));
+              j += 2;
+            }
+            else
+            {
+              divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j].second],
+                  pos_per_pt[line_per_gradient[j+1].second]));
+              divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+1].second],
+                  pos_per_pt[line_per_gradient[j].second]));
+            }
           }
         }
         

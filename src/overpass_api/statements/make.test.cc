@@ -996,30 +996,34 @@ void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
   
   if (num_points > 0)
-    add_point(num_points <= 4 ? "51.1" : "51.101", "7.1", subs, stmt_cont);
+    add_point("41.01", "0.01", subs, stmt_cont);
   if (num_points > 1)
-    add_point("51.4", "7.2", subs, stmt_cont);
+    add_point("41.04", "0.02", subs, stmt_cont);
   if (num_points > 2)
-    add_point("51.3", "7.3", subs, stmt_cont);
+    add_point("41.03", "0.03", subs, stmt_cont);
   
   if (num_points > 3)
   {
+    add_point("41.0", "0.001", subs, stmt_cont);
+    
     Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
-    add_fixed_stmt("41.4", pt, stmt_cont);
-    subs = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), pt);
-    add_fixed_stmt(".0000001", subs, stmt_cont);
-    subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), subs);
-    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), subs);
+    add_fixed_stmt("41.0", pt, stmt_cont);
+    Statement* times = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), pt);
+    add_fixed_stmt(".0000001", times, stmt_cont);
+    Statement* max = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), times);
+    stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), max);
+    
+    add_point("41.0", "0.0", subs, stmt_cont);
   }
   if (num_points > 4)
-    add_point("51.101", "7.1", subs, stmt_cont);
+    add_point("41.01", "0.01", subs, stmt_cont);
   
   if (num_points > 5)
   {
     subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
-    add_point("51.31", "7.2", subs, stmt_cont);
-    add_point("51.29", "7.19", subs, stmt_cont);
-    add_point("51.29", "7.21", subs, stmt_cont);
+    add_point("41.031", "0.02", subs, stmt_cont);
+    add_point("41.029", "0.019", subs, stmt_cont);
+    add_point("41.029", "0.021", subs, stmt_cont);
   }
 
   stmt.execute(rman);
