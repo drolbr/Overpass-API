@@ -1033,6 +1033,144 @@ void assemble_linestrings(
 }
 
 
+struct RHR_Polygon_Area_Oracle : Area_Oracle
+{
+  RHR_Polygon_Area_Oracle(
+      const std::vector< Point_Double >& all_segments_,
+      const std::map< uint32, std::vector< unsigned int > >& segments_per_idx_)
+      : all_segments(&all_segments_), segments_per_idx(&segments_per_idx_),
+      righthandness(all_segments_.size(), 0) {}
+  
+  virtual void build_area(bool sw_corner_inside, int32 value, bool* se_corner_inside, bool* nw_corner_inside);
+  
+private:
+  const std::vector< Point_Double >* all_segments;
+  const std::map< uint32, std::vector< unsigned int > >* segments_per_idx;
+  std::vector< char > righthandness;
+};
+
+
+void RHR_Polygon_Area_Oracle::build_area(
+    bool sw_corner_inside, int32 value, bool* se_corner_inside, bool* nw_corner_inside)
+{
+  std::map< uint32, std::vector< unsigned int > >::const_iterator spi_it = segments_per_idx->find(value);
+  if (spi_it == segments_per_idx->end())
+    return;
+  
+  // TODO: Care for the date line - the problem are tiles boundaries below -180
+  // and segments that have vastly different lons.
+  
+  // This functionality could be improved by better scaling algorithms
+  // But given that we should be able to keep the number of segments by splitting down to less than 10
+  // it is not expected to be worth the extra complexity.
+  for (std::vector< unsigned int >::const_iterator cand_it = spi_it->second.begin();
+      cand_it != spi_it->second.end(); ++cand_it)
+  {
+    if (righthandness[*cand_it])
+      continue;
+    
+    double middle_lat = ((*all_segments)[*cand_it].lat + (*all_segments)[*cand_it+1].lat)/2.;
+    double middle_lon = ((*all_segments)[*cand_it].lon + (*all_segments)[*cand_it+1].lon)/2.;
+    if ((::ilat(middle_lat) & 0xffff0000) != (value & 0xffff0000)
+        || (::ilon(middle_lon) & 0xffff0000) != (value<<16))
+      continue;
+    
+    bool middle_point_inside = false;
+    
+    for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+        seg_it != spi_it->second.end(); ++seg_it)
+    {
+      if ((*all_segments)[*seg_it].lon < middle_lon && middle_lon < (*all_segments)[*seg_it+1].lon
+          || (*all_segments)[*seg_it+1].lon < middle_lon && middle_lon < (*all_segments)[*seg_it].lon)
+      {
+        double isect_lat = (*all_segments)[*seg_it].lat
+            + ((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat)
+                *(middle_lon - (*all_segments)[*seg_it].lon)
+                /((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon);
+                
+        if (isect_lat < middle_lat && ::ilat(isect_lat) & 0xffff0000) == (value & 0xffff0000))
+          middle_point_inside = !middle_point_inside;
+      }
+      else if (((*all_segments)[*seg_it].lon == middle_lon
+              && (*all_segments)[*seg_it].lon < (*all_segments)[*seg_it+1].lon)
+          || ((*all_segments)[*seg_it+1].lon == middle_lon
+              && (*all_segments)[*seg_it+1].lon < (*all_segments)[*seg_it].lon))
+        middle_point_inside = !middle_point_inside;
+    }
+    
+    for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+        seg_it != spi_it->second.end(); ++seg_it)
+    {
+      uint32 lhs_ilat = ::ilat((*all_segments)[*seg_it].lat) & 0xffff0000;
+      uint32 rhs_ilat = ::ilat((*all_segments)[*seg_it+1].lat) & 0xffff0000;
+      
+      if ((lhs_ilat < (value & 0xffff0000) && rhs_ilat == (value & 0xffff0000))
+          || (lhs_ilat == (value & 0xffff0000) && rhs_ilat < (value & 0xffff0000)))
+      {
+        double isect_lon = (*all_segments)[*seg_it].lon
+            + ((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon)
+                *(::lat(value & 0xffff0000) - (*all_segments)[*seg_it].lat)
+                /((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat);
+        if ((::ilon(isect_lon) & 0xffff0000) == (uint32(value)<<16) && isect_lon < middle_lon)
+          middle_point_inside = !middle_point_inside;
+      }
+    }
+    
+    if ((*all_segments)[*cand_it].lon < (*all_segments)[*cand_it+1].lon)
+      righthandness[*cand_it] = (middle_point_inside ? 2 : 1);
+    else
+      righthandness[*cand_it] = (middle_point_inside ? 1 : 2);
+  }
+  
+  if (nw_corner_inside)
+  {
+    *nw_corner_inside = sw_corner_inside;
+    
+    for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+        seg_it != spi_it->second.end(); ++seg_it)
+    {
+      int32 lhs_ilon = ::ilon((*all_segments)[*seg_it].lon) & 0xffff0000;
+      int32 rhs_ilon = ::ilon((*all_segments)[*seg_it+1].lon) & 0xffff0000;
+      
+      if ((lhs_ilon < (value<<16) && rhs_ilon == (value<<16))
+          || (lhs_ilon == (value<<16) && rhs_ilon < (value<<16)))
+      {
+        double isect_lat = (*all_segments)[*seg_it].lat
+            + ((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat)
+                *(::lon(uint32(value)<<16) - (*all_segments)[*seg_it].lon)
+                /((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon);
+        if ((::ilat(isect_lat) & 0xffff0000) == (value & 0xffff0000))
+          *nw_corner_inside = !*nw_corner_inside;
+      }
+    }
+  }
+  
+  if (se_corner_inside)
+  {
+    *se_corner_inside = sw_corner_inside;
+    
+    for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+        seg_it != spi_it->second.end(); ++seg_it)
+    {
+      uint32 lhs_ilat = ::ilat((*all_segments)[*seg_it].lat) & 0xffff0000;
+      uint32 rhs_ilat = ::ilat((*all_segments)[*seg_it+1].lat) & 0xffff0000;
+      
+      if ((lhs_ilat < (value & 0xffff0000) && rhs_ilat == (value & 0xffff0000))
+          || (lhs_ilat == (value & 0xffff0000) && rhs_ilat < (value & 0xffff0000)))
+      {
+        double isect_lon = (*all_segments)[*seg_it].lon
+            + ((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon)
+                *(::lat(value & 0xffff0000) - (*all_segments)[*seg_it].lat)
+                /((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat);
+        if ((::ilon(isect_lon) & 0xffff0000) == (uint32(value)<<16))
+          *se_corner_inside = !*se_corner_inside;
+      }
+    }
+  }
+}
+
+
+#include <iostream>
 RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : bounds(0)
 {
   std::vector< std::vector< Point_Double > > input(*rhs.get_multiline_geometry());
@@ -1071,6 +1209,16 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
     collect_divertions(all_segments, idx_it->first, idx_it->second, divertions);
   
   assemble_linestrings(all_segments, gap_positions.size(), divertions, linestrings);
+  
+  RHR_Polygon_Area_Oracle area_oracle(all_segments, segments_per_idx);
+  Four_Field_Index four_field_idx(&area_oracle);
+  
+  for (std::map< uint32, std::vector< unsigned int > >::const_iterator idx_it = segments_per_idx.begin();
+      idx_it != segments_per_idx.end(); ++idx_it)
+    four_field_idx.add_point(::lat(idx_it->first | 0x8000), ::lon(idx_it->first<<16 | 0x8000), idx_it->first);
+  
+  four_field_idx.compute_inside_parts();
+  std::cerr<<four_field_idx.to_string()<<'\n';
 }
 
 

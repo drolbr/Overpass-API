@@ -200,6 +200,62 @@ Four_Field_Entry& Four_Field_Index::make_available(uint32 lat, int32 lon, int si
 }
 
 
+void Four_Field_Index::compute_inside_parts()
+{
+  if (area_oracle && !tree.empty())
+    compute_inside_parts(0, 0, 0, 0);
+}
+
+
+void Four_Field_Index::compute_inside_parts(unsigned int pos, bool sw, bool* r_se, bool* r_nw)
+{
+  bool se = false;
+  bool nw = false;
+  bool ne = false;
+  
+  if (tree[pos].sw < 0)
+    compute_inside_parts(-tree[pos].sw, sw, &se, &nw);
+  else if (tree[pos].sw > 0)
+    area_oracle->build_area(sw, tree[pos].sw, &se, &nw);
+  else
+  {
+    tree[pos].sw = sw;
+    se = sw;
+    nw = sw;
+  }
+  
+  if (tree[pos].se < 0)
+    compute_inside_parts(-tree[pos].se, se, r_se, 0);
+  else if (tree[pos].se > 0)
+    area_oracle->build_area(se, tree[pos].se, r_se, 0);
+  else
+  {
+    tree[pos].se = se;
+    if (r_se)
+      *r_se = se;
+  }
+  
+  if (tree[pos].nw < 0)
+    compute_inside_parts(-tree[pos].nw, nw, &ne, r_nw);
+  else if (tree[pos].nw > 0)
+    area_oracle->build_area(nw, tree[pos].nw, &ne, r_nw);
+  else
+  {
+    tree[pos].nw = nw;
+    ne = nw;
+    if (r_nw)
+      *r_nw = nw;
+  }
+  
+  if (tree[pos].ne < 0)
+    compute_inside_parts(-tree[pos].ne, ne, 0, 0);
+  else if (tree[pos].ne > 0)
+    area_oracle->build_area(ne, tree[pos].ne, 0, 0);
+  else
+    tree[pos].ne = ne;
+}
+
+
 namespace
 {
   void print_index(std::ostringstream& out, const std::vector< Four_Field_Entry >& tree,

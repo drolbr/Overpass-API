@@ -31,7 +31,7 @@ int main(int argc, char* args[])
   
   if (test_to_execute.empty() || test_to_execute == "1")
   {
-    Four_Field_Index idx;
+    Four_Field_Index idx(0);
     check_result(idx, "[]");
     std::cout<<"retval = "<<idx.add_point(51., 7., 256)<<" ... ";
     check_result(idx, "[ {(50.9968512, 6.9992448, 51.0034047, 7.0057983), 256} ]");
@@ -47,7 +47,7 @@ int main(int argc, char* args[])
   
   if (test_to_execute.empty() || test_to_execute == "2")
   {
-    Four_Field_Index idx;
+    Four_Field_Index idx(0);
     check_result(idx, "[]");
     dump_four_fields(idx.add_segment(51., 7., 51.001, 7.001, 256));
     check_result(idx, "[ {(50.9968512, 6.9992448, 51.0034047, 7.0057983), 256} ]");
