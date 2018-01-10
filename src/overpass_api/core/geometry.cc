@@ -1038,15 +1038,15 @@ struct RHR_Polygon_Area_Oracle : Area_Oracle
   RHR_Polygon_Area_Oracle(
       const std::vector< Point_Double >& all_segments_,
       const std::map< uint32, std::vector< unsigned int > >& segments_per_idx_)
-      : all_segments(&all_segments_), segments_per_idx(&segments_per_idx_),
-      righthandness(all_segments_.size(), 0) {}
+      : all_segments(&all_segments_), segments_per_idx(&segments_per_idx_) {}
   
   virtual void build_area(bool sw_corner_inside, int32 value, bool* se_corner_inside, bool* nw_corner_inside);
+  virtual Area_Oracle::point_status get_point_status(int32 value, double lat, double lon);
   
 private:
   const std::vector< Point_Double >* all_segments;
   const std::map< uint32, std::vector< unsigned int > >* segments_per_idx;
-  std::vector< char > righthandness;
+  std::set< uint32 > inside_corners;
 };
 
 
@@ -1057,116 +1057,274 @@ void RHR_Polygon_Area_Oracle::build_area(
   if (spi_it == segments_per_idx->end())
     return;
   
-  // TODO: Care for the date line - the problem are tiles boundaries below -180
-  // and segments that have vastly different lons.
+  if (sw_corner_inside)
+    inside_corners.insert(value);
   
-  // This functionality could be improved by better scaling algorithms
-  // But given that we should be able to keep the number of segments by splitting down to less than 10
-  // it is not expected to be worth the extra complexity.
-  for (std::vector< unsigned int >::const_iterator cand_it = spi_it->second.begin();
-      cand_it != spi_it->second.end(); ++cand_it)
+  if (::lon(uint32(value)<<16) > -179.99)
   {
-    if (righthandness[*cand_it])
-      continue;
-    
-    double middle_lat = ((*all_segments)[*cand_it].lat + (*all_segments)[*cand_it+1].lat)/2.;
-    double middle_lon = ((*all_segments)[*cand_it].lon + (*all_segments)[*cand_it+1].lon)/2.;
-    if ((::ilat(middle_lat) & 0xffff0000) != (value & 0xffff0000)
-        || (::ilon(middle_lon) & 0xffff0000) != (value<<16))
-      continue;
-    
-    bool middle_point_inside = false;
-    
-    for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
-        seg_it != spi_it->second.end(); ++seg_it)
+    if (nw_corner_inside)
     {
-      if ((*all_segments)[*seg_it].lon < middle_lon && middle_lon < (*all_segments)[*seg_it+1].lon
-          || (*all_segments)[*seg_it+1].lon < middle_lon && middle_lon < (*all_segments)[*seg_it].lon)
+      *nw_corner_inside = sw_corner_inside;
+    
+      for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+          seg_it != spi_it->second.end(); ++seg_it)
       {
-        double isect_lat = (*all_segments)[*seg_it].lat
-            + ((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat)
-                *(middle_lon - (*all_segments)[*seg_it].lon)
-                /((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon);
-                
-        if (isect_lat < middle_lat && ::ilat(isect_lat) & 0xffff0000) == (value & 0xffff0000))
-          middle_point_inside = !middle_point_inside;
-      }
-      else if (((*all_segments)[*seg_it].lon == middle_lon
-              && (*all_segments)[*seg_it].lon < (*all_segments)[*seg_it+1].lon)
-          || ((*all_segments)[*seg_it+1].lon == middle_lon
-              && (*all_segments)[*seg_it+1].lon < (*all_segments)[*seg_it].lon))
-        middle_point_inside = !middle_point_inside;
-    }
-    
-    for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
-        seg_it != spi_it->second.end(); ++seg_it)
-    {
-      uint32 lhs_ilat = ::ilat((*all_segments)[*seg_it].lat) & 0xffff0000;
-      uint32 rhs_ilat = ::ilat((*all_segments)[*seg_it+1].lat) & 0xffff0000;
+        int32 lhs_ilon = ::ilon((*all_segments)[*seg_it].lon) & 0xffff0000;
+        int32 rhs_ilon = ::ilon((*all_segments)[*seg_it+1].lon) & 0xffff0000;
       
-      if ((lhs_ilat < (value & 0xffff0000) && rhs_ilat == (value & 0xffff0000))
-          || (lhs_ilat == (value & 0xffff0000) && rhs_ilat < (value & 0xffff0000)))
-      {
-        double isect_lon = (*all_segments)[*seg_it].lon
-            + ((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon)
-                *(::lat(value & 0xffff0000) - (*all_segments)[*seg_it].lat)
-                /((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat);
-        if ((::ilon(isect_lon) & 0xffff0000) == (uint32(value)<<16) && isect_lon < middle_lon)
-          middle_point_inside = !middle_point_inside;
+        if ((lhs_ilon < (value<<16) && rhs_ilon == (value<<16))
+            || (lhs_ilon == (value<<16) && rhs_ilon < (value<<16)))
+        {
+          double isect_lat = (*all_segments)[*seg_it].lat
+              + ((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat)
+                  *(::lon(uint32(value)<<16) - (*all_segments)[*seg_it].lon)
+                  /((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon);
+          if ((::ilat(isect_lat) & 0xffff0000) == (value & 0xffff0000))
+            *nw_corner_inside = !*nw_corner_inside;
+        }
       }
     }
+  
+    if (se_corner_inside)
+    {
+      *se_corner_inside = sw_corner_inside;
     
-    if ((*all_segments)[*cand_it].lon < (*all_segments)[*cand_it+1].lon)
-      righthandness[*cand_it] = (middle_point_inside ? 2 : 1);
+      for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+          seg_it != spi_it->second.end(); ++seg_it)
+      {
+        uint32 lhs_ilat = ::ilat((*all_segments)[*seg_it].lat) & 0xffff0000;
+        uint32 rhs_ilat = ::ilat((*all_segments)[*seg_it+1].lat) & 0xffff0000;
+      
+        if ((lhs_ilat < (value & 0xffff0000) && rhs_ilat == (value & 0xffff0000))
+            || (lhs_ilat == (value & 0xffff0000) && rhs_ilat < (value & 0xffff0000)))
+        {
+          double isect_lon = (*all_segments)[*seg_it].lon
+              + ((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon)
+                  *(::lat(value & 0xffff0000) - (*all_segments)[*seg_it].lat)
+                  /((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat);
+          if ((::ilon(isect_lon) & 0xffff0000) == (uint32(value)<<16))
+            *se_corner_inside = !*se_corner_inside;
+        }
+      }
+    }
+  }
+  else
+  {
+    if (nw_corner_inside)
+    {
+      *nw_corner_inside = sw_corner_inside;
+    
+      for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+          seg_it != spi_it->second.end(); ++seg_it)
+      {
+        double lhs_lon = (*all_segments)[*seg_it].lon;
+        lhs_lon -= lhs_lon > 0 ? 360. : 0.;
+        double rhs_lon = (*all_segments)[*seg_it+1].lon;
+        rhs_lon -= rhs_lon > 0 ? 360. : 0.;
+          
+        if (::lon(uint32(value)<<16 > -180.))
+        {
+          int32 lhs_ilon = ::ilon(lhs_lon) & 0xffff0000;
+          int32 rhs_ilon = ::ilon(rhs_lon) & 0xffff0000;
+      
+          if ((lhs_ilon < (value<<16) && rhs_ilon == (value<<16))
+              || (lhs_ilon == (value<<16) && rhs_ilon < (value<<16)))
+          {
+            double isect_lat = (*all_segments)[*seg_it].lat
+                + ((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat)
+                    *(::lon(uint32(value)<<16) - (*all_segments)[*seg_it].lon)
+                    /((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon);
+            if ((::ilat(isect_lat) & 0xffff0000) == (value & 0xffff0000))
+              *nw_corner_inside = !*nw_corner_inside;
+          }
+        }
+        else
+        {
+          if ((lhs_lon <= -180. && rhs_lon > -180.) || (rhs_lon <= -180. && lhs_lon > -180.))
+          {
+            double isect_lat = (*all_segments)[*seg_it].lat
+                + ((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat)
+                    *(-180. - (*all_segments)[*seg_it].lon)
+                    /((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon);
+            if ((::ilat(isect_lat) & 0xffff0000) == (value & 0xffff0000))
+              *nw_corner_inside = !*nw_corner_inside;
+          }
+        }
+      }
+    }
+  
+    if (se_corner_inside)
+    {
+      *se_corner_inside = sw_corner_inside;
+    
+      for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+          seg_it != spi_it->second.end(); ++seg_it)
+      {
+        uint32 lhs_ilat = ::ilat((*all_segments)[*seg_it].lat) & 0xffff0000;
+        uint32 rhs_ilat = ::ilat((*all_segments)[*seg_it+1].lat) & 0xffff0000;
+      
+        if ((lhs_ilat < (value & 0xffff0000) && rhs_ilat == (value & 0xffff0000))
+            || (lhs_ilat == (value & 0xffff0000) && rhs_ilat < (value & 0xffff0000)))
+        {
+          double lhs_lon = (*all_segments)[*seg_it].lon;
+          lhs_lon -= lhs_lon > 0 ? 360. : 0.;
+          double rhs_lon = (*all_segments)[*seg_it+1].lon;
+          rhs_lon -= rhs_lon > 0 ? 360. : 0.;
+          
+          double isect_lon = (*all_segments)[*seg_it].lon
+              + ((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon)
+                  *(::lat(value & 0xffff0000) - (*all_segments)[*seg_it].lat)
+                  /((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat);
+          if (isect_lon >= -180. && (::ilon(isect_lon) & 0xffff0000) == (uint32(value)<<16))
+            *se_corner_inside = !*se_corner_inside;
+        }
+      }
+    }
+  }
+}
+
+
+#include <iomanip>
+#include <iostream>
+Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value, double lat, double lon)
+{
+  if (value == 1)
+    return 1;
+  
+  std::map< uint32, std::vector< unsigned int > >::const_iterator spi_it = segments_per_idx->find(value);
+  if (spi_it == segments_per_idx->end())
+    return 0;
+  
+  double border_lon = std::max(::lon(value<<16), -180.);
+  double border_lat = ::lat(value & 0xffff0000);
+  
+  bool on_vertex = false;
+  bool on_segment = false;
+  bool is_inside = (inside_corners.find(value) != inside_corners.end());
+  // is_inside is now true iff the sw corner is inside the area
+  
+//   std::cerr<<std::setprecision(14)<<lat<<' '<<lon<<' '<<is_inside<<'\n';
+  
+  for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
+      seg_it != spi_it->second.end(); ++seg_it)
+  {
+    double lhs_lat = (*all_segments)[*seg_it].lat;
+    double rhs_lat = (*all_segments)[*seg_it+1].lat;
+    
+    double lhs_lon = (*all_segments)[*seg_it].lon;
+    double rhs_lon = (*all_segments)[*seg_it+1].lon;
+    if (lon < -179.9)
+    {
+      lhs_lon -= lhs_lon > 0 ? 360. : 0.;
+      rhs_lon -= rhs_lon > 0 ? 360. : 0.;
+    }
+    else if (lon > 179.9)
+    {
+      lhs_lon += lhs_lon < 0 ? 360. : 0.;
+      rhs_lon += rhs_lon < 0 ? 360. : 0.;
+    }
+    
+//     std::cerr<<*seg_it<<' '<<lhs_lat<<' '<<lhs_lon<<' '<<rhs_lat<<' '<<rhs_lon<<' ';
+    
+    if (lhs_lat == rhs_lat)
+    {
+      if (lhs_lat < lat)
+        is_inside ^= ((lhs_lon - lon)*(rhs_lon - lon) < 0);
+      else if (lhs_lat == lat)
+      {
+        if (lon == lhs_lon || lon == rhs_lon)
+          on_vertex = true;
+        else
+          on_segment |= ((lhs_lon - lon)*(rhs_lon - lon) < 0);
+      }
+      // no else required -- such a segment does not play a role
+    }
+    else if (lhs_lon == rhs_lon)
+    {
+      if ((lat == lhs_lat && lon == lhs_lon) || (lat == rhs_lat && lon == rhs_lon))
+        on_vertex = true;
+      else if ((lat - lhs_lat)*(lat - rhs_lat) < 0)
+        on_segment = true;
+      else if (lhs_lon < lon && (lhs_lat < border_lat || rhs_lat < border_lat))
+        is_inside = !is_inside;
+      // no else required -- such a segment does not play a role
+    }
+    else if ((lhs_lat - rhs_lat)*(lhs_lon - rhs_lon) < 0)
+      // The segment runs from nw to se or se to nw
+    {
+      if ((lat == lhs_lat && lon == lhs_lon) || (lat == rhs_lat && lon == rhs_lon))
+        on_vertex = true;
+      else if ((lon - lhs_lon)*(lon - rhs_lon) < 0)
+      {
+        double isect_lat = lhs_lat + (rhs_lat - lhs_lat)*(lon - lhs_lon)/(rhs_lon - lhs_lon);
+        if (isect_lat < lat)
+          is_inside = !is_inside;
+        else if (isect_lat == lat)
+          on_segment = true;
+      }
+      else if (lon == lhs_lon && rhs_lon < lon)
+      {
+        if (lhs_lat < lat)
+          is_inside = !is_inside;
+      }
+      else if (lon == rhs_lon && lhs_lon < lon)
+      {
+        if (rhs_lat < lat)
+          is_inside = !is_inside;
+      }
+      else if ((border_lat - lhs_lat)*(border_lat - rhs_lat) < 0)
+      {
+        double isect_lon = lhs_lon + (rhs_lon - lhs_lon)*(border_lat - lhs_lat)/(rhs_lat - lhs_lat);
+        if (border_lon < isect_lon && isect_lon < lon)
+          is_inside = !is_inside;
+      }
+    }
     else
-      righthandness[*cand_it] = (middle_point_inside ? 1 : 2);
-  }
-  
-  if (nw_corner_inside)
-  {
-    *nw_corner_inside = sw_corner_inside;
-    
-    for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
-        seg_it != spi_it->second.end(); ++seg_it)
+      // The segment runs from sw to ne or ne to sw
     {
-      int32 lhs_ilon = ::ilon((*all_segments)[*seg_it].lon) & 0xffff0000;
-      int32 rhs_ilon = ::ilon((*all_segments)[*seg_it+1].lon) & 0xffff0000;
-      
-      if ((lhs_ilon < (value<<16) && rhs_ilon == (value<<16))
-          || (lhs_ilon == (value<<16) && rhs_ilon < (value<<16)))
+      if ((border_lat - lhs_lat)*(border_lat - rhs_lat) < 0)
       {
-        double isect_lat = (*all_segments)[*seg_it].lat
-            + ((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat)
-                *(::lon(uint32(value)<<16) - (*all_segments)[*seg_it].lon)
-                /((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon);
-        if ((::ilat(isect_lat) & 0xffff0000) == (value & 0xffff0000))
-          *nw_corner_inside = !*nw_corner_inside;
+        double isect_lon = lhs_lon + (rhs_lon - lhs_lon)*(border_lat - lhs_lat)/(rhs_lat - lhs_lat);
+//         std::cerr<<std::setprecision(14)<<border_lon<<' '<<isect_lon<<' ';
+        if ((lhs_lon <= lon || rhs_lon <= lon) && (border_lon < isect_lon))
+          is_inside = !is_inside;
+      }
+      if ((lat == lhs_lat && lon == lhs_lon) || (lat == rhs_lat && lon == rhs_lon))
+      {
+        on_vertex = true;
+//         std::cerr<<is_inside<<'\n';
+        continue;
+      }
+      
+      if ((lon - lhs_lon)*(lon - rhs_lon) < 0)
+      {
+        double isect_lat = lhs_lat + (rhs_lat - lhs_lat)*(lon - lhs_lon)/(rhs_lon - lhs_lon);
+        if (isect_lat < lat)
+          is_inside = !is_inside;
+        else if (isect_lat == lat)
+          on_segment = true;
+      }
+      else if (lon == lhs_lon && rhs_lon < lon)
+      {
+        if (lhs_lat < lat)
+          is_inside = !is_inside;
+      }
+      else if (lon == rhs_lon && lhs_lon < lon)
+      {
+        if (rhs_lat < lat)
+          is_inside = !is_inside;
       }
     }
+    
+//     std::cerr<<is_inside<<'\n';
   }
   
-  if (se_corner_inside)
-  {
-    *se_corner_inside = sw_corner_inside;
-    
-    for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
-        seg_it != spi_it->second.end(); ++seg_it)
-    {
-      uint32 lhs_ilat = ::ilat((*all_segments)[*seg_it].lat) & 0xffff0000;
-      uint32 rhs_ilat = ::ilat((*all_segments)[*seg_it+1].lat) & 0xffff0000;
-      
-      if ((lhs_ilat < (value & 0xffff0000) && rhs_ilat == (value & 0xffff0000))
-          || (lhs_ilat == (value & 0xffff0000) && rhs_ilat < (value & 0xffff0000)))
-      {
-        double isect_lon = (*all_segments)[*seg_it].lon
-            + ((*all_segments)[*seg_it+1].lon - (*all_segments)[*seg_it].lon)
-                *(::lat(value & 0xffff0000) - (*all_segments)[*seg_it].lat)
-                /((*all_segments)[*seg_it+1].lat - (*all_segments)[*seg_it].lat);
-        if ((::ilon(isect_lon) & 0xffff0000) == (uint32(value)<<16))
-          *se_corner_inside = !*se_corner_inside;
-      }
-    }
-  }
+  if (on_vertex)
+    return 0x20 + 2*is_inside;
+  if (on_segment)
+    return 0x10 + 2*is_inside;
+  
+  return 2*is_inside;
 }
 
 
@@ -1218,7 +1376,27 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
     four_field_idx.add_point(::lat(idx_it->first | 0x8000), ::lon(idx_it->first<<16 | 0x8000), idx_it->first);
   
   four_field_idx.compute_inside_parts();
-  std::cerr<<four_field_idx.to_string()<<'\n';
+//   std::cerr<<four_field_idx.to_string()<<'\n';
+  
+  for (std::vector< std::vector< Point_Double > >::iterator lstr_it = linestrings.begin();
+      lstr_it != linestrings.end(); ++lstr_it)
+  {
+    if (lstr_it->size() > 2)
+    {
+//       Point_Double pt = (*lstr_it)[1];
+//       std::cerr<<"Component "<<pt.lat<<' '<<pt.lon
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat, pt.lon))
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat, pt.lon + 0.0000001))
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat, pt.lon - 0.0000001))
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat + 0.000001, pt.lon))
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat + 0.000001, pt.lon + 0.0000001))
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat + 0.000001, pt.lon - 0.0000001))
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat - 0.000001, pt.lon))
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat - 0.000001, pt.lon + 0.0000001))
+//         <<' '<<int(four_field_idx.get_point_status(pt.lat - 0.000001, pt.lon - 0.0000001))
+//         <<'\n';
+    }
+  }
 }
 
 

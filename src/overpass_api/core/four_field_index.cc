@@ -7,6 +7,11 @@
 #include <sstream>
 
 
+Four_Field_Index::Four_Field_Index(Area_Oracle* area_oracle_)
+    : base_lat(0), base_lon(2000000000), base_significant_bits(0), area_oracle(area_oracle_),
+    min_lat(::ilat(-90.)), max_lat(::ilat(90.)), min_lon(::ilon(-180.)), max_lon(::ilon(180.)) {}
+
+
 namespace
 {
   int32 exchange_value(Four_Field_Entry& entry, uint32 ilat, int32 ilon, int32 value)
@@ -203,98 +208,210 @@ Four_Field_Entry& Four_Field_Index::make_available(uint32 lat, int32 lon, int si
 void Four_Field_Index::compute_inside_parts()
 {
   if (area_oracle && !tree.empty())
-    compute_inside_parts(0, 0, 0, 0);
+    compute_inside_parts(base_lat, base_lon, base_significant_bits, 0, 0, 0, 0);
 }
 
 
-void Four_Field_Index::compute_inside_parts(unsigned int pos, bool sw, bool* r_se, bool* r_nw)
+Area_Oracle::point_status Four_Field_Index::get_point_status(double lat, double lon)
 {
-  bool se = false;
-  bool nw = false;
-  bool ne = false;
+  if (!area_oracle || tree.empty())
+    return 0;
   
-  if (tree[pos].sw < 0)
-    compute_inside_parts(-tree[pos].sw, sw, &se, &nw);
-  else if (tree[pos].sw > 0)
-    area_oracle->build_area(sw, tree[pos].sw, &se, &nw);
-  else
+  uint32 ilat = ::ilat(lat);
+  int32 ilon = ::ilon(lon);
+  
+  int cur_bits = base_significant_bits;
+  uint cur_pos = 0;
+  while (cur_bits < 32)
   {
-    tree[pos].sw = sw;
-    se = sw;
-    nw = sw;
+    if (ilat & (0x80000000u>>cur_bits))
+    {
+      if (ilon & (0x80000000u>>cur_bits))
+      {
+        if (tree[cur_pos].ne < 0)
+          cur_pos = -tree[cur_pos].ne;
+        else if (tree[cur_pos].ne > 0)
+          return area_oracle->get_point_status(tree[cur_pos].ne, lat, lon);
+        else
+          return 0;
+      }
+      else
+      {
+        if (tree[cur_pos].nw < 0)
+          cur_pos = -tree[cur_pos].nw;
+        else if (tree[cur_pos].nw > 0)
+          return area_oracle->get_point_status(tree[cur_pos].nw, lat, lon);
+        else
+          return 0;
+      }
+    }
+    else
+    {
+      if (ilon & (0x80000000u>>cur_bits))
+      {
+        if (tree[cur_pos].se < 0)
+          cur_pos = -tree[cur_pos].se;
+        else if (tree[cur_pos].se > 0)
+          return area_oracle->get_point_status(tree[cur_pos].se, lat, lon);
+        else
+          return 0;
+      }
+      else
+      {
+        if (tree[cur_pos].sw < 0)
+          cur_pos = -tree[cur_pos].sw;
+        else if (tree[cur_pos].sw > 0)
+          return area_oracle->get_point_status(tree[cur_pos].sw, lat, lon);
+        else
+          return 0;
+      }
+    }
+    
+    ++cur_bits;
   }
   
-  if (tree[pos].se < 0)
-    compute_inside_parts(-tree[pos].se, se, r_se, 0);
-  else if (tree[pos].se > 0)
-    area_oracle->build_area(se, tree[pos].se, r_se, 0);
+  return 0;
+}
+
+
+void Four_Field_Index::compute_inside_parts(uint32 lat, int32 lon, int significant_bits, unsigned int pos,
+    bool sw, bool* r_se, bool* r_nw)
+{
+  if (!significant_bits || min_lon <= lon + int32(0x80000000u>>significant_bits))
+  {
+    bool se = false;
+    bool nw = false;
+    bool ne = false;
+  
+    if (tree[pos].sw < 0)
+      compute_inside_parts(lat, lon, significant_bits+1, -tree[pos].sw, sw, &se, &nw);
+    else if (tree[pos].sw > 0)
+      area_oracle->build_area(sw, tree[pos].sw, &se, &nw);
+    else
+    {
+      tree[pos].sw = sw;
+      se = sw;
+      nw = sw;
+    }
+    
+    if (tree[pos].se < 0)
+      compute_inside_parts(lat, lon + (0x80000000u>>significant_bits), significant_bits+1, -tree[pos].se,
+          se, r_se, 0);
+    else if (tree[pos].se > 0)
+      area_oracle->build_area(se, tree[pos].se, r_se, 0);
+    else
+    {
+      tree[pos].se = se;
+      if (r_se)
+        *r_se = se;
+    }
+    
+    if (tree[pos].nw < 0)
+      compute_inside_parts(lat + (0x80000000u>>significant_bits), lon, significant_bits+1, -tree[pos].nw,
+          nw, &ne, r_nw);
+    else if (tree[pos].nw > 0)
+      area_oracle->build_area(nw, tree[pos].nw, &ne, r_nw);
+    else
+    {
+      tree[pos].nw = nw;
+      ne = nw;
+      if (r_nw)
+        *r_nw = nw;
+    }
+    
+    if (tree[pos].ne < 0)
+      compute_inside_parts(lat + (0x80000000u>>significant_bits), lon + (0x80000000u>>significant_bits),
+          significant_bits+1, -tree[pos].ne, ne, 0, 0);
+    else if (tree[pos].ne > 0)
+      area_oracle->build_area(ne, tree[pos].ne, 0, 0);
+    else
+      tree[pos].ne = ne;
+  }
   else
   {
-    tree[pos].se = se;
-    if (r_se)
-      *r_se = se;
-  }
+    bool ne = false;
   
-  if (tree[pos].nw < 0)
-    compute_inside_parts(-tree[pos].nw, nw, &ne, r_nw);
-  else if (tree[pos].nw > 0)
-    area_oracle->build_area(nw, tree[pos].nw, &ne, r_nw);
-  else
-  {
-    tree[pos].nw = nw;
-    ne = nw;
-    if (r_nw)
-      *r_nw = nw;
+    if (tree[pos].se < 0)
+      compute_inside_parts(lat, lon + (0x80000000u>>significant_bits), significant_bits+1, -tree[pos].se,
+          sw, r_se, &ne);
+    else if (tree[pos].se > 0)
+      area_oracle->build_area(sw, tree[pos].se, r_se, &ne);
+    else
+    {
+      tree[pos].se = sw;
+      if (r_se)
+        *r_se = sw;
+    }
+    
+    if (tree[pos].ne < 0)
+      compute_inside_parts(lat + (0x80000000u>>significant_bits), lon + (0x80000000u>>significant_bits),
+          significant_bits+1, -tree[pos].ne, ne, 0, r_nw);
+    else if (tree[pos].ne > 0)
+      area_oracle->build_area(ne, tree[pos].ne, 0, r_nw);
+    else
+    {
+      tree[pos].ne = ne;
+      if (r_nw)
+        *r_nw = ne;
+    }
   }
-  
-  if (tree[pos].ne < 0)
-    compute_inside_parts(-tree[pos].ne, ne, 0, 0);
-  else if (tree[pos].ne > 0)
-    area_oracle->build_area(ne, tree[pos].ne, 0, 0);
-  else
-    tree[pos].ne = ne;
 }
 
 
 namespace
 {
   void print_index(std::ostringstream& out, const std::vector< Four_Field_Entry >& tree,
-      uint32 base_lat, int32 base_lon, int significant_bits, int32 value)
+      uint32 base_lat, int32 base_lon, int significant_bits, int32 value,
+      uint32 min_lat, uint32 max_lat, int32 min_lon, int32 max_lon)
   {
-    out<<" {("<<std::fixed<<std::setprecision(7)<<::lat(base_lat)<<", "
-        <<std::fixed<<std::setprecision(7)<<::lon(base_lon)<<", "
-        <<std::fixed<<std::setprecision(7)<<::lat(base_lat + (0x80000000u>>significant_bits) - 1)<<", "
-        <<std::fixed<<std::setprecision(7)<<::lon(base_lon + (0x80000000u>>significant_bits) - 1)<<"), "
-        <<value<<"} ";
+    if (base_lat < max_lat && base_lon < max_lon
+        && base_lat + (0x80000000u>>significant_bits) - 1 > min_lat
+        && base_lon + int32((0x80000000u>>significant_bits) - 1) > min_lon)
+      out<<" {("<<std::fixed<<std::setprecision(7)<<::lat(std::max(base_lat, min_lat))<<", "
+          <<std::fixed<<std::setprecision(7)<<::lon(std::max(base_lon, min_lon))<<", "
+          <<std::fixed<<std::setprecision(7)
+          <<::lat(std::min(base_lat + (0x80000000u>>significant_bits) - 1, max_lat))<<", "
+          <<std::fixed<<std::setprecision(7)
+          <<::lon(std::min(base_lon + int32((0x80000000u>>significant_bits) - 1), max_lon))<<"), "
+          <<value<<"} ";
   }
 
 
   void print_indexes(std::ostringstream& out, const std::vector< Four_Field_Entry >& tree,
-      uint pos, uint32 base_lat, int32 base_lon, int significant_bits)
+      uint pos, uint32 base_lat, int32 base_lon, int significant_bits,
+      uint32 min_lat, uint32 max_lat, int32 min_lon, int32 max_lon)
   {
     const Four_Field_Entry& entry = tree[pos];
   
     if (entry.sw < 0)
-      print_indexes(out, tree, -entry.sw, base_lat, base_lon, significant_bits+1);
+      print_indexes(out, tree, -entry.sw, base_lat, base_lon, significant_bits+1,
+          min_lat, max_lat, min_lon, max_lon);
     else if (entry.sw > 0)
-      print_index(out, tree, base_lat, base_lon, significant_bits, entry.sw);
+      print_index(out, tree, base_lat, base_lon, significant_bits, entry.sw,
+          min_lat, max_lat, min_lon, max_lon);
   
     if (entry.se < 0)
-      print_indexes(out, tree, -entry.se, base_lat, base_lon + (0x80000000u>>significant_bits), significant_bits+1);
+      print_indexes(out, tree, -entry.se, base_lat, base_lon + (0x80000000u>>significant_bits), significant_bits+1,
+          min_lat, max_lat, min_lon, max_lon);
     else if (entry.se > 0)
-      print_index(out, tree, base_lat, base_lon + (0x80000000u>>significant_bits), significant_bits, entry.se);
+      print_index(out, tree, base_lat, base_lon + (0x80000000u>>significant_bits), significant_bits, entry.se,
+          min_lat, max_lat, min_lon, max_lon);
   
     if (entry.nw < 0)
-      print_indexes(out, tree, -entry.nw, base_lat + (0x80000000u>>significant_bits), base_lon, significant_bits+1);
+      print_indexes(out, tree, -entry.nw, base_lat + (0x80000000u>>significant_bits), base_lon, significant_bits+1,
+          min_lat, max_lat, min_lon, max_lon);
     else if (entry.nw > 0)
-      print_index(out, tree, base_lat + (0x80000000u>>significant_bits), base_lon, significant_bits, entry.nw);
+      print_index(out, tree, base_lat + (0x80000000u>>significant_bits), base_lon, significant_bits, entry.nw,
+          min_lat, max_lat, min_lon, max_lon);
   
     if (entry.ne < 0)
       print_indexes(out, tree, -entry.ne, base_lat + (0x80000000u>>significant_bits),
-          base_lon + (0x80000000u>>significant_bits), significant_bits+1);
+          base_lon + (0x80000000u>>significant_bits), significant_bits+1,
+          min_lat, max_lat, min_lon, max_lon);
     else if (entry.ne > 0)
       print_index(out, tree, base_lat + (0x80000000u>>significant_bits),
-          base_lon + (0x80000000u>>significant_bits), significant_bits, entry.ne);
+          base_lon + (0x80000000u>>significant_bits), significant_bits, entry.ne,
+          min_lat, max_lat, min_lon, max_lon);
   }
 }
 
@@ -305,7 +422,8 @@ std::string Four_Field_Index::to_string() const
   out<<"[";
   
   if (!tree.empty())
-    print_indexes(out, tree, 0, base_lat, base_lon, base_significant_bits);
+    print_indexes(out, tree, 0, base_lat, base_lon, base_significant_bits,
+        min_lat, max_lat, min_lon, max_lon);
   
   return out.str() + "]";
 }
