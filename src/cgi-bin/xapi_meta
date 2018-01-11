@@ -58,6 +58,6 @@ else
   };
   fi
   REQUEST_METHOD=
-  echo "$XML_REQUEST" | ./interpreter <$REQUEST_FILE
+  echo "$XML_REQUEST" | ./interpreter
 };
 fi

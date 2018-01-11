@@ -1274,7 +1274,7 @@ std::set< std::pair< Index, Index > > intersect_ranges
 
 void Query_Statement::execute(Resource_Manager& rman)
 {
-  Cpu_Timer(rman, 1);
+  Cpu_Timer cpu(rman, 1);
   
   Answer_State answer_state = nothing;
   Set into;

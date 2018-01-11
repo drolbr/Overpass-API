@@ -963,7 +963,7 @@ std::vector< std::pair< std::string, std::string > > make_count_tags(const Set& 
 
 void Print_Statement::execute(Resource_Manager& rman)
 {
-  Cpu_Timer(rman, 2);
+  Cpu_Timer cpu(rman, 2);
   
   if (collection_mode != dont_collect)
   {

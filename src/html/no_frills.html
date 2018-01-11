@@ -119,7 +119,7 @@ cd osm-3s_v0.7.54/</pre>
 <pre>nohup bin/apply_osc_to_db.sh &quot;diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 <p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate.
 Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from.
-If you have cloned the database then the right id is the content of the file <em>db/repplicate_id</em>.
+If you have cloned the database then the right id is the content of the file <em>db/replicate_id</em>.
 Otherwise, search on <a href="http://planet.openstreetmap.org/replication/minute/">http://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
 
 <p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: <em>&quot;db/&quot;</em> is the directory of the database, <em>&quot;http://planet.openstreetmap.org/replication/minute/&quot;</em> is the replicate diff's remote source, and <em>&quot;diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
