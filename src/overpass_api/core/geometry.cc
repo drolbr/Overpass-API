@@ -857,14 +857,12 @@ void split_segments(
             // Avoid rounding artifacts
             for (unsigned int k = 0; k < idx_it->second.size(); ++k)
             {
-              if (fabs(isect.lat - all_segments[idx_it->second[k]].lat) < 1e-7
-                  && fabs(isect.lon - all_segments[idx_it->second[k]].lon) < 1e-7)
+              if (isect.epsilon_equal(all_segments[idx_it->second[k]]))
               {
                 isect.lat = all_segments[idx_it->second[k]].lat;
                 isect.lon = all_segments[idx_it->second[k]].lon;
               }
-              if (fabs(isect.lat - all_segments[idx_it->second[k]+1].lat) < 1e-7
-                  && fabs(isect.lon - all_segments[idx_it->second[k]+1].lon) < 1e-7)
+              if (isect.epsilon_equal(all_segments[idx_it->second[k]+1]))
               {
                 isect.lat = all_segments[idx_it->second[k]+1].lat;
                 isect.lon = all_segments[idx_it->second[k]+1].lon;
@@ -1010,7 +1008,12 @@ void assemble_linestrings(
     int dir = 1;
     while (divertions[2*pos + dir].from_remote_idx != pos + (dir-1)/2)
     {
-      cur_target.push_back(all_segments[pos]);
+      if (cur_target.size() >= 2 && all_segments[pos].epsilon_equal(cur_target[cur_target.size()-2]))
+        // Remove pairs of equal segments
+        cur_target.pop_back();
+      else if (cur_target.empty() || !all_segments[pos].epsilon_equal(cur_target.back()))
+        cur_target.push_back(all_segments[pos]);
+      
       ++count;
       divertions[2*pos + dir].from_remote_idx = pos + (dir-1)/2;
       
@@ -1025,7 +1028,7 @@ void assemble_linestrings(
     if (pos == all_segments.size()-1)
       pos = 0;
     
-    if (cur_target.empty())
+    if (cur_target.size() <= 2)
       linestrings.pop_back();
     else
       cur_target.push_back(cur_target.front());
@@ -1184,8 +1187,6 @@ void RHR_Polygon_Area_Oracle::build_area(
 }
 
 
-#include <iomanip>
-#include <iostream>
 Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value, double lat, double lon)
 {
   if (value == 1)
@@ -1202,8 +1203,6 @@ Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value,
   bool on_segment = false;
   bool is_inside = (inside_corners.find(value) != inside_corners.end());
   // is_inside is now true iff the sw corner is inside the area
-  
-//   std::cerr<<std::setprecision(14)<<lat<<' '<<lon<<' '<<is_inside<<'\n';
   
   for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
       seg_it != spi_it->second.end(); ++seg_it)
@@ -1224,8 +1223,6 @@ Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value,
       rhs_lon += rhs_lon < 0 ? 360. : 0.;
     }
     
-//     std::cerr<<*seg_it<<' '<<lhs_lat<<' '<<lhs_lon<<' '<<rhs_lat<<' '<<rhs_lon<<' ';
-    
     if (lhs_lat == rhs_lat)
     {
       if (lhs_lat < lat)
@@ -1243,7 +1240,7 @@ Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value,
     {
       if ((lat == lhs_lat && lon == lhs_lon) || (lat == rhs_lat && lon == rhs_lon))
         on_vertex = true;
-      else if ((lat - lhs_lat)*(lat - rhs_lat) < 0)
+      else if (lon == lhs_lon && (lat - lhs_lat)*(lat - rhs_lat) < 0)
         on_segment = true;
       else if (lhs_lon < lon && (lhs_lat < border_lat || rhs_lat < border_lat))
         is_inside = !is_inside;
@@ -1285,14 +1282,12 @@ Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value,
       if ((border_lat - lhs_lat)*(border_lat - rhs_lat) < 0)
       {
         double isect_lon = lhs_lon + (rhs_lon - lhs_lon)*(border_lat - lhs_lat)/(rhs_lat - lhs_lat);
-//         std::cerr<<std::setprecision(14)<<border_lon<<' '<<isect_lon<<' ';
         if ((lhs_lon <= lon || rhs_lon <= lon) && (border_lon < isect_lon))
           is_inside = !is_inside;
       }
       if ((lat == lhs_lat && lon == lhs_lon) || (lat == rhs_lat && lon == rhs_lon))
       {
         on_vertex = true;
-//         std::cerr<<is_inside<<'\n';
         continue;
       }
       
@@ -1315,8 +1310,6 @@ Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value,
           is_inside = !is_inside;
       }
     }
-    
-//     std::cerr<<is_inside<<'\n';
   }
   
   if (on_vertex)
@@ -1328,7 +1321,6 @@ Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value,
 }
 
 
-#include <iostream>
 RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : bounds(0)
 {
   std::vector< std::vector< Point_Double > > input(*rhs.get_multiline_geometry());
@@ -1376,25 +1368,51 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
     four_field_idx.add_point(::lat(idx_it->first | 0x8000), ::lon(idx_it->first<<16 | 0x8000), idx_it->first);
   
   four_field_idx.compute_inside_parts();
-//   std::cerr<<four_field_idx.to_string()<<'\n';
   
   for (std::vector< std::vector< Point_Double > >::iterator lstr_it = linestrings.begin();
       lstr_it != linestrings.end(); ++lstr_it)
   {
     if (lstr_it->size() > 2)
     {
-//       Point_Double pt = (*lstr_it)[1];
-//       std::cerr<<"Component "<<pt.lat<<' '<<pt.lon
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat, pt.lon))
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat, pt.lon + 0.0000001))
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat, pt.lon - 0.0000001))
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat + 0.000001, pt.lon))
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat + 0.000001, pt.lon + 0.0000001))
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat + 0.000001, pt.lon - 0.0000001))
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat - 0.000001, pt.lon))
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat - 0.000001, pt.lon + 0.0000001))
-//         <<' '<<int(four_field_idx.get_point_status(pt.lat - 0.000001, pt.lon - 0.0000001))
-//         <<'\n';
+      if ((*lstr_it)[0].lon < (*lstr_it)[1].lon)
+      {
+        if ((*lstr_it)[1].lon <= (*lstr_it)[2].lon)
+        {
+          if (four_field_idx.get_point_status((*lstr_it)[1].lat, (*lstr_it)[1].lon) & 0x3)
+            std::reverse(lstr_it->begin(), lstr_it->end());
+        }
+        else
+        {
+          if (bool(four_field_idx.get_point_status((*lstr_it)[1].lat, (*lstr_it)[1].lon) & 0x3)
+              ^ (((*lstr_it)[1].lat - (*lstr_it)[0].lat)/((*lstr_it)[1].lon -(*lstr_it)[0].lon)
+                  < ((*lstr_it)[2].lat -(*lstr_it)[1].lat)/((*lstr_it)[2].lon -(*lstr_it)[1].lon)))
+            std::reverse(lstr_it->begin(), lstr_it->end());
+        }
+      }
+      else if ((*lstr_it)[2].lon < (*lstr_it)[1].lon)
+      {
+        if (!(four_field_idx.get_point_status((*lstr_it)[1].lat, (*lstr_it)[1].lon) & 0x3))
+          std::reverse(lstr_it->begin(), lstr_it->end());
+      }
+      else if ((*lstr_it)[0].lon == (*lstr_it)[1].lon)
+      {
+        if (bool(four_field_idx.get_point_status((*lstr_it)[1].lat, (*lstr_it)[1].lon) & 0x3)
+            ^ ((*lstr_it)[0].lat < (*lstr_it)[1].lat))
+          std::reverse(lstr_it->begin(), lstr_it->end());
+      }
+      else if ((*lstr_it)[2].lon == (*lstr_it)[1].lon)
+      {
+        if (bool(four_field_idx.get_point_status((*lstr_it)[1].lat, (*lstr_it)[1].lon) & 0x3)
+            ^ ((*lstr_it)[1].lat < (*lstr_it)[2].lat))
+          std::reverse(lstr_it->begin(), lstr_it->end());
+      }
+      else
+      {
+        if (bool(four_field_idx.get_point_status((*lstr_it)[1].lat, (*lstr_it)[1].lon) & 0x3)
+            ^ (((*lstr_it)[1].lat -(*lstr_it)[0].lat)/((*lstr_it)[1].lon -(*lstr_it)[0].lon)
+                < ((*lstr_it)[2].lat -(*lstr_it)[1].lat)/((*lstr_it)[2].lon -(*lstr_it)[1].lon)))
+          std::reverse(lstr_it->begin(), lstr_it->end());
+      }
     }
   }
 }

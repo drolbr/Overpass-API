@@ -2,6 +2,7 @@
 #define DE__OSM3S___OVERPASS_API__CORE__GEOMETRY_H
 
 
+#include <cmath>
 #include <vector>
 
 
@@ -15,6 +16,9 @@ public:
   
   bool operator==(const Point_Double& rhs) const { return lat == rhs.lat && lon == rhs.lon; }
   bool operator!=(const Point_Double& rhs) const { return !(*this == rhs); }
+  
+  bool epsilon_equal(const Point_Double& rhs) const
+  { return fabs(lat - rhs.lat) < 1e-7 && fabs(lon - rhs.lon) < 1e-7; }
 };
 
 
