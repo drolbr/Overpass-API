@@ -69,6 +69,7 @@ std::vector< std::string > members(const std::string& lrs)
 
 
 Binary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_In > Evaluator_Lrs_In::statement_maker;
+Binary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_In > Evaluator_Lrs_In::evaluator_maker;
 
 
 std::string Evaluator_Lrs_In::process(const std::string& first_s, const std::string& second_s) const
@@ -102,6 +103,7 @@ std::string Evaluator_Lrs_In::process(const std::string& first_s, const std::str
 
 
 Binary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_Isect > Evaluator_Lrs_Isect::statement_maker;
+Binary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_Isect > Evaluator_Lrs_Isect::evaluator_maker;
 
 
 std::string Evaluator_Lrs_Isect::process(const std::string& first_s, const std::string& second_s) const
@@ -129,6 +131,7 @@ std::string Evaluator_Lrs_Isect::process(const std::string& first_s, const std::
 
 
 Binary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_Union > Evaluator_Lrs_Union::statement_maker;
+Binary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_Union > Evaluator_Lrs_Union::evaluator_maker;
 
 
 std::string Evaluator_Lrs_Union::process(const std::string& first_s, const std::string& second_s) const
@@ -159,6 +162,7 @@ enum Type_Indicator { type_void = 0, type_int64 = 1, type_double = 2, type_strin
 
 
 Unary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_Max > Evaluator_Lrs_Max::statement_maker;
+Unary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_Max > Evaluator_Lrs_Max::evaluator_maker;
 
 
 void update_maximum(const std::string& elem, Type_Indicator& relevant_type,
@@ -224,6 +228,7 @@ std::string Evaluator_Lrs_Max::process(const std::string& rhs_s) const
 
 
 Unary_Set_List_Operator_Statement_Maker< Evaluator_Lrs_Min > Evaluator_Lrs_Min::statement_maker;
+Unary_Set_List_Operator_Evaluator_Maker< Evaluator_Lrs_Min > Evaluator_Lrs_Min::evaluator_maker;
 
 
 void update_minimum(const std::string& elem, Type_Indicator& relevant_type,

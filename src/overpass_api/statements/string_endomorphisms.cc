@@ -23,6 +23,7 @@
 
 
 String_Endom_Statement_Maker< Evaluator_Number > Evaluator_Number::statement_maker;
+String_Endom_Evaluator_Maker< Evaluator_Number > Evaluator_Number::evaluator_maker;
 
 
 std::string Evaluator_Number::process(const std::string& rhs_s) const
@@ -43,6 +44,7 @@ std::string Evaluator_Number::process(const std::string& rhs_s) const
 
 
 String_Endom_Statement_Maker< Evaluator_Is_Num > Evaluator_Is_Num::statement_maker;
+String_Endom_Evaluator_Maker< Evaluator_Is_Num > Evaluator_Is_Num::evaluator_maker;
 
 
 std::string Evaluator_Is_Num::process(const std::string& rhs_s) const
@@ -63,6 +65,7 @@ std::string Evaluator_Is_Num::process(const std::string& rhs_s) const
 
 
 String_Endom_Statement_Maker< Evaluator_Suffix > Evaluator_Suffix::statement_maker;
+String_Endom_Evaluator_Maker< Evaluator_Suffix > Evaluator_Suffix::evaluator_maker;
 
 
 std::string Evaluator_Suffix::process(const std::string& rhs_s) const
@@ -75,6 +78,7 @@ std::string Evaluator_Suffix::process(const std::string& rhs_s) const
 
 
 String_Endom_Statement_Maker< Evaluator_Date > Evaluator_Date::statement_maker;
+String_Endom_Evaluator_Maker< Evaluator_Date > Evaluator_Date::evaluator_maker;
 
 
 std::string Evaluator_Date::process(const std::string& rhs_s) const
@@ -148,6 +152,7 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
 
 
 String_Endom_Statement_Maker< Evaluator_Is_Date > Evaluator_Is_Date::statement_maker;
+String_Endom_Evaluator_Maker< Evaluator_Is_Date > Evaluator_Is_Date::evaluator_maker;
 
 
 std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
