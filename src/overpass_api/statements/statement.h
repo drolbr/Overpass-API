@@ -88,6 +88,7 @@ class Statement
 {
   public:
     enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible };
+    enum Eval_Return_Type { non_evaluator, string, geometry };
 
     struct Factory
     {
@@ -95,10 +96,11 @@ class Statement
       ~Factory();
 
       Statement* create_statement(std::string element, int line_number,
-				  const std::map< std::string, std::string >& attributes);
-      Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context);
+          const std::map< std::string, std::string >& attributes);
+      Statement* create_evaluator(
+          const Token_Node_Ptr& tree_it, QL_Context tree_context, Eval_Return_Type eval_type);
       Statement* create_criterion(const Token_Node_Ptr& tree_it,
-                                  const std::string& type, bool& can_standalone, const std::string& into);
+          const std::string& type, bool& can_standalone, const std::string& into);
 
       std::vector< Statement* > created_statements;
       Error_Output* error_output_;

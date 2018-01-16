@@ -83,21 +83,7 @@ std::string Evaluator_Fixed::dump_compact_ql(const std::string&) const
 
 
 Evaluator_Id::Statement_Maker Evaluator_Id::statement_maker;
-Evaluator_Id::Evaluator_Maker Evaluator_Id::evaluator_maker;
-
-
-Statement* Evaluator_Id::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  std::map< std::string, std::string > attributes;
-  return new Evaluator_Id(tree_it->line_col.first, attributes, global_settings);
-}
+Element_Function_Maker< Evaluator_Id > Evaluator_Id::evaluator_maker;
 
 
 Evaluator_Id::Evaluator_Id
@@ -105,7 +91,6 @@ Evaluator_Id::Evaluator_Id
     : Evaluator(line_number_)
 {
   std::map< std::string, std::string > attributes;
-
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
@@ -114,21 +99,7 @@ Evaluator_Id::Evaluator_Id
 
 
 Evaluator_Type::Statement_Maker Evaluator_Type::statement_maker;
-Evaluator_Type::Evaluator_Maker Evaluator_Type::evaluator_maker;
-
-
-Statement* Evaluator_Type::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  std::map< std::string, std::string > attributes;
-  return new Evaluator_Type(tree_it->line_col.first, attributes, global_settings);
-}
+Element_Function_Maker< Evaluator_Type > Evaluator_Type::evaluator_maker;
 
 
 Evaluator_Type::Evaluator_Type
@@ -145,21 +116,7 @@ Evaluator_Type::Evaluator_Type
 
 
 Evaluator_Is_Closed::Statement_Maker Evaluator_Is_Closed::statement_maker;
-Evaluator_Is_Closed::Evaluator_Maker Evaluator_Is_Closed::evaluator_maker;
-
-
-Statement* Evaluator_Is_Closed::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  std::map< std::string, std::string > attributes;
-  return new Evaluator_Is_Closed(tree_it->line_col.first, attributes, global_settings);
-}
+Element_Function_Maker< Evaluator_Is_Closed > Evaluator_Is_Closed::evaluator_maker;
 
 
 Evaluator_Is_Closed::Evaluator_Is_Closed
@@ -303,20 +260,7 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
 
 
 Evaluator_Geometry::Statement_Maker Evaluator_Geometry::statement_maker;
-Evaluator_Geometry::Evaluator_Maker Evaluator_Geometry::evaluator_maker;
-
-
-Statement* Evaluator_Geometry::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  return new Evaluator_Geometry(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
-}
+Element_Function_Maker< Evaluator_Geometry > Evaluator_Geometry::evaluator_maker;
 
 
 Evaluator_Geometry::Evaluator_Geometry
@@ -332,20 +276,7 @@ Evaluator_Geometry::Evaluator_Geometry
 
 
 Evaluator_Length::Statement_Maker Evaluator_Length::statement_maker;
-Evaluator_Length::Evaluator_Maker Evaluator_Length::evaluator_maker;
-
-
-Statement* Evaluator_Length::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  return new Evaluator_Length(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
-}
+Element_Function_Maker< Evaluator_Length > Evaluator_Length::evaluator_maker;
 
 
 Evaluator_Length::Evaluator_Length
@@ -361,20 +292,7 @@ Evaluator_Length::Evaluator_Length
 
 
 Evaluator_Version::Statement_Maker Evaluator_Version::statement_maker;
-Evaluator_Version::Evaluator_Maker Evaluator_Version::evaluator_maker;
-
-
-Statement* Evaluator_Version::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  return new Evaluator_Version(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
-}
+Element_Function_Maker< Evaluator_Version > Evaluator_Version::evaluator_maker;
 
 
 Evaluator_Version::Evaluator_Version
@@ -387,20 +305,7 @@ Evaluator_Version::Evaluator_Version
 
 
 Evaluator_Timestamp::Statement_Maker Evaluator_Timestamp::statement_maker;
-Evaluator_Timestamp::Evaluator_Maker Evaluator_Timestamp::evaluator_maker;
-
-
-Statement* Evaluator_Timestamp::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  return new Evaluator_Timestamp(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
-}
+Element_Function_Maker< Evaluator_Timestamp > Evaluator_Timestamp::evaluator_maker;
 
 
 Evaluator_Timestamp::Evaluator_Timestamp
@@ -413,20 +318,7 @@ Evaluator_Timestamp::Evaluator_Timestamp
 
 
 Evaluator_Changeset::Statement_Maker Evaluator_Changeset::statement_maker;
-Evaluator_Changeset::Evaluator_Maker Evaluator_Changeset::evaluator_maker;
-
-
-Statement* Evaluator_Changeset::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  return new Evaluator_Changeset(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
-}
+Element_Function_Maker< Evaluator_Changeset > Evaluator_Changeset::evaluator_maker;
 
 
 Evaluator_Changeset::Evaluator_Changeset
@@ -439,20 +331,7 @@ Evaluator_Changeset::Evaluator_Changeset
 
 
 Evaluator_Uid::Statement_Maker Evaluator_Uid::statement_maker;
-Evaluator_Uid::Evaluator_Maker Evaluator_Uid::evaluator_maker;
-
-
-Statement* Evaluator_Uid::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  return new Evaluator_Uid(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
-}
+Element_Function_Maker< Evaluator_Uid > Evaluator_Uid::evaluator_maker;
 
 
 Evaluator_Uid::Evaluator_Uid
@@ -465,20 +344,7 @@ Evaluator_Uid::Evaluator_Uid
 
 
 Evaluator_User::Statement_Maker Evaluator_User::statement_maker;
-Evaluator_User::Evaluator_Maker Evaluator_User::evaluator_maker;
-
-
-Statement* Evaluator_User::Evaluator_Maker::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
-    Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
-{
-  if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
-      || !tree_it.assert_has_arguments(error_output, false)
-      || !assert_element_in_context(error_output, tree_it, tree_context))
-    return 0;
-  
-  return new Evaluator_User(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
-}
+Element_Function_Maker< Evaluator_User > Evaluator_User::evaluator_maker;
 
 
 Evaluator_User::Evaluator_User

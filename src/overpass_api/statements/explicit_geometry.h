@@ -116,6 +116,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; }
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Const_Eval_Task("<Point_Geometry>"); }
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)
@@ -220,6 +221,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; }
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Const_Eval_Task("<Linestring_Geometry>"); }
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)
@@ -333,6 +335,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; }
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Const_Eval_Task("<Polygon_Geometry>"); }
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)

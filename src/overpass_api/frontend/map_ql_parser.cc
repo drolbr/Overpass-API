@@ -158,7 +158,7 @@ TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokeniz
   if (tree.tree.empty())
     return 0;
 
-  return stmt_factory.create_evaluator(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context);
+  return stmt_factory.create_evaluator(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context, Statement::string);
 }
 
 
@@ -754,7 +754,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
       {
         if (tree_it->rhs)
         {
-          TStatement* stmt = stmt_factory.create_evaluator(tree_it.rhs(), tree_context);
+          TStatement* stmt = stmt_factory.create_evaluator(tree_it.rhs(), tree_context, Statement::non_evaluator);
           if (stmt)
             evaluators.push_back(stmt);
         }
@@ -762,7 +762,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
         tree_it = tree_it.lhs();
       }
       
-      TStatement* stmt = stmt_factory.create_evaluator(tree_it, tree_context);
+      TStatement* stmt = stmt_factory.create_evaluator(tree_it, tree_context, Statement::non_evaluator);
       if (stmt)
         evaluators.push_back(stmt);
       

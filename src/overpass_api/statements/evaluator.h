@@ -279,10 +279,27 @@ struct Evaluator : public Statement
 
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) = 0;
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context) { return 0; }
-  virtual bool returns_geometry() const { return false; }
+  virtual Statement::Eval_Return_Type return_type() const = 0;
 
   virtual std::string dump_pretty_ql(const std::string& indent) const { return dump_compact_ql(indent); }
   virtual int get_operator_priority() const { return std::numeric_limits< int >::max(); }
+};
+
+
+template< typename Evaluator_ >
+struct Element_Function_Maker : public Statement::Evaluator_Maker
+{
+  virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+  {
+    if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+        || !tree_it.assert_has_arguments(error_output, false)
+        || !assert_element_in_context(error_output, tree_it, tree_context))
+      return 0;
+  
+    return new Evaluator_(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
+  }
+  Element_Function_Maker() { Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this); }
 };
 
 

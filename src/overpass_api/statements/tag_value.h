@@ -72,6 +72,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context(); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Const_Eval_Task(value); }
 
@@ -137,15 +138,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Id >("eval-id") {}
   };
   static Statement_Maker statement_maker;
-
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["id"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static Element_Function_Maker< Evaluator_Id > evaluator_maker;
+  
+  static std::string stmt_func_name() { return "id"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-id/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "id()"; }
@@ -159,6 +154,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) { return new Id_Eval_Task(); }
 };
 
@@ -194,15 +190,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Type >("eval-type") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Type > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["type"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "type"; }
   virtual std::string dump_xml(const std::string& indent) const { return indent + "<eval-type/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "type()"; }
 
@@ -215,6 +205,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Type_Eval_Task(); }
 };
@@ -264,15 +255,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Is_Closed >("eval-is-closed") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Is_Closed > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["is_closed"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "is_closed"; }
   virtual std::string dump_xml(const std::string& indent) const { return indent + "<eval-is-closed/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const { return "is_closed()"; }
 
@@ -285,6 +270,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::SKELETON); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Is_Closed_Eval_Task(); }
 };
@@ -376,6 +362,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* target_key)
   { return new Value_Eval_Task(key); }
 
@@ -446,6 +433,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* target_key)
   { return new Is_Tag_Eval_Task(key); }
 
@@ -507,6 +495,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Generic_Eval_Task(); }
 };
@@ -557,15 +546,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Geometry >("eval-geometry") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Geometry > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["geom"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "geom"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-geometry/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
@@ -580,6 +563,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Const_Eval_Task("<Opaque_Geometry>"); }
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)
@@ -628,15 +612,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Length >("eval-length") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Length > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["length"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "length"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-length/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
@@ -651,6 +629,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Length_Eval_Task(); }
 };
@@ -720,15 +699,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Version >("eval-version") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Version > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["version"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "version"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-version/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
@@ -743,6 +716,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Version_Eval_Task(); }
 };
@@ -781,15 +755,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Timestamp >("eval-timestamp") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Timestamp > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["timestamp"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "timestamp"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-timestamp/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
@@ -804,6 +772,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Timestamp_Eval_Task(); }
 };
@@ -842,15 +811,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Changeset >("eval-changeset") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Changeset > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["changeset"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "changeset"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-changeset/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
@@ -865,6 +828,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Changeset_Eval_Task(); }
 };
@@ -903,15 +867,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Uid >("eval-uid") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Uid > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["uid"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "uid"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-uid/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
@@ -926,6 +884,7 @@ public:
 
   virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::META); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Uid_Eval_Task(); }
 };
@@ -964,15 +923,9 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_User >("eval-user") {}
   };
   static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_User > evaluator_maker;
 
-  struct Evaluator_Maker : public Statement::Evaluator_Maker
-  {
-    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
-        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
-    Evaluator_Maker() { Statement::maker_by_func_name()["user"].push_back(this); }
-  };
-  static Evaluator_Maker evaluator_maker;
-
+  static std::string stmt_func_name() { return "user"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-user/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
@@ -988,6 +941,7 @@ public:
   virtual Requested_Context request_context() const
   { return Requested_Context().add_usage(Set_Usage::META).add_user_names(); }
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new User_Eval_Task(); }
 };
@@ -1076,6 +1030,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
 
 private:

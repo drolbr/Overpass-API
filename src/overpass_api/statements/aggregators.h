@@ -59,6 +59,7 @@ struct Evaluator_Aggregator : public Evaluator
 
   virtual Requested_Context request_context() const;
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
 
   virtual Value_Aggregator* get_aggregator() = 0;
@@ -97,7 +98,7 @@ struct Aggregator_Evaluator_Maker : Statement::Evaluator_Maker
     if (result)
     {
       Statement* rhs = stmt_factory.create_evaluator(
-          input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::elem_eval_possible);
+          input_set ? tree_it.rhs().rhs() : tree_it.rhs(), Statement::elem_eval_possible, Statement::string);
       if (rhs)
         result->add_statement(rhs, "");
       else if (error_output)
@@ -387,6 +388,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
 
 private:

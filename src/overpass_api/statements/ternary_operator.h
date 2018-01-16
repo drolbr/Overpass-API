@@ -99,6 +99,7 @@ struct Ternary_Evaluator : public Evaluator
 
   virtual Requested_Context request_context() const;
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
 
   static bool applicable_by_subtree_structure(const Token_Node_Ptr& tree_it)

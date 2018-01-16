@@ -58,6 +58,7 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
     return 0;
   }
 
+  Statement::Eval_Return_Type eval_type = Statement::string;
   std::map< std::string, std::string > attributes;
   if (tree_it.lhs()->token == "::")
   {
@@ -66,9 +67,13 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
       if (tree_it.lhs().rhs()->token == "id")
         attributes["keytype"] = "id";
       else if (tree_it.lhs().rhs()->token == "geom")
+      {
         attributes["keytype"] = "geometry";
+        eval_type = Statement::geometry;
+      }
       else if (error_output)
-        error_output->add_parse_error("The only allowed special property is \"id\"", tree_it->line_col.first);
+        error_output->add_parse_error("The only allowed special properties are \"id\" and \"geometry\"",
+            tree_it->line_col.first);
     }
     else if (tree_it.lhs()->lhs)
     {
@@ -98,7 +103,8 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
   if (result)
   {
     Statement* rhs = stmt_factory.create_evaluator(tree_it.rhs(),
-        tree_context == Statement::in_convert ? Statement::elem_eval_possible : Statement::evaluator_expected);
+        tree_context == Statement::in_convert ? Statement::elem_eval_possible : Statement::evaluator_expected,
+        eval_type);
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

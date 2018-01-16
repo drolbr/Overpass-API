@@ -109,7 +109,8 @@ Statement* Filter_Statement::Criterion_Maker::create_criterion(const Token_Node_
   
   if (tree_it->token == ":" && tree_it->rhs)
   {
-    Statement* criterion = stmt_factory.create_evaluator(tree_it.rhs(), Statement::elem_eval_possible);
+    Statement* criterion = stmt_factory.create_evaluator(
+        tree_it.rhs(), Statement::elem_eval_possible, Statement::string);
     if (criterion)
     {
       std::map< std::string, std::string > attributes;

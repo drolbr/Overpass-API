@@ -80,6 +80,7 @@ public:
 
   virtual Requested_Context request_context() const;
 
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
 
   virtual std::string process(const std::string& lhs_result, const std::string& rhs_result) const = 0;
