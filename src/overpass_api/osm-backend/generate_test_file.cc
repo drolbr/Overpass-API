@@ -3182,6 +3182,16 @@ void create_relation_test_pattern(uint id, uint size, uint64 global_node_offset,
 }
 
 
+std::string lat_lon_of_node(unsigned int id, unsigned int pattern_size)
+{
+  std::ostringstream out;
+  out<<std::fixed<<std::setprecision(7)
+      <<"lat=\""<<(51. + (id / pattern_size)*(1./pattern_size) + .5/pattern_size)<<"\" "
+      <<"lon=\""<<(7. + ((id-1) % pattern_size)*(1./pattern_size) + .5/pattern_size)<<"\"";
+  return out.str();
+}
+
+
 int main(int argc, char* args[])
 {
   uint64 global_node_offset = 0;
@@ -5154,6 +5164,52 @@ int main(int argc, char* args[])
       "    <tag k=\"by_role_with_type\" v=\"3\"/>\n"
       "    <tag k=\"distinct_by_role_with_type\" v=\"2\"/>\n"
       "  </count-from-default>\n";
+    if (std::string(args[2]) == "convert_11")
+      std::cout<<
+      "  <geometry id=\"2\">\n"
+      "    <point "<<lat_lon_of_node(8, pattern_size)<<"/>\n"
+      "  </geometry>\n"
+      "  <geometry id=\"3\">\n"
+      "    <point "<<lat_lon_of_node(14, pattern_size)<<"/>\n"
+      "  </geometry>\n"
+      "  <geometry id=\"4\">\n"
+      "    <vertex "<<lat_lon_of_node(pattern_size + 8, pattern_size)<<"/>\n"
+      "    <vertex "<<lat_lon_of_node(pattern_size + 9, pattern_size)<<"/>\n"
+      "  </geometry>\n"
+      "  <geometry id=\"5\">\n"
+      "    <group>\n"
+      "      <point "<<lat_lon_of_node(1, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "    <group>\n"
+      "      <vertex "<<lat_lon_of_node(pattern_size + 1, pattern_size)<<"/>\n"
+      "      <vertex "<<lat_lon_of_node(pattern_size + 2, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "    <group>\n"
+      "      <point "<<lat_lon_of_node(2, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "    <group>\n"
+      "      <vertex "<<lat_lon_of_node(pattern_size + 2, pattern_size)<<"/>\n"
+      "      <vertex "<<lat_lon_of_node(pattern_size + 3, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "    <group>\n"
+      "      <point "<<lat_lon_of_node(pattern_size + 2, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "    <group>\n"
+      "      <vertex "<<lat_lon_of_node(2, pattern_size)<<"/>\n"
+      "      <vertex "<<lat_lon_of_node(pattern_size + 2, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "    <group>\n"
+      "      <point "<<lat_lon_of_node(pattern_size + 1, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "    <group>\n"
+      "      <vertex "<<lat_lon_of_node(2*pattern_size + 4, pattern_size)<<"/>\n"
+      "      <vertex "<<lat_lon_of_node(3*pattern_size + 4, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "    <group>\n"
+      "      <point "<<lat_lon_of_node(1, pattern_size)<<"/>\n"
+      "    </group>\n"
+      "  </geometry>\n"
+      "  <geometry id=\"6\"/>\n";
 
     std::cout<<"</osm>\n";
   }

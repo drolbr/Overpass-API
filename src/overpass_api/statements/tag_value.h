@@ -514,6 +514,82 @@ public:
 
 /* === Geometry Related Operators ===
 
+==== Geometry ====
+
+The <em>geometry</em> operator returns the geometry of a single object
+as a geometry that can be put into the other geomtry converting operators.
+
+Its syntax is:
+
+  geom()
+*/
+
+struct Geometry_Geometry_Task : Eval_Geometry_Task
+{
+  Geometry_Geometry_Task() {}
+
+  virtual Opaque_Geometry* eval() const { return 0; }
+
+  virtual Opaque_Geometry* eval(const Element_With_Context< Node_Skeleton >& data) const
+      { return data.geometry ? data.geometry->clone() : new Null_Geometry(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Node_Skeleton > >& data) const
+      { return data.geometry ? data.geometry->clone() : new Null_Geometry(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Way_Skeleton >& data) const
+      { return data.geometry ? data.geometry->clone() : new Null_Geometry(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Way_Skeleton > >& data) const
+      { return data.geometry ? data.geometry->clone() : new Null_Geometry(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Relation_Skeleton >& data) const
+      { return data.geometry ? data.geometry->clone() : new Null_Geometry(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Relation_Skeleton > >& data) const
+      { return data.geometry ? data.geometry->clone() : new Null_Geometry(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Area_Skeleton >& data) const
+      { return data.geometry ? data.geometry->clone() : new Null_Geometry(); }
+  virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& data) const
+      { return data.geometry ? data.geometry->clone() : new Null_Geometry(); }
+};
+
+
+class Evaluator_Geometry : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Geometry >
+  {
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Geometry >("eval-geometry") {}
+  };
+  static Statement_Maker statement_maker;
+
+  struct Evaluator_Maker : public Statement::Evaluator_Maker
+  {
+    virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,
+        Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
+    Evaluator_Maker() { Statement::maker_by_func_name()["geom"].push_back(this); }
+  };
+  static Evaluator_Maker evaluator_maker;
+
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-geometry/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return "geom(\"\")"; }
+
+  Evaluator_Geometry(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-geometry"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Geometry() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
+
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  { return new Const_Eval_Task("<Opaque_Geometry>"); }
+  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context)
+  { return new Geometry_Geometry_Task(); }
+  virtual bool returns_geometry() const { return true; }
+};
+
+
+/* ==== Length ====
+
 Its syntax is:
 
   length()

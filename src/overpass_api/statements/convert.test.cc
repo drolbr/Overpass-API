@@ -427,6 +427,35 @@ void is_tag_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void geom_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_value_test(global_settings, rman, "_", 8, 14, "1000", global_node_offset);
+  
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  Convert_Statement stmt(0, attributes, global_settings);
+
+  attributes.clear();
+  attributes["keytype"] = "geometry";
+  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  stmt.add_statement(&stmt1, "");
+  attributes.clear();
+  Evaluator_Geometry stmt10(0, attributes, global_settings);
+  stmt1.add_statement(&stmt10, "");
+
+  stmt.execute(rman);
+
+  {
+    attributes.clear();
+    attributes["geometry"] = "full";
+    Print_Statement stmt(0, attributes, global_settings);
+    stmt.execute(rman);
+  }
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -468,6 +497,8 @@ int main(int argc, char* args[])
       count_test(global_settings, transaction, "count-from-default", "_", 2, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "10"))
       count_test(global_settings, transaction, "count-from-default", "_", 10, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "11"))
+      geom_test(global_settings, transaction, "geometry", global_node_offset);
 
     std::cout<<"</osm>\n";
   }
