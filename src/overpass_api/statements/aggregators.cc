@@ -23,7 +23,8 @@
 
 
 Evaluator_Aggregator::Evaluator_Aggregator
-    (const std::string& func_name, int line_number_, const std::map< std::string, std::string >& input_attributes,
+    (const std::string& func_name, int line_number_,
+     const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
     : Evaluator(line_number_), rhs(0), input_set(0)
 {
@@ -61,6 +62,20 @@ void eval_elems(Value_Aggregator& aggregator, Eval_Task& task,
 }
 
 
+template< typename Index, typename Maybe_Attic >
+void eval_elems(Geometry_Aggregator& aggregator, Eval_Geometry_Task& task,
+    const std::map< Index, std::vector< Maybe_Attic > >& elems, Set_With_Context& input_set)
+{
+  for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator idx_it = elems.begin();
+      idx_it != elems.end(); ++idx_it)
+  {
+    for (typename std::vector< Maybe_Attic >::const_iterator elem_it = idx_it->second.begin();
+        elem_it != idx_it->second.end(); ++elem_it)
+      aggregator.consume_value(task.eval(input_set.get_context(idx_it->first, *elem_it)));
+  }
+}
+
+
 Eval_Task* Evaluator_Aggregator::get_string_task(Prepare_Task_Context& context, const std::string* key)
 {
   if (!rhs)
@@ -88,6 +103,36 @@ Eval_Task* Evaluator_Aggregator::get_string_task(Prepare_Task_Context& context, 
   eval_elems(*value_agg, *rhs_task, input_set->base->deriveds, *input_set, key);
 
   return new Const_Eval_Task((*value_agg).get_value());
+}
+
+
+Eval_Geometry_Task* Evaluator_Aggregator::get_geometry_task(Prepare_Task_Context& context)
+{
+  if (!rhs)
+    return 0;
+
+  Owner< Eval_Geometry_Task > rhs_task(rhs->get_geometry_task(context));
+  if (!rhs_task)
+    return 0;
+
+  Set_With_Context* input_set = context.get_set(input);
+  if (!input_set || !input_set->base)
+    return 0;
+
+  Owner< Geometry_Aggregator > value_agg(get_geometry_aggregator());
+  if (!value_agg)
+    return 0;
+
+  eval_elems(*value_agg, *rhs_task, input_set->base->nodes, *input_set);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_nodes, *input_set);
+  eval_elems(*value_agg, *rhs_task, input_set->base->ways, *input_set);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_ways, *input_set);
+  eval_elems(*value_agg, *rhs_task, input_set->base->relations, *input_set);
+  eval_elems(*value_agg, *rhs_task, input_set->base->attic_relations, *input_set);
+  eval_elems(*value_agg, *rhs_task, input_set->base->areas, *input_set);
+  eval_elems(*value_agg, *rhs_task, input_set->base->deriveds, *input_set);
+
+  return new Const_Eval_Geometry_Task((*value_agg).move_value());
 }
 
 
@@ -445,4 +490,31 @@ Eval_Task* Evaluator_Set_Count::get_string_task(Prepare_Task_Context& context, c
   }
 
   return new Const_Eval_Task(::to_string(counter));
+}
+
+
+//-----------------------------------------------------------------------------
+
+
+Aggregator_Statement_Maker< Evaluator_Geom_Concat_Value > Evaluator_Geom_Concat_Value::statement_maker;
+Aggregator_Evaluator_Maker< Evaluator_Geom_Concat_Value > Evaluator_Geom_Concat_Value::evaluator_maker;
+
+
+void Evaluator_Geom_Concat_Value::Aggregator::consume_value(Opaque_Geometry* geom)
+{
+  if (!geom)
+    return;
+  
+  if (!result)
+    result = new Compound_Geometry();
+  
+  result->add_component(geom);
+}
+
+
+Opaque_Geometry* Evaluator_Geom_Concat_Value::Aggregator::move_value()
+{
+  Opaque_Geometry* result_ = result;
+  result = 0;
+  return result_;
 }

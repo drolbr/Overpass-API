@@ -271,6 +271,17 @@ struct Eval_Geometry_Task
 };
 
 
+struct Const_Eval_Geometry_Task : public Eval_Geometry_Task
+{
+  Const_Eval_Geometry_Task(Opaque_Geometry* geometry_) : geometry(geometry_) {}
+
+  virtual Opaque_Geometry* eval() const { return geometry ? geometry->clone() : 0; }
+
+private:
+  Owner< Opaque_Geometry > geometry;
+};
+
+
 struct Evaluator : public Statement
 {
   Evaluator(int line_number) : Statement(line_number) {}

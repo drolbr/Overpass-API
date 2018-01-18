@@ -76,6 +76,7 @@ public:
   
   virtual bool has_components() const = 0;
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return 0; }
+  virtual std::vector< Opaque_Geometry* >* move_components() { return 0; }
   
   virtual unsigned int way_size() const = 0;
   virtual bool has_faithful_way_geometry() const = 0;
@@ -260,12 +261,7 @@ class Partial_Way_Geometry : public Opaque_Geometry
 {
 public:
   Partial_Way_Geometry() : bounds(0), has_coords(false) {}
-  Partial_Way_Geometry(const std::vector< Point_Double >& points_)
-      : points(points_), bounds(0), has_coords(false)
-  {
-    for (std::vector< Point_Double >::const_iterator it = points.begin(); it != points.end() && !has_coords; ++it)
-      has_coords |= (it->lat < 100.);
-  }
+  Partial_Way_Geometry(const std::vector< Point_Double >& points_);
   virtual ~Partial_Way_Geometry() { delete bounds; }
   virtual Opaque_Geometry* clone() const { return new Partial_Way_Geometry(points); }
   
@@ -279,10 +275,14 @@ public:
   virtual double west() const;
   virtual double east() const;
   
-  virtual bool has_line_geometry() const { return false; }
-  virtual const std::vector< Point_Double >* get_line_geometry() const { return 0; }
+  virtual bool has_line_geometry() const { return valid_segments.size() == 1; }
+  virtual const std::vector< Point_Double >* get_line_geometry() const
+  { return valid_segments.size() == 1 ? &valid_segments.front() : 0; }
   
-  virtual bool has_multiline_geometry() const { return false; }
+  virtual bool has_multiline_geometry() const { return true; }
+  virtual const std::vector< std::vector< Point_Double > >* get_multiline_geometry() const
+  { return &valid_segments; }
+  
   virtual bool has_components() const { return false; }
   
   virtual unsigned int way_size() const { return points.size(); }
@@ -304,6 +304,7 @@ public:
   
 private:
   std::vector< Point_Double > points;
+  std::vector< std::vector< Point_Double > > valid_segments;
   mutable Bbox_Double* bounds;
   bool has_coords;
 };
@@ -432,6 +433,7 @@ public:
 
   virtual bool has_components() const { return true; }
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }
+  virtual std::vector< Opaque_Geometry* >* move_components() { return &components; }
   
   void add_component(Opaque_Geometry* component);
   
@@ -479,7 +481,7 @@ public:
     for (std::vector< Opaque_Geometry* >::iterator it = components.begin(); it != components.end(); ++it)
       delete *it;
   }
-  virtual Opaque_Geometry* clone() const { return new Partial_Relation_Geometry(components); }
+  virtual Opaque_Geometry* clone() const;
   
   virtual bool has_center() const;
   virtual double center_lat() const;
@@ -497,6 +499,7 @@ public:
 
   virtual bool has_components() const { return true; }
   virtual const std::vector< Opaque_Geometry* >* get_components() const { return &components; }
+  virtual std::vector< Opaque_Geometry* >* move_components() { return &components; }
   
   void add_placeholder();
   void add_point(const Point_Double& point);

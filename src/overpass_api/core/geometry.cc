@@ -251,11 +251,40 @@ double Partial_Way_Geometry::east() const
 }
 
   
+Partial_Way_Geometry::Partial_Way_Geometry(const std::vector< Point_Double >& points_)
+    : points(points_), bounds(0), has_coords(false)
+{
+  for (std::vector< Point_Double >::const_iterator it = points.begin(); it != points.end() && !has_coords; ++it)
+    has_coords |= (it->lat < 100.);
+  
+  if (has_coords)
+  {
+    valid_segments.push_back(std::vector< Point_Double >());
+    if (!points.empty() && points.front().lat < 100.)
+      valid_segments.back().push_back(points.front());
+    for (unsigned int i = 1; i < points.size(); ++i)
+    {
+      if (points[i].lat < 100.)
+      {
+        if (points[i-1].lat >= 100.)
+          valid_segments.push_back(std::vector< Point_Double >());
+        valid_segments.back().push_back(points[i]);
+      }
+    }
+  }
+}
+
 void Partial_Way_Geometry::add_point(const Point_Double& point)
 {
   delete bounds;
   bounds = 0;
-  has_coords |= (point.lat < 100.);
+  if (point.lat < 100.)
+  {
+    if (points.empty() || (points.back().lat >= 100.))
+      valid_segments.push_back(std::vector< Point_Double >());
+    valid_segments.back().push_back(point);
+    has_coords = true;
+  }
   points.push_back(point);
 }
 
@@ -1667,6 +1696,15 @@ void Compound_Geometry::add_component(Opaque_Geometry* component)
   delete bounds;
   bounds = 0;
   components.push_back(component);
+}
+
+
+Opaque_Geometry* Partial_Relation_Geometry::clone() const
+{
+  std::vector< Opaque_Geometry* > cloned;
+  for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
+    cloned.push_back((*it)->clone());
+  return new Partial_Relation_Geometry(cloned);
 }
 
 
