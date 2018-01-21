@@ -107,6 +107,94 @@ std::string Unary_Eval_Task::eval(const Element_With_Context< Derived_Skeleton >
 //-----------------------------------------------------------------------------
 
 
+Evaluator_Geometry_Unary_Function::Evaluator_Geometry_Unary_Function(int line_number_)
+    : Evaluator(line_number_), rhs(0) {}
+
+
+void Evaluator_Geometry_Unary_Function::add_statement(Statement* statement, std::string text)
+{
+  Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
+  if (!tag_value_)
+    substatement_error(get_name(), statement);
+  else if (!rhs)
+    rhs = tag_value_;
+  else
+    add_static_error(get_name() + " must have exactly one evaluator substatement.");
+}
+
+
+Eval_Geometry_Task* Evaluator_Geometry_Unary_Function::get_geometry_task(Prepare_Task_Context& context)
+{
+  Eval_Geometry_Task* rhs_task = rhs ? rhs->get_geometry_task(context) : 0;
+  return new Unary_Geometry_Eval_Task(rhs_task, this);
+}
+
+
+Requested_Context Evaluator_Geometry_Unary_Function::request_context() const
+{
+  if (rhs)
+    return rhs->request_context();
+  return Requested_Context();
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval() const
+{
+  return evaluator->process(rhs ? rhs->eval() : 0);
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval(const Element_With_Context< Node_Skeleton >& data) const
+{
+  return evaluator->process(rhs ? rhs->eval(data) : 0);
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval(const Element_With_Context< Attic< Node_Skeleton > >& data) const
+{
+  return evaluator->process(rhs ? rhs->eval(data) : 0);
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval(const Element_With_Context< Way_Skeleton >& data) const
+{
+  return evaluator->process(rhs ? rhs->eval(data) : 0);
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval(const Element_With_Context< Attic< Way_Skeleton > >& data) const
+{
+  return evaluator->process(rhs ? rhs->eval(data) : 0);
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval(const Element_With_Context< Relation_Skeleton >& data) const
+{
+  return evaluator->process(rhs ? rhs->eval(data) : 0);
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval(const Element_With_Context< Attic< Relation_Skeleton > >& data) const
+{
+  return evaluator->process(rhs ? rhs->eval(data) : 0);
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval(const Element_With_Context< Area_Skeleton >& data) const
+{
+  return evaluator->process(rhs ? rhs->eval(data) : 0);
+}
+
+
+Opaque_Geometry* Unary_Geometry_Eval_Task::eval(const Element_With_Context< Derived_Skeleton >& data) const
+{
+  return evaluator->process(rhs ? rhs->eval(data) : 0);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Evaluator_Binary_Function::Evaluator_Binary_Function(int line_number_) : Evaluator(line_number_),
     first(0), second(0) {}
 

@@ -34,7 +34,7 @@
 
 String endomorphisms are functions with one argument.
 Many of them help to normalize or check the value of its argument.
-The always first let their argument be evaluated.
+They always first let their argument be evaluated.
 Their syntax is always
 
   <Function Name>(<Evaluator>)

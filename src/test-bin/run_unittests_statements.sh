@@ -210,9 +210,9 @@ date +%T
 perform_test_loop polygon_query 5 "$DATA_SIZE ../../input/update_database/"
 
 # Test the make statement
-prepare_test_loop make 110 $DATA_SIZE
+prepare_test_loop make 112 $DATA_SIZE
 date +%T
-perform_test_loop make 110 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+perform_test_loop make 112 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the make statement
 prepare_test_loop convert 11 $DATA_SIZE

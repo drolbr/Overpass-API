@@ -67,6 +67,49 @@ private:
 };
 
 
+class Evaluator_Geometry_Unary_Function : public Evaluator
+{
+public:
+  Evaluator_Geometry_Unary_Function(int line_number_);
+  virtual void add_statement(Statement* statement, std::string text);
+  virtual void execute(Resource_Manager& rman) {}
+  virtual std::string get_result_name() const { return ""; }
+
+  virtual Requested_Context request_context() const;
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::geometry; };
+  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context);
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) { return 0; }
+
+  virtual Opaque_Geometry* process(Opaque_Geometry* geom) const = 0;
+
+protected:
+  Evaluator* rhs;
+};
+
+
+struct Unary_Geometry_Eval_Task : public Eval_Geometry_Task
+{
+  Unary_Geometry_Eval_Task(Eval_Geometry_Task* rhs_, Evaluator_Geometry_Unary_Function* evaluator_)
+      : rhs(rhs_), evaluator(evaluator_) {}
+  ~Unary_Geometry_Eval_Task() { delete rhs; }
+
+  virtual Opaque_Geometry* eval() const;
+
+  virtual Opaque_Geometry* eval(const Element_With_Context< Node_Skeleton >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Node_Skeleton > >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Way_Skeleton >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Way_Skeleton > >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Relation_Skeleton >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Relation_Skeleton > >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Area_Skeleton >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& data) const;
+
+private:
+  Eval_Geometry_Task* rhs;
+  Evaluator_Geometry_Unary_Function* evaluator;
+};
+
+
 class Evaluator_Binary_Function : public Evaluator
 {
 public:

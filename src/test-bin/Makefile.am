@@ -35,6 +35,7 @@ statements_cc = \
   ../overpass_api/statements/filter.cc \
   ../overpass_api/statements/for.cc \
   ../overpass_api/statements/foreach.cc \
+  ../overpass_api/statements/geometry_endomorphisms.cc \
   ../overpass_api/statements/id_query.cc \
   ../overpass_api/statements/if.cc \
   ../overpass_api/statements/item.cc \

@@ -4978,6 +4978,16 @@ int main(int argc, char* args[])
       "      <vertex lat=\"51.0050000\" lon=\"7.0015000\"/>\n"
       "    </group>\n"
       "  </geometry>\n";
+    if (std::string(args[2]) == "make_111")
+      std::cout<<
+      "  <center id=\"1\">\n"
+      "    <point lat=\"48.0000000\" lon=\"11.0000000\"/>\n"
+      "  </center>\n";
+    if (std::string(args[2]) == "make_112")
+      std::cout<<
+      "  <center id=\"1\">\n"
+      "    <point lat=\"42.0000000\" lon=\"180.0000000\"/>\n"
+      "  </center>\n";
 
     std::cout<<"</osm>\n";
   }
