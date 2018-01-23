@@ -131,4 +131,33 @@ public:
 };
 
 
+/* === Trace ===
+
+The function <em>trace</em> returns the trace of its argument.
+It expects a function that evaluates to a geometry.
+It then delivers a collection of all segments and nodes that appear in its input.
+Ways are split at points that are explicitly in the set.
+Every node and segments is contained at most once.
+
+Its syntax is
+
+  trace(<Evaluator>)
+
+*/
+
+class Evaluator_Trace : public Evaluator_Geometry_Endom_Syntax< Evaluator_Trace >
+{
+public:
+  static Geometry_Endom_Statement_Maker< Evaluator_Trace > statement_maker;
+  static Geometry_Endom_Evaluator_Maker< Evaluator_Trace > evaluator_maker;
+  static std::string stmt_func_name() { return "trace"; }
+  static std::string stmt_name() { return "eval-trace"; }
+
+  Evaluator_Trace(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Geometry_Endom_Syntax< Evaluator_Trace >(line_number_, input_attributes) {}
+
+  virtual Opaque_Geometry* process(Opaque_Geometry* geom) const;
+};
+
+
 #endif

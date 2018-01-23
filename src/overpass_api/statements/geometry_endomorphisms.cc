@@ -40,3 +40,22 @@ Opaque_Geometry* Evaluator_Center::process(Opaque_Geometry* geom) const
   delete geom;
   return result;
 }
+
+
+//-----------------------------------------------------------------------------
+
+
+Geometry_Endom_Statement_Maker< Evaluator_Trace > Evaluator_Trace::statement_maker;
+Geometry_Endom_Evaluator_Maker< Evaluator_Trace > Evaluator_Trace::evaluator_maker;
+
+
+Opaque_Geometry* Evaluator_Trace::process(Opaque_Geometry* geom) const
+{
+  if (!geom)
+    return 0;
+  
+  Opaque_Geometry* result = make_trace(*geom);
+  
+  delete geom;
+  return result;
+}

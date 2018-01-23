@@ -1947,3 +1947,142 @@ double length(const Opaque_Geometry& geometry)
   
   return result;
 }
+
+
+void collect_components(
+    std::vector< Point_Double >& nodes, std::vector< std::vector< Point_Double > >& linestrings,
+    const Opaque_Geometry& geometry)
+{
+  if (geometry.has_components())
+  {
+    const std::vector< Opaque_Geometry* >& components = *geometry.get_components();
+    for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
+    {
+      if (*it)
+        collect_components(nodes, linestrings, **it);
+    }
+  }
+  else if (geometry.has_line_geometry())
+    linestrings.push_back(*geometry.get_line_geometry());
+  else if (geometry.has_multiline_geometry())
+  {
+    const std::vector< std::vector< Point_Double > >& lstrs = *geometry.get_multiline_geometry();
+    for (std::vector< std::vector< Point_Double > >::const_iterator it = lstrs.begin(); it != lstrs.end(); ++it)
+      linestrings.push_back(*it);
+  }
+  else if (geometry.has_center())
+    nodes.push_back(Point_Double(geometry.center_lat(), geometry.center_lon()));
+}
+
+
+struct Linestring_Geometry_Ptr
+{
+  Linestring_Geometry_Ptr(Linestring_Geometry* ptr_) : ptr(ptr_) {}
+  bool operator<(Linestring_Geometry_Ptr rhs) const;
+  
+private:
+  Linestring_Geometry* ptr;
+};
+
+
+bool Linestring_Geometry_Ptr::operator<(Linestring_Geometry_Ptr rhs_) const
+{
+  if (!rhs_.ptr)
+    return false;
+  if (!ptr)
+    return true;
+  
+  const std::vector< Point_Double >& lhs = *ptr->get_line_geometry();
+  const std::vector< Point_Double >& rhs = *rhs_.ptr->get_line_geometry();
+  
+  if (lhs.size() != rhs.size())
+    return lhs.size() < rhs.size();
+  
+  uint l_start = 0;
+  uint l_factor = 1;
+  if (lhs.back() < lhs.front())
+  {
+    l_start = lhs.size()-1;
+    l_factor = -1;
+  }
+  
+  uint r_start = 0;
+  uint r_factor = 1;
+  if (rhs.back() < rhs.front())
+  {
+    r_start = rhs.size()-1;
+    r_factor = -1;
+  }
+  
+  for (int i = 0; i < (int)lhs.size(); ++i)
+  {
+    if (lhs[l_start + l_factor*i] != rhs[r_start + r_factor*i])
+      return lhs[l_start + l_factor*i] < rhs[r_start + r_factor*i];
+  }
+  return false;
+}
+
+
+Opaque_Geometry* make_trace(const Opaque_Geometry& geometry)
+{
+  std::vector< Point_Double > nodes;
+  std::vector< std::vector< Point_Double > > linestrings;
+  collect_components(nodes, linestrings, geometry);
+  
+  std::map< Point_Double, uint > coord_count;
+  for (std::vector< Point_Double >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+    ++coord_count[*it];
+  
+  for (std::vector< std::vector< Point_Double > >::const_iterator lit = linestrings.begin();
+      lit != linestrings.end(); ++lit)
+  {
+    if (lit->empty())
+      continue;
+    coord_count[lit->front()] += 2;
+    coord_count[lit->back()] += 2;
+    for (uint i = 1; i < lit->size() - 1; ++i)
+      ++coord_count[(*lit)[i]];
+  }
+  
+  Compound_Geometry* result = new Compound_Geometry();
+  
+  std::sort(nodes.begin(), nodes.end());
+  nodes.erase(std::unique(nodes.begin(), nodes.end()), nodes.end());
+  for (std::vector< Point_Double >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+    result->add_component(new Point_Geometry(it->lat, it->lon));
+  
+  std::set< Linestring_Geometry_Ptr > lstrs;
+  for (std::vector< std::vector< Point_Double > >::const_iterator lit = linestrings.begin();
+      lit != linestrings.end(); ++lit)
+  {
+    if (lit->empty())
+      continue;
+    
+    std::vector< Point_Double > points;
+    points.push_back(lit->front());
+    for (uint i = 1; i < lit->size() - 1; ++i)
+    {
+      if (coord_count[(*lit)[i]] > 1)
+      {
+        points.push_back((*lit)[i]);
+        
+        Linestring_Geometry* lstr = new Linestring_Geometry(points);
+        if (lstrs.insert(Linestring_Geometry_Ptr(lstr)).second)
+          result->add_component(lstr);
+        else
+          delete lstr;
+        
+        points.clear();
+      }
+      points.push_back((*lit)[i]);
+    }
+    points.push_back(lit->back());
+    Linestring_Geometry* lstr = new Linestring_Geometry(points);
+    if (lstrs.insert(Linestring_Geometry_Ptr(lstr)).second)
+      result->add_component(lstr);
+    else
+      delete lstr;
+  }
+  
+  return result;
+}

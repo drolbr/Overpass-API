@@ -21,61 +21,59 @@
 #include "aggregators.h"
 #include "id_query.h"
 #include "convert.h"
+#include "geometry_endomorphisms.h"
 #include "make.h"
 #include "print.h"
 #include "set_prop.h"
 #include "tag_value.h"
+#include "testing_tools.h"
 #include "union.h"
 
 
 void prepare_value_test(Parsed_Query& global_settings, Resource_Manager& rman,
     std::string from, uint64 ref1, uint64 ref2, std::string derived_num, uint64 global_node_offset)
 {
-  std::map< std::string, std::string > attributes;
-  if (from != "_")
-    attributes["into"] = from;
-  Union_Statement union_(0, attributes, global_settings);
+  Union_Statement union_(0, (from == "_" ? Attr() : Attr()("into", from)).kvs(), global_settings);
 
-  attributes.clear();
-  attributes["type"] = "node";
-  attributes["ref"] = to_string(ref1 + global_node_offset);
-  Id_Query_Statement stmt1(0, attributes, global_settings);
+  Id_Query_Statement stmt1(0, Attr()("type", "node")("ref", to_string(ref1 + global_node_offset)).kvs(),
+      global_settings);
   union_.add_statement(&stmt1, "");
-
-  attributes.clear();
-  attributes["type"] = "way";
-  attributes["ref"] = to_string(ref1);
-  Id_Query_Statement stmt2(0, attributes, global_settings);
+  Id_Query_Statement stmt2(0, Attr()("type", "way")("ref", to_string(ref1)).kvs(), global_settings);
   union_.add_statement(&stmt2, "");
-
-  attributes.clear();
-  attributes["type"] = "relation";
-  attributes["ref"] = to_string(ref1);
-  Id_Query_Statement stmt3(0, attributes, global_settings);
+  Id_Query_Statement stmt3(0, Attr()("type", "relation")("ref", to_string(ref1)).kvs(), global_settings);
   union_.add_statement(&stmt3, "");
 
-  attributes.clear();
-  attributes["type"] = "node";
-  attributes["ref"] = to_string(ref2 + global_node_offset);
-  Id_Query_Statement stmt4(0, attributes, global_settings);
+  Id_Query_Statement stmt4(0, Attr()("type", "node")("ref", to_string(ref2 + global_node_offset)).kvs(),
+      global_settings);
   if (ref1 != ref2)
     union_.add_statement(&stmt4, "");
 
-  attributes.clear();
-  attributes["type"] = "derivee";
-  Make_Statement stmt5(0, attributes, global_settings);
-
-  attributes.clear();
-  attributes["k"] = "number";
-  Set_Prop_Statement stmt50(0, attributes, global_settings);
+  Make_Statement stmt5(0, Attr()("type", "derivee").kvs(), global_settings);
+  Set_Prop_Statement stmt50(0, Attr()("k", "number").kvs(), global_settings);
   stmt5.add_statement(&stmt50, "");
-  attributes.clear();
-  attributes["v"] = derived_num;
-  Evaluator_Fixed stmt500(0, attributes, global_settings);
+  Evaluator_Fixed stmt500(0, Attr()("v", derived_num).kvs(), global_settings);
   stmt50.add_statement(&stmt500, "");
 
   if (derived_num != "")
     union_.add_statement(&stmt5, "");
+
+  union_.execute(rman);
+}
+
+
+void prepare_relation_test(Parsed_Query& global_settings, Resource_Manager& rman,
+    std::string from, uint64 ref1, uint64 ref2, uint64 ref3, uint64 ref4)
+{
+  Union_Statement union_(0, (from == "_" ? Attr() : Attr()("into", from)).kvs(), global_settings);
+
+  Id_Query_Statement stmt1(0, Attr()("type", "relation")("ref", to_string(ref1)).kvs(), global_settings);
+  union_.add_statement(&stmt1, "");
+  Id_Query_Statement stmt2(0, Attr()("type", "relation")("ref", to_string(ref2)).kvs(), global_settings);
+  union_.add_statement(&stmt2, "");
+  Id_Query_Statement stmt3(0, Attr()("type", "relation")("ref", to_string(ref3)).kvs(), global_settings);
+  union_.add_statement(&stmt3, "");
+  Id_Query_Statement stmt4(0, Attr()("type", "relation")("ref", to_string(ref4)).kvs(), global_settings);
+  union_.add_statement(&stmt4, "");
 
   union_.execute(rman);
 }
@@ -87,26 +85,15 @@ void just_copy_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, from, ref1, ref2, derived_num, global_node_offset);
 
-  std::map< std::string, std::string > attributes;
-  attributes["from"] = from;
-  attributes["type"] = type;
-  Convert_Statement stmt(0, attributes, global_settings);
+  Convert_Statement stmt(0, Attr()("from", from)("type", type).kvs(), global_settings);
 
-  attributes.clear();
-  attributes["keytype"] = "generic";
-  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "generic").kvs(), global_settings);
   stmt.add_statement(&stmt1, "");
-  attributes.clear();
-  Evaluator_Generic stmt10(0, attributes, global_settings);
+  Evaluator_Generic stmt10(0, Attr().kvs(), global_settings);
   stmt1.add_statement(&stmt10, "");
 
   stmt.execute(rman);
-
-  {
-    attributes.clear();
-    Print_Statement stmt(0, attributes, global_settings);
-    stmt.execute(rman);
-  }
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
 }
 
 
@@ -116,27 +103,15 @@ void into_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, "_", 7, 14, "1000", global_node_offset);
 
-  std::map< std::string, std::string > attributes;
-  attributes["type"] = type;
-  attributes["into"] = into;
-  Convert_Statement stmt(0, attributes, global_settings);
+  Convert_Statement stmt(0, Attr()("type", type)("into", into).kvs(), global_settings);
 
-  attributes.clear();
-  attributes["keytype"] = "generic";
-  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "generic").kvs(), global_settings);
   stmt.add_statement(&stmt1, "");
-  attributes.clear();
-  Evaluator_Generic stmt10(0, attributes, global_settings);
+  Evaluator_Generic stmt10(0, Attr().kvs(), global_settings);
   stmt1.add_statement(&stmt10, "");
 
   stmt.execute(rman);
-
-  {
-    attributes.clear();
-    attributes["from"] = into;
-    Print_Statement stmt(0, attributes, global_settings);
-    stmt.execute(rman);
-  }
+  Print_Statement(0, Attr()("from", into).kvs(), global_settings).execute(rman);
 }
 
 
@@ -146,45 +121,25 @@ void tag_manipulation_test(Parsed_Query& global_settings, Transaction& transacti
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, from, ref1, ref2, derived_num, global_node_offset);
 
-  std::map< std::string, std::string > attributes;
-  attributes["from"] = from;
-  attributes["type"] = type;
-  Convert_Statement stmt(0, attributes, global_settings);
+  Convert_Statement stmt(0, Attr()("from", from)("type", type).kvs(), global_settings);
 
-  attributes.clear();
-  attributes["keytype"] = "generic";
-  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "generic").kvs(), global_settings);
   stmt.add_statement(&stmt1, "");
-  attributes.clear();
-  Evaluator_Generic stmt10(0, attributes, global_settings);
+  Evaluator_Generic stmt10(0, Attr().kvs(), global_settings);
   stmt1.add_statement(&stmt10, "");
 
-  attributes.clear();
-  attributes["k"] = "extra_key";
-  Set_Prop_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, Attr()("k", "extra_key").kvs(), global_settings);
   stmt.add_statement(&stmt2, "");
-  attributes.clear();
-  attributes["v"] = "extra_value";
-  Evaluator_Fixed stmt20(0, attributes, global_settings);
+  Evaluator_Fixed stmt20(0, Attr()("v", "extra_value").kvs(), global_settings);
   stmt2.add_statement(&stmt20, "");
 
-  attributes.clear();
-  attributes["k"] = "node_key";
-  Set_Prop_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, Attr()("k", "node_key").kvs(), global_settings);
   stmt.add_statement(&stmt3, "");
-
-  attributes.clear();
-  attributes["k"] = "number";
-  Set_Prop_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, Attr()("k", "number").kvs(), global_settings);
   stmt.add_statement(&stmt4, "");
 
   stmt.execute(rman);
-
-  {
-    attributes.clear();
-    Print_Statement stmt(0, attributes, global_settings);
-    stmt.execute(rman);
-  }
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
 }
 
 
@@ -220,157 +175,82 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
     union_.execute(rman);
   }
 
-  std::map< std::string, std::string > attributes;
-  attributes["type"] = type;
-  Convert_Statement stmt(0, attributes, global_settings);
+  Convert_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
 
-  attributes.clear();
-  attributes["k"] = "nodes";
-  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("k", "nodes").kvs(), global_settings);
   stmt.add_statement(&stmt1, "");
-  attributes.clear();
-  attributes["type"] = "nodes";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Set_Count stmt10(0, attributes, global_settings);
+  Evaluator_Set_Count stmt10(0, (from == "_" ? Attr() : Attr()("from", from))("type", "nodes").kvs(),
+      global_settings);
   stmt1.add_statement(&stmt10, "");
 
-  attributes.clear();
-  attributes["k"] = "ways";
-  Set_Prop_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, Attr()("k", "ways").kvs(), global_settings);
   stmt.add_statement(&stmt2, "");
-  attributes.clear();
-  attributes["type"] = "ways";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Set_Count stmt20(0, attributes, global_settings);
+  Evaluator_Set_Count stmt20(0, (from == "_" ? Attr() : Attr()("from", from))("type", "ways").kvs(),
+      global_settings);
   stmt2.add_statement(&stmt20, "");
 
-  attributes.clear();
-  attributes["k"] = "relations";
-  Set_Prop_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, Attr()("k", "relations").kvs(), global_settings);
   stmt.add_statement(&stmt3, "");
-  attributes.clear();
-  attributes["type"] = "relations";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Set_Count stmt30(0, attributes, global_settings);
+  Evaluator_Set_Count stmt30(0, (from == "_" ? Attr() : Attr()("from", from))("type", "relations").kvs(),
+      global_settings);
   stmt3.add_statement(&stmt30, "");
 
-  attributes.clear();
-  attributes["k"] = "tags";
-  Set_Prop_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, Attr()("k", "tags").kvs(), global_settings);
   stmt.add_statement(&stmt4, "");
-  attributes.clear();
-  attributes["type"] = "tags";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt40(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt40(0, (from == "_" ? Attr() : Attr()("from", from))("type", "tags").kvs(),
+      global_settings);
   stmt4.add_statement(&stmt40, "");
 
-  attributes.clear();
-  attributes["k"] = "members";
-  Set_Prop_Statement stmt5(0, attributes, global_settings);
+  Set_Prop_Statement stmt5(0, Attr()("k", "members").kvs(), global_settings);
   stmt.add_statement(&stmt5, "");
-  attributes.clear();
-  attributes["type"] = "members";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt50(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt50(0, (from == "_" ? Attr() : Attr()("from", from))("type", "members").kvs(),
+      global_settings);
   stmt5.add_statement(&stmt50, "");
 
-  attributes.clear();
-  attributes["k"] = "distinct_members";
-  Set_Prop_Statement stmt6(0, attributes, global_settings);
+  Set_Prop_Statement stmt6(0, Attr()("k", "distinct_members").kvs(), global_settings);
   stmt.add_statement(&stmt6, "");
-  attributes.clear();
-  attributes["type"] = "distinct_members";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt60(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt60(0, (from == "_" ? Attr() : Attr()("from", from))
+      ("type", "distinct_members").kvs(), global_settings);
   stmt6.add_statement(&stmt60, "");
 
-  attributes.clear();
-  attributes["k"] = "by_role";
-  Set_Prop_Statement stmt7(0, attributes, global_settings);
+  Set_Prop_Statement stmt7(0, Attr()("k", "by_role").kvs(), global_settings);
   stmt.add_statement(&stmt7, "");
-  attributes.clear();
-  attributes["type"] = "by_role";
-  attributes["role"] = "one";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt70(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt70(0, (from == "_" ? Attr() : Attr()("from", from))
+      ("type", "by_role")("role", "one").kvs(), global_settings);
   stmt7.add_statement(&stmt70, "");
 
-  attributes.clear();
-  attributes["k"] = "distinct_by_role";
-  Set_Prop_Statement stmt8(0, attributes, global_settings);
+  Set_Prop_Statement stmt8(0, Attr()("k", "distinct_by_role").kvs(), global_settings);
   stmt.add_statement(&stmt8, "");
-  attributes.clear();
-  attributes["type"] = "distinct_by_role";
-  attributes["role"] = "one";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt80(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt80(0, (from == "_" ? Attr() : Attr()("from", from))
+      ("type", "distinct_by_role")("role", "one").kvs(), global_settings);
   stmt8.add_statement(&stmt80, "");
 
-  attributes.clear();
-  attributes["k"] = "members_with_type";
-  Set_Prop_Statement stmt_10(0, attributes, global_settings);
+  Set_Prop_Statement stmt_10(0, Attr()("k", "members_with_type").kvs(), global_settings);
   stmt.add_statement(&stmt_10, "");
-  attributes.clear();
-  attributes["type"] = "members";
-  attributes["members_type"] = "nodes";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt_100(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt_100(0, (from == "_" ? Attr() : Attr()("from", from))
+      ("type", "members")("members_type", "nodes").kvs(), global_settings);
   stmt_10.add_statement(&stmt_100, "");
 
-  attributes.clear();
-  attributes["k"] = "distinct_members_with_type";
-  Set_Prop_Statement stmt_11(0, attributes, global_settings);
+  Set_Prop_Statement stmt_11(0, Attr()("k", "distinct_members_with_type").kvs(), global_settings);
   stmt.add_statement(&stmt_11, "");
-  attributes.clear();
-  attributes["type"] = "distinct_members";
-  attributes["members_type"] = "nodes";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt_110(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt_110(0, (from == "_" ? Attr() : Attr()("from", from))
+      ("type", "distinct_members")("members_type", "nodes").kvs(), global_settings);
   stmt_11.add_statement(&stmt_110, "");
 
-  attributes.clear();
-  attributes["k"] = "by_role_with_type";
-  Set_Prop_Statement stmt_12(0, attributes, global_settings);
+  Set_Prop_Statement stmt_12(0, Attr()("k", "by_role_with_type").kvs(), global_settings);
   stmt.add_statement(&stmt_12, "");
-  attributes.clear();
-  attributes["type"] = "by_role";
-  attributes["role"] = "one";
-  attributes["members_type"] = "nodes";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt_120(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt_120(0, (from == "_" ? Attr() : Attr()("from", from))
+      ("type", "by_role")("role", "one")("members_type", "nodes").kvs(), global_settings);
   stmt_12.add_statement(&stmt_120, "");
 
-  attributes.clear();
-  attributes["k"] = "distinct_by_role_with_type";
-  Set_Prop_Statement stmt_13(0, attributes, global_settings);
+  Set_Prop_Statement stmt_13(0, Attr()("k", "distinct_by_role_with_type").kvs(), global_settings);
   stmt.add_statement(&stmt_13, "");
-  attributes.clear();
-  attributes["type"] = "distinct_by_role";
-  attributes["role"] = "one";
-  attributes["members_type"] = "nodes";
-  if (from != "_")
-    attributes["from"] = from;
-  Evaluator_Properties_Count stmt_130(0, attributes, global_settings);
+  Evaluator_Properties_Count stmt_130(0, (from == "_" ? Attr() : Attr()("from", from))
+      ("type", "distinct_by_role")("role", "one")("members_type", "nodes").kvs(), global_settings);
   stmt_13.add_statement(&stmt_130, "");
 
   stmt.execute(rman);
-
-  {
-    const char* attributes[] = { 0 };
-    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-    stmt.execute(rman);
-  }
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
 }
 
 
@@ -380,50 +260,27 @@ void is_tag_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, "_", 7, 14, "1000", global_node_offset);
 
-  std::map< std::string, std::string > attributes;
-  attributes["type"] = type;
-  Convert_Statement stmt(0, attributes, global_settings);
+  Convert_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
 
-  attributes.clear();
-  attributes["k"] = "node_key";
-  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("k", "node_key").kvs(), global_settings);
   stmt.add_statement(&stmt1, "");
-  attributes.clear();
-  attributes["k"] = "node_key";
-  Evaluator_Is_Tag stmt10(0, attributes, global_settings);
+  Evaluator_Is_Tag stmt10(0, Attr()("k", "node_key").kvs(), global_settings);
   stmt1.add_statement(&stmt10, "");
-  attributes.clear();
-  attributes["k"] = "way_key";
-  Set_Prop_Statement stmt2(0, attributes, global_settings);
+  Set_Prop_Statement stmt2(0, Attr()("k", "way_key").kvs(), global_settings);
   stmt.add_statement(&stmt2, "");
-  attributes.clear();
-  attributes["k"] = "way_key";
-  Evaluator_Is_Tag stmt20(0, attributes, global_settings);
+  Evaluator_Is_Tag stmt20(0, Attr()("k", "way_key").kvs(), global_settings);
   stmt2.add_statement(&stmt20, "");
-  attributes.clear();
-  attributes["k"] = "relation_key";
-  Set_Prop_Statement stmt3(0, attributes, global_settings);
+  Set_Prop_Statement stmt3(0, Attr()("k", "relation_key").kvs(), global_settings);
   stmt.add_statement(&stmt3, "");
-  attributes.clear();
-  attributes["k"] = "relation_key";
-  Evaluator_Is_Tag stmt30(0, attributes, global_settings);
+  Evaluator_Is_Tag stmt30(0, Attr()("k", "relation_key").kvs(), global_settings);
   stmt3.add_statement(&stmt30, "");
-  attributes.clear();
-  attributes["k"] = "number";
-  Set_Prop_Statement stmt4(0, attributes, global_settings);
+  Set_Prop_Statement stmt4(0, Attr()("k", "number").kvs(), global_settings);
   stmt.add_statement(&stmt4, "");
-  attributes.clear();
-  attributes["k"] = "number";
-  Evaluator_Is_Tag stmt40(0, attributes, global_settings);
+  Evaluator_Is_Tag stmt40(0, Attr()("k", "number").kvs(), global_settings);
   stmt4.add_statement(&stmt40, "");
 
   stmt.execute(rman);
-
-  {
-    attributes.clear();
-    Print_Statement stmt(0, attributes, global_settings);
-    stmt.execute(rman);
-  }
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
 }
 
 
@@ -433,26 +290,55 @@ void geom_test(Parsed_Query& global_settings, Transaction& transaction,
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, "_", 8, 14, "1000", global_node_offset);
   
-  std::map< std::string, std::string > attributes;
-  attributes["type"] = type;
-  Convert_Statement stmt(0, attributes, global_settings);
+  Convert_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
 
-  attributes.clear();
-  attributes["keytype"] = "geometry";
-  Set_Prop_Statement stmt1(0, attributes, global_settings);
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
   stmt.add_statement(&stmt1, "");
-  attributes.clear();
-  Evaluator_Geometry stmt10(0, attributes, global_settings);
+  Evaluator_Geometry stmt10(0, Attr().kvs(), global_settings);
   stmt1.add_statement(&stmt10, "");
 
   stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
 
-  {
-    attributes.clear();
-    attributes["geometry"] = "full";
-    Print_Statement stmt(0, attributes, global_settings);
-    stmt.execute(rman);
-  }
+
+void trace_test_1(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_value_test(global_settings, rman, "_", 2, 3, "1000", global_node_offset);
+  
+  Convert_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  stmt.add_statement(&stmt1, "");
+  Evaluator_Trace stmt10(0, Attr().kvs(), global_settings);
+  stmt1.add_statement(&stmt10, "");
+  Evaluator_Geometry stmt100(0, Attr().kvs(), global_settings);
+  stmt10.add_statement(&stmt100, "");
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
+void trace_test_2(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_relation_test(global_settings, rman, "_", 2, 6, 9, 10);
+  
+  Convert_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  stmt.add_statement(&stmt1, "");
+  Evaluator_Trace stmt10(0, Attr().kvs(), global_settings);
+  stmt1.add_statement(&stmt10, "");
+  Evaluator_Geometry stmt100(0, Attr().kvs(), global_settings);
+  stmt10.add_statement(&stmt100, "");
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
 }
 
 
@@ -499,6 +385,10 @@ int main(int argc, char* args[])
       count_test(global_settings, transaction, "count-from-default", "_", 10, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "11"))
       geom_test(global_settings, transaction, "geometry", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "12"))
+      trace_test_1(global_settings, transaction, "trace", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "13"))
+      trace_test_2(global_settings, transaction, "trace", global_node_offset);
 
     std::cout<<"</osm>\n";
   }
