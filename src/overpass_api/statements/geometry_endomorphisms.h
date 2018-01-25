@@ -160,4 +160,31 @@ public:
 };
 
 
+/* === Hull ===
+
+The function <em>hull</em> returns the convex hull of its argument.
+It expects a function that evaluates to a geometry
+It then delivers a polygon without holes that contains all of its arguments.
+
+Its syntax is
+
+  hull(<Evaluator>)
+
+*/
+
+class Evaluator_Hull : public Evaluator_Geometry_Endom_Syntax< Evaluator_Hull >
+{
+public:
+  static Geometry_Endom_Statement_Maker< Evaluator_Hull > statement_maker;
+  static Geometry_Endom_Evaluator_Maker< Evaluator_Hull > evaluator_maker;
+  static std::string stmt_func_name() { return "hull"; }
+  static std::string stmt_name() { return "eval-hull"; }
+
+  Evaluator_Hull(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_Geometry_Endom_Syntax< Evaluator_Hull >(line_number_, input_attributes) {}
+
+  virtual Opaque_Geometry* process(Opaque_Geometry* geom) const;
+};
+
+
 #endif

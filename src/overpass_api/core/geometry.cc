@@ -2029,6 +2029,9 @@ Opaque_Geometry* make_trace(const Opaque_Geometry& geometry)
   std::vector< std::vector< Point_Double > > linestrings;
   collect_components(nodes, linestrings, geometry);
   
+  std::sort(nodes.begin(), nodes.end());
+  nodes.erase(std::unique(nodes.begin(), nodes.end()), nodes.end());
+  
   std::map< Point_Double, uint > coord_count;
   for (std::vector< Point_Double >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     ++coord_count[*it];
@@ -2046,8 +2049,6 @@ Opaque_Geometry* make_trace(const Opaque_Geometry& geometry)
   
   Compound_Geometry* result = new Compound_Geometry();
   
-  std::sort(nodes.begin(), nodes.end());
-  nodes.erase(std::unique(nodes.begin(), nodes.end()), nodes.end());
   for (std::vector< Point_Double >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     result->add_component(new Point_Geometry(it->lat, it->lon));
   
@@ -2085,4 +2086,121 @@ Opaque_Geometry* make_trace(const Opaque_Geometry& geometry)
   }
   
   return result;
+}
+
+
+void collect_components(std::vector< Point_Double >& nodes, const Opaque_Geometry& geometry)
+{
+  if (geometry.has_components())
+  {
+    const std::vector< Opaque_Geometry* >& components = *geometry.get_components();
+    for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
+    {
+      if (*it)
+        collect_components(nodes, **it);
+    }
+  }
+  else if (geometry.has_line_geometry())
+  {
+    const std::vector< Point_Double >& lstrs = *geometry.get_line_geometry();
+    for (std::vector< Point_Double >::const_iterator it = lstrs.begin(); it != lstrs.end(); ++it)
+      nodes.push_back(*it);
+  }
+  else if (geometry.has_multiline_geometry())
+  {
+    const std::vector< std::vector< Point_Double > >& lstrs = *geometry.get_multiline_geometry();
+    for (std::vector< std::vector< Point_Double > >::const_iterator lit = lstrs.begin(); lit != lstrs.end(); ++lit)
+    {
+      for (std::vector< Point_Double >::const_iterator it = lit->begin(); it != lit->end(); ++it)
+        nodes.push_back(*it);
+    }
+  }
+  else if (geometry.has_center())
+    nodes.push_back(Point_Double(geometry.center_lat(), geometry.center_lon()));
+}
+
+
+struct Point_Double_By_Lon
+{
+  bool operator()(const Point_Double& lhs, const Point_Double& rhs)
+  {
+    if (lhs.lon != rhs.lon)
+      return lhs.lon < rhs.lon;
+    return lhs.lat < rhs.lat;
+  }
+};
+
+
+struct Proto_Hull
+{
+  Proto_Hull(const Point_Double& s, const Point_Double& w, const Point_Double& n, const Point_Double& e);
+  void enhance(const Point_Double& rhs);
+  const std::vector< Point_Double >& get_line_geometry() const { return nodes; }
+  
+private:
+  std::vector< Point_Double > nodes;
+};
+
+
+Proto_Hull::Proto_Hull(const Point_Double& s, const Point_Double& w, const Point_Double& n, const Point_Double& e)
+{
+  nodes.push_back(w);
+  nodes.push_back(s);
+  nodes.push_back(e);
+  nodes.push_back(n);
+}
+
+
+void Proto_Hull::enhance(const Point_Double& rhs)
+{
+}
+
+
+Opaque_Geometry* make_hull(const Opaque_Geometry& geometry)
+{
+  std::vector< Point_Double > nodes;
+  collect_components(nodes, geometry);
+  
+  std::sort(nodes.begin(), nodes.end(), Point_Double_By_Lon());
+  nodes.erase(std::unique(nodes.begin(), nodes.end()), nodes.end());
+  
+  if (nodes.empty())
+    return new Null_Geometry();
+  if (nodes.size() == 1)
+    return new Point_Geometry(nodes.front().lat, nodes.front().lon);
+  if (nodes.size() == 2)
+  {
+    nodes.push_back(nodes.front());
+    return new Linestring_Geometry(nodes);
+  }
+  
+  Point_Double min_lat(100., 0.);
+  Point_Double max_lat(-100., 0.);
+  for (std::vector< Point_Double >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+  {
+    if (it->lat < min_lat.lat)
+      min_lat = *it;
+    if (it->lat > max_lat.lat)
+      max_lat = *it;
+  }
+  
+  double max_lon_delta = nodes.front().lon + 360. - nodes.back().lon;
+  Point_Double west_end = nodes.front();
+  Point_Double east_end = nodes.back();
+  for (uint i = 1; i < nodes.size(); ++i)
+  {
+    if (max_lon_delta < nodes[i].lon - nodes[i-1].lon)
+    {
+      max_lon_delta = nodes[i].lon - nodes[i-1].lon;
+      west_end = nodes[i];
+      east_end = nodes[i-1];
+    }
+  }
+  
+  Proto_Hull proto_hull(min_lat, west_end, max_lat, east_end);
+  for (std::vector< Point_Double >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
+    proto_hull.enhance(*it);
+  
+  return new RHR_Polygon_Geometry(Free_Polygon_Geometry(
+      std::vector< std::vector< Point_Double > >(1, proto_hull.get_line_geometry())));
 }

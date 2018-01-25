@@ -535,6 +535,8 @@ double length(const Opaque_Geometry& geometry);
 
 Opaque_Geometry* make_trace(const Opaque_Geometry& geometry);
 
+Opaque_Geometry* make_hull(const Opaque_Geometry& geometry);
+
 double great_circle_dist(double lat1, double lon1, double lat2, double lon2);
 
 

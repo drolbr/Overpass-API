@@ -59,3 +59,22 @@ Opaque_Geometry* Evaluator_Trace::process(Opaque_Geometry* geom) const
   delete geom;
   return result;
 }
+
+
+//-----------------------------------------------------------------------------
+
+
+Geometry_Endom_Statement_Maker< Evaluator_Hull > Evaluator_Hull::statement_maker;
+Geometry_Endom_Evaluator_Maker< Evaluator_Hull > Evaluator_Hull::evaluator_maker;
+
+
+Opaque_Geometry* Evaluator_Hull::process(Opaque_Geometry* geom) const
+{
+  if (!geom)
+    return 0;
+  
+  Opaque_Geometry* result = make_hull(*geom);
+  
+  delete geom;
+  return result;
+}
