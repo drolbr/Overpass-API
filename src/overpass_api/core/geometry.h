@@ -316,7 +316,7 @@ class Free_Polygon_Geometry : public Opaque_Geometry
 {
 public:
   Free_Polygon_Geometry() : bounds(0) {}
-  Free_Polygon_Geometry(const std::vector< std::vector< Point_Double > >& linestrings_) : linestrings(linestrings_), bounds(0) {}
+  Free_Polygon_Geometry(const std::vector< std::vector< Point_Double > >& linestrings_);
   virtual ~Free_Polygon_Geometry() { delete bounds; }
   virtual Opaque_Geometry* clone() const { return new Free_Polygon_Geometry(linestrings); }
   

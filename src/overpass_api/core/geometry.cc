@@ -3,6 +3,7 @@
 #include "index_computations.h"
 
 #include <cmath>
+#include <limits>
 #include <map>
 
 
@@ -342,6 +343,17 @@ Bbox_Double* calc_bounds(const std::vector< std::vector< Point_Double > >& lines
   }
   else
     return new Bbox_Double(south, west, north, east);
+}
+
+
+Free_Polygon_Geometry::Free_Polygon_Geometry(const std::vector< std::vector< Point_Double > >& linestrings_) : linestrings(linestrings_), bounds(0)
+{
+  for (std::vector< std::vector< Point_Double > >::iterator it = linestrings.begin(); it != linestrings.end();
+      ++it)
+  {
+    if (it->front() != it->back())
+      it->push_back(it->front());
+  }
 }
 
 
@@ -840,24 +852,12 @@ struct Idx_Per_Point_Double
 
 struct Line_Divertion
 {
-  Line_Divertion(const Idx_Per_Point_Double& from_pt, const Idx_Per_Point_Double& to_pt)
-      : from_idx(from_pt.idx), from_remote_idx(from_pt.remote_idx),
-      to_idx(to_pt.idx), to_remote_idx(to_pt.remote_idx) {}
-  Line_Divertion(unsigned int from_idx_, unsigned int to_idx_)
-      : from_idx(from_idx_), from_remote_idx(from_idx_), to_idx(to_idx_), to_remote_idx(to_idx_) {}
+  Line_Divertion() : to_idx(std::numeric_limits< uint >::max()),
+      to_remote_idx(std::numeric_limits< uint >::max()) {}
+  Line_Divertion(const Idx_Per_Point_Double& rhs) : to_idx(rhs.idx), to_remote_idx(rhs.remote_idx) {}
   
-  unsigned int from_idx;
-  unsigned int from_remote_idx;
   unsigned int to_idx;
   unsigned int to_remote_idx;
-  
-  bool operator<(const Line_Divertion& rhs) const
-  {
-    if (from_idx != rhs.from_idx)
-      return from_idx < rhs.from_idx;
-    
-    return from_remote_idx < rhs.from_remote_idx;
-  }
 };
 
 
@@ -933,6 +933,12 @@ void split_segments(
 }
 
 
+unsigned int line_divertion_idx(const Idx_Per_Point_Double& rhs)
+{
+  return rhs.idx*2 + ((int)rhs.remote_idx - (int)rhs.idx - 1)/2;
+}
+
+
 void collect_divertions(const std::vector< Point_Double >& all_segments,
     uint32 idx, const std::vector< unsigned int >& segments,
     std::vector< Line_Divertion >& divertions)
@@ -966,8 +972,8 @@ void collect_divertions(const std::vector< Point_Double >& all_segments,
     {
       if (i - same_since == 2)
       {
-        divertions.push_back(Line_Divertion(pos_per_pt[same_since], pos_per_pt[same_since+1]));
-        divertions.push_back(Line_Divertion(pos_per_pt[same_since+1], pos_per_pt[same_since]));
+        divertions[line_divertion_idx(pos_per_pt[same_since])] = Line_Divertion(pos_per_pt[same_since+1]);
+        divertions[line_divertion_idx(pos_per_pt[same_since+1])] = Line_Divertion(pos_per_pt[same_since]);
       }
       else
       {
@@ -985,22 +991,22 @@ void collect_divertions(const std::vector< Point_Double >& all_segments,
           if (j+3 < line_per_gradient.size()
               && line_per_gradient[j+1].first == line_per_gradient[j+2].first)
           {
-            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j].second],
-                pos_per_pt[line_per_gradient[j+3].second]));
-            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+1].second],
-                pos_per_pt[line_per_gradient[j+2].second]));
-            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+2].second],
-                pos_per_pt[line_per_gradient[j+1].second]));
-            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+3].second],
-                pos_per_pt[line_per_gradient[j].second]));
+            divertions[line_divertion_idx(pos_per_pt[line_per_gradient[j].second])]
+                = Line_Divertion(pos_per_pt[line_per_gradient[j+3].second]);
+            divertions[line_divertion_idx(pos_per_pt[line_per_gradient[j+1].second])]
+                = Line_Divertion(pos_per_pt[line_per_gradient[j+2].second]);
+            divertions[line_divertion_idx(pos_per_pt[line_per_gradient[j+2].second])]
+                = Line_Divertion(pos_per_pt[line_per_gradient[j+1].second]);
+            divertions[line_divertion_idx(pos_per_pt[line_per_gradient[j+3].second])]
+                = Line_Divertion(pos_per_pt[line_per_gradient[j].second]);
             j += 2;
           }
           else
           {
-            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j].second],
-                pos_per_pt[line_per_gradient[j+1].second]));
-            divertions.push_back(Line_Divertion(pos_per_pt[line_per_gradient[j+1].second],
-                pos_per_pt[line_per_gradient[j].second]));
+            divertions[line_divertion_idx(pos_per_pt[line_per_gradient[j].second])]
+                = Line_Divertion(pos_per_pt[line_per_gradient[j+1].second]);
+            divertions[line_divertion_idx(pos_per_pt[line_per_gradient[j+1].second])]
+                = Line_Divertion(pos_per_pt[line_per_gradient[j].second]);
           }
         }
       }
@@ -1012,19 +1018,20 @@ void collect_divertions(const std::vector< Point_Double >& all_segments,
 }
 
 
-void assemble_linestrings(
-    const std::vector< Point_Double >& all_segments, unsigned int gap_positions_size,
-    std::vector< Line_Divertion >& divertions,
-    std::vector< std::vector< Point_Double > >& linestrings)
+void assemble_linestrings(const std::vector< Point_Double >& all_segments,
+    std::vector< Line_Divertion >& divertions, std::vector< std::vector< Point_Double > >& linestrings)
 {
-  std::sort(divertions.begin(), divertions.end());
+  // the function changes divertions because divertions is no longer needed after the function
   
   unsigned int pos = 0;
   unsigned int count = 0;
+  for (unsigned int i = 0; i < divertions.size(); i += 2)
+    count += (divertions[i+1].to_idx == std::numeric_limits< uint >::max());
   
-  while (count < all_segments.size()+1-gap_positions_size)
+  //Invariant: count is always equal to the number of i with divertions[2*i+1] == uint::max()
+  while (count < all_segments.size())
   {
-    while (divertions[2*pos + 1].from_remote_idx == pos)
+    while (divertions[2*pos].to_idx == std::numeric_limits< uint >::max())
     {
       ++pos;
       if (pos == all_segments.size()-1)
@@ -1035,7 +1042,7 @@ void assemble_linestrings(
     std::vector< Point_Double >& cur_target = linestrings.back();
     
     int dir = 1;
-    while (divertions[2*pos + dir].from_remote_idx != pos + (dir-1)/2)
+    while (divertions[2*pos + dir].to_idx != std::numeric_limits< uint >::max())
     {
       if (cur_target.size() >= 2 && all_segments[pos].epsilon_equal(cur_target[cur_target.size()-2]))
         // Remove pairs of equal segments
@@ -1043,14 +1050,13 @@ void assemble_linestrings(
       else if (cur_target.empty() || !all_segments[pos].epsilon_equal(cur_target.back()))
         cur_target.push_back(all_segments[pos]);
       
-      ++count;
-      divertions[2*pos + dir].from_remote_idx = pos + (dir-1)/2;
-      
-      pos = (int)pos + dir;
-      
-      Line_Divertion& divertion = divertions[2*pos + (1-dir)/2];
+      Line_Divertion& old_div = divertions[2*(int)pos + dir];
+      Line_Divertion& divertion = divertions[2*(int)pos + (3*dir-1)/2];
       dir = divertion.to_remote_idx - divertion.to_idx;
       pos = divertion.to_idx;
+      
+      ++count;
+      old_div.to_idx = std::numeric_limits< uint >::max();
     }
     
     ++pos;
@@ -1377,17 +1383,23 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
   }
   split_segments(all_segments, gap_positions, segments_per_idx);
   
-  std::vector< Line_Divertion > divertions;
-  for (unsigned int i = 0; i < gap_positions.size()-1; ++i)
+  // divertions[2*i - 2] tells which segment follows the segment from all_segments[i+1] to all_segments[i]
+  // divertions[2*i - 1] tells which segment follows the segment from all_segments[i] to all_segments[i+1]
+  std::vector< Line_Divertion > divertions(2*all_segments.size());
+  
+  // fill the gaps with invalid following segments
+  for (unsigned int i = 1; i < gap_positions.size(); ++i)
   {
-    divertions.push_back(Line_Divertion(gap_positions[i], gap_positions[i]-1));
-    divertions.push_back(Line_Divertion(gap_positions[i]-1, gap_positions[i]));
+    divertions[gap_positions[i]*2 - 2] = Line_Divertion();
+    divertions[gap_positions[i]*2 - 1] = Line_Divertion();
   }
+  
+  // compute the real segment connections
   for (std::map< uint32, std::vector< unsigned int > >::const_iterator idx_it = segments_per_idx.begin();
       idx_it != segments_per_idx.end(); ++idx_it)
     collect_divertions(all_segments, idx_it->first, idx_it->second, divertions);
   
-  assemble_linestrings(all_segments, gap_positions.size(), divertions, linestrings);
+  assemble_linestrings(all_segments, divertions, linestrings);
   
   RHR_Polygon_Area_Oracle area_oracle(all_segments, segments_per_idx);
   Four_Field_Index four_field_idx(&area_oracle);
