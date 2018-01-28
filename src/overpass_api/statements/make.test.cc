@@ -1420,6 +1420,123 @@ void trace_test_2(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void hull_test_1(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint test_level, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  
+  Statement_Container stmt_cont(global_settings);
+  Union_Statement union_(0, Attr().kvs(), global_settings);
+  
+  if (test_level > 0)
+  {
+    Statement* geom_source = stmt_cont.add_stmt(
+        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+    geom_source = stmt_cont.add_stmt(
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+    Statement* lstr = stmt_cont.add_stmt(
+        new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
+    add_point("51.", "6.999", lstr, stmt_cont);
+    if (test_level > 1)
+      add_point("50.999", "7.", lstr, stmt_cont);
+    if (test_level > 2)
+    {
+      add_point("51.", "7.001", lstr, stmt_cont);
+      add_point("51.001", "7.", lstr, stmt_cont);
+    }
+  }
+
+  if (test_level > 3)
+  {
+    Statement* geom_source = stmt_cont.add_stmt(
+        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+    geom_source = stmt_cont.add_stmt(
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+    add_point("50.9993", "6.9993", geom_source, stmt_cont);
+  }
+
+  if (test_level > 4)
+  {
+    Statement* geom_source = stmt_cont.add_stmt(
+        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+    geom_source = stmt_cont.add_stmt(
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+    add_point("50.9994", "7.0005", geom_source, stmt_cont);
+
+    geom_source = stmt_cont.add_stmt(
+        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+    geom_source = stmt_cont.add_stmt(
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+    add_point("50.9995", "7.0006", geom_source, stmt_cont);
+  }
+
+  if (test_level > 5)
+  {
+    Statement* geom_source = stmt_cont.add_stmt(
+        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+    geom_source = stmt_cont.add_stmt(
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+    add_point("50.9991", "7.0009", geom_source, stmt_cont);
+  }
+
+  union_.execute(rman);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  stmt.add_statement(&stmt1, "");
+  Evaluator_Hull stmt10(0, Attr().kvs(), global_settings);
+  stmt1.add_statement(&stmt10, "");
+  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs(), global_settings);
+  stmt10.add_statement(&stmt100, "");
+  Evaluator_Geometry stmt1000(0, Attr().kvs(), global_settings);
+  stmt100.add_statement(&stmt1000, "");
+
+  stmt.execute(rman);
+
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
+void hull_test_2(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint test_level, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  
+  Statement_Container stmt_cont(global_settings);
+  Union_Statement union_(0, Attr().kvs(), global_settings);
+  
+  Statement* geom_source = stmt_cont.add_stmt(
+      new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+  geom_source = stmt_cont.add_stmt(
+      new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+  Statement* lstr = stmt_cont.add_stmt(
+      new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
+  add_point("51.002", "-179.999", lstr, stmt_cont);
+  add_point("51.", "179.998", lstr, stmt_cont);
+  add_point("50.998", "179.999", lstr, stmt_cont);
+  if (test_level > 0)
+    add_point("51.", "-179.998", lstr, stmt_cont);
+
+  union_.execute(rman);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  stmt.add_statement(&stmt1, "");
+  Evaluator_Hull stmt10(0, Attr().kvs(), global_settings);
+  stmt1.add_statement(&stmt10, "");
+  Evaluator_Geom_Concat_Value stmt100(0, Attr().kvs(), global_settings);
+  stmt10.add_statement(&stmt100, "");
+  Evaluator_Geometry stmt1000(0, Attr().kvs(), global_settings);
+  stmt100.add_statement(&stmt1000, "");
+
+  stmt.execute(rman);
+
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -1679,6 +1796,24 @@ int main(int argc, char* args[])
       trace_test_2(global_settings, transaction, "trace", true, false, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "118"))
       trace_test_2(global_settings, transaction, "trace", false, true, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "119"))
+      hull_test_1(global_settings, transaction, "hull", 0, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "120"))
+      hull_test_1(global_settings, transaction, "hull", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "121"))
+      hull_test_1(global_settings, transaction, "hull", 2, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "122"))
+      hull_test_1(global_settings, transaction, "hull", 3, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "123"))
+      hull_test_1(global_settings, transaction, "hull", 4, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "124"))
+      hull_test_1(global_settings, transaction, "hull", 5, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "125"))
+      hull_test_1(global_settings, transaction, "hull", 6, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "126"))
+      hull_test_2(global_settings, transaction, "hull", 0, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "127"))
+      hull_test_2(global_settings, transaction, "hull", 1, global_node_offset);
 
     std::cout<<"</osm>\n";
   }

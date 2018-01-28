@@ -1356,6 +1356,24 @@ Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value,
 }
 
 
+bool strictly_west_of(double lhs, double rhs)
+{
+  if (lhs - rhs > 180.)
+    return lhs - 360. < rhs;
+  
+  return lhs < rhs;
+}
+
+
+bool weakly_west_of(double lhs, double rhs)
+{
+  if (lhs - rhs > 180.)
+    return lhs - 360. <= rhs;
+  
+  return lhs <= rhs;
+}
+
+
 RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : bounds(0)
 {
   std::vector< std::vector< Point_Double > > input(*rhs.get_multiline_geometry());
@@ -1415,9 +1433,9 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
   {
     if (lstr_it->size() > 2)
     {
-      if ((*lstr_it)[0].lon < (*lstr_it)[1].lon)
+      if (strictly_west_of((*lstr_it)[0].lon, (*lstr_it)[1].lon))
       {
-        if ((*lstr_it)[1].lon <= (*lstr_it)[2].lon)
+        if (weakly_west_of((*lstr_it)[1].lon, (*lstr_it)[2].lon))
         {
           if (four_field_idx.get_point_status((*lstr_it)[1].lat, (*lstr_it)[1].lon) & 0x3)
             std::reverse(lstr_it->begin(), lstr_it->end());
@@ -1430,7 +1448,7 @@ RHR_Polygon_Geometry::RHR_Polygon_Geometry(const Free_Polygon_Geometry& rhs) : b
             std::reverse(lstr_it->begin(), lstr_it->end());
         }
       }
-      else if ((*lstr_it)[2].lon < (*lstr_it)[1].lon)
+      else if (strictly_west_of((*lstr_it)[2].lon, (*lstr_it)[1].lon))
       {
         if (!(four_field_idx.get_point_status((*lstr_it)[1].lat, (*lstr_it)[1].lon) & 0x3))
           std::reverse(lstr_it->begin(), lstr_it->end());
@@ -2143,28 +2161,117 @@ struct Point_Double_By_Lon
 };
 
 
+struct Spherical_Vector
+{
+  Spherical_Vector() : x(0), y(0), z(0) {}
+  
+  Spherical_Vector(const Point_Double& pt) : x(sin(pt.lat*deg_to_arc()))
+  {
+    double cos_lat = cos(pt.lat*deg_to_arc());
+    y = cos_lat*sin(pt.lon*deg_to_arc());
+    z = cos_lat*cos(pt.lon*deg_to_arc());
+  }
+  
+  Spherical_Vector(const Spherical_Vector& lhs, const Spherical_Vector& rhs)
+      : x(lhs.y*rhs.z - lhs.z*rhs.y), y(lhs.z*rhs.x - lhs.x*rhs.z), z(lhs.x*rhs.y - lhs.y*rhs.x)
+  {
+    double length = sqrt(x*x + y*y + z*z);
+    x /= length;
+    y /= length;
+    z /= length;
+  }
+  
+  double x;
+  double y;
+  double z;
+  
+  double operator*(const Spherical_Vector& rhs) const { return x*rhs.x + y*rhs.y + z*rhs.z; }
+  
+  static double deg_to_arc()
+  {
+    static const double result = acos(0)/90.;
+    return result;
+  }
+};
+
+
 struct Proto_Hull
 {
+  struct Hull_Segment
+  {
+    Hull_Segment(const Point_Double& pt) : ll_pt(pt), s_pt(pt) {}
+    Hull_Segment(const Point_Double& pt, const Spherical_Vector& s) : ll_pt(pt), s_pt(s) {}
+    
+    Point_Double ll_pt;
+    Spherical_Vector s_pt;
+    Spherical_Vector edge;
+  };
+  
   Proto_Hull(const Point_Double& s, const Point_Double& w, const Point_Double& n, const Point_Double& e);
   void enhance(const Point_Double& rhs);
-  const std::vector< Point_Double >& get_line_geometry() const { return nodes; }
+  std::vector< Point_Double > get_line_geometry() const;
   
 private:
-  std::vector< Point_Double > nodes;
+  std::vector< Hull_Segment > segments;
 };
 
 
 Proto_Hull::Proto_Hull(const Point_Double& s, const Point_Double& w, const Point_Double& n, const Point_Double& e)
 {
-  nodes.push_back(w);
-  nodes.push_back(s);
-  nodes.push_back(e);
-  nodes.push_back(n);
+  segments.push_back(Hull_Segment(w));
+  if (s != segments.back().ll_pt)
+    segments.push_back(Hull_Segment(s));
+  if (e != segments.back().ll_pt)
+    segments.push_back(Hull_Segment(e));
+  if (n != segments.back().ll_pt)
+    segments.push_back(Hull_Segment(n));
+  
+  for (unsigned int i = 1; i < segments.size(); ++i)
+    segments[i].edge = Spherical_Vector(segments[i-1].s_pt, segments[i].s_pt);
+  segments[0].edge = Spherical_Vector(segments.back().s_pt, segments.front().s_pt);
 }
 
 
 void Proto_Hull::enhance(const Point_Double& rhs)
 {
+  Spherical_Vector s_pt(rhs);
+  
+  std::vector< Hull_Segment >::iterator from_it = segments.begin();
+  while (from_it != segments.end() && from_it->edge*s_pt < 1e-8)
+    ++from_it;
+  
+  if (from_it != segments.end())
+  {
+    std::vector< Hull_Segment >::iterator to_it = from_it;
+    while (to_it != segments.end() && to_it->edge*s_pt >= 1e-8)
+      ++to_it;
+    --to_it;
+    
+    to_it->edge = Spherical_Vector(s_pt, to_it->s_pt);
+    if (from_it == to_it)
+      from_it = segments.insert(from_it, Hull_Segment(rhs, s_pt));
+    else
+    {
+      ++from_it;
+      from_it = segments.erase(from_it, to_it);
+      --from_it;
+      *from_it = Hull_Segment(rhs, s_pt);
+    }
+    if (from_it == segments.begin())
+      from_it->edge = Spherical_Vector(segments.back().s_pt, s_pt);
+    else
+      from_it->edge = Spherical_Vector((from_it-1)->s_pt, s_pt);
+  }
+}
+
+
+std::vector< Point_Double > Proto_Hull::get_line_geometry() const
+{
+  std::vector< Point_Double > result;
+  result.reserve(segments.size());
+  for (std::vector< Hull_Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
+    result.push_back(it->ll_pt);
+  return result;
 }
 
 
@@ -2213,6 +2320,10 @@ Opaque_Geometry* make_hull(const Opaque_Geometry& geometry)
   for (std::vector< Point_Double >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     proto_hull.enhance(*it);
   
+  std::vector< Point_Double > line_geom = proto_hull.get_line_geometry();
+  if (line_geom.size() < 3)
+    return new Linestring_Geometry(line_geom);
+  
   return new RHR_Polygon_Geometry(Free_Polygon_Geometry(
-      std::vector< std::vector< Point_Double > >(1, proto_hull.get_line_geometry())));
+      std::vector< std::vector< Point_Double > >(1, line_geom)));
 }
