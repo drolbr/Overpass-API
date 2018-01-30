@@ -26,6 +26,7 @@ const uint Set_Usage::SKELETON = 1;
 const uint Set_Usage::TAGS = 2;
 const uint Set_Usage::GEOMETRY = 4;
 const uint Set_Usage::META = 8;
+const uint Set_Usage::SET_KEY_VALUES = 128;
 
 
 bool assert_element_in_context(Error_Output* error_output,
@@ -440,6 +441,8 @@ Prepare_Task_Context::Prepare_Task_Context(
     const Set* input = rman.get_set(context.name);
     if (input)
       context.prefetch(it->usage, *input, stmt, rman);
+    if (it->usage & Set_Usage::SET_KEY_VALUES)
+      context.set_key_values = rman.get_set_key_values(context.name);
   }
   
   if (requested.role_names_requested)

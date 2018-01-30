@@ -254,6 +254,14 @@ Statement* Statement::Factory::create_evaluator(
         error_output->add_parse_error(std::string("Function \"") + tree_it.rhs().lhs()->token + "\" not known",
             tree_it->line_col.first);
     }
+    else
+    {
+      std::map< std::string, std::vector< Statement::Evaluator_Maker* > >::iterator all_it =
+          Statement::maker_by_token().find(tree_it->token);
+      if (all_it != Statement::maker_by_token().end())
+        statement = stmt_from_tree_node(tree_it, tree_context, eval_type,
+            all_it->second, *this, global_settings, Statement::error_output);
+    }
   }
   else if (tree_it->token == "")
     error_output->add_parse_error("Evaluator expected, but empty token found.", tree_it->line_col.first);

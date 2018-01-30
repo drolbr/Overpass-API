@@ -186,6 +186,7 @@ void For_Statement::execute(Resource_Manager& rman)
   {
     rman.count_loop();
     rman.swap_set(get_result_name(), it->second);
+    rman.set_value(get_result_name(), "val", it->first);
 
     for (std::vector< Statement* >::iterator it = substatements.begin();
         it != substatements.end(); ++it)

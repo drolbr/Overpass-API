@@ -62,6 +62,7 @@ struct Set_Usage
   static const uint TAGS;
   static const uint GEOMETRY;
   static const uint META;
+  static const uint SET_KEY_VALUES;
 
   bool operator<(const Set_Usage& rhs) const { return this->set_name < rhs.set_name; }
 };
@@ -98,7 +99,7 @@ private:
   Set_With_Context& operator=(const Set_With_Context&);
 
 public:
-  Set_With_Context() : base(0), parent(0),
+  Set_With_Context() : base(0), set_key_values(0), parent(0),
       tag_store_nodes(0), tag_store_attic_nodes(0),
       tag_store_ways(0), tag_store_attic_ways(0),
       tag_store_relations(0), tag_store_attic_relations(0),
@@ -145,6 +146,7 @@ public:
 
   std::string name;
   const Set* base;
+  const std::map< std::string, std::string >* set_key_values;
   const Prepare_Task_Context* parent;
   
   Tag_Store< Uint32_Index, Node_Skeleton >* tag_store_nodes;
@@ -176,7 +178,7 @@ struct Prepare_Task_Context
 {
   Prepare_Task_Context(const Requested_Context& requested, const Statement& stmt, Resource_Manager& rman);
   
-  Set_With_Context* get_set(const std::string& set_name);  
+  Set_With_Context* get_set(const std::string& set_name);
   uint32 get_role_id(const std::string& role) const;
   const std::string* get_user_name(uint32 user_id) const;
 

@@ -58,8 +58,11 @@ public:
     
   Set* get_set(const std::string& set_name);
   Diff_Set* get_diff_set(const std::string& set_name);
+  const std::string* get_value(const std::string& set_name, const std::string& key);
+  const std::map< std::string, std::string >* get_set_key_values(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
   void swap_diff_set(const std::string& set_name, Diff_Set& set_);
+  void set_value(const std::string& set_name, const std::string& key, const std::string& value);
   void clear_sets();
   
   void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
@@ -89,6 +92,7 @@ private:
   Runtime_Stack_Frame* parent;
   std::map< std::string, Set > sets;
   std::map< std::string, Diff_Set > diff_sets;
+  std::map< std::string, std::map< std::string, std::string > > key_values;
   std::map< std::string, uint64 > size_per_set;
   uint loop_count;
   uint loop_size;
@@ -123,8 +127,11 @@ public:
 
   const Set* get_set(const std::string& set_name);
   const Diff_Set* get_diff_set(const std::string& set_name);
+  const std::string* get_value(const std::string& set_name, const std::string& key);
+  const std::map< std::string, std::string >* get_set_key_values(const std::string& set_name);
   void swap_set(const std::string& set_name, Set& set_);
   void swap_diff_set(const std::string& set_name, Diff_Set& set_);
+  void set_value(const std::string& set_name, const std::string& key, const std::string& value);
   void clear_sets();
   
   void push_stack_frame();

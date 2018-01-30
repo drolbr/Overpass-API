@@ -956,5 +956,5 @@ out;
 
 (node[foo];way[foo];rel[foo];);
 for(version())
-( make for_test ver=u(version()),refs=set("{"+type()+","+id()+"}"); );
+( make for_test ver=u(version()),per_val=_.val,refs=set("{"+type()+","+id()+"}"); );
 out;

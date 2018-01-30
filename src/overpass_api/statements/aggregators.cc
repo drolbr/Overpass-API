@@ -26,7 +26,7 @@ Evaluator_Aggregator::Evaluator_Aggregator
     (const std::string& func_name, int line_number_,
      const std::map< std::string, std::string >& input_attributes,
       Parsed_Query& global_settings)
-    : Evaluator(line_number_), rhs(0), input_set(0)
+    : Evaluator(line_number_), rhs(0)
 {
   std::map< std::string, std::string > attributes;
   attributes["from"] = "_";

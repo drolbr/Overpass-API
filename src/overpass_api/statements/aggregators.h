@@ -76,7 +76,6 @@ struct Evaluator_Aggregator : public Evaluator
 
   std::string input;
   Evaluator* rhs;
-  const Set_With_Context* input_set;
 };
 
 

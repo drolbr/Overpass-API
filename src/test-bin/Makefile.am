@@ -50,6 +50,7 @@ statements_cc = \
   ../overpass_api/statements/query.cc \
   ../overpass_api/statements/recurse.cc \
   ../overpass_api/statements/retro.cc \
+  ../overpass_api/statements/runtime_value.cc \
   ../overpass_api/statements/set_list_operators.cc \
   ../overpass_api/statements/set_prop.cc \
   ../overpass_api/statements/statement.cc \

@@ -139,6 +139,7 @@ Diff_Set* Runtime_Stack_Frame::get_diff_set(const std::string& set_name)
 void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
 {
   diff_sets.erase(set_name);
+  key_values.erase(set_name);
   Set& to_swap = sets[set_name];
   set_.swap(to_swap);
   size_per_set[set_name] = eval_set(to_swap);
@@ -148,8 +149,47 @@ void Runtime_Stack_Frame::swap_set(const std::string& set_name, Set& set_)
 void Runtime_Stack_Frame::swap_diff_set(const std::string& set_name, Diff_Set& set_)
 {
   sets.erase(set_name);
+  key_values.erase(set_name);
   Diff_Set& to_swap = diff_sets[set_name];
   set_.swap(to_swap);
+}
+
+
+const std::string* Runtime_Stack_Frame::get_value(const std::string& set_name, const std::string& key)
+{
+  const std::map< std::string, std::string >* key_values = get_set_key_values(set_name);
+  if (key_values)
+  {
+    std::map< std::string, std::string >::const_iterator kvit = key_values->find(key);
+    return kvit == key_values->end() ? 0 : &kvit->second;
+  }
+  return 0;
+}
+
+
+const std::map< std::string, std::string >* Runtime_Stack_Frame::get_set_key_values(const std::string& set_name)
+{
+  std::map< std::string, std::map< std::string, std::string > >::iterator it = key_values.find(set_name);
+  if (it != key_values.end())
+    return &it->second;
+  
+  std::map< std::string, Set >::iterator it_set = sets.find(set_name);
+  if (it_set != sets.end())
+    return 0;
+  std::map< std::string, Diff_Set >::iterator it_diff = diff_sets.find(set_name);
+  if (it_diff != diff_sets.end())
+    return 0;
+  
+  if (parent)
+    return parent->get_set_key_values(set_name);
+  
+  return 0;
+}
+
+
+void Runtime_Stack_Frame::set_value(const std::string& set_name, const std::string& key, const std::string& value)
+{
+  key_values[set_name][key] = value;
 }
 
 
@@ -157,6 +197,7 @@ void Runtime_Stack_Frame::clear_sets()
 {
   sets.clear();
   diff_sets.clear();
+  key_values.clear();
   size_per_set.clear();
 }
 
@@ -179,6 +220,7 @@ void Runtime_Stack_Frame::copy_outward(const std::string& inner_set_name, const 
     sets[top_set_name].clear();
   }
   diff_sets.erase(top_set_name);
+  key_values.erase(top_set_name);
 }
 
 
@@ -191,6 +233,7 @@ void Runtime_Stack_Frame::move_outward(const std::string& inner_set_name, const 
     parent->swap_set(inner_set_name, sets[top_set_name]);
   }
   diff_sets.erase(top_set_name);
+  key_values.erase(top_set_name);
 }
 
 
@@ -218,6 +261,7 @@ bool Runtime_Stack_Frame::union_inward(const std::string& top_set_name, const st
     parent->size_per_set[inner_set_name] = eval_set(target);
   }
   parent->diff_sets.erase(inner_set_name);
+  parent->key_values.erase(top_set_name);
   
   return new_elements_found;
 }
@@ -239,6 +283,7 @@ void Runtime_Stack_Frame::copy_inward(const std::string& top_set_name, const std
     parent->sets[inner_set_name] = it->second;
   
   parent->diff_sets.erase(inner_set_name);
+  parent->key_values.erase(inner_set_name);
 }
 
 
@@ -264,6 +309,7 @@ void Runtime_Stack_Frame::substract_from_inward(const std::string& top_set_name,
     parent->size_per_set[inner_set_name] = eval_set(target);
   }
   parent->diff_sets.erase(inner_set_name);
+  parent->key_values.erase(inner_set_name);
 }
 
 
@@ -275,6 +321,7 @@ void Runtime_Stack_Frame::move_all_inward()
     {
       parent->swap_set(it->first, it->second);
       parent->diff_sets.erase(it->first);
+      parent->key_values.erase(it->first);
     }
   }
 }
@@ -290,6 +337,7 @@ void Runtime_Stack_Frame::move_all_inward_except(const std::string& set_name)
       {
         parent->swap_set(it->first, it->second);
         parent->diff_sets.erase(it->first);
+        parent->key_values.erase(it->first);
       }
     }
   }
@@ -388,6 +436,33 @@ void Resource_Manager::swap_diff_set(const std::string& set_name, Diff_Set& set_
     runtime_stack.push_back(new Runtime_Stack_Frame());
   
   runtime_stack.back()->swap_diff_set(set_name, set_);
+}
+
+
+const std::string* Resource_Manager::get_value(const std::string& set_name, const std::string& key)
+{
+  if (runtime_stack.empty())
+    return 0;
+  
+  return runtime_stack.back()->get_value(set_name, key);
+}
+
+
+const std::map< std::string, std::string >* Resource_Manager::get_set_key_values(const std::string& set_name)
+{
+  if (runtime_stack.empty())
+    return 0;
+  
+  return runtime_stack.back()->get_set_key_values(set_name);
+}
+
+
+void Resource_Manager::set_value(const std::string& set_name, const std::string& key, const std::string& value)
+{
+  if (runtime_stack.empty())
+    runtime_stack.push_back(new Runtime_Stack_Frame());
+  
+  runtime_stack.back()->set_value(set_name, key, value);
 }
 
 
