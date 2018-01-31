@@ -193,6 +193,15 @@ void Runtime_Stack_Frame::set_value(const std::string& set_name, const std::stri
 }
 
 
+void Runtime_Stack_Frame::erase_set(const std::string& set_name)
+{
+  sets.erase(set_name);
+  diff_sets.erase(set_name);
+  key_values.erase(set_name);
+  size_per_set[set_name] = 0;
+}
+
+
 void Runtime_Stack_Frame::clear_sets()
 {
   sets.clear();
@@ -463,6 +472,15 @@ void Resource_Manager::set_value(const std::string& set_name, const std::string&
     runtime_stack.push_back(new Runtime_Stack_Frame());
   
   runtime_stack.back()->set_value(set_name, key, value);
+}
+
+
+void Resource_Manager::erase_set(const std::string& set_name)
+{
+  if (runtime_stack.empty())
+    runtime_stack.push_back(new Runtime_Stack_Frame());
+  
+  runtime_stack.back()->erase_set(set_name);
 }
 
 

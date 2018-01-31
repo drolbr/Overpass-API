@@ -954,16 +954,14 @@ rel(id:1333,1433,1673,1773,1873,1922);
 convert geometry ::id=id(), type=type(), length=length();
 out;
 
-(node[foo];way[foo];rel[foo];);
-._->.copy;
-for(version())
-( make for_test ver=u(version()),per_val=_.val,refs=set("{"+type()+","+id()+"}"); );
+(node[foo];way[foo];rel[foo];)->.orig;
+for.orig(version())
+( make for_test ver=u(version()),per_val=_.val,refs=set("{"+type()+","+id()+"}")->.orig; );
 out;
-.copy->._;
-for(keys())
+for.orig(keys())
 ( 
   if (count(nodes)+count(ways)+count(relations) > 1)
   ( make for_keys_test key=_.val,count=count(nodes)+";"+count(ways)+";"+count(relations)+";"+count(deriveds),length=sum(length())->.result; );
-  .result->._;
+  .result->.orig;
 );
 out;

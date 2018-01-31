@@ -222,6 +222,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
     }
   }
   
+  rman.erase_set(input);
   rman.move_all_inward_except(get_result_name());
   rman.pop_stack_frame();
 

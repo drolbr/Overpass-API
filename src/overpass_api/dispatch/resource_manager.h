@@ -63,6 +63,7 @@ public:
   void swap_set(const std::string& set_name, Set& set_);
   void swap_diff_set(const std::string& set_name, Diff_Set& set_);
   void set_value(const std::string& set_name, const std::string& key, const std::string& value);
+  void erase_set(const std::string& set_name);
   void clear_sets();
   
   void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
@@ -132,6 +133,7 @@ public:
   void swap_set(const std::string& set_name, Set& set_);
   void swap_diff_set(const std::string& set_name, Diff_Set& set_);
   void set_value(const std::string& set_name, const std::string& key, const std::string& value);
+  void erase_set(const std::string& set_name);
   void clear_sets();
   
   void push_stack_frame();
