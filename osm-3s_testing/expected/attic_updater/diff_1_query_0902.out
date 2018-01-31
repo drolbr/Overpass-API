@@ -11870,5 +11870,95 @@
     <tag k="per_val" v="1"/>
     <tag k="refs" v="{node,1101};{node,1201};{node,1202};{node,1203};{node,1301};{node,1302};{node,1303};{node,1304};{node,1401};{node,1402};{node,1403};{node,1404};{node,1501};{node,1502};{node,1503};{node,1504};{node,1505};{relation,1111};{relation,1121};{relation,1131};{relation,1141};{relation,1171};{relation,1201};{relation,1202};{relation,1203};{relation,1311};{relation,1312};{relation,1313};{relation,1314};{relation,1321};{relation,1322};{relation,1323};{relation,1324};{relation,1325};{relation,1326};{relation,1327};{relation,1331};{relation,1332};{relation,1333};{relation,1334};{relation,1411};{relation,1412};{relation,1413};{relation,1414};{relation,1421};{relation,1422};{relation,1423};{relation,1424};{relation,1425};{relation,1426};{relation,1427};{relation,1431};{relation,1432};{relation,1433};{relation,1434};{relation,1501};{relation,1502};{relation,1503};{relation,1504};{relation,1505};{relation,1611};{relation,1612};{relation,1613};{relation,1621};{relation,1622};{relation,1623};{relation,1631};{relation,1632};{relation,1633};{relation,1641};{relation,1642};{relation,1643};{relation,1671};{relation,1672};{relation,1673};{relation,1711};{relation,1712};{relation,1713};{relation,1721};{relation,1722};{relation,1723};{relation,1731};{relation,1732};{relation,1733};{relation,1741};{relation,1742};{relation,1743};{relation,1771};{relation,1772};{relation,1773};{relation,1811};{relation,1812};{relation,1813};{relation,1821};{relation,1822};{relation,1823};{relation,1831};{relation,1832};{relation,1833};{relation,1841};{relation,1842};{relation,1843};{relation,1871};{relation,1872};{relation,1873};{relation,1901};{relation,1911};{relation,1921};{relation,1922};{relation,1941};{way,1101};{way,1201};{way,1202};{way,1203};{way,1301};{way,1302};{way,1303};{way,1304};{way,1401};{way,1402};{way,1403};{way,1404};{way,1501};{way,1502};{way,1503};{way,1504};{way,1505};{way,1601};{way,1602};{way,1603};{way,1701};{way,1702};{way,1703};{way,1801};{way,1802};{way,1803}"/>
   </for_test>
+  <for_keys_test id="5">
+    <tag k="key" v="foo"/>
+    <tag k="count" v="17;26;93;0"/>
+    <tag k="length" v="229147.747"/>
+  </for_keys_test>
+  <for_keys_test id="6">
+    <tag k="key" v="foo_1101"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="7">
+    <tag k="key" v="foo_1201"/>
+    <tag k="count" v="1;1;1;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="8">
+    <tag k="key" v="foo_1202"/>
+    <tag k="count" v="1;1;1;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="9">
+    <tag k="key" v="foo_1203"/>
+    <tag k="count" v="1;1;1;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="10">
+    <tag k="key" v="foo_1301"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="11">
+    <tag k="key" v="foo_1302"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="12">
+    <tag k="key" v="foo_1303"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="13">
+    <tag k="key" v="foo_1304"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="14">
+    <tag k="key" v="foo_1401"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="15">
+    <tag k="key" v="foo_1402"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="16">
+    <tag k="key" v="foo_1403"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="17">
+    <tag k="key" v="foo_1404"/>
+    <tag k="count" v="1;1;0;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="18">
+    <tag k="key" v="foo_1501"/>
+    <tag k="count" v="1;1;1;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="19">
+    <tag k="key" v="foo_1502"/>
+    <tag k="count" v="1;1;1;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="20">
+    <tag k="key" v="foo_1503"/>
+    <tag k="count" v="1;1;1;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="21">
+    <tag k="key" v="foo_1504"/>
+    <tag k="count" v="1;1;1;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
+  <for_keys_test id="22">
+    <tag k="key" v="foo_1505"/>
+    <tag k="count" v="1;1;1;0"/>
+    <tag k="length" v="222.222"/>
+  </for_keys_test>
 
 </osm>

@@ -67,6 +67,118 @@ void For_Statement::add_statement(Statement* statement, std::string text)
 }
 
 
+template< typename Index, typename Object, typename Valuation_Target >
+void collect_for_targets_by_string(
+    const std::map< Index, std::vector< Object > >& container,
+    const Valuation_Target& target,
+    const Eval_Task& task, Set_With_Context& context_from)
+{
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
+      it_idx = container.begin(); it_idx != container.end(); ++it_idx)
+  {
+    for (typename std::vector< Object >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+    {
+      std::string valuation = task.eval(context_from.get_context(it_idx->first, *it_elem), 0);
+      target(valuation)[it_idx->first].push_back(*it_elem);
+    }
+  }
+}
+
+
+template< typename Index, typename Object, typename Valuation_Target >
+void collect_for_targets_by_container(
+    const std::map< Index, std::vector< Object > >& container,
+    const Valuation_Target& target,
+    const Eval_Container_Task& task, Set_With_Context& context_from)
+{
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
+      it_idx = container.begin(); it_idx != container.end(); ++it_idx)
+  {
+    for (typename std::vector< Object >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+    {
+      std::vector< std::string > valuation = task.eval(context_from.get_context(it_idx->first, *it_elem), 0);
+      for (std::vector< std::string >::const_iterator it_val = valuation.begin();
+          it_val != valuation.end(); ++it_val)
+        target(*it_val)[it_idx->first].push_back(*it_elem);
+    }
+  }
+}
+
+
+struct Base_Valuation_Target
+{
+  Base_Valuation_Target(std::map< std::string, Set >& element_groups_) : element_groups(&element_groups_) {}
+protected:
+  std::map< std::string, Set >* element_groups;
+};
+
+
+struct Node_Valuation_Target : Base_Valuation_Target
+{
+  Node_Valuation_Target(std::map< std::string, Set >& rhs) : Base_Valuation_Target(rhs) {}
+  std::map< Uint32_Index, std::vector< Node_Skeleton > >& operator()(const std::string& rhs) const
+  { return (*element_groups)[rhs].nodes; }
+};
+
+
+struct Attic_Node_Valuation_Target : Base_Valuation_Target
+{
+  Attic_Node_Valuation_Target(std::map< std::string, Set >& rhs) : Base_Valuation_Target(rhs) {}
+  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& operator()(const std::string& rhs) const
+  { return (*element_groups)[rhs].attic_nodes; }
+};
+
+
+struct Way_Valuation_Target : Base_Valuation_Target
+{
+  Way_Valuation_Target(std::map< std::string, Set >& rhs) : Base_Valuation_Target(rhs) {}
+  std::map< Uint31_Index, std::vector< Way_Skeleton > >& operator()(const std::string& rhs) const
+  { return (*element_groups)[rhs].ways; }
+};
+
+
+struct Attic_Way_Valuation_Target : Base_Valuation_Target
+{
+  Attic_Way_Valuation_Target(std::map< std::string, Set >& rhs) : Base_Valuation_Target(rhs) {}
+  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& operator()(const std::string& rhs) const
+  { return (*element_groups)[rhs].attic_ways; }
+};
+
+
+struct Relation_Valuation_Target : Base_Valuation_Target
+{
+  Relation_Valuation_Target(std::map< std::string, Set >& rhs) : Base_Valuation_Target(rhs) {}
+  std::map< Uint31_Index, std::vector< Relation_Skeleton > >& operator()(const std::string& rhs) const
+  { return (*element_groups)[rhs].relations; }
+};
+
+
+struct Attic_Relation_Valuation_Target : Base_Valuation_Target
+{
+  Attic_Relation_Valuation_Target(std::map< std::string, Set >& rhs) : Base_Valuation_Target(rhs) {}
+  std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& operator()(const std::string& rhs) const
+  { return (*element_groups)[rhs].attic_relations; }
+};
+
+
+struct Area_Valuation_Target : Base_Valuation_Target
+{
+  Area_Valuation_Target(std::map< std::string, Set >& rhs) : Base_Valuation_Target(rhs) {}
+  std::map< Uint31_Index, std::vector< Area_Skeleton > >& operator()(const std::string& rhs) const
+  { return (*element_groups)[rhs].areas; }
+};
+
+
+struct Derived_Valuation_Target : Base_Valuation_Target
+{
+  Derived_Valuation_Target(std::map< std::string, Set >& rhs) : Base_Valuation_Target(rhs) {}
+  std::map< Uint31_Index, std::vector< Derived_Structure > >& operator()(const std::string& rhs) const
+  { return (*element_groups)[rhs].deriveds; }
+};
+
+
 void For_Statement::execute(Resource_Manager& rman)
 {
   if (!evaluator)
@@ -78,7 +190,6 @@ void For_Statement::execute(Resource_Manager& rman)
   
   Prepare_Task_Context context(requested_context, *this, rman);
   
-  Owner< Eval_Task > task(evaluator->get_string_task(context, 0));
   Set_With_Context* context_from = context.get_set(input);
   if (!context_from)
     return;
@@ -94,92 +205,47 @@ void For_Statement::execute(Resource_Manager& rman)
   
   std::map< std::string, Set > element_groups;
   
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator
-      it_idx = base_set->nodes.begin(); it_idx != base_set->nodes.end(); ++it_idx)
+  if (evaluator->return_type() == Statement::string)
   {
-    for (std::vector< Node_Skeleton >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      std::string valuation = (*task).eval(context_from->get_context(it_idx->first, *it_elem), 0);
-      element_groups[valuation].nodes[it_idx->first].push_back(*it_elem);
-    }
-  }
+    Owner< Eval_Task > task(evaluator->get_string_task(context, 0));
   
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
-      it_idx = base_set->attic_nodes.begin(); it_idx != base_set->attic_nodes.end(); ++it_idx)
-  {
-    for (std::vector< Attic< Node_Skeleton > >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      std::string valuation = (*task).eval(context_from->get_context(it_idx->first, *it_elem), 0);
-      element_groups[valuation].attic_nodes[it_idx->first].push_back(*it_elem);
-    }
+    collect_for_targets_by_string(base_set->nodes, Node_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_string(base_set->attic_nodes, Attic_Node_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_string(base_set->ways, Way_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_string(base_set->attic_ways, Attic_Way_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_string(base_set->relations, Relation_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_string(base_set->attic_relations, Attic_Relation_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_string(base_set->areas, Area_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_string(base_set->deriveds, Derived_Valuation_Target(element_groups),
+        *task, *context_from);
   }
-  
-  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
-      it_idx = base_set->ways.begin(); it_idx != base_set->ways.end(); ++it_idx)
+  else
   {
-    for (std::vector< Way_Skeleton >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      std::string valuation = (*task).eval(context_from->get_context(it_idx->first, *it_elem), 0);
-      element_groups[valuation].ways[it_idx->first].push_back(*it_elem);
-    }
-  }
+    Owner< Eval_Container_Task > task(evaluator->get_container_task(context, 0));
   
-  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
-      it_idx = base_set->attic_ways.begin(); it_idx != base_set->attic_ways.end(); ++it_idx)
-  {
-    for (std::vector< Attic< Way_Skeleton > >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      std::string valuation = (*task).eval(context_from->get_context(it_idx->first, *it_elem), 0);
-      element_groups[valuation].attic_ways[it_idx->first].push_back(*it_elem);
-    }
-  }
-  
-  for (std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-      it_idx = base_set->relations.begin(); it_idx != base_set->relations.end(); ++it_idx)
-  {
-    for (std::vector< Relation_Skeleton >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      std::string valuation = (*task).eval(context_from->get_context(it_idx->first, *it_elem), 0);
-      element_groups[valuation].relations[it_idx->first].push_back(*it_elem);
-    }
-  }
-  
-  for (std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-      it_idx = base_set->attic_relations.begin(); it_idx != base_set->attic_relations.end(); ++it_idx)
-  {
-    for (std::vector< Attic< Relation_Skeleton > >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      std::string valuation = (*task).eval(context_from->get_context(it_idx->first, *it_elem), 0);
-      element_groups[valuation].attic_relations[it_idx->first].push_back(*it_elem);
-    }
-  }
-  
-  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
-      it_idx = base_set->areas.begin(); it_idx != base_set->areas.end(); ++it_idx)
-  {
-    for (std::vector< Area_Skeleton >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      std::string valuation = (*task).eval(context_from->get_context(it_idx->first, *it_elem), 0);
-      element_groups[valuation].areas[it_idx->first].push_back(*it_elem);
-    }
-  }
-  
-  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::const_iterator
-      it_idx = base_set->deriveds.begin(); it_idx != base_set->deriveds.end(); ++it_idx)
-  {
-    for (std::vector< Derived_Structure >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      std::string valuation = (*task).eval(context_from->get_context(it_idx->first, *it_elem), 0);
-      element_groups[valuation].deriveds[it_idx->first].push_back(*it_elem);
-    }
+    collect_for_targets_by_container(base_set->nodes, Node_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_container(base_set->attic_nodes, Attic_Node_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_container(base_set->ways, Way_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_container(base_set->attic_ways, Attic_Way_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_container(base_set->relations, Relation_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_container(base_set->attic_relations, Attic_Relation_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_container(base_set->areas, Area_Valuation_Target(element_groups),
+        *task, *context_from);
+    collect_for_targets_by_container(base_set->deriveds, Derived_Valuation_Target(element_groups),
+        *task, *context_from);
   }
   
   for (std::map< std::string, Set >::iterator it = element_groups.begin(); it != element_groups.end(); ++it)

@@ -39,8 +39,8 @@ class Statement_Dump
       
       Statement_Dump* create_statement(std::string element, int line_number,
 				       const std::map< std::string, std::string >& attributes);
-      Statement_Dump* create_evaluator(
-          const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context, Statement::Eval_Return_Type);
+      Statement_Dump* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+                                       const Statement::Return_Type_Checker& eval_type);
       Statement_Dump* create_criterion(const Token_Node_Ptr& tree_it,
                                   const std::string& type, bool& can_standalone, const std::string& into);
       

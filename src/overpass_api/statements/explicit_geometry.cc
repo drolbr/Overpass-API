@@ -48,13 +48,15 @@ Statement* Evaluator_Point::Evaluator_Maker::create_evaluator(
   Evaluator_Point* result = new Evaluator_Point(tree_it->line_col.first, attributes, global_settings);
   if (tree_it.rhs()->token == "," && tree_it.rhs()->lhs && tree_it.rhs()->rhs)
   {
-    Statement* first = stmt_factory.create_evaluator(tree_it.rhs().lhs(), tree_context, Statement::string);
+    Statement* first = stmt_factory.create_evaluator(
+        tree_it.rhs().lhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
     if (first)
       result->add_statement(first, "");
     else if (error_output)
       error_output->add_parse_error("First argument of pt(...) must be an evaluator", tree_it->line_col.first);
 
-    Statement* second = stmt_factory.create_evaluator(tree_it.rhs().rhs(), tree_context, Statement::string);
+    Statement* second = stmt_factory.create_evaluator(
+        tree_it.rhs().rhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
     if (second)
       result->add_statement(second, "");
     else if (error_output)
@@ -166,7 +168,8 @@ Statement* Evaluator_Linestring::Evaluator_Maker::create_evaluator(
   for (std::vector< Token_Node_Ptr >::const_iterator it = args.begin(); it != args.end(); ++it)
   {
     Evaluator* sub = dynamic_cast< Evaluator* >(
-        stmt_factory.create_evaluator(*it, tree_context, Statement::geometry));
+        stmt_factory.create_evaluator(
+            *it, tree_context, Statement::Single_Return_Type_Checker(Statement::geometry)));
     if (sub)
     {
       if (sub->return_type() == Statement::geometry)
@@ -270,7 +273,8 @@ Statement* Evaluator_Polygon::Evaluator_Maker::create_evaluator(
   for (std::vector< Token_Node_Ptr >::const_iterator it = args.begin(); it != args.end(); ++it)
   {
     Evaluator* sub = dynamic_cast< Evaluator* >(
-        stmt_factory.create_evaluator(*it, tree_context, Statement::geometry));
+        stmt_factory.create_evaluator(
+            *it, tree_context, Statement::Single_Return_Type_Checker(Statement::geometry)));
     if (sub)
     {
       if (sub->return_type() == Statement::geometry)

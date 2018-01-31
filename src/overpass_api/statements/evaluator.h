@@ -248,6 +248,39 @@ private:
 };
 
 
+struct Eval_Container_Task
+{
+  virtual ~Eval_Container_Task() {}
+
+  virtual std::vector< std::string > eval(const std::string* key) const = 0;
+
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return eval(key); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return eval(key); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return eval(key); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return eval(key); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return eval(key); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return eval(key); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return eval(key); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return eval(key); }
+};
+
+
 struct Eval_Geometry_Task
 {
   virtual ~Eval_Geometry_Task() {}
@@ -291,6 +324,7 @@ struct Evaluator : public Statement
   virtual Requested_Context request_context() const = 0;
 
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key) = 0;
+  virtual Eval_Container_Task* get_container_task(Prepare_Task_Context& context, const std::string* key) { return 0; }
   virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context) { return 0; }
   virtual Statement::Eval_Return_Type return_type() const = 0;
 

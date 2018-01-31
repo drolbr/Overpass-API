@@ -68,7 +68,8 @@ struct Unary_Set_List_Operator_Evaluator_Maker : public Statement::Evaluator_Mak
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     if (result)
     {
-      Statement* rhs = stmt_factory.create_evaluator(tree_it.rhs(), tree_context, Statement::string);
+      Statement* rhs = stmt_factory.create_evaluator(
+          tree_it.rhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
       if (rhs)
         result->add_statement(rhs, "");
       else if (error_output)
@@ -134,14 +135,16 @@ struct Binary_Set_List_Operator_Evaluator_Maker : public Statement::Evaluator_Ma
     {
       if (tree_it.rhs()->token == "," && tree_it.rhs()->lhs && tree_it.rhs()->rhs)
       {
-        Statement* first = stmt_factory.create_evaluator(tree_it.rhs().lhs(), tree_context, Statement::string);
+        Statement* first = stmt_factory.create_evaluator(
+            tree_it.rhs().lhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
         if (first)
           result->add_statement(first, "");
         else if (error_output)
           error_output->add_parse_error("First argument of " + Evaluator_::stmt_func_name()
               + "(...) must be an evualator", tree_it->line_col.first);
 
-        Statement* second = stmt_factory.create_evaluator(tree_it.rhs().rhs(), tree_context, Statement::string);
+        Statement* second = stmt_factory.create_evaluator(
+            tree_it.rhs().rhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
         if (second)
           result->add_statement(second, "");
         else if (error_output)

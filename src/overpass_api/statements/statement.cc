@@ -148,10 +148,12 @@ Statement* Statement::Factory::create_statement
 }
 
 
-std::string to_string(Statement::Eval_Return_Type eval_type)
+std::string Statement::eval_to_string(Statement::Eval_Return_Type eval_type)
 {
   if (eval_type == Statement::string)
     return "string";
+  else if (eval_type == Statement::container)
+    return "container";
   else if (eval_type == Statement::geometry)
     return "geometry";
 
@@ -160,7 +162,7 @@ std::string to_string(Statement::Eval_Return_Type eval_type)
 
 
 Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it,
-    Statement::QL_Context tree_context, Statement::Eval_Return_Type eval_type,
+    Statement::QL_Context tree_context, const Statement::Return_Type_Checker& eval_type,
     const std::vector< Statement::Evaluator_Maker* >& makers, Statement::Factory& stmt_factory,
     Parsed_Query& global_settings, Error_Output* error_output)
 {
@@ -189,7 +191,7 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it,
     ++maker_it;
   }
   
-  if (statement && eval_type != Statement::non_evaluator)
+  if (statement && eval_type.eval_required())
   {
     Evaluator* eval = dynamic_cast< Evaluator* >(statement);
     if (!eval)
@@ -200,12 +202,12 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it,
       delete statement;
       statement = 0;
     }
-    else if (eval_type != eval->return_type())
+    else if (!eval_type.matches(eval->return_type()))
     {
       if (error_output)
-        error_output->add_static_error(std::string("Evaluator for ") + to_string(eval_type)
+        error_output->add_static_error(std::string("Evaluator for ") + eval_type.expectation()
             + " expected, but function \"" + statement->get_name() + "\" is an evaluator for "
-            + to_string(eval->return_type()) + ".", tree_it->line_col.first);
+            + Statement::eval_to_string(eval->return_type()) + ".", tree_it->line_col.first);
       delete statement;
       statement = 0;
     }
@@ -216,7 +218,8 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it,
 
 
 Statement* Statement::Factory::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context, Statement::Eval_Return_Type eval_type)
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    const Statement::Return_Type_Checker& eval_type)
 {
   Statement* statement = 0;
 

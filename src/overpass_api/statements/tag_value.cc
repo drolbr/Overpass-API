@@ -259,6 +259,39 @@ Evaluator_Is_Tag::Evaluator_Is_Tag
 //-----------------------------------------------------------------------------
 
 
+Evaluator_All_Keys::Statement_Maker Evaluator_All_Keys::statement_maker;
+Element_Function_Maker< Evaluator_All_Keys > Evaluator_All_Keys::evaluator_maker;
+
+
+std::vector< std::string > all_keys(const std::vector< std::pair< std::string, std::string > >* tags)
+{
+  std::vector< std::string > result;
+  if (!tags)
+    return result;
+  
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
+      it != tags->end(); ++it)
+    result.push_back(it->first);
+  
+  std::sort(result.begin(), result.end());
+  result.erase(std::unique(result.begin(), result.end()), result.end());
+  
+  return result;
+}
+
+
+Evaluator_All_Keys::Evaluator_All_Keys
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Evaluator_Geometry::Statement_Maker Evaluator_Geometry::statement_maker;
 Element_Function_Maker< Evaluator_Geometry > Evaluator_Geometry::evaluator_maker;
 

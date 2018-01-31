@@ -104,7 +104,7 @@ Statement* Set_Prop_Statement::Evaluator_Maker::create_evaluator(
   {
     Statement* rhs = stmt_factory.create_evaluator(tree_it.rhs(),
         tree_context == Statement::in_convert ? Statement::elem_eval_possible : Statement::evaluator_expected,
-        eval_type);
+        Statement::Single_Return_Type_Checker(eval_type));
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

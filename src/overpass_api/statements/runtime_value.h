@@ -27,7 +27,19 @@
 #include <string>
 
 
-/* === TODO ===
+/* === Set Key-Value Evaluator ===
+
+Sets can have not only members.
+The may get assigned properties by other statements.
+
+An example is the property "val":
+This property contains inside a "for"-loop the respective value of the current loop.
+
+The syntax is
+
+  <Set>.<Property>
+
+As opposed to most other situations, it is mandatory to explicitly state the set.
 
 */
 

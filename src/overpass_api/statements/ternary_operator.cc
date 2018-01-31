@@ -52,21 +52,24 @@ void Ternary_Evaluator::add_substatements(Statement* result, const std::string& 
       return;
     }
 
-    Statement* condition = stmt_factory.create_evaluator(tree_it.lhs(), tree_context, Statement::string);
+    Statement* condition = stmt_factory.create_evaluator(
+        tree_it.lhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
     if (condition)
       result->add_statement(condition, "");
     else if (error_output)
       error_output->add_parse_error(
           "Operator \"?\" needs a left-hand-side argument", tree_it->line_col.first);
       
-    Statement* lhs = stmt_factory.create_evaluator(tree_it.rhs().lhs(), tree_context, Statement::string);
+    Statement* lhs = stmt_factory.create_evaluator(
+        tree_it.rhs().lhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
     if (lhs)
       result->add_statement(lhs, "");
     else if (error_output)
       error_output->add_parse_error(
           "Operator \":\" of operator \"?\" needs a left-hand-side argument", tree_it->line_col.first);
 
-    Statement* rhs = stmt_factory.create_evaluator(tree_it.rhs().rhs(), tree_context, Statement::string);
+    Statement* rhs = stmt_factory.create_evaluator(
+        tree_it.rhs().rhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

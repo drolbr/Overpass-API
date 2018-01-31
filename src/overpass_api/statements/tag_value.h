@@ -351,7 +351,7 @@ public:
 
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-value k=\"" + escape_xml(key) + "\"/>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const { return std::string("[\"") + escape_cstr(key) + "\"]"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return std::string("t[\"") + escape_cstr(key) + "\"]"; }
 
   Evaluator_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
@@ -501,6 +501,84 @@ public:
 };
 
 
+/* === All Keys Evaluator ===
+
+The all keys evaluator returns a container of the keys of the given element.
+
+Its syntax is
+
+  keys()
+*/
+
+
+std::vector< std::string > all_keys(const std::vector< std::pair< std::string, std::string > >* tags);
+
+
+struct All_Keys_Eval_Task : public Eval_Container_Task
+{
+  virtual std::vector< std::string > eval(const std::string* key) const { return std::vector< std::string >(); }
+
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return all_keys(data.tags); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return all_keys(data.tags); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return all_keys(data.tags); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return all_keys(data.tags); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return all_keys(data.tags); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return all_keys(data.tags); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return all_keys(data.tags); }
+  virtual std::vector< std::string > eval(
+      const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return all_keys(data.tags); }
+};
+
+
+class Evaluator_All_Keys : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_All_Keys >
+  {
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_All_Keys >("eval-all-keys") {}
+  };
+  static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_All_Keys > evaluator_maker;
+
+  static std::string stmt_func_name() { return "keys"; }
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-all-keys/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return "keys()"; }
+
+  Evaluator_All_Keys(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-all-keys"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_All_Keys() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
+
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::container; };
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* target_key) { return 0; }
+  virtual Eval_Container_Task* get_container_task(Prepare_Task_Context& context, const std::string* key)
+  { return new All_Keys_Eval_Task(); }
+
+private:
+  std::string key;
+};
+
+
 /* === Geometry Related Operators ===
 
 ==== Geometry ====
@@ -618,7 +696,7 @@ public:
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-length/>\n"; }
   virtual std::string dump_compact_ql(const std::string&) const
-  { return "length(\"\")"; }
+  { return "length()"; }
 
   Evaluator_Length(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);

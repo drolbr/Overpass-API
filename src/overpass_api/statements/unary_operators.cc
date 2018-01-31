@@ -32,7 +32,8 @@ void Evaluator_Prefix_Operator::add_substatements(Statement* result, const std::
 {
   if (result)
   {
-    Statement* rhs = stmt_factory.create_evaluator(tree_it.rhs(), tree_context, Statement::string);
+    Statement* rhs = stmt_factory.create_evaluator(
+        tree_it.rhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)

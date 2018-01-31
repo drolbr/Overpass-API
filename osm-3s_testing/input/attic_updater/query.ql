@@ -955,6 +955,15 @@ convert geometry ::id=id(), type=type(), length=length();
 out;
 
 (node[foo];way[foo];rel[foo];);
+._->.copy;
 for(version())
 ( make for_test ver=u(version()),per_val=_.val,refs=set("{"+type()+","+id()+"}"); );
+out;
+.copy->._;
+for(keys())
+( 
+  if (count(nodes)+count(ways)+count(relations) > 1)
+  ( make for_keys_test key=_.val,count=count(nodes)+";"+count(ways)+";"+count(relations)+";"+count(deriveds),length=sum(length())->.result; );
+  .result->._;
+);
 out;

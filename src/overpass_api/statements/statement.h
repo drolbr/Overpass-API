@@ -88,7 +88,30 @@ class Statement
 {
   public:
     enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible };
-    enum Eval_Return_Type { non_evaluator, string, geometry };
+    
+    enum Eval_Return_Type { non_evaluator, string, container, geometry };
+    static std::string eval_to_string(Statement::Eval_Return_Type eval_type);
+    
+    struct Return_Type_Checker
+    {
+      virtual bool eval_required() const = 0;
+      virtual bool matches(Eval_Return_Type eval_type) const = 0;
+      virtual std::string expectation() const = 0;
+      virtual ~Return_Type_Checker() {}
+    };
+    
+    struct Single_Return_Type_Checker : Return_Type_Checker
+    {
+      Single_Return_Type_Checker(Eval_Return_Type expected_) : expected(expected_) {}
+      
+      virtual bool eval_required() const { return true; }
+      virtual bool matches(Eval_Return_Type eval_type) const { return eval_type == expected; }
+      virtual std::string expectation() const { return eval_to_string(expected); }
+      virtual ~Single_Return_Type_Checker() {}
+    
+    private:
+      Eval_Return_Type expected;
+    };
 
     struct Factory
     {
@@ -98,7 +121,7 @@ class Statement
       Statement* create_statement(std::string element, int line_number,
           const std::map< std::string, std::string >& attributes);
       Statement* create_evaluator(
-          const Token_Node_Ptr& tree_it, QL_Context tree_context, Eval_Return_Type eval_type);
+          const Token_Node_Ptr& tree_it, QL_Context tree_context, const Statement::Return_Type_Checker& eval_type);
       Statement* create_criterion(const Token_Node_Ptr& tree_it,
           const std::string& type, bool& can_standalone, const std::string& into);
 

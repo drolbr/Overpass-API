@@ -108,7 +108,7 @@ struct Aggregator_Evaluator_Maker : Statement::Evaluator_Maker
     {
       Statement* rhs = stmt_factory.create_evaluator(
           input_set ? tree_it.rhs().rhs() : tree_it.rhs(),
-          Statement::elem_eval_possible, Evaluator_::argument_type());
+          Statement::elem_eval_possible, Statement::Single_Return_Type_Checker(Evaluator_::argument_type()));
       if (rhs)
         result->add_statement(rhs, "");
       else if (error_output)

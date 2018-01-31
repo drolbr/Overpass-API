@@ -335,7 +335,8 @@ Statement_Dump* Statement_Dump::Factory::create_statement
 
 
 Statement_Dump* Statement_Dump::Factory::create_evaluator(
-    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context, Statement::Eval_Return_Type eval_type)
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+    const Statement::Return_Type_Checker& eval_type)
 {
   Statement* stmt = stmt_factory->create_evaluator(tree_it, tree_context, eval_type);
   if (stmt)

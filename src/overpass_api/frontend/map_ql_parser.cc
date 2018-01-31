@@ -152,13 +152,15 @@ std::vector< TStatement* > collect_substatements_and_probe
 
 template< class TStatement >
 TStatement* parse_value_tree(typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token,
-    Error_Output* error_output, Statement::QL_Context tree_context, bool parenthesis_expected)
+    Error_Output* error_output, bool parenthesis_expected,
+    Statement::QL_Context tree_context, const Statement::Return_Type_Checker& eval_type)
 {
   Token_Tree tree(token, error_output, parenthesis_expected);
   if (tree.tree.empty())
     return 0;
 
-  return stmt_factory.create_evaluator(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context, Statement::string);
+  return stmt_factory.create_evaluator(Token_Node_Ptr(tree, tree.tree[0].rhs), tree_context,
+      eval_type);
 }
 
 
@@ -486,6 +488,18 @@ TStatement* parse_foreach(typename TStatement::Factory& stmt_factory, Parsed_Que
 }
 
 
+struct For_Stmt_Return_Type_Checker : Statement::Return_Type_Checker
+{
+  For_Stmt_Return_Type_Checker() {}
+
+  virtual bool eval_required() const { return true; }
+  virtual bool matches(Statement::Eval_Return_Type eval_type) const
+  { return eval_type == Statement::string || eval_type == Statement::container; }
+  virtual std::string expectation() const
+  { return Statement::eval_to_string(Statement::string) + " or " + Statement::eval_to_string(Statement::container); }
+};
+
+
 template< class TStatement >
 TStatement* parse_for(typename TStatement::Factory& stmt_factory, Parsed_Query& parsed_query,
 			  Tokenizer_Wrapper& token, Error_Output* error_output, int depth)
@@ -497,8 +511,8 @@ TStatement* parse_for(typename TStatement::Factory& stmt_factory, Parsed_Query& 
   std::string into = probe_into(token, error_output);
 
   clear_until_after(token, error_output, "(");
-  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
-      Statement::elem_eval_possible, true);
+  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output, true,
+      Statement::elem_eval_possible, For_Stmt_Return_Type_Checker());
   clear_until_after(token, error_output, ")");
   std::vector< TStatement* > substatements =
       collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth+1);
@@ -542,8 +556,8 @@ TStatement* parse_if(typename TStatement::Factory& stmt_factory, Parsed_Query& p
   ++token;
 
   clear_until_after(token, error_output, "(");
-  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
-      Statement::evaluator_expected, true);
+  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output, true,
+      Statement::evaluator_expected, Statement::Single_Return_Type_Checker(Statement::string));
   clear_until_after(token, error_output, ")");
   std::vector< TStatement* > substatements =
       collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
@@ -565,8 +579,8 @@ TStatement* parse_retro(typename TStatement::Factory& stmt_factory, Parsed_Query
   ++token;
 
   clear_until_after(token, error_output, "(");
-  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
-      Statement::evaluator_expected, true);
+  TStatement* condition = parse_value_tree< TStatement >(stmt_factory, token, error_output, true,
+      Statement::evaluator_expected, Statement::Single_Return_Type_Checker(Statement::string));
   clear_until_after(token, error_output, ")");
   std::vector< TStatement* > substatements =
       collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
@@ -624,8 +638,8 @@ TStatement* parse_compare(typename TStatement::Factory& stmt_factory, Parsed_Que
     {
       clear_until_after(token, error_output, "delta");
       clear_until_after(token, error_output, ":");
-      condition = parse_value_tree< TStatement >(stmt_factory, token, error_output,
-          Statement::elem_eval_possible, true);
+      condition = parse_value_tree< TStatement >(stmt_factory, token, error_output, true,
+          Statement::elem_eval_possible, Statement::Single_Return_Type_Checker(Statement::string));
     }
     clear_until_after(token, error_output, ")");
   }
@@ -731,6 +745,16 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 }
 
 
+struct No_Return_Type_Checker : Statement::Return_Type_Checker
+{
+  No_Return_Type_Checker() {}
+
+  virtual bool eval_required() const { return false; }
+  virtual bool matches(Statement::Eval_Return_Type eval_type) const { return false; }
+  virtual std::string expectation() const { return Statement::eval_to_string(Statement::non_evaluator); }
+};
+
+
 template< class TStatement >
 TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::string& from,
                        Tokenizer_Wrapper& token, Error_Output* error_output, const std::string& strategy)
@@ -754,7 +778,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
       {
         if (tree_it->rhs)
         {
-          TStatement* stmt = stmt_factory.create_evaluator(tree_it.rhs(), tree_context, Statement::non_evaluator);
+          TStatement* stmt = stmt_factory.create_evaluator(tree_it.rhs(), tree_context, No_Return_Type_Checker());
           if (stmt)
             evaluators.push_back(stmt);
         }
@@ -762,7 +786,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
         tree_it = tree_it.lhs();
       }
       
-      TStatement* stmt = stmt_factory.create_evaluator(tree_it, tree_context, Statement::non_evaluator);
+      TStatement* stmt = stmt_factory.create_evaluator(tree_it, tree_context, No_Return_Type_Checker());
       if (stmt)
         evaluators.push_back(stmt);
       
