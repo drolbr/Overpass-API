@@ -184,7 +184,7 @@ make marker full_history="node 1402"; out;
 timeline(node,1402);
 foreach(
   out;
-  retro(u(t[created]))
+  retro(u(t["created"]))
   (
     node(1402); out meta;
   );
@@ -194,7 +194,7 @@ make marker full_history="way 1505"; out;
 timeline(way,1505);
 foreach(
   out;
-  retro(u(t[created]))
+  retro(u(t["created"]))
   (
     way(1505); out geom meta;
     >; out meta;
@@ -205,7 +205,7 @@ make marker full_history="way 1602"; out;
 timeline(way,1602);
 foreach(
   out;
-  retro(u(t[created]))
+  retro(u(t["created"]))
   (
     way(1602); out geom meta;
     >; out meta;
@@ -216,7 +216,7 @@ make marker full_history="rel 1632"; out;
 timeline(rel,1632);
 foreach(
   out;
-  retro(u(t[created]))
+  retro(u(t["created"]))
   (
     rel(1632); out geom meta;
     >; out center meta;

@@ -306,29 +306,21 @@ std::string find_value(const std::vector< std::pair< std::string, std::string > 
 
 struct Value_Eval_Task : public Eval_Task
 {
-  Value_Eval_Task(const std::string& key_) : key(key_) {}
+  Value_Eval_Task(Eval_Task* rhs_) : rhs(rhs_) {}
 
-  virtual std::string eval(const std::string* key) const { return ""; }
+  virtual std::string eval(const std::string* key) const;
 
-  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
-      { return find_value(data.tags, this->key); }
-  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
-      { return find_value(data.tags, this->key); }
-  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
-      { return find_value(data.tags, this->key); }
-  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
-      { return find_value(data.tags, this->key); }
-  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
-      { return find_value(data.tags, this->key); }
-  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
-      { return find_value(data.tags, this->key); }
-  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
-      { return find_value(data.tags, this->key); }
-  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
-      { return find_value(data.tags, this->key); }
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const;
 
 private:
-  std::string key;
+  Eval_Task* rhs;
 };
 
 
@@ -350,24 +342,29 @@ public:
   static Evaluator_Maker evaluator_maker;
 
   virtual std::string dump_xml(const std::string& indent) const
-  { return indent + "<eval-value k=\"" + escape_xml(key) + "\"/>\n"; }
-  virtual std::string dump_compact_ql(const std::string&) const { return std::string("t[\"") + escape_cstr(key) + "\"]"; }
+  {
+    return indent + "<eval-value>\n"
+        + (rhs ? rhs->dump_xml(indent + "  ") : "")
+        + indent + "</eval-value>\n";
+  }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return std::string("t[\"") + (rhs ? rhs->dump_compact_ql("") : "") + "\"]"; }
 
   Evaluator_Value(int line_number_, const std::map< std::string, std::string >& input_attributes,
                    Parsed_Query& global_settings);
+  virtual void add_statement(Statement* statement, std::string text);
   virtual std::string get_name() const { return "eval-value"; }
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman) {}
   virtual ~Evaluator_Value() {}
 
-  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::TAGS); }
+  virtual Requested_Context request_context() const;
 
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
-  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* target_key)
-  { return new Value_Eval_Task(key); }
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* target_key);
 
 private:
-  std::string key;
+  Evaluator* rhs;
 };
 
 

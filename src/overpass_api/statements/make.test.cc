@@ -239,22 +239,26 @@ void union_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Statement* subs = add_prop_stmt("node_key", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Union_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "node_key").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("way_key", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Union_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "way_key").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("relation_key", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Union_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "relation_key").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("unused_key", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Union_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "unused_key").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key").kvs(), global_settings), subs);
 
   stmt.execute(rman);
   Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
@@ -273,22 +277,26 @@ void min_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Statement* subs = add_prop_stmt("node_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Min_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "node_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("way_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Min_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "way_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("relation_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Min_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "relation_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("unused_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Min_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "unused_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs(), global_settings), subs);
 
   stmt.execute(rman);
   Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
@@ -307,22 +315,26 @@ void max_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Statement* subs = add_prop_stmt("node_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "node_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("way_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "way_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("relation_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "relation_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("unused_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Max_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "unused_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs(), global_settings), subs);
 
   stmt.execute(rman);
   Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
@@ -341,22 +353,26 @@ void set_value_test(Parsed_Query& global_settings, Transaction& transaction,
   Statement* subs = add_prop_stmt("node_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "node_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "node_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("way_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "way_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "way_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("relation_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "relation_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "relation_key_7").kvs(), global_settings), subs);
 
   subs = add_prop_stmt("unused_key_7", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Value(0,
       (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
-  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr()("k", "unused_key_7").kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Value(0, Attr().kvs(), global_settings), subs);
+  subs = stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "unused_key_7").kvs(), global_settings), subs);
 
   stmt.execute(rman);
   Print_Statement(0, Attr().kvs(), global_settings).execute(rman);

@@ -959,9 +959,9 @@ for.orig(version())
 ( make for_test ver=u(version()),per_val=_.val,refs=set("{"+type()+","+id()+"}")->.orig; );
 out;
 for.orig(keys())
-( 
+(
   if (count(nodes)+count(ways)+count(relations) > 1)
-  ( make for_keys_test key=_.val,count=count(nodes)+";"+count(ways)+";"+count(relations)+";"+count(deriveds),length=sum(length())->.result; );
+  ( make for_keys_test key=_.val,values=set(t[_.val]),count=count(nodes)+";"+count(ways)+";"+count(relations)+";"+count(deriveds),length=sum(length())->.result; );
   .result->.orig;
 );
 out;

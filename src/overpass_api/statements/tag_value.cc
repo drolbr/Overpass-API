@@ -172,29 +172,110 @@ Statement* Evaluator_Value::Evaluator_Maker::create_evaluator(
       error_output->add_parse_error("Operator \"[\" needs a tag key as argument", tree_it->line_col.first);
     return 0;
   }
-  if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
-  {
-    if (error_output)
-      error_output->add_parse_error("Operator \"[\" needs a single string (the tag key) as argument", tree_it->line_col.first);
-    return 0;
-  }
+
   std::map< std::string, std::string > attributes;
-  attributes["k"] = decode_json(tree_it.rhs()->token, error_output);
-  return new Evaluator_Value(tree_it->line_col.first, attributes, global_settings);
+  Statement* result = new Evaluator_Value(tree_it->line_col.first, attributes, global_settings);
+  if (result)
+  {
+    Statement* rhs = stmt_factory.create_evaluator(
+        tree_it.rhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
+    if (rhs)
+      result->add_statement(rhs, "");
+    else if (error_output)
+      error_output->add_parse_error("t[...] needs an argument",
+          tree_it->line_col.first);
+  }
+  return result;
 }
 
 
 Evaluator_Value::Evaluator_Value
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator(line_number_)
+    : Evaluator(line_number_), rhs(0)
 {
   std::map< std::string, std::string > attributes;
-
-  attributes["k"] = "";
-
   eval_attributes_array(get_name(), attributes, input_attributes);
+}
 
-  key = attributes["k"];
+
+void Evaluator_Value::add_statement(Statement* statement, std::string text)
+{
+  Evaluator* tag_value_ = dynamic_cast< Evaluator* >(statement);
+  if (!tag_value_)
+    substatement_error(get_name(), statement);
+  else if (!rhs)
+    rhs = tag_value_;
+  else
+    add_static_error(get_name() + " must have exactly one evaluator substatement.");
+}
+
+
+Requested_Context Evaluator_Value::request_context() const
+{
+  if (rhs)
+    return rhs->request_context().add_usage(Set_Usage::TAGS);
+  return Requested_Context().add_usage(Set_Usage::TAGS);
+}
+
+
+Eval_Task* Evaluator_Value::get_string_task(Prepare_Task_Context& context, const std::string* key)
+{
+  Eval_Task* rhs_task = rhs ? rhs->get_string_task(context, key) : 0;
+  return new Value_Eval_Task(rhs_task);
+}
+
+
+std::string Value_Eval_Task::eval(const std::string* key) const
+{
+  return "";
+}
+
+
+std::string Value_Eval_Task::eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+{
+  return find_value(data.tags, rhs ? rhs->eval(data, key) : "");
+}
+
+
+std::string Value_Eval_Task::eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+{
+  return find_value(data.tags, rhs ? rhs->eval(data, key) : "");
+}
+
+
+std::string Value_Eval_Task::eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+{
+  return find_value(data.tags, rhs ? rhs->eval(data, key) : "");
+}
+
+
+std::string Value_Eval_Task::eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+{
+  return find_value(data.tags, rhs ? rhs->eval(data, key) : "");
+}
+
+
+std::string Value_Eval_Task::eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+{
+  return find_value(data.tags, rhs ? rhs->eval(data, key) : "");
+}
+
+
+std::string Value_Eval_Task::eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+{
+  return find_value(data.tags, rhs ? rhs->eval(data, key) : "");
+}
+
+
+std::string Value_Eval_Task::eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+{
+  return find_value(data.tags, rhs ? rhs->eval(data, key) : "");
+}
+
+
+std::string Value_Eval_Task::eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+{
+  return find_value(data.tags, rhs ? rhs->eval(data, key) : "");
 }
 
 
