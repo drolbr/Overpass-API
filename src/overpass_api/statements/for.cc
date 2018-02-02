@@ -258,7 +258,7 @@ void For_Statement::execute(Resource_Manager& rman)
         it != substatements.end(); ++it)
       (*it)->execute(rman);
     
-    rman.union_inward(input, get_result_name());
+    rman.union_inward(get_result_name(), get_result_name());
   }
 
   rman.erase_set(input);

@@ -30,6 +30,7 @@
 
 Generic_Statement_Maker< Foreach_Statement > Foreach_Statement::statement_maker("foreach");
 
+
 Foreach_Statement::Foreach_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_)
@@ -45,6 +46,7 @@ Foreach_Statement::Foreach_Statement
   output = attributes["into"];
 }
 
+
 void Foreach_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
@@ -55,6 +57,49 @@ void Foreach_Statement::add_statement(Statement* statement, std::string text)
       substatements.push_back(statement);
     else
       add_static_error("\"newer\" can appear only inside \"query\" statements.");
+  }
+}
+
+
+void add_to_set(Set& target, Uint32_Index idx, const Node_Skeleton& skel)
+{ target.nodes[idx].push_back(skel); }
+void add_to_set(Set& target, Uint32_Index idx, const Attic< Node_Skeleton >& skel)
+{ target.attic_nodes[idx].push_back(skel); }
+void add_to_set(Set& target, Uint31_Index idx, const Way_Skeleton& skel)
+{ target.ways[idx].push_back(skel); }
+void add_to_set(Set& target, Uint31_Index idx, const Attic< Way_Skeleton >& skel)
+{ target.attic_ways[idx].push_back(skel); }
+void add_to_set(Set& target, Uint31_Index idx, const Relation_Skeleton& skel)
+{ target.relations[idx].push_back(skel); }
+void add_to_set(Set& target, Uint31_Index idx, const Attic< Relation_Skeleton >& skel)
+{ target.attic_relations[idx].push_back(skel); }
+void add_to_set(Set& target, Uint31_Index idx, const Area_Skeleton& skel)
+{ target.areas[idx].push_back(skel); }
+void add_to_set(Set& target, Uint31_Index idx, const Derived_Structure& skel)
+{ target.deriveds[idx].push_back(skel); }
+
+
+template< typename Index, typename Object >
+void loop_over_elements(const std::map< Index, std::vector< Object > >& source, Resource_Manager& rman,
+    std::vector< Statement* >& substatements, const std::string& result_name)
+{
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
+      it = source.begin(); it != source.end(); ++it)
+  {
+    for (typename std::vector< Object >::const_iterator it2 = it->second.begin();
+        it2 != it->second.end(); ++it2)
+    {
+      rman.count_loop();
+      Set empty;
+      add_to_set(empty, it->first, *it2);
+      rman.swap_set(result_name, empty);
+
+      for (std::vector< Statement* >::iterator it = substatements.begin();
+          it != substatements.end(); ++it)
+	(*it)->execute(rman);
+    
+      rman.union_inward(result_name, result_name);
+    }
   }
 }
 
@@ -70,157 +115,14 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   if (!base_set)
     base_set = &base_result_set;
   
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator
-      it(base_set->nodes.begin()); it != base_set->nodes.end(); ++it)
-  {
-    for (std::vector< Node_Skeleton >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    {
-      rman.count_loop();
-      Set empty;
-      empty.nodes[it->first].push_back(*it2);
-      rman.swap_set(get_result_name(), empty);
-
-      for (std::vector< Statement* >::iterator it(substatements.begin());
-          it != substatements.end(); ++it)
-	(*it)->execute(rman);
-    
-      rman.union_inward(input, get_result_name());
-    }
-  }
-
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
-      it(base_set->attic_nodes.begin()); it != base_set->attic_nodes.end(); ++it)
-  {
-    for (std::vector< Attic< Node_Skeleton > >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    {
-      rman.count_loop();
-      Set empty;
-      empty.attic_nodes[it->first].push_back(*it2);
-      rman.swap_set(get_result_name(), empty);
-
-      for (std::vector< Statement* >::iterator it(substatements.begin());
-          it != substatements.end(); ++it)
-	(*it)->execute(rman);
-    
-      rman.union_inward(input, get_result_name());
-    }
-  }
-
-  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
-    it(base_set->ways.begin()); it != base_set->ways.end(); ++it)
-  {
-    for (std::vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    {
-      rman.count_loop();
-      Set empty;
-      empty.ways[it->first].push_back(*it2);
-      rman.swap_set(get_result_name(), empty);
-
-      for (std::vector< Statement* >::iterator it(substatements.begin());
-          it != substatements.end(); ++it)
-	(*it)->execute(rman);
-    
-      rman.union_inward(input, get_result_name());
-    }
-  }
-
-  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
-    it(base_set->attic_ways.begin()); it != base_set->attic_ways.end(); ++it)
-  {
-    for (std::vector< Attic< Way_Skeleton > >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    {
-      rman.count_loop();
-      Set empty;
-      empty.attic_ways[it->first].push_back(*it2);
-      rman.swap_set(get_result_name(), empty);
-
-      for (std::vector< Statement* >::iterator it(substatements.begin());
-          it != substatements.end(); ++it)
-	(*it)->execute(rman);
-    
-      rman.union_inward(input, get_result_name());
-    }
-  }
-
-  for (std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-    it(base_set->relations.begin()); it != base_set->relations.end(); ++it)
-  {
-    for (std::vector< Relation_Skeleton >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    {
-      rman.count_loop();
-      Set empty;
-      empty.relations[it->first].push_back(*it2);
-      rman.swap_set(get_result_name(), empty);
-
-      for (std::vector< Statement* >::iterator it(substatements.begin());
-          it != substatements.end(); ++it)
-	(*it)->execute(rman);
-    
-      rman.union_inward(input, get_result_name());
-    }
-  }
-
-  for (std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-    it(base_set->attic_relations.begin()); it != base_set->attic_relations.end(); ++it)
-  {
-    for (std::vector< Attic< Relation_Skeleton > >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    {
-      rman.count_loop();
-      Set empty;
-      empty.attic_relations[it->first].push_back(*it2);
-      rman.swap_set(get_result_name(), empty);
-
-      for (std::vector< Statement* >::iterator it(substatements.begin());
-          it != substatements.end(); ++it)
-	(*it)->execute(rman);
-    
-      rman.union_inward(input, get_result_name());
-    }
-  }
-
-  for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator
-    it(base_set->areas.begin()); it != base_set->areas.end(); ++it)
-  {
-    for (std::vector< Area_Skeleton >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    {
-      rman.count_loop();
-      Set empty;
-      empty.areas[it->first].push_back(*it2);
-      rman.swap_set(get_result_name(), empty);
-
-      for (std::vector< Statement* >::iterator it(substatements.begin());
-          it != substatements.end(); ++it)
-	(*it)->execute(rman);
-    
-      rman.union_inward(input, get_result_name());
-    }
-  }
-
-  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::const_iterator
-    it(base_set->deriveds.begin()); it != base_set->deriveds.end(); ++it)
-  {
-    for (std::vector< Derived_Structure >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-    {
-      rman.count_loop();
-      Set empty;
-      empty.deriveds[it->first].push_back(*it2);
-      rman.swap_set(get_result_name(), empty);
-
-      for (std::vector< Statement* >::iterator it(substatements.begin());
-          it != substatements.end(); ++it)
-	(*it)->execute(rman);
-    
-      rman.union_inward(input, get_result_name());
-    }
-  }
+  loop_over_elements(base_set->nodes, rman, substatements, get_result_name());
+  loop_over_elements(base_set->attic_nodes, rman, substatements, get_result_name());
+  loop_over_elements(base_set->ways, rman, substatements, get_result_name());
+  loop_over_elements(base_set->attic_ways, rman, substatements, get_result_name());
+  loop_over_elements(base_set->relations, rman, substatements, get_result_name());
+  loop_over_elements(base_set->attic_relations, rman, substatements, get_result_name());
+  loop_over_elements(base_set->areas, rman, substatements, get_result_name());
+  loop_over_elements(base_set->deriveds, rman, substatements, get_result_name());
   
   rman.erase_set(input);
   rman.move_all_inward_except(get_result_name());
