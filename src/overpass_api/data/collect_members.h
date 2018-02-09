@@ -976,4 +976,113 @@ struct Order_By_Way_Id
   }
 };
 
+
+template< class TIndex, class TObject, class Id_Type >
+std::vector< Id_Type > extract_children_ids(const std::map< TIndex, std::vector< TObject > >& elems)
+{
+  std::vector< Id_Type > ids;
+
+  {
+    for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
+        it(elems.begin()); it != elems.end(); ++it)
+    {
+      for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
+          it2 != it->second.end(); ++it2)
+        ids.push_back(Id_Type(it2->id.val()));
+    }
+  }
+
+  sort(ids.begin(), ids.end());
+
+  return ids;
+}
+
+
+template< class TIndex, class TObject >
+std::set< Uint31_Index > extract_parent_indices(const std::map< TIndex, std::vector< TObject > >& elems)
+{
+  std::vector< uint32 > children;
+  {
+    for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
+        it(elems.begin()); it != elems.end(); ++it)
+      children.push_back(it->first.val());
+  }
+
+  std::vector< uint32 > parents = calc_parents(children);
+
+  std::set< Uint31_Index > req;
+  for (std::vector< uint32 >::const_iterator it = parents.begin(); it != parents.end(); ++it)
+    req.insert(Uint31_Index(*it));
+
+  return req;
+}
+
+
+void collect_ways(const Statement& query, Resource_Manager& rman,
+		  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+		  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+		  const std::vector< Way::Id_Type >& ids, bool invert_ids,
+		  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways);
+
+
+void collect_ways(const Statement& query, Resource_Manager& rman,
+                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+                  const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
+                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
+                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+                  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways);
+
+
+void collect_ways(const Statement& query, Resource_Manager& rman,
+                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
+                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+                  uint32 role_id);
+
+
+void collect_ways(const Statement& query, Resource_Manager& rman,
+                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+                  const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
+                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
+                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+                  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+                  uint32 role_id);
+
+
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >& result);
+
+
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
+     const std::vector< Way::Id_Type >& ids, bool invert_ids);
+
+
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
+     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result);
+
+
+void collect_ways
+    (const Statement& stmt, Resource_Manager& rman,
+     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
+     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result,
+     const std::vector< Way::Id_Type >& ids, bool invert_ids);
+
+
+void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into);
+
+
 #endif
