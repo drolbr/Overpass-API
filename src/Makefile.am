@@ -112,6 +112,7 @@ statements_cc = \
   overpass_api/statements/id_query.cc \
   overpass_api/statements/if.cc \
   overpass_api/statements/item.cc \
+  overpass_api/statements/localize.cc \
   overpass_api/statements/make_area.cc \
   overpass_api/statements/make.cc \
   overpass_api/statements/map_to_area.cc \
@@ -288,6 +289,7 @@ nobase_dist_HEADERS = \
   overpass_api/statements/id_query.h\
   overpass_api/statements/if.h\
   overpass_api/statements/item.h\
+  overpass_api/statements/localize.h\
   overpass_api/statements/make_area.h\
   overpass_api/statements/make.h\
   overpass_api/statements/map_to_area.h\

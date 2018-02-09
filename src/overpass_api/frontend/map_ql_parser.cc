@@ -279,7 +279,7 @@ TStatement* create_compare_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_query_statement(typename TStatement::Factory& stmt_factory,
-				   std::string type, std::string into, uint line_nr)
+    std::string type, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["type"] = type;
@@ -293,8 +293,7 @@ typedef enum { haskv_plain, haskv_regex, haskv_icase } haskv_type;
 
 template< class TStatement >
 TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
-				    std::string key, std::string value, haskv_type regex, haskv_type key_regex, bool straight,
-				    uint line_nr)
+    std::string key, std::string value, haskv_type regex, haskv_type key_regex, bool straight, uint line_nr)
 {
   std::map< std::string, std::string > attr;
 
@@ -320,7 +319,7 @@ TStatement* create_has_kv_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
-				  std::string from, std::string into, uint line_nr)
+    std::string from, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["from"] = from;
@@ -331,7 +330,7 @@ TStatement* create_item_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
-				     std::string type, std::string from, std::string into, uint line_nr)
+     std::string type, std::string from, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["from"] = (from == "" ? "_" : from);
@@ -343,7 +342,7 @@ TStatement* create_recurse_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_coord_query_statement(typename TStatement::Factory& stmt_factory,
-				     std::string lat, std::string lon, std::string from, std::string into, uint line_nr)
+    std::string lat, std::string lon, std::string from, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["from"] = (from == "" ? "_" : from);
@@ -353,14 +352,27 @@ TStatement* create_coord_query_statement(typename TStatement::Factory& stmt_fact
   return stmt_factory.create_statement("coord-query", line_nr, attr);
 }
 
+
 template< class TStatement >
 TStatement* create_map_to_area_statement(typename TStatement::Factory& stmt_factory,
-				     std::string from, std::string into, uint line_nr)
+    std::string from, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["from"] = (from == "" ? "_" : from);
   attr["into"] = into;
   return stmt_factory.create_statement("map-to-area", line_nr, attr);
+}
+
+
+template< class TStatement >
+TStatement* create_localize_statement(typename TStatement::Factory& stmt_factory,
+    std::string type, std::string from, std::string into, uint line_nr)
+{
+  std::map< std::string, std::string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  attr["type"] = type;
+  return stmt_factory.create_statement("localize", line_nr, attr);
 }
 
 
@@ -807,6 +819,26 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
 }
 
 
+template< class TStatement >
+TStatement* parse_localize(typename TStatement::Factory& stmt_factory,
+    Tokenizer_Wrapper& token, const std::string& from, Error_Output* error_output)
+{
+  uint line_col = token.line_col().first;
+  ++token;
+  
+  std::string type = "l";
+  if (*token != ";" && *token != "->")
+  {
+    type = *token;
+    ++token;
+  }
+
+  std::string into = probe_into(token, error_output);
+
+  return create_localize_statement< TStatement >(stmt_factory, type, from, into, line_col);
+}
+
+
 struct Statement_Text
 {
   Statement_Text(std::string statement_ = "",
@@ -1207,6 +1239,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
     return parse_coord_query< TStatement >(stmt_factory, token, from, error_output);
   else if (token.good() && *token == "map_to_area")
     return parse_map_to_area< TStatement >(stmt_factory, token, from, error_output);
+  else if (token.good() && *token == "local")
+    return parse_localize< TStatement >(stmt_factory, token, from, error_output);
   else if (token.good() && *token == "compare")
     return parse_compare< TStatement >(stmt_factory, parsed_query, token, from, error_output, depth);
 

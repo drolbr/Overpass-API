@@ -72,7 +72,9 @@ public:
 
   virtual std::string dump_xml(const std::string& indent) const
   {
-    std::string result = indent + "<convert" + dump_xml_result_name() + " type=\"" + type;
+    std::string result = indent + "<convert"
+          + (input != "_" ? " from=\"" + input + "\"" : "")
+          + dump_xml_result_name() + " type=\"" + type;
     if (evaluators.empty())
       return result + "\"/>\n";
     result += "\">\n";
