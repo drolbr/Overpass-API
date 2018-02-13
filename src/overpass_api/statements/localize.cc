@@ -35,6 +35,10 @@ Localize_Statement::Localize_Statement
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["type"] = "l";
+  attributes["s"] = "";
+  attributes["n"] = "";
+  attributes["w"] = "";
+  attributes["e"] = "";
   
   eval_attributes_array(get_name(), attributes, input_attributes);
   
@@ -47,6 +51,34 @@ Localize_Statement::Localize_Statement
     type = all;
   else if (attributes["type"] != "l")
     add_static_error("Localize must have one of the values \"l\", \"ll\", or \"llb\". \"l\" is the default value.");
+  
+  south = 100.;
+  if (!attributes["s"].empty() || !attributes["n"].empty()
+      || !attributes["w"].empty() || !attributes["e"].empty())
+  {
+    south = atof(attributes["s"].c_str());
+    if ((south < -90.0) || (south > 90.0) || (attributes["s"] == ""))
+      add_static_error("For the attribute \"s\" of the element \"bbox-query\""
+          " the only allowed values are floats between -90.0 and 90.0.");
+
+    north = atof(attributes["n"].c_str());
+    if ((north < -90.0) || (north > 90.0) || (attributes["n"] == ""))
+      add_static_error("For the attribute \"n\" of the element \"bbox-query\""
+          " the only allowed values are floats between -90.0 and 90.0.");
+    if (north < south)
+      add_static_error("The value of attribute \"n\" of the element \"bbox-query\""
+          " must always be greater or equal than the value of attribute \"s\".");
+
+    west = atof(attributes["w"].c_str());
+    if ((west < -180.0) || (west > 180.0) || (attributes["w"] == ""))
+      add_static_error("For the attribute \"w\" of the element \"bbox-query\""
+          " the only allowed values are floats between -180.0 and 180.0.");
+
+    east = atof(attributes["e"].c_str());
+    if ((east < -180.0) || (east > 180.0) || (attributes["e"] == ""))
+      add_static_error("For the attribute \"e\" of the element \"bbox-query\""
+          " the only allowed values are floats between -180.0 and 180.0.");
+  }
 }
 
 
@@ -237,19 +269,24 @@ NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Se
   
   Set extra_ways;
   if (rman.get_desired_timestamp() == NOW)
+  {
     collect_ways(stmt, rman, relevant_nwrs.nodes, extra_ways.ways);
+    indexed_set_union(relevant_nwrs.ways, extra_ways.ways);
+  }
   else
   {
     collect_ways(stmt, rman, relevant_nwrs.nodes, relevant_nwrs.attic_nodes,
                  extra_ways.ways, extra_ways.attic_ways);
     indexed_set_union(relevant_nwrs.attic_ways, extra_ways.attic_ways);
+    indexed_set_union(relevant_nwrs.ways, extra_ways.ways);
+    keep_matching_skeletons(relevant_nwrs.ways, relevant_nwrs.attic_ways, rman.get_desired_timestamp());
   }
-  indexed_set_union(relevant_nwrs.ways, extra_ways.ways);
   
   // Build local ids for node segments
   
   indexed_set_union(relevant_nwrs.nodes, input_set.nodes);
   indexed_set_union(relevant_nwrs.attic_nodes, input_set.attic_nodes);
+  keep_matching_skeletons(relevant_nwrs.nodes, relevant_nwrs.attic_nodes, rman.get_desired_timestamp());
   
   std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it_now_idx
       = relevant_nwrs.nodes.begin();
@@ -352,7 +389,7 @@ Derived_Skeleton::Id_Type NWR_Context::local_id_by_node_id(Node_Skeleton::Id_Typ
 
 template< typename Index, typename Maybe_Attic >
 void process_vertices(const std::map< Index, std::vector< Maybe_Attic > >& items, Set_With_Context& context_from,
-    Set& into, Resource_Manager& rman, NWR_Context& nwr_context)
+    Set& into, Resource_Manager& rman, NWR_Context& nwr_context, const Owner< Bbox_Double >& bbox)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -367,22 +404,25 @@ void process_vertices(const std::map< Index, std::vector< Maybe_Attic > >& items
         NWR_Context::Node_Context& node_context = nwr_context.context_by_node_id(it_elem->id);
         ++node_context.count;
         
-        Derived_Structure result("vertex", 0ull);
-        result.id = rman.get_global_settings().dispense_derived_id();
-        result.acquire_geometry(new Point_Geometry(
-            ::lat(it_idx->first.val(), it_elem->ll_lower), ::lon(it_idx->first.val(), it_elem->ll_lower)));
+        if (!bbox || bbox->contains(Point_Double(node_context.lat, node_context.lon)))
+        {
+          Derived_Structure result("vertex", 0ull);
+          result.id = rman.get_global_settings().dispense_derived_id();
+          result.acquire_geometry(new Point_Geometry(
+              ::lat(it_idx->first.val(), it_elem->ll_lower), ::lon(it_idx->first.val(), it_elem->ll_lower)));
       
-        for (std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = data.tags->begin();
-            it_tag != data.tags->end(); ++it_tag)
-          result.tags.push_back(std::make_pair(
-              it_tag->first.empty() ? "" : it_tag->first[0] == '_' ? "_" + it_tag->first : it_tag->first,
-              it_tag->second));
+          for (std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = data.tags->begin();
+              it_tag != data.tags->end(); ++it_tag)
+            result.tags.push_back(std::make_pair(
+                it_tag->first.empty() ? "" : it_tag->first[0] == '_' ? "_" + it_tag->first : it_tag->first,
+                it_tag->second));
           
-        Derived_Skeleton::Id_Type local_id = nwr_context.local_id_by_node_id(it_elem->id);
-        if (local_id.val())
-          result.tags.push_back(std::make_pair("_local_id", to_string(local_id.val())));
+          Derived_Skeleton::Id_Type local_id = nwr_context.local_id_by_node_id(it_elem->id);
+          if (local_id.val())
+            result.tags.push_back(std::make_pair("_local_id", to_string(local_id.val())));
       
-        into.deriveds[Uint31_Index(0u)].push_back(result);
+          into.deriveds[Uint31_Index(0u)].push_back(result);
+        }
       }
     }
   }
@@ -391,7 +431,7 @@ void process_vertices(const std::map< Index, std::vector< Maybe_Attic > >& items
 
 template< typename Index, typename Maybe_Attic >
 void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, Set_With_Context& context_from,
-    Set& into, Resource_Manager& rman, NWR_Context& nwr_context)
+    Set& into, Resource_Manager& rman, NWR_Context& nwr_context, const Owner< Bbox_Double >& bbox)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -408,6 +448,23 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
         
         for (uint i = 0; i < way_context.size(); ++i)
         {
+          if (bbox)
+          {
+            bool in_bbox = false;
+            for (std::vector< Point_Double >::const_iterator it = way_context[i].points.begin();
+                it != way_context[i].points.end() && !in_bbox; ++it)
+              in_bbox |= bbox->contains(*it);
+            
+            if (!in_bbox)
+            {
+              for (uint j = 1; j < way_context[i].points.size() && !in_bbox; ++j)
+                in_bbox |= bbox->intersects(way_context[i].points[j-1], way_context[i].points[j]);
+            }
+            
+            if (!in_bbox)
+              continue;
+          }
+          
           Derived_Structure result("link", 0ull);
           result.id = rman.get_global_settings().dispense_derived_id();
           result.acquire_geometry(new Linestring_Geometry(way_context[i].points));
@@ -437,7 +494,7 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
 
 template< typename Index, typename Maybe_Attic >
 void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& items, Set_With_Context& context_from,
-    Set& into, Resource_Manager& rman, NWR_Context& nwr_context)
+    Set& into, Resource_Manager& rman, NWR_Context& nwr_context, const Owner< Bbox_Double >& bbox)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -458,26 +515,31 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
           {
             NWR_Context::Node_Context& node_context = nwr_context.context_by_node_id(it_memb->ref);
             
-            Derived_Structure result("trigraph", 0ull);
-            result.id = rman.get_global_settings().dispense_derived_id();
-            result.acquire_geometry(new Point_Geometry(node_context.lat, node_context.lon));
-      
-            for (std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = data.tags->begin();
-                it_tag != data.tags->end(); ++it_tag)
-              result.tags.push_back(std::make_pair(
-                  it_tag->first.empty() ? "" : it_tag->first[0] == '_' ? "_" + it_tag->first : it_tag->first,
-                  it_tag->second));
-              
-            if (node_context.local_id.val())
-              result.tags.push_back(std::make_pair("_local_ref", to_string(node_context.local_id.val())));
-          
-            if (last)
+            if (!bbox || bbox->contains(Point_Double(node_context.lat, node_context.lon)))
             {
-              last->tags.push_back(std::make_pair("_next", to_string(result.id.val())));
-              result.tags.push_back(std::make_pair("_previous", to_string(last->id.val())));
+              Derived_Structure result("trigraph", 0ull);
+              result.id = rman.get_global_settings().dispense_derived_id();
+              result.acquire_geometry(new Point_Geometry(node_context.lat, node_context.lon));
+      
+              for (std::vector< std::pair< std::string, std::string > >::const_iterator
+                  it_tag = data.tags->begin(); it_tag != data.tags->end(); ++it_tag)
+                result.tags.push_back(std::make_pair(
+                    it_tag->first.empty() ? "" : it_tag->first[0] == '_' ? "_" + it_tag->first : it_tag->first,
+                    it_tag->second));
+              
+              if (node_context.local_id.val())
+                result.tags.push_back(std::make_pair("_local_ref", to_string(node_context.local_id.val())));
+          
+              if (last)
+              {
+                last->tags.push_back(std::make_pair("_next", to_string(result.id.val())));
+                result.tags.push_back(std::make_pair("_previous", to_string(last->id.val())));
+              }
+              into.deriveds[Uint31_Index(0u)].push_back(result);
+              last = &into.deriveds[Uint31_Index(0u)].back();
             }
-            into.deriveds[Uint31_Index(0u)].push_back(result);
-            last = &into.deriveds[Uint31_Index(0u)].back();
+            else
+              last = 0;
           }
           else if (it_memb->type == Relation_Entry::WAY)
           {
@@ -486,6 +548,26 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
             
             for (uint i = 0; i < way_context.size(); ++i)
             {
+              if (bbox)
+              {
+                bool in_bbox = false;
+                for (std::vector< Point_Double >::const_iterator it = way_context[i].points.begin();
+                    it != way_context[i].points.end() && !in_bbox; ++it)
+                  in_bbox |= bbox->contains(*it);
+            
+                if (!in_bbox)
+                {
+                  for (uint j = 1; j < way_context[i].points.size() && !in_bbox; ++j)
+                    in_bbox |= bbox->intersects(way_context[i].points[j-1], way_context[i].points[j]);
+                }
+            
+                if (!in_bbox)
+                {
+                  last = 0;
+                  continue;
+                }
+              }
+          
               Derived_Structure result("trigraph", 0ull);
               result.id = rman.get_global_settings().dispense_derived_id();
               result.acquire_geometry(new Linestring_Geometry(way_context[i].points));
@@ -553,6 +635,10 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
 
 void Localize_Statement::execute(Resource_Manager& rman)
 {
+  //TODO: bbox
+  //TODO: diff
+  //TODO: other modes
+  
   Set into;
 
   const Set* input_set = rman.get_set(input);
@@ -562,6 +648,8 @@ void Localize_Statement::execute(Resource_Manager& rman)
     return;
   }
   
+  Owner< Bbox_Double > bbox(south <= 90. ? new Bbox_Double(south, west, north, east) : 0);
+  
   Requested_Context requested_context;
   requested_context.add_usage(input, Set_Usage::TAGS);
   Prepare_Task_Context context(requested_context, *this, rman);
@@ -570,18 +658,18 @@ void Localize_Statement::execute(Resource_Manager& rman)
   if (context_from && context_from->base)
   {
     NWR_Context nwr_context(rman, *this, *input_set);
-    process_vertices(context_from->base->nodes, *context_from, into, rman, nwr_context);
+    process_vertices(context_from->base->nodes, *context_from, into, rman, nwr_context, bbox);
     if (!context_from->base->attic_nodes.empty())
-      process_vertices(context_from->base->attic_nodes, *context_from, into, rman, nwr_context);
+      process_vertices(context_from->base->attic_nodes, *context_from, into, rman, nwr_context, bbox);
     
     nwr_context.prepare_links(rman, *this, *input_set);
-    generate_links(context_from->base->ways, *context_from, into, rman, nwr_context);
+    generate_links(context_from->base->ways, *context_from, into, rman, nwr_context, bbox);
     if (!context_from->base->attic_ways.empty())
-      generate_links(context_from->base->attic_ways, *context_from, into, rman, nwr_context);
+      generate_links(context_from->base->attic_ways, *context_from, into, rman, nwr_context, bbox);
     
-    generate_trigraphs(context_from->base->relations, *context_from, into, rman, nwr_context);
+    generate_trigraphs(context_from->base->relations, *context_from, into, rman, nwr_context, bbox);
     if (!context_from->base->attic_ways.empty())
-      generate_trigraphs(context_from->base->attic_relations, *context_from, into, rman, nwr_context);
+      generate_trigraphs(context_from->base->attic_relations, *context_from, into, rman, nwr_context, bbox);
   }
 
   transfer_output(rman, into);

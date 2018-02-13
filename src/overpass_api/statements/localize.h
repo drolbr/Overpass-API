@@ -70,28 +70,39 @@ public:
 
   virtual std::string dump_xml(const std::string& indent) const
   {
-    return indent + "<localize"
-        + (input != "_" ? " from=\"" + input + "\"" : "")
-        + dump_xml_result_name()
+    std::string result = indent + "<localize"
+        + (input != "_" ? " from=\"" + input + "\"" : "");
+    if (south <= 90.)
+      result += " s=\"" + to_string(south) + "\""
+          + " w=\"" + to_string(west) + "\""
+          + " n=\"" + to_string(north) + "\""
+          + " e=\"" + to_string(east) + "\"";
+    return result + dump_xml_result_name()
         + (type == data ? "" : (std::string(" type=\"") + (type == also_loose ? "ll" : "llb") + "\"")) + "/>\n";
   }
 
   virtual std::string dump_compact_ql(const std::string& indent) const
   {
-    return indent + (input == "_" ? "" : "." + input + " ") + "local"
-        + (type == data ? "" : (type == also_loose ? " ll" : " llb"))
-        + dump_ql_result_name();
+    std::string result = indent + (input == "_" ? "" : "." + input + " ") + "local"
+        + (type == data ? "" : (type == also_loose ? " ll" : " llb"));
+    if (south <= 90.)
+      result += std::string("(")
+          + to_string(south)
+          + "," + to_string(west)
+          + "," + to_string(north)
+          + "," + to_string(east)
+          + ")";
+    return result + dump_ql_result_name();
   }
 
   virtual std::string dump_pretty_ql(const std::string& indent) const
   {
-    return indent + (input == "_" ? "" : "." + input + " ") + "local"
-        + (type == data ? "" : (type == also_loose ? " ll" : " llb"))
-        + dump_ql_result_name();
+    return dump_compact_ql(indent);
   }
 
 private:
   std::string input;
+  double south, north, west, east;
   Mode type;
 };
 

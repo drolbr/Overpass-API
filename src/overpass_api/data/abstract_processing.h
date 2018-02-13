@@ -314,6 +314,14 @@ std::vector< typename TObject::Id_Type > filter_for_ids(const std::map< TIndex, 
 
 //-----------------------------------------------------------------------------
 
+
+template< typename TObject >
+struct Compare_By_Id
+{
+  bool operator()(const TObject& lhs, const TObject& rhs) { return lhs.id < rhs.id; }
+};
+
+
 template< class TIndex, class TObject >
 bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
 		       const std::map< TIndex, std::vector< TObject > >& summand)
@@ -333,8 +341,8 @@ bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
 
     std::vector< TObject > other;
     other.swap(target);
-    set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-	      back_inserter(target));
+    std::set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
+	      back_inserter(target), Compare_By_Id< TObject >());
     
     result_has_grown |= (target.size() > other.size());
   }
@@ -354,7 +362,7 @@ void indexed_set_difference(std::map< TIndex, std::vector< TObject > >& result,
     std::vector< TObject > other;
     other.swap(result[it->first]);
     std::sort(other.begin(), other.end());
-    set_difference(other.begin(), other.end(), it->second.begin(), it->second.end(),
+    std::set_difference(other.begin(), other.end(), it->second.begin(), it->second.end(),
                    back_inserter(result[it->first]));
   }
 }

@@ -366,12 +366,17 @@ TStatement* create_map_to_area_statement(typename TStatement::Factory& stmt_fact
 
 template< class TStatement >
 TStatement* create_localize_statement(typename TStatement::Factory& stmt_factory,
-    std::string type, std::string from, std::string into, uint line_nr)
+    std::string type, std::string from, std::string into,
+    std::string south, std::string north, std::string west, std::string east, uint line_nr)
 {
   std::map< std::string, std::string > attr;
   attr["from"] = (from == "" ? "_" : from);
   attr["into"] = into;
   attr["type"] = type;
+  attr["s"] = south;
+  attr["n"] = north;
+  attr["w"] = west;
+  attr["e"] = east;
   return stmt_factory.create_statement("localize", line_nr, attr);
 }
 
@@ -827,15 +832,42 @@ TStatement* parse_localize(typename TStatement::Factory& stmt_factory,
   ++token;
   
   std::string type = "l";
-  if (*token != ";" && *token != "->")
+  if (*token != ";" && *token != "->" && *token != "(")
   {
     type = *token;
+    ++token;
+  }
+  std::string south, north, west, east;
+  if (*token == "(")
+  {
+    ++token;
+    south = get_text_token(token, error_output, "Value");
+    clear_until_after(token, error_output, ",", ")", false);
+    if (*token == ",")
+    {
+      ++token;
+      west = get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, ",", ")", false);
+    }
+    if (*token == ",")
+    {
+      ++token;
+      north = get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, ",", ")", false);
+    }
+    if (*token == ",")
+    {
+      ++token;
+      east = get_text_token(token, error_output, "Value");
+      clear_until_after(token, error_output, ",", ")", false);
+    }    
     ++token;
   }
 
   std::string into = probe_into(token, error_output);
 
-  return create_localize_statement< TStatement >(stmt_factory, type, from, into, line_col);
+  return create_localize_statement< TStatement >(stmt_factory, type, from, into,
+      south, north, west, east, line_col);
 }
 
 
