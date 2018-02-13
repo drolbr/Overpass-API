@@ -63,14 +63,24 @@ public:
     std::map< Node_Skeleton::Id_Type, std::vector< Way_Skeleton::Id_Type > > link_by_origin;
   };
   
+  struct Way_Section_Context
+  {
+    Way_Section_Context(uint pos_) : pos(pos_), local_id(0ull) {}
+    uint pos;
+    Derived_Skeleton::Id_Type local_id;
+    std::vector< Point_Double > points;
+  };
+  
   NWR_Context(Resource_Manager& rman, const Statement& stmt, const Set& input_set);
   void prepare_links(Resource_Manager& rman, const Statement& stmt, const Set& input_set);
   Derived_Skeleton::Id_Type local_id_by_node_id(Node_Skeleton::Id_Type id) const;
   Node_Context& context_by_node_id(Node_Skeleton::Id_Type id) { return context_by_node_id_[id]; }
+  std::vector< Way_Section_Context >& context_by_way_id(Way_Skeleton::Id_Type id) { return context_by_way_id_[id]; }
   
 private:
   Set relevant_nwrs;
   std::map< Node_Skeleton::Id_Type, Node_Context > context_by_node_id_;
+  std::map< Way_Skeleton::Id_Type, std::vector< Way_Section_Context > > context_by_way_id_;
 };
 
 
@@ -82,6 +92,134 @@ struct Node_Skeleton_By_Coord_Then_Id
       return lhs->ll_lower < rhs->ll_lower;
     return lhs->id < rhs->id;
   }
+};
+
+
+template< typename Index, typename Object, typename Task >
+void for_each_elem(const std::map< Index, std::vector< Object > >& container, Task task)
+{
+  for (typename std::map< Index, std::vector< Object > >::const_iterator
+      it_idx = container.begin(); it_idx != container.end(); ++it_idx)
+  {
+    for (typename std::vector< Object >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+      task(it_idx->first, *it_elem);
+  }
+}
+
+
+struct Set_Coord_In_Context
+{
+  void operator()(Uint32_Index idx, const Node_Skeleton& node)
+  {
+    NWR_Context::Node_Context& context = (*context_by_node_id)[node.id];
+    context.lat = ::lat(idx.val(), node.ll_lower);
+    context.lon = ::lon(idx.val(), node.ll_lower);
+  }
+  
+  Set_Coord_In_Context(std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >& context_by_node_id_)
+    : context_by_node_id(&context_by_node_id_) {}
+private:
+  std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >* context_by_node_id;
+};
+
+
+struct Count_Node_Use
+{
+  void operator()(Uint31_Index idx, const Way_Skeleton& way)
+  {
+    if (!way.nds.empty())
+    {
+      (*context_by_node_id)[way.nds.front()].count += 2;
+      for (uint i = 1; i < way.nds.size()-1; ++i)
+        ++(*context_by_node_id)[way.nds[i]].count;
+      (*context_by_node_id)[way.nds.back()].count += 2;
+    }
+  }
+  
+  Count_Node_Use(std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >& context_by_node_id_)
+    : context_by_node_id(&context_by_node_id_) {}
+private:
+  std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >* context_by_node_id;
+};
+
+
+struct Partition_Into_Links
+{
+  void operator()(Uint31_Index idx, const Way_Skeleton& way)
+  {
+    if (!way.nds.empty())
+    {
+      std::vector< NWR_Context::Way_Section_Context >& way_context = (*context_by_way_id)[way.id];
+      
+      uint start = 0;
+      const NWR_Context::Node_Context& start_context = (*context_by_node_id)[way.nds[start]];
+      way_context.push_back(NWR_Context::Way_Section_Context(start));
+      way_context.back().points.push_back(Point_Double(start_context.lat, start_context.lon));
+      
+      for (uint i = 1; i < way.nds.size()-1; ++i)
+      {
+        NWR_Context::Node_Context& context = (*context_by_node_id)[way.nds[i]];
+        way_context.back().points.push_back(Point_Double(context.lat, context.lon));
+        
+        if (context.local_id.val() || context.count > 1)
+        {
+          context.link_by_origin[way.nds[start]].push_back(way.id);
+          start = i;
+          way_context.push_back(NWR_Context::Way_Section_Context(start));
+          way_context.back().points.push_back(Point_Double(context.lat, context.lon));
+        }
+      }
+      
+      NWR_Context::Node_Context& context = (*context_by_node_id)[way.nds.back()];
+      way_context.back().points.push_back(Point_Double(context.lat, context.lon));
+      context.link_by_origin[way.nds[start]].push_back(way.id);
+    }
+  }
+  
+  Partition_Into_Links(
+      std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >& context_by_node_id_,
+      std::map< Way_Skeleton::Id_Type, std::vector< NWR_Context::Way_Section_Context > >& context_by_way_id_)
+    : context_by_node_id(&context_by_node_id_), context_by_way_id(&context_by_way_id_) {}
+private:
+  std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >* context_by_node_id;
+  std::map< Way_Skeleton::Id_Type, std::vector< NWR_Context::Way_Section_Context > >* context_by_way_id;
+};
+
+
+struct Figure_Out_Local_Ids_Of_Links
+{
+  void operator()(Uint31_Index idx, const Way_Skeleton& way)
+  {
+    if (!way.nds.empty())
+    {
+      std::vector< NWR_Context::Way_Section_Context >& way_context = (*context_by_way_id)[way.id];
+      
+      for (uint i = 0; i < way_context.size(); ++i)
+      {
+        NWR_Context::Node_Context& context = (*context_by_node_id)[
+            i+1 < way_context.size() ? way.nds[way_context[i+1].pos] : way.nds.back()];
+        const std::vector< Way_Skeleton::Id_Type >& parallel_links
+            = context.link_by_origin.find(way.nds[way_context[i].pos])->second;
+        if (parallel_links.size() > 1)
+        {
+          uint parallel_links_pos = 0;
+          while (parallel_links_pos < parallel_links.size()
+              && !(parallel_links[parallel_links_pos] == way.id))
+            ++parallel_links_pos;
+          way_context[i].local_id = parallel_links_pos + 1;
+        }
+      }
+    }
+  }
+  
+  Figure_Out_Local_Ids_Of_Links(
+      std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >& context_by_node_id_,
+      std::map< Way_Skeleton::Id_Type, std::vector< NWR_Context::Way_Section_Context > >& context_by_way_id_)
+    : context_by_node_id(&context_by_node_id_), context_by_way_id(&context_by_way_id_) {}
+private:
+  std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >* context_by_node_id;
+  std::map< Way_Skeleton::Id_Type, std::vector< NWR_Context::Way_Section_Context > >* context_by_way_id;
 };
 
 
@@ -167,113 +305,20 @@ NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Se
   }
   
   // Store node coordinates for use by links
-  
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator
-      it_idx = relevant_nwrs.nodes.begin(); it_idx != relevant_nwrs.nodes.end(); ++it_idx)
-  {
-    for (std::vector< Node_Skeleton >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      Node_Context& context = context_by_node_id_[it_elem->id];
-      context.lat = ::lat(it_idx->first.val(), it_elem->ll_lower);
-      context.lon = ::lon(it_idx->first.val(), it_elem->ll_lower);
-    }
-  }
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
-      it_idx = relevant_nwrs.attic_nodes.begin(); it_idx != relevant_nwrs.attic_nodes.end(); ++it_idx)
-  {
-    for (std::vector< Attic< Node_Skeleton > >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      Node_Context& context = context_by_node_id_[it_elem->id];
-      context.lat = ::lat(it_idx->first.val(), it_elem->ll_lower);
-      context.lon = ::lon(it_idx->first.val(), it_elem->ll_lower);
-    }
-  }
+  for_each_elem(relevant_nwrs.nodes, Set_Coord_In_Context(context_by_node_id_));
+  for_each_elem(relevant_nwrs.attic_nodes, Set_Coord_In_Context(context_by_node_id_));
 
   // Count node use by ways
-  
-  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
-      it_idx = relevant_nwrs.ways.begin(); it_idx != relevant_nwrs.ways.end(); ++it_idx)
-  {
-    for (std::vector< Way_Skeleton >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      if (!it_elem->nds.empty())
-      {
-        context_by_node_id_[it_elem->nds.front()].count += 2;
-        for (uint i = 1; i < it_elem->nds.size()-1; ++i)
-          ++context_by_node_id_[it_elem->nds[i]].count;
-        context_by_node_id_[it_elem->nds.back()].count += 2;
-      }
-    }
-  }
-  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
-      it_idx = relevant_nwrs.attic_ways.begin(); it_idx != relevant_nwrs.attic_ways.end(); ++it_idx)
-  {
-    for (std::vector< Attic< Way_Skeleton > >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      if (!it_elem->nds.empty())
-      {
-        context_by_node_id_[it_elem->nds.front()].count += 2;
-        for (uint i = 1; i < it_elem->nds.size()-1; ++i)
-          ++context_by_node_id_[it_elem->nds[i]].count;
-        context_by_node_id_[it_elem->nds.back()].count += 2;
-      }
-    }
-  }
+  for_each_elem(relevant_nwrs.ways, Count_Node_Use(context_by_node_id_));
+  for_each_elem(relevant_nwrs.attic_ways, Count_Node_Use(context_by_node_id_));
 }
 
 
 void NWR_Context::prepare_links(Resource_Manager& rman, const Statement& stmt, const Set& input_set)
 {
-  // Figure out links and link local ids
-  
-  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
-      it_idx = relevant_nwrs.ways.begin(); it_idx != relevant_nwrs.ways.end(); ++it_idx)
-  {
-    for (std::vector< Way_Skeleton >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      if (!it_elem->nds.empty())
-      {
-        uint start = 0;
-        for (uint i = 1; i < it_elem->nds.size()-1; ++i)
-        {
-          Node_Context& context = context_by_node_id_[it_elem->nds[i]];
-          if (context.local_id.val() || context.count > 1)
-          {
-            context.link_by_origin[it_elem->nds[start]].push_back(it_elem->id);
-            start = i;
-          }
-        }
-        context_by_node_id_[it_elem->nds.back()].link_by_origin[it_elem->nds[start]].push_back(it_elem->id);
-      }
-    }
-  }
-  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
-      it_idx = relevant_nwrs.attic_ways.begin(); it_idx != relevant_nwrs.attic_ways.end(); ++it_idx)
-  {
-    for (std::vector< Attic< Way_Skeleton > >::const_iterator it_elem = it_idx->second.begin();
-        it_elem != it_idx->second.end(); ++it_elem)
-    {
-      if (!it_elem->nds.empty())
-      {
-        uint start = 0;
-        for (uint i = 1; i < it_elem->nds.size()-1; ++i)
-        {
-          Node_Context& context = context_by_node_id_[it_elem->nds[i]];
-          if (context.local_id.val() || context.count > 1)
-          {
-            context.link_by_origin[it_elem->nds[start]].push_back(it_elem->id);
-            start = i;
-          }
-        }
-        context_by_node_id_[it_elem->nds.back()].link_by_origin[it_elem->nds[start]].push_back(it_elem->id);
-      }
-    }
-  }
+  // Figure out links
+  for_each_elem(relevant_nwrs.ways, Partition_Into_Links(context_by_node_id_, context_by_way_id_));
+  for_each_elem(relevant_nwrs.attic_ways, Partition_Into_Links(context_by_node_id_, context_by_way_id_));
   
   for (std::map< Node_Skeleton::Id_Type, Node_Context >::iterator it_ctx = context_by_node_id_.begin();
       it_ctx != context_by_node_id_.end(); ++it_ctx)
@@ -282,6 +327,10 @@ void NWR_Context::prepare_links(Resource_Manager& rman, const Statement& stmt, c
         it_orig = it_ctx->second.link_by_origin.begin(); it_orig != it_ctx->second.link_by_origin.end(); ++it_orig)
       std::sort(it_orig->second.begin(), it_orig->second.end());
   }
+  
+  // Figure out local ids of links
+  for_each_elem(relevant_nwrs.ways, Figure_Out_Local_Ids_Of_Links(context_by_node_id_, context_by_way_id_));
+  for_each_elem(relevant_nwrs.attic_ways, Figure_Out_Local_Ids_Of_Links(context_by_node_id_, context_by_way_id_));
 }
 
 
@@ -350,19 +399,17 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
       {
         uint start = 0;
         const NWR_Context::Node_Context* start_context = &nwr_context.context_by_node_id(it_elem->nds[start]);
-        
-        std::vector< Point_Double > points;
-        points.push_back(Point_Double(start_context->lat, start_context->lon));
+        std::vector< NWR_Context::Way_Section_Context >& way_context = nwr_context.context_by_way_id(it_elem->id);
+        std::vector< NWR_Context::Way_Section_Context >::const_iterator it_way_ctx = way_context.begin();
         
         for (uint i = 1; i < it_elem->nds.size(); ++i)
         {
           const NWR_Context::Node_Context& context = nwr_context.context_by_node_id(it_elem->nds[i]);
-          points.push_back(Point_Double(context.lat, context.lon));
           if (context.local_id.val() || context.count > 1)
           {
             Derived_Structure result("link", 0ull);
             result.id = rman.get_global_settings().dispense_derived_id();
-            result.acquire_geometry(new Linestring_Geometry(points));
+            result.acquire_geometry(new Linestring_Geometry(it_way_ctx->points));
       
             for (std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = data.tags->begin();
                 it_tag != data.tags->end(); ++it_tag)
@@ -375,23 +422,14 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
             if (context.local_id.val())
               result.tags.push_back(std::make_pair("_local_to", to_string(context.local_id.val())));
             
-            const std::vector< Way_Skeleton::Id_Type >& parallel_links
-                = context.link_by_origin.find(it_elem->nds[start])->second;
-            if (parallel_links.size() > 1)
-            {
-              uint parallel_links_pos = 0;
-              while (parallel_links_pos < parallel_links.size()
-                  && !(parallel_links[parallel_links_pos] == it_elem->id))
-                ++parallel_links_pos;
-              result.tags.push_back(std::make_pair("_local_id", to_string(parallel_links_pos+1)));
-            }
-      
+            if (it_way_ctx->local_id.val())
+              result.tags.push_back(std::make_pair("_local_id", to_string(it_way_ctx->local_id.val())));
+            
             into.deriveds[Uint31_Index(0u)].push_back(result);
             
-            points.clear();
-            points.push_back(Point_Double(context.lat, context.lon));
             start_context = &context;
             start = i;
+            ++it_way_ctx;
           }
         }
       }
@@ -403,19 +441,8 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
 void Localize_Statement::execute(Resource_Manager& rman)
 {
   /*
-  - aus Relationen Liste der betroffenen Ways ermitteln
-  - zu Ways alle beteiligten Nodes ermitteln
-  - zu Nodes alle adjazenten Ways bestimmen
-  
-  - wegen Ways und Relationen relevante Nodes bestimmen
-  - wegen Tags relevante Nodes bestimmen  
-  - Vertex aus Context
-  
-  - Links anhand der Zuordnung Node-Id nach Vertex aufbauen
-  - Links aus Context (Tags und Geometry)
-  
-  - Trigraphen aus der Zuordnung Way-Id nach Link und Node-Id nach Vertex aufbauen
-  - Trigraphen aus Context
+  - Way-Struktur in (Pos,local-id),... ablegen
+  - Trigraphen: (Node-Id)~>(Point,ggf.local_id), (Pos,local-id)~>(Lstr,local-id)
   */
   
   Set into;
