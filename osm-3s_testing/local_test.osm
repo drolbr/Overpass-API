@@ -26,4 +26,19 @@
     <nd ref="1001"/>
     <tag k="bar" v="way_102"/>
   </way>
+  <way id="103">
+    <nd ref="1012"/>
+    <nd ref="1003"/>
+  </way>
+  <relation id="11">
+    <member type="way" ref="101"/>
+    <member type="way" ref="102"/>
+    <member type="way" ref="103"/>
+    <tag k="bar" v="rel_11"/>
+  </relation>
+  <relation id="12">
+    <member type="node" ref="2001"/>
+    <member type="node" ref="1001"/>
+    <tag k="bar" v="rel_12"/>
+  </relation>
 </osm>
