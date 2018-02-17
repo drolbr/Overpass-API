@@ -35,6 +35,9 @@
     <nd ref="2001"/>
     <tag k="bar" v="way_102"/>
   </way>
+  <way id="199">
+    <tag k="property" v="empty_way_199"/>
+  </way>
   <relation id="11">
     <member type="way" ref="101"/>
     <member type="way" ref="103"/>
@@ -44,6 +47,7 @@
   <relation id="12">
     <member type="node" ref="2001"/>
     <member type="node" ref="1001"/>
+    <member type="relation" ref="21"/>
     <tag k="bar" v="rel_12"/>
   </relation>
   <relation id="21">

@@ -398,11 +398,14 @@ struct Derived_Structure_Builder
     target.id = rman.get_global_settings().dispense_derived_id();
     target.acquire_geometry(geometry);
     
-    for (std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = tags->begin();
-        it_tag != tags->end(); ++it_tag)
-      target.tags.push_back(std::make_pair(
-          it_tag->first.empty() ? "" : it_tag->first[0] == '_' ? "_" + it_tag->first : it_tag->first,
-          it_tag->second));
+    if (tags)
+    {
+      for (std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = tags->begin();
+          it_tag != tags->end(); ++it_tag)
+        target.tags.push_back(std::make_pair(
+            it_tag->first.empty() ? "" : it_tag->first[0] == '_' ? "_" + it_tag->first : it_tag->first,
+            it_tag->second));
+    }
   }
   
   void set_tag(const std::string& key, const std::string& value)
@@ -443,7 +446,8 @@ bool admissible_by_bbox(const Owner< Bbox_Double >& bbox, const NWR_Context::Way
 
 template< typename Index, typename Maybe_Attic >
 void process_vertices(const std::map< Index, std::vector< Maybe_Attic > >& items, Set_With_Context& context_from,
-    Set& into, Resource_Manager& rman, NWR_Context& nwr_context, const Owner< Bbox_Double >& bbox)
+    Set& into, Resource_Manager& rman, NWR_Context& nwr_context,
+    Localize_Statement::Mode mode, const Owner< Bbox_Double >& bbox)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -453,10 +457,11 @@ void process_vertices(const std::map< Index, std::vector< Maybe_Attic > >& items
     {
       const Element_With_Context< Maybe_Attic >& data = context_from.get_context(it_idx->first, *it_elem);
       
-      if (data.tags && !data.tags->empty())
+      if (mode == Localize_Statement::all || (data.tags && !data.tags->empty()))
       {
         NWR_Context::Node_Context& node_context = nwr_context.context_by_node_id(it_elem->id);
-        ++node_context.count;
+        if (data.tags && !data.tags->empty())
+          ++node_context.count;
         
         if (admissible_by_bbox(bbox, node_context))
         {
@@ -468,6 +473,9 @@ void process_vertices(const std::map< Index, std::vector< Maybe_Attic > >& items
           Derived_Skeleton::Id_Type local_id = nwr_context.local_id_by_node_id(it_elem->id);
           if (local_id.val())
             result.set_tag("_local_id", to_string(local_id.val()));
+          
+          if (mode == Localize_Statement::all)
+            result.set_tag("_node_ref", to_string(it_elem->id.val()));
       
           into.deriveds[Uint31_Index(0u)].push_back(result.get());
         }
@@ -479,7 +487,8 @@ void process_vertices(const std::map< Index, std::vector< Maybe_Attic > >& items
 
 template< typename Index, typename Maybe_Attic >
 void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, Set_With_Context& context_from,
-    Set& into, Resource_Manager& rman, NWR_Context& nwr_context, const Owner< Bbox_Double >& bbox)
+    Set& into, Resource_Manager& rman, NWR_Context& nwr_context,
+    Localize_Statement::Mode mode, const Owner< Bbox_Double >& bbox)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -489,7 +498,7 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
     {
       const Element_With_Context< Maybe_Attic >& data = context_from.get_context(it_idx->first, *it_elem);
       
-      if (data.tags && !data.tags->empty())
+      if (mode == Localize_Statement::all || (data.tags && !data.tags->empty()))
       {
         std::vector< NWR_Context::Way_Section_Context >& way_context = nwr_context.context_by_way_id(it_elem->id);
         std::vector< NWR_Context::Way_Section_Context >::const_iterator it_way_ctx = way_context.begin();
@@ -509,6 +518,9 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
           if (way_context[i].local_id.val())
             result.set_tag("_local_id", to_string(way_context[i].local_id.val()));
           
+          if (mode == Localize_Statement::all)
+            result.set_tag("_way_ref", to_string(it_elem->id.val()));
+          
           into.deriveds[Uint31_Index(0u)].push_back(result.get());
           
           ++it_way_ctx;
@@ -521,7 +533,7 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
 
 template< typename Index, typename Maybe_Attic >
 void generate_loose_links(const std::map< Index, std::vector< Maybe_Attic > >& items,
-    Set_With_Context& context_from, Set& into, Resource_Manager& rman)
+    Set_With_Context& context_from, Set& into, Resource_Manager& rman, Localize_Statement::Mode mode)
 {
   for (typename std::map< Index, std::vector< Maybe_Attic > >::const_iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
@@ -531,9 +543,14 @@ void generate_loose_links(const std::map< Index, std::vector< Maybe_Attic > >& i
     {
       const Element_With_Context< Maybe_Attic >& data = context_from.get_context(it_idx->first, *it_elem);
       
-      if (data.tags && !data.tags->empty())
+      if ((mode == Localize_Statement::all || (data.tags && !data.tags->empty()))
+          && it_elem->nds.empty())
       {
         Derived_Structure_Builder result(rman, "link", new Null_Geometry(), data.tags);
+        
+        if (mode == Localize_Statement::all)
+          result.set_tag("_way_ref", to_string(it_elem->id.val()));
+        
         into.deriveds[Uint31_Index(0u)].push_back(result.get());
       }
     }
@@ -554,7 +571,7 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
     {
       const Element_With_Context< Maybe_Attic >& data = context_from.get_context(it_idx->first, *it_elem);
       
-      if (data.tags && !data.tags->empty())
+      if (mode == Localize_Statement::all || (data.tags && !data.tags->empty()))
       {
         Derived_Structure* last = 0;
         Point_Double last_point(100., 0.);
@@ -573,6 +590,9 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
               
               if (node_context.local_id.val())
                 result.set_tag("_local_ref", to_string(node_context.local_id.val()));
+          
+              if (mode == Localize_Statement::all)
+                result.set_tag("_relation_ref", to_string(it_elem->id.val()));
           
               if (last)
               {
@@ -640,6 +660,9 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
                 if (way_context[i].local_id.val())
                   result.set_tag("_local_ref", to_string(way_context[i].local_id.val()));
           
+                if (mode == Localize_Statement::all)
+                  result.set_tag("_relation_ref", to_string(it_elem->id.val()));
+          
                 if (last)
                 {
                   last->tags.push_back(std::make_pair("_next", to_string(result.get().id.val())));
@@ -672,7 +695,10 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
                   result.set_tag("_vertex_local_to", to_string(way_context[i].local_from.val()));
                 if (way_context[i].local_id.val())
                   result.set_tag("_local_ref", to_string(way_context[i].local_id.val()));
-          
+                    
+                if (mode == Localize_Statement::all)
+                  result.set_tag("_relation_ref", to_string(it_elem->id.val()));
+
                 if (last)
                 {
                   last->tags.push_back(std::make_pair("_next", to_string(result.get().id.val())));
@@ -688,6 +714,11 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
           else if (mode >= Localize_Statement::also_loose)
           {
             Derived_Structure_Builder result(rman, "trigraph", new Null_Geometry(), data.tags);
+          
+            if (mode == Localize_Statement::all)
+              result.set_tag("_relation_ref", to_string(it_elem->id.val()));
+            if (mode == Localize_Statement::all)
+              result.set_tag("_child_relation_ref", to_string(it_memb->ref.val()));
           
             if (last)
             {
@@ -709,9 +740,8 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
 
 void Localize_Statement::execute(Resource_Manager& rman)
 {
-  //TODO: bookkeeping mode
-  //TODO: tests
   //TODO: bbox shall collect itself
+  //TODO: tests
   //TODO: performance
   //TODO: diff
   
@@ -734,20 +764,20 @@ void Localize_Statement::execute(Resource_Manager& rman)
   if (context_from && context_from->base)
   {
     NWR_Context nwr_context(rman, *this, *input_set);
-    process_vertices(context_from->base->nodes, *context_from, into, rman, nwr_context, bbox);
+    process_vertices(context_from->base->nodes, *context_from, into, rman, nwr_context, type, bbox);
     if (!context_from->base->attic_nodes.empty())
-      process_vertices(context_from->base->attic_nodes, *context_from, into, rman, nwr_context, bbox);
+      process_vertices(context_from->base->attic_nodes, *context_from, into, rman, nwr_context, type, bbox);
     
     nwr_context.prepare_links(rman, *this, *input_set);
-    generate_links(context_from->base->ways, *context_from, into, rman, nwr_context, bbox);
+    generate_links(context_from->base->ways, *context_from, into, rman, nwr_context, type, bbox);
     if (!context_from->base->attic_ways.empty())
-      generate_links(context_from->base->attic_ways, *context_from, into, rman, nwr_context, bbox);
+      generate_links(context_from->base->attic_ways, *context_from, into, rman, nwr_context, type, bbox);
     
     if (type >= also_loose)
     {
-      generate_loose_links(context_from->base->ways, *context_from, into, rman);
+      generate_loose_links(context_from->base->ways, *context_from, into, rman, type);
       if (!context_from->base->attic_ways.empty())
-        generate_loose_links(context_from->base->attic_ways, *context_from, into, rman);
+        generate_loose_links(context_from->base->attic_ways, *context_from, into, rman, type);
     }
     
     generate_trigraphs(context_from->base->relations, *context_from, into, rman, nwr_context, type, bbox);
