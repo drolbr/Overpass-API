@@ -1452,13 +1452,15 @@ void collect_ways
 }
 
 
-void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into)
+void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into,
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >* ranges_32,
+    const std::set< std::pair< Uint31_Index, Uint31_Index > >* ranges_31)
 {
   if (rman.get_desired_timestamp() == NOW)
   {
     std::map< Uint32_Index, std::vector< Node_Skeleton > > rel_nodes
-          = relation_node_members(stmt, rman, input_set.relations);
-    into.ways = relation_way_members(stmt, rman, input_set.relations);
+          = relation_node_members(stmt, rman, input_set.relations, ranges_32);
+    into.ways = relation_way_members(stmt, rman, input_set.relations, ranges_31);
     std::map< Uint31_Index, std::vector< Way_Skeleton > > source_ways = input_set.ways;
     sort_second(source_ways);
     sort_second(into.ways);
@@ -1472,13 +1474,13 @@ void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const 
   {
     std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
         std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > all_nodes
-        = relation_node_members(stmt, rman, input_set.relations, input_set.attic_relations);
+        = relation_node_members(stmt, rman, input_set.relations, input_set.attic_relations, ranges_32);
     into.nodes.swap(all_nodes.first);
     into.attic_nodes.swap(all_nodes.second);
 
     std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
         std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > all_ways
-        = relation_way_members(stmt, rman, input_set.relations, input_set.attic_relations);
+        = relation_way_members(stmt, rman, input_set.relations, input_set.attic_relations, ranges_31);
     into.ways = all_ways.first;
     into.attic_ways = all_ways.second;
 

@@ -17,6 +17,7 @@
 */
 
 
+#include "../data/bbox_filter.h"
 #include "../data/tag_store.h"
 #include "../data/utils.h"
 #include "localize.h"
@@ -87,7 +88,7 @@ class NWR_Context
 public:
   struct Node_Context
   {
-    Node_Context() : local_id(0ull), count(0) {}
+    Node_Context() : local_id(0ull), count(0), lat(100.), lon(0.) {}
     Derived_Skeleton::Id_Type local_id;
     uint count;
     double lat;
@@ -105,7 +106,7 @@ public:
     std::vector< Point_Double > points;
   };
   
-  NWR_Context(Resource_Manager& rman, const Statement& stmt, const Set& input_set);
+  NWR_Context(Resource_Manager& rman, const Statement& stmt, const Set& input_set, const Owner< Bbox_Double >& bbox);
   void prepare_links(Resource_Manager& rman, const Statement& stmt, const Set& input_set);
   Derived_Skeleton::Id_Type local_id_by_node_id(Node_Skeleton::Id_Type id) const;
   Node_Context& context_by_node_id(Node_Skeleton::Id_Type id) { return context_by_node_id_[id]; }
@@ -261,11 +262,18 @@ private:
 };
 
 
-NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Set& input_set)
+NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
+    const Owner< Bbox_Double >& bbox)
 {
   // Collect all objects required for context
   
-  add_nw_member_objects(rman, &stmt, input_set, relevant_nwrs);
+  if (bbox)
+  {
+    Bbox_Filter filter(*bbox);
+    add_nw_member_objects(rman, &stmt, input_set, relevant_nwrs, &filter.get_ranges_32(), &filter.get_ranges_31());
+  }
+  else
+    add_nw_member_objects(rman, &stmt, input_set, relevant_nwrs);
   
   Set extra_ways;
   if (rman.get_desired_timestamp() == NOW)
@@ -501,29 +509,27 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
       if (mode == Localize_Statement::all || (data.tags && !data.tags->empty()))
       {
         std::vector< NWR_Context::Way_Section_Context >& way_context = nwr_context.context_by_way_id(it_elem->id);
-        std::vector< NWR_Context::Way_Section_Context >::const_iterator it_way_ctx = way_context.begin();
         
-        for (uint i = 0; i < way_context.size(); ++i)
+        for (std::vector< NWR_Context::Way_Section_Context >::const_iterator it_way_ctx = way_context.begin();
+            it_way_ctx != way_context.end(); ++it_way_ctx)
         {
-          if (!admissible_by_bbox(bbox, way_context[i]))
+          if (!admissible_by_bbox(bbox, *it_way_ctx))
             continue;
                     
           Derived_Structure_Builder result(rman, "link",
-              new Linestring_Geometry(way_context[i].points), data.tags);
+              new Linestring_Geometry(it_way_ctx->points), data.tags);
           
-          if (way_context[i].local_from.val())
-            result.set_tag("_local_from", to_string(way_context[i].local_from.val()));
-          if (way_context[i].local_to.val())
-            result.set_tag("_local_to", to_string(way_context[i].local_to.val()));
-          if (way_context[i].local_id.val())
-            result.set_tag("_local_id", to_string(way_context[i].local_id.val()));
+          if (it_way_ctx->local_from.val())
+            result.set_tag("_local_from", to_string(it_way_ctx->local_from.val()));
+          if (it_way_ctx->local_to.val())
+            result.set_tag("_local_to", to_string(it_way_ctx->local_to.val()));
+          if (it_way_ctx->local_id.val())
+            result.set_tag("_local_id", to_string(it_way_ctx->local_id.val()));
           
           if (mode == Localize_Statement::all)
             result.set_tag("_way_ref", to_string(it_elem->id.val()));
           
           into.deriveds[Uint31_Index(0u)].push_back(result.get());
-          
-          ++it_way_ctx;
         }
       }
     }
@@ -740,7 +746,6 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
 
 void Localize_Statement::execute(Resource_Manager& rman)
 {
-  //TODO: bbox shall collect itself
   //TODO: tests
   //TODO: performance
   //TODO: diff
@@ -763,7 +768,7 @@ void Localize_Statement::execute(Resource_Manager& rman)
   
   if (context_from && context_from->base)
   {
-    NWR_Context nwr_context(rman, *this, *input_set);
+    NWR_Context nwr_context(rman, *this, *input_set, bbox);
     process_vertices(context_from->base->nodes, *context_from, into, rman, nwr_context, type, bbox);
     if (!context_from->base->attic_nodes.empty())
       process_vertices(context_from->base->attic_nodes, *context_from, into, rman, nwr_context, type, bbox);

@@ -1082,7 +1082,9 @@ void collect_ways
      const std::vector< Way::Id_Type >& ids, bool invert_ids);
 
 
-void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into);
+void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into,
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >* ranges_32 = 0,
+    const std::set< std::pair< Uint31_Index, Uint31_Index > >* ranges_31 = 0);
 
 
 #endif
