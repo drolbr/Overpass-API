@@ -631,18 +631,21 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
               {
                 std::vector< NWR_Context::Way_Section_Context >& next_way_context
                     = nwr_context.context_by_way_id(Way_Skeleton::Id_Type(it_next->ref.val()));
-                if (!way_context.back().points.empty()
-                  && ((!next_way_context.front().points.empty()
-                      && next_way_context.front().points.front() == way_context.back().points.back())
-                    || (!next_way_context.back().points.empty()
-                      && next_way_context.back().points.back() == way_context.back().points.back())))
-                  elem_orientation = must_forwards;
-                else if (!way_context.front().points.empty()
-                  && ((!next_way_context.front().points.empty()
-                      && next_way_context.front().points.front() == way_context.front().points.front())
-                    || (!next_way_context.back().points.empty()
-                      && next_way_context.back().points.back() == way_context.front().points.front())))
-                  elem_orientation = must_backwards;
+                if (!next_way_context.empty())
+                {
+                  if (!way_context.back().points.empty()
+                    && ((!next_way_context.front().points.empty()
+                        && next_way_context.front().points.front() == way_context.back().points.back())
+                      || (!next_way_context.back().points.empty()
+                        && next_way_context.back().points.back() == way_context.back().points.back())))
+                    elem_orientation = must_forwards;
+                  else if (!way_context.front().points.empty()
+                    && ((!next_way_context.front().points.empty()
+                        && next_way_context.front().points.front() == way_context.front().points.front())
+                      || (!next_way_context.back().points.empty()
+                        && next_way_context.back().points.back() == way_context.front().points.front())))
+                    elem_orientation = must_backwards;
+                }
               }
             }
             
