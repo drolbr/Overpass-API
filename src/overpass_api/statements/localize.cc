@@ -106,8 +106,10 @@ public:
     std::vector< Point_Double > points;
   };
   
-  NWR_Context(Resource_Manager& rman, const Statement& stmt, const Set& input_set, const Owner< Bbox_Double >& bbox);
-  void prepare_links(Resource_Manager& rman, const Statement& stmt, const Set& input_set);
+  NWR_Context(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
+      const Owner< Bbox_Double >& bbox);
+  void prepare_links(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
+      const Owner< Bbox_Double >& bbox);
   Derived_Skeleton::Id_Type local_id_by_node_id(Node_Skeleton::Id_Type id) const;
   Node_Context& context_by_node_id(Node_Skeleton::Id_Type id) { return context_by_node_id_[id]; }
   std::vector< Way_Section_Context >& context_by_way_id(Way_Skeleton::Id_Type id) { return context_by_way_id_[id]; }
@@ -128,6 +130,31 @@ struct Node_Skeleton_By_Coord_Then_Id
     return lhs->id < rhs->id;
   }
 };
+
+
+bool admissible_by_bbox(const Owner< Bbox_Double >& bbox, const NWR_Context::Node_Context& node_context)
+{
+  return (!bbox || bbox->contains(Point_Double(node_context.lat, node_context.lon)));
+}
+
+
+bool admissible_by_bbox(const Owner< Bbox_Double >& bbox, const std::vector< Point_Double >& points)
+{
+  if (!bbox)
+    return true;
+  
+  for (std::vector< Point_Double >::const_iterator it = points.begin(); it != points.end(); ++it)
+  {
+    if (bbox->contains(*it))
+      return true;
+  }
+  for (uint j = 1; j < points.size(); ++j)
+  {
+    if (bbox->intersects(points[j-1], points[j]))
+      return true;
+  }
+  return false;
+}
 
 
 template< typename Index, typename Object, typename Task >
@@ -187,15 +214,26 @@ struct Partition_Into_Links
     {
       std::vector< NWR_Context::Way_Section_Context >& way_context = (*context_by_way_id)[way.id];
       
+      std::vector< NWR_Context::Node_Context* > nds_contexts;
+      nds_contexts.reserve(way.nds.size());
+      for (std::vector< Node::Id_Type >::const_iterator it_nds = way.nds.begin(); it_nds != way.nds.end(); ++it_nds)
+      {
+        std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >::iterator it_ctx
+            = context_by_node_id->find(*it_nds);
+        if (it_ctx == context_by_node_id->end() || it_ctx->second.lat == 100.)
+          return;
+        nds_contexts.push_back(&it_ctx->second);
+      }
+      
       uint start = 0;
-      const NWR_Context::Node_Context& start_context = (*context_by_node_id)[way.nds[start]];
+      const NWR_Context::Node_Context& start_context = *nds_contexts[start];
       way_context.push_back(NWR_Context::Way_Section_Context(start));
       way_context.back().local_from = start_context.local_id;
       way_context.back().points.push_back(Point_Double(start_context.lat, start_context.lon));
       
       for (uint i = 1; i < way.nds.size()-1; ++i)
       {
-        NWR_Context::Node_Context& context = (*context_by_node_id)[way.nds[i]];
+        NWR_Context::Node_Context& context = *nds_contexts[i];
         way_context.back().points.push_back(Point_Double(context.lat, context.lon));
         
         if (context.local_id.val() || context.count > 1)
@@ -203,26 +241,32 @@ struct Partition_Into_Links
           context.link_by_origin[way.nds[start]].push_back(way.id);
           start = i;
           way_context.back().local_to = context.local_id;
+          if (!admissible_by_bbox(*bbox, way_context.back().points))
+            way_context.back().points.clear();
           way_context.push_back(NWR_Context::Way_Section_Context(start));
           way_context.back().local_from = context.local_id;
           way_context.back().points.push_back(Point_Double(context.lat, context.lon));
         }
       }
       
-      NWR_Context::Node_Context& context = (*context_by_node_id)[way.nds.back()];
+      NWR_Context::Node_Context& context = *nds_contexts.back();
       way_context.back().points.push_back(Point_Double(context.lat, context.lon));
       way_context.back().local_to = context.local_id;
       context.link_by_origin[way.nds[start]].push_back(way.id);
+      if (!admissible_by_bbox(*bbox, way_context.back().points))
+        way_context.back().points.clear();
     }
   }
   
   Partition_Into_Links(
       std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >& context_by_node_id_,
-      std::map< Way_Skeleton::Id_Type, std::vector< NWR_Context::Way_Section_Context > >& context_by_way_id_)
-    : context_by_node_id(&context_by_node_id_), context_by_way_id(&context_by_way_id_) {}
+      std::map< Way_Skeleton::Id_Type, std::vector< NWR_Context::Way_Section_Context > >& context_by_way_id_,
+      const Owner< Bbox_Double >& bbox_)
+    : context_by_node_id(&context_by_node_id_), context_by_way_id(&context_by_way_id_), bbox(&bbox_) {}
 private:
   std::map< Node_Skeleton::Id_Type, NWR_Context::Node_Context >* context_by_node_id;
   std::map< Way_Skeleton::Id_Type, std::vector< NWR_Context::Way_Section_Context > >* context_by_way_id;
+  const Owner< Bbox_Double >* bbox;
 };
 
 
@@ -366,11 +410,12 @@ NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Se
 }
 
 
-void NWR_Context::prepare_links(Resource_Manager& rman, const Statement& stmt, const Set& input_set)
+void NWR_Context::prepare_links(Resource_Manager& rman, const Statement& stmt, const Set& input_set,
+    const Owner< Bbox_Double >& bbox)
 {
   // Figure out links
-  for_each_elem(relevant_nwrs.ways, Partition_Into_Links(context_by_node_id_, context_by_way_id_));
-  for_each_elem(relevant_nwrs.attic_ways, Partition_Into_Links(context_by_node_id_, context_by_way_id_));
+  for_each_elem(relevant_nwrs.ways, Partition_Into_Links(context_by_node_id_, context_by_way_id_, bbox));
+  for_each_elem(relevant_nwrs.attic_ways, Partition_Into_Links(context_by_node_id_, context_by_way_id_, bbox));
   
   for (std::map< Node_Skeleton::Id_Type, Node_Context >::iterator it_ctx = context_by_node_id_.begin();
       it_ctx != context_by_node_id_.end(); ++it_ctx)
@@ -424,32 +469,6 @@ struct Derived_Structure_Builder
 private:
   Derived_Structure target;
 };
-
-
-bool admissible_by_bbox(const Owner< Bbox_Double >& bbox, const NWR_Context::Node_Context& node_context)
-{
-  return (!bbox || bbox->contains(Point_Double(node_context.lat, node_context.lon)));
-}
-
-
-bool admissible_by_bbox(const Owner< Bbox_Double >& bbox, const NWR_Context::Way_Section_Context& sec_context)
-{
-  if (!bbox)
-    return true;
-  
-  for (std::vector< Point_Double >::const_iterator it = sec_context.points.begin();
-      it != sec_context.points.end(); ++it)
-  {
-    if (bbox->contains(*it))
-      return true;
-  }
-  for (uint j = 1; j < sec_context.points.size(); ++j)
-  {
-    if (bbox->intersects(sec_context.points[j-1], sec_context.points[j]))
-      return true;
-  }
-  return false;
-}
 
 
 template< typename Index, typename Maybe_Attic >
@@ -513,7 +532,7 @@ void generate_links(const std::map< Index, std::vector< Maybe_Attic > >& items, 
         for (std::vector< NWR_Context::Way_Section_Context >::const_iterator it_way_ctx = way_context.begin();
             it_way_ctx != way_context.end(); ++it_way_ctx)
         {
-          if (!admissible_by_bbox(bbox, *it_way_ctx))
+          if (it_way_ctx->points.empty())
             continue;
                     
           Derived_Structure_Builder result(rman, "link",
@@ -598,7 +617,10 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
                 result.set_tag("_local_ref", to_string(node_context.local_id.val()));
           
               if (mode == Localize_Statement::all)
+              {
+                result.set_tag("_child_node_ref", to_string(it_memb->ref.val()));
                 result.set_tag("_relation_ref", to_string(it_elem->id.val()));
+              }
           
               if (last)
               {
@@ -615,16 +637,22 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
           {
             std::vector< NWR_Context::Way_Section_Context >& way_context
                 = nwr_context.context_by_way_id(Way_Skeleton::Id_Type(it_memb->ref.val()));
+                
+            if (way_context.empty())
+            {
+              last = 0;
+              continue;
+            }
             
             enum { both_possible, must_forwards, must_backwards } elem_orientation = both_possible;
-            if (last_point.lat <= 90. && !way_context.empty())
+            if (last && last_point.lat <= 90.)
             {
               if (!way_context.front().points.empty() && last_point == way_context.front().points.front())
                 elem_orientation = must_forwards;
               else if (!way_context.back().points.empty() && last_point == way_context.back().points.back())
                 elem_orientation = must_backwards;
             }
-            if (elem_orientation == both_possible && !way_context.empty())
+            if (elem_orientation == both_possible)
             {
               std::vector< Relation_Entry >::const_iterator it_next = it_memb+1;
               if (it_next != data.object->members.end() && it_next->type == Relation_Entry::WAY)
@@ -653,7 +681,7 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
             {
               for (uint i = 0; i < way_context.size(); ++i)
               {
-                if (!admissible_by_bbox(bbox, way_context[i]))
+                if (way_context[i].points.empty())
                 {
                   last = 0;
                   continue;
@@ -670,7 +698,10 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
                   result.set_tag("_local_ref", to_string(way_context[i].local_id.val()));
           
                 if (mode == Localize_Statement::all)
+                {
+                  result.set_tag("_child_way_ref", to_string(it_memb->ref.val()));
                   result.set_tag("_relation_ref", to_string(it_elem->id.val()));
+                }
           
                 if (last)
                 {
@@ -687,7 +718,7 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
             {
               for (int i = way_context.size()-1; i >= 0; --i)
               {
-                if (!admissible_by_bbox(bbox, way_context[i]))
+                if (way_context[i].points.empty())
                 {
                   last = 0;
                   continue;
@@ -706,7 +737,10 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
                   result.set_tag("_local_ref", to_string(way_context[i].local_id.val()));
                     
                 if (mode == Localize_Statement::all)
+                {
+                  result.set_tag("_child_way_ref", to_string(it_memb->ref.val()));
                   result.set_tag("_relation_ref", to_string(it_elem->id.val()));
+                }
 
                 if (last)
                 {
@@ -725,9 +759,10 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
             Derived_Structure_Builder result(rman, "trigraph", new Null_Geometry(), data.tags);
           
             if (mode == Localize_Statement::all)
-              result.set_tag("_relation_ref", to_string(it_elem->id.val()));
-            if (mode == Localize_Statement::all)
+            {
               result.set_tag("_child_relation_ref", to_string(it_memb->ref.val()));
+              result.set_tag("_relation_ref", to_string(it_elem->id.val()));
+            }
           
             if (last)
             {
@@ -776,7 +811,7 @@ void Localize_Statement::execute(Resource_Manager& rman)
     if (!context_from->base->attic_nodes.empty())
       process_vertices(context_from->base->attic_nodes, *context_from, into, rman, nwr_context, type, bbox);
     
-    nwr_context.prepare_links(rman, *this, *input_set);
+    nwr_context.prepare_links(rman, *this, *input_set, bbox);
     generate_links(context_from->base->ways, *context_from, into, rman, nwr_context, type, bbox);
     if (!context_from->base->attic_ways.empty())
       generate_links(context_from->base->attic_ways, *context_from, into, rman, nwr_context, type, bbox);
