@@ -1618,12 +1618,7 @@ void tags_quadtile_attic
   Tag_Store< Index, Object > tag_store(transaction);
   tag_store.prefetch_all(items);
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, transaction,
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
-  Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, transaction,
-      (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
+  Attic_Meta_Collector< Index, Object > meta_printer(items, transaction, extra_data.mode & Output_Mode::META);
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -1634,12 +1629,8 @@ void tags_quadtile_attic
     {
       if (++element_count > limit)
         return;
-      const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
-          = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-      if (!meta)
-        meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
       print_item(extra_data, target, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-                 meta, extra_data.users);
+                 meta_printer.get(item_it->first, it2->id, it2->timestamp), extra_data.users);
     }
     ++item_it;
   }
