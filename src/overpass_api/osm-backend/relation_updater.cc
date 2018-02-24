@@ -574,7 +574,7 @@ Relation_Skeleton add_intermediate_versions
          std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      const std::map< Way_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >& ways_by_id,
-     bool add_last_version, Uint31_Index attic_idx,
+     bool add_last_version, Uint31_Index attic_idx, Uint31_Index& last_idx,
      std::map< Uint31_Index, std::set< Attic< Relation_Delta > > >& full_attic,
      std::map< Uint31_Index, std::set< Attic< Relation_Skeleton::Id_Type > > >& new_undeleted,
      std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
@@ -651,7 +651,7 @@ Relation_Skeleton add_intermediate_versions
   }
 
   // Track index for the undelete creation
-  Uint31_Index last_idx = idx;
+  last_idx = idx;
   Relation_Skeleton last_skeleton = cur_skeleton;
 
   for (std::vector< uint64 >::const_iterator it = relevant_timestamps.end();
@@ -843,6 +843,7 @@ void compute_new_attic_skeletons
       it = new_data.data.begin(); it != new_data.data.end(); ++it)
   {
     ++next_it;
+    Uint31_Index it_idx = it->idx;
     if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
     {
       if (it->idx.val() != 0)
@@ -851,7 +852,7 @@ void compute_new_attic_skeletons
                                   nodes_by_id, ways_by_id,
                                   // Add last version only if it differs from the next version
                                   (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)),
-                                  Uint31_Index(0u), full_attic, new_undeleted, idx_lists);
+                                  Uint31_Index(0u), it_idx, full_attic, new_undeleted, idx_lists);
       }
     }
 
@@ -859,7 +860,7 @@ void compute_new_attic_skeletons
       // This is the latest version of this element. Care here for changes since this element.
       add_intermediate_versions(it->elem, Relation_Skeleton(), it->meta.timestamp, NOW,
                                 nodes_by_id, ways_by_id, false, Uint31_Index(0u),
-                                full_attic, new_undeleted, idx_lists);
+                                it_idx, full_attic, new_undeleted, idx_lists);
 
     if (last_id == it->elem.id)
     {
@@ -868,7 +869,6 @@ void compute_new_attic_skeletons
       --last_it;
       if (last_it->idx == Uint31_Index(0u))
       {
-        Uint31_Index it_idx = it->idx;
         if (it_idx.val() == 0xff)
         {
           Relation_Skeleton skel = it->elem;
@@ -884,7 +884,6 @@ void compute_new_attic_skeletons
       const Uint31_Index* idx_attic = binary_pair_search(attic_map_positions, it->elem.id);
       if (!idx && idx_attic)
       {
-        Uint31_Index it_idx = it->idx;
         if (it_idx.val() == 0xff)
         {
           Relation_Skeleton skel = it->elem;
@@ -920,7 +919,7 @@ void compute_new_attic_skeletons
 			          uint64(0u) : it_attic_time->second.second.timestamp,
 			      it->meta.timestamp, nodes_by_id, ways_by_id,
                               (it->idx.val() == 0 || !geometrically_equal(*it_attic, it->elem)),
-                              *idx, full_attic, new_undeleted, idx_lists);
+                              *idx, it_idx, full_attic, new_undeleted, idx_lists);
     if (it_attic_time != existing_attic_skeleton_timestamps.end()
         && it_attic_time->second.second.id == it->elem.id)
       adapt_newest_existing_attic(it_attic_time->second.first, *idx, it_attic_time->second.second,
@@ -937,13 +936,14 @@ void compute_new_attic_skeletons
     {
       std::map< Relation_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Relation_Delta > > >::const_iterator
           it_attic_time = existing_attic_skeleton_timestamps.find(it2->id);
+      Uint31_Index dummy;
       Relation_Skeleton oldest_new =
         add_intermediate_versions(*it2, *it2,
 			        it_attic_time == existing_attic_skeleton_timestamps.end() ?
 			            uint64(0u) : it_attic_time->second.second.timestamp,
 				NOW, nodes_by_id, ways_by_id,
                                 false, it->first,
-                                full_attic, new_undeleted, idx_lists);
+                                dummy, full_attic, new_undeleted, idx_lists);
       if (it_attic_time != existing_attic_skeleton_timestamps.end()
           && it_attic_time->second.second.id == it2->id)
         adapt_newest_existing_attic(it_attic_time->second.first, it->first, it_attic_time->second.second,
