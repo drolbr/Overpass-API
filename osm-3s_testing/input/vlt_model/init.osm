@@ -1,0 +1,452 @@
+<osm>
+  <node id="1100" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.101">
+    <tag k="id_tag" v="node_1100"/>
+  </node>
+  <node id="1101" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.102"/>
+  <node id="1110" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.011" lon="8.105">
+    <tag k="id_tag" v="node_1110"/>
+  </node>
+  <node id="1111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.011" lon="8.105"/>
+  <node id="1500" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="50.001" lon="8.101">
+    <tag k="id_tag" v="node_1500"/>
+  </node>
+  <node id="1501" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="50.001" lon="8.102"/>
+
+  <node id="10011" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.005"/>
+  <node id="10012" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.006"/>
+  <node id="10021" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="50.002" lon="8.005"/>
+  <node id="10022" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="50.002" lon="8.006"/>
+  <node id="10041" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.004" lon="8.005"/>
+  <node id="10042" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.004" lon="8.006"/>
+  <node id="10043" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.004" lon="8.007"/>
+  <node id="10051" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="50.005" lon="8.005"/>
+  <node id="10052" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="50.005" lon="8.006"/>
+  <node id="10053" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="50.005" lon="8.007"/>
+  <node id="10061" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="51.999" lon="8.005"/>
+  <node id="10062" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="51.999" lon="8.006"/>
+  <node id="10063" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.007"/>
+  <node id="10064" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.008"/>
+
+  <node id="11111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.105"/>
+  <node id="11121" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.114"/>
+  <node id="11122" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.116"/>
+  <node id="11131" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="50.005" lon="8.124"/>
+  <node id="11132" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.125"/>
+  <node id="11133" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.126"/>
+  <node id="11141" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.135"/>
+  <node id="11142" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.135"/>
+  <node id="11311" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.145"/>
+
+  <node id="20011" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.101" lon="8.005"/>
+  <node id="20012" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.101" lon="8.006">
+    <tag k="id_tag" v="node_20012"/>
+  </node>
+  <node id="20013" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.101" lon="8.007"/>
+  <node id="20021" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.102" lon="8.005"/>
+  <node id="20022" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.102" lon="8.006"/>
+  <node id="20023" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.102" lon="8.007"/>
+  <node id="20031" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.103" lon="8.005"/>
+  <node id="20032" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.103" lon="8.006"/>
+  <node id="20033" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.103" lon="8.007"/>
+  <node id="20034" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.103" lon="8.006"/>
+  <node id="20041" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.1021" lon="8.006"/>
+  <node id="30011" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.001"/>
+  <node id="30012" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.003"/>
+  <node id="30021" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.204" lon="8.002"/>
+  <node id="30022" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.206" lon="8.002"/>
+  <node id="30031" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.007"/>
+  <node id="30032" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.009"/>
+  <node id="30041" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.204" lon="8.007"/>
+  <node id="30042" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.206" lon="8.009"/>
+  <node id="30051" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.204" lon="8.009"/>
+  <node id="30052" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.206" lon="8.007"/>
+  <node id="30111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.505" lon="8.005"/>
+  <node id="30112" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.505" lon="8.025"/>
+  <node id="30121" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.505" lon="8.505"/>
+  <node id="30122" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.505" lon="8.995"/>
+  <node id="30221" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.104"/>
+  <node id="30222" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="51.999" lon="8.105"/>
+  <node id="30223" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.106"/>
+  <node id="30241" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="51.998" lon="8.105"/>
+  <node id="31111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.104"/>
+  <node id="31112" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.105"/>
+  <node id="31113" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.106"/>
+  <node id="31211" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.204"/>
+  <node id="31212" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.205"/>
+  <node id="31213" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.206"/>
+  <node id="31222" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.104" lon="8.205"/>
+  <node id="31311" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.304"/>
+  <node id="31312" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.306"/>
+  <node id="31313" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.106" lon="8.305"/>
+  <node id="31314" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.105" lon="8.307"/>
+
+  <node id="112111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.104"/>
+  <node id="112112" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.106"/>
+  <node id="112211" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.205"/>
+  <node id="112212" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.204"/>
+  <node id="112221" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.206"/>
+  <node id="112311" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.301"/>
+  <node id="112312" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.302"/>
+  <node id="112313" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.303"/>
+  <node id="112321" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.307"/>
+  <node id="112322" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.306"/>
+  <node id="112331" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.308"/>
+  <node id="112411" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.404"/>
+  <node id="112412" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.405"/>
+  <node id="112421" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.406"/>
+  <node id="112511" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.501"/>
+  <node id="112512" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="51.199" lon="8.502"/>
+  <node id="112513" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="51.199" lon="8.503"/>
+  <node id="112521" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.505"/>
+  <node id="112522" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.504"/>
+  <node id="112531" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.506"/>
+  <node id="112611" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.604"/>
+  <node id="112612" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="51.199" lon="8.604">
+    <tag k="id_tag" v="node_112612"/>
+  </node>
+  <node id="112613" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="51.199" lon="8.606">
+    <tag k="id_tag" v="node_112613"/>
+  </node>
+  <node id="112614" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.001" lon="8.606"/>
+  <node id="112711" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.305" lon="8.304"/>
+  <node id="112712" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.305" lon="8.306"/>
+  <node id="112713" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.306" lon="8.305"/>
+  <node id="112714" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.305" lon="8.307"/>
+  <node id="112811" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.305" lon="8.404"/>
+  <node id="112812" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.305" lon="8.406"/>
+  <node id="112821" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.306" lon="8.405"/>
+  <node id="113111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.145"/>
+  <node id="113112" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.005" lon="8.146"/>
+  <node id="116111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.702"/>
+  <node id="116112" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.701"/>
+  <node id="116121" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.703"/>
+  <node id="116211" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.712"/>
+  <node id="116212" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.711"/>
+  <node id="116221" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42" lat="52.205" lon="8.713"/>
+
+  <way id="1001" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="10011"/>
+    <nd ref="10012"/>
+    <tag k="id_tag" v="way_1001"/>
+  </way>
+  <way id="1002" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="10021"/>
+    <nd ref="10022"/>
+    <tag k="id_tag" v="way_1002"/>
+  </way>
+  <way id="1003" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <tag k="id_tag" v="way_1003"/>
+  </way>
+  <way id="1004" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="10041"/>
+    <nd ref="10042"/>
+    <nd ref="10043"/>
+    <tag k="id_tag" v="way_1004"/>
+  </way>
+  <way id="1005" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="10051"/>
+    <nd ref="10052"/>
+    <nd ref="10053"/>
+    <tag k="id_tag" v="way_1005"/>
+  </way>
+  <way id="1006" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="10061"/>
+    <nd ref="10062"/>
+    <nd ref="10063"/>
+    <nd ref="10064"/>
+    <tag k="id_tag" v="way_1006"/>
+  </way>
+  <way id="2001" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="20011"/>
+    <nd ref="20012"/>
+    <nd ref="20013"/>
+    <tag k="id_tag" v="way_2001"/>
+  </way>
+  <way id="2002" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="20021"/>
+    <nd ref="20022"/>
+    <nd ref="20023"/>
+    <tag k="id_tag" v="way_2002"/>
+  </way>
+  <way id="2003" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="20031"/>
+    <nd ref="20032"/>
+    <nd ref="20033"/>
+    <tag k="id_tag" v="way_2003"/>
+  </way>
+  <way id="2004" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="20041"/>
+    <nd ref="20022"/>
+    <tag k="id_tag" v="way_2004"/>
+  </way>
+  <way id="3001" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30011"/>
+    <nd ref="30012"/>
+    <tag k="id_tag" v="way_3001"/>
+  </way>
+  <way id="3002" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30021"/>
+    <nd ref="30022"/>
+    <tag k="id_tag" v="way_3002"/>
+  </way>
+  <way id="3003" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30031"/>
+    <nd ref="30032"/>
+    <tag k="id_tag" v="way_3003"/>
+  </way>
+  <way id="3004" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30041"/>
+    <nd ref="30042"/>
+    <tag k="id_tag" v="way_3004"/>
+  </way>
+  <way id="3005" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30051"/>
+    <nd ref="30052"/>
+    <tag k="id_tag" v="way_3005"/>
+  </way>
+  <way id="3011" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30111"/>
+    <nd ref="30112"/>
+    <tag k="id_tag" v="way_3011"/>
+  </way>
+  <way id="3012" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30121"/>
+    <nd ref="30122"/>
+    <tag k="id_tag" v="way_3012"/>
+  </way>
+  <way id="3022" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30221"/>
+    <nd ref="30222"/>
+    <nd ref="30223"/>
+    <tag k="id_tag" v="way_3022"/>
+  </way>
+  <way id="3024" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="30241"/>
+    <nd ref="30222"/>
+    <tag k="id_tag" v="way_3024"/>
+  </way>
+  <way id="3111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="31111"/>
+    <nd ref="31112"/>
+    <nd ref="31113"/>
+    <tag k="id_tag" v="way_3111"/>
+  </way>
+  <way id="3112" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="31111"/>
+    <nd ref="31112"/>
+    <nd ref="31113"/>
+    <tag k="id_tag" v="way_3112"/>
+  </way>
+  <way id="3121" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="31211"/>
+    <nd ref="31212"/>
+    <nd ref="31213"/>
+    <tag k="id_tag" v="way_3121"/>
+  </way>
+  <way id="3122" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="31211"/>
+    <nd ref="31222"/>
+    <nd ref="31213"/>
+    <tag k="id_tag" v="way_3122"/>
+  </way>
+  <way id="3131" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="31311"/>
+    <nd ref="31312"/>
+    <nd ref="31313"/>
+    <nd ref="31311"/>
+    <nd ref="31312"/>
+    <nd ref="31314"/>
+    <tag k="id_tag" v="way_3131"/>
+  </way>
+
+  <way id="11211" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112111"/>
+    <nd ref="112112"/>
+  </way>
+  <way id="11221" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112211"/>
+    <nd ref="112212"/>
+  </way>
+  <way id="11222" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112221"/>
+    <nd ref="112211"/>
+  </way>
+  <way id="11231" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112311"/>
+    <nd ref="112312"/>
+    <nd ref="112313"/>
+  </way>
+  <way id="11232" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112321"/>
+    <nd ref="112322"/>
+  </way>
+  <way id="11233" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112331"/>
+    <nd ref="112321"/>
+  </way>
+  <way id="11241" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112411"/>
+    <nd ref="112412"/>
+  </way>
+  <way id="11242" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112421"/>
+    <nd ref="112412"/>
+  </way>
+  <way id="11251" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112511"/>
+    <nd ref="112512"/>
+    <nd ref="112513"/>
+  </way>
+  <way id="11252" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112521"/>
+    <nd ref="112522"/>
+  </way>
+  <way id="11253" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112531"/>
+    <nd ref="112521"/>
+  </way>
+  <way id="11261" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112611"/>
+    <nd ref="112612"/>
+    <nd ref="112613"/>
+    <nd ref="112614"/>
+  </way>
+  <way id="11271" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112711"/>
+    <nd ref="112712"/>
+    <nd ref="112713"/>
+    <nd ref="112711"/>
+    <nd ref="112712"/>
+    <nd ref="112714"/>
+  </way>
+  <way id="11281" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112812"/>
+    <nd ref="112811"/>
+  </way>
+  <way id="11282" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112811"/>
+    <nd ref="112821"/>
+  </way>
+  <way id="11283" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="112812"/>
+    <nd ref="112821"/>
+  </way>
+  <way id="11311" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="113111"/>
+    <nd ref="113112"/>
+  </way>
+  <way id="11611" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="116111"/>
+    <nd ref="116112"/>
+  </way>
+  <way id="11612" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="116121"/>
+    <nd ref="116111"/>
+  </way>
+  <way id="11621" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="116211"/>
+    <nd ref="116212"/>
+  </way>
+  <way id="11622" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <nd ref="116221"/>
+    <nd ref="116211"/>
+  </way>
+
+  <relation id="1111" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="node" ref="11111" role="role_11111"/>
+    <tag k="id_tag" v="rel_1111"/>
+  </relation>
+  <relation id="1112" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="node" ref="11121" role="role_11121"/>
+    <member type="node" ref="11122" role="role_11122"/>
+    <tag k="id_tag" v="rel_1112"/>
+  </relation>
+  <relation id="1113" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="node" ref="11131" role="role_11131"/>
+    <member type="node" ref="11132" role="role_11132"/>
+    <member type="node" ref="11133" role="role_11133"/>
+    <tag k="id_tag" v="rel_1113"/>
+  </relation>
+  <relation id="1114" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="node" ref="11141" role="role_11411"/>
+    <member type="node" ref="11142" role="role_11412"/>
+    <tag k="id_tag" v="rel_1114"/>
+  </relation>
+  <relation id="1121" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11211" role="role_11211"/>
+    <tag k="id_tag" v="rel_1121"/>
+  </relation>
+  <relation id="1122" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11221" role="role_11221"/>
+    <member type="way" ref="11222" role="role_11222"/>
+    <tag k="id_tag" v="rel_1122"/>
+  </relation>
+  <relation id="1123" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11231" role="role_11231"/>
+    <member type="way" ref="11232" role="role_11232"/>
+    <member type="way" ref="11233" role="role_11233"/>
+    <tag k="id_tag" v="rel_1123"/>
+  </relation>
+  <relation id="1124" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11241" role="role_11241"/>
+    <member type="way" ref="11242" role="role_11242"/>
+    <tag k="id_tag" v="rel_1124"/>
+  </relation>
+  <relation id="1125" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11251" role="role_11251"/>
+    <member type="way" ref="11252" role="role_11252"/>
+    <member type="way" ref="11253" role="role_11253"/>
+    <tag k="id_tag" v="rel_1125"/>
+  </relation>
+  <relation id="1126" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11261" role="role_11261"/>
+    <tag k="id_tag" v="rel_1126"/>
+  </relation>
+  <relation id="1127" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11271" role="role_11271"/>
+    <tag k="id_tag" v="rel_1127"/>
+  </relation>
+  <relation id="1128" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11281" role="role_11281"/>
+    <member type="way" ref="11282" role="role_11282"/>
+    <member type="way" ref="11283" role="role_11283"/>
+    <member type="way" ref="11281" role="role_11281"/>
+    <tag k="id_tag" v="rel_1128"/>
+  </relation>
+  <relation id="1131" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="node" ref="11311" role="role_11311"/>
+    <member type="way" ref="11311"/>
+    <tag k="id_tag" v="rel_1131"/>
+  </relation>
+  <relation id="1141" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="relation" ref="11411" role="role_11411"/>
+    <tag k="id_tag" v="rel_1141"/>
+  </relation>
+  <relation id="1161" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="relation" ref="11611" role="role_11611"/>
+    <member type="way" ref="11611"/>
+    <member type="way" ref="11612"/>
+    <tag k="id_tag" v="rel_1161"/>
+  </relation>
+  <relation id="1162" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <member type="way" ref="11621"/>
+    <member type="relation" ref="11621" role="role_11621"/>
+    <member type="way" ref="11622"/>
+    <tag k="id_tag" v="rel_1162"/>
+  </relation>
+
+  <relation id="1500" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42"/>
+  <relation id="1501" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <tag k="id_tag" v="rel_1501"/>
+  </relation>
+  
+  <relation id="11411" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <tag k="id_tag" v="rel_11411"/>
+  </relation>
+  <relation id="11611" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <tag k="id_tag" v="rel_11611"/>
+  </relation>
+  <relation id="11621" version="1" timestamp="2018-02-01T00:00:05Z" user="foo" uid="42">
+    <tag k="id_tag" v="rel_11621"/>
+  </relation>
+</osm>

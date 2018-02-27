@@ -277,6 +277,7 @@ struct Figure_Out_Local_Ids_Of_Links
     if (!way.nds.empty())
     {
       std::vector< NWR_Context::Way_Section_Context >& way_context = (*context_by_way_id)[way.id];
+      std::vector< std::pair< Node_Skeleton::Id_Type, Node_Skeleton::Id_Type > > segment_count;
       
       for (uint i = 0; i < way_context.size(); ++i)
       {
@@ -290,7 +291,21 @@ struct Figure_Out_Local_Ids_Of_Links
           while (parallel_links_pos < parallel_links.size()
               && !(parallel_links[parallel_links_pos] == way.id))
             ++parallel_links_pos;
-          way_context[i].local_id = parallel_links_pos + 1;
+          if (parallel_links_pos+1 == parallel_links.size() || !(parallel_links[parallel_links_pos+1] == way.id))
+            way_context[i].local_id = parallel_links_pos + 1;
+          else
+          {
+            Node_Skeleton::Id_Type target_id =
+                (i+1 < way_context.size() ? way.nds[way_context[i+1].pos] : way.nds.back());
+            for (std::vector< std::pair< Node_Skeleton::Id_Type, Node_Skeleton::Id_Type > >::const_iterator
+                it_pair = segment_count.begin(); it_pair != segment_count.end(); ++it_pair)
+            {
+              if (it_pair->first == way.nds[way_context[i].pos] && it_pair->second == target_id)
+                ++parallel_links_pos;
+            }
+            way_context[i].local_id = parallel_links_pos + 1;
+            segment_count.push_back(std::make_pair(way.nds[way_context[i].pos], target_id));
+          }
         }
       }
     }
