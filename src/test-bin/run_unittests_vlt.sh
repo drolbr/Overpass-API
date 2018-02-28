@@ -56,6 +56,46 @@ date '+%T'
   | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >now_bbox_llb.out 2>now_bbox_llb.err
 date '+%T'
 
+date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/killall.osc
+
+date '+%T'
+{ echo '[date:"2018-02-01T00:01:00Z"];'; cat $INPUTDIR/now.ql; echo "local; out geom;"; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >attic_global.out 2>attic_global.err
+if [[ -z `diff now_global.out attic_global.out` ]]; then
+  rm attic_global.out
+fi
+date '+%T'
+{ echo '[date:"2018-02-01T00:01:00Z"];'; cat $INPUTDIR/now.ql; echo "local ll; out geom;"; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >attic_global_ll.out 2>attic_global_ll.err
+if [[ -z `diff now_global_ll.out attic_global_ll.out` ]]; then
+  rm attic_global_ll.out
+fi
+date '+%T'
+{ echo '[date:"2018-02-01T00:01:00Z"];'; cat $INPUTDIR/now.ql; echo "local llb; out geom;"; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >attic_global_llb.out 2>attic_global_llb.err
+if [[ -z `diff now_global_llb.out attic_global_llb.out` ]]; then
+  rm attic_global_llb.out
+fi
+date '+%T'
+{ echo '[date:"2018-02-01T00:01:00Z"];'; cat $INPUTDIR/now.ql; echo "local (52,8,53,9); out geom;"; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >attic_bbox.out 2>attic_bbox.err
+if [[ -z `diff now_bbox.out attic_bbox.out` ]]; then
+  rm attic_bbox.out
+fi
+date '+%T'
+{ echo '[date:"2018-02-01T00:01:00Z"];'; cat $INPUTDIR/now.ql; echo "local ll(52,8,53,9); out geom;"; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >attic_bbox_ll.out 2>attic_bbox_ll.err
+if [[ -z `diff now_bbox_ll.out attic_bbox_ll.out` ]]; then
+  rm attic_bbox_ll.out
+fi
+date '+%T'
+{ echo '[date:"2018-02-01T00:01:00Z"];'; cat $INPUTDIR/now.ql; echo "local llb(52,8,53,9); out geom;"; } \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >attic_bbox_llb.out 2>attic_bbox_llb.err
+if [[ -z `diff now_bbox_llb.out attic_bbox_llb.out` ]]; then
+  rm attic_bbox_llb.out
+fi
+date '+%T'
+
 for i in *.err; do
   diff -q "../../expected/vlt_model/$i" "$i"
 done

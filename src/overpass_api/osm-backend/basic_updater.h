@@ -1004,7 +1004,7 @@ std::map< Tag_Index_Local, std::set< Attic< Id_Type > > > compute_new_attic_loca
 	  else
 	  {
 	    // This is similar to the case that only the tag value changes.
-            if (last_idx.val() != 0u && last_value != *tit2)
+            if ((last_idx.val() != 0u && last_value != *tit2) || it2->val() == 0xfe)
               result[Tag_Index_Local(Uint31_Index(last_idx.val() & 0x7fffff00), tit->first.second,
 		    *tit2 != void_tag_value() + " " ? *tit2 : void_tag_value())]
                   .insert(Attic< Id_Type >(it->first, tit2->timestamp));

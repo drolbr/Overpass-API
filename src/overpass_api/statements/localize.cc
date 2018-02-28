@@ -799,8 +799,6 @@ void generate_trigraphs(const std::map< Index, std::vector< Maybe_Attic > >& ite
 
 void Localize_Statement::execute(Resource_Manager& rman)
 {
-  //TODO: tests
-  //TODO: performance
   //TODO: diff
   
   Set into;
