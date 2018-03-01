@@ -193,7 +193,7 @@ public:
 
   const std::string* get_key() const { return key; }
   bool has_value() const { return tag_value; }
-  bool should_set_id() const { return mode == Set_Prop_Task::set_id; }
+  Set_Prop_Task::Mode get_mode() const { return mode; }
 
 private:
   std::string input;

@@ -114,6 +114,8 @@ struct Diff_Set
   std::vector< std::pair< Node_With_Context, Node_With_Context > > different_nodes;
   std::vector< std::pair< Way_With_Context, Way_With_Context > > different_ways;
   std::vector< std::pair< Relation_With_Context, Relation_With_Context > > different_relations;
+  std::vector< Derived_Structure > lhs_deriveds;
+  std::vector< Derived_Structure > rhs_deriveds;
   
   void clear()
   {
@@ -127,6 +129,8 @@ struct Diff_Set
     different_nodes.swap(rhs.different_nodes);
     different_ways.swap(rhs.different_ways);
     different_relations.swap(rhs.different_relations);
+    lhs_deriveds.swap(rhs.lhs_deriveds);
+    rhs_deriveds.swap(rhs.rhs_deriveds);
     
     return *this;
   }

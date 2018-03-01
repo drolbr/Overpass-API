@@ -13,6 +13,25 @@
   </node>
   <node id="1501" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="50.001" lon="8.102"/>
 
+  <node id="2001" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="1.001" lon="1.001">
+    <tag k="changes" v="old_value"/>
+  </node>
+  <node id="2003" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="1.001" lon="1.001">
+    <tag k="one" v="const_2003"/>
+    <tag k="two" v="const_2003"/>
+  </node>
+  <node id="2004" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="1.001" lon="1.001">
+    <tag k="one" v="const_2004"/>
+    <tag k="two" v="const_2004"/>
+  </node>
+  <node id="2005" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="1.001" lon="1.001">
+    <tag k="one" v="const_2005"/>
+    <tag k="two" v="const_2005"/>
+    <tag k="three" v="old_value"/>
+  </node>
+  
+  <node id="2500" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="1.001" lon="1.001"/>
+
   <node id="10011" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="52.001" lon="8.005"/>
   <node id="10012" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="52.001" lon="8.006"/>
   <node id="10021" version="1" timestamp="2018-02-01T00:00:05Z" changeset="496" user="foo" uid="42" lat="50.002" lon="8.005"/>

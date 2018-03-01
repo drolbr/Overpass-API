@@ -144,6 +144,8 @@ private:
   void clear_nodes(Resource_Manager& rman, bool add_deletion_information = false);
   void clear_ways(Resource_Manager& rman, bool add_deletion_information = false);
   void clear_relations(Resource_Manager& rman, bool add_deletion_information = false);
+  
+  void compute_deriveds(std::map< Uint31_Index, std::vector< Derived_Structure > > rhs_deriveds);
     
   const Set& lhs_set() const { return lhs_set_; }
   uint64 lhs_timestamp() const { return lhs_timestamp_; }

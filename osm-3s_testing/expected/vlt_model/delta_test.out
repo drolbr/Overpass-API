@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base=""/>
+
+<action type="delete">
+<old>
+  <equal_geom id="4">
+    <tag k="changes" v="old_value"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="43">
+    <tag k="changes" v="new_value"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="5">
+    <point lat="48.0000000" lon="11.0000000"/>
+    <tag k="changes" v="old_value"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="44">
+    <point lat="48.0000000" lon="11.0000000"/>
+    <tag k="changes" v="new_value"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="6">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="changes" v="old_value"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="45">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="changes" v="new_value"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="7">
+    <linestring>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+      <vertex lat="48.0000000" lon="11.0010000"/>
+      <vertex lat="48.0010000" lon="11.0000000"/>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+    </linestring>
+    <tag k="changes" v="old_value"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="46">
+    <linestring>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+      <vertex lat="48.0000000" lon="11.0010000"/>
+      <vertex lat="48.0010000" lon="11.0000000"/>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+    </linestring>
+    <tag k="changes" v="new_value"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="8">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0050000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="changes" v="old_value"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="47">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0050000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="changes" v="new_value"/>
+  </equal_geom>
+</action>
+<action type="show_initial">
+  <marker id="48">
+    <tag k="after" v="2001"/>
+  </marker>
+</action>
+<action type="show_final">
+  <marker id="49">
+    <tag k="after" v="2001"/>
+  </marker>
+</action>
+<action type="show_initial">
+  <marker id="55">
+    <tag k="after" v="2003"/>
+  </marker>
+</action>
+<action type="show_final">
+  <marker id="56">
+    <tag k="after" v="2003"/>
+  </marker>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="14">
+    <tag k="one" v="const_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="57">
+    <tag k="one" v="const_2004"/>
+    <tag k="three" v="now_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="15">
+    <point lat="48.0000000" lon="11.0000000"/>
+    <tag k="one" v="const_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="58">
+    <point lat="48.0000000" lon="11.0000000"/>
+    <tag k="one" v="const_2004"/>
+    <tag k="three" v="now_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="16">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="one" v="const_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="59">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="one" v="const_2004"/>
+    <tag k="three" v="now_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="17">
+    <linestring>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+      <vertex lat="48.0000000" lon="11.0010000"/>
+      <vertex lat="48.0010000" lon="11.0000000"/>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+    </linestring>
+    <tag k="one" v="const_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="60">
+    <linestring>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+      <vertex lat="48.0000000" lon="11.0010000"/>
+      <vertex lat="48.0010000" lon="11.0000000"/>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+    </linestring>
+    <tag k="one" v="const_2004"/>
+    <tag k="three" v="now_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="18">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0050000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="one" v="const_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="61">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0050000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="one" v="const_2004"/>
+    <tag k="three" v="now_2004"/>
+    <tag k="two" v="const_2004"/>
+  </equal_geom>
+</action>
+<action type="show_initial">
+  <marker id="62">
+    <tag k="after" v="2004"/>
+  </marker>
+</action>
+<action type="show_final">
+  <marker id="63">
+    <tag k="after" v="2004"/>
+  </marker>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="19">
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="old_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="64">
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="new_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="20">
+    <point lat="48.0000000" lon="11.0000000"/>
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="old_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="65">
+    <point lat="48.0000000" lon="11.0000000"/>
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="new_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="21">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="old_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="66">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="new_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="22">
+    <linestring>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+      <vertex lat="48.0000000" lon="11.0010000"/>
+      <vertex lat="48.0010000" lon="11.0000000"/>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+    </linestring>
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="old_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="67">
+    <linestring>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+      <vertex lat="48.0000000" lon="11.0010000"/>
+      <vertex lat="48.0010000" lon="11.0000000"/>
+      <vertex lat="48.0000000" lon="10.9990000"/>
+    </linestring>
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="new_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</action>
+<action type="delete">
+<old>
+  <equal_geom id="23">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0050000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="old_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</old>
+</action>
+<action type="create">
+  <equal_geom id="68">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0050000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="one" v="const_2005"/>
+    <tag k="three" v="new_value"/>
+    <tag k="two" v="const_2005"/>
+  </equal_geom>
+</action>
+<action type="show_initial">
+  <marker id="69">
+    <tag k="after" v="2005"/>
+  </marker>
+</action>
+<action type="show_final">
+  <marker id="70">
+    <tag k="after" v="2005"/>
+  </marker>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="27">
+    <tag k="tag" v="no_geom"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="74">
+    <point lat="48.0000000" lon="12.0000000"/>
+    <tag k="tag" v="no_geom"/>
+  </equal_tags>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="28">
+    <point lat="48.0000000" lon="12.0040000"/>
+    <tag k="tag" v="center"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="75">
+    <point lat="48.0000000" lon="12.0060000"/>
+    <tag k="tag" v="center"/>
+  </equal_tags>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="29">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0050000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="tag" v="comp_vs_vertex"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="76">
+    <point lat="48.1000000" lon="11.0050000"/>
+    <tag k="tag" v="comp_vs_vertex"/>
+  </equal_tags>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="31">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0050000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="tag" v="comp_vertex_diff"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="78">
+    <group>
+      <point lat="48.1000000" lon="11.0040000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0055000"/>
+    </group>
+    <group>
+      <point lat="48.1000000" lon="11.0060000"/>
+    </group>
+    <tag k="tag" v="comp_vertex_diff"/>
+  </equal_tags>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="33">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0005000" lon="10.9999000"/>
+    <tag k="tag" v="link_last_diff"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="80">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0006000" lon="10.9999000"/>
+    <tag k="tag" v="link_last_diff"/>
+  </equal_tags>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="34">
+    <vertex lat="48.0005000" lon="11.0001000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="tag" v="link_first_diff"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="81">
+    <vertex lat="48.0006000" lon="11.0001000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="tag" v="link_first_diff"/>
+  </equal_tags>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="35">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0000000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="tag" v="link_middle_diff"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="82">
+    <vertex lat="48.0000000" lon="10.9990000"/>
+    <vertex lat="48.0010000" lon="11.0001000"/>
+    <vertex lat="48.0000000" lon="11.0010000"/>
+    <tag k="tag" v="link_middle_diff"/>
+  </equal_tags>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="38">
+    <linestring>
+      <vertex lat="48.0000000" lon="12.0000000"/>
+      <vertex lat="48.0000000" lon="12.0010000"/>
+      <vertex lat="48.0010000" lon="12.0010000"/>
+      <vertex lat="48.0000000" lon="12.0000000"/>
+    </linestring>
+    <linestring>
+      <vertex lat="48.0000000" lon="13.0000000"/>
+      <vertex lat="48.0000000" lon="13.0010000"/>
+      <vertex lat="48.0010000" lon="13.0010000"/>
+      <vertex lat="48.0000000" lon="13.0000000"/>
+    </linestring>
+    <tag k="tag" v="poly_diff_1"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="85">
+    <linestring>
+      <vertex lat="48.0000000" lon="12.0000000"/>
+      <vertex lat="48.0001000" lon="12.0010000"/>
+      <vertex lat="48.0010000" lon="12.0010000"/>
+      <vertex lat="48.0000000" lon="12.0000000"/>
+    </linestring>
+    <linestring>
+      <vertex lat="48.0000000" lon="13.0000000"/>
+      <vertex lat="48.0000000" lon="13.0010000"/>
+      <vertex lat="48.0010000" lon="13.0010000"/>
+      <vertex lat="48.0000000" lon="13.0000000"/>
+    </linestring>
+    <tag k="tag" v="poly_diff_1"/>
+  </equal_tags>
+</action>
+<action type="delete">
+<old>
+  <equal_tags id="39">
+    <linestring>
+      <vertex lat="48.0000000" lon="12.0000000"/>
+      <vertex lat="48.0000000" lon="12.0010000"/>
+      <vertex lat="48.0010000" lon="12.0010000"/>
+      <vertex lat="48.0000000" lon="12.0000000"/>
+    </linestring>
+    <linestring>
+      <vertex lat="48.0000000" lon="13.0000000"/>
+      <vertex lat="48.0000000" lon="13.0010000"/>
+      <vertex lat="48.0010000" lon="13.0010000"/>
+      <vertex lat="48.0000000" lon="13.0000000"/>
+    </linestring>
+    <tag k="tag" v="poly_diff_2"/>
+  </equal_tags>
+</old>
+</action>
+<action type="create">
+  <equal_tags id="86">
+    <linestring>
+      <vertex lat="48.0000000" lon="12.0000000"/>
+      <vertex lat="48.0000000" lon="12.0010000"/>
+      <vertex lat="48.0010000" lon="12.0010000"/>
+      <vertex lat="48.0000000" lon="12.0000000"/>
+    </linestring>
+    <linestring>
+      <vertex lat="48.0000000" lon="13.0000000"/>
+      <vertex lat="48.0001000" lon="13.0010000"/>
+      <vertex lat="48.0010000" lon="13.0010000"/>
+      <vertex lat="48.0000000" lon="13.0000000"/>
+    </linestring>
+    <tag k="tag" v="poly_diff_2"/>
+  </equal_tags>
+</action>
+
+</osm>

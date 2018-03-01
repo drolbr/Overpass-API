@@ -28,7 +28,7 @@ Generic_Statement_Maker< Convert_Statement > Convert_Statement::statement_maker(
 
 Convert_Statement::Convert_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_), id_evaluator(0), multi_evaluator(0)
+    : Output_Statement(line_number_), geom_evaluator(0), id_evaluator(0), multi_evaluator(0)
 {
   std::map< std::string, std::string > attributes;
   
@@ -66,12 +66,19 @@ void Convert_Statement::add_statement(Statement* statement, std::string text)
           add_static_error(std::string("A key cannot be added twice to an element: \"") + *set_prop->get_key() + '\"');
       }
     }
-    else if (set_prop->should_set_id())
+    else if (set_prop->get_mode() == Set_Prop_Task::set_id)
     {
       if (!id_evaluator)
         id_evaluator = set_prop;
       else
         add_static_error("A convert statement can have at most one set-prop statement of subtype setting the id.");
+    }
+    else if (set_prop->get_mode() == Set_Prop_Task::set_geometry)
+    {
+      if (!geom_evaluator)
+        geom_evaluator = set_prop;
+      else
+        add_static_error("A make statement can have at most one set-prop statement of subtype setting the geometry.");
     }
     else if (!multi_evaluator)
       multi_evaluator = set_prop;

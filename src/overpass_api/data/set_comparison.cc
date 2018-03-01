@@ -824,6 +824,234 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
 }
 
 
+struct Derived_Structure_Handle
+{
+  Derived_Structure_Handle(Uint31_Index idx, const Derived_Structure& elem_)
+    : elem(&elem_), center(elem_.get_geometry() && elem_.get_geometry()->has_center() ?
+        Point_Double(elem_.get_geometry()->center_lat(), elem_.get_geometry()->center_lon())
+        : Point_Double(100., 0.)) {}
+  
+  bool operator<(const Derived_Structure_Handle& rhs) const;
+  
+  const Derived_Structure* elem;
+  Point_Double center;
+};
+
+
+int compare_geometry(const Opaque_Geometry& lhs_geom, const Opaque_Geometry& rhs_geom)
+{
+  if (lhs_geom.has_center())
+  {
+    if (rhs_geom.has_center())
+    {
+      if (lhs_geom.center_lat() < rhs_geom.center_lat())
+        return -1;
+      if (rhs_geom.center_lat() < lhs_geom.center_lat())
+        return 1;
+      if (lhs_geom.center_lon() < rhs_geom.center_lon())
+        return -1;
+      if (rhs_geom.center_lon() < lhs_geom.center_lon())
+        return 1;
+    }
+    else
+      return -1;
+  }
+  else if (rhs_geom.has_center())
+    return 1;
+  
+  if (lhs_geom.has_components())
+  {
+    if (rhs_geom.has_components())
+    {
+      const std::vector< Opaque_Geometry* >& lhs_comp = *lhs_geom.get_components();
+      const std::vector< Opaque_Geometry* >& rhs_comp = *rhs_geom.get_components();
+      
+      if (lhs_comp.size() != rhs_comp.size())
+        return lhs_comp.size() < rhs_comp.size();
+      
+      for (uint i = 0; i < lhs_comp.size(); ++i)
+      {
+        int cmp = compare_geometry(*lhs_comp[i], *rhs_comp[i]);
+        if (cmp)
+          return cmp;
+      }
+      
+      return 0;
+    }
+    else
+      return 1;
+  }
+  else if (rhs_geom.has_components())
+    return -1;
+  
+  if (lhs_geom.has_line_geometry())
+  {
+    if (rhs_geom.has_line_geometry())
+    {
+      const std::vector< Point_Double >& lhs_comp = *lhs_geom.get_line_geometry();
+      const std::vector< Point_Double >& rhs_comp = *rhs_geom.get_line_geometry();
+      
+      if (lhs_comp.size() != rhs_comp.size())
+        return lhs_comp.size() < rhs_comp.size();
+      
+      for (uint i = 0; i < lhs_comp.size(); ++i)
+      {
+        if (lhs_comp[i] < rhs_comp[i])
+          return -1;
+        if (rhs_comp[i] < lhs_comp[i])
+          return 1;
+      }
+      
+      return 0;
+    }
+    else
+      return -1;
+  }
+  else if (rhs_geom.has_line_geometry())
+    return 1;
+  
+  if (lhs_geom.has_multiline_geometry())
+  {
+    if (rhs_geom.has_multiline_geometry())
+    {
+      const std::vector< std::vector< Point_Double > >& lhs_comp = *lhs_geom.get_multiline_geometry();
+      const std::vector< std::vector< Point_Double > >& rhs_comp = *rhs_geom.get_multiline_geometry();
+      
+      if (lhs_comp.size() != rhs_comp.size())
+        return lhs_comp.size() < rhs_comp.size();
+      
+      for (uint i = 0; i < lhs_comp.size(); ++i)
+      {
+        if (lhs_comp[i].size() < rhs_comp[i].size())
+          return -1;
+        if (rhs_comp[i].size() < lhs_comp[i].size())
+          return 1;
+
+        for (uint j = 0; j < lhs_comp[i].size(); ++j)
+        {
+          if (lhs_comp[i][j] < rhs_comp[i][j])
+            return -1;
+          if (rhs_comp[i][j] < lhs_comp[i][j])
+            return 1;
+        }
+      }
+      
+      return 0;
+    }
+    else
+      return -1;
+  }
+  else if (rhs_geom.has_multiline_geometry())
+    return 1;
+  
+  return 0;
+}
+
+
+bool Derived_Structure_Handle::operator<(const Derived_Structure_Handle& rhs) const
+{
+  if (center.lat < 100.)
+  {
+    if (rhs.center.lat < 100.)
+    {
+      if (center.lat != rhs.center.lat)
+        return center.lat < rhs.center.lat;
+      if (center.lon != rhs.center.lon)
+        return center.lon < rhs.center.lon;
+    }
+    else
+      return true;
+  }
+  else if (rhs.center.lat < 100.)
+    return false;
+    
+  if (elem->get_geometry())
+  {
+    if (rhs.elem->get_geometry())
+    {
+      int cmp = compare_geometry(*elem->get_geometry(), *rhs.elem->get_geometry());
+      if (cmp < 0)
+        return true;
+      else if (cmp > 0)
+        return false;
+    }
+    else
+      return true;
+  }
+  else if (rhs.elem->get_geometry())
+    return false;
+    
+  if (elem->tags.size() != rhs.elem->tags.size())
+    return elem->tags.size() < rhs.elem->tags.size();
+  
+  for (uint i = 0; i < elem->tags.size(); ++i)
+  {
+    if (elem->tags[i] < rhs.elem->tags[i])
+      return true;
+    if (rhs.elem->tags[i] < elem->tags[i])
+      return false;
+  }
+  
+  return false;
+}
+
+
+void Set_Comparison::compute_deriveds(std::map< Uint31_Index, std::vector< Derived_Structure > > rhs_deriveds)
+{
+  std::vector< Derived_Structure_Handle > lhs_handles;
+  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::const_iterator
+      it_idx = lhs_set_.deriveds.begin(); it_idx != lhs_set_.deriveds.end(); ++it_idx)
+  {
+    for (std::vector< Derived_Structure >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+      lhs_handles.push_back(Derived_Structure_Handle(it_idx->first, *it_elem));
+  }
+  std::sort(lhs_handles.begin(), lhs_handles.end());
+
+  std::vector< Derived_Structure_Handle > rhs_handles;
+  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::const_iterator
+      it_idx = rhs_deriveds.begin(); it_idx != rhs_deriveds.end(); ++it_idx)
+  {
+    for (std::vector< Derived_Structure >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+      rhs_handles.push_back(Derived_Structure_Handle(it_idx->first, *it_elem));
+  }
+  std::sort(rhs_handles.begin(), rhs_handles.end());
+  
+  std::vector< Derived_Structure_Handle >::const_iterator it_lhs = lhs_handles.begin();
+  std::vector< Derived_Structure_Handle >::const_iterator it_rhs = rhs_handles.begin();
+  
+  while (it_lhs != lhs_handles.end() && it_rhs != rhs_handles.end())
+  {
+    if (*it_lhs < *it_rhs)
+    {
+      result.lhs_deriveds.push_back(*it_lhs->elem);
+      ++it_lhs;
+    }
+    else if (*it_rhs < *it_lhs)
+    {
+      result.rhs_deriveds.push_back(*it_rhs->elem);
+      ++it_rhs;
+    }
+    else
+    {
+      ++it_lhs;
+      ++it_rhs;
+    }
+  }
+  while (it_lhs != lhs_handles.end())
+  {
+    result.lhs_deriveds.push_back(*it_lhs->elem);
+    ++it_lhs;
+  }
+  while (it_rhs != rhs_handles.end())
+  {
+    result.rhs_deriveds.push_back(*it_rhs->elem);
+    ++it_rhs;
+  }
+}
+
+
 Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement& stmt,
     const Set& input_set, double south, double north, double west, double east, bool add_deletion_information)
 {
@@ -872,6 +1100,8 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, rman);
   clear_relations(rman, add_deletion_information);
+  
+  compute_deriveds(input_set.deriveds);
   
   Diff_Set local_result;
   local_result.swap(result);

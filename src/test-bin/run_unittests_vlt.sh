@@ -56,6 +56,8 @@ date '+%T'
   | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >now_bbox_llb.out 2>now_bbox_llb.err
 date '+%T'
 
+date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/diff_1.osc
+
 date '+%T'; $BASEDIR/bin/update_database --db-dir=./ --keep-attic <$INPUTDIR/killall.osc
 
 date '+%T'
@@ -94,6 +96,11 @@ date '+%T'
 if [[ -z `diff now_bbox_llb.out attic_bbox_llb.out` ]]; then
   rm attic_bbox_llb.out
 fi
+date '+%T'
+
+date '+%T'
+  cat $INPUTDIR/delta_test.ql \
+  | $BASEDIR/bin/osm3s_query --concise --db-dir=./ >delta_test.out 2>delta_test.err
 date '+%T'
 
 for i in *.err; do

@@ -539,7 +539,7 @@ void Output_XML::print_item(const Derived_Skeleton& skel,
       Output_Mode mode,
       const Feature_Action& action)
 {
-  prepend_action(action, false);
+  prepend_action(action, true);
   
   std::cout<<"  <"<<skel.type_name;
   if (mode.mode & Output_Mode::ID)
@@ -553,5 +553,5 @@ void Output_XML::print_item(const Derived_Skeleton& skel,
   else
     std::cout<<"  </"<<skel.type_name<<">\n";
   
-  append_action(action, false, false);
+  append_action(action, false, true);
 }

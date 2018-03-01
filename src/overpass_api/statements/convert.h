@@ -118,6 +118,7 @@ private:
   std::string input;
   std::string type;
   std::vector< Set_Prop_Statement* > evaluators;
+  Set_Prop_Statement* geom_evaluator;
   Set_Prop_Statement* id_evaluator;
   Set_Prop_Statement* multi_evaluator;
 };

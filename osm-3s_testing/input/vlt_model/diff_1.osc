@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+  <node id="2001" version="2" timestamp="2018-02-01T01:00:05Z" changeset="1496" user="foo" uid="42" lat="1.001" lon="1.001">
+    <tag k="changes" v="new_value"/>
+  </node>
+  <node id="2003" version="2" timestamp="2018-02-01T01:00:05Z" changeset="1496" user="foo" uid="42" lat="1.001" lon="1.001">
+    <tag k="one" v="const_2003"/>
+    <tag k="two" v="const_2003"/>
+  </node>
+  <node id="2004" version="2" timestamp="2018-02-01T01:00:05Z" changeset="1496" user="foo" uid="42" lat="1.001" lon="1.001">
+    <tag k="one" v="const_2004"/>
+    <tag k="two" v="const_2004"/>
+    <tag k="three" v="now_2004"/>
+  </node>
+  <node id="2005" version="2" timestamp="2018-02-01T01:00:05Z" changeset="1496" user="foo" uid="42" lat="1.001" lon="1.001">
+    <tag k="one" v="const_2005"/>
+    <tag k="two" v="const_2005"/>
+    <tag k="three" v="new_value"/>
+  </node>
+
+<delete>
+  <node id="2500" version="2" timestamp="2018-02-01T01:00:05Z" changeset="1496" user="foo" uid="42"/>
+</delete>
+</osm>

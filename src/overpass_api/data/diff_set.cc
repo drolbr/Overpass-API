@@ -320,6 +320,22 @@ void print_relations(
 }
 
 
+void print_deriveds(
+    const std::vector< Derived_Structure >& lhs_deriveds, const std::vector< Derived_Structure >& rhs_deriveds,
+    uint32 output_mode, Output_Handler* output)
+{
+  Null_Geometry null_geom;
+  
+  for (std::vector< Derived_Structure >::const_iterator it = lhs_deriveds.begin(); it != lhs_deriveds.end(); ++it)
+    output->print_item(*it, it->get_geometry() ? *it->get_geometry() : null_geom, &it->tags,
+        output_mode, Output_Handler::erase);
+
+  for (std::vector< Derived_Structure >::const_iterator it = rhs_deriveds.begin(); it != rhs_deriveds.end(); ++it)
+    output->print_item(*it, it->get_geometry() ? *it->get_geometry() : null_geom, &it->tags,
+        output_mode, Output_Handler::create);
+}
+
+
 void print_diff_set(const Diff_Set& result,
     uint32 output_mode, Output_Handler* output,
     const std::map< uint32, std::string >& users, const std::map< uint32, std::string >& roles,
@@ -328,4 +344,6 @@ void print_diff_set(const Diff_Set& result,
   print_nodes(result.different_nodes, output_mode, output, users, add_deletion_information);
   print_ways(result.different_ways, output_mode, output, users, add_deletion_information);
   print_relations(result.different_relations, output_mode, output, users, roles, add_deletion_information);
+  
+  print_deriveds(result.lhs_deriveds, result.rhs_deriveds, output_mode, output);
 }
