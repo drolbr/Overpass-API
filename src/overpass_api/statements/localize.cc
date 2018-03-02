@@ -479,7 +479,11 @@ struct Derived_Structure_Builder
   void set_tag(const std::string& key, const std::string& value)
   { target.tags.push_back(std::make_pair(key, value)); }
   
-  const Derived_Structure& get() const { return target; }
+  const Derived_Structure& get()
+  { 
+    std::sort(target.tags.begin(), target.tags.end());
+    return target;
+  }
   
 private:
   Derived_Structure target;

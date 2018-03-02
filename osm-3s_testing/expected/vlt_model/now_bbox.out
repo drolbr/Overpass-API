@@ -9,8 +9,8 @@
   </vertex>
   <vertex id="2">
     <point lat="52.0110000" lon="8.1050000"/>
-    <tag k="id_tag" v="node_1110"/>
     <tag k="_local_id" v="1"/>
+    <tag k="id_tag" v="node_1110"/>
   </vertex>
   <vertex id="3">
     <point lat="52.1010000" lon="8.0060000"/>
@@ -67,14 +67,14 @@
   <link id="13">
     <vertex lat="52.1030000" lon="8.0050000"/>
     <vertex lat="52.1030000" lon="8.0060000"/>
-    <tag k="id_tag" v="way_2003"/>
     <tag k="_local_to" v="1"/>
+    <tag k="id_tag" v="way_2003"/>
   </link>
   <link id="14">
     <vertex lat="52.1030000" lon="8.0060000"/>
     <vertex lat="52.1030000" lon="8.0070000"/>
-    <tag k="id_tag" v="way_2003"/>
     <tag k="_local_from" v="1"/>
+    <tag k="id_tag" v="way_2003"/>
   </link>
   <link id="15">
     <vertex lat="52.1021000" lon="8.0060000"/>
@@ -84,26 +84,26 @@
   <link id="16">
     <vertex lat="52.1050000" lon="8.1040000"/>
     <vertex lat="52.1050000" lon="8.1050000"/>
-    <tag k="id_tag" v="way_3111"/>
     <tag k="_local_id" v="1"/>
+    <tag k="id_tag" v="way_3111"/>
   </link>
   <link id="17">
     <vertex lat="52.1050000" lon="8.1050000"/>
     <vertex lat="52.1050000" lon="8.1060000"/>
-    <tag k="id_tag" v="way_3111"/>
     <tag k="_local_id" v="1"/>
+    <tag k="id_tag" v="way_3111"/>
   </link>
   <link id="18">
     <vertex lat="52.1050000" lon="8.1040000"/>
     <vertex lat="52.1050000" lon="8.1050000"/>
-    <tag k="id_tag" v="way_3112"/>
     <tag k="_local_id" v="2"/>
+    <tag k="id_tag" v="way_3112"/>
   </link>
   <link id="19">
     <vertex lat="52.1050000" lon="8.1050000"/>
     <vertex lat="52.1050000" lon="8.1060000"/>
-    <tag k="id_tag" v="way_3112"/>
     <tag k="_local_id" v="2"/>
+    <tag k="id_tag" v="way_3112"/>
   </link>
   <link id="20">
     <vertex lat="52.2050000" lon="8.0010000"/>
@@ -134,21 +134,21 @@
     <vertex lat="52.1050000" lon="8.2040000"/>
     <vertex lat="52.1040000" lon="8.2050000"/>
     <vertex lat="52.1050000" lon="8.2060000"/>
-    <tag k="id_tag" v="way_3122"/>
     <tag k="_local_id" v="2"/>
+    <tag k="id_tag" v="way_3122"/>
   </link>
   <link id="26">
     <vertex lat="52.1050000" lon="8.2040000"/>
     <vertex lat="52.1050000" lon="8.2050000"/>
     <vertex lat="52.1050000" lon="8.2060000"/>
-    <tag k="id_tag" v="way_3121"/>
     <tag k="_local_id" v="1"/>
+    <tag k="id_tag" v="way_3121"/>
   </link>
   <link id="27">
     <vertex lat="52.1050000" lon="8.3040000"/>
     <vertex lat="52.1050000" lon="8.3060000"/>
-    <tag k="id_tag" v="way_3131"/>
     <tag k="_local_id" v="1"/>
+    <tag k="id_tag" v="way_3131"/>
   </link>
   <link id="28">
     <vertex lat="52.1050000" lon="8.3060000"/>
@@ -159,8 +159,8 @@
   <link id="29">
     <vertex lat="52.1050000" lon="8.3040000"/>
     <vertex lat="52.1050000" lon="8.3060000"/>
-    <tag k="id_tag" v="way_3131"/>
     <tag k="_local_id" v="2"/>
+    <tag k="id_tag" v="way_3131"/>
   </link>
   <link id="30">
     <vertex lat="52.1050000" lon="8.3060000"/>
@@ -184,8 +184,8 @@
   </trigraph>
   <trigraph id="34">
     <point lat="52.0050000" lon="8.1260000"/>
-    <tag k="id_tag" v="rel_1113"/>
     <tag k="_previous" v="33"/>
+    <tag k="id_tag" v="rel_1113"/>
   </trigraph>
   <trigraph id="35">
     <vertex lat="52.0010000" lon="8.5010000"/>
@@ -197,15 +197,15 @@
   <trigraph id="36">
     <vertex lat="52.2050000" lon="8.5040000"/>
     <vertex lat="52.2050000" lon="8.5050000"/>
-    <tag k="id_tag" v="rel_1125"/>
     <tag k="_previous" v="35"/>
+    <tag k="id_tag" v="rel_1125"/>
     <tag k="_next" v="37"/>
   </trigraph>
   <trigraph id="37">
     <vertex lat="52.2050000" lon="8.5050000"/>
     <vertex lat="52.2050000" lon="8.5060000"/>
-    <tag k="id_tag" v="rel_1125"/>
     <tag k="_previous" v="36"/>
+    <tag k="id_tag" v="rel_1125"/>
   </trigraph>
   <trigraph id="38">
     <vertex lat="52.0010000" lon="8.6040000"/>
@@ -228,33 +228,33 @@
   </trigraph>
   <trigraph id="42">
     <point lat="52.0050000" lon="8.1160000"/>
-    <tag k="id_tag" v="rel_1112"/>
     <tag k="_previous" v="41"/>
+    <tag k="id_tag" v="rel_1112"/>
   </trigraph>
   <trigraph id="43">
     <point lat="52.0050000" lon="8.1350000"/>
-    <tag k="id_tag" v="rel_1114"/>
     <tag k="_local_ref" v="1"/>
+    <tag k="id_tag" v="rel_1114"/>
     <tag k="_next" v="44"/>
   </trigraph>
   <trigraph id="44">
     <point lat="52.0050000" lon="8.1350000"/>
-    <tag k="id_tag" v="rel_1114"/>
     <tag k="_local_ref" v="2"/>
     <tag k="_previous" v="43"/>
+    <tag k="id_tag" v="rel_1114"/>
   </trigraph>
   <trigraph id="45">
     <point lat="52.0050000" lon="8.1450000"/>
-    <tag k="id_tag" v="rel_1131"/>
     <tag k="_local_ref" v="1"/>
+    <tag k="id_tag" v="rel_1131"/>
     <tag k="_next" v="46"/>
   </trigraph>
   <trigraph id="46">
     <vertex lat="52.0050000" lon="8.1450000"/>
     <vertex lat="52.0050000" lon="8.1460000"/>
-    <tag k="id_tag" v="rel_1131"/>
-    <tag k="_vertex_local_from" v="2"/>
     <tag k="_previous" v="45"/>
+    <tag k="_vertex_local_from" v="2"/>
+    <tag k="id_tag" v="rel_1131"/>
   </trigraph>
   <trigraph id="47">
     <vertex lat="52.2050000" lon="8.1040000"/>
@@ -270,8 +270,8 @@
   <trigraph id="49">
     <vertex lat="52.2050000" lon="8.2050000"/>
     <vertex lat="52.2050000" lon="8.2060000"/>
-    <tag k="id_tag" v="rel_1122"/>
     <tag k="_previous" v="48"/>
+    <tag k="id_tag" v="rel_1122"/>
   </trigraph>
   <trigraph id="50">
     <vertex lat="52.2050000" lon="8.3010000"/>
@@ -283,44 +283,44 @@
   <trigraph id="51">
     <vertex lat="52.2050000" lon="8.3060000"/>
     <vertex lat="52.2050000" lon="8.3070000"/>
-    <tag k="id_tag" v="rel_1123"/>
     <tag k="_previous" v="50"/>
+    <tag k="id_tag" v="rel_1123"/>
     <tag k="_next" v="52"/>
   </trigraph>
   <trigraph id="52">
     <vertex lat="52.2050000" lon="8.3070000"/>
     <vertex lat="52.2050000" lon="8.3080000"/>
-    <tag k="id_tag" v="rel_1123"/>
     <tag k="_previous" v="51"/>
+    <tag k="id_tag" v="rel_1123"/>
   </trigraph>
   <trigraph id="53">
     <vertex lat="52.3050000" lon="8.3040000"/>
     <vertex lat="52.3050000" lon="8.3060000"/>
-    <tag k="id_tag" v="rel_1127"/>
     <tag k="_local_ref" v="1"/>
+    <tag k="id_tag" v="rel_1127"/>
     <tag k="_next" v="54"/>
   </trigraph>
   <trigraph id="54">
     <vertex lat="52.3050000" lon="8.3060000"/>
     <vertex lat="52.3060000" lon="8.3050000"/>
     <vertex lat="52.3050000" lon="8.3040000"/>
-    <tag k="id_tag" v="rel_1127"/>
     <tag k="_previous" v="53"/>
+    <tag k="id_tag" v="rel_1127"/>
     <tag k="_next" v="55"/>
   </trigraph>
   <trigraph id="55">
     <vertex lat="52.3050000" lon="8.3040000"/>
     <vertex lat="52.3050000" lon="8.3060000"/>
-    <tag k="id_tag" v="rel_1127"/>
     <tag k="_local_ref" v="2"/>
     <tag k="_previous" v="54"/>
+    <tag k="id_tag" v="rel_1127"/>
     <tag k="_next" v="56"/>
   </trigraph>
   <trigraph id="56">
     <vertex lat="52.3050000" lon="8.3060000"/>
     <vertex lat="52.3050000" lon="8.3070000"/>
-    <tag k="id_tag" v="rel_1127"/>
     <tag k="_previous" v="55"/>
+    <tag k="id_tag" v="rel_1127"/>
   </trigraph>
   <trigraph id="57">
     <vertex lat="52.2050000" lon="8.4040000"/>
@@ -331,8 +331,8 @@
   <trigraph id="58">
     <vertex lat="52.2050000" lon="8.4050000"/>
     <vertex lat="52.2050000" lon="8.4060000"/>
-    <tag k="id_tag" v="rel_1124"/>
     <tag k="_previous" v="57"/>
+    <tag k="id_tag" v="rel_1124"/>
   </trigraph>
   <trigraph id="59">
     <vertex lat="52.2050000" lon="8.7010000"/>
@@ -343,8 +343,8 @@
   <trigraph id="60">
     <vertex lat="52.2050000" lon="8.7020000"/>
     <vertex lat="52.2050000" lon="8.7030000"/>
-    <tag k="id_tag" v="rel_1161"/>
     <tag k="_previous" v="59"/>
+    <tag k="id_tag" v="rel_1161"/>
   </trigraph>
   <trigraph id="61">
     <vertex lat="52.2050000" lon="8.7120000"/>
@@ -365,22 +365,22 @@
   <trigraph id="64">
     <vertex lat="52.3050000" lon="8.4040000"/>
     <vertex lat="52.3060000" lon="8.4050000"/>
-    <tag k="id_tag" v="rel_1128"/>
     <tag k="_previous" v="63"/>
+    <tag k="id_tag" v="rel_1128"/>
     <tag k="_next" v="65"/>
   </trigraph>
   <trigraph id="65">
     <vertex lat="52.3060000" lon="8.4050000"/>
     <vertex lat="52.3050000" lon="8.4060000"/>
-    <tag k="id_tag" v="rel_1128"/>
     <tag k="_previous" v="64"/>
+    <tag k="id_tag" v="rel_1128"/>
     <tag k="_next" v="66"/>
   </trigraph>
   <trigraph id="66">
     <vertex lat="52.3050000" lon="8.4060000"/>
     <vertex lat="52.3050000" lon="8.4040000"/>
-    <tag k="id_tag" v="rel_1128"/>
     <tag k="_previous" v="65"/>
+    <tag k="id_tag" v="rel_1128"/>
   </trigraph>
 
 </osm>

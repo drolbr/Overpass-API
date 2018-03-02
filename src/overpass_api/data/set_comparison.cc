@@ -511,7 +511,7 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
 		std::vector< std::pair< std::string, std::string > >())));
       }
     }
-    
+
     searched_ids.clear();
     for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator
         it = result.different_nodes.begin(); it != result.different_nodes.end(); ++it)
@@ -533,7 +533,7 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
       {
         it->first.idx = std::binary_search(found_ids.begin(), found_ids.end(), it->second.elem.id) ? 0xfdu : 0xffu;
         it->first.elem = Node_Skeleton(it->second.elem.id);
-        
+
 	std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->second.elem.id);
         if (meta_it != found_meta.end())
@@ -642,7 +642,7 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
 		std::vector< std::pair< std::string, std::string > >())));
       }
     }
-    
+
     searched_ids.clear();
     for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::const_iterator
         it = result.different_ways.begin(); it != result.different_ways.end(); ++it)
@@ -664,7 +664,7 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
       {
         it->first.idx = std::binary_search(found_ids.begin(), found_ids.end(), it->second.elem.id) ? 0xfdu : 0xffu;
         it->first.elem = Way_Skeleton(it->second.elem.id);
-        
+
 	std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->second.elem.id);
         if (meta_it != found_meta.end())
@@ -684,7 +684,7 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
 		std::vector< std::pair< std::string, std::string > >())));
     }
   }
-  
+
   std::sort(result.different_ways.begin(), result.different_ways.end());
 }
 
@@ -777,7 +777,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
 
       req = get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, rman, true);
     }
-    
+
     searched_ids.clear();
     for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::const_iterator
         it = result.different_relations.begin(); it != result.different_relations.end(); ++it)
@@ -799,7 +799,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
       {
         it->first.idx = std::binary_search(found_ids.begin(), found_ids.end(), it->second.elem.id) ? 0xfdu : 0xffu;
         it->first.elem = Relation_Skeleton(it->second.elem.id);
-        
+
 	std::map< Relation_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Relation::Id_Type > >::const_iterator
 	    meta_it = found_meta.find(it->second.elem.id);
         if (meta_it != found_meta.end())
@@ -819,7 +819,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
 		std::vector< std::pair< std::string, std::string > >())));
     }
   }
-  
+
   std::sort(result.different_relations.begin(), result.different_relations.end());
 }
 
@@ -830,9 +830,9 @@ struct Derived_Structure_Handle
     : elem(&elem_), center(elem_.get_geometry() && elem_.get_geometry()->has_center() ?
         Point_Double(elem_.get_geometry()->center_lat(), elem_.get_geometry()->center_lon())
         : Point_Double(100., 0.)) {}
-  
+
   bool operator<(const Derived_Structure_Handle& rhs) const;
-  
+
   const Derived_Structure* elem;
   Point_Double center;
 };
@@ -858,24 +858,24 @@ int compare_geometry(const Opaque_Geometry& lhs_geom, const Opaque_Geometry& rhs
   }
   else if (rhs_geom.has_center())
     return 1;
-  
+
   if (lhs_geom.has_components())
   {
     if (rhs_geom.has_components())
     {
       const std::vector< Opaque_Geometry* >& lhs_comp = *lhs_geom.get_components();
       const std::vector< Opaque_Geometry* >& rhs_comp = *rhs_geom.get_components();
-      
+
       if (lhs_comp.size() != rhs_comp.size())
-        return lhs_comp.size() < rhs_comp.size();
-      
+        return lhs_comp.size() < rhs_comp.size() ? -1 : 1;
+
       for (uint i = 0; i < lhs_comp.size(); ++i)
       {
         int cmp = compare_geometry(*lhs_comp[i], *rhs_comp[i]);
         if (cmp)
           return cmp;
       }
-      
+
       return 0;
     }
     else
@@ -883,17 +883,17 @@ int compare_geometry(const Opaque_Geometry& lhs_geom, const Opaque_Geometry& rhs
   }
   else if (rhs_geom.has_components())
     return -1;
-  
+
   if (lhs_geom.has_line_geometry())
   {
     if (rhs_geom.has_line_geometry())
     {
       const std::vector< Point_Double >& lhs_comp = *lhs_geom.get_line_geometry();
       const std::vector< Point_Double >& rhs_comp = *rhs_geom.get_line_geometry();
-      
+
       if (lhs_comp.size() != rhs_comp.size())
-        return lhs_comp.size() < rhs_comp.size();
-      
+        return lhs_comp.size() < rhs_comp.size() ? -1 : 1;
+
       for (uint i = 0; i < lhs_comp.size(); ++i)
       {
         if (lhs_comp[i] < rhs_comp[i])
@@ -901,7 +901,7 @@ int compare_geometry(const Opaque_Geometry& lhs_geom, const Opaque_Geometry& rhs
         if (rhs_comp[i] < lhs_comp[i])
           return 1;
       }
-      
+
       return 0;
     }
     else
@@ -909,17 +909,17 @@ int compare_geometry(const Opaque_Geometry& lhs_geom, const Opaque_Geometry& rhs
   }
   else if (rhs_geom.has_line_geometry())
     return 1;
-  
+
   if (lhs_geom.has_multiline_geometry())
   {
     if (rhs_geom.has_multiline_geometry())
     {
       const std::vector< std::vector< Point_Double > >& lhs_comp = *lhs_geom.get_multiline_geometry();
       const std::vector< std::vector< Point_Double > >& rhs_comp = *rhs_geom.get_multiline_geometry();
-      
+
       if (lhs_comp.size() != rhs_comp.size())
-        return lhs_comp.size() < rhs_comp.size();
-      
+        return lhs_comp.size() < rhs_comp.size() ? -1 : 1;
+
       for (uint i = 0; i < lhs_comp.size(); ++i)
       {
         if (lhs_comp[i].size() < rhs_comp[i].size())
@@ -935,7 +935,7 @@ int compare_geometry(const Opaque_Geometry& lhs_geom, const Opaque_Geometry& rhs
             return 1;
         }
       }
-      
+
       return 0;
     }
     else
@@ -943,7 +943,7 @@ int compare_geometry(const Opaque_Geometry& lhs_geom, const Opaque_Geometry& rhs
   }
   else if (rhs_geom.has_multiline_geometry())
     return 1;
-  
+
   return 0;
 }
 
@@ -964,7 +964,7 @@ bool Derived_Structure_Handle::operator<(const Derived_Structure_Handle& rhs) co
   }
   else if (rhs.center.lat < 100.)
     return false;
-    
+
   if (elem->get_geometry())
   {
     if (rhs.elem->get_geometry())
@@ -980,18 +980,35 @@ bool Derived_Structure_Handle::operator<(const Derived_Structure_Handle& rhs) co
   }
   else if (rhs.elem->get_geometry())
     return false;
-    
-  if (elem->tags.size() != rhs.elem->tags.size())
-    return elem->tags.size() < rhs.elem->tags.size();
-  
-  for (uint i = 0; i < elem->tags.size(); ++i)
+
+  std::vector< std::pair< std::string, std::string > >::const_iterator it_tl = elem->tags.begin();
+  std::vector< std::pair< std::string, std::string > >::const_iterator it_tr = rhs.elem->tags.begin();
+  while (it_tl != elem->tags.end() && it_tr != rhs.elem->tags.end())
   {
-    if (elem->tags[i] < rhs.elem->tags[i])
-      return true;
-    if (rhs.elem->tags[i] < elem->tags[i])
+    if (*it_tl == *it_tr)
+    {
+      ++it_tl;
+      ++it_tr;
+    }
+    else if (it_tl->first == "_next" || it_tl->first == "_previous")
+      ++it_tl;
+    else if (it_tr->first == "_next" || it_tr->first == "_previous")
+      ++it_tr;
+    else if (*it_tl < *it_tr)
+       return true;
+    else
       return false;
   }
-  
+  while (it_tl != elem->tags.end() && (it_tl->first == "_next" || it_tl->first == "_previous"))
+    ++it_tl;
+  while (it_tr != rhs.elem->tags.end() && (it_tr->first == "_next" || it_tr->first == "_previous"))
+    ++it_tr;
+
+  if (it_tr != rhs.elem->tags.end())
+    return true;
+  if (it_tl != elem->tags.end())
+    return false;
+
   return false;
 }
 
@@ -1017,10 +1034,10 @@ void Set_Comparison::compute_deriveds(std::map< Uint31_Index, std::vector< Deriv
       rhs_handles.push_back(Derived_Structure_Handle(it_idx->first, *it_elem));
   }
   std::sort(rhs_handles.begin(), rhs_handles.end());
-  
+
   std::vector< Derived_Structure_Handle >::const_iterator it_lhs = lhs_handles.begin();
   std::vector< Derived_Structure_Handle >::const_iterator it_rhs = rhs_handles.begin();
-  
+
   while (it_lhs != lhs_handles.end() && it_rhs != rhs_handles.end())
   {
     if (*it_lhs < *it_rhs)
@@ -1056,10 +1073,10 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
     const Set& input_set, double south, double north, double west, double east, bool add_deletion_information)
 {
   result.clear();
-  
+
   uint64 rhs_timestamp = rman.get_desired_timestamp();
   rman.set_desired_timestamp(lhs_timestamp_);
-    
+
   Extra_Data_For_Diff extra_data_lhs(rman, stmt, lhs_set_, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
       | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
@@ -1076,11 +1093,11 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
   tags_quadtile(extra_data_lhs, lhs_set_.relations, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_lhs, lhs_set_.attic_relations, rman);
-    
+
   rman.set_desired_timestamp(rhs_timestamp);
-      
+
   set_target(true);
-    
+
   Extra_Data_For_Diff extra_data_rhs(rman, stmt, input_set, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
       | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
@@ -1100,9 +1117,9 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, rman);
   clear_relations(rman, add_deletion_information);
-  
+
   compute_deriveds(input_set.deriveds);
-  
+
   Diff_Set local_result;
   local_result.swap(result);
   return local_result;
@@ -1131,7 +1148,7 @@ void eval_lhs_elems(const std::map< Index, std::vector< Maybe_Attic > >& items,
       result.push_back(std::make_pair(
           it_elem->id, task.eval(into_context.get_context(it_idx->first, *it_elem), 0)));
   }
-  
+
   std::sort(result.begin(), result.end(), First_Comparator< Id_Type, std::string >());
 }
 
@@ -1148,7 +1165,7 @@ void eval_rhs_elems(const std::map< Index, std::vector< Maybe_Attic > >& items,
         it_elem != it_idx->second.end(); ++it_elem)
     {
       std::string rhs_val = task.eval(into_context.get_context(it_idx->first, *it_elem), 0);
-      typename std::vector< std::pair< Id_Type, std::string > >::iterator it_lhs = 
+      typename std::vector< std::pair< Id_Type, std::string > >::iterator it_lhs =
           std::lower_bound(lhs_set.begin(), lhs_set.end(), std::make_pair(it_elem->id, ""),
               First_Comparator< Id_Type, std::string >());
 
@@ -1161,7 +1178,7 @@ void eval_rhs_elems(const std::map< Index, std::vector< Maybe_Attic > >& items,
       {
         if (rhs_val != it_lhs->second)
           result.push_back(it_elem->id);
-        
+
         it_lhs->second.clear();
       }
     }
@@ -1178,7 +1195,7 @@ void clear_elems(std::vector< std::pair< Id_Type, std::string > >& lhs_set, std:
     if (!it_lhs->second.empty())
       result.push_back(it_lhs->first);
   }
-  
+
   lhs_set.clear();
   std::sort(result.begin(), result.end());
 }
@@ -1188,10 +1205,10 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
     const Set& input_set, Evaluator* evaluator, bool add_deletion_information)
 {
   result.clear();
-  
+
   uint64 rhs_timestamp = rman.get_desired_timestamp();
   rman.set_desired_timestamp(lhs_timestamp_);
-  
+
   {
     Requested_Context requested_context = evaluator->request_context();
     Prepare_Task_Context context(requested_context, stmt, rman);
@@ -1208,19 +1225,19 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
       node_values.clear();
       eval_lhs_elems(lhs_set_.nodes, node_values, into_context, *task);
       eval_lhs_elems(lhs_set_.attic_nodes, node_values, into_context, *task);
-      
+
       way_values.clear();
       eval_lhs_elems(lhs_set_.ways, way_values, into_context, *task);
       eval_lhs_elems(lhs_set_.attic_ways, way_values, into_context, *task);
-      
+
       relation_values.clear();
       eval_lhs_elems(lhs_set_.relations, relation_values, into_context, *task);
       eval_lhs_elems(lhs_set_.attic_relations, relation_values, into_context, *task);
     }
   }
-  
+
   rman.set_desired_timestamp(rhs_timestamp);
-  
+
   std::vector< Node_Skeleton::Id_Type > changed_nodes;
   std::vector< Way_Skeleton::Id_Type > changed_ways;
   std::vector< Relation_Skeleton::Id_Type > changed_relations;
@@ -1240,19 +1257,19 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
       eval_rhs_elems(input_set.nodes, node_values, changed_nodes, into_context, *task);
       eval_rhs_elems(input_set.attic_nodes, node_values, changed_nodes, into_context, *task);
       clear_elems(node_values, changed_nodes);
-      
+
       eval_rhs_elems(input_set.ways, way_values, changed_ways, into_context, *task);
       eval_rhs_elems(input_set.attic_ways, way_values, changed_ways, into_context, *task);
       clear_elems(way_values, changed_ways);
-      
+
       eval_rhs_elems(input_set.relations, relation_values, changed_relations, into_context, *task);
       eval_rhs_elems(input_set.attic_relations, relation_values, changed_relations, into_context, *task);
       clear_elems(relation_values, changed_relations);
     }
   }
-  
+
   rman.set_desired_timestamp(lhs_timestamp_);
-    
+
   Extra_Data_For_Diff extra_data_lhs(rman, stmt, lhs_set_, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
       | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
@@ -1269,11 +1286,11 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
   tags_quadtile(extra_data_lhs, lhs_set_.relations, changed_relations, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_lhs, lhs_set_.attic_relations, changed_relations, rman);
-    
+
   rman.set_desired_timestamp(rhs_timestamp);
-      
+
   set_target(true);
-    
+
   Extra_Data_For_Diff extra_data_rhs(rman, stmt, input_set, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
       | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
@@ -1293,7 +1310,7 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, changed_relations, rman);
   clear_relations(rman, add_deletion_information);
-  
+
   Diff_Set local_result;
   local_result.swap(result);
   return local_result;
