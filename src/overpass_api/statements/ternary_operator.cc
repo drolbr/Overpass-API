@@ -30,12 +30,25 @@ void Ternary_Evaluator::add_statement(Statement* statement, std::string text)
   else if (!condition)
     condition = tag_value_;
   else if (!lhs)
+  {
     lhs = tag_value_;
+    return_type_ = tag_value_->return_type();
+  }
   else if (!rhs)
     rhs = tag_value_;
   else
     add_static_error(get_name() + " must have exactly three evaluator substatements.");
 }
+
+
+struct Any_Return_Type_Checker : Statement::Return_Type_Checker
+{
+  Any_Return_Type_Checker() {}
+
+  virtual bool eval_required() const { return true; }
+  virtual bool matches(Statement::Eval_Return_Type eval_type) const { return true; }
+  virtual std::string expectation() const { return "any nonempty type"; }
+};
 
 
 void Ternary_Evaluator::add_substatements(Statement* result, const std::string& operator_name,
@@ -59,22 +72,29 @@ void Ternary_Evaluator::add_substatements(Statement* result, const std::string& 
     else if (error_output)
       error_output->add_parse_error(
           "Operator \"?\" needs a left-hand-side argument", tree_it->line_col.first);
-      
+    
+    Statement::Eval_Return_Type rhs_expected = Statement::string;
     Statement* lhs = stmt_factory.create_evaluator(
-        tree_it.rhs().lhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
+        tree_it.rhs().lhs(), tree_context, Any_Return_Type_Checker());
     if (lhs)
+    {
       result->add_statement(lhs, "");
+      Evaluator* lhs_eval = (Evaluator*)lhs;
+      if (lhs_eval)
+        rhs_expected = lhs_eval->return_type();
+    }
     else if (error_output)
       error_output->add_parse_error(
           "Operator \":\" of operator \"?\" needs a left-hand-side argument", tree_it->line_col.first);
 
     Statement* rhs = stmt_factory.create_evaluator(
-        tree_it.rhs().rhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
+        tree_it.rhs().rhs(), tree_context, Statement::Single_Return_Type_Checker(rhs_expected));
     if (rhs)
       result->add_statement(rhs, "");
     else if (error_output)
       error_output->add_parse_error(
-          "Operator \":\" of operator \"?\" needs a right-hand-side argument", tree_it->line_col.first);
+          "Operator \":\" of operator \"?\" needs a right-hand-side argument"
+          " with the same return type as the left-hand-side argument", tree_it->line_col.first);
   }
 }
 
@@ -175,6 +195,105 @@ std::string Ternary_Eval_Task::eval(const Element_With_Context< Derived_Skeleton
   if (string_represents_boolean_true(condition->eval(data, key)))
     return lhs ? lhs->eval(data, key) : "";
   return rhs ? rhs->eval(data, key) : "";
+}
+
+
+Eval_Geometry_Task* Ternary_Evaluator::get_geometry_task(Prepare_Task_Context& context)
+{
+  Eval_Task* cond_task = condition ? condition->get_string_task(context, 0) : 0;
+  Eval_Geometry_Task* lhs_task = lhs ? lhs->get_geometry_task(context) : 0;
+  Eval_Geometry_Task* rhs_task = rhs ? rhs->get_geometry_task(context) : 0;
+  return new Ternary_Eval_Geometry_Task(cond_task, lhs_task, rhs_task);
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval() const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(0)))
+    return lhs ? lhs->eval() : 0;
+  return rhs ? rhs->eval() : 0;
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval(const Element_With_Context< Node_Skeleton >& data) const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(data, 0)))
+    return lhs ? lhs->eval(data) : 0;
+  return rhs ? rhs->eval(data) : 0;
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval(const Element_With_Context< Attic< Node_Skeleton > >& data) const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(data, 0)))
+    return lhs ? lhs->eval(data) : 0;
+  return rhs ? rhs->eval(data) : 0;
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval(const Element_With_Context< Way_Skeleton >& data) const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(data, 0)))
+    return lhs ? lhs->eval(data) : 0;
+  return rhs ? rhs->eval(data) : 0;
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval(const Element_With_Context< Attic< Way_Skeleton > >& data) const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(data, 0)))
+    return lhs ? lhs->eval(data) : 0;
+  return rhs ? rhs->eval(data) : 0;
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval(const Element_With_Context< Relation_Skeleton >& data) const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(data, 0)))
+    return lhs ? lhs->eval(data) : 0;
+  return rhs ? rhs->eval(data) : 0;
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval(const Element_With_Context< Attic< Relation_Skeleton > >& data) const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(data, 0)))
+    return lhs ? lhs->eval(data) : 0;
+  return rhs ? rhs->eval(data) : 0;
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval(const Element_With_Context< Area_Skeleton >& data) const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(data, 0)))
+    return lhs ? lhs->eval(data) : 0;
+  return rhs ? rhs->eval(data) : 0;
+}
+
+
+Opaque_Geometry* Ternary_Eval_Geometry_Task::eval(const Element_With_Context< Derived_Skeleton >& data) const
+{
+  if (!condition)
+    return 0;
+  if (string_represents_boolean_true(condition->eval(data, 0)))
+    return lhs ? lhs->eval(data) : 0;
+  return rhs ? rhs->eval(data) : 0;
 }
 
 

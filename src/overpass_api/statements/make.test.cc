@@ -1553,6 +1553,26 @@ void hull_test_2(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void triple_geom_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, std::string key, std::string condition)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  Statement_Container stmt_cont(global_settings);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
+  stmt.add_statement(&stmt1, "");
+  Statement* subs = stmt_cont.add_stmt(new Ternary_Evaluator(0, Attr().kvs(), global_settings), &stmt1);
+  add_fixed_stmt(condition, subs, stmt_cont);
+  add_point("51.5", "8.0", subs, stmt_cont);
+  add_point("52.5", "10.0", subs, stmt_cont);
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr()("geometry", "full").kvs(), global_settings).execute(rman);
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -1830,6 +1850,10 @@ int main(int argc, char* args[])
       hull_test_2(global_settings, transaction, "hull", 0, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "127"))
       hull_test_2(global_settings, transaction, "hull", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "128"))
+      triple_geom_test(global_settings, transaction, "test-ternary", "ternary-geom", "1");
+    if ((test_to_execute == "") || (test_to_execute == "129"))
+      triple_geom_test(global_settings, transaction, "test-ternary", "ternary-geom", "0");
 
     std::cout<<"</osm>\n";
   }

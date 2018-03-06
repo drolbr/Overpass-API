@@ -79,6 +79,35 @@ private:
 };
 
 
+struct Ternary_Eval_Geometry_Task : public Eval_Geometry_Task
+{
+  Ternary_Eval_Geometry_Task(Eval_Task* condition_, Eval_Geometry_Task* lhs_, Eval_Geometry_Task* rhs_)
+      : condition(condition_), lhs(lhs_), rhs(rhs_) {}
+  ~Ternary_Eval_Geometry_Task()
+  {
+    delete condition;
+    delete lhs;
+    delete rhs;
+  }
+
+  virtual Opaque_Geometry* eval() const;
+
+  virtual Opaque_Geometry* eval(const Element_With_Context< Node_Skeleton >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Node_Skeleton > >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Way_Skeleton >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Way_Skeleton > >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Relation_Skeleton >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Attic< Relation_Skeleton > >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Area_Skeleton >& data) const;
+  virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& data) const;
+
+private:
+  Eval_Task* condition;
+  Eval_Geometry_Task* lhs;
+  Eval_Geometry_Task* rhs;
+};
+
+
 struct Ternary_Evaluator : public Evaluator
 {
   static Operator_Stmt_Maker< Ternary_Evaluator > statement_maker;
@@ -87,7 +116,8 @@ struct Ternary_Evaluator : public Evaluator
   static std::string stmt_name() { return "eval-ternary"; }
 
   Ternary_Evaluator(int line_number_, const std::map< std::string, std::string >& input_attributes,
-      Parsed_Query& global_settings) : Evaluator(line_number_), condition(0), lhs(0), rhs(0)
+      Parsed_Query& global_settings) : Evaluator(line_number_), condition(0), lhs(0), rhs(0),
+      return_type_(Statement::string)
   {
     std::map< std::string, std::string > attributes;
     eval_attributes_array(stmt_name(), attributes, input_attributes);
@@ -99,8 +129,9 @@ struct Ternary_Evaluator : public Evaluator
 
   virtual Requested_Context request_context() const;
 
-  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
+  virtual Statement::Eval_Return_Type return_type() const { return return_type_; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
+  virtual Eval_Geometry_Task* get_geometry_task(Prepare_Task_Context& context);
 
   static bool applicable_by_subtree_structure(const Token_Node_Ptr& tree_it)
   { return tree_it->lhs && tree_it->rhs; }
@@ -141,6 +172,7 @@ private:
   Evaluator* condition;
   Evaluator* lhs;
   Evaluator* rhs;
+  Statement::Eval_Return_Type return_type_;
 };
 
 

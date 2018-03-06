@@ -5131,6 +5131,16 @@ int main(int argc, char* args[])
       "      <vertex lat=\"51.0000000\" lon=\"179.9980000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
+    if (std::string(args[2]) == "make_128")
+      std::cout<<
+      "  <test-ternary id=\"1\">\n"
+      "    <point lat=\"51.5000000\" lon=\"8.0000000\"/>\n"
+      "  </test-ternary>\n";
+    if (std::string(args[2]) == "make_129")
+      std::cout<<
+      "  <test-ternary id=\"1\">\n"
+      "    <point lat=\"52.5000000\" lon=\"10.0000000\"/>\n"
+      "  </test-ternary>\n";
 
     std::cout<<"</osm>\n";
   }
