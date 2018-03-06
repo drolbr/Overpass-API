@@ -25,6 +25,7 @@
 #include "if.h"
 #include "print.h"
 #include "tag_value.h"
+#include "testing_tools.h"
 #include "unary_operators.h"
 
 
@@ -37,30 +38,26 @@ std::string to_string_(T val)
 }
 
 
-void execute_base_test_case(const char* id_attributes[], Statement& condition,
-    Resource_Manager& rman, Parsed_Query& global_settings)
+void execute_base_test_case(const std::map< std::string, std::string >& id_attributes, Statement& condition,
+    Resource_Manager& rman, Parsed_Query& global_settings, bool add_else)
 {
+  Statement_Container stmt_cont(global_settings);
+
+  Id_Query_Statement(0, id_attributes, global_settings).execute(rman);
   {
-    Id_Query_Statement stmt(0, convert_c_pairs(id_attributes), global_settings);
-    stmt.execute(rman);
-  }
-  {
-    const char* attributes[] = { 0 };
-    If_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-    
+    If_Statement stmt(0, Attr().kvs(), global_settings);
     stmt.add_statement(&condition, "");
+    stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "way")("ref", "2").kvs(), global_settings), &stmt);
     
-    const char* attributes1[] = { "type", "way", "ref", "2", 0 };
-    Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
-    stmt.add_statement(&stmt1, "");
-          
-    stmt.execute(rman);
-  }      
-  {
-    const char* attributes[] = { 0 };
-    Print_Statement stmt(0, convert_c_pairs(attributes), global_settings);
+    if (add_else)
+    {
+      stmt_cont.add_stmt(new Else_Statement(0, Attr().kvs(), global_settings), &stmt);
+      stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "way")("ref", "4").kvs(), global_settings),
+          &stmt);
+    }
     stmt.execute(rman);
   }
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
 }
 
 
@@ -81,24 +78,16 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
-    // An empty complete must copy the input set to the output set
-    
     try
     {
-      {
-	Nonsynced_Transaction transaction(false, false, args[2], "");
-	Resource_Manager rman(transaction, &global_settings);
-        
-        const char* attributes0[] = { 0 };
-        Evaluator_Min_Value stmt0(0, convert_c_pairs(attributes0), global_settings);
-          
-        const char* attributes01[] = { 0 };
-        Evaluator_Id stmt01(0, convert_c_pairs(attributes01), global_settings);
-        stmt0.add_statement(&stmt01, "");
-          
-        const char* id_attributes[] = { "type", "way", "ref", "1", 0 };
-        execute_base_test_case(id_attributes, stmt0, rman, global_settings);	
-      }
+      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Resource_Manager rman(transaction, &global_settings);
+      Statement_Container stmt_cont(global_settings);
+
+      Evaluator_Min_Value stmt0(0, Attr().kvs(), global_settings);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), &stmt0);
+
+      execute_base_test_case(Attr()("type", "way")("ref", "1").kvs(), stmt0, rman, global_settings, false);
     }
     catch (File_Error e)
     {
@@ -108,32 +97,20 @@ int main(int argc, char* args[])
   }
   if ((test_to_execute == "") || (test_to_execute == "2"))
   {
-    // An empty complete must copy the input set to the output set
-    
     try
     {
-      {
-	Nonsynced_Transaction transaction(false, false, args[2], "");
-	Resource_Manager rman(transaction, &global_settings);
-        
-        const char* attributes0[] = { 0 };
-        Evaluator_Not_Equal stmt0(0, convert_c_pairs(attributes0), global_settings);
-          
-        const char* attributes01[] = { 0 };
-        Evaluator_Min_Value stmt01(0, convert_c_pairs(attributes01), global_settings);
-        stmt0.add_statement(&stmt01, "");
-          
-        const char* attributes011[] = { 0 };
-        Evaluator_Id stmt011(0, convert_c_pairs(attributes011), global_settings);
-        stmt01.add_statement(&stmt011, "");
-          
-        const char* attributes02[] = { "v", "1", 0 };
-        Evaluator_Fixed stmt02(0, convert_c_pairs(attributes02), global_settings);
-        stmt0.add_statement(&stmt02, "");
-          
-        const char* id_attributes[] = { "type", "way", "ref", "1", 0 };
-        execute_base_test_case(id_attributes, stmt0, rman, global_settings);	
-      }
+      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Resource_Manager rman(transaction, &global_settings);
+      Statement_Container stmt_cont(global_settings);
+
+      Evaluator_Not_Equal stmt0(0, Attr().kvs(), global_settings);
+
+      Statement* stmt01 =
+          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr().kvs(), global_settings), &stmt0);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), stmt01);
+      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs(), global_settings), &stmt0);
+
+      execute_base_test_case(Attr()("type", "way")("ref", "1").kvs(), stmt0, rman, global_settings, false);
     }
     catch (File_Error e)
     {
@@ -143,24 +120,17 @@ int main(int argc, char* args[])
   }
   if ((test_to_execute == "") || (test_to_execute == "3"))
   {
-    // An empty complete must copy the input set to the output set
-    
     try
     {
-      {
-	Nonsynced_Transaction transaction(false, false, args[2], "");
-	Resource_Manager rman(transaction, &global_settings);
-        
-        const char* attributes0[] = { "from", "a", 0 };
-        Evaluator_Min_Value stmt0(0, convert_c_pairs(attributes0), global_settings);
-          
-        const char* attributes01[] = { 0 };
-        Evaluator_Id stmt01(0, convert_c_pairs(attributes01), global_settings);
-        stmt0.add_statement(&stmt01, "");
-          
-        const char* id_attributes[] = { "type", "way", "ref", "1", "into", "a", 0 };
-        execute_base_test_case(id_attributes, stmt0, rman, global_settings);	
-      }
+      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Resource_Manager rman(transaction, &global_settings);
+      Statement_Container stmt_cont(global_settings);
+
+      Evaluator_Min_Value stmt0(0, Attr()("from", "a").kvs(), global_settings);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), &stmt0);
+
+      execute_base_test_case(Attr()("type", "way")("ref", "1")("into", "a").kvs(), stmt0,
+          rman, global_settings, false);
     }
     catch (File_Error e)
     {
@@ -170,37 +140,64 @@ int main(int argc, char* args[])
   }
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
-    // An empty complete must copy the input set to the output set
-    
     try
     {
-      {
-	Nonsynced_Transaction transaction(false, false, args[2], "");
-	Resource_Manager rman(transaction, &global_settings);
-        
-        const char* attributes0[] = { 0 };
-        Evaluator_Not_Equal stmt0(0, convert_c_pairs(attributes0), global_settings);
-          
-        const char* attributes01[] = { "from", "a", 0 };
-        Evaluator_Min_Value stmt01(0, convert_c_pairs(attributes01), global_settings);
-        stmt0.add_statement(&stmt01, "");
-          
-        const char* attributes011[] = { 0 };
-        Evaluator_Id stmt011(0, convert_c_pairs(attributes011), global_settings);
-        stmt01.add_statement(&stmt011, "");
-          
-        const char* attributes02[] = { "v", "1", 0 };
-        Evaluator_Fixed stmt02(0, convert_c_pairs(attributes02), global_settings);
-        stmt0.add_statement(&stmt02, "");
-          
-        {
-          const char* attributes[] = { "type", "way", "ref", "3", 0 };
-          Id_Query_Statement stmt(0, convert_c_pairs(attributes), global_settings);
-          stmt.execute(rman);
-        }
-        const char* id_attributes[] = { "type", "way", "ref", "1", "into", "a", 0 };
-        execute_base_test_case(id_attributes, stmt0, rman, global_settings);	
-      }
+      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Resource_Manager rman(transaction, &global_settings);
+      Statement_Container stmt_cont(global_settings);
+
+      Id_Query_Statement(0, Attr()("type", "way")("ref", "3").kvs(), global_settings).execute(rman);
+
+      Evaluator_Not_Equal stmt0(0, Attr().kvs(), global_settings);
+      Statement* stmt01 =
+          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr()("from", "a").kvs(), global_settings), &stmt0);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), stmt01);
+      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs(), global_settings), &stmt0);
+
+      execute_base_test_case(Attr()("type", "way")("ref", "1")("into", "a").kvs(), stmt0,
+          rman, global_settings, false);
+    }
+    catch (File_Error e)
+    {
+      std::cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "5"))
+  {
+    try
+    {
+      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Resource_Manager rman(transaction, &global_settings);
+      Statement_Container stmt_cont(global_settings);
+
+      Evaluator_Min_Value stmt0(0, Attr().kvs(), global_settings);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), &stmt0);
+
+      execute_base_test_case(Attr()("type", "way")("ref", "1").kvs(), stmt0, rman, global_settings, true);
+    }
+    catch (File_Error e)
+    {
+      std::cerr<<"File error caught: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "6"))
+  {
+    try
+    {
+      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Resource_Manager rman(transaction, &global_settings);
+      Statement_Container stmt_cont(global_settings);
+
+      Evaluator_Not_Equal stmt0(0, Attr().kvs(), global_settings);
+
+      Statement* stmt01 =
+          stmt_cont.add_stmt(new Evaluator_Min_Value(0, Attr().kvs(), global_settings), &stmt0);
+      stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), stmt01);
+      stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", "1").kvs(), global_settings), &stmt0);
+
+      execute_base_test_case(Attr()("type", "way")("ref", "1").kvs(), stmt0, rman, global_settings, true);
     }
     catch (File_Error e)
     {

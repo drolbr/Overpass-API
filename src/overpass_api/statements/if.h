@@ -45,6 +45,17 @@ The base syntax is
     <List of Substatements>
   );
 
+resp.
+
+  if (<Evaluator>)
+  (
+    <List of Substatements>
+  )
+  else
+  (
+    <List of Substatements>
+  );
+
 where <Evaluator> is an evaulator and <List of Substatements> is a list of substatements.
 
 */
@@ -74,6 +85,14 @@ public:
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
       result += *it ? (*it)->dump_xml(indent + "  ") : "";
 
+    if (!else_statements.empty())
+    {
+      result = indent + "  <else/>\n";
+      for (std::vector< Statement* >::const_iterator it = else_statements.begin();
+          it != else_statements.end(); ++it)
+        result += *it ? (*it)->dump_xml(indent + "  ") : "";
+    }
+
     return result + indent + "</if>\n";
   }
 
@@ -83,6 +102,14 @@ public:
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
       result += (*it)->dump_compact_ql(indent) + ";";
+
+    if (!else_statements.empty())
+    {
+      result += ")else(";
+      for (std::vector< Statement* >::const_iterator it = else_statements.begin();
+          it != else_statements.end(); ++it)
+        result += (*it)->dump_compact_ql(indent) + ";";
+    }
     result += ")";
 
     return result;
@@ -95,14 +122,45 @@ public:
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
       result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
-    result += indent + "\n)";
+
+    if (!else_statements.empty())
+    {
+      result += "\n" + indent + ")\n" + indent + "else\n" + indent + "(\n";
+      for (std::vector< Statement* >::const_iterator it = else_statements.begin();
+          it != else_statements.end(); ++it)
+        result += (*it)->dump_compact_ql(indent + "  ") + ";";
+    }
+    result += "\n" + indent + ")";
 
     return result;
   }
 
 private:
   Evaluator* criterion;
+  bool else_reached;
   std::vector< Statement* > substatements;
+  std::vector< Statement* > else_statements;
+};
+
+
+class Else_Statement : public Statement
+{
+public:
+  Else_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
+                     Parsed_Query& global_settings) : Statement(line_number_) {}
+  virtual std::string get_name() const { return "else"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+
+  struct Statement_Maker : public Generic_Statement_Maker< Else_Statement >
+  {
+    Statement_Maker() : Generic_Statement_Maker< Else_Statement >("else") {}
+  };
+  static Statement_Maker statement_maker;
+
+  virtual std::string dump_xml(const std::string& indent) const { return indent + "<else/>\n"; }
+  virtual std::string dump_compact_ql(const std::string& indent) const { return "else\n"; }
+  virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + "else\n"; }
 };
 
 

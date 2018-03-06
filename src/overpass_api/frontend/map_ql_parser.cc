@@ -226,6 +226,14 @@ TStatement* create_if_statement(typename TStatement::Factory& stmt_factory, uint
 
 
 template< class TStatement >
+TStatement* create_else_statement(typename TStatement::Factory& stmt_factory, uint line_nr)
+{
+  std::map< std::string, std::string > attr;
+  return stmt_factory.create_statement("else", line_nr, attr);
+}
+
+
+template< class TStatement >
 TStatement* create_retro_statement(typename TStatement::Factory& stmt_factory, uint line_nr)
 {
   std::map< std::string, std::string > attr;
@@ -578,11 +586,20 @@ TStatement* parse_if(typename TStatement::Factory& stmt_factory, Parsed_Query& p
   clear_until_after(token, error_output, ")");
   std::vector< TStatement* > substatements =
       collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth);
+  std::vector< TStatement* > else_statements;
+  if (token.good() && *token == "else")
+    collect_substatements< TStatement >(stmt_factory, parsed_query, token, error_output, depth)
+        .swap(else_statements);
 
   TStatement* statement = create_if_statement< TStatement >(stmt_factory, line_col.first);
   statement->add_statement(condition, "");
   for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
       it != substatements.end(); ++it)
+    statement->add_statement(*it, "");
+  if (!else_statements.empty())
+    statement->add_statement(create_else_statement< TStatement >(stmt_factory, line_col.first), "");
+  for (typename std::vector< TStatement* >::const_iterator it = else_statements.begin();
+      it != else_statements.end(); ++it)
     statement->add_statement(*it, "");
   return statement;
 }

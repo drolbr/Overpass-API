@@ -22,11 +22,12 @@
 
 
 If_Statement::Statement_Maker If_Statement::statement_maker;
+Else_Statement::Statement_Maker Else_Statement::statement_maker;
 
 
 If_Statement::If_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Statement(line_number_), criterion(0)
+    : Statement(line_number_), criterion(0), else_reached(false)
 {
   std::map< std::string, std::string > attributes;
   
@@ -48,10 +49,14 @@ void If_Statement::add_statement(Statement* statement, std::string text)
   }
   else if (statement)
   {
-    if (statement->get_name() == "newer")
+    if (statement->get_name() == "else")
+      else_reached = true;
+    else if (statement->get_name() == "newer")
       add_static_error("\"newer\" can appear only inside \"query\" statements.");
-    
-    substatements.push_back(statement);
+    else if (!else_reached)
+      substatements.push_back(statement);
+    else
+      else_statements.push_back(statement);
   }
 }
 
@@ -71,6 +76,11 @@ void If_Statement::execute(Resource_Manager& rman)
   if (criterion && evals_to_true(*criterion, *this, rman))
   {
     for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
+      (*it)->execute(rman);
+  }
+  else
+  {
+    for (std::vector< Statement* >::iterator it = else_statements.begin(); it != else_statements.end(); ++it)
       (*it)->execute(rman);
   }
 

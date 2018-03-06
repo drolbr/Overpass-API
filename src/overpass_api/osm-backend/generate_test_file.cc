@@ -3663,6 +3663,10 @@ int main(int argc, char* args[])
       modifier = new Accept_If(2);
     else if (std::string(args[2]) == "if_4")
       modifier = new Accept_If(3);
+    else if (std::string(args[2]) == "if_5")
+      modifier = new Accept_If(2);
+    else if (std::string(args[2]) == "if_6")
+      modifier = new Accept_If(4);
     else if (std::string(args[2]) == "around_1")
       modifier = new Accept_Around_1(pattern_size, 20.01);
     else if (std::string(args[2]) == "around_2")
