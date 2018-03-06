@@ -35,9 +35,9 @@ struct Attr
       kvs_[k] = v;
       return *this;
   }
-  
+
   const std::map< std::string, std::string >& kvs() { return kvs_; }
-  
+
 private:
   std::map< std::string, std::string > kvs_;
 };
@@ -51,10 +51,10 @@ struct Statement_Container
     for (std::vector< Statement* >::iterator it = cont.begin(); it != cont.end(); ++it)
       delete *it;
   }
-  
+
   Statement* add_stmt(Statement* stmt, Statement* parent);
   Parsed_Query& global_settings() { return *global_settings_; }
-  
+
   template< typename NewStatement >
   Statement* create_stmt(const std::map< std::string, std::string >& attributes, Statement* parent)
   {

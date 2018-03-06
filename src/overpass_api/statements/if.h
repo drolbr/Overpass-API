@@ -70,7 +70,7 @@ public:
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman);
   virtual ~If_Statement() {}
-    
+
   struct Statement_Maker : public Generic_Statement_Maker< If_Statement >
   {
     Statement_Maker() : Generic_Statement_Maker< If_Statement >("if") {}

@@ -39,15 +39,15 @@ Relation_Geometry_Store::Relation_Geometry_Store
     north = 0;
     south = 1;
   }
-  
+
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   if (south <= north)
     get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
-  
+
   // Retrieve all nodes referred by the relations.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
       = relation_node_members(&query, rman, relations, north < south ? 0 : &node_ranges);
-  
+
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.begin();
       it != node_members.end(); ++it)
@@ -57,17 +57,17 @@ Relation_Geometry_Store::Relation_Geometry_Store
       nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
   }
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
-  
+
   std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
   if (south <= north)
     calc_parents(node_ranges).swap(way_ranges);
-  
+
   // Retrieve all ways referred by the relations.
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members
       = relation_way_members(&query, rman, relations, north < south ? 0 : &way_ranges);
-      
+
   way_geometry_store = new Way_Geometry_Store(way_members, query, rman);
-  
+
   // Order way ids by id.
   for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = way_members.begin();
       it != way_members.end(); ++it)
@@ -92,18 +92,18 @@ Relation_Geometry_Store::Relation_Geometry_Store
     north = 0;
     south = 1;
   }
-  
+
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   if (south <= north)
     get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
-  
+
   // Retrieve all nodes referred by the relations.
   std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
       std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
       = relation_node_members(&query, rman,
           std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
           north < south ? 0 : &node_ranges);
-  
+
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.first.begin();
       it != nodes_by_idx.first.end(); ++it)
@@ -120,18 +120,18 @@ Relation_Geometry_Store::Relation_Geometry_Store
       nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
   }
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
-      
+
   std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
   if (south <= north)
     calc_parents(node_ranges).swap(way_ranges);
-  
+
   // Retrieve all ways referred by the relations.
   std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > ways_by_idx
       = relation_way_members(&query, rman,
           std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
           north < south ? 0 : &way_ranges);
-  
+
   for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways_by_idx.first.begin();
       it != ways_by_idx.first.end(); ++it)
   {
@@ -140,9 +140,9 @@ Relation_Geometry_Store::Relation_Geometry_Store
         iit != it->second.end(); ++iit)
       target.push_back(Attic< Way_Skeleton >(*iit, NOW));
   }
-  
+
   way_geometry_store = new Way_Geometry_Store(ways_by_idx.second, query, rman);
-  
+
   for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::iterator it = ways_by_idx.second.begin();
       it != ways_by_idx.second.end(); ++it)
   {
@@ -218,6 +218,6 @@ std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
     else if (it->type == Relation_Entry::RELATION)
       result.push_back(std::vector< Quad_Coord >());
   }
-  
+
   return result;
 }

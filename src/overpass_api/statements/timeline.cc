@@ -34,7 +34,7 @@ Timeline_Statement::Timeline_Statement
   attributes["type"] = "";
   attributes["ref"] = "";
   attributes["version"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
 
   set_output(attributes["into"]);
@@ -84,7 +84,7 @@ void create_timeline_entries(uint64 ref, uint32 version, Statement* stmt, Resour
   std::vector< typename Skeleton::Id_Type > ids;
   ids.push_back(ref);
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman, true);
-  
+
   std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > metas;
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
@@ -112,10 +112,10 @@ void create_timeline_entries(uint64 ref, uint32 version, Statement* stmt, Resour
         metas.push_back(it.object());
     }
   }
-  
+
   std::sort(metas.begin(), metas.end());
   metas.erase(std::unique(metas.begin(), metas.end(), Ref_Ver_Equal< Skeleton >()), metas.end());
-  
+
   for (uint i = 0; i < metas.size(); ++i)
   {
     if (version == 0 || version == metas[i].version)

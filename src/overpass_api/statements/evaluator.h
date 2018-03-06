@@ -42,7 +42,7 @@ struct Element_With_Context
       const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta_,
       const std::string* user_name_)
       : object(object_), tags(tags_), geometry(geometry_), meta(meta_), user_name(user_name_) {}
-  
+
   const Object* object;
   const std::vector< std::pair< std::string, std::string > >* tags;
   const Opaque_Geometry* geometry;
@@ -81,7 +81,7 @@ struct Requested_Context
   Requested_Context& add_user_names();
   void add(const Requested_Context& rhs);
   void bind(const std::string& set_name);
-  
+
   std::vector< Set_Usage > set_usage;
   uint object_usage;
   bool role_names_requested;
@@ -121,7 +121,7 @@ public:
     delete tag_store_attic_relations;
     delete tag_store_areas;
     delete tag_store_deriveds;
-    
+
     delete meta_collector_nodes;
     delete meta_collector_attic_nodes;
     delete meta_collector_ways;
@@ -129,7 +129,7 @@ public:
     delete meta_collector_relations;
     delete meta_collector_attic_relations;
   }
-  
+
   Element_With_Context< Node_Skeleton > get_context(const Uint32_Index& index, const Node_Skeleton& elem);
   Element_With_Context< Attic< Node_Skeleton > > get_context(
       const Uint32_Index& index, const Attic< Node_Skeleton >& elem);
@@ -148,7 +148,7 @@ public:
   const Set* base;
   const std::map< std::string, std::string >* set_key_values;
   const Prepare_Task_Context* parent;
-  
+
   Tag_Store< Uint32_Index, Node_Skeleton >* tag_store_nodes;
   Tag_Store< Uint32_Index, Node_Skeleton >* tag_store_attic_nodes;
   Tag_Store< Uint31_Index, Way_Skeleton >* tag_store_ways;
@@ -157,14 +157,14 @@ public:
   Tag_Store< Uint31_Index, Relation_Skeleton >* tag_store_attic_relations;
   Tag_Store< Uint31_Index, Area_Skeleton >* tag_store_areas;
   Tag_Store< Uint31_Index, Derived_Structure >* tag_store_deriveds;
-  
+
   bool use_geometry;
   Opaque_Geometry* current_geometry;
   Way_Geometry_Store* way_geometry_store;
   Way_Geometry_Store* attic_way_geometry_store;
   Relation_Geometry_Store* relation_geometry_store;
   Relation_Geometry_Store* attic_relation_geometry_store;
-  
+
   Meta_Collector< Uint32_Index, Node_Skeleton::Id_Type >* meta_collector_nodes;
   Attic_Meta_Collector< Uint32_Index, Node_Skeleton >* meta_collector_attic_nodes;
   Meta_Collector< Uint31_Index, Way_Skeleton::Id_Type >* meta_collector_ways;
@@ -177,7 +177,7 @@ public:
 struct Prepare_Task_Context
 {
   Prepare_Task_Context(const Requested_Context& requested, const Statement& stmt, Resource_Manager& rman);
-  
+
   Set_With_Context* get_set(const std::string& set_name);
   uint32 get_role_id(const std::string& role) const;
   const std::string* get_user_name(uint32 user_id) const;
@@ -343,7 +343,7 @@ struct Element_Function_Maker : public Statement::Evaluator_Maker
         || !tree_it.assert_has_arguments(error_output, false)
         || !assert_element_in_context(error_output, tree_it, tree_context))
       return 0;
-  
+
     return new Evaluator_(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
   }
   Element_Function_Maker() { Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this); }

@@ -76,7 +76,7 @@ Flat_Meta_Collector< TIndex, Id_Type >::Flat_Meta_Collector
 {
   meta_db = new Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< Id_Type > >
       (transaction.data_index(meta_file_prop));
-	
+
   reset();
 }
 
@@ -96,7 +96,7 @@ void Flat_Meta_Collector< TIndex, Id_Type >::reset()
 
   db_it = new typename Block_Backend< TIndex, OSM_Element_Metadata_Skeleton< Id_Type > >
       ::Flat_Iterator(meta_db->flat_begin());
-	
+
   if (!(*db_it == meta_db->flat_end()))
     current_index = new TIndex(db_it->index());
   while (!(*db_it == meta_db->flat_end()) && (*current_index == db_it->index()))

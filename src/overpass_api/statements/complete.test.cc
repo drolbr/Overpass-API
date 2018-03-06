@@ -60,7 +60,7 @@ void fill_set_with_all_types(Resource_Manager& rman, uint64 global_node_offset,
   const char* attributes3[] = { "type", "relation", "ref", buf3.c_str(), 0 };
   Id_Query_Statement stmt3(0, convert_c_pairs(attributes3), global_settings);
   stmt.add_statement(&stmt3, "");
-  
+
   stmt.execute(rman);
 }
 
@@ -85,15 +85,15 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
     // An empty complete must copy the input set to the output set
-    
+
     try
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
-        
+
         fill_set_with_all_types(rman, global_node_offset, global_settings, "a");
-	
+
 	{
 	  const char* attributes[] = { "from", "a", "into", "b", 0 };
 	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -115,15 +115,15 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "2"))
   {
     // An empty complete with equal input and output shall do nothing
-    
+
     try
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
-        
+
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
-	
+
 	{
 	  const char* attributes[] = { 0 };
 	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -145,15 +145,15 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "3"))
   {
     // A complete statement with empty loop result shall copy the input set to the output set
-    
+
     try
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
-        
+
         fill_set_with_all_types(rman, global_node_offset, global_settings, "a");
-	
+
 	{
 	  const char* attributes[] = { "from", "a", "into", "b", 0 };
 	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -162,7 +162,7 @@ int main(int argc, char* args[])
           const char* attributes1[] = { "type", "node", "ref", buf1.c_str(), "into", "a", 0 };
           Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
           stmt.add_statement(&stmt1, "");
-          
+
 	  stmt.execute(rman);
 	}
 	{
@@ -181,15 +181,15 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
     // A complete statement with empty loop result shall copy the input set to the output set
-    
+
     try
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
-        
+
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
-	
+
 	{
 	  const char* attributes[] = { 0 };
 	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -198,7 +198,7 @@ int main(int argc, char* args[])
           const char* attributes1[] = { "type", "node", "ref", buf1.c_str(), 0 };
           Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
           stmt.add_statement(&stmt1, "");
-          
+
 	  stmt.execute(rman);
 	}
 	{
@@ -217,15 +217,15 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "5"))
   {
     // A complete statement with loop result equal to input shall copy the input set to the output set
-    
+
     try
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
-        
+
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
-	
+
 	{
 	  const char* attributes[] = { "into", "b", 0 };
 	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -248,7 +248,7 @@ int main(int argc, char* args[])
           const char* attributes3[] = { "type", "relation", "ref", buf3.c_str(), 0 };
           Id_Query_Statement stmt3(0, convert_c_pairs(attributes3), global_settings);
           stmt0.add_statement(&stmt3, "");
-          
+
 	  stmt.execute(rman);
 	}
 	{
@@ -267,15 +267,15 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "6"))
   {
     // A complete statement with equal input and output set name shall keep the original input as output both inside and after the loop
-    
+
     try
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
-        
+
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
-	
+
 	{
 	  const char* attributes[] = { 0 };
 	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -288,7 +288,7 @@ int main(int argc, char* args[])
           const char* attributes1[] = { "type", "node", "ref", buf1.c_str(), 0 };
           Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
           stmt.add_statement(&stmt1, "");
-          
+
 	  stmt.execute(rman);
 	}
 	{
@@ -307,15 +307,15 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "7"))
   {
     // Collect with multiple but limited rounds of growth
-    
+
     try
     {
       {
 	Nonsynced_Transaction transaction(false, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
-        
+
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
-	
+
 	{
 	  const char* attributes[] = { 0 };
 	  Complete_Statement stmt(0, convert_c_pairs(attributes), global_settings);
@@ -341,7 +341,7 @@ int main(int argc, char* args[])
           const char* attributes22[] = { "s", "51.0", "w", "7.0", "n", north.c_str(), "e", east.c_str(), 0 };
           Bbox_Query_Statement stmt22(0, convert_c_pairs(attributes22), global_settings);
           stmt2.add_statement(&stmt22, "");
-          
+
 	  stmt.execute(rman);
 	}
 	{

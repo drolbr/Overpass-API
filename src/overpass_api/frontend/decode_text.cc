@@ -27,7 +27,7 @@ void decode_to_utf8(const std::string& input, std::string& result,
   std::string::size_type limit = from + 4;
   if (result.size() < limit)
     limit = result.size();
-  
+
   uint val = 0;
   while (from < limit)
   {
@@ -67,7 +67,7 @@ std::string decode_json(const std::string& input, Error_Output* error_output, ui
 {
   if (frame_size > 0 && (input.empty() || (input[0] != '\"' && input[0] != '\'')))
     return input;
-  
+
   std::string::size_type j = 0;
   std::string result(input.size(), '\x0');
   for (std::string::size_type i = frame_size; i < input.size()-frame_size; ++i)
@@ -91,7 +91,7 @@ std::string decode_json(const std::string& input, Error_Output* error_output, ui
       result[j++] = input[i];
   }
   result.resize(j);
-    
+
   return result;
 }
 

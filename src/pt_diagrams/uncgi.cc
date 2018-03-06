@@ -47,7 +47,7 @@ string decode_cgi_to_plain(const string& raw)
 {
   string result;
   string::size_type pos(0);
-  
+
   while (pos < raw.size())
   {
     if (raw[pos] == '%')
@@ -73,7 +73,7 @@ string decode_cgi_to_plain(const string& raw)
     else
       result += raw[pos++];
   }
-  
+
   return result;
 }
 
@@ -86,8 +86,8 @@ int main(int argc, char *argv[])
     cin.get(c);
     buf += c;
   }
-  
+
   cout<<decode_cgi_to_plain(buf);
-  
+
   return 0;
 }

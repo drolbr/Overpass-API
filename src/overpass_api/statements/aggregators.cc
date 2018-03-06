@@ -144,7 +144,7 @@ Requested_Context Evaluator_Aggregator::request_context() const
     result.bind(input);
     return result;
   }
-  
+
   return Requested_Context();
 }
 
@@ -399,7 +399,7 @@ Statement* Evaluator_Set_Count::Evaluator_Maker::create_evaluator(
   if (!tree_it.assert_is_function(error_output)
       || !tree_it.assert_has_arguments(error_output, true))
     return 0;
-  
+
   std::map< std::string, std::string > attributes;
 
   if (tree_it->token == "(")
@@ -412,7 +412,7 @@ Statement* Evaluator_Set_Count::Evaluator_Maker::create_evaluator(
     attributes["from"] = tree_it.lhs()->token;
     attributes["type"] = tree_it.rhs().rhs()->token;
   }
-  
+
   Objects to_count;
   if (try_parse_object_type(attributes["type"], to_count))
     return new Evaluator_Set_Count(tree_it->line_col.first, attributes, global_settings);
@@ -504,10 +504,10 @@ void Evaluator_Geom_Concat_Value::Aggregator::consume_value(Opaque_Geometry* geo
 {
   if (!geom)
     return;
-  
+
   if (!result)
     result = new Compound_Geometry();
-  
+
   result->add_component(geom);
 }
 

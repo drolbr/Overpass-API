@@ -199,7 +199,7 @@ void collect_old_meta_data
 
 void rename_referred_file(const std::string& db_dir, const std::string& from, const std::string& to,
 			  const File_Properties& file_prop);
-			
+
 class Transaction_Collection
 {
   public:

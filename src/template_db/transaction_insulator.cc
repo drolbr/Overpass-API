@@ -91,7 +91,7 @@ Transaction_Insulator::Transaction_Insulator(
 
 
 void Transaction_Insulator::request_read_and_idx(pid_t pid)
-{ 
+{
   for (std::vector< Idx_Footprints >::iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
     it->register_pid(pid);
@@ -178,7 +178,7 @@ void Transaction_Insulator::set_current_footprints()
       std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
     catch (...) {}
-    
+
     try
     {
       map_footprints[i].set_current_footprint
@@ -196,7 +196,7 @@ void Transaction_Insulator::set_current_footprints()
 std::set< pid_t > Transaction_Insulator::registered_pids() const
 {
   std::set< pid_t > registered;
-  
+
   for (std::vector< Idx_Footprints >::const_iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
   {
@@ -213,14 +213,14 @@ std::set< pid_t > Transaction_Insulator::registered_pids() const
         it != registered_processes.end(); ++it)
       registered.insert(*it);
   }
-  
+
   return registered;
 }
 
 
 void write_to_index_empty_file_data(const std::vector< bool >& footprint, const std::string& filename)
 {
-  Void_Pointer< std::pair< uint32, uint32 > > buffer(footprint.size() * 8);  
+  Void_Pointer< std::pair< uint32, uint32 > > buffer(footprint.size() * 8);
   std::pair< uint32, uint32 >* pos = buffer.ptr;
   uint32 last_start = 0;
   for (uint32 i = 0; i < footprint.size(); ++i)
@@ -240,7 +240,7 @@ void write_to_index_empty_file_data(const std::vector< bool >& footprint, const 
     *pos = std::make_pair(footprint.size() - last_start, last_start);
     ++pos;
   }
-  
+
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
 		S_666, "write_to_index_empty_file_data:1");
   file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:26");
@@ -269,7 +269,7 @@ void write_to_index_empty_file_ids(const std::vector< bool >& footprint, const s
     *pos = std::make_pair(footprint.size() - last_start, last_start);
     ++pos;
   }
-  
+
   Raw_File file(filename, O_RDWR|O_CREAT|O_TRUNC,
 		S_666, "write_to_index_empty_file_ids:1");
   file.write((uint8*)buffer.ptr, ((uint8*)pos) - ((uint8*)buffer.ptr), "Dispatcher:36");

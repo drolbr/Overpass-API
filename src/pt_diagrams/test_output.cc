@@ -40,7 +40,7 @@ namespace
     Bbox(double north_, double south_, double east_, double west_)
       : north(north_), south(south_), east(east_), west(west_) {}
   };
-  
+
   Bbox calc_bbox(const OSMData& current_data)
   {
     double north(-90.0), south(90.0), east(-180.0), west(180.0);
@@ -56,7 +56,7 @@ namespace
       if (it->second->lon > east)
 	east = it->second->lon;
     }
-    
+
     return Bbox(north, south, east, west);
   }
 }
@@ -88,7 +88,7 @@ void dump_osm_data(const OSMData& current_data)
       cout<<'\t'<<it2->first<<'\t'<<it2->second<<'\n';
   }
   cout<<'\n';
-  
+
   cout<<"Relations:\n";
   for (map< uint32, Relation* >::const_iterator it(current_data.relations.begin());
       it != current_data.relations.end(); ++it)
@@ -125,13 +125,13 @@ void dump_osm_data(const OSMData& current_data)
 void sketch_unscaled_osm_data(const OSMData& current_data)
 {
   ::Bbox bbox(::calc_bbox(current_data));
-  
+
   //expand the bounding box to avoid elements scratching the frame
   bbox.north += 0.01;
   bbox.south -= 0.01;
   bbox.east += 0.01;
   bbox.west -= 0.01;
-  
+
   cout<<"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
   "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
   "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
@@ -140,7 +140,7 @@ void sketch_unscaled_osm_data(const OSMData& current_data)
   "     width=\""<<(bbox.east - bbox.west)*10000<<"px\" "
        "height=\""<<(bbox.north - bbox.south)*10000<<"px\">\n"
   "\n";
-  
+
   for (map< uint32, Node* >::const_iterator it(current_data.nodes.begin());
       it != current_data.nodes.end(); ++it)
   {
@@ -178,7 +178,7 @@ namespace
   {
     return (north - lat)*(1000000.0/9.0)/m_per_pixel;
   }
-  
+
   double hpos(double lat, double lon, double west, double m_per_pixel)
   {
     return (lon - west)*(1000000.0/9.0)/m_per_pixel*cos(lat/90.0*acos(0));
@@ -188,13 +188,13 @@ namespace
 void sketch_osm_data(const OSMData& current_data, double pivot_lon, double m_per_pixel)
 {
   ::Bbox bbox(::calc_bbox(current_data));
-  
+
   //expand the bounding box to avoid elements scratching the frame
   bbox.north += 0.01;
   bbox.south -= 0.01;
   bbox.east += 0.01;
   bbox.west -= 0.01;
-  
+
   cout<<"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
   "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
   "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
@@ -203,7 +203,7 @@ void sketch_osm_data(const OSMData& current_data, double pivot_lon, double m_per
   "     width=\""<<hpos(bbox.south, bbox.east, bbox.west, m_per_pixel)<<"px\" "
   "height=\""<<vpos(bbox.south, bbox.north, m_per_pixel)<<"px\">\n"
   "\n";
-  
+
   for (map< uint32, Node* >::const_iterator it(current_data.nodes.begin());
       it != current_data.nodes.end(); ++it)
   {
@@ -214,7 +214,7 @@ void sketch_osm_data(const OSMData& current_data, double pivot_lon, double m_per
         <<"\" r=\"6\" fill=\"blue\"/>\n";
   }
   cout<<'\n';
-  
+
   for (map< uint32, Way* >::const_iterator it(current_data.ways.begin());
       it != current_data.ways.end(); ++it)
   {
@@ -235,6 +235,6 @@ void sketch_osm_data(const OSMData& current_data, double pivot_lon, double m_per
     cout<<"\"/>\n";
   }
   cout<<'\n';
-  
+
   cout<<"</svg>\n";
 }

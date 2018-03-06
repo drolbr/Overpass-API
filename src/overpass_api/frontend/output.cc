@@ -36,7 +36,7 @@ class Verbose_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void update_finished() { std::cerr<<" done.\n"; }
     virtual void partial_started() { std::cerr<<"Reorganizing the database ..."; }
     virtual void partial_finished() { std::cerr<<" done.\n"; }
-    
+
     virtual void parser_started() { std::cerr<<"Reading XML file ..."; }
     virtual void node_elapsed(Node::Id_Type id) { std::cerr<<" elapsed node "<<id.val()<<". "; }
     virtual void nodes_finished() { std::cerr<<" finished reading nodes. "; }
@@ -69,7 +69,7 @@ class Quiet_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void update_finished() {}
     virtual void partial_started() {}
     virtual void partial_finished() {}
-    
+
     virtual void parser_started() {}
     virtual void node_elapsed(Node::Id_Type id) {}
     virtual void nodes_finished() {}
@@ -77,7 +77,7 @@ class Quiet_Osm_Backend_Callback : public Osm_Backend_Callback
     virtual void ways_finished() {}
     virtual void relation_elapsed(Relation::Id_Type id) {}
     virtual void relations_finished() {}
-    
+
     virtual void parser_succeeded() {}
 };
 

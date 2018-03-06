@@ -57,7 +57,7 @@ std::string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
     result = *token;
   else
     result_valid = false;
-  
+
   if (result_valid)
     ++token;
   else
@@ -65,7 +65,7 @@ std::string get_text_token(Tokenizer_Wrapper& token, Error_Output* error_output,
     if (error_output)
       error_output->add_parse_error(type_of_token + " expected - '" + *token + "' found.", token.line_col().first);
   }
-  
+
   return result;
 }
 
@@ -82,7 +82,7 @@ std::string get_identifier_token(Tokenizer_Wrapper& token, Error_Output* error_o
     result = *token;
   else
     result_valid = false;
-  
+
   if (result_valid)
     ++token;
   else
@@ -90,7 +90,7 @@ std::string get_identifier_token(Tokenizer_Wrapper& token, Error_Output* error_o
     if (error_output)
       error_output->add_parse_error(type_of_token + " expected - '" + *token + "' found.", token.line_col().first);
   }
-  
+
   return result;
 }
 
@@ -225,14 +225,14 @@ int operator_priority(const std::string& operator_name, bool unary)
     priority["!"] = 13;
     priority["::"] = 15;
   }
-  
+
   if (unary)
     return 13;
-  
+
   std::map< std::string, int >::const_iterator prio_it = priority.find(operator_name);
   if (prio_it != priority.end())
     return prio_it->second;
-  
+
   return 0;
 }
 
@@ -242,7 +242,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
   tree.push_back(Token_Node("", std::make_pair(0u, 0u)));
   std::vector< uint > stack;
   stack.push_back(0);
-  
+
   while (token.good() && *token != ";" && *token != "->")
   {
     if (*token == "(" || *token == "[" || *token == "{")
@@ -277,7 +277,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
         prio = 10;
         unary_minus = true;
       }
-      
+
       if (prio > 0)
       {
         if (stack.back() < tree.size())
@@ -295,7 +295,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
         tree.back().lhs = tree[stack.back()].rhs;
         tree[stack.back()].rhs = tree.size()-1;
         stack.push_back(tree.size()-1);
-        
+
         if (unary_minus)
         {
           tree.push_back(Token_Node((*token).substr(1), token.line_col()));
@@ -313,7 +313,7 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
     }
     ++token;
   }
-  
+
   int stack_pos = stack.size()-1;
   while (stack_pos >= 0 && tree[stack[stack_pos]].token != "("
       && tree[stack[stack_pos]].token != "[" && tree[stack[stack_pos]].token != "{")
@@ -333,10 +333,10 @@ const std::string* Token_Node_Ptr::function_name() const
       if (operator*().lhs)
         return &lhs()->token;
     }
-    
+
     return &rhs().lhs()->token;
   }
-  
+
   return 0;
 }
 
@@ -354,7 +354,7 @@ bool Token_Node_Ptr::assert_is_function(Error_Output* error_output) const
               + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
         return false;
       }
-      
+
       Token_Node_Ptr lhs_ = lhs();
       if (lhs_->lhs || lhs_->rhs)
       {
@@ -363,7 +363,7 @@ bool Token_Node_Ptr::assert_is_function(Error_Output* error_output) const
               + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
         return false;
       }
-      
+
       return true;
     }
     else if (operator*().token == ".")
@@ -375,7 +375,7 @@ bool Token_Node_Ptr::assert_is_function(Error_Output* error_output) const
               + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
         return false;
       }
-      
+
       Token_Node_Ptr rhs_ = rhs();
       if (rhs_->token != "(")
       {
@@ -384,7 +384,7 @@ bool Token_Node_Ptr::assert_is_function(Error_Output* error_output) const
               + "\"" + rhs_->token + "\" found.", rhs_->line_col.first);
         return false;
       }
-      
+
       if (!rhs_->lhs)
       {
         if (error_output)
@@ -392,7 +392,7 @@ bool Token_Node_Ptr::assert_is_function(Error_Output* error_output) const
               + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
         return false;
       }
-      
+
       Token_Node_Ptr lhs_ = rhs_.lhs();
       if (lhs_->lhs || lhs_->rhs)
       {
@@ -401,17 +401,17 @@ bool Token_Node_Ptr::assert_is_function(Error_Output* error_output) const
               + (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
         return false;
       }
-      
+
       return true;
     }
   }
-  
+
   if (error_output)
     error_output->add_parse_error(std::string("Function expected, but ")
         + (tree && pos < tree->tree.size() ?
             "\"" + operator*().token + "\"" : "void token") + " found.",
         (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
-  
+
   return false;
 }
 
@@ -419,7 +419,7 @@ bool Token_Node_Ptr::assert_is_function(Error_Output* error_output) const
 bool Token_Node_Ptr::assert_has_input_set(Error_Output* error_output, bool expected) const
 {
   // We assume that this is a function to avoid double checking
-  
+
   if (operator*().token == "(")
   {
     if (expected)
@@ -441,7 +441,7 @@ bool Token_Node_Ptr::assert_has_input_set(Error_Output* error_output, bool expec
             (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
       return false;
     }
-      
+
     if (expected)
     {
       Token_Node_Ptr lhs_ = lhs();
@@ -463,7 +463,7 @@ bool Token_Node_Ptr::assert_has_input_set(Error_Output* error_output, bool expec
       return false;
     }
   }
-    
+
   return false;
 }
 
@@ -471,19 +471,19 @@ bool Token_Node_Ptr::assert_has_input_set(Error_Output* error_output, bool expec
 bool Token_Node_Ptr::assert_has_arguments(Error_Output* error_output, bool expected) const
 {
   // We assume that this is a function to avoid double checking
-  
-  bool has_arguments = operator*().rhs;  
+
+  bool has_arguments = operator*().rhs;
   if (operator*().token == ".")
     has_arguments = rhs()->rhs;
-  
+
   if (has_arguments)
   {
     if (expected)
       return true;
-    
+
     const std::string* func_name = function_name();
     if (error_output)
-      error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function") 
+      error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function")
           + " does not accept any arguments",
           (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
     return false;
@@ -492,10 +492,10 @@ bool Token_Node_Ptr::assert_has_arguments(Error_Output* error_output, bool expec
   {
     if (!expected)
       return true;
-    
+
     const std::string* func_name = function_name();
     if (error_output)
-      error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function") 
+      error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function")
           + " must have one or more arguments",
           (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
     return false;

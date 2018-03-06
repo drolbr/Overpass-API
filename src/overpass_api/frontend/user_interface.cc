@@ -44,7 +44,7 @@ namespace
 	++line_number;
       ++pos;
     }
-    
+
     if (pos == input.size())
     {
       if (pos == 0)
@@ -59,7 +59,7 @@ namespace
       }
       return "";
     }
-    
+
     // pos now points at the first non-whitespace character
     // assert length restriction.
     if (input.size() > max_input_size)
@@ -71,7 +71,7 @@ namespace
 	error_output->add_encoding_error(temp.str());
       return input;
     }
-    
+
     // pos again points at the first non-whitespace character.
     if (input.substr(pos, 1) == "<" && input.substr(pos, 2) != "<?")
     {
@@ -84,7 +84,7 @@ namespace
             <<"added. This shifts line numbering by "<<(int)line_number-3<<" line(s).";
         if (error_output)
           error_output->add_encoding_remark(temp.str());
-      
+
         input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm-script>\n"
             + input.substr(pos) + "\n</osm-script>\n";
       }
@@ -97,11 +97,11 @@ namespace
             <<(int)line_number - 2<<" line(s).";
         if (error_output)
           error_output->add_encoding_remark(temp.str());
-      
+
         input = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + input.substr(pos);
       }
     }
-    
+
     return input;
   }
 }
@@ -123,7 +123,7 @@ std::map< std::string, std::string > get_xml_cgi(
   allow_header = ((allow_header_c) ? allow_header_c : "");
   char* origin = getenv("HTTP_ORIGIN");
   has_origin = ((origin) && strnlen(origin, 1) > 0);
-  
+
   int line_number(1);
   // If there is nonempty input from GET method, use GET
   std::string input(cgi_get_to_text());
@@ -134,9 +134,9 @@ std::map< std::string, std::string > get_xml_cgi(
       ++line_number;
     ++pos;
   }
-  
+
   std::map< std::string, std::string > decoded;
-  
+
   if (pos == input.size())
   {
     if (http_method == http_options)
@@ -158,7 +158,7 @@ std::map< std::string, std::string > get_xml_cgi(
       if (error_output)
 	error_output->add_encoding_remark("Only whitespace found from GET method. Trying to retrieve input by POST method.");
     }
-    
+
     input = cgi_post_to_text();
     pos = 0;
     line_number = 1;
@@ -168,7 +168,7 @@ std::map< std::string, std::string > get_xml_cgi(
 	++line_number;
       ++pos;
     }
-  
+
     if (pos == input.size())
     {
       if (pos == 0)
@@ -201,11 +201,11 @@ std::map< std::string, std::string > get_xml_cgi(
    decode_cgi_to_plain(input).swap(decoded);
     std::string jsonp = decoded["jsonp"];
     input = decoded["data"];
-    
+
     if (decoded["bbox"] != "")
     {
       const std::string& lonlat = decoded["bbox"];
-    
+
       std::vector< std::string > coords;
       std::string::size_type pos = 0;
       std::string::size_type newpos = lonlat.find(",");
@@ -220,14 +220,14 @@ std::map< std::string, std::string > get_xml_cgi(
       if (coords.size() == 4)
       {
 	std::string latlon = coords[1] + "," + coords[0] + "," + coords[3] + "," + coords[2];
-      
+
 	pos = input.find("(bbox)");
 	while (pos != std::string::npos)
 	{
 	  input = input.substr(0, pos) + "(" + latlon + ")" + input.substr(pos + 6);
 	  pos = input.find("(bbox)");
 	}
-      
+
 	pos = input.find("[bbox]");
 	if (pos != std::string::npos)
 	  input = input.substr(0, pos) + "[bbox:" + latlon + "]" + input.substr(pos + 6);
@@ -239,7 +239,7 @@ std::map< std::string, std::string > get_xml_cgi(
     if (error_output)
       error_output->add_encoding_remark("The first non-whitespace character is '<'. Thus, your input will be interpreted verbatim.");
   }
-  
+
   input = autocomplete(input, error_output, max_input_size);
   decoded["data"] = input;
   return decoded;
@@ -250,7 +250,7 @@ std::string get_xml_console(Error_Output* error_output, uint32 max_input_size)
 {
   if (error_output)
     error_output->add_encoding_remark("Please enter your query and terminate it with CTRL+D.");
-  
+
   // If there is nonempty input from GET method, use GET
   std::string input("");
   input = cgi_post_to_text();
@@ -264,8 +264,8 @@ std::string probe_client_identifier()
   char* remote_addr_c = getenv("REMOTE_ADDR");
   if (!remote_addr_c)
     return "";
-  
-  return std::string(remote_addr_c);  
+
+  return std::string(remote_addr_c);
 }
 
 
@@ -273,11 +273,11 @@ uint32 parse_ipv4_address(const std::string ip_addr)
 {
   if (ip_addr == "")
     return 0;
-  
+
   std::string::size_type pos = ip_addr.find(".");
   std::string::size_type old_pos = 0;
   uint32 client_token = 0;
-  
+
   // Try IPv4 address format
   while (pos != std::string::npos)
   {
@@ -287,8 +287,8 @@ uint32 parse_ipv4_address(const std::string ip_addr)
     pos = ip_addr.find(".", old_pos);
   }
   client_token = (client_token<<8 | atoll(ip_addr.substr(old_pos).c_str()));
-  
-  return client_token;  
+
+  return client_token;
 }
 
 
@@ -296,7 +296,7 @@ int decode_hex(std::string representation)
 {
   int result = 0;
   std::string::size_type pos = 0;
-  
+
   while (pos < representation.size())
   {
     if (representation[pos] >= '0' && representation[pos] <= '9')
@@ -314,12 +314,12 @@ int decode_hex(std::string representation)
 std::vector< uint16 > parse_short_ipv6_address(std::string ip_addr)
 {
   std::vector< uint16 > ipv6_address;
-  
+
   // Try shortened IPv6 address format
   std::string::size_type upper_end = ip_addr.find("::");
   std::string::size_type pos = ip_addr.find(":");
   std::string::size_type old_pos = 0;
-  
+
   while (pos < upper_end)
   {
     ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos, pos - old_pos).c_str()));
@@ -327,7 +327,7 @@ std::vector< uint16 > parse_short_ipv6_address(std::string ip_addr)
     pos = ip_addr.find(":", old_pos);
   }
   ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos, upper_end - old_pos).c_str()));
-    
+
   std::vector< uint16 > lower_ipv6_address;
   old_pos = upper_end + 2;
   pos = ip_addr.find(":", old_pos);
@@ -338,11 +338,11 @@ std::vector< uint16 > parse_short_ipv6_address(std::string ip_addr)
     pos = ip_addr.find(":", old_pos);
   }
   lower_ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos).c_str()));
-   
+
   ipv6_address.resize(8, 0);
   for (std::vector< uint16 >::size_type i = 0; i < lower_ipv6_address.size(); ++i)
     ipv6_address[i + 8 - lower_ipv6_address.size()] = lower_ipv6_address[i];
-  
+
   return ipv6_address;
 }
 
@@ -350,19 +350,19 @@ std::vector< uint16 > parse_short_ipv6_address(std::string ip_addr)
 std::vector< uint16 > parse_full_ipv6_address(std::string ip_addr)
 {
   std::vector< uint16 > ipv6_address;
-  
+
   std::string::size_type pos = ip_addr.find(":");
   std::string::size_type old_pos = 0;
-  
+
   while (pos != std::string::npos)
   {
       ipv6_address.push_back(decode_hex(ip_addr.substr(old_pos, pos - old_pos).c_str()));
       old_pos = pos + 1;
       pos = ip_addr.find(":", old_pos);
   }
-    
+
   ipv6_address.resize(8, 0);
-  
+
   return ipv6_address;
 }
 
@@ -372,14 +372,14 @@ uint32 probe_client_token()
   std::string ip_addr = probe_client_identifier();
   if (ip_addr == "")
     return 0;
-  
+
   if (ip_addr.find(".") != std::string::npos)
     return parse_ipv4_address(ip_addr);
-  
+
   std::vector< uint16 > ipv6_address = (ip_addr.find("::") == std::string::npos ?
       parse_full_ipv6_address(ip_addr) :
       parse_short_ipv6_address(ip_addr));
-  
+
   // We only consider the upper 64 bit of an IPv6 address.
   // For the sake of simplicity we xor these bits to get a 32 bit token.
   // This shall be reviewed once we know how IPv6 addresses really are distributed.

@@ -48,7 +48,7 @@ void execute_base_test_case(const std::map< std::string, std::string >& id_attri
     If_Statement stmt(0, Attr().kvs(), global_settings);
     stmt.add_statement(&condition, "");
     stmt_cont.add_stmt(new Id_Query_Statement(0, Attr()("type", "way")("ref", "2").kvs(), global_settings), &stmt);
-    
+
     if (add_else)
     {
       stmt_cont.add_stmt(new Else_Statement(0, Attr().kvs(), global_settings), &stmt);

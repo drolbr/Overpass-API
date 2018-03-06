@@ -39,7 +39,7 @@ void Evaluator_Prefix_Operator::add_substatements(Statement* result, const std::
     else if (error_output)
       error_output->add_parse_error(std::string("Operator \"") + operator_name
           + "\" needs a right-hand-side argument", tree_it->line_col.first);
-  }  
+  }
 }
 
 
@@ -65,13 +65,13 @@ Operator_Eval_Maker< Evaluator_Negate > Evaluator_Negate::evaluator_maker;
 
 std::string Evaluator_Negate::process(const std::string& rhs_s) const
 {
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(rhs_s, rhs_l))
     return to_string(-rhs_l);
-  
-  double rhs_d = 0;  
+
+  double rhs_d = 0;
   if (try_double(rhs_s, rhs_d))
     return to_string(-rhs_d);
-  
+
   return "NaN";
 }

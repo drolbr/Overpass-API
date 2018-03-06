@@ -38,64 +38,64 @@ typedef unsigned long long uint64;
 struct Uint32_Index
 {
   typedef uint32 Id_Type;
-  
+
   Uint32_Index() : value(0u) {}
   Uint32_Index(uint32 i) : value(i) {}
   Uint32_Index(void* data) : value(*(uint32*)data) {}
-  
+
   uint32 size_of() const
   {
     return 4;
   }
-  
+
   static uint32 max_size_of()
   {
     return 4;
   }
-  
+
   static uint32 size_of(void* data)
   {
     return 4;
   }
-  
+
   void to_data(void* data) const
   {
     *(uint32*)data = value;
   }
-  
+
   bool operator<(const Uint32_Index& index) const
   {
     return this->value < index.value;
   }
-  
+
   bool operator==(const Uint32_Index& index) const
   {
     return this->value == index.value;
   }
-  
+
   Uint32_Index operator++()
   {
     ++value;
     return this;
   }
-  
+
   Uint32_Index operator+=(Uint32_Index offset)
   {
     value += offset.val();
     return this;
   }
-  
+
   Uint32_Index operator+(Uint32_Index offset) const
   {
     Uint32_Index temp(*this);
     return (temp += offset);
   }
-  
+
   uint32 val() const
   {
     return value;
   }
-  
+
   protected:
     uint32 value;
 };
@@ -124,7 +124,7 @@ struct Uint31_Index : Uint32_Index
   Uint31_Index() : Uint32_Index() {}
   Uint31_Index(uint32 i) : Uint32_Index(i) {}
   Uint31_Index(void* data) : Uint32_Index(*(uint32*)data) {}
-  
+
   bool operator<(const Uint31_Index& index) const
   {
     if ((this->value & 0x7fffffff) != (index.value & 0x7fffffff))
@@ -154,50 +154,50 @@ inline unsigned long long difference(Uint31_Index lhs, Uint31_Index rhs)
 struct Uint64
 {
   typedef uint64 Id_Type;
-  
+
   Uint64() : value(0ull) {}
   Uint64(uint64 i) : value(i) {}
   Uint64(void* data) : value(*(uint64*)data) {}
-  
+
   uint32 size_of() const { return 8; }
   static uint32 max_size_of() { return 8; }
   static uint32 size_of(void* data) { return 8; }
-  
+
   void to_data(void* data) const
   {
     *(uint64*)data = value;
   }
-  
+
   bool operator<(const Uint64& index) const
   {
     return this->value < index.value;
   }
-  
+
   bool operator==(const Uint64& index) const
   {
     return this->value == index.value;
   }
-  
+
   Uint64 operator++()
   {
     ++value;
     return this;
   }
-  
+
   Uint64 operator+=(Uint64 offset)
   {
     value += offset.val();
     return this;
   }
-  
+
   Uint64 operator+(Uint64 offset) const
   {
     Uint64 temp(*this);
     return (temp += offset);
   }
-  
+
   uint64 val() const { return value; }
-  
+
   protected:
     uint64 value;
 };
@@ -207,10 +207,10 @@ struct Quad_Coord
 {
   Quad_Coord() : ll_upper(0), ll_lower(0) {}
   Quad_Coord(uint32 ll_upper_, uint32 ll_lower_) : ll_upper(ll_upper_), ll_lower(ll_lower_) {}
-  
+
   uint32 ll_upper;
   uint32 ll_lower;
-  
+
   bool operator==(const Quad_Coord& rhs) const
   {
     return ll_upper == rhs.ll_upper && ll_lower == rhs.ll_lower;
@@ -222,23 +222,23 @@ template< typename Element_Skeleton >
 struct Attic : public Element_Skeleton
 {
   Attic(const Element_Skeleton& elem, uint64 timestamp_) : Element_Skeleton(elem), timestamp(timestamp_) {}
-  
+
   uint64 timestamp;
-  
+
   Attic(void* data)
     : Element_Skeleton(data),
       timestamp(*(uint64*)((uint8*)data + Element_Skeleton::size_of(data)) & 0xffffffffffull) {}
-  
+
   uint32 size_of() const
   {
     return Element_Skeleton::size_of() + 5;
   }
-  
+
   static uint32 size_of(void* data)
   {
     return Element_Skeleton::size_of(data) + 5;
   }
-  
+
   void to_data(void* data) const
   {
     Element_Skeleton::to_data(data);
@@ -246,7 +246,7 @@ struct Attic : public Element_Skeleton
     *(uint32*)(pos) = (timestamp & 0xffffffffull);
     *(uint8*)((uint8*)pos+4) = ((timestamp & 0xff00000000ull)>>32);
   }
-  
+
   bool operator<(const Attic& rhs) const
   {
     if (*static_cast< const Element_Skeleton* >(this) < *static_cast< const Element_Skeleton* >(&rhs))
@@ -255,7 +255,7 @@ struct Attic : public Element_Skeleton
       return false;
     return (timestamp < rhs.timestamp);
   }
-  
+
   bool operator==(const Attic& rhs) const
   {
     return (*static_cast< const Element_Skeleton* >(this) == rhs && timestamp == rhs.timestamp);
@@ -286,17 +286,17 @@ void make_delta(const std::vector< Object >& source, const std::vector< Object >
   while (prefix_length < source.size() && prefix_length < reference.size()
       && source[prefix_length] == reference[prefix_length])
     ++prefix_length;
-  
+
   //Detect a common suffix
   uint suffix_length = 1;
   while (suffix_length < source.size() - prefix_length && suffix_length < reference.size() - prefix_length
       && source[source.size() - suffix_length] == reference[reference.size() - suffix_length])
     ++suffix_length;
   --suffix_length;
-  
+
   for (uint i = prefix_length; i < reference.size() - suffix_length; ++i)
     to_remove.push_back(i);
-  
+
   for (uint i = prefix_length; i < source.size() - suffix_length; ++i)
     to_add.push_back(std::make_pair(i, source[i]));
 }
@@ -326,7 +326,7 @@ void expand_diff(const std::vector< Object >& reference,
       target.push_back(it_added->second);
       ++it_added;
     }
-      
+
     if (it_removed == removed.end() || i < *it_removed)
       target.push_back(reference[i]);
     else

@@ -38,7 +38,7 @@ string encode_plain_to_cgi(const string& raw)
 {
   string result;
   string::size_type pos(0);
-  
+
   while (pos < raw.size())
   {
     if (isalnum(raw[pos]))
@@ -47,7 +47,7 @@ string encode_plain_to_cgi(const string& raw)
       result += hexcode(raw[pos]);
     ++pos;
   }
-  
+
   return result;
 }
 
@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
     buf += c;
     cin.get(c);
   }
-  
+
   cout<<encode_plain_to_cgi(buf);
-  
+
   return 0;
 }

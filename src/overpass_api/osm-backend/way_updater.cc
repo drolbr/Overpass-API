@@ -930,7 +930,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, bool partial,
     std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
         = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
                                  *transaction, *attic_settings().WAY_IDX_LIST);
-	
+
     // Collect known change times of attic elements. This allows that
     // for each object no older version than the youngest known attic version can be written
     std::map< Way_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Way_Delta > > >

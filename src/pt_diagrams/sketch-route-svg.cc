@@ -145,7 +145,7 @@ string forward_stop_template()
 {
   return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:$rel_color;\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\"" 
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
       "<path d=\"M 4,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
       "\n";
@@ -155,7 +155,7 @@ string backward_stop_template()
 {
   return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:$rel_color;\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\"" 
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
       "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
       "\n";
@@ -173,7 +173,7 @@ string forward_terminus_template()
       "\n"
       /*"<path d=\"M -9,0 a 9 9 0 0 0 18,0 Z\" style=\"fill:$rel_color;\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"2 -8, 8 -8\"" 
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"2 -8, 8 -8\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
       "<path d=\"M 6,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
       "\n"*/;
@@ -185,7 +185,7 @@ string backward_terminus_template()
       "\n"
       /*"<path d=\"M -9,0 a 9 9 0 0 1 18,0 Z\" style=\"fill:$rel_color;\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-8 8, -2 8\"" 
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-8 8, -2 8\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
       "<path d=\"M -6,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
       "\n"*/;
@@ -201,7 +201,7 @@ string forward_hub_template()
 {
   return "<path d=\"M -7,0 a 7 7 0 0 0 14,0 Z\" style=\"fill:white; stroke:$rel_color;; stroke-width:2px;\""
   " transform=\"translate($hpos;,$vpos;)\"/>\n"
-  "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\"" 
+  "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"0 -8, 6 -8\""
   " transform=\"translate($hpos;,$vpos;)\"/>\n"
   "<path d=\"M 4,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
   "\n";
@@ -211,7 +211,7 @@ string backward_hub_template()
 {
   return "<path d=\"M -7,0 a 7 7 0 0 1 14,0 Z\" style=\"fill:white; stroke:$rel_color;; stroke-width:2px;\""
   " transform=\"translate($hpos;,$vpos;)\"/>\n"
-  "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\"" 
+  "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-6 8, 0 8\""
   " transform=\"translate($hpos;,$vpos;)\"/>\n"
   "<path d=\"M -4,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
   "\n";
@@ -229,7 +229,7 @@ string forward_terminus_hub_template()
       "\n"
       /*"<path d=\"M -9,0 a 9 9 0 0 0 18,0 Z\" style=\"fill:white; stroke:$rel_color;; stroke-width:2px;\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"2 -8, 8 -8\"" 
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"2 -8, 8 -8\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
       "<path d=\"M 6,-4 l 0,-8 l 6,4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
       "\n"*/;
@@ -241,7 +241,7 @@ string backward_terminus_hub_template()
       "\n"
       /*"<path d=\"M -9,0 a 9 9 0 0 1 18,0 Z\" style=\"fill:white; stroke:$rel_color;; stroke-width:2px;\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
-      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-8 8, -2 8\"" 
+      "<polyline fill=\"none\" stroke=\"$rel_color;\" stroke-width=\"2px\" points=\"-8 8, -2 8\""
       " transform=\"translate($hpos;,$vpos;)\"/>\n"
       "<path d=\"M -6,4 l 0,8 l -6,-4 Z\" style=\"fill:$rel_color;\" transform=\"translate($hpos;,$vpos;)\"/>\n"
       "\n"*/;
@@ -288,12 +288,12 @@ string tr_weekday(unsigned int wd)
 map< string, string > default_translations()
 {
   map< string, string > translations;
-  
+
   translations["$tr_from;"] = "from";
   translations["$tr_to;"] = "to";
   translations["$tr_or;"] = "or";
   translations["$tr_and;"] = "and";
-  
+
   translations["$tr_monday_short;"] = "monday";
   translations["$tr_tuesday_short;"] = "tuesday";
   translations["$tr_wednesday_short;"] = "wednesday";
@@ -301,9 +301,9 @@ map< string, string > default_translations()
   translations["$tr_friday_short;"] = "friday";
   translations["$tr_saturday_short;"] = "saturday";
   translations["$tr_sunday_short;"] = "sunday";
-  
+
   translations["$tr_operates;"] = "operates";
-  
+
   return translations;
 }
 
@@ -314,7 +314,7 @@ class Replacer
 {
   public:
     Replacer(string match_, Inserted insert_) : match(match_), insert(insert_) {}
-    
+
     // Returns the string template, where all occurrences of match are
     // replaced by insert
     string apply(string source)
@@ -329,10 +329,10 @@ class Replacer
 	found = source.find(match, pos);
       }
       result<<source.substr(pos);
-      
+
       return result.str();
     }
-    
+
   private:
     string match;
     Inserted insert;
@@ -362,7 +362,7 @@ string multi_replace(map< string, string > replace, string data)
       found = data.find(it->first, pos);
     }
     result<<data.substr(pos);
-    
+
     data = result.str();
   }
   return data;
@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
   pivot_ref = "";
   walk_limit_for_changes = 300;
   max_correspondences_per_line = 6;
-  
+
   doubleread_rel = false;
   int argi(1);
   // check on early run for options only
@@ -545,11 +545,11 @@ int main(int argc, char *argv[])
       debug_level = atoi(((string)(argv[argi])).substr(8).c_str());
     ++argi;
   }
-  
+
   // Default rather to a unattractive value than crash
   if (max_correspondences_per_line <= 0)
     max_correspondences_per_line = 1;
-  
+
   bool have_valid_operation_times = false;
   vector< Relation > relations;
   Stoplist stoplist = make_stoplist(walk_limit_for_changes, doubleread_rel,
@@ -565,9 +565,9 @@ int main(int argc, char *argv[])
     (Replacer< string >("<stops-diagram/>", "<text x=\"100\" y=\"100\">No relation found</text>").apply(frame_template()))));
     return 0;
   }
-  
+
   Relation relation = relations.front();
-  
+
   //desactivated, for debugging purposes only
 /*  for (unsigned int i(0); i < relations.size(); ++i)
     cerr<<relations[i].direction<<' ';
@@ -580,7 +580,7 @@ int main(int argc, char *argv[])
     cerr<<it->name<<'\n';
   }
   cerr<<'\n';*/
-  
+
   // trim the horizontal itinerary lines
   vector< int > first_stop_idx(relations.size());
   vector< int > last_stop_idx(relations.size());
@@ -590,7 +590,7 @@ int main(int argc, char *argv[])
     {
       if (relations[i].direction == 0)
         continue;
-    
+
       first_stop_idx[i] = 0;
       last_stop_idx[i] = stoplist.stops.size()-1;
       for (list< Stop >::const_iterator it(stoplist.stops.begin());
@@ -615,12 +615,12 @@ int main(int argc, char *argv[])
     {
       if (relations[i].direction == 0)
 	continue;
-      
+
       first_stop_idx[i] = 0;
       last_stop_idx[i] = stoplist.stops.size()-1;
     }
   }
-    
+
   //desactivated, for debugging purposes only
 /*  for (unsigned int i(0); i < relations.size(); ++i)
     cerr<<relations[i].direction<<' ';
@@ -639,7 +639,7 @@ int main(int argc, char *argv[])
     cerr<<it->name<<'\n';
   }
   cerr<<'\n';*/
-  
+
   // unify itinerary lines with similar begin
   vector< int > left_join_to(relations.size(), -1);
   vector< int > right_join_to(relations.size(), -1);
@@ -692,7 +692,7 @@ int main(int argc, char *argv[])
       }
     }
   }
-  
+
   //desactivated, for debugging purposes only
 /*  for (unsigned int i(0); i < relations.size(); ++i)
     cerr<<relations[i].direction<<' ';
@@ -717,7 +717,7 @@ int main(int argc, char *argv[])
     cerr<<it->name<<'\n';
   }
   cerr<<'\n';*/
-  
+
   string from_buffer, to_buffer, headline, last_from, last_to;
   headline = from_to_headline_template();
   from_buffer = "$tail;";
@@ -751,12 +751,12 @@ int main(int argc, char *argv[])
       ("$content;", last_from).apply(destination_headline_template())).apply(from_buffer);
   to_buffer = Replacer< string >("$tail;", Replacer< string >
       ("$content;", last_to).apply(destination_headline_template())).apply(to_buffer);
-  
+
   headline = Replacer< string >("$from_tail;", from_buffer).apply
 	    (Replacer< string >("$to_tail;", to_buffer).apply
 	    (Replacer< string >("$rel_ref;", relation.ref).apply
 	    (Replacer< string >("$rel_color;", relation.color).apply(headline))));
-  
+
   // display operation times
   if (have_valid_operation_times)
   {
@@ -791,7 +791,7 @@ int main(int argc, char *argv[])
 	day.push_back(timespan);
 	++it;
       }
-      
+
       if (last_day != day)
       {
 	// print last_day
@@ -820,16 +820,16 @@ int main(int argc, char *argv[])
 	   it != last_day.end(); ++it)
 	opening_hours_text += it->hh_mm() + ", ";
     }
-    
+
     opening_hours_text = opening_hours_text.substr(0, opening_hours_text.size()-2);
     headline += multi_replace(translations,
 	     Replacer< string >("$timespans;", opening_hours_text).apply
 	    (operation_time_template()));
   }
-  
+
   ostringstream result("");
   ostringstream backlines("");
-  
+
   // count the number of line rows that actually appear
   vector< int > offset_of(relations.size()+1);
   offset_of[0] = 0;
@@ -840,7 +840,7 @@ int main(int argc, char *argv[])
     else
       offset_of[i+1] = offset_of[i];
   }
-  
+
   // calculate extra space used by multiline labels
   vector< unsigned int > extra_rows(stoplist.stops.size()+1);
   unsigned int stop_idx(0);
@@ -871,12 +871,12 @@ int main(int argc, char *argv[])
   {
     if (stop_font_size == 0)
       stop_font_size = 16;
-    
+
     double stop_distance(0);
     double vpos
         (height - 20*offset_of[relations.size()]
         - stop_font_size*max_correspondences_below);
-    
+
     if (width > 0)
       stop_distance = (width - 220
         - sqrt(2.0)*stop_font_size*extra_rows[stoplist.stops.size()])
@@ -887,15 +887,15 @@ int main(int argc, char *argv[])
       width = stop_distance*(stoplist.stops.size()-1) + 220
         + sqrt(2.0)*stop_font_size*extra_rows[stoplist.stops.size()];
     }
-    
+
     for (unsigned int i(0); i < relations.size(); ++i)
     {
       if (relations[i].direction == 0)
 	continue;
-      
+
       double hmin(30 + first_stop_idx[i]*stop_distance + extra_rows[first_stop_idx[i]]*sqrt(2.0)*stop_font_size);
       double hmax(30 + last_stop_idx[i]*stop_distance + extra_rows[last_stop_idx[i]]*sqrt(2.0)*stop_font_size);
-      
+
       result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< double >("$hmin;", hmin).apply
 	    (Replacer< double >("$hmax;", hmax).apply
@@ -918,18 +918,18 @@ int main(int argc, char *argv[])
 	    (Replacer< double >("$vpos_join;", vpos + 20*offset_of[right_join_to[i]]).apply
 	    (right_join_template()))))));
     }
-    
+
     int stopcount(0);
     for (list< Stop >::const_iterator it(stoplist.stops.begin()); it != stoplist.stops.end(); ++it)
     {
       double pos(30 + stopcount*stop_distance + extra_rows[stopcount]*sqrt(2.0)*stop_font_size);
-      
+
       if ((!it->correspondences.empty()) && (it->correspondences.size() <= max_correspondences_below))
 	backlines<<Replacer< double >("$hpos;", pos).apply
             (Replacer< double >("$vpos_upper;", vpos - 10).apply
             (Replacer< double >("$vpos_lower;", vpos - 10 + 20*offset_of[relations.size()]).apply
 	    (stop_background_template())))<<'\n';
-      
+
       bool is_a_terminus(false);
       for (unsigned int i(0); i < relations.size(); ++i)
       {
@@ -939,7 +939,7 @@ int main(int argc, char *argv[])
 	  continue;
 	if (stopcount > last_stop_idx[i])
 	  continue;
-	
+
 	string stop_template;
 	if (it->correspondences.empty())
 	{
@@ -987,7 +987,7 @@ int main(int argc, char *argv[])
 	      stop_template = backward_hub_template();
 	  }
 	}
-      
+
 	result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< string >("$stop_fontsize;", "16px").apply
 	    (Replacer< double >("$hpos;", pos).apply
@@ -995,7 +995,7 @@ int main(int argc, char *argv[])
 	    (stop_template))));
       }
       ++stopcount;
-      
+
       string stopname(multi_replace(name_shortcuts, it->name));
       if (is_a_terminus)
 	result<<Replacer< string >("$stopname;", stopname).apply
@@ -1094,12 +1094,12 @@ int main(int argc, char *argv[])
     double vpos_lower(height - 20*offset_of[relations.size()]
 	- stop_font_size*max_correspondences_below);
     double vpos(vpos_upper);
-	
+
     for (unsigned int i(0); i < relations.size(); ++i)
     {
       if (relations[i].direction == 0)
 	continue;
-      
+
       if (first_stop_idx[i] < (int)(stoplist.stops.size()+1)/2)
       {
 	double stop_distance(stop_distance_upper);
@@ -1161,12 +1161,12 @@ int main(int argc, char *argv[])
 	      (right_join_template()))))));
       }
     }
-    
+
     unsigned int count(0);
     double stop_distance(0);
-  
+
     stop_distance = stop_distance_upper;
-  
+
     int stopcount(0);
     for (list< Stop >::const_iterator it(stoplist.stops.begin()); it != stoplist.stops.end(); ++it)
     {
@@ -1176,13 +1176,13 @@ int main(int argc, char *argv[])
       else
 	pos = 30 + (stopcount-(int)(stoplist.stops.size()-1)/2)*stop_distance
 	    + (extra_rows[stopcount] - extra_rows[(stoplist.stops.size()+1)/2])*sqrt(2.0)*stop_font_size;
-      
+
       if ((!it->correspondences.empty()) && (it->correspondences.size() <= max_correspondences_below))
         backlines<<Replacer< double >("$hpos;", pos).apply
             (Replacer< double >("$vpos_upper;", vpos - 10).apply
             (Replacer< double >("$vpos_lower;", vpos - 10 + 20*offset_of[relations.size()]).apply
 	    (stop_background_template())))<<'\n';
-      
+
       bool is_a_terminus(false);
       for (unsigned int i(0); i < relations.size(); ++i)
       {
@@ -1192,7 +1192,7 @@ int main(int argc, char *argv[])
 	  continue;
 	if (stopcount > last_stop_idx[i])
 	  continue;
-	
+
 	string stop_template;
 	if (it->correspondences.empty())
 	{
@@ -1240,7 +1240,7 @@ int main(int argc, char *argv[])
 	      stop_template = backward_hub_template();
 	  }
 	}
-      
+
 	result<<Replacer< string >("$rel_color;", relation.color).apply
 	    (Replacer< string >("$stop_fontsize;", "16px").apply
 	    (Replacer< double >("$hpos;", pos).apply
@@ -1248,7 +1248,7 @@ int main(int argc, char *argv[])
 	    (stop_template))));
       }
       ++stopcount;
-      
+
       string stopname(multi_replace(name_shortcuts, it->name));
       if (is_a_terminus)
         result<<Replacer< string >("$stopname;", stopname).apply
@@ -1261,7 +1261,7 @@ int main(int argc, char *argv[])
             (Replacer< string >("$rel_color;", relation.color).apply
             (Replacer< double >("$stop_fontsize;", stop_font_size).apply
             (Replacer< double >("$hpos;", pos).apply
-            (Replacer< double >("$vpos;", vpos).apply(stop_name_template())))));	
+            (Replacer< double >("$vpos;", vpos).apply(stop_name_template())))));
 
       vector< RelationHumanId > correspondences;
       for (set< RelationHumanId >::const_iterator cit(it->correspondences.begin());
@@ -1316,7 +1316,7 @@ int main(int argc, char *argv[])
 	      (Replacer< double >("$vpos;", vpos).apply
 	      (Replacer< string >("$data;", corr_buf).apply(correspondence_row_template()))));
       }
-      
+
       if (++count >= (stoplist.stops.size()+1)/2)
       {
 	count = 0;
@@ -1325,13 +1325,13 @@ int main(int argc, char *argv[])
       }
     }
   }
-  
+
   cout<<multi_replace(translations, Replacer< double >("$width;", width).apply
       (Replacer< double >("$height;", height).apply
       (Replacer< string >("$rel_from;", relations.begin()->from).apply
       (Replacer< string >("$rel_to;", relations.begin()->to).apply
       (Replacer< string >("<headline/>", headline).apply
       (Replacer< string >("<stops-diagram/>", backlines.str() + result.str()).apply(frame_template())))))));
-  
+
   return 0;
 }

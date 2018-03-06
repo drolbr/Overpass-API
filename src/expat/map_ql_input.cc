@@ -146,7 +146,7 @@ inline void Comment_Replacer< In >::get(char& c)
       }
       else
 	++col;
-	
+
       if (c == '*')
       {
 	c = ' ';

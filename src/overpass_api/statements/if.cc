@@ -30,7 +30,7 @@ If_Statement::If_Statement
     : Statement(line_number_), criterion(0), else_reached(false)
 {
   std::map< std::string, std::string > attributes;
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
@@ -38,7 +38,7 @@ If_Statement::If_Statement
 void If_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
-  
+
   if (!criterion)
   {
     Evaluator* tag_value = dynamic_cast< Evaluator* >(statement);
@@ -64,7 +64,7 @@ void If_Statement::add_statement(Statement* statement, std::string text)
 bool evals_to_true(Evaluator& criterion, const Statement& stmt, Resource_Manager& rman)
 {
   Prepare_Task_Context context(criterion.request_context(), stmt, rman);
-  Owner< Eval_Task > task(criterion.get_string_task(context, 0));  
+  Owner< Eval_Task > task(criterion.get_string_task(context, 0));
   std::string valuation = (*task).eval(0);
   double val_d = 0;
   return valuation != "" && (!try_double(valuation, val_d) || val_d != 0);

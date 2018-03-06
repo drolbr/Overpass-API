@@ -35,13 +35,13 @@ class Bbox_Query_Statement : public Output_Statement
     virtual std::string get_name() const { return "bbox-query"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Bbox_Query_Statement();
-    
+
     struct Statement_Maker : public Generic_Statement_Maker< Bbox_Query_Statement >
     {
       Statement_Maker() : Generic_Statement_Maker< Bbox_Query_Statement >("bbox-query") {}
     };
     static Statement_Maker statement_maker;
-    
+
     struct Criterion_Maker : public Statement::Criterion_Maker
     {
       virtual bool can_standalone(const std::string& type) { return type == "node"; }

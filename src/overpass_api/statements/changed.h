@@ -41,7 +41,7 @@ class Changed_Statement : public Output_Statement
       Statement_Maker() : Generic_Statement_Maker< Changed_Statement >("changed") {}
     };
     static Statement_Maker statement_maker;
-    
+
     struct Criterion_Maker : public Statement::Criterion_Maker
     {
       virtual bool can_standalone(const std::string& type) { return false; }

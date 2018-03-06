@@ -65,12 +65,12 @@ namespace
   map< unsigned int, NamedNode > nodes;
   NamedNode nnode;
   unsigned int id;
-  
+
   unsigned int parse_status;
   const unsigned int IN_NODE = 1;
   const unsigned int IN_RELATION = 2;
   bool is_stop = false;
-  bool is_route = false;  
+  bool is_route = false;
 
   vector< Relation >* relations;
   vector< Relation > correspondences;
@@ -101,12 +101,12 @@ bool Timespan::operator<(const Timespan& a) const
     return false;
   return end < a.end;
 }
-  
+
 bool Timespan::operator==(const Timespan& a) const
 {
   return ((begin == a.begin) && (end == a.end));
 }
-  
+
 string Timespan::hh_mm() const
 {
   string result("##:##-##:##");
@@ -131,7 +131,7 @@ bool RelationHumanId_Comparator::operator()
     (const RelationHumanId& rhi_1, const RelationHumanId& rhi_2)
 {
   unsigned int numval_1(0), numval_2(0);
-  
+
   unsigned int pos(0);
   while ((pos < rhi_1.ref.size()) && (!isdigit(rhi_1.ref[pos])))
     ++pos;
@@ -140,7 +140,7 @@ bool RelationHumanId_Comparator::operator()
     numval_1 = numval_1*10 + (rhi_1.ref[pos] - 48);
     ++pos;
   }
-  
+
   pos = 0;
   while ((pos < rhi_2.ref.size()) && (!isdigit(rhi_2.ref[pos])))
     ++pos;
@@ -149,12 +149,12 @@ bool RelationHumanId_Comparator::operator()
     numval_2 = numval_2*10 + (rhi_2.ref[pos] - 48);
     ++pos;
   }
-  
+
   if (numval_1 < numval_2)
     return true;
   else if (numval_1 > numval_2)
     return false;
-  
+
   return (rhi_1.ref < rhi_2.ref);
 }
 
@@ -190,7 +190,7 @@ Correspondence_Data::Correspondence_Data(const vector< Relation >& correspondenc
 set< RelationHumanId > Correspondence_Data::correspondences_at(const NamedNode& nnode) const
 {
   set< RelationHumanId > result;
-  
+
   for (map< unsigned int, set< RelationHumanId > >::const_iterator it(what_calls_here.begin());
       it != what_calls_here.end(); ++it)
   {
@@ -228,7 +228,7 @@ void Stoplist::populate_stop
       stop.used_by[rel_index] |= mode;
     else
       stop.used_by[rel_index] = mode;
-    
+
     set< RelationHumanId > cors(cors_data.correspondences_at(nnode));
     cors_data.display_nodes_at(nnode, cors);
     stop.correspondences.insert(cors.begin(), cors.end());
@@ -256,7 +256,7 @@ void Stoplist::insert
 vector< unsigned int > longest_ascending_subsequence(const vector< unsigned int >& sequence)
 {
   vector< vector< unsigned int > > sublists;
-  
+
   vector< unsigned int >::const_iterator it(sequence.begin());
   if (it == sequence.end())
     return vector< unsigned int >();
@@ -270,7 +270,7 @@ vector< unsigned int > longest_ascending_subsequence(const vector< unsigned int 
     while (i > 0)
     {
       --i;
-      
+
       if (*it > sublists[i].back())
       {
 	if (sublists.size() == i+1)
@@ -292,17 +292,17 @@ vector< unsigned int > longest_ascending_subsequence(const vector< unsigned int 
 	  sublists[i][sublists[i].size()-1] = *it;
       }
     }
-    
+
     ++it;
   }
-  
+
   return sublists.back();
 }
 
 vector< unsigned int > longest_descending_subsequence(const vector< unsigned int >& sequence)
 {
   vector< vector< unsigned int > > sublists;
-  
+
   vector< unsigned int >::const_reverse_iterator it(sequence.rbegin());
   if (it == sequence.rend())
     return vector< unsigned int >();
@@ -316,7 +316,7 @@ vector< unsigned int > longest_descending_subsequence(const vector< unsigned int
     while (i > 0)
     {
       --i;
-      
+
       if (*it > sublists[i].back())
       {
 	if (sublists.size() == i+1)
@@ -338,10 +338,10 @@ vector< unsigned int > longest_descending_subsequence(const vector< unsigned int
 	  sublists[i][sublists[i].size()-1] = *it;
       }
     }
-    
+
     ++it;
   }
-  
+
   return sublists.back();
 }
 
@@ -357,7 +357,7 @@ int process_relation
     rel_stops = &(rel.backward_stops);
   else
     return direction_const;
-  
+
   multimap< string, unsigned int > stopdict;
   for (unsigned int i(0); i < rel_stops->size(); ++i)
   {
@@ -365,7 +365,7 @@ int process_relation
 	 && (nodes.find((*rel_stops)[i])->second.lat <= 90.0))
       stopdict.insert(make_pair(nodes.find((*rel_stops)[i])->second.name, i+1));
   }
-    
+
   vector< unsigned int > indices_of_present_stops;
   for (list< Stop >::const_iterator it(stoplist.stops.begin());
        it != stoplist.stops.end(); ++it)
@@ -374,17 +374,17 @@ int process_relation
 	 iit(stopdict.lower_bound(it->name)); iit != stopdict.upper_bound(it->name); ++iit)
       indices_of_present_stops.push_back(iit->second);
   }
-    
+
   vector< unsigned int > ascending(longest_ascending_subsequence
       (indices_of_present_stops));
   vector< unsigned int > descending(longest_descending_subsequence
       (indices_of_present_stops));
-  
+
   if (ascending.size() > descending.size())
   {
     if (direction_const == 0)
       direction_const = Stop::FORWARD;
-    
+
     vector< unsigned int >::const_iterator sit(ascending.begin());
     unsigned int last_idx(1);
     for (list< Stop >::iterator it(stoplist.stops.begin());
@@ -404,19 +404,19 @@ int process_relation
 			    rel_count, direction_const, cors_data);
 	  ++last_idx;
 	}
-	  
+
 	// match the current stop
 	if (nodes.find((*rel_stops)[last_idx-1]) != nodes.end())
 	  stoplist.populate_stop(*it, nodes.find((*rel_stops)[last_idx-1])->second,
 				  rel_count, direction_const, true, cors_data);
-	  
+
 	++last_idx;
-	  
+
 	if (++sit == ascending.end())
 	  break;
       }
     }
-      
+
       // insert stops at the end
     while (last_idx <= rel_stops->size())
     {
@@ -425,14 +425,14 @@ int process_relation
 			   rel_count, direction_const, cors_data);
       ++last_idx;
     }
-    
+
     return Relation::FORWARD;
   }
   else if (descending.size() > 0)
   {
     if (direction_const == 0)
       direction_const = Stop::BACKWARD;
-    
+
     vector< unsigned int >::const_reverse_iterator sit(descending.rbegin());
     unsigned int last_idx(rel_stops->size());
     for (list< Stop >::iterator it(stoplist.stops.begin());
@@ -452,19 +452,19 @@ int process_relation
 			    rel_count, direction_const, cors_data);
 	  --last_idx;
 	}
-	  
+
 	// match the current stop
 	if (nodes.find((*rel_stops)[last_idx-1]) != nodes.end())
 	  stoplist.populate_stop(*it, nodes.find((*rel_stops)[last_idx-1])->second,
 				rel_count, direction_const, true, cors_data);
 
 	--last_idx;
-	
+
 	if (++sit == descending.rend())
 	  break;
       }
     }
-      
+
     // insert stops at the end
     while (last_idx > 0)
     {
@@ -473,10 +473,10 @@ int process_relation
 			     rel_count, direction_const, cors_data);
       --last_idx;
     }
-    
+
     return Relation::BACKWARD;
   }
-  
+
   return direction_const;
 }
 
@@ -496,7 +496,7 @@ bool have_intersecting_operation_times(const Relation& a, const Relation& b)
 {
   vector< Timespan >::const_iterator ita(a.opening_hours.begin());
   vector< Timespan >::const_iterator itb(b.opening_hours.begin());
-  
+
   while ((ita != a.opening_hours.end()) && (itb != b.opening_hours.end()))
   {
     if (ita->begin < itb->begin)
@@ -529,13 +529,13 @@ void parse_timespans(vector< Timespan >& timespans, string data)
     weekdays["Su"] = 6;
     weekdays[""] = 8;
   }
-  
+
   string::size_type pos(0);
   while ((pos < data.size()) && isspace(data[pos]))
     ++pos;
-  
+
   string begin_wd(data.substr(pos, 2)), end_wd;
-  
+
   while ((pos < data.size()) && isspace(data[pos]))
     ++pos;
   if (!((pos < data.size()) && isalpha(data[pos])))
@@ -547,7 +547,7 @@ void parse_timespans(vector< Timespan >& timespans, string data)
     end_wd = data.substr(pos, 2);
     pos += 2;
   }
-  
+
   if (weekdays.find(begin_wd) == weekdays.end())
     return;
   if (weekdays.find(end_wd) == weekdays.end())
@@ -557,7 +557,7 @@ void parse_timespans(vector< Timespan >& timespans, string data)
     end_day = begin_day;
   if (begin_day > end_day)
     return;
-  
+
   while ((pos < data.size()) && isspace(data[pos]))
     ++pos;
   while ((pos < data.size()) && isdigit(data[pos]))
@@ -589,7 +589,7 @@ void parse_timespans(vector< Timespan >& timespans, string data)
     }
     while ((pos < data.size()) && !isdigit(data[pos]))
       ++pos;
-    
+
     unsigned int start_time(start_hour*60 + start_minute);
     unsigned int end_time(end_hour*60 + end_minute);
     if (end_time > 60*24)
@@ -597,7 +597,7 @@ void parse_timespans(vector< Timespan >& timespans, string data)
     unsigned int end_day_offset = 0;
     if (start_time >= end_time)
       end_day_offset = 1;
-    
+
     for (unsigned int day(begin_day); day <= end_day; ++day)
     {
       timespans.push_back(Timespan
@@ -609,7 +609,7 @@ void parse_timespans(vector< Timespan >& timespans, string data)
 void cleanup_opening_hours(Relation& rel)
 {
   sort(rel.opening_hours.begin(), rel.opening_hours.end());
-  
+
   // join overlapping timespans
   unsigned int last_valid(0);
   for (unsigned int i(1); i < rel.opening_hours.size(); ++i)
@@ -667,14 +667,14 @@ string default_color(string ref)
     numval = numval*10 + (ref[pos] - 48);
     ++pos;
   }
-  
+
   if (numval == 0)
   {
     for (unsigned int i(0); i < ref.size(); ++i)
       numval += i*(unsigned char)ref[i];
     numval = numval % 1000;
   }
-  
+
   if (numval < 10)
     color = default_colors()[numval];
   else if (numval < 100)
@@ -697,7 +697,7 @@ string default_color(string ref)
 	| ((((color1 & 0xff0000)*10 + (color2 & 0xff0000)*5 + (color3 & 0xff0000))
 	  /16) & 0xff0000);
   }
-  
+
   string result("#......");
   result[1] = hex((color & 0xf00000)/0x100000);
   result[2] = hex((color & 0x0f0000)/0x10000);
@@ -909,15 +909,15 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
   display_classes = &display_classes_;
   pivot_ref = &pivot_ref_;
   pivot_network = &pivot_network_;
-  
+
   // read the XML input
   parse_status = 0;
   parse(stdin, start, end);
-  
+
   // bailout if no relation is found
   if (relations->size() == 0)
     return Stoplist();
-  
+
   // check whether the relations have uniform operation times
   have_valid_operation_times = !relations_[0].opening_hours.empty();
   for (unsigned int i(1); i < relations->size(); ++i)
@@ -944,13 +944,13 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
       }
     }
   }
-  
+
   // initialise complex data structures
   Correspondence_Data cors_data
       (correspondences, nodes, display_nodes, walk_limit_for_changes);
   Stoplist stoplist;
   Stop::used_by_size = relations->size();
-  
+
   // make a common stoplist from all relations
   // integrate all relations (their forward direction) into the stoplist
   Relation relation = relations->front();
@@ -960,7 +960,7 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
     stoplist.push_back(nodes[*it], 0, Stop::FORWARD, cors_data);
   }
   relations->begin()->direction |= Relation::FORWARD;
-  
+
   vector< Relation >::iterator rit(relations->begin());
   unsigned int rel_count(1);
   ++rit;
@@ -968,11 +968,11 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
   {
     rit->direction |= process_relation
 	(*rit, nodes, rel_count, 0, Relation::FORWARD, stoplist, cors_data);
-    
+
     ++rit;
     ++rel_count;
   }
-  
+
   // integrate second direction (where it exists) into stoplist
   rit = relations->begin();
   rel_count = 0;
@@ -984,19 +984,19 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
       ++rel_count;
       continue;
     }
-    
+
     int direction_const(0);
     if ((rit->direction & Relation::FORWARD) != 0)
       direction_const = Stop::BACKWARD;
     if ((rit->direction & Relation::BACKWARD) != 0)
       direction_const = Stop::FORWARD;
-    
+
     process_relation(*rit, nodes, rel_count, direction_const, Relation::BACKWARD, stoplist, cors_data);
-    
+
     ++rit;
     ++rel_count;
   }
-  
+
   // unify one-directional relations as good as possible
   multimap< double, pair< int, int > > possible_pairs;
   if (debug_level < 10)
@@ -1027,7 +1027,7 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
       }
     }
   }
-    
+
   for (multimap< double, pair< int, int > >::const_reverse_iterator
        it(possible_pairs.rbegin()); it != possible_pairs.rend(); ++it)
   {
@@ -1038,6 +1038,6 @@ Stoplist make_stoplist(double walk_limit_for_changes, bool doubleread_rel,
       sit->used_by[it->second.first] |= sit->used_by[it->second.second];
     relations_[it->second.second].direction = 0;
   }
-  
+
   return stoplist;
 }

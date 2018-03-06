@@ -356,7 +356,7 @@ std::vector< Id_Type > Query_Statement::collect_ids
       filter_id_list(new_ids, filtered,
 	  tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
 	      Trivial_Regex(), Trivial_Regex());
-	
+
       rman.health_check(*this);
     }
 
@@ -1346,7 +1346,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	        new_ids.begin()), new_ids.end());
 	    node_ids.swap(new_ids);
 	  }
-	
+
 	  if (node_ids.empty())
 	    answer_state = data_collected;
 	}
@@ -1370,7 +1370,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	        new_ids.begin()), new_ids.end());
 	    ids.swap(new_ids);
 	  }
-	
+
 	  if (ids.empty())
 	    answer_state = data_collected;
 	}
@@ -1394,7 +1394,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	        new_ids.begin()), new_ids.end());
 	    ids.swap(new_ids);
 	  }
-	
+
 	  if (ids.empty())
 	    answer_state = data_collected;
 	}

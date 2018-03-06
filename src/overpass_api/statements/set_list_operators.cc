@@ -27,14 +27,14 @@ std::string trim(const std::string& input)
   std::string::size_type from = 0;
   while (from < input.size() && isspace(input[from]))
     ++from;
-  
+
   if (from == input.size())
     return " ";
-  
+
   std::string::size_type to = input.size()-1;
   while (isspace(input[to]))
     --to;
-  
+
   return input.substr(from, to+1);
 }
 
@@ -42,23 +42,23 @@ std::string trim(const std::string& input)
 std::vector< std::string > members(const std::string& lrs)
 {
   std::vector< std::string > result;
-  
+
   if (lrs.empty())
     return result;
-  
+
   std::string::size_type from = 0;
   while (from < lrs.size())
   {
     std::string::size_type to = lrs.find(';', from);
     if (to == std::string::npos)
       break;
-    
+
     result.push_back(trim(lrs.substr(from, to - from)));
-    
+
     from = to + 1;
   }
   result.push_back(trim(lrs.substr(from)));
-  
+
   std::sort(result.begin(), result.end());
   result.erase(std::unique(result.begin(), result.end()), result.end());
   return result;
@@ -76,25 +76,25 @@ std::string Evaluator_Lrs_In::process(const std::string& first_s, const std::str
 {
   if (second_s.empty())
     return "0";
-  
+
   std::string first = trim(first_s);
-  
+
   std::string::size_type from = 0;
   while (from < second_s.size())
   {
     std::string::size_type to = second_s.find(';', from);
     if (to == std::string::npos)
       break;
-    
+
     if (first == trim(second_s.substr(from, to - from)))
       return "1";
-    
+
     from = to + 1;
   }
-  
+
   if (first == trim(second_s.substr(from)))
     return "1";
-  
+
   return "0";
 }
 
@@ -113,16 +113,16 @@ std::string Evaluator_Lrs_Isect::process(const std::string& first_s, const std::
   std::vector< std::string > second;
   members(second_s).swap(second);
   std::vector< std::string > result(std::min(first.size(), second.size()));
-  
+
   result.erase(std::set_intersection(first.begin(), first.end(), second.begin(), second.end(), result.begin()),
       result.end());
-  
+
   std::string result_s;
   if (!result.empty())
     result_s = result[0];
   for (unsigned int i = 1; i < result.size(); ++i)
     result_s += ";" + result[i];
-  
+
   return result_s;
 }
 
@@ -141,16 +141,16 @@ std::string Evaluator_Lrs_Union::process(const std::string& first_s, const std::
   std::vector< std::string > second;
   members(second_s).swap(second);
   std::vector< std::string > result(first.size() + second.size());
-  
+
   result.erase(std::set_union(first.begin(), first.end(), second.begin(), second.end(), result.begin()),
       result.end());
-  
+
   std::string result_s;
   if (!result.empty())
     result_s = result[0];
   for (unsigned int i = 1; i < result.size(); ++i)
     result_s += ";" + result[i];
-  
+
   return result_s;
 }
 
@@ -195,26 +195,26 @@ std::string Evaluator_Lrs_Max::process(const std::string& rhs_s) const
 {
   if (rhs_s.empty())
     return "";
-  
+
   Type_Indicator relevant_type = type_int64;
   int64 result_l = std::numeric_limits< int64 >::min();
   double result_d = -std::numeric_limits< double >::max();
   std::string result_s;
-  
+
   std::string::size_type from = 0;
   while (from < rhs_s.size())
   {
     std::string::size_type to = rhs_s.find(';', from);
     if (to == std::string::npos)
       break;
-    
+
     update_maximum(trim(rhs_s.substr(from, to - from)), relevant_type, result_l, result_d, result_s);
-    
+
     from = to + 1;
   }
-  
+
   update_maximum(trim(rhs_s.substr(from)), relevant_type, result_l, result_d, result_s);
-  
+
   if (relevant_type == type_int64)
     return to_string(result_l);
   else if (relevant_type == type_double)
@@ -261,26 +261,26 @@ std::string Evaluator_Lrs_Min::process(const std::string& rhs_s) const
 {
   if (rhs_s.empty())
     return "";
-  
+
   Type_Indicator relevant_type = type_int64;
   int64 result_l = std::numeric_limits< int64 >::max();
   double result_d = std::numeric_limits< double >::max();
   std::string result_s;
-  
+
   std::string::size_type from = 0;
   while (from < rhs_s.size())
   {
     std::string::size_type to = rhs_s.find(';', from);
     if (to == std::string::npos)
       break;
-    
+
     update_minimum(trim(rhs_s.substr(from, to - from)), relevant_type, result_l, result_d, result_s);
-    
+
     from = to + 1;
   }
-  
+
   update_minimum(trim(rhs_s.substr(from)), relevant_type, result_l, result_d, result_s);
-  
+
   if (relevant_type == type_int64)
     return to_string(result_l);
   else if (relevant_type == type_double)

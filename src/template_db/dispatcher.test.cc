@@ -1193,10 +1193,10 @@ int main(int argc, char* args[])
 
       {
 	pid_t read_pid;
-	
+
 	std::ifstream in((dispatcher_client.get_shadow_name() + ".lock").c_str());
         in>>read_pid;
-	
+
 	if (read_pid != getpid())
 	{
 	  std::cout<<"Pid in lock doesn't match.\n";
@@ -1223,10 +1223,10 @@ int main(int argc, char* args[])
 
       {
 	pid_t read_pid;
-	
+
 	std::ifstream in((dispatcher_client.get_shadow_name() + ".lock").c_str());
 	in>>read_pid;
-	
+
 	if (read_pid != getpid())
 	{
 	  std::cout<<"Pid in lock doesn't match.\n";

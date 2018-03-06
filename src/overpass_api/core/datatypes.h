@@ -42,7 +42,7 @@ struct String_Object
   typedef uint32 Id_Type;
 
   String_Object(std::string s) : value(s) {}
-  
+
   String_Object(void* data) : value()
   {
     value = std::string(((int8*)data + 2), *(uint16*)data);
@@ -171,11 +171,11 @@ struct Array
       ptr = new T[size];
   }
   ~Array() { delete[] ptr; }
-  
-  const T& operator[](unsigned int i) const { return ptr[i]; }  
-  T& operator[](unsigned int i) { return ptr[i]; }  
+
+  const T& operator[](unsigned int i) const { return ptr[i]; }
+  T& operator[](unsigned int i) { return ptr[i]; }
   unsigned int size() const { return size_; }
-  
+
 private:
   T* ptr;
   unsigned int size_;
@@ -187,15 +187,15 @@ struct Owner
 {
   Owner(Object* ptr_) : ptr(ptr_) {}
   ~Owner() { delete ptr; }
-  
+
   operator bool() const { return ptr; }
   Object& operator*() const { return *ptr; }
   Object* operator->() const { return ptr; }
-  
+
 private:
   Owner(const Owner&);
   Owner& operator=(const Owner&);
-  
+
   Object* ptr;
 };
 
@@ -215,7 +215,7 @@ struct Clonable_Owner
     return *this;
   }
   ~Clonable_Owner() { delete ptr; }
-  
+
   operator bool() const { return ptr; }
   Object& operator*() const { return *ptr; }
   void acquire(Object* ptr_)
@@ -223,9 +223,9 @@ struct Clonable_Owner
     delete ptr;
     ptr = ptr_;
   }
-  
+
 private:
-  
+
   Object* ptr;
 };
 
@@ -239,15 +239,15 @@ struct Owning_Array
     for (typename std::vector< Pointer >::iterator it = content.begin(); it != content.end(); ++it)
       delete *it;
   }
-  
+
   const Pointer& operator[](uint i) const { return content[i]; }
   void push_back(Pointer ptr) { content.push_back(ptr); }
   uint size() const { return content.size(); }
-  
+
 private:
   Owning_Array(const Owning_Array&);
   Owning_Array& operator=(const Owning_Array&);
-  
+
   std::vector< Pointer > content;
 };
 
@@ -255,9 +255,9 @@ private:
 struct Derived_Skeleton
 {
   typedef Uint64 Id_Type;
-  
+
   Derived_Skeleton(const std::string& type_name_, Id_Type id_) : type_name(type_name_), id(id_) {}
-  
+
   std::string type_name;
   Id_Type id;
 };
@@ -270,25 +270,25 @@ struct Derived_Structure : public Derived_Skeleton
   Derived_Structure(const std::string& type_name_, Id_Type id_,
       const std::vector< std::pair< std::string, std::string > >& tags_, Opaque_Geometry* geometry_)
       : Derived_Skeleton(type_name_, id_), tags(tags_), geometry(geometry_) {}
-  
+
   std::vector< std::pair< std::string, std::string > > tags;
-  
+
   const Opaque_Geometry* get_geometry() const { return &*geometry; }
   const void acquire_geometry(Opaque_Geometry* geometry_)
   {
     geometry.acquire(geometry_);
   }
-  
+
   bool operator<(const Derived_Structure& a) const
   {
     return this->id.val() < a.id.val();
   }
-  
+
   bool operator==(const Derived_Structure& a) const
   {
     return this->id.val() == a.id.val();
   }
-  
+
 private:
   Clonable_Owner< Opaque_Geometry > geometry;
 };
@@ -309,7 +309,7 @@ struct Set
 
   std::map< Uint31_Index, std::vector< Area_Skeleton > > areas;
   std::map< Uint31_Index, std::vector< Derived_Structure > > deriveds;
-  
+
   void swap(Set& rhs)
   {
     nodes.swap(rhs.nodes);
@@ -620,7 +620,7 @@ struct Timestamp
     timestamp |= ((minute & 0x3f)<<6); //minute
     timestamp |= (second & 0x3f); //second
   }
-  
+
   Timestamp(const std::string& input) : timestamp(0)
   {
     if (input.size() < 19
@@ -640,7 +640,7 @@ struct Timestamp
     timestamp |= ((two_digits(&input[14]) & 0x3f)<<6); //minute
     timestamp |= (two_digits(&input[17]) & 0x3f); //second
   }
-  
+
   static int two_digits(const char* input) { return (input[0] - '0')*10 + (input[1] - '0'); }
   static int four_digits(const char* input)
   { return (input[0] - '0')*1000 + (input[1] - '0')*100 + (input[2] - '0')*10 + (input[3] - '0'); }

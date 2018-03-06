@@ -63,7 +63,7 @@ or the output set
   );
 
 or both
-  
+
   complete.<Name of Input Set>->.<Name of Output Set>(
     <List of Substatements>
   );
@@ -79,9 +79,9 @@ public:
   virtual std::string get_name() const { return "complete"; }
   virtual void execute(Resource_Manager& rman);
   virtual ~Complete_Statement() {}
-    
+
   static Generic_Statement_Maker< Complete_Statement > statement_maker;
-    
+
   virtual std::string dump_xml(const std::string& indent) const
   {
     std::string result = indent + "<complete"

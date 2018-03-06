@@ -183,32 +183,32 @@ void For_Statement::execute(Resource_Manager& rman)
 {
   if (!evaluator)
     return;
-  
+
   Requested_Context requested_context;
   requested_context.add(evaluator->request_context());
   requested_context.bind(input);
-  
+
   Prepare_Task_Context context(requested_context, *this, rman);
-  
+
   Set_With_Context* context_from = context.get_set(input);
   if (!context_from)
     return;
 
   Set base_result_set;
   rman.swap_set(get_result_name(), base_result_set);
-  
+
   rman.push_stack_frame();
-  
+
   const Set* base_set = (input == get_result_name() ? &base_result_set : rman.get_set(input));
   if (!base_set)
     base_set = &base_result_set;
-  
+
   std::map< std::string, Set > element_groups;
-  
+
   if (evaluator->return_type() == Statement::string)
   {
     Owner< Eval_Task > task(evaluator->get_string_task(context, 0));
-  
+
     collect_for_targets_by_string(base_set->nodes, Node_Valuation_Target(element_groups),
         *task, *context_from);
     collect_for_targets_by_string(base_set->attic_nodes, Attic_Node_Valuation_Target(element_groups),
@@ -229,7 +229,7 @@ void For_Statement::execute(Resource_Manager& rman)
   else
   {
     Owner< Eval_Container_Task > task(evaluator->get_container_task(context, 0));
-  
+
     collect_for_targets_by_container(base_set->nodes, Node_Valuation_Target(element_groups),
         *task, *context_from);
     collect_for_targets_by_container(base_set->attic_nodes, Attic_Node_Valuation_Target(element_groups),
@@ -247,7 +247,7 @@ void For_Statement::execute(Resource_Manager& rman)
     collect_for_targets_by_container(base_set->deriveds, Derived_Valuation_Target(element_groups),
         *task, *context_from);
   }
-  
+
   for (std::map< std::string, Set >::iterator it = element_groups.begin(); it != element_groups.end(); ++it)
   {
     rman.count_loop();
@@ -257,7 +257,7 @@ void For_Statement::execute(Resource_Manager& rman)
     for (std::vector< Statement* >::iterator it = substatements.begin();
         it != substatements.end(); ++it)
       (*it)->execute(rman);
-    
+
     rman.union_inward(get_result_name(), get_result_name());
   }
 

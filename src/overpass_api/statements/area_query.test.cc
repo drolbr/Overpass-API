@@ -45,7 +45,7 @@ void comp_sets(Resource_Manager& rman, const std::string& set_1, const std::stri
   rman.swap_set(set_1, s1);
   Set s2;
   rman.swap_set(set_2, s2);
-  
+
   std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it1(s1.nodes.begin());
   std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it2(s2.nodes.begin());
   std::vector< std::string > visual(600, std::string(1000, '.'));
@@ -157,7 +157,7 @@ void comp_sets(Resource_Manager& rman, const std::string& set_1, const std::stri
 
   for (std::vector< std::string >::const_iterator it(visual.begin()); it != visual.end(); ++it)
     std::cout<<*it<<'\n';
-  
+
   rman.swap_set(set_1, s1);
   rman.swap_set(set_2, s2);
 }

@@ -57,7 +57,7 @@ std::string cgi_get_to_text()
     return getenv("QUERY_STRING");
   if ((method) && (!strncmp(method, "HEAD", 5)))
     return getenv("QUERY_STRING");
-  
+
   return "";
 }
 
@@ -76,7 +76,7 @@ std::string replace_cgi(const std::string& raw)
 {
   std::string result;
   std::string::size_type pos = 0;
-  
+
   while (pos < raw.size())
   {
     if (raw[pos] == '%')
@@ -100,21 +100,21 @@ std::string replace_cgi(const std::string& raw)
     else
       result += raw[pos++];
   }
-  
+
   return result;
 }
 
 std::map< std::string, std::string > decode_cgi_to_plain(const std::string& raw)
 {
   std::map< std::string, std::string > result;
-  
+
   std::string::size_type pos = 0;
   do
   {
     std::string::size_type delim_pos = raw.find('&', pos);
     if (delim_pos == std::string::npos)
       delim_pos = raw.size();
-    
+
     std::string::size_type middle_pos = raw.find('=', pos);
     if (middle_pos != std::string::npos && middle_pos < delim_pos)
     {
@@ -123,13 +123,13 @@ std::map< std::string, std::string > decode_cgi_to_plain(const std::string& raw)
 	--end_pos;
       result[raw.substr(pos, middle_pos - pos)] = replace_cgi(raw.substr(middle_pos + 1, end_pos - middle_pos - 1));
     }
-    
+
     pos = delim_pos + 1;
   }
   while (pos < raw.size());
-  
+
   if (result["data"] == "")
     result["data"] = raw;
-  
+
   return result;
 }

@@ -29,27 +29,27 @@
 struct Node
 {
   typedef Uint64 Id_Type;
-  
+
   Id_Type id;
   uint32 index;
   uint32 ll_lower_;
   std::vector< std::pair< std::string, std::string > > tags;
-  
+
   Node() : id(0ull) {}
-  
+
   Node(Id_Type id_, double lat, double lon)
       : id(id_), index(ll_upper_(lat, lon)), ll_lower_(ll_lower(lat, lon))
   {}
-  
+
   Node(Id_Type id_, uint32 ll_upper_, uint32 ll_lower__)
       : id(id_), index(ll_upper_), ll_lower_(ll_lower__)
-  {}  
-  
+  {}
+
   bool operator<(const Node& a) const
   {
     return this->id.val() < a.id.val();
   }
-  
+
   bool operator==(const Node& a) const
   {
     return this->id.val() == a.id.val();
@@ -66,7 +66,7 @@ struct Node_Comparator_By_Id {
   bool operator() (const Node* a, const Node* b)
   {
     return (a->id.val() < b->id.val());
-  }  
+  }
 };
 
 
@@ -79,7 +79,7 @@ struct Node_Equal_Id {
   bool operator() (const Node* a, const Node* b)
   {
     return (a->id.val() == b->id.val());
-  }  
+  }
 };
 
 
@@ -90,47 +90,47 @@ struct Node_Skeleton
 
   Node::Id_Type id;
   uint32 ll_lower;
-  
+
   Node_Skeleton() : id(0ull) {}
-  
+
   Node_Skeleton(void* data)
     : id(*(Id_Type*)data), ll_lower(*(uint32*)((uint8*)data+8)) {}
-  
+
   Node_Skeleton(const Node& node)
   : id(node.id), ll_lower(node.ll_lower_) {}
-  
+
   Node_Skeleton(Node::Id_Type id_)
   : id(id_), ll_lower(0) {}
-  
+
   Node_Skeleton(Node::Id_Type id_, uint32 ll_lower_)
   : id(id_), ll_lower(ll_lower_) {}
-  
+
   uint32 size_of() const
   {
     return 12;
   }
-  
+
   static uint32 size_of(void* data)
   {
     return 12;
   }
-  
+
   static Id_Type get_id(void* data)
   {
     return *(Id_Type*)data;
   }
-  
+
   void to_data(void* data) const
   {
     *(Id_Type*)data = id.val();
     *(uint32*)((uint8*)data+8) = ll_lower;
   }
-  
+
   bool operator<(const Node_Skeleton& a) const
   {
     return this->id.val() < a.id.val();
   }
-  
+
   bool operator==(const Node_Skeleton& a) const
   {
     return this->id.val() == a.id.val();

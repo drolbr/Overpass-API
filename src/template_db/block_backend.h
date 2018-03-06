@@ -313,7 +313,7 @@ struct Block_Backend
         (const std::map< TIndex, std::set< TObject > >& to_delete,
          const std::map< TIndex, std::set< TObject > >& to_insert,
 	 Update_Logger& update_logger);
-	
+
     void update
         (const std::map< TIndex, std::set< TObject > >& to_delete,
          const std::map< TIndex, std::set< TObject > >& to_insert)
@@ -343,14 +343,14 @@ struct Block_Backend
     void create_from_scratch
         (typename File_Blocks_::Discrete_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_insert);
-	
+
     template< class Update_Logger >
     void update_group
         (typename File_Blocks_::Discrete_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_delete,
          const std::map< TIndex, std::set< TObject > >& to_insert,
 	 Update_Logger& update_logger);
-	
+
     template< class Update_Logger >
     void update_segments
         (typename File_Blocks_::Discrete_Iterator& file_it,
@@ -1049,7 +1049,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
 	       (0, data_filename,
 		"Block_Backend: an item's size exceeds block size.");
 	  }
-	
+
 	  it2->to_data(pos);
 	  pos = pos + it2->size_of();
 	}
@@ -1283,7 +1283,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 		    (0, data_filename,
 		     "Block_Backend: an item's size exceeds block size.");
 	  }
-	
+
 	    it2->to_data(pos);
 	    pos = pos + it2->size_of();
 	}
@@ -1341,7 +1341,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
     //copy everything that is not deleted yet
     if (*(uint32*)source.ptr != *((uint32*)(source.ptr + 4)))
       throw File_Error(0, data_filename,
-	    "Block_Backend::1: one index expected - several found.");	
+	    "Block_Backend::1: one index expected - several found.");
     while ((uint32)(spos - source.ptr) < *(uint32*)source.ptr)
     {
       TObject obj(spos);
@@ -1398,7 +1398,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   //copy everything that is not deleted yet
   if (*(uint32*)source.ptr != *((uint32*)(source.ptr + 4)))
       throw File_Error(0, data_filename,
-	  "Block_Backend::2: one index expected - several found.");	
+	  "Block_Backend::2: one index expected - several found.");
   while ((uint32)(spos - source.ptr) < *(uint32*)source.ptr)
   {
     TObject obj(spos);

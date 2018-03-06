@@ -52,10 +52,10 @@ public:
     desired_action(parent_ ? parent_->desired_action : Diff_Action::positive),
     diff_from_timestamp(parent_ ? parent_->diff_from_timestamp : NOW),
     diff_to_timestamp(parent_ ? parent_->diff_to_timestamp : NOW) {}
-  
+
   // Returns the used RAM including the used RAM of parent frames
   uint64 total_used_space() const;
-    
+
   Set* get_set(const std::string& set_name);
   Diff_Set* get_diff_set(const std::string& set_name);
   const std::string* get_value(const std::string& set_name, const std::string& key);
@@ -65,7 +65,7 @@ public:
   void set_value(const std::string& set_name, const std::string& key, const std::string& value);
   void erase_set(const std::string& set_name);
   void clear_sets();
-  
+
   void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
   void move_outward(const std::string& inner_set_name, const std::string& top_set_name);
   bool union_inward(const std::string& top_set_name, const std::string& inner_set_name);
@@ -73,7 +73,7 @@ public:
   void substract_from_inward(const std::string& top_set_name, const std::string& inner_set_name);
   void move_all_inward();
   void move_all_inward_except(const std::string& set_name);
-  
+
   uint64 get_desired_timestamp() const { return desired_timestamp; }
   Diff_Action::_ get_desired_action() const { return desired_action; }
   uint64 get_diff_from_timestamp() const { return diff_from_timestamp; }
@@ -88,7 +88,7 @@ public:
   std::vector< std::pair< uint, uint > > stack_progress() const;
   void set_loop_size(uint loop_size_) { loop_size = loop_size_; }
   void count_loop() { ++loop_count; }
-    
+
 private:
   Runtime_Stack_Frame* parent;
   std::map< std::string, Set > sets;
@@ -97,7 +97,7 @@ private:
   std::map< std::string, uint64 > size_per_set;
   uint loop_count;
   uint loop_size;
-  
+
   uint64 desired_timestamp;
   Diff_Action::_ desired_action;
   uint64 diff_from_timestamp;
@@ -114,13 +114,13 @@ public:
   Resource_Manager(Transaction& transaction_, Parsed_Query& global_settings_, Error_Output* error_output_,
 		   Transaction& area_transaction_, Watchdog_Callback* watchdog_,
 		   Area_Usage_Listener* area_updater__);
-	
+
   ~Resource_Manager()
   {
     for (std::vector< Runtime_Stack_Frame* >::iterator it = runtime_stack.begin();
         it != runtime_stack.end(); ++it)
       delete *it;
-    
+
     if (global_settings_owned)
       delete global_settings;
     delete area_updater_;
@@ -135,7 +135,7 @@ public:
   void set_value(const std::string& set_name, const std::string& key, const std::string& value);
   void erase_set(const std::string& set_name);
   void clear_sets();
-  
+
   void push_stack_frame();
   void copy_outward(const std::string& inner_set_name, const std::string& top_set_name);
   void move_outward(const std::string& inner_set_name, const std::string& top_set_name);
@@ -147,7 +147,7 @@ public:
   void pop_stack_frame();
 
   void count_loop();
-  
+
   Area_Usage_Listener* area_updater()
   {
     return area_updater_;
@@ -187,7 +187,7 @@ public:
 
 private:
   std::vector< Runtime_Stack_Frame* > runtime_stack;
-  
+
   Transaction* transaction;
   Error_Output* error_output;
   Transaction* area_transaction;

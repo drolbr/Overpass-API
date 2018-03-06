@@ -61,7 +61,7 @@ int main(int argc, char* args[])
       {
 	Nonsynced_Transaction transaction(false, false, args[2], "");
 	Resource_Manager rman(transaction, &global_settings);
-	
+
 	const char* attributes[] = { 0 };
 	Difference_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
@@ -69,12 +69,12 @@ int main(int argc, char* args[])
 	const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
 	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
 	stmt.add_statement(&stmt1, "");
-	
+
         buf = to_string_(2 + global_node_offset);
         const char* attributes2[] = { "type", "node", "ref", buf.c_str(), 0 };
         Id_Query_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
         stmt.add_statement(&stmt2, "");
-	
+
 	stmt.execute(rman);
 	{
 	  const char* attributes[] = { 0 };
@@ -259,7 +259,7 @@ int main(int argc, char* args[])
       {
         Nonsynced_Transaction transaction(false, false, args[2], "");
         Resource_Manager rman(transaction, &global_settings);
-        
+
         const char* attributes0[] = { "type", "way", "ref", "1", 0 };
         Id_Query_Statement stmt0(0, convert_c_pairs(attributes0), global_settings);
         stmt0.execute(rman);

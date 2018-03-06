@@ -403,7 +403,7 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
   {
     Output_Handler_Parser* format_parser =
 	Output_Handler_Parser::get_format_parser(result.back());
-	
+
     if (!format_parser)
     {
       if (error_output)
@@ -639,7 +639,7 @@ TStatement* parse_timeline(typename TStatement::Factory& stmt_factory,
   std::string type = get_text_token(token, error_output, "OSM base type");
   if (type == "rel")
     type = "relation";
-    
+
   clear_until_after(token, error_output, ",");
   std::string ref = get_text_token(token, error_output, "OSM element id");
   clear_until_after(token, error_output, ",", ")", false);
@@ -690,7 +690,7 @@ TStatement* parse_compare(typename TStatement::Factory& stmt_factory, Parsed_Que
   for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
       it != substatements.end(); ++it)
     statement->add_statement(*it, "");
-  
+
   return statement;
 }
 
@@ -807,7 +807,7 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
     {
       Statement::QL_Context tree_context = (strategy == "convert" ? Statement::in_convert : Statement::generic);
       Token_Node_Ptr tree_it(tree, tree.tree[0].rhs);
-      
+
       while (tree_it->token == ",")
       {
         if (tree_it->rhs)
@@ -816,14 +816,14 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
           if (stmt)
             evaluators.push_back(stmt);
         }
-      
+
         tree_it = tree_it.lhs();
       }
-      
+
       TStatement* stmt = stmt_factory.create_evaluator(tree_it, tree_context, No_Return_Type_Checker());
       if (stmt)
         evaluators.push_back(stmt);
-      
+
       std::reverse(evaluators.begin(),evaluators.end());
     }
 
@@ -847,7 +847,7 @@ TStatement* parse_localize(typename TStatement::Factory& stmt_factory,
 {
   uint line_col = token.line_col().first;
   ++token;
-  
+
   std::string type = "l";
   if (*token != ";" && *token != "->" && *token != "(")
   {
@@ -877,7 +877,7 @@ TStatement* parse_localize(typename TStatement::Factory& stmt_factory,
       ++token;
       east = get_text_token(token, error_output, "Value");
       clear_until_after(token, error_output, ",", ")", false);
-    }    
+    }
     ++token;
   }
 
@@ -1042,7 +1042,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	  error_output->add_parse_error(
 	      "A regular expression for a key can only be combined with a regular expression as value criterion",
 	      token.line_col().first);
-	
+
 	Statement_Text clause("has-kv", token.line_col());
 	clause.attributes.push_back(key);
 	clause.attributes.push_back("");
@@ -1056,7 +1056,7 @@ TStatement* parse_query(typename TStatement::Factory& stmt_factory, Parsed_Query
 	  error_output->add_parse_error(
 	      "A regular expression for a key can only be combined with a regular expression as value criterion",
 	      token.line_col().first);
-	
+
 	straight = (*token == "=");
 	++token;
 	if (token.good() && *token == "]")
@@ -1362,7 +1362,7 @@ void generic_parse_and_validate_map_ql
     TStatement* statement = parse_statement< TStatement >(stmt_factory, parsed_query, token, error_output, 0);
     if (statement)
       base_statement->add_statement(statement, "");
-    
+
     clear_until_after(token, error_output, ";");
   }
 

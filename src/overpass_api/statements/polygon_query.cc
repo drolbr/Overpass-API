@@ -232,7 +232,7 @@ Statement* Polygon_Query_Statement::Criterion_Maker::create_criterion(const Toke
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   uint line_nr = tree_it->line_col.first;
-  
+
   if (tree_it->token == ":" && tree_it->rhs)
   {
     std::map< std::string, std::string > attributes;
@@ -379,7 +379,7 @@ void Polygon_Query_Statement::collect_nodes(std::map< Uint32_Index, std::vector<
             + 91.0)*10000000+0.5);
         int32 ilon(::lon(nodes_it->first.val(), iit->ll_lower)*10000000
             + (::lon(nodes_it->first.val(), iit->ll_lower) > 0 ? 0.5 : -0.5));
-	
+
         int inside = 0;
         for (std::vector< Area_Block >::const_iterator it = areas.begin();
 	     it != areas.end(); ++it)

@@ -38,17 +38,17 @@ Output_Handler* Output_Popup_Generator::new_output_handler(const std::map< std::
       clear_until_after(*token, error_output, ";", ")", true);
 
       while (token->good() && **token == "[")
-      {	
+      {
 	std::vector< Tag_Filter* > filter_conjunction;
-	
+
         while (token->good() && **token == "[")
 	{
 	  ++(*token);
-	
+
           std::string key = get_text_token(*token, error_output, "Key");
 	  std::string value = ".";
           bool straight = true;
-	
+
           clear_until_after(*token, error_output, "!", "~", "=", "!=", "]", false);
 
           if (**token == "!")
@@ -70,15 +70,15 @@ Output_Handler* Output_Popup_Generator::new_output_handler(const std::map< std::
 	    value = get_text_token(*token, error_output, "Value");
           }
 	  clear_until_after(*token, error_output, "]");
-	
+
 	  filter_conjunction.push_back(new Tag_Filter(key, value, straight));
 	}
 
         clear_until_after(*token, error_output, ";", true);
-	
+
 	category->add_filter(filter_conjunction);
       }
-      
+
       if (**token != ")")
       {
 	category->set_title_key(get_text_token(*token, error_output, "title key"));

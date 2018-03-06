@@ -39,12 +39,12 @@ Complete_Statement::Complete_Statement
     : Output_Statement(line_number_)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["from"] = "_";
   attributes["into"] = "_";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   input = attributes["from"];
   set_output(attributes["into"]);
 }
@@ -53,12 +53,12 @@ Complete_Statement::Complete_Statement
 void Complete_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
-  
+
   if (statement)
   {
     if (statement->get_name() == "newer")
       add_static_error("\"newer\" can appear only inside \"query\" statements.");
-    
+
     substatements.push_back(statement);
   }
 }
@@ -69,18 +69,18 @@ void Complete_Statement::execute(Resource_Manager& rman)
   bool new_elements_found = false;
 
   rman.push_stack_frame();
-  
+
   do
   {
     rman.copy_outward(input, get_result_name());
-    
+
     for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
       (*it)->execute(rman);
-    
+
     new_elements_found = rman.union_inward(input, input);
   }
   while (new_elements_found);
-  
+
   rman.copy_outward(input, get_result_name());
   rman.move_all_inward();
   rman.pop_stack_frame();

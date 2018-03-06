@@ -28,7 +28,7 @@ double middle_lon(const OSMData& current_data)
     if (it->second->lon > east)
       east = it->second->lon;
   }
-  
+
   return (east + west)/2.0;
 }
 
@@ -69,14 +69,14 @@ string default_color(string ref)
     numval = numval*10 + (ref[pos] - 48);
     ++pos;
   }
-  
+
   if (numval == 0)
   {
     for (unsigned int i(0); i < ref.size(); ++i)
       numval += i*(unsigned char)ref[i];
     numval = numval % 1000;
   }
-  
+
   if (numval < 10)
     color = default_colors()[numval];
   else if (numval < 100)
@@ -99,7 +99,7 @@ string default_color(string ref)
     | ((((color1 & 0xff0000)*10 + (color2 & 0xff0000)*5 + (color3 & 0xff0000))
     /16) & 0xff0000);
   }
-  
+
   string result("#......");
   result[1] = hex((color & 0xf00000)/0x100000);
   result[2] = hex((color & 0x0f0000)/0x10000);
@@ -116,7 +116,7 @@ struct StopFeature
   string color;
   double lat;
   double lon;
-  
+
   StopFeature(string name_, string color_, double lat_, double lon_)
   : name(name_), color(color_), lat(lat_), lon(lon_) {}
 };
@@ -125,7 +125,7 @@ struct NodeFeature
 {
   NodeFeature(const double& lat_, const double& lon_)
   : lat(lat_), lon(lon_) {}
-  
+
   double lat;
   double lon;
 };
@@ -146,7 +146,7 @@ struct PolySegmentFeature
 {
   vector< NodeFeature > lat_lon;
   int shift;
-  
+
   PolySegmentFeature(int shift_) : shift(shift_) {}
 };
 
@@ -170,7 +170,7 @@ struct Rough_Coord
     lon = std::floor(lon_ / deg_threshold);
   }
   Rough_Coord(int lat_, int lon_) : lat(lat_), lon(lon_) {}
-  
+
   int lat;
   int lon;
 };
@@ -223,7 +223,7 @@ struct Placed_Node
 {
   Placed_Node(double lat_, double lon_, uint weight_ = 1)
     : lat(lat_), lon(lon_), weight(weight_) {}
-  
+
   double lat;
   double lon;
   uint weight;
@@ -252,7 +252,7 @@ struct Placed_Segment
       to = from_;
     }
   }
-  
+
   Placed_Node from;
   Placed_Node to;
 };
@@ -350,7 +350,7 @@ struct Way_Position
   Way_Position(Way* way_, int segment_idx_, double pos_,
 	       const string& color_, const string& name_)
       : way(way_), segment_idx(segment_idx_), pos(pos_), color(color_), name(name_) {}
-  
+
   Way* way;
   int segment_idx;
   double pos;
@@ -436,7 +436,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       way_pos.color = stop_feature.color;
       way_pos.name = stop_feature.name;
       stops_per_way[way_pos.way].push_back(way_pos);
-      
+
 /*      // Debug code
       stop_feature.lat = (1.0 - way_pos.pos) * way_pos.way->nds[way_pos.segment_idx]->lat
           + way_pos.pos * way_pos.way->nds[way_pos.segment_idx+1]->lat;
@@ -448,13 +448,13 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
   for (map< Way*, vector< Way_Position > >::iterator it = stops_per_way.begin();
       it != stops_per_way.end(); ++it)
     sort(it->second.begin(), it->second.end());
-    
+
   // --------------------------------------------------------------------------
 
   // Coarse nodes
 
   const double deg_threshold = threshold/40000000*360.0;
-  
+
   // Debug output
 //   for (map< uint32, Way* >::const_iterator it = osm_data.ways.begin();
 //       it != osm_data.ways.end(); ++it)
@@ -511,7 +511,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
     intermediate_lattice_nodes[Rough_Coord(lat_sum / count, lon_sum / count, deg_threshold)]
         .push_back(Placed_Node(lat_sum / count, lon_sum / count, count));
   }
-  
+
   // Debug output
 //   for (map< Rough_Coord, vector< Placed_Node > >::const_iterator
 //       it = intermediate_lattice_nodes.begin();
@@ -572,7 +572,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
     double lat_sum = it->second.lat * it->second.weight;
     double lon_sum = it->second.lon * it->second.weight;
     unsigned int count = it->second.weight;
-    
+
     map< Rough_Coord, Placed_Node >::const_iterator
         it_right = boxed_lattice_nodes.find
 	    (Rough_Coord(it->first.lat, it->first.lon + 1));
@@ -584,7 +584,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       lon_sum = it_right->second.lon * it_right->second.weight;
       count = it_right->second.weight;
     }
-        
+
     map< Rough_Coord, Placed_Node >::const_iterator
         it_down = boxed_lattice_nodes.find
 	    (Rough_Coord(it->first.lat, it->first.lon + 1));
@@ -596,7 +596,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       lon_sum = it_down->second.lon * it_down->second.weight;
       count = it_down->second.weight;
     }
-        
+
     map< Rough_Coord, Placed_Node >::const_iterator
         it_right_down = boxed_lattice_nodes.find
 	    (Rough_Coord(it->first.lat, it->first.lon + 1));
@@ -608,11 +608,11 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       lon_sum = it_right_down->second.lon * it_right_down->second.weight;
       count = it_right_down->second.weight;
     }
-        
+
     lattice_nodes.insert(make_pair
         (it->first, Placed_Node(lat_sum / count, lon_sum / count, count)));
   }
-  
+
   // Debug output
   /*for (map< Rough_Coord, Placed_Node >::const_iterator it = lattice_nodes.begin();
       it != lattice_nodes.end(); ++it)
@@ -621,7 +621,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
     buf<<it->second.lat<<' '<<it->second.lon;
     features.stops.push_back(StopFeature(buf.str(), "#777700", it->second.lat, it->second.lon));
   }*/
-  
+
   map< Placed_Segment, set< Way* > > segments;
   map< Placed_Segment, vector< Way_Position > > stops_per_segment;
   for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
@@ -630,7 +630,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 /*    for (vector< Way_Position >::const_iterator stop_it = stops_per_way[it->second].begin();
         stop_it != stops_per_way[it->second].end(); ++stop_it)
       cerr<<stop_it->name<<' '<<stop_it->way<<' '<<stop_it->segment_idx<<' '<<stop_it->pos<<'\n';*/
-    
+
     if (it->second->nds.size() < 2)
       continue;
     vector< Node* >::const_iterator it2 = it->second->nds.begin();
@@ -643,7 +643,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
     for (++it2; it2 != it->second->nds.end(); ++it2)
     {
       //cerr<<count<<' '<<(*it2)->lat<<' '<<(*it2)->lon<<'\n';
-      
+
       map< double, Placed_Node > nodes_to_pass;
       nodes_to_pass.insert(make_pair(0.0, find_nearest(lattice_nodes, **last_it2, deg_threshold)));
       nodes_to_pass.insert(make_pair(1.0, find_nearest(lattice_nodes, **it2, deg_threshold)));
@@ -687,7 +687,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 	      ((*it2)->lat, (*it2)->lon, (*last_it2)->lat, (*last_it2)->lon,
 	       it_lattice->second.lat, it_lattice->second.lon), it_lattice->second));
       }
-      
+
       // Set the iterators such that only the shortest interval from the starting point
       // to the destination point is included
       map< double, Placed_Node >::const_iterator it3 = nodes_to_pass.find(0.0);
@@ -704,7 +704,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 	++it3_seek;
       it3_end = it3_seek;
       ++it3_end;
-      
+
       if (it3 != it3_end)
       {
         map< double, Placed_Node >::const_iterator last_it3 = it3;
@@ -743,12 +743,12 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 		<<last_it3->first<<' '<<stop_it->pos<<' '<<it3->first<<' '
 	        <<stops_per_segment[last_segment].back().pos<<'\n';*/
 	  }
-	  
+
 	  segments[Placed_Segment(it3->second, last_it3->second)].insert(it->second);
 	  ++last_it3;
         }
       }
-      
+
       ++count;
       ++last_it2;
     }
@@ -789,7 +789,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
           <<' '<<it->first.to.lat<<' '<<it->first.to.lon<<' '<<it2->pos<<'\n';
     }
   }*/
-  
+
   map< Way*, set< string > > colors_per_way;
   for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
       it != osm_data.relations.end(); ++it)
@@ -825,7 +825,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
     segments_per_node[it->first.from].push_back(&it->first);
     segments_per_node[it->first.to].push_back(&it->first);
   }
-  
+
   //Debug output
 //   for (map< Placed_Node, vector< const Placed_Segment* > >::const_iterator
 //       it = segments_per_node.begin(); it != segments_per_node.end(); ++it)
@@ -883,7 +883,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 	current_node = current_segment->from;
       }
     }
-    
+
     //Debug
 /*    if (way.nds.size() == 2)
     {
@@ -891,7 +891,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       way.nds[1].lat = (way.nds[0].lat + way.nds[2].lat)/2.0;
       way.nds[1].lon = (way.nds[0].lon + way.nds[2].lon)/2.0;
     }*/
-    
+
     if (!(way.nds.back() < way.nds.front()))
       colors_per_placed_way.insert(make_pair(way, it->second));
   }
@@ -914,7 +914,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       i += 2;
     }
   }
-  
+
   for (map< string, RouteFeature >::const_iterator it = routes_per_color.begin();
       it != routes_per_color.end(); ++it)
     features.routes.push_back(it->second);
@@ -955,7 +955,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 	}
       }
     }
-    
+
     // Debug output
     for (vector< Way_Position >::const_iterator it2 = not_yet_unified_ways.begin();
         it2 != not_yet_unified_ways.end(); ++it2)
@@ -974,10 +974,10 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
       total_dist += flat_dist(it->first.nds[i-1].lat, it->first.nds[i-1].lon,
 			      it->first.nds[i].lat, it->first.nds[i].lon);
     }
-    
+
     stops_per_placed_way[&it->first].swap(not_yet_unified_ways);
   }
-  
+
   return features;
 }
 
@@ -989,7 +989,7 @@ namespace
     Bbox(double north_, double south_, double east_, double west_)
     : north(north_), south(south_), east(east_), west(west_) {}
   };
-  
+
   Bbox calc_bbox(const OSMData& current_data)
   {
     double north(-90.0), south(90.0), east(-180.0), west(180.0);
@@ -1005,10 +1005,10 @@ namespace
       if (it->second->lon > east)
 	east = it->second->lon;
     }
-    
+
     return Bbox(north, south, east, west);
   }
-  
+
   // Transforms (lat,lon) coordinates into coordinates on the map
   class Coord_Transform
   {
@@ -1023,18 +1023,18 @@ namespace
 	    (pivot_lon - west)*(1000000.0/9.0)/m_per_pixel
 	    /**cos((south + north)*(1/2.0/90.0*acos(0)))*/;
       }
-	    
+
       double vpos(double lat)
       {
 	return (north_ - lat)*(1000000.0/9.0)/m_per_pixel_;
       }
-      
+
       double hpos(double lat, double lon)
       {
 	return (lon - pivot_lon_)*(1000000.0/9.0)/m_per_pixel_
 	/**cos(lat*(1/90.0*acos(0)))*/ + pivot_hpos_;
       }
-      
+
     private:
       double north_, south_, west_, east_;
       double m_per_pixel_, pivot_lon_, pivot_hpos_;
@@ -1044,10 +1044,10 @@ namespace
 struct Vec_2_Dim
 {
   Vec_2_Dim(double x_, double y_) : x(x_), y(y_) {}
-  
+
   double x;
   double y;
-  
+
   double length() const
   {
     return sqrt(x*x + y*y);
@@ -1073,7 +1073,7 @@ string shifted(double before_x, double before_y, double x, double y,
 	       double after_x, double after_y, int shift)
 {
   const double LINE_DIST = 2.0;
-  
+
   bool invalid = false;
   Vec_2_Dim in_vec(x - before_x, y - before_y);
   in_vec = (1.0/in_vec.length())*in_vec;
@@ -1099,7 +1099,7 @@ string shifted(double before_x, double before_y, double x, double y,
       Vec_2_Dim left_out_vec(turn_left(out_vec));
       left_out_vec = (1.0/left_out_vec.length())*left_out_vec;
       draw_vec = (1.0/draw_vec.length())*draw_vec;
-    
+
       ostringstream out;
       out<<x + LINE_DIST*left_vec.x*shift<<' '<<y + LINE_DIST*left_vec.y*shift<<", ";
       out<<x + LINE_DIST*draw_vec.x*shift<<' '<<y + LINE_DIST*draw_vec.y*shift<<", ";
@@ -1109,7 +1109,7 @@ string shifted(double before_x, double before_y, double x, double y,
     }
   }
   draw_vec = (LINE_DIST/(draw_vec.x*left_vec.x + draw_vec.y*left_vec.y))*draw_vec;
-  
+
   ostringstream out;
   //out<<x<<' '<<y<<", ";
   //out<<x + 10.0*draw_vec.x<<' '<<y + 10.0*draw_vec.y<<", ";
@@ -1136,7 +1136,7 @@ string shifted(double before_x, double before_y, double x, double y,
 	       double after_x, double after_y, int shift_before, int shift_after)
 {
   const double LINE_DIST = 2.0;
-  
+
   if (shift_before*shift_after >= 0)
   {
     Vec_2_Dim in_vec(x - before_x, y - before_y);
@@ -1144,13 +1144,13 @@ string shifted(double before_x, double before_y, double x, double y,
     Vec_2_Dim left_vec(turn_left(in_vec));
     Vec_2_Dim out_vec(after_x - x, after_y - y);
     out_vec = (1.0/out_vec.length())*out_vec;
-    
+
     if ((out_vec.x*left_vec.x + out_vec.y*left_vec.y)*shift_before < 0.0)
     {
       Vec_2_Dim draw_vec(turn_left(in_vec + out_vec));
       draw_vec = (1.0/draw_vec.length())*draw_vec;
       Vec_2_Dim left_out_vec(turn_left(out_vec));
-      
+
       ostringstream out;
       out<<x + LINE_DIST*left_vec.x*shift_before<<' '
          <<y + LINE_DIST*left_vec.y*shift_before<<", ";
@@ -1186,7 +1186,7 @@ string shifted(double before_x, double before_y, double x, double y,
 string shifted(double x, double y, double after_x, double after_y, int shift, bool forward)
 {
   const double LINE_DIST = 2.0;
-  
+
   ostringstream out;
   if (forward)
   {
@@ -1210,7 +1210,7 @@ void sketch_features
      double south = 100.0, double north = 100.0, double west = 200.0, double east = 200.0)
 {
   ::Bbox bbox(::calc_bbox(osm_data));
-  
+
   // if a restriction has been set, take the bbox from there.
   if (south != 100.0)
   {
@@ -1226,12 +1226,12 @@ void sketch_features
     bbox.east += 0.003*m_per_pixel;
     bbox.west -= 0.003*m_per_pixel;
   }
-  
+
   // expand the bounding box to avoid elements scratching the frame
   ::Coord_Transform coord_transform
       (bbox.north, bbox.south, bbox.west, bbox.east,
        m_per_pixel, pivot_lon);
-  
+
   out<<"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
   "<svg xmlns=\"http://www.w3.org/2000/svg\"\n"
   "     xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n"
@@ -1241,7 +1241,7 @@ void sketch_features
       <<coord_transform.hpos((bbox.south + bbox.north)/2.0, bbox.east)<<"px\" "
   "height=\""<<coord_transform.vpos(bbox.south)<<"px\">\n"
   "\n";
-  
+
   for (vector< StopFeature >::const_iterator it(features.stops.begin());
       it != features.stops.end(); ++it)
   {
@@ -1256,7 +1256,7 @@ void sketch_features
 	    <<"\" font-size=\""<<stop_font_size<<"px\">"<<it->name<<"</text>\n";
   }
   out<<'\n';
-  
+
   for (vector< RouteFeature >::const_iterator it(features.routes.begin());
       it != features.routes.end(); ++it)
   {
@@ -1269,16 +1269,16 @@ void sketch_features
       polys_per_node[it2->lat_lon.front()].push_back(&*it2);
       polys_per_node[it2->lat_lon.back()].push_back(&*it2);
     }
-    
+
     for (vector< PolySegmentFeature >::const_iterator it2(it->polysegs.begin());
         it2 != it->polysegs.end(); ++it2)
     {
       if (it2->lat_lon.size() < 2)
 	continue;
-      
+
       out<<"<polyline fill=\"none\" stroke=\""<<it->color
           <<"\" stroke-width=\"3px\" points=\"";
-	  
+
       // Prepare coordinates to enable forward looking.
       vector< double > x_s;
       vector< double > y_s;
@@ -1336,7 +1336,7 @@ void sketch_features
 	x_s.push_back(coord_transform.hpos(lat, lon));
 	y_s.push_back(coord_transform.vpos(lat));
       }
-      
+
       if (x_s.size() >= 2)
       {
 	unsigned int line_size = x_s.size();
@@ -1347,13 +1347,13 @@ void sketch_features
 			      shifts[i-1], shifts[i]);
 	if (display_back)
 	  out<<", "<<shifted(x_s[line_size-1], y_s[line_size-1],
-			      x_s[line_size-2], y_s[line_size-2], -shifts[line_size-1], false);	
+			      x_s[line_size-2], y_s[line_size-2], -shifts[line_size-1], false);
       }
       out<<"\"/>\n";
     }
     out<<'\n';
   }
-  
+
   out<<"</svg>\n";
 }
 
@@ -1367,7 +1367,7 @@ void restrict_to_bbox(Features& features, double north, double south, double wes
       stops.push_back(*it);
   }
   features.stops.swap(stops);
-  
+
   vector< RouteFeature > routes;
   for (vector< RouteFeature >::iterator it = features.routes.begin();
       it != features.routes.end(); ++it)
@@ -1460,17 +1460,17 @@ int main(int argc, char *argv[])
     }
     ++argi;
   }
-  
+
   // read the XML input
   const OSMData& current_data(read_osm());
-  
+
   // choose pivot_lon automatically
   if (pivot_lon == -200.0)
     pivot_lon = middle_lon(current_data);
 
   Features features(extract_features
       (const_cast< OSMData& >(current_data), pivot_lon, threshold));
-  
+
   if (!config_data.empty())
   {
     int i = 0;
@@ -1481,11 +1481,11 @@ int main(int argc, char *argv[])
 
       double lat_scale = ((it->north - it->south)/360.0*40*1000*1000)/600.0;
       double lon_scale = (
-          (transform_lon((it->north + it->south)/2.0, it->east, pivot_lon) - 
+          (transform_lon((it->north + it->south)/2.0, it->east, pivot_lon) -
 	   transform_lon((it->north + it->south)/2.0, it->west, pivot_lon))
 	   /360.0*40*1000*1000)/600.0;
       scale = max(lat_scale, lon_scale);
-      
+
       restrict_to_bbox(local_features, it->north, it->south,
 		       transform_lon((it->north + it->south)/2.0, it->west, pivot_lon),
 		       transform_lon((it->north + it->south)/2.0, it->east, pivot_lon));
@@ -1518,8 +1518,8 @@ int main(int argc, char *argv[])
 		    stop_font_size);
 
   //sketch_unscaled_osm_data(current_data);
-    
+
   //sketch_osm_data(current_data, middle_lon(current_data), 1.0);
-  
+
   return 0;
 }

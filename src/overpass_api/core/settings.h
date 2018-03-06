@@ -31,14 +31,14 @@ struct Basic_Settings
   std::string INDEX_SUFFIX;
   std::string ID_SUFFIX;
   std::string SHADOW_SUFFIX;
-  
+
   std::string base_directory;
   std::string logfile_name;
   std::string shared_name_base;
-  
+
   uint32 compression_method;
   uint32 map_compression_method;
-  
+
   Basic_Settings();
 };
 
@@ -58,13 +58,13 @@ struct Osm_Base_Settings
   File_Properties* RELATION_TAGS_LOCAL;
   File_Properties* RELATION_TAGS_GLOBAL;
   File_Properties* RELATION_KEYS;
-  
+
   std::string shared_name;
   uint max_num_processes;
   uint purge_timeout;
   uint64 total_available_space;
   uint64 total_available_time_units;
-  
+
   Osm_Base_Settings();
 };
 
@@ -75,13 +75,13 @@ struct Area_Settings
   File_Properties* AREAS;
   File_Properties* AREA_TAGS_LOCAL;
   File_Properties* AREA_TAGS_GLOBAL;
-  
+
   std::string shared_name;
   uint max_num_processes;
   uint purge_timeout;
   uint64 total_available_space;
   uint64 total_available_time_units;
-  
+
   Area_Settings();
 };
 
@@ -93,7 +93,7 @@ struct Meta_Settings
   File_Properties* NODES_META;
   File_Properties* WAYS_META;
   File_Properties* RELATIONS_META;
-  
+
   Meta_Settings();
 };
 
@@ -121,7 +121,7 @@ struct Attic_Settings
   File_Properties* RELATION_TAGS_GLOBAL;
   File_Properties* RELATIONS_META;
   File_Properties* RELATION_CHANGELOG;
-  
+
   Attic_Settings();
 };
 
@@ -141,7 +141,7 @@ class Logger
     Logger(const std::string& db_dir);
     void annotated_log(const std::string& message);
     void raw_log(const std::string& message);
-    
+
   private:
     std::string logfile_full_name;
 };

@@ -51,12 +51,12 @@ class Dispatcher_Stub : public Watchdog_Callback
     Dispatcher_Stub(std::string db_dir_, Error_Output* error_output_, std::string xml_raw,
 		    meta_modes meta_, int area_level,
 		    uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings_);
-    
+
     // Called once per minute from the resource manager
     virtual void ping() const;
 
     ~Dispatcher_Stub();
-    
+
     std::string get_db_dir() { return (db_dir == "" ? dispatcher_client->get_db_dir() : db_dir); }
     std::string get_timestamp() { return timestamp; }
     std::string get_area_timestamp() { return area_timestamp; }
@@ -64,7 +64,7 @@ class Dispatcher_Stub : public Watchdog_Callback
 
   private:
     std::string db_dir, timestamp, area_timestamp;
-    
+
     Error_Output* error_output;
     Dispatcher_Client* dispatcher_client;
     Dispatcher_Client* area_dispatcher_client;

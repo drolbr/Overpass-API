@@ -129,9 +129,9 @@ void Web_Output::write_html_header
      bool write_remarks)
 {
   if (header_written != not_yet)
-    return;    
+    return;
   header_written = html;
-  
+
   if (write_mime)
   {
     if (allow_headers != "")
@@ -156,9 +156,9 @@ void Web_Output::write_payload_header
     (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp, bool write_mime)
 {
   if (header_written != not_yet)
-    return;    
+    return;
   header_written = payload;
-  
+
   if (write_mime)
   {
     if (allow_headers != "")
@@ -174,7 +174,7 @@ void Web_Output::write_payload_header
     if (http_method == http_options || http_method == http_head)
       return;
   }
-  
+
   if (output_handler)
     output_handler->write_payload_header(db_dir, timestamp, area_timestamp);
 }
@@ -184,9 +184,9 @@ void Web_Output::write_payload_header
 //     (const std::string& timestamp, const std::string& area_timestamp, bool write_mime)
 // {
 //   if (header_written != not_yet)
-//     return;    
+//     return;
 //   header_written = json;
-//   
+//
 //   if (write_mime)
 //   {
 //     if (allow_headers != "")
@@ -201,10 +201,10 @@ void Web_Output::write_payload_header
 //     if (http_method == http_options || http_method == http_head)
 //       return;
 //   }
-// 
+//
 //   if (padding != "")
 //     std::cout<<padding<<"(";
-//     
+//
 //   std::cout<<"{\n"
 //         "  \"version\": 0.6,\n"
 //         "  \"generator\": \"Overpass API\",\n"
@@ -225,7 +225,7 @@ void Web_Output::write_payload_header
 //   if (header_written != not_yet)
 //     return;
 //   header_written = text;
-//   
+//
 //   if (write_mime)
 //   {
 //     if (allow_headers != "")
@@ -240,7 +240,7 @@ void Web_Output::write_payload_header
 //     if (http_method == http_options || http_method == http_head)
 //       return;
 //   }
-// 
+//
 //   std::cout<<timestamp<<"\n";
 // }
 
@@ -251,7 +251,7 @@ void Web_Output::write_payload_header
 //   if (header_written != not_yet)
 //     return;
 //   header_written = csv;
-//   
+//
 //   if (write_mime)
 //   {
 //     if (allow_headers != "")
@@ -274,7 +274,7 @@ void Web_Output::write_footer()
     std::cout<<"\n</body>\n</html>\n";
   else if (header_written != final && output_handler)
     output_handler->write_footer();
-  
+
   header_written = final;
 }
 

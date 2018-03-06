@@ -310,7 +310,7 @@ Statement* Evaluator_Is_Tag::Evaluator_Maker::create_evaluator(
       || !tree_it.assert_has_arguments(error_output, true)
       || !assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
-  
+
   if (tree_it.rhs()->lhs || tree_it.rhs()->rhs)
   {
     if (error_output)
@@ -349,14 +349,14 @@ std::vector< std::string > all_keys(const std::vector< std::pair< std::string, s
   std::vector< std::string > result;
   if (!tags)
     return result;
-  
+
   for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
       it != tags->end(); ++it)
     result.push_back(it->first);
-  
+
   std::sort(result.begin(), result.end());
   result.erase(std::unique(result.begin(), result.end()), result.end());
-  
+
   return result;
 }
 
@@ -512,9 +512,9 @@ Statement* Evaluator_Properties_Count::Evaluator_Maker::create_evaluator(
   if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
       || !assert_element_in_context(error_output, tree_it, tree_context))
     return 0;
-  
+
   std::map< std::string, std::string > attributes;
-  
+
   const std::string* func_name = tree_it.function_name();
   attributes["type"] = func_name->size() > 6 ? func_name->substr(6) : "";
 
@@ -529,11 +529,11 @@ Statement* Evaluator_Properties_Count::Evaluator_Maker::create_evaluator(
         else
         {
           if (error_output)
-            error_output->add_parse_error(tree_it.lhs()->token 
+            error_output->add_parse_error(tree_it.lhs()->token
                 + "() needs a single literal expression as argument for the wanted role", tree_it->line_col.first);
           return 0;
         }
-        
+
         if (tree_it.rhs().rhs()->lhs || tree_it.rhs().rhs()->rhs
             || (tree_it.rhs().rhs()->token != "nodes" && tree_it.rhs().rhs()->token != "ways"
               && tree_it.rhs().rhs()->token != "relations" && tree_it.rhs().rhs()->token != "rels"))
@@ -552,7 +552,7 @@ Statement* Evaluator_Properties_Count::Evaluator_Maker::create_evaluator(
       else
       {
         if (error_output)
-          error_output->add_parse_error(tree_it.lhs()->token 
+          error_output->add_parse_error(tree_it.lhs()->token
               + "() needs a single literal expression as argument for the wanted role", tree_it->line_col.first);
         return 0;
       }
@@ -560,7 +560,7 @@ Statement* Evaluator_Properties_Count::Evaluator_Maker::create_evaluator(
     else
     {
       if (error_output)
-        error_output->add_parse_error(tree_it.lhs()->token 
+        error_output->add_parse_error(tree_it.lhs()->token
             + "() must have the name of the wanted role as argument", tree_it->line_col.first);
       return 0;
     }
@@ -651,7 +651,7 @@ Evaluator_Properties_Count::Evaluator_Properties_Count
         " the only allowed values are \"tags\", \"members\", \"distinct_members\","
         " \"by_role\", or \"distinct_by_role\" strings.");
   }
-  
+
   if (attributes["members_type"] == "all")
     type_to_count = all;
   else if (attributes["members_type"] == "nodes")
@@ -665,7 +665,7 @@ Evaluator_Properties_Count::Evaluator_Properties_Count
     add_static_error("For the attribute \"members_type\" of the element \"eval-prop-count\""
         " the only allowed values are \"all\", \"nodes\", \"ways\", or \"relations\" strings.");
   }
-  
+
   role = attributes["role"];
 }
 
@@ -687,7 +687,7 @@ Eval_Task* Evaluator_Properties_Count::get_string_task(Prepare_Task_Context& con
 {
   if (to_count == Evaluator_Properties_Count::by_role || to_count == Evaluator_Properties_Count::distinct_by_role)
     return new Prop_Count_Eval_Task(to_count, type_to_count, context.get_role_id(role));
-  
+
   return new Prop_Count_Eval_Task(to_count, type_to_count);
 }
 
@@ -759,11 +759,11 @@ bool matches_criterion(const Relation_Entry& member, Evaluator_Properties_Count:
     if (type_to_count == Evaluator_Properties_Count::relations && member.type != Relation_Entry::RELATION)
       return false;
   }
-  
+
   if (member.role != role_id &&
       (to_count == Evaluator_Properties_Count::by_role || to_count == Evaluator_Properties_Count::distinct_by_role))
     return false;
-  
+
   return true;
 }
 
@@ -774,7 +774,7 @@ struct Relation_Member_Comparer
   {
     if (lhs.type != rhs.type)
       return lhs.type < rhs.type;
-    
+
     return lhs.ref < rhs.ref;
   }
 };
@@ -787,10 +787,10 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Relation_Skel
   {
     if (!data.object)
       return "0";
-    
+
     if (to_count == Evaluator_Properties_Count::members && type_to_count == Evaluator_Properties_Count::all)
       return to_string(data.object->members.size());
-    
+
     uint counter = 0;
     for (std::vector< Relation_Entry >::const_iterator it = data.object->members.begin(); it != data.object->members.end(); ++it)
     {
@@ -804,9 +804,9 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Relation_Skel
   {
     if (!data.object)
       return "0";
-    
+
     std::vector< Relation_Entry > distinct = data.object->members;
-    
+
     if (to_count != Evaluator_Properties_Count::distinct_members || type_to_count != Evaluator_Properties_Count::all)
     {
       std::vector< Relation_Entry >::size_type from = 0;
@@ -818,7 +818,7 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Relation_Skel
       }
       distinct.resize(to);
     }
-    
+
     std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
     return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
   }
@@ -835,10 +835,10 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Relati
   {
     if (!data.object)
       return "0";
-    
+
     if (to_count == Evaluator_Properties_Count::members && type_to_count == Evaluator_Properties_Count::all)
       return to_string(data.object->members.size());
-    
+
     uint counter = 0;
     for (std::vector< Relation_Entry >::const_iterator it = data.object->members.begin(); it != data.object->members.end(); ++it)
     {
@@ -852,9 +852,9 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Relati
   {
     if (!data.object)
       return "0";
-    
+
     std::vector< Relation_Entry > distinct = data.object->members;
-    
+
     if (to_count != Evaluator_Properties_Count::distinct_members || type_to_count != Evaluator_Properties_Count::all)
     {
       std::vector< Relation_Entry >::size_type from = 0;
@@ -866,7 +866,7 @@ std::string Prop_Count_Eval_Task::eval(const Element_With_Context< Attic< Relati
       }
       distinct.resize(to);
     }
-    
+
     std::sort(distinct.begin(), distinct.end(), Relation_Member_Comparer());
     return to_string(std::distance(distinct.begin(), std::unique(distinct.begin(), distinct.end())));
   }

@@ -41,7 +41,7 @@ Statement* Changed_Statement::Criterion_Maker::create_criterion(const Token_Node
   std::string since;
   std::string until;
   uint line_nr = tree_it->line_col.first;
-  
+
   if (tree_it->token == ":" && tree_it->rhs)
   {
     since = decode_json(tree_it.rhs()->token, error_output);
@@ -75,7 +75,7 @@ Statement* Changed_Statement::Criterion_Maker::create_criterion(const Token_Node
 
   std::map< std::string, std::string > attributes;
   attributes["since"] = since;
-  attributes["until"] = until;  
+  attributes["until"] = until;
   return new Changed_Statement(line_nr, attributes, global_settings);
 }
 
@@ -136,14 +136,14 @@ class Changed_Constraint : public Query_Constraint
 //         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
 //     bool get_ranges
 //         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
-	
+
     bool get_node_ids
         (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids);
     bool get_way_ids
         (Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids);
     bool get_relation_ids
         (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids);
-	
+
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Changed_Constraint() {}
 
@@ -276,14 +276,14 @@ Changed_Statement::Changed_Statement
   std::string timestamp = attributes["since"];
   if (timestamp.size() >= 19)
     since = Timestamp(timestamp).timestamp;
-  
+
   if (!behave_trivial && attributes["since"] != "auto" && (since == 0 || since == NOW))
     add_static_error("The attribute \"since\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".");
 
   timestamp = attributes["until"];
   if (timestamp.size() >= 19)
     until = Timestamp(timestamp).timestamp;
-  
+
   if (!behave_trivial && attributes["until"] != "auto" && (until == 0 || until == NOW))
     add_static_error("The attribute \"until\" must contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".");
 }

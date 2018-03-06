@@ -38,16 +38,16 @@ class Tokenizer_Wrapper
   public:
     Tokenizer_Wrapper(std::istream& in_);
     ~Tokenizer_Wrapper();
-    
+
     const std::string& operator*() const { return head; }
     void operator++();
     bool good() { return good_; }
     const std::pair< uint, uint >& line_col() const { return line_col_; }
-    
+
   private:
     Tokenizer_Wrapper(const Tokenizer_Wrapper&);
     void operator=(const Tokenizer_Wrapper&);
-    
+
     std::string head;
     bool good_;
     Comment_Replacer< std::istream >* incr;

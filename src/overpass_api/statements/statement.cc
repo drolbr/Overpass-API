@@ -190,7 +190,7 @@ Statement* stmt_from_tree_node(const Token_Node_Ptr& tree_it,
     }
     ++maker_it;
   }
-  
+
   if (statement && eval_type.eval_required())
   {
     Evaluator* eval = dynamic_cast< Evaluator* >(statement);
@@ -317,7 +317,7 @@ Token_Node_Ptr find_leftmost_token(Token_Node_Ptr tree_it)
 {
   while (tree_it->lhs)
     tree_it = tree_it.lhs();
-  
+
   return tree_it;
 }
 
@@ -328,12 +328,12 @@ Statement* Statement::Factory::create_criterion(const Token_Node_Ptr& tree_it,
   Token_Node_Ptr criterion = find_leftmost_token(tree_it);
   uint line_nr = criterion->line_col.first;
   std::string criterion_s = criterion->token;
-  
+
   if (!criterion_s.empty()
       && (isdigit(criterion_s[0])
           || (criterion_s[0] == '-' && criterion_s.size() > 1 && isdigit(criterion_s[1]))))
     criterion_s = (tree_it->token == "," ? "bbox" : "id");
-  
+
   std::map< std::string, Criterion_Maker* >::iterator it = Statement::maker_by_ql_criterion().find(criterion_s);
   if (it != Statement::maker_by_ql_criterion().end() && it->second)
   {

@@ -33,7 +33,7 @@ Compare_Statement::Compare_Statement
 
   attributes["from"] = "_";
   attributes["into"] = "_";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
 
   input = attributes["from"];
@@ -44,7 +44,7 @@ Compare_Statement::Compare_Statement
 void Compare_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
-  
+
   if (!criterion)
   {
     Evaluator* tag_value = dynamic_cast< Evaluator* >(statement);
@@ -65,7 +65,7 @@ void Compare_Statement::add_statement(Statement* statement, std::string text)
 void Compare_Statement::execute(Resource_Manager& rman)
 {
   Diff_Action::_ action = rman.get_desired_action();
-  
+
   const Set* input_set = rman.get_set(input);
   if (!input_set)
     return;
@@ -75,7 +75,7 @@ void Compare_Statement::execute(Resource_Manager& rman)
     delete set_comparison;
     set_comparison = new Set_Comparison(
         *rman.get_transaction(), *input_set, rman.get_desired_timestamp());
-    
+
     Set into;
     transfer_output(rman, into);
     rman.health_check(*this);
@@ -99,7 +99,7 @@ void Compare_Statement::execute(Resource_Manager& rman)
     {
       rman.push_stack_frame();
       rman.switch_diff_show_from(get_result_name());
-  
+
       for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
         (*it)->execute(rman);
 
@@ -107,7 +107,7 @@ void Compare_Statement::execute(Resource_Manager& rman)
 
       rman.push_stack_frame();
       rman.switch_diff_show_to(get_result_name());
-  
+
       for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
         (*it)->execute(rman);
 

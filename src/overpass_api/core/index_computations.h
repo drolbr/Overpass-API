@@ -43,11 +43,11 @@ inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
 
 inline std::vector< std::pair< uint32, uint32 > > calc_ranges
     (double south, double north, double west, double east);
-    
+
 inline void recursively_calc_ranges
     (uint32 south, uint32 north, int32 west, int32 east,
      uint32 bitlevel, std::vector< std::pair< uint32, uint32 > >& ranges);
-     
+
 /** ------------------------------------------------------------------------ */
 
 struct Uint31_Compare
@@ -61,13 +61,13 @@ struct Uint31_Compare
 inline uint32 ll_upper(uint32 ilat, int32 ilon)
 {
   uint32 result = 0;
-  
+
   for (uint32 i(0); i < 16; ++i)
   {
     result |= ((0x1<<(i+16))&ilat)>>(15-i);
     result |= ((0x1<<(i+16))&(uint32)ilon)>>(16-i);
   }
-  
+
   return result;
 }
 
@@ -79,7 +79,7 @@ inline uint32 ll_upper_(uint32 ilat, int32 ilon)
 inline uint32 upper_ilat(uint32 quadtile)
 {
   uint32 result = 0;
-  
+
   result |= (quadtile & 0x2)>>1;
   result |= (quadtile & 0x8)>>2;
   result |= (quadtile & 0x20)>>3;
@@ -95,14 +95,14 @@ inline uint32 upper_ilat(uint32 quadtile)
   result |= (quadtile & 0x2000000)>>13;
   result |= (quadtile & 0x8000000)>>14;
   result |= (quadtile & 0x20000000)>>15;
-  
+
   return result;
 }
 
 inline uint32 upper_ilon(uint32 quadtile)
 {
   uint32 result = 0;
-  
+
   result |= (quadtile & 0x1);
   result |= (quadtile & 0x4)>>1;
   result |= (quadtile & 0x10)>>2;
@@ -119,7 +119,7 @@ inline uint32 upper_ilon(uint32 quadtile)
   result |= (quadtile & 0x4000000)>>13;
   result |= (quadtile & 0x10000000)>>14;
   result |= (quadtile & 0x40000000)>>15;
-  
+
   return result;
 }
 
@@ -127,15 +127,15 @@ inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
 {
   if (node_idxs.empty())
     return 0xfe;
-  
+
   // Calculate the bounding box of the appearing indices.
-  
+
   std::vector< uint32 >::const_iterator it = node_idxs.begin();
   uint32 lat_min = *it & 0x2aaaaaaa;
   uint32 lat_max = lat_min;
   uint32 lon_min = *it & 0x55555555;
   uint32 lon_max = lon_min;
-  
+
   if (*it & 0x80000000)
   {
     if (*it & 0x00000001)
@@ -190,16 +190,16 @@ inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
     else // *it == 0x80000080
       return 0x80000080;
   }
-  
+
   for (++it; it != node_idxs.end(); ++it)
   {
     if (*it & 0x80000000)
     {
       uint32 lat = 0;
-      uint32 lon = 0;      
+      uint32 lon = 0;
       uint32 lat_u = 0;
       uint32 lon_u = 0;
-      
+
       if (*it & 0x00000001)
       {
 	lat = *it & 0x2aaaaaa8;
@@ -251,7 +251,7 @@ inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
       }
       else // *it == 0x80000080
 	return 0x80000080;
-      
+
       if (lat < lat_min)
 	lat_min = lat;
       if (lat_u > lat_max)
@@ -265,7 +265,7 @@ inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
     {
       uint32 lat = *it & 0x2aaaaaaa;
       uint32 lon = *it & 0x55555555;
-      
+
       if (lat < lat_min)
         lat_min = lat;
       else if (lat > lat_max)
@@ -276,42 +276,42 @@ inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
 	lon_max = lon;
     }
   }
-  
+
 
   // Evaluate the bounding box.
 
   if ((lat_max == lat_min) && (lon_max == lon_min))
     return node_idxs.front();
-  
+
   uint32 ilat_min = upper_ilat(lat_min);
   uint32 ilat_max = upper_ilat(lat_max);
   uint32 ilon_min = upper_ilon(lon_min);
   uint32 ilon_max = upper_ilon(lon_max);
-  
+
   if (((ilat_max & 0xfffe) - (ilat_min & 0xfffe) < 4) &&
       ((ilon_max & 0xfffe) - (ilon_min & 0xfffe) < 4))
     return (((lon_min | lat_min) & 0xfffffffc) | 0x80000001);
-  
+
   if (((ilat_max & 0xfff8) - (ilat_min & 0xfff8) < 0x10) &&
       ((ilon_max & 0xfff8) - (ilon_min & 0xfff8) < 0x10))
     return (((lon_min | lat_min) & 0xffffffc0) | 0x80000002);
-  
+
   if (((ilat_max & 0xffe0) - (ilat_min & 0xffe0) < 0x40) &&
       ((ilon_max & 0xffe0) - (ilon_min & 0xffe0) < 0x40))
     return (((lon_min | lat_min) & 0xfffffc00) | 0x80000004);
-  
+
   if (((ilat_max & 0xff80) - (ilat_min & 0xff80) < 0x100) &&
       ((ilon_max & 0xff80) - (ilon_min & 0xff80) < 0x100))
     return (((lon_min | lat_min) & 0xffffc000) | 0x80000008);
-  
+
   if (((ilat_max & 0xfe00) - (ilat_min & 0xfe00) < 0x400) &&
       ((ilon_max & 0xfe00) - (ilon_min & 0xfe00) < 0x400))
     return (((lon_min | lat_min) & 0xfffc0000) | 0x80000010);
-  
+
   if (((ilat_max & 0xf800) - (ilat_min & 0xf800) < 0x1000) &&
       ((ilon_max & 0xf800) - (ilon_min & 0xf800) < 0x1000))
     return (((lon_min | lat_min) & 0xffc00000) | 0x80000020);
-  
+
   if (((ilat_max & 0xe000) - (ilat_min & 0xe000) < 0x4000) &&
       ((ilon_max & 0xe000) - (ilon_min & 0xe000) < 0x4000))
     return (((lon_min | lat_min) & 0xfc000000) | 0x80000040);
@@ -325,9 +325,9 @@ inline std::pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way
   if (way_rel_idx.val() & 0x80000000)
   {
     uint32 lat = 0;
-    uint32 lon = 0;      
+    uint32 lon = 0;
     uint32 offset = 0;
-    
+
     if (way_rel_idx.val() & 0x00000001)
     {
       lat = upper_ilat(way_rel_idx.val() & 0x2aaaaaa8);
@@ -392,18 +392,18 @@ inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 
   std::vector< Uint32_Index > result;
 
   std::vector< std::pair< uint32, uint32 > > ranges;
-  
+
   for (std::vector< uint32 >::const_iterator it = way_rel_idxs.begin();
       it != way_rel_idxs.end(); ++it)
   {
     if (*it & 0x80000000)
     {
       uint32 lat = 0;
-      uint32 lon = 0;      
+      uint32 lon = 0;
       uint32 lat_u = 0;
       uint32 lon_u = 0;
       uint32 offset = 0;
-      
+
       if (*it & 0x00000001)
       {
 	lat = upper_ilat(*it & 0x2aaaaaa8);
@@ -487,17 +487,17 @@ inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 
 inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& way_rel_idxs)
 {
   std::vector< Uint31_Index > result;
-  
+
   for (std::vector< uint32 >::const_iterator it = way_rel_idxs.begin();
       it != way_rel_idxs.end(); ++it)
   {
     if (*it & 0x80000000)
     {
       int32 lat = 0;
-      int32 lon = 0;      
+      int32 lon = 0;
       int32 lat_u = 0;
       int32 lon_u = 0;
-      
+
       if (*it & 0x00000001)
       {
 	lat = upper_ilat(*it & 0x2aaaaaa8);
@@ -600,7 +600,7 @@ inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& wa
     else
       result.push_back(*it);
   }
-  
+
   sort(result.begin(), result.end());
   result.erase(unique(result.begin(), result.end()), result.end());
   return result;
@@ -611,54 +611,54 @@ inline std::set< Uint31_Index > calc_parents(const std::set< Uint31_Index >& nod
 {
   std::set< Uint31_Index > result;
   result.insert(0x80000080);
-  
+
   for (std::set< Uint31_Index >::const_iterator it = node_idxs.begin();
       it != node_idxs.end(); ++it)
   {
     result.insert(*it);
-    
+
     uint32 lat = upper_ilat(it->val() & 0x2aaaaaa8) & 0xfffe;
     uint32 lon = upper_ilon(it->val() & 0x55555554) & 0xfffe;
     result.insert(ll_upper((lat - 2)<<16, (lon - 2)<<16) | 0x80000001);
     result.insert(ll_upper(lat<<16, (lon - 2)<<16) | 0x80000001);
     result.insert(ll_upper((lat - 2)<<16, lon<<16) | 0x80000001);
     result.insert(ll_upper(lat<<16, lon<<16) | 0x80000001);
-    
+
     lat = lat & 0xfff8;
     lon = lon & 0xfff8;
     result.insert(ll_upper((lat - 8)<<16, (lon - 8)<<16) | 0x80000002);
     result.insert(ll_upper(lat<<16, (lon - 8)<<16) | 0x80000002);
     result.insert(ll_upper((lat - 8)<<16, lon<<16) | 0x80000002);
     result.insert(ll_upper(lat<<16, lon<<16) | 0x80000002);
-    
+
     lat = lat & 0xffe0;
     lon = lon & 0xffe0;
     result.insert(ll_upper((lat - 0x20)<<16, (lon - 0x20)<<16) | 0x80000004);
     result.insert(ll_upper(lat<<16, (lon - 0x20)<<16) | 0x80000004);
     result.insert(ll_upper((lat - 0x20)<<16, lon<<16) | 0x80000004);
     result.insert(ll_upper(lat<<16, lon<<16) | 0x80000004);
-    
+
     lat = lat & 0xff80;
     lon = lon & 0xff80;
     result.insert(ll_upper((lat - 0x80)<<16, (lon - 0x80)<<16) | 0x80000008);
     result.insert(ll_upper(lat<<16, (lon - 0x80)<<16) | 0x80000008);
     result.insert(ll_upper((lat - 0x80)<<16, lon<<16) | 0x80000008);
     result.insert(ll_upper(lat<<16, lon<<16) | 0x80000008);
-    
+
     lat = lat & 0xfe00;
     lon = lon & 0xfe00;
     result.insert(ll_upper((lat - 0x200)<<16, (lon - 0x200)<<16) | 0x80000010);
     result.insert(ll_upper(lat<<16, (lon - 0x200)<<16) | 0x80000010);
     result.insert(ll_upper((lat - 0x200)<<16, lon<<16) | 0x80000010);
     result.insert(ll_upper(lat<<16, lon<<16) | 0x80000010);
-    
+
     lat = lat & 0xf800;
     lon = lon & 0xf800;
     result.insert(ll_upper((lat - 0x800)<<16, (lon - 0x800)<<16) | 0x80000020);
     result.insert(ll_upper(lat<<16, (lon - 0x800)<<16) | 0x80000020);
     result.insert(ll_upper((lat - 0x800)<<16, lon<<16) | 0x80000020);
     result.insert(ll_upper(lat<<16, lon<<16) | 0x80000020);
-    
+
     lat = lat & 0xe000;
     lon = lon & 0xe000;
     result.insert(ll_upper((lat - 0x2000)<<16, (lon - 0x2000)<<16) | 0x80000040);
@@ -666,7 +666,7 @@ inline std::set< Uint31_Index > calc_parents(const std::set< Uint31_Index >& nod
     result.insert(ll_upper((lat - 0x2000)<<16, lon<<16) | 0x80000040);
     result.insert(ll_upper(lat<<16, lon<<16) | 0x80000040);
   }
-  
+
   return result;
 }
 
@@ -675,54 +675,54 @@ inline std::vector< uint32 > calc_parents(const std::vector< uint32 >& node_idxs
 {
   std::vector< uint32 > result;
   result.push_back(0x80000080);
-  
+
   for (std::vector< uint32 >::const_iterator it = node_idxs.begin();
   it != node_idxs.end(); ++it)
   {
     result.push_back(*it);
-    
+
     uint32 lat = upper_ilat(*it & 0x2aaaaaa8) & 0xfffe;
     uint32 lon = upper_ilon(*it & 0x55555554) & 0xfffe;
     result.push_back(ll_upper((lat - 2)<<16, (lon - 2)<<16) | 0x80000001);
     result.push_back(ll_upper(lat<<16, (lon - 2)<<16) | 0x80000001);
     result.push_back(ll_upper((lat - 2)<<16, lon<<16) | 0x80000001);
     result.push_back(ll_upper(lat<<16, lon<<16) | 0x80000001);
-    
+
     lat = lat & 0xfff8;
     lon = lon & 0xfff8;
     result.push_back(ll_upper((lat - 8)<<16, (lon - 8)<<16) | 0x80000002);
     result.push_back(ll_upper(lat<<16, (lon - 8)<<16) | 0x80000002);
     result.push_back(ll_upper((lat - 8)<<16, lon<<16) | 0x80000002);
     result.push_back(ll_upper(lat<<16, lon<<16) | 0x80000002);
-    
+
     lat = lat & 0xffe0;
     lon = lon & 0xffe0;
     result.push_back(ll_upper((lat - 0x20)<<16, (lon - 0x20)<<16) | 0x80000004);
     result.push_back(ll_upper(lat<<16, (lon - 0x20)<<16) | 0x80000004);
     result.push_back(ll_upper((lat - 0x20)<<16, lon<<16) | 0x80000004);
     result.push_back(ll_upper(lat<<16, lon<<16) | 0x80000004);
-    
+
     lat = lat & 0xff80;
     lon = lon & 0xff80;
     result.push_back(ll_upper((lat - 0x80)<<16, (lon - 0x80)<<16) | 0x80000008);
     result.push_back(ll_upper(lat<<16, (lon - 0x80)<<16) | 0x80000008);
     result.push_back(ll_upper((lat - 0x80)<<16, lon<<16) | 0x80000008);
     result.push_back(ll_upper(lat<<16, lon<<16) | 0x80000008);
-    
+
     lat = lat & 0xfe00;
     lon = lon & 0xfe00;
     result.push_back(ll_upper((lat - 0x200)<<16, (lon - 0x200)<<16) | 0x80000010);
     result.push_back(ll_upper(lat<<16, (lon - 0x200)<<16) | 0x80000010);
     result.push_back(ll_upper((lat - 0x200)<<16, lon<<16) | 0x80000010);
     result.push_back(ll_upper(lat<<16, lon<<16) | 0x80000010);
-    
+
     lat = lat & 0xf800;
     lon = lon & 0xf800;
     result.push_back(ll_upper((lat - 0x800)<<16, (lon - 0x800)<<16) | 0x80000020);
     result.push_back(ll_upper(lat<<16, (lon - 0x800)<<16) | 0x80000020);
     result.push_back(ll_upper((lat - 0x800)<<16, lon<<16) | 0x80000020);
     result.push_back(ll_upper(lat<<16, lon<<16) | 0x80000020);
-    
+
     lat = lat & 0xe000;
     lon = lon & 0xe000;
     result.push_back(ll_upper((lat - 0x2000)<<16, (lon - 0x2000)<<16) | 0x80000040);
@@ -730,16 +730,16 @@ inline std::vector< uint32 > calc_parents(const std::vector< uint32 >& node_idxs
     result.push_back(ll_upper((lat - 0x2000)<<16, lon<<16) | 0x80000040);
     result.push_back(ll_upper(lat<<16, lon<<16) | 0x80000040);
   }
-  
+
   sort(result.begin(), result.end(), Uint31_Compare());
   result.erase(unique(result.begin(), result.end()), result.end());
-  
+
   return result;
 }
 
 inline std::pair< Uint31_Index, Uint31_Index > make_interval(uint32 idx)
 {
-  return std::make_pair(Uint31_Index(idx), Uint31_Index((idx + 1) & 0x7fffffff)); 
+  return std::make_pair(Uint31_Index(idx), Uint31_Index((idx + 1) & 0x7fffffff));
 }
 
 inline void blur_index(uint32 distance, uint32 bitmask, uint32 lower_idx, uint32 upper_idx,
@@ -808,15 +808,15 @@ inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
   for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator
       it = node_idxs.begin(); it != node_idxs.end(); ++it)
     add_decomp_range(*it, node_decomp);
-  
+
   std::vector< std::pair< Uint31_Index, Uint31_Index > > result;
   result.push_back(std::make_pair(0x80000080, 0x80000081));
-  
+
   for (std::vector< std::pair< Uint32_Index, Uint32_Index > >::const_iterator
       it = node_decomp.begin(); it != node_decomp.end(); ++it)
   {
     result.push_back(std::make_pair(it->first.val(), it->second.val()));
-    
+
     uint32 lower_idx = it->first.val() & 0x7ffffffc;
     uint32 upper_idx = (it->second.val() - 1) & 0x7ffffffc;
     blur_index(2, 0x80000001, lower_idx, upper_idx, result);
@@ -824,30 +824,30 @@ inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
     lower_idx = it->first.val() & 0x7fffffc0;
     upper_idx = (it->second.val() - 1) & 0x7fffffc0;
     blur_index(8, 0x80000002, lower_idx, upper_idx, result);
-    
+
     lower_idx = it->first.val() & 0x7ffffc00;
     upper_idx = (it->second.val() - 1) & 0x7ffffc00;
     blur_index(0x20, 0x80000004, lower_idx, upper_idx, result);
-    
+
     lower_idx = it->first.val() & 0x7fffc000;
     upper_idx = (it->second.val() - 1) & 0x7fffc000;
     blur_index(0x80, 0x80000008, lower_idx, upper_idx, result);
-    
+
     lower_idx = it->first.val() & 0x7ffc0000;
     upper_idx = (it->second.val() - 1) & 0x7ffc0000;
     blur_index(0x200, 0x80000010, lower_idx, upper_idx, result);
-    
+
     lower_idx = it->first.val() & 0x7fc00000;
     upper_idx = (it->second.val() - 1) & 0x7fc00000;
     blur_index(0x800, 0x80000020, lower_idx, upper_idx, result);
-    
+
     lower_idx = it->first.val() & 0x7c000000;
     upper_idx = (it->second.val() - 1) & 0x7c000000;
     blur_index(0x2000, 0x80000040, lower_idx, upper_idx, result);
   }
 
   sort(result.begin(), result.end());
-  
+
   std::set< std::pair< Uint31_Index, Uint31_Index > > result_set;
   Uint31_Index last_first = result[0].first;
   Uint31_Index last_second = result[0].second;
@@ -863,7 +863,7 @@ inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
       last_second = result[i].second;
   }
   result_set.insert(std::make_pair(last_first, last_second));
-    
+
   return result_set;
 }
 
@@ -880,7 +880,7 @@ inline std::vector< std::pair< uint32, uint32 > > calc_ranges
   uint32 inorth((north + 91.0)*10000000+0.5);
   int32 iwest(west*10000000 + (west > 0 ? 0.5 : -0.5));
   int32 ieast(east*10000000 + (east > 0 ? 0.5 : -0.5));
-  
+
   if (west <= east)
   {
     if ((west < 0) && (east >= 0))
@@ -912,7 +912,7 @@ inline std::vector< std::pair< uint32, uint32 > > calc_ranges
       recursively_calc_ranges
           (isouth & 0xffff0000, inorth & 0xffff0000,
 	   iwest & 0xffff0000, int32(180.0*10000000 + 0.5) & 0xffff0000, 1, ranges);
-	  
+
     if (east > 0)
     {
       recursively_calc_ranges
@@ -935,7 +935,7 @@ inline std::set< std::pair< Uint32_Index, Uint32_Index > > get_ranges_32(
     double south, double north, double west, double east)
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
-  
+
   std::vector< std::pair< uint32, uint32 > > uint_ranges = ::calc_ranges(south, north, west, east);
   for (std::vector< std::pair< uint32, uint32 > >::const_iterator
       it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
@@ -944,7 +944,7 @@ inline std::set< std::pair< Uint32_Index, Uint32_Index > > get_ranges_32(
       (std::make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
     ranges.insert(range);
   }
-    
+
   return ranges;
 }
 
@@ -958,7 +958,7 @@ inline void recursively_calc_ranges
      uint32 bitlevel, std::vector< std::pair< uint32, uint32 > >& ranges)
 {
   int32 dist = ((0xffff0000u>>bitlevel)&0xffff0000);
-  
+
   // If the difference is exactly dist, the indices fill the whole square
   // and we can add this square to the ranges.
   if ((south + dist == north) && (west + dist == east))
@@ -968,10 +968,10 @@ inline void recursively_calc_ranges
 		   ll_upper_(north, east) + 1));
     return;
   }
-  
+
   // Shift dist to obtain a proper recursion.
   dist = ((dist>>1)&0xffff0000);
-  
+
   if ((north | dist) != (south | dist))
   {
     // We need to split between northern and southern part.
@@ -1045,18 +1045,18 @@ inline uint32 ll_upper_(double lat, double lon)
   uint32 temp = ll_upper(ilat_(lat), ilon_(lon));
   return (temp ^ 0x40000000);
 }
-  
+
 
 inline uint32 ll_lower(uint32 ilat, int32 ilon)
 {
   uint32 result(0);
-  
+
   for (uint32 i(0); i < 16; ++i)
   {
     result |= ((0x1<<i)&ilat)<<(i+1);
     result |= ((0x1<<i)&(uint32)ilon)<<i;
   }
-  
+
   return result;
 }
 
@@ -1081,20 +1081,20 @@ inline int32 ilon(double lon)
 
 // convert interleaved coordinates to plain integers
 inline uint32 ilat(uint32 ll_upper, uint32 ll_lower)
-{  
+{
   uint32 upper = ll_upper & 0xaaaaaaaa;
   upper = (upper | (upper<<1)) & 0xcccccccc;
   upper = (upper | (upper<<2)) & 0xf0f0f0f0;
   upper = (upper | (upper<<4)) & 0xff00ff00;
   upper = (upper | (upper<<8)) & 0xffff0000;
-  
+
   uint32 lower = ll_lower & 0xaaaaaaaa;
   lower = (lower | (lower>>1)) & 0x99999999;
   lower = (lower | (lower>>2)) & 0x87878787;
   lower = (lower | (lower>>4)) & 0x807f807f;
   lower = (lower | (lower>>8)) & 0x80007fff;
   lower = (lower | (lower>>16)) & 0x0000ffff;
-  
+
   return (upper | lower);
 }
 
@@ -1119,13 +1119,13 @@ inline int32 ilon(uint32 ll_upper, uint32 ll_lower)
   upper = (upper | (upper<<4)) & 0xfe01fe01;
   upper = (upper | (upper<<8)) & 0xfffe0001;
   upper = (upper | (upper<<16)) & 0xffff0000;
-  
+
   uint32 lower = ll_lower & 0x55555555;
   lower = (lower | (lower>>1)) & 0x33333333;
   lower = (lower | (lower>>2)) & 0x0f0f0f0f;
   lower = (lower | (lower>>4)) & 0x00ff00ff;
   lower = (lower | (lower>>8)) & 0x0000ffff;
-  
+
   return (upper | lower);
 }
 
@@ -1149,7 +1149,7 @@ std::set< std::pair< Index, Index > > intersect_ranges
   std::set< std::pair< Index, Index > > result;
   typename std::set< std::pair< Index, Index > >::const_iterator it_a = range_a.begin();
   typename std::set< std::pair< Index, Index > >::const_iterator it_b = range_b.begin();
-  
+
   while (it_a != range_a.end() && it_b != range_b.end())
   {
     if (!(it_a->first < it_b->second))
@@ -1167,7 +1167,7 @@ std::set< std::pair< Index, Index > > intersect_ranges
       ++it_a;
     }
   }
-  
+
   return result;
 }
 

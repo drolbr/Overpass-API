@@ -61,13 +61,13 @@ class Around_Statement : public Output_Statement
     virtual std::string get_name() const { return "around"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Around_Statement();
-    
+
     struct Statement_Maker : public Generic_Statement_Maker< Around_Statement >
     {
       Statement_Maker() : Generic_Statement_Maker< Around_Statement >("around") {}
     };
     static Statement_Maker statement_maker;
-    
+
     struct Criterion_Maker : public Statement::Criterion_Maker
     {
       virtual bool can_standalone(const std::string& type) { return type == "node"; }

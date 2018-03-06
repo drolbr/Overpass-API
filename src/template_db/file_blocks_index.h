@@ -40,10 +40,10 @@ struct File_Block_Index_Entry
   static const int GROUP = 2;
   static const int SEGMENT = 3;
   static const int LAST_SEGMENT = 4;
-  
+
   File_Block_Index_Entry(const TIndex& index_, uint32 pos_, uint32 size_, uint32 max_keysize_)
     : index(index_), pos(pos_), size(size_), max_keysize(max_keysize_) {}
-  
+
   TIndex index;
   uint32 pos;
   uint32 size;
@@ -61,12 +61,12 @@ public:
   virtual ~File_Blocks_Index();
   bool writeable() const { return (empty_index_file_name != ""); }
   const std::string& file_name_extension() const { return file_name_extension_; }
-    
+
   std::string get_data_file_name() const { return data_file_name; }
   uint64 get_block_size() const { return block_size_; }
   uint32 get_compression_factor() const { return compression_factor; }
   uint32 get_compression_method() const { return compression_method; }
-    
+
   std::list< File_Block_Index_Entry< TIndex > >& get_blocks()
   {
     if (index_buf.ptr)
@@ -79,12 +79,12 @@ public:
       init_void_blocks();
     return void_blocks;
   }
-    
+
   static const int FILE_FORMAT_VERSION = 7512;
   static const int NO_COMPRESSION = 0;
   static const int ZLIB_COMPRESSION = 1;
   static const int LZ4_COMPRESSION = 2;
-    
+
 private:
   std::string index_file_name;
   std::string empty_index_file_name;
@@ -96,17 +96,17 @@ private:
   std::list< File_Block_Index_Entry< TIndex > > blocks;
   std::vector< std::pair< uint32, uint32 > > void_blocks;
   bool void_blocks_initialized;
-    
+
   uint64 block_size_;
   uint32 compression_factor;
   int compression_method;
-    
+
   void init_structure_params();
   void init_blocks();
   void init_void_blocks();
-  
+
 public:
-  uint32 block_count;  
+  uint32 block_count;
 };
 
 
@@ -147,12 +147,12 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
     if (e.error_number != 2)
       throw e;
   }
-  
+
   try
   {
     Raw_File source_file(index_file_name, O_RDONLY, S_666,
 			 "File_Blocks_Index::File_Blocks_Index::3");
-			 
+
     // read index file
     index_size = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
     index_buf.resize(index_size);
@@ -164,9 +164,9 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
       throw e;
     index_buf.resize(0);
   }
-  
+
   init_structure_params();
-  
+
   if (empty_index_file_name != "")
     init_void_blocks();
 }
@@ -184,7 +184,7 @@ void File_Blocks_Index< TIndex >::init_structure_params()
       block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
       compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
       compression_method = *(uint16*)(index_buf.ptr + 6);
-    }      
+    }
     block_count = file_size / block_size_;
   }
 }
@@ -231,7 +231,7 @@ void File_Blocks_Index< TIndex >::init_blocks()
         pos += TIndex::size_of(index_buf.ptr + pos);
       }
     }
-    
+
     index_buf.resize(0);
   }
 }
@@ -242,7 +242,7 @@ void File_Blocks_Index< TIndex >::init_void_blocks()
 {
   if (index_buf.ptr)
     init_blocks();
-  
+
   std::vector< bool > is_referred(block_count, false);
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = blocks.begin();
       it != blocks.end(); ++it)
@@ -250,7 +250,7 @@ void File_Blocks_Index< TIndex >::init_void_blocks()
     for (uint32 i = 0; i < it->size; ++i)
       is_referred[it->pos + i] = true;
   }
-  
+
   bool empty_index_file_used = false;
   if (empty_index_file_name != "")
   {
@@ -267,7 +267,7 @@ void File_Blocks_Index< TIndex >::init_void_blocks()
     }
     catch (File_Error e) {}
   }
-    
+
   if (!empty_index_file_used)
   {
     // determine void_blocks
@@ -284,7 +284,7 @@ void File_Blocks_Index< TIndex >::init_void_blocks()
     if (last_start < block_count)
       void_blocks.push_back(std::make_pair(block_count - last_start, last_start));
   }
-    
+
   std::stable_sort(void_blocks.begin(), void_blocks.end());
   void_blocks_initialized = true;
 }
@@ -299,18 +299,18 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   // Keep space for file version and size information
   uint32 index_size = 8;
   uint32 pos = 8;
-  
+
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
       it(blocks.begin()); it != blocks.end(); ++it)
     index_size += 12 + it->index.size_of();
-  
+
   Void_Pointer< uint8 > index_buf(index_size);
-  
+
   *(uint32*)index_buf.ptr = FILE_FORMAT_VERSION;
   *(uint8*)(index_buf.ptr + 4) = shift_log(block_size_);
   *(uint8*)(index_buf.ptr + 5) = shift_log(compression_factor);
   *(uint16*)(index_buf.ptr + 6) = compression_method;
-  
+
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
       it(blocks.begin()); it != blocks.end(); ++it)
   {
@@ -330,14 +330,14 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   if (index_size < dest_file.size("File_Blocks_Index::~File_Blocks_Index::2"))
     dest_file.resize(index_size, "File_Blocks_Index::~File_Blocks_Index::3");
   dest_file.write(index_buf.ptr, index_size, "File_Blocks_Index::~File_Blocks_Index::4");
-  
+
   // Write void blocks
   Void_Pointer< uint8 > void_index_buf(void_blocks.size() * 8);
   std::pair< uint32, uint32 >* it_ptr = (std::pair< uint32, uint32 >*)(void_index_buf.ptr);
   for (std::vector< std::pair< uint32, uint32 > >::const_iterator it(void_blocks.begin());
       it != void_blocks.end(); ++it)
     *(it_ptr++) = *it;
-  
+
   try
   {
     Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666,
@@ -355,7 +355,7 @@ std::vector< bool > get_data_index_footprint
     (const File_Properties& file_prop, std::string db_dir)
 {
   File_Blocks_Index< TIndex > index(file_prop, false, false, db_dir, "");
-  
+
   std::vector< bool > result(index.block_count, true);
   for (typename std::vector< std::pair< uint32, uint32 > >::const_iterator
       it = index.get_void_blocks().begin(); it != index.get_void_blocks().end(); ++it)

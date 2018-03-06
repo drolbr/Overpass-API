@@ -61,7 +61,7 @@ class Localize_Statement : public Output_Statement
 {
 public:
   enum Mode { data, also_loose, all };
-  
+
   Localize_Statement(int line_number_, const std::map< std::string, std::string >& attributes,
                    Parsed_Query& global_settings);
   virtual std::string get_name() const { return "localize"; }

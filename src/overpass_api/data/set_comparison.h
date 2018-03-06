@@ -144,9 +144,9 @@ private:
   void clear_nodes(Resource_Manager& rman, bool add_deletion_information = false);
   void clear_ways(Resource_Manager& rman, bool add_deletion_information = false);
   void clear_relations(Resource_Manager& rman, bool add_deletion_information = false);
-  
+
   void compute_deriveds(std::map< Uint31_Index, std::vector< Derived_Structure > > rhs_deriveds);
-    
+
   const Set& lhs_set() const { return lhs_set_; }
   uint64 lhs_timestamp() const { return lhs_timestamp_; }
 
@@ -170,15 +170,15 @@ private:
       Resource_Manager& rman);
 
   bool final_target;
-  
+
   std::vector< Node_With_Context > nodes;
   std::vector< Way_With_Context > ways;
   std::vector< Relation_With_Context > relations;
-  
+
   std::vector< std::pair< Node_Skeleton::Id_Type, std::string > > node_values;
   std::vector< std::pair< Way_Skeleton::Id_Type, std::string > > way_values;
   std::vector< std::pair< Relation_Skeleton::Id_Type, std::string > > relation_values;
-  
+
   Set lhs_set_;
   uint64 lhs_timestamp_;
 

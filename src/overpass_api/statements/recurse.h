@@ -37,13 +37,13 @@ class Recurse_Statement : public Output_Statement
     virtual std::string get_name() const { return "recurse"; }
     virtual void execute(Resource_Manager& rman);
     virtual ~Recurse_Statement();
-    
+
     struct Statement_Maker : public Generic_Statement_Maker< Recurse_Statement >
     {
       Statement_Maker() : Generic_Statement_Maker< Recurse_Statement >("recurse") {}
     };
     static Statement_Maker statement_maker;
-    
+
     struct Criterion_Maker_1 : public Statement::Criterion_Maker
     {
       virtual bool can_standalone(const std::string& type) { return true; }
@@ -60,7 +60,7 @@ class Recurse_Statement : public Output_Statement
       }
     };
     static Criterion_Maker_1 criterion_maker_1;
-    
+
     struct Criterion_Maker_2 : public Statement::Criterion_Maker
     {
       virtual bool can_standalone(const std::string& type) { return false; }

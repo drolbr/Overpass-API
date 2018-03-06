@@ -23,7 +23,7 @@ bool Tag_Filter::matches(const std::vector< std::pair< std::string, std::string 
 std::string link_if_any(const std::vector< std::pair< std::string, std::string > >& tags)
 {
   std::string link;
-  
+
   for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags.begin(); it != tags.end(); ++it)
   {
     if (it->second.find("www.") != std::string::npos)
@@ -48,7 +48,7 @@ std::string title_if_any(const std::string& link, const std::string& title_key,
     const std::vector< std::pair< std::string, std::string > >& tags)
 {
   std::string title;
-  
+
   for (std::vector< std::pair< std::string, std::string > >::const_iterator it = tags.begin(); it != tags.end(); ++it)
   {
     if (it->first == title_key)
@@ -59,11 +59,11 @@ std::string title_if_any(const std::string& link, const std::string& title_key,
       if (link != "")
 	title += "</a>";
       title += "<br/>\n";
-      
+
       break;
     }
   }
-  
+
   return title;
 }
 
@@ -92,7 +92,7 @@ std::string print(const std::string& title_key,
 {
   std::string link = tags ? link_if_any(*tags) : "";
   std::string result = "\n<p>" + (tags ? title_if_any(link, title_key, *tags) : "");
-  
+
   if (result == "\n<p>")
   {
     if (link != "")
@@ -130,10 +130,10 @@ bool Category_Filter::consider(const Node_Skeleton& skel,
     if (it != it_conj->end())
       break;
   }
-  
+
   if (it_conj != filter_disjunction.end())
     output += print(title_key, skel, tags);
-  
+
   return it_conj != filter_disjunction.end();
 }
 
@@ -153,10 +153,10 @@ bool Category_Filter::consider(const Way_Skeleton& skel,
     if (it != it_conj->end())
       break;
   }
-  
+
   if (it_conj != filter_disjunction.end())
     output += print(title_key, skel, tags);
-  
+
   return it_conj != filter_disjunction.end();
 }
 
@@ -176,10 +176,10 @@ bool Category_Filter::consider(const Relation_Skeleton& skel,
     if (it != it_conj->end())
       break;
   }
-  
+
   if (it_conj != filter_disjunction.end())
     output += print(title_key, skel, tags);
-  
+
   return it_conj != filter_disjunction.end();
 }
 
@@ -223,7 +223,7 @@ void Output_Popup::write_footer()
 {
   for (std::vector< Category_Filter* >::iterator it = categories.begin(); it != categories.end(); ++it)
     std::cout<<(*it)->result();
-  
+
   std::cout<<"\n</body>\n</html>\n";
 }
 
@@ -255,7 +255,7 @@ void Output_Popup::print_item(const Way_Skeleton& skel,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action,
-      const Way_Skeleton* new_skel,      
+      const Way_Skeleton* new_skel,
       const Opaque_Geometry* new_geometry,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)

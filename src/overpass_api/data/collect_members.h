@@ -191,7 +191,7 @@ void get_elements_by_id_from_db
      File_Properties& file_prop, File_Properties& attic_file_prop)
 {
   uint64 timestamp = rman.get_desired_timestamp();
-  
+
   elements.clear();
   attic_elements.clear();
   if (ids.empty())

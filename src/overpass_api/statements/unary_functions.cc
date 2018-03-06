@@ -233,7 +233,7 @@ Requested_Context Evaluator_Binary_Function::request_context() const
     return first->request_context();
   else if (second)
     return second->request_context();
-  
+
   return Requested_Context();
 }
 

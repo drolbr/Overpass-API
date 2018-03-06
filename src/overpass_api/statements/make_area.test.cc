@@ -70,7 +70,7 @@ void evaluate_grid(double south, double north, double west, double east,
       if (!areas_printed && default_ && !default_->areas.empty())
       {
 	areas_printed = true;
-	
+
 	const char* attributes[] = { 0 };
 	Print_Statement stmt1(0, convert_c_pairs(attributes), global_settings);
 	stmt1.execute(rman);

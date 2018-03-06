@@ -113,11 +113,11 @@ void Newer_Constraint::filter(const Statement& query, Resource_Manager& rman, Se
   if (!into.attic_nodes.empty())
     newer_filter_map_attic(into.attic_nodes, rman, this->timestamp,
 			   meta_settings().NODES_META, attic_settings().NODES_META);
-    
+
   if (!into.attic_ways.empty())
     newer_filter_map_attic(into.attic_ways, rman, this->timestamp,
 			   meta_settings().WAYS_META, attic_settings().WAYS_META);
-    
+
   if (!into.attic_relations.empty())
     newer_filter_map_attic(into.attic_relations, rman, this->timestamp,
 			   meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
@@ -136,7 +136,7 @@ Statement* Newer_Statement::Criterion_Maker::create_criterion(const Token_Node_P
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
   uint line_nr = tree_it->line_col.first;
-  
+
   if (tree_it->token == ":" && tree_it->rhs)
   {
     std::map< std::string, std::string > attributes;

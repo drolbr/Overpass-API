@@ -14,25 +14,25 @@ class Parsed_Query
 public:
   Parsed_Query() : output_handler(0), global_bbox_limitation(Bbox_Double::invalid), last_dispensed_id(0ull) {}
   ~Parsed_Query() { delete output_handler; }
-  
+
   Output_Handler* get_output_handler() const { return output_handler; }
   void set_output_handler(Output_Handler_Parser* parser,
 			  Tokenizer_Wrapper* token, Error_Output* error_output);
   void set_global_bbox(const Bbox_Double& bbox) { global_bbox_limitation = bbox; }
-  
+
   const std::map< std::string, std::string >& get_input_params() const { return input_params; }
   void set_input_params(const std::map< std::string, std::string >& input_params_) { input_params = input_params_; }
-  
+
   void trigger_print_bounds() const;
   const Bbox_Double& get_global_bbox_limitation() const { return global_bbox_limitation; }
-  
+
   Derived_Skeleton::Id_Type dispense_derived_id() { return ++last_dispensed_id; }
 
 private:
   // The class has ownership of objects - hence no assignment or copies are allowed
   Parsed_Query(const Parsed_Query&);
   Parsed_Query& operator=(const Parsed_Query&);
-  
+
   Output_Handler* output_handler;
   Bbox_Double global_bbox_limitation;
   std::map< std::string, std::string > input_params;

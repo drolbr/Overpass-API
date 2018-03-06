@@ -182,7 +182,7 @@ const OSMData& read_osm()
 {
   // read the XML input
   parse(stdin, start, end);
-  
+
   for (map< uint32, Way* >::const_iterator it(current_data.ways.begin());
       it != current_data.ways.end(); ++it)
   {
@@ -200,7 +200,7 @@ const OSMData& read_osm()
         it->second->nds.push_back(nit->second);
     }
   }
-  
+
   for (map< uint32, Relation* >::const_iterator it(current_data.relations.begin());
       it != current_data.relations.end(); ++it)
   {

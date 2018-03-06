@@ -49,18 +49,18 @@ class Dispatcher_Client
     ~Dispatcher_Client();
 
     /** Write operations: -------------------------------------------------- */
-	       
+
     /** Allocates a write lock. Waits if necessary. */
     void write_start();
-    
+
     /** Aborts an active writing operation. Results are undefined if it is
         called outside a writing operation. */
     void write_rollback();
-    
+
     /** Commits an active writing operation. Results are undefined if it is
         called outside a writing operation. */
     void write_commit();
-    
+
     /** Read operations: --------------------------------------------------- */
 
     /** Request the index for a read operation and registers the reading process.
@@ -68,47 +68,47 @@ class Dispatcher_Client
     is in this state, write_commits are blocked. */
     void request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
 			      uint32 client_token);
-    
+
     /** Changes the registered state from reading the index to reading the
     database. Can be safely called multiple times for the same process. */
     void read_idx_finished();
-    
+
     /** Unregisteres a reading process. */
     void read_finished();
-    
+
     /** Other operations: -------------------------------------------------- */
-    
+
     /** Terminate another instance running in the standby_loop. */
     void terminate();
 
     /** Let another instance running in the standby_loop output its status. */
     void output_status();
-    
+
     /** Purge another instance. */
     void purge(uint32 pid);
-    
+
     /** Query the pid of the instance with the given token. */
     pid_t query_by_token(uint32 token);
-    
+
     Client_Status query_my_status(uint32 token);
-    
+
     void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units, int rate_limit);
-    
+
     /** Called regularly to tell the dispatcher that this process is still alive */
     void ping();
-    
+
     const std::string& get_db_dir() { return db_dir; }
     const std::string& get_shadow_name() { return shadow_name; }
-    
+
   private:
     std::string dispatcher_share_name;
     int dispatcher_shm_fd;
     volatile uint8* dispatcher_shm_ptr;
     std::string db_dir, shadow_name;
     Unix_Socket socket;
-    
+
     uint32 ack_arrived();
-    
+
     template< class TObject >
     void send_message(TObject message, const std::string& source_pos);
 };
@@ -120,7 +120,7 @@ bool file_present(const std::string& full_path);
 struct Context_Error
 {
   Context_Error(const std::string message_) : message(message_) {}
-  
+
   std::string message;
 };
 

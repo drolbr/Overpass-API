@@ -327,7 +327,7 @@ bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
 		       const std::map< TIndex, std::vector< TObject > >& summand)
 {
   bool result_has_grown = false;
-  
+
   for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
       it = summand.begin(); it != summand.end(); ++it)
   {
@@ -343,10 +343,10 @@ bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
     other.swap(target);
     std::set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
 	      back_inserter(target), Compare_By_Id< TObject >());
-    
+
     result_has_grown |= (target.size() > other.size());
   }
-  
+
   return result_has_grown;
 }
 

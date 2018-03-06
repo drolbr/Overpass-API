@@ -50,10 +50,10 @@ inline const std::map< uint32, std::string >& User_Data_Cache::users(
     for (Block_Backend< Uint32_Index, User_Data >::Flat_Iterator it = user_db.flat_begin();
         !(it == user_db.flat_end()); ++it)
       users_[it.object().id] = it.object().name;
-    
+
     loaded = true;
   }
-  
+
   return users_;
 }
 

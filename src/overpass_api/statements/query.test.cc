@@ -188,7 +188,7 @@ void perform_query
       stmt1.stmt().add_statement(&stmt3("set", "c").stmt(), "");
       stmt1.stmt().execute(rman);
     }
-    
+
     lhs = rman.get_set("_");
     if (!lhs)
       lhs = &empty;
@@ -853,7 +853,7 @@ void perform_multi_query_with_bbox
 	  stmt4("v", value2);
 	stmt1.stmt().add_statement(&stmt4("modv", straight2 ? "" : "not").stmt(), "");
       }
-	
+
       SProxy< Has_Kv_Statement > stmt5;
       if (key3 != "")
       {
@@ -868,7 +868,7 @@ void perform_multi_query_with_bbox
 	  stmt5("v", value3);
 	stmt1.stmt().add_statement(&stmt5("modv", straight2 ? "" : "not").stmt(), "");
       }
-	
+
       SProxy< Bbox_Query_Statement > stmt3;
       stmt1.stmt().add_statement(&stmt3("n", to_string(north))("s", to_string(south))
           ("e", to_string(east))("w", to_string(west)).stmt(), "");
@@ -1150,7 +1150,7 @@ int main(int argc, char* args[])
     // Test three key-values intersected
     perform_query("node", "node_key_5", "node_value_5", "node_key_7", "node_value_0",
 		  "node_key_15", "node_value_15", args[3]);
-		
+
   // Test queries for ways.
   if ((test_to_execute == "") || (test_to_execute == "12"))
     // Test a key and value which appears only locally
@@ -1485,7 +1485,7 @@ int main(int argc, char* args[])
     perform_query_with_recurse("relation", "relation-backwards", "", "",
 			       100.0, 100.0, 0.0, 0.0, true,
 			       pattern_size, global_node_offset, args[3]);
-			
+
   // Test id-query type node as subquery
   if ((test_to_execute == "") || (test_to_execute == "91"))
     perform_query_with_id_query("node", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1505,7 +1505,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "95"))
     perform_query_with_id_query("node", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			        pattern_size, global_node_offset, args[3]);
-			
+
   // Test id-query type way as subquery
   if ((test_to_execute == "") || (test_to_execute == "96"))
     perform_query_with_id_query("way", "", "", 100.0, 100.0, 0.0, 0.0, false,
@@ -1525,7 +1525,7 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "100"))
     perform_query_with_id_query("way", "", "", 100.0, 100.0, 0.0, 0.0, true,
 			        pattern_size, global_node_offset, args[3]);
-			
+
   // Test id-query type relation as subquery
   if ((test_to_execute == "") || (test_to_execute == "101"))
     perform_query_with_id_query("relation", "", "", 100.0, 100.0, 0.0, 0.0, false,

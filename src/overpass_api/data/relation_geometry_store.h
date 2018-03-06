@@ -36,22 +36,22 @@ public:
       (const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
       const Statement& query, Resource_Manager& rman,
       double south_ = 1., double north_ = 0., double west_ = 0., double east_ = 0.);
-      
+
   ~Relation_Geometry_Store();
-  
+
   // return the empty vector if the relation is not found
   std::vector< std::vector< Quad_Coord > > get_geometry(const Relation_Skeleton& relation) const;
-  
+
 private:
   std::vector< Node > nodes;
   std::vector< Way_Skeleton > ways;
   Way_Geometry_Store* way_geometry_store;
-  
+
   uint32 south;
   uint32 north;
   int32 west;
   int32 east;
-  
+
   bool matches_bbox(uint32 ll_upper, uint32 ll_lower) const;
 };
 

@@ -67,16 +67,16 @@ void Union_Statement::execute(Resource_Manager& rman)
 {
   rman.push_stack_frame();
   rman.move_outward(get_result_name(), get_result_name());
-  
+
   for (std::vector< Statement* >::iterator it(substatements.begin());
        it != substatements.end(); ++it)
   {
     (*it)->execute(rman);
     rman.union_inward((*it)->get_result_name(), get_result_name());
   }
-  
+
   rman.move_all_inward_except(get_result_name());
   rman.pop_stack_frame();
-  
+
   rman.health_check(*this);
 }

@@ -56,19 +56,19 @@ struct Script_Parser
     if (!p)
       throw Parse_Error("Couldn't allocate memory for parser.");
   }
-  
+
   ~Script_Parser()
   {
     XML_ParserFree(p);
   }
-  
+
   void parse(const std::string& input,
 	void (*start)(const char*, const char**),
 	void (*end)(const char*))
   {
     working_start = start;
     working_end = end;
-  
+
     XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
     XML_SetCharacterDataHandler(p, expat_wrapper_text);
     XML_SetUserData(p, this);
@@ -83,7 +83,7 @@ struct Script_Parser
         buff_len = BUFFSIZE-1;
       strcpy(Buff, input.substr(pos, buff_len).c_str());
       pos += buff_len;
-  
+
       if (XML_Parse(p, Buff, buff_len, done) == XML_STATUS_ERROR)
         throw Parse_Error(XML_ErrorString(XML_GetErrorCode(p)));
     }
@@ -129,12 +129,12 @@ struct Script_Parser
 
 private:
   XML_Parser p;
-  bool parser_online;  
+  bool parser_online;
   std::string result_buf;
 
   void (*working_start)(const char*, const char**);
   void (*working_end)(const char*);
-  
+
   //for the XMLParser
   char Buff[BUFFSIZE];
 };

@@ -392,7 +392,7 @@ void generic_key_test(Parsed_Query& global_settings, Transaction& transaction,
 
   Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(
       Attr()("keytype", "generic")("from", from).kvs(), &stmt);
-  
+
   if (set_value_const)
     add_fixed_stmt("...", subs, stmt_cont);
   else
@@ -401,7 +401,7 @@ void generic_key_test(Parsed_Query& global_settings, Transaction& transaction,
         (from == "" ? Attr() : Attr()("from", from)).kvs(), global_settings), subs);
     subs = stmt_cont.add_stmt(new Evaluator_Generic(0, Attr().kvs(), global_settings), subs);
   }
-  
+
   if (exclude_a_key)
     subs = stmt_cont.create_stmt< Set_Prop_Statement >(
       Attr()("keytype", "tag")("k", "way_key").kvs(), &stmt);
@@ -416,7 +416,7 @@ void value_id_type_test(Parsed_Query& global_settings, Transaction& transaction,
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, from, ref, ref+1, global_node_offset);
-  
+
   Statement_Container stmt_cont(global_settings);
 
   Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
@@ -596,7 +596,7 @@ void lrs_test(Parsed_Query& global_settings, Transaction& transaction,
 {
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
-  
+
   Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
 
   Statement* subs = add_prop_stmt("lrs_in_1_positive", &stmt, stmt_cont);
@@ -977,14 +977,14 @@ void make_linestring_test(Parsed_Query& global_settings, Transaction& transactio
 
   Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), subs);
-  
+
   if (num_points > 0)
     add_point("51.1", "7.1", subs, stmt_cont);
   if (num_points > 1)
     add_point("51.2", "7.2", subs, stmt_cont);
   if (num_points > 2)
     add_point("51.3", "7.3", subs, stmt_cont);
-  
+
   if (num_points > 3)
   {
     Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
@@ -1012,30 +1012,30 @@ void make_polygon_test(Parsed_Query& global_settings, Transaction& transaction,
   Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
   Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
-  
+
   if (num_points > 0)
     add_point("41.01", "0.01", subs, stmt_cont);
   if (num_points > 1)
     add_point("41.04", "0.02", subs, stmt_cont);
   if (num_points > 2)
     add_point("41.03", "0.03", subs, stmt_cont);
-  
+
   if (num_points > 3)
   {
     add_point("41.0", "0.001", subs, stmt_cont);
-    
+
     Statement* pt = stmt_cont.add_stmt(new Evaluator_Point(0, Attr().kvs(), global_settings), subs);
     add_fixed_stmt("41.0", pt, stmt_cont);
     Statement* times = stmt_cont.add_stmt(new Evaluator_Times(0, Attr().kvs(), global_settings), pt);
     add_fixed_stmt(".0000001", times, stmt_cont);
     Statement* max = stmt_cont.add_stmt(new Evaluator_Max_Value(0, Attr()("from", "_").kvs(), global_settings), times);
     stmt_cont.add_stmt(new Evaluator_Length(0, Attr().kvs(), global_settings), max);
-    
+
     add_point("41.0", "0.0", subs, stmt_cont);
   }
   if (num_points > 4)
     add_point("41.01", "0.01", subs, stmt_cont);
-  
+
   if (num_points > 5)
   {
     subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
@@ -1059,7 +1059,7 @@ void make_polygon_date_line_test(Parsed_Query& global_settings, Transaction& tra
 
   Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
   Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
-  
+
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
   add_point("45", "179.99", subs, stmt_cont);
   add_point("44.99", "-179.99", subs, stmt_cont);
@@ -1083,7 +1083,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings,
 
   Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
   Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
-  
+
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
   add_point(lat_1, lon_1, subs, stmt_cont);
   add_point(lat_2, lon_2, subs, stmt_cont);
@@ -1107,12 +1107,12 @@ void make_polygon_intersection_test_2(Parsed_Query& global_settings,
 
   Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
   Statement* poly = stmt_cont.add_stmt(new Evaluator_Polygon(0, Attr().kvs(), global_settings), subs);
-  
+
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
   add_point("51.006", "7.0025", subs, stmt_cont);
   add_point("51.005", lon_1, subs, stmt_cont);
   add_point("51.005", lon_2, subs, stmt_cont);
-  
+
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), poly);
   add_point("51.004", "7.0025", subs, stmt_cont);
   add_point("51.005", lon_3, subs, stmt_cont);
@@ -1128,28 +1128,28 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
 {
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.004", "7.004",
       "51.006", "7.004",
       "51.004", "7.006",
       "51.006", "7.006");
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.104", "7.005",
       "51.106", "7.005",
       "51.105", "7.006",
       "51.105", "7.004");
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.203", "7.004",
       "51.207", "7.006",
       "51.206", "7.007",
       "51.204", "7.003");
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.004", "7.004",
@@ -1157,7 +1157,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
       "51.005", "7.005",
       "51.004", "7.006",
       "51.006", "7.006");
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.104", "7.005",
@@ -1165,7 +1165,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
       "51.105", "7.006",
       "51.105", "7.005",
       "51.105", "7.004");
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.203", "7.004",
@@ -1173,7 +1173,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
       "51.206", "7.007",
       "51.205", "7.005",
       "51.204", "7.003");
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.004", "7.004",
@@ -1182,7 +1182,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
       "51.004", "7.006",
       "51.006", "7.006",
       "51.005", "7.005");
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.104", "7.005",
@@ -1191,7 +1191,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
       "51.105", "7.006",
       "51.105", "7.005",
       "51.105", "7.004");
-  
+
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
       "51.203", "7.004",
@@ -1200,7 +1200,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
       "51.206", "7.007",
       "51.205", "7.005",
       "51.204", "7.003");
-  
+
   // Both intersections within the same index bucket
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
@@ -1209,7 +1209,7 @@ void make_polygon_intersection_test_1(Parsed_Query& global_settings, Transaction
       "51.004", "7.005",
       "51.006", "7.006",
       "51.005", "7.007");
-  
+
   // Two intersections in different index buckets
   make_polygon_intersection_test_1(global_settings,
       type, rman, stmt_cont,
@@ -1226,7 +1226,7 @@ void make_polygon_intersection_test_2(Parsed_Query& global_settings, Transaction
 {
   Resource_Manager rman(transaction, &global_settings);
   Statement_Container stmt_cont(global_settings);
-  
+
   make_polygon_intersection_test_2(global_settings,
       "7.001", "7.002", "7.003", "7.004", type, rman, stmt_cont);
   make_polygon_intersection_test_2(global_settings,
@@ -1283,7 +1283,7 @@ void gcat_test(Parsed_Query& global_settings, Transaction& transaction,
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, "_", 8, 14, global_node_offset);
-  
+
   Statement_Container stmt_cont(global_settings);
   Union_Statement union_(0, Attr().kvs(), global_settings);
   stmt_cont.add_stmt(new Item_Statement(0, Attr().kvs(), global_settings), &union_);
@@ -1324,7 +1324,7 @@ void center_test(Parsed_Query& global_settings, Transaction& transaction,
 
   Statement* subs = stmt_cont.create_stmt< Set_Prop_Statement >(Attr()("keytype", "geometry").kvs(), &stmt);
   Statement* center = stmt_cont.add_stmt(new Evaluator_Center(0, Attr().kvs(), global_settings), subs);
-  
+
   subs = stmt_cont.add_stmt(new Evaluator_Linestring(0, Attr().kvs(), global_settings), center);
   add_point(to_string(base_lat + 0.01), to_string(base_lon_1), subs, stmt_cont);
   add_point(to_string(base_lat), to_string(base_lon_2), subs, stmt_cont);
@@ -1339,16 +1339,16 @@ void trace_test_1(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, bool multiple, bool same, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
-  
+
   Statement_Container stmt_cont(global_settings);
   Union_Statement union_(0, Attr().kvs(), global_settings);
-  
+
   Statement* geom_source = stmt_cont.add_stmt(
       new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
   geom_source = stmt_cont.add_stmt(
       new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
   add_point("51.501", "7.0005", geom_source, stmt_cont);
-  
+
   if (multiple)
   {
     geom_source = stmt_cont.add_stmt(
@@ -1381,10 +1381,10 @@ void trace_test_2(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, bool multiple, bool reversed, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
-  
+
   Statement_Container stmt_cont(global_settings);
   Union_Statement union_(0, Attr().kvs(), global_settings);
-  
+
   Statement* geom_source = stmt_cont.add_stmt(
       new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
   geom_source = stmt_cont.add_stmt(
@@ -1393,14 +1393,14 @@ void trace_test_2(Parsed_Query& global_settings, Transaction& transaction,
       new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
   add_point("52.004", "7.0025", lstr, stmt_cont);
   add_point("52.005", "7.0025", lstr, stmt_cont);
-  
+
   geom_source = stmt_cont.add_stmt(
       new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
   geom_source = stmt_cont.add_stmt(
       new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
   lstr = stmt_cont.add_stmt(
       new Evaluator_Linestring(0, Attr().kvs(), global_settings), geom_source);
-  
+
   if (multiple)
   {
     add_point("52.004", "7.0015", lstr, stmt_cont);
@@ -1440,10 +1440,10 @@ void hull_test_1(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, uint test_level, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
-  
+
   Statement_Container stmt_cont(global_settings);
   Union_Statement union_(0, Attr().kvs(), global_settings);
-  
+
   if (test_level > 0)
   {
     Statement* geom_source = stmt_cont.add_stmt(
@@ -1518,10 +1518,10 @@ void hull_test_2(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, uint test_level, uint64 global_node_offset)
 {
   Resource_Manager rman(transaction, &global_settings);
-  
+
   Statement_Container stmt_cont(global_settings);
   Union_Statement union_(0, Attr().kvs(), global_settings);
-  
+
   Statement* geom_source = stmt_cont.add_stmt(
       new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
   geom_source = stmt_cont.add_stmt(

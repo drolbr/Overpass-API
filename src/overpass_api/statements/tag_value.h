@@ -139,7 +139,7 @@ public:
   };
   static Statement_Maker statement_maker;
   static Element_Function_Maker< Evaluator_Id > evaluator_maker;
-  
+
   static std::string stmt_func_name() { return "id"; }
   virtual std::string dump_xml(const std::string& indent) const
   { return indent + "<eval-id/>\n"; }
@@ -1083,7 +1083,7 @@ public:
   {
     return indent + "<eval-prop-count type=\"" + to_string(to_count) + "\""
         + (to_count == by_role || to_count == distinct_by_role ?
-            std::string(" role=\"") + escape_xml(role) + "\"" : std::string("")) 
+            std::string(" role=\"") + escape_xml(role) + "\"" : std::string(""))
         + (type_to_count != all ?
             std::string(" members_type=\"") + to_string(type_to_count) + "\"" : std::string("")) + "/>\n";
   }
@@ -1092,7 +1092,7 @@ public:
     return std::string("count_") + to_string(to_count) + "("
         + (to_count == by_role || to_count == distinct_by_role ?
             std::string("\"") + escape_cstr(role) + "\""
-            + (type_to_count != all ? "," : "") : std::string("")) 
+            + (type_to_count != all ? "," : "") : std::string(""))
         + (type_to_count != all ? to_string(type_to_count) : std::string("")) + ")";
   }
 

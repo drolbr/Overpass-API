@@ -32,7 +32,7 @@ const double PI = acos(0)*2;
 struct Display_Class
 {
   Display_Class() : key(""), value(""), text(""), limit(-1) {}
-  
+
   string key;
   string value;
   string text;
@@ -77,9 +77,9 @@ void options_end(const char *el)
 int main(int argc, char *argv[])
 {
   string network, ref, operator_;
-  
+
   brim = 0.0;
-  
+
   int argi(1);
   // check on early run for options only
   while (argi < argc)
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
       operator_ = string(argv[argi]).substr(11);
     ++argi;
   }
-  
+
   cout<<"<osm-script>\n"
       <<"\n"
       <<"<query type=\"relation\">\n"
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     cout<<"  <has-kv k=\"operator\" v=\""<<operator_<<"\"/>\n";
   cout<<"</query>\n"
       <<"<recurse type=\"relation-node\" into=\"stops\"/>\n";
-      
+
   if (brim == 0.0)
   {
     cout<<"<union>\n"
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 	<<"<union>\n"
 	<<"  <item/>\n"
 	<<"  <recurse type=\"node-relation\"/>\n";
-	
+
     for (vector< Display_Class >::const_iterator it(display_classes.begin());
         it != display_classes.end(); ++it)
     {
@@ -160,12 +160,12 @@ int main(int argc, char *argv[])
       <<"    <has-kv k=\""<<it->key<<"\" v=\""<<it->value<<"\"/>\n"
       <<"  </query>\n";
     }
-    
+
     cout<<"</union>\n"
         <<"<print/>\n"
         <<"\n"
         <<"</osm-script>\n";
   }
-  
+
   return 0;
 }

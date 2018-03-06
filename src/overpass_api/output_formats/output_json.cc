@@ -16,7 +16,7 @@ void Output_JSON::write_payload_header
 {
   if (padding != "")
     std::cout<<padding<<"(";
-    
+
   std::cout<<"{\n"
         "  \"version\": 0.6,\n"
         "  \"generator\": \"Overpass API\",\n"
@@ -98,19 +98,19 @@ void Output_JSON::print_item(const Node_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta)
 {
-  handle_first_elem(first_elem);  
+  handle_first_elem(first_elem);
   std::cout<<"{\n"
         "  \"type\": \"node\"";
   if (mode.mode & Output_Mode::ID)
     std::cout<<",\n  \"id\": "<<skel.id.val();
-  
+
   if (mode.mode & (Output_Mode::COORDS | Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
     std::cout<<",\n  \"lat\": "<<std::fixed<<std::setprecision(7)<<geometry.center_lat()
         <<",\n  \"lon\": "<<std::fixed<<std::setprecision(7)<<geometry.center_lon();
   if (meta)
     print_meta_json(*meta, *users);
-  
-  print_tags(tags);  
+
+  print_tags(tags);
   std::cout<<"\n}";
 }
 
@@ -139,22 +139,22 @@ void Output_JSON::print_item(const Way_Skeleton& skel,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action,
-      const Way_Skeleton* new_skel,      
+      const Way_Skeleton* new_skel,
       const Opaque_Geometry* new_geometry,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
 {
-  handle_first_elem(first_elem);  
+  handle_first_elem(first_elem);
   std::cout<<"{\n"
         "  \"type\": \"way\"";
   if (mode.mode & Output_Mode::ID)
     std::cout<<",\n  \"id\": "<<skel.id.val();
-  
+
   if (meta)
     print_meta_json(*meta, *users);
 
   print_bounds(geometry, mode);
-  
+
   if ((mode.mode & Output_Mode::NDS) != 0 && !skel.nds.empty())
   {
     std::vector< Node::Id_Type >::const_iterator it = skel.nds.begin();
@@ -168,7 +168,7 @@ void Output_JSON::print_item(const Way_Skeleton& skel,
   if ((mode.mode & Output_Mode::GEOMETRY) != 0 && geometry.has_faithful_way_geometry())
   {
     std::cout<<",\n  \"geometry\": [";
-    for (uint i = 0; i < geometry.way_size(); ++i) 
+    for (uint i = 0; i < geometry.way_size(); ++i)
     {
       if (geometry.way_pos_is_valid(i))
         std::cout<<"\n    { \"lat\": "<<std::fixed<<std::setprecision(7)
@@ -177,14 +177,14 @@ void Output_JSON::print_item(const Way_Skeleton& skel,
             <<geometry.way_pos_lon(i)<<" }";
       else
         std::cout<<"\n    null";
-      
+
       if (i < geometry.way_size() - 1)
         std::cout << ",";
     }
     std::cout<<"\n  ]";
-  }  
+  }
 
-  print_tags(tags);  
+  print_tags(tags);
   std::cout<<"\n}";
 }
 
@@ -202,17 +202,17 @@ void Output_JSON::print_item(const Relation_Skeleton& skel,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta)
 {
-  handle_first_elem(first_elem);  
+  handle_first_elem(first_elem);
   std::cout<<"{\n"
         "  \"type\": \"relation\"";
   if (mode.mode & Output_Mode::ID)
     std::cout<<",\n  \"id\": "<<skel.id.val();
-  
+
   if (meta)
     print_meta_json(*meta, *users);
 
   print_bounds(geometry, mode);
-  
+
   if (roles && (mode.mode & Output_Mode::MEMBERS) != 0 && !skel.members.empty())
   {
     std::cout<<",\n  \"members\": [";
@@ -229,7 +229,7 @@ void Output_JSON::print_item(const Relation_Skeleton& skel,
           geometry.has_faithful_relation_geometry() && geometry.relation_pos_is_valid(i))
         std::cout<<",\n      \"lat\": "<<std::fixed<<std::setprecision(7)<<geometry.relation_pos_lat(i)
             <<",\n      \"lon\": "<<std::fixed<<std::setprecision(7)<<geometry.relation_pos_lon(i);
-              
+
       if (skel.members[i].type == Relation_Entry::WAY && geometry.has_faithful_relation_geometry())
       {
         std::cout<<",\n      \"geometry\": [";
@@ -249,13 +249,13 @@ void Output_JSON::print_item(const Relation_Skeleton& skel,
         }
         std::cout<<"\n      ]";
       }
-      
+
       std::cout<<"\n    }";
     }
     std::cout<<"\n  ]";
   }
-  
-  print_tags(tags);  
+
+  print_tags(tags);
   std::cout<<"\n}";
 }
 
@@ -266,12 +266,12 @@ void Output_JSON::print_item(const Derived_Skeleton& skel,
       Output_Mode mode,
       const Feature_Action& action)
 {
-  handle_first_elem(first_elem);  
+  handle_first_elem(first_elem);
   std::cout<<"{\n"
         "  \"type\": \""<<skel.type_name<<"\"";
   if (mode.mode & Output_Mode::ID)
     std::cout<<",\n  \"id\": "<<skel.id.val();
-  
-  print_tags(tags);  
+
+  print_tags(tags);
   std::cout<<"\n}";
 }

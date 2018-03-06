@@ -32,7 +32,7 @@ struct NamedNode
 {
   public:
     NamedNode() : lat(100.0), lon(200.0), name("") {}
-    
+
     double lat, lon;
     string name;
 };
@@ -43,7 +43,7 @@ struct DisplayNode
 {
   public:
     DisplayNode() : node(), limit(-1.0) {}
-    
+
     NamedNode node;
     double limit;
 };
@@ -55,11 +55,11 @@ struct Timespan
 	   unsigned int end_d, unsigned int end_h, unsigned int end_m)
   : begin(begin_d*60*24 + begin_h*60 + begin_m),
     end(end_d*60*24 + end_h*60 + end_m) {}
-  
+
   bool operator<(const Timespan& a) const;
   bool operator==(const Timespan& a) const;
   string hh_mm() const;
-  
+
   // values are minutes since monday midnight
   unsigned int begin;
   unsigned int end;
@@ -70,10 +70,10 @@ struct Relation
   public:
     Relation() : forward_stops(), backward_stops(), ref(""), network(""),
       color(""), from(""), to(""), direction(0), opening_hours() {}
-    
+
     vector< unsigned int > forward_stops;
     vector< unsigned int > backward_stops;
-    
+
     string ref;
     string network;
     string color;
@@ -92,7 +92,7 @@ struct RelationHumanId
   public:
     RelationHumanId() : ref(""), color("") {}
     RelationHumanId(string ref_, string color_) : ref(ref_), color(color_) {}
-    
+
     string ref;
     string color;
 };
@@ -111,12 +111,12 @@ struct Stop
 {
   public:
     Stop() : name(""), used_by(used_by_size) {}
-    
+
     string name;
-    
+
     vector< int > used_by;
     static unsigned int used_by_size;
-    
+
     set< RelationHumanId > correspondences;
     const static int FORWARD = 1;
     const static int BACKWARD = 2;
@@ -133,16 +133,16 @@ struct Correspondence_Data
     : what_calls_here(what_calls_here_), nodes(nodes_),
       display_nodes(display_nodes_),
       walk_limit_for_changes(walk_limit_for_changes_) {}
-      
+
     Correspondence_Data(const vector< Relation >& correspondences,
 	     const map< unsigned int, NamedNode >& nodes_,
 	     const vector< DisplayNode > display_nodes_,
 	     double walk_limit_for_changes_);
-    
-    set< RelationHumanId > correspondences_at(const NamedNode& nnode) const;    
+
+    set< RelationHumanId > correspondences_at(const NamedNode& nnode) const;
     set< RelationHumanId >& display_nodes_at
         (const NamedNode& nnode, set< RelationHumanId >& result) const;
-    
+
     map< unsigned int, set< RelationHumanId > > what_calls_here;
     const map< unsigned int, NamedNode >& nodes;
     vector< DisplayNode > display_nodes;
@@ -153,26 +153,26 @@ struct Stoplist
 {
   public:
     Stoplist() : stops() {}
-    
+
     void populate_stop
 	(Stop& stop, const NamedNode& nnode, int rel_index, int mode, bool additive,
 	 const Correspondence_Data& cors_data);
-    
+
     void push_back
 	(const NamedNode& nnode, int rel_index, int mode,
 	 const Correspondence_Data& cors_data);
-    
+
     void insert
 	(list< Stop >::iterator it, const NamedNode& nnode, int rel_index, int mode,
 	 const Correspondence_Data& cors_data);
-    
+
     list< Stop > stops;
 };
 
 struct Display_Class
 {
   Display_Class() : key(""), value(""), text(""), limit(-1) {}
-  
+
   string key;
   string value;
   string text;

@@ -60,7 +60,7 @@ public:
 
   LZ4_Inflate();
   ~LZ4_Inflate();
-  
+
   int decompress(const void* in, int in_size, void* out, int out_buffer_size);
 };
 

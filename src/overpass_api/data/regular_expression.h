@@ -39,7 +39,7 @@ class Regular_Expression
 {
   public:
     enum Strategy { call_library, match_anything, match_nonempty };
-    
+
     Regular_Expression(const std::string& regex, bool case_sensitive)
     {
       if (regex == ".*")
@@ -48,7 +48,7 @@ class Regular_Expression
         strategy = match_nonempty;
       else
         strategy = call_library;
-      
+
 //       cache_available = false;
 //       prev_line = "";
 //       prev_result = false;
@@ -62,13 +62,13 @@ class Regular_Expression
           throw Regular_Expression_Error(error_no);
       }
     }
-    
+
     ~Regular_Expression()
     {
       if (strategy == call_library)
         regfree(&preg);
     }
-    
+
     inline bool matches(const std::string& line) const
     {
       if (strategy == match_anything)
@@ -86,11 +86,11 @@ class Regular_Expression
 
       return (result);
     }
-    
+
   private:
     Regular_Expression(const Regular_Expression&);
     const Regular_Expression& operator=(const Regular_Expression&);
-    
+
     regex_t preg;
     Strategy strategy;
 //     mutable bool cache_available;

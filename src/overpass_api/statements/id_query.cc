@@ -42,18 +42,18 @@ Statement* Id_Query_Statement::Criterion_Maker::create_criterion(const Token_Nod
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
   std::vector< std::string > ref;
-  
+
   while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
   {
     ref.push_back(tree_it.rhs()->token);
     tree_it = tree_it.lhs();
   }
-  
+
   if (tree_it->token == ":" && tree_it->rhs)
     ref.push_back(tree_it.rhs()->token);
   else
     ref.push_back(tree_it->token);
-  
+
   std::reverse(ref.begin(), ref.end());
 
   std::map< std::string, std::string > attributes;
@@ -121,14 +121,14 @@ class Id_Query_Constraint : public Query_Constraint
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
-	
+
     bool get_node_ids
         (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids);
     bool get_way_ids
         (Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids);
     bool get_relation_ids
         (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids);
-	
+
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Id_Query_Constraint() {}
 
@@ -142,7 +142,7 @@ bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node
   ids.clear();
   if (stmt->get_type() == Statement::NODE)
     ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-  
+
   return true;
 }
 
@@ -152,7 +152,7 @@ bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_S
   ids.clear();
   if (stmt->get_type() == Statement::WAY)
     ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-  
+
   return true;
 }
 
@@ -162,7 +162,7 @@ bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< 
   ids.clear();
   if (stmt->get_type() == Statement::RELATION)
     ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-  
+
   return true;
 }
 
@@ -171,7 +171,7 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair
 {
   std::vector< Node_Skeleton::Id_Type > ids;
   ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-  
+
   std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
 
   ranges.clear();
@@ -251,7 +251,7 @@ Id_Query_Statement::Id_Query_Statement
   attributes["ref"] = "";
   attributes["lower"] = "";
   attributes["upper"] = "";
-  
+
   for (std::map<std::string, std::string>::const_iterator it = input_attributes.begin();
       it != input_attributes.end(); ++it)
   {
@@ -324,7 +324,7 @@ Id_Query_Statement::Id_Query_Statement
     for (uint64 i = lower; i < upper; ++i)
       refs.push_back(i);
   }
-  
+
   std::sort(refs.begin(), refs.end());
   refs.erase(std::unique(refs.begin(), refs.end()), refs.end());
 }

@@ -49,16 +49,16 @@ struct Tag_Index_Local
   uint32 index;
   std::string key;
   std::string value;
-  
+
   Tag_Index_Local() {}
-  
+
   template< typename Id_Type >
   Tag_Index_Local(const Tag_Entry< Id_Type >& entry)
       : index(entry.index), key(entry.key), value(entry.value) {}
-  
+
   Tag_Index_Local(Uint31_Index index_, std::string key_, std::string value_)
       : index(index_.val() & 0x7fffff00), key(key_), value(value_) {}
-  
+
   Tag_Index_Local(void* data)
   {
     index = (*((uint32*)data + 1))<<8;
@@ -66,17 +66,17 @@ struct Tag_Index_Local
     value = std::string(((int8*)data + 7 + key.length()),
 		   *((uint16*)data + 1));
   }
-  
+
   uint32 size_of() const
   {
     return 7 + key.length() + value.length();
   }
-  
+
   static uint32 size_of(void* data)
   {
     return (*((uint16*)data) + *((uint16*)data + 1) + 7);
   }
-  
+
   void to_data(void* data) const
   {
     *(uint16*)data = key.length();
@@ -86,7 +86,7 @@ struct Tag_Index_Local
     memcpy(((uint8*)data + 7 + key.length()), value.data(),
 	   value.length());
   }
-  
+
   bool operator<(const Tag_Index_Local& a) const
   {
     if ((index & 0x7fffffff) != (a.index & 0x7fffffff))
@@ -97,7 +97,7 @@ struct Tag_Index_Local
       return (key < a.key);
     return (value < a.value);
   }
-  
+
   bool operator==(const Tag_Index_Local& a) const
   {
     if (index != a.index)
@@ -106,7 +106,7 @@ struct Tag_Index_Local
       return false;
     return (value == a.value);
   }
-  
+
   static uint32 max_size_of()
   {
     throw Unsupported_Error("static uint32 Tag_Index_Local::max_size_of()");
@@ -172,12 +172,12 @@ void generate_ids_by_coarse
     it(items.begin()); it != items.end(); ++it)
   {
     std::vector< typename TObject::Id_Type >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
-    
+
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       ids_by_coarse_.push_back(it2->id);
   }
-  
+
   for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
       it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
   {
@@ -200,13 +200,13 @@ void generate_ids_by_coarse
     it(items.begin()); it != items.end(); ++it)
   {
     std::vector< Attic< typename TObject::Id_Type > >& ids_by_coarse_ = ids_by_coarse[it->first.val() & 0x7fffff00];
-    
+
     for (typename std::vector< TObject >::const_iterator it2(it->second.begin());
         it2 != it->second.end(); ++it2)
       ids_by_coarse_.push_back
           (Attic< typename TObject::Id_Type >(it2->id, it2->timestamp));
   }
-  
+
   for (typename std::map< uint32, std::vector< Attic< typename TObject::Id_Type > > >::iterator
       it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
   {
@@ -224,30 +224,30 @@ struct Tag_Index_Global
 {
   std::string key;
   std::string value;
-  
+
   Tag_Index_Global() {}
-  
+
   Tag_Index_Global(void* data)
   {
     key = std::string(((int8*)data + 4), *(uint16*)data);
     value = std::string(((int8*)data + 4 + key.length()),
 		   *((uint16*)data + 1));
   }
-  
+
   Tag_Index_Global(const Tag_Index_Local& tag_idx) : key(tag_idx.key), value(tag_idx.value) {}
-  
+
   Tag_Index_Global(const std::string& key_, const std::string& value_) : key(key_), value(value_) {}
-  
+
   uint32 size_of() const
   {
     return 4 + key.length() + value.length();
   }
-  
+
   static uint32 size_of(void* data)
   {
     return (*((uint16*)data) + *((uint16*)data + 1) + 4);
   }
-  
+
   void to_data(void* data) const
   {
     *(uint16*)data = key.length();
@@ -256,21 +256,21 @@ struct Tag_Index_Global
     memcpy(((uint8*)data + 4 + key.length()), value.data(),
 	   value.length());
   }
-  
+
   bool operator<(const Tag_Index_Global& a) const
   {
     if (key != a.key)
       return (key < a.key);
     return (value < a.value);
   }
-  
+
   bool operator==(const Tag_Index_Global& a) const
   {
     if (key != a.key)
       return false;
     return (value == a.value);
   }
-  
+
   static uint32 max_size_of()
   {
     throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
@@ -283,51 +283,51 @@ template< typename Id_Type_ >
 struct Tag_Object_Global
 {
   typedef Id_Type_ Id_Type;
-  
+
   Uint31_Index idx;
   Id_Type id;
-  
+
   Tag_Object_Global() {}
-  
+
   Tag_Object_Global(Id_Type id_, Uint31_Index idx_) : idx(idx_), id(id_) {}
-  
+
   Tag_Object_Global(void* data)
   {
     idx = Uint31_Index(((*((uint32*)data))<<8) & 0xffffff00);
     id = Id_Type((void*)((uint8*)data + 3));
   }
-  
+
   uint32 size_of() const
   {
     return 3 + id.size_of();
   }
-  
+
   static uint32 size_of(void* data)
   {
     return 3 + Id_Type::size_of((void*)((uint8*)data + 3));
   }
-  
+
   void to_data(void* data) const
   {
     *(uint32*)data = ((idx.val()>>8) & 0x7fffff);
     id.to_data((void*)((uint8*)data + 3));
   }
-  
+
   bool operator<(const Tag_Object_Global& a) const
   {
     if (id < a.id)
       return true;
     if (a.id < id)
       return false;
-    
+
     return (idx < a.idx);
   }
-  
+
   bool operator==(const Tag_Object_Global& a) const
   {
     return (id == a.id && idx == a.idx);
   }
-  
+
   static uint32 max_size_of()
   {
     return 3 + Id_Type::max_size_of();

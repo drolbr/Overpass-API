@@ -43,7 +43,7 @@ class Polygon_Query_Statement : public Output_Statement
       Statement_Maker() : Generic_Statement_Maker< Polygon_Query_Statement >("polygon-query") {}
     };
     static Statement_Maker statement_maker;
-    
+
     struct Criterion_Maker : public Statement::Criterion_Maker
     {
       virtual bool can_standalone(const std::string& type) { return type == "node"; }

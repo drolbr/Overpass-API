@@ -61,9 +61,9 @@ public:
   virtual std::string get_result_name() const { return ""; }
   virtual void execute(Resource_Manager& rman);
   virtual ~Retro_Statement() {}
-    
+
   static Generic_Statement_Maker< Retro_Statement > statement_maker;
-    
+
   virtual std::string dump_xml(const std::string& indent) const
   {
     std::string result = indent + "<retro>\n"

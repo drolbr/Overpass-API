@@ -31,13 +31,13 @@ class Idx_Footprints
 {
   public:
     typedef uint pid_t;
-    
+
     void set_current_footprint(const std::vector< bool >& footprint);
-    void register_pid(pid_t pid); 
-    void unregister_pid(pid_t pid); 
+    void register_pid(pid_t pid);
+    void unregister_pid(pid_t pid);
     std::vector< pid_t > registered_processes() const;
     std::vector< bool > total_footprint() const;
-    
+
   private:
     std::vector< bool > current_footprint;
     std::map< pid_t, std::vector< bool > > footprint_per_pid;
@@ -57,9 +57,9 @@ public:
   void remove_shadows();
   void set_current_footprints();
   void write_index_of_empty_blocks();
-  
+
   const std::string& db_dir() const { return db_dir_; }
-  
+
 private:
   std::string db_dir_;
   std::vector< File_Properties* > controlled_files;

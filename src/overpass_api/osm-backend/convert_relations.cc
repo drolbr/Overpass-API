@@ -40,31 +40,31 @@ int main(int argc, char* args[])
     std::cout<<"Usage: "<<args[0]<<" db_dir\n";
     return 0;
   }
-  
+
   string db_dir(args[1]);
-  
+
   try
-  {    
+  {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     Nonsynced_Transaction target_transaction(true, false, db_dir, "_compressed_");
 
     Block_Backend< Uint31_Index, Relation_Skeleton > current_db
         (transaction.data_index(osm_base_settings().RELATIONS));
     Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator current_it(current_db.flat_begin());
-        
+
     Block_Backend< Uint31_Index, Attic< Relation_Skeleton > > attic_db
         (transaction.data_index(attic_settings().RELATIONS));
     Block_Backend< Uint31_Index, Attic< Relation_Skeleton > >::Flat_Iterator attic_it(attic_db.flat_begin());
-    
+
     std::map< Uint31_Index, std::set< Attic< Relation_Delta > > > compressed_set;
     uint compressed_set_total_size = 0;
-    
+
     while (!(attic_it == attic_db.flat_end()))
     {
       Uint31_Index current_idx = attic_it.index();
-      
+
       std::cerr<<'.';
-      
+
       while (!(current_it == current_db.flat_end()) && current_it.index() < current_idx)
       {
 //         cout<<hex<<current_it.index().val()<<'\t'
@@ -74,11 +74,11 @@ int main(int argc, char* args[])
 //             <<'\t'<<current_it.object().way_idxs.size()<<'\n';
         ++current_it;
       }
-      
+
 //       std::cout<<'\n';
       std::vector< Attic< Relation_Skeleton > > rels;
       std::vector< Attic< Relation_Delta > > rels_compressed;
-      
+
       while (!(current_it == current_db.flat_end()) && current_it.index() == current_idx)
       {
         rels.push_back(Attic< Relation_Skeleton >(current_it.object(), NOW));
@@ -100,9 +100,9 @@ int main(int argc, char* args[])
 //             <<attic_it.object().timestamp<<'\n';
         ++attic_it;
       }
-      
+
       std::sort(rels.begin(), rels.end());
-      
+
       std::vector< Attic< Relation_Skeleton > >::const_iterator next = rels.begin();
       if (next != rels.end())
         ++next;
@@ -119,10 +119,10 @@ int main(int argc, char* args[])
 //         cout<<hex<<current_idx.val()<<'\t'<<dec<<it->id.val()<<'\t'<<it->timestamp<<'\n';
         ++next;
       }
-      
+
       compressed_set_total_size += rels_compressed.size();
       std::set< Attic< Relation_Delta > >& compressed_ref = compressed_set[current_idx];
-      
+
       for (std::vector< Attic< Relation_Delta > >::const_iterator it = rels_compressed.begin();
            it != rels_compressed.end(); ++it)
       {
@@ -141,20 +141,20 @@ int main(int argc, char* args[])
 //           cout<<it2->first<<' '<<it2->second.ref.val()<<' '<<it2->second.role<<' ';
 //         cout<<'\n';
       }
-      
+
       if (compressed_set_total_size > 65*536)
       {
         Block_Backend< Uint31_Index, Attic< Relation_Delta > >
             db(target_transaction.data_index(attic_settings().RELATIONS));
         db.update(std::map< Uint31_Index, std::set< Attic< Relation_Delta > > >(), compressed_set);
-        
+
         compressed_set.clear();
         compressed_set_total_size = 0;
       }
     }
-    
+
 //     std::cout<<'\n';
-    
+
     while (!(current_it == current_db.flat_end()))
     {
 //       cout<<hex<<current_it.index().val()<<'\t'
@@ -166,6 +166,6 @@ int main(int argc, char* args[])
   {
     std::cout<<e.origin<<' '<<e.filename<<' '<<e.error_number<<'\n';
   }
-  
+
   return 0;
 }

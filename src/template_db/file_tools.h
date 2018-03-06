@@ -49,15 +49,15 @@ class Connection_Per_Pid_Map
 {
 public:
   typedef uint pid_t;
-  
+
   Connection_Per_Pid_Map() : last_pid(0) {}
-    
+
   Blocking_Client_Socket* get(pid_t pid);
   void set(pid_t pid, Blocking_Client_Socket* socket);
   const std::map< pid_t, Blocking_Client_Socket* >& base_map() const { return connection_per_pid; }
-  
+
   void poll_command_round_robin(uint32& command, uint32& client_pid);
-  
+
 private:
   std::map< pid_t, Blocking_Client_Socket* > connection_per_pid;
   uint32 last_pid;

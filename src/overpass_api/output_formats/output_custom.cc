@@ -27,12 +27,12 @@ std::string process_template(const std::string& raw_template, unsigned int count
   std::ostringstream result;
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{{", old_pos);
   while (new_pos != std::string::npos)
   {
     result<<raw_template.substr(old_pos, new_pos - old_pos);
-    
+
     if (raw_template.substr(new_pos + 3, 8) == "count}}}")
     {
       result<<count;
@@ -46,7 +46,7 @@ std::string process_template(const std::string& raw_template, unsigned int count
     new_pos = raw_template.find("{{{", old_pos);
   }
   result<<raw_template.substr(old_pos);
-  
+
   return result.str();
 }
 
@@ -67,12 +67,12 @@ std::string::size_type find_block_end(std::string data, std::string::size_type p
 {
   if (pos == std::string::npos || data.substr(pos, 2) != "{{")
     return pos;
-  
+
   std::string::size_type curly_brace_count = 2;
   if (data.substr(pos, 3) == "{{{")
     curly_brace_count = 3;
   pos += curly_brace_count;
-  
+
   while (pos < data.size())
   {
     if (data[pos] == '{' && data.substr(pos, 2) == "{{")
@@ -84,7 +84,7 @@ std::string::size_type find_block_end(std::string data, std::string::size_type p
     else
       ++pos;
   }
-  
+
   return std::string::npos;
 }
 
@@ -92,7 +92,7 @@ std::string::size_type find_block_end(std::string data, std::string::size_type p
 void Output_Custom::set_output_templates()
 {
   std::string data;
-  
+
   std::ifstream in((db_dir + "/templates/" + template_name).c_str());
   while (in.good())
   {
@@ -100,7 +100,7 @@ void Output_Custom::set_output_templates()
     std::getline(in, buf);
     data += buf + '\n';
   }
-  
+
   if (data.find("<includeonly>") != std::string::npos)
   {
     std::string::size_type start = data.find("<includeonly>") + 13;
@@ -116,7 +116,7 @@ void Output_Custom::set_output_templates()
   node_template = "\n<p>No {{node:..}} found in template.</p>\n";
   way_template = "\n<p>No {{way:..}} found in template.</p>\n";
   relation_template = "\n<p>No {{relation:..}} found in template.</p>\n";
-  
+
   bool header_written = false;
   std::string::size_type pos = 0;
   while (pos < data.size())
@@ -126,13 +126,13 @@ void Output_Custom::set_output_templates()
       if (data.substr(pos, 7) == "{{node:")
       {
 	std::string::size_type end_pos = find_block_end(data, pos);
-	
+
 	if (!header_written)
 	{
 	  header = data.substr(0, pos);
 	  header_written = true;
 	}
-	
+
 	if (end_pos != std::string::npos)
 	{
 	  node_template = data.substr(pos + 7, end_pos - pos - 9);
@@ -150,7 +150,7 @@ void Output_Custom::set_output_templates()
 	  header = data.substr(0, pos);
 	  header_written = true;
 	}
-	
+
 	if (end_pos != std::string::npos)
 	{
 	  way_template = data.substr(pos + 6, end_pos - pos - 8);
@@ -162,13 +162,13 @@ void Output_Custom::set_output_templates()
       else if (data.substr(pos, 11) == "{{relation:")
       {
 	std::string::size_type end_pos = find_block_end(data, pos);
-	
+
 	if (!header_written)
 	{
 	  header = data.substr(0, pos);
 	  header_written = true;
 	}
-	
+
 	if (end_pos != std::string::npos)
 	{
 	  relation_template = data.substr(pos + 11, end_pos - pos - 13);
@@ -183,7 +183,7 @@ void Output_Custom::set_output_templates()
     else
       ++pos;
   }
-  
+
   if (!header_written)
     header = data.substr(0, pos);
 }
@@ -194,7 +194,7 @@ std::string process_members(const std::string& raw_template, Node::Id_Type ref)
   std::ostringstream result;
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{", old_pos);
   while (new_pos != std::string::npos)
   {
@@ -214,7 +214,7 @@ std::string process_members(const std::string& raw_template, Node::Id_Type ref)
     new_pos = raw_template.find("{{", old_pos);
   }
   result<<raw_template.substr(old_pos, new_pos - old_pos);
-  
+
   return result.str();
 }
 
@@ -225,7 +225,7 @@ std::string process_members(const std::string& raw_template, uint32 id, const Re
   std::ostringstream result;
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{", old_pos);
   while (new_pos != std::string::npos)
   {
@@ -254,7 +254,7 @@ std::string process_members(const std::string& raw_template, uint32 id, const Re
     new_pos = raw_template.find("{{", old_pos);
   }
   result<<raw_template.substr(old_pos, new_pos - old_pos);
-  
+
   return result.str();
 }
 
@@ -264,7 +264,7 @@ std::string process_tags(const std::string& raw_template, uint32 id, const std::
   std::ostringstream result;
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{", old_pos);
   while (new_pos != std::string::npos)
   {
@@ -288,7 +288,7 @@ std::string process_tags(const std::string& raw_template, uint32 id, const std::
     new_pos = raw_template.find("{{", old_pos);
   }
   result<<raw_template.substr(old_pos, new_pos - old_pos);
-  
+
   return result.str();
 }
 
@@ -298,7 +298,7 @@ std::string process_coords(const std::string& raw_template, uint32 id, double la
   std::ostringstream result;
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{", old_pos);
   while (new_pos != std::string::npos)
   {
@@ -320,7 +320,7 @@ std::string process_coords(const std::string& raw_template, uint32 id, double la
     new_pos = raw_template.find("{{", old_pos);
   }
   result<<raw_template.substr(old_pos, new_pos - old_pos);
-  
+
   return result.str();
 }
 
@@ -331,7 +331,7 @@ std::string process_coords(const std::string& raw_template, uint32 id,
   std::ostringstream result;
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{", old_pos);
   while (new_pos != std::string::npos)
   {
@@ -365,7 +365,7 @@ std::string process_coords(const std::string& raw_template, uint32 id,
     new_pos = raw_template.find("{{", old_pos);
   }
   result<<raw_template.substr(old_pos, new_pos - old_pos);
-  
+
   return result.str();
 }
 
@@ -374,7 +374,7 @@ std::string extract_first(const std::string& raw_template)
 {
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{", old_pos);
   while (new_pos != std::string::npos)
   {
@@ -385,7 +385,7 @@ std::string extract_first(const std::string& raw_template)
       return raw_template.substr(new_pos + 8, old_pos - new_pos - 10);
     new_pos = raw_template.find("{{", old_pos);
   }
-  
+
   return "";
 }
 
@@ -395,7 +395,7 @@ std::string antiprocess_coords(const std::string& raw_template)
   std::ostringstream result;
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{", old_pos);
   while (new_pos != std::string::npos)
   {
@@ -413,7 +413,7 @@ std::string antiprocess_coords(const std::string& raw_template)
     new_pos = raw_template.find("{{", old_pos);
   }
   result<<raw_template.substr(old_pos, new_pos - old_pos);
-  
+
   return result.str();
 }
 
@@ -428,7 +428,7 @@ std::string process_template(const std::string& raw_template, unsigned long long
   std::ostringstream result;
   std::string::size_type old_pos = 0;
   std::string::size_type new_pos = 0;
-  
+
   new_pos = raw_template.find("{{", old_pos);
   while (new_pos != std::string::npos)
   {
@@ -462,14 +462,14 @@ std::string process_template(const std::string& raw_template, unsigned long long
       if (tags != 0 && !tags->empty())
       {
 	std::vector< std::pair< std::string, std::string > >::const_iterator it = tags->begin();
-	
+
 	std::string first = extract_first(raw_template.substr(new_pos + 7, old_pos - new_pos - 9));
 	if (first != "" && it != tags->end())
 	{
 	  result<<process_tags(first, id, escape_xml(it->first), escape_xml(it->second));
 	  ++it;
 	}
-	
+
 	for (; it != tags->end(); ++it)
 	  result<<process_tags(raw_template.substr(new_pos + 7, old_pos - new_pos - 9), id,
 			       escape_xml(it->first), escape_xml(it->second));
@@ -480,28 +480,28 @@ std::string process_template(const std::string& raw_template, unsigned long long
       if (nds != 0 && !nds->empty())
       {
 	std::vector< Node::Id_Type >::const_iterator it = nds->begin();
-	
+
 	std::string first = extract_first(raw_template.substr(new_pos + 10, old_pos - new_pos - 12));
 	if (first != "" && it != nds->end())
 	{
 	  result<<process_members(first, *it);
 	  ++it;
 	}
-	
+
 	for (; it != nds->end(); ++it)
 	  result<<process_members(raw_template.substr(new_pos + 10, old_pos - new_pos - 12), *it);
       }
       else if (members != 0 && !members->empty())
       {
 	std::vector< Relation_Entry >::const_iterator it = members->begin();
-	
+
 	std::string first = extract_first(raw_template.substr(new_pos + 10, old_pos - new_pos - 12));
 	if (first != "" && it != members->end())
 	{
 	  result<<process_members(first, id, *it, *roles);
 	  ++it;
 	}
-	
+
 	for (; it != members->end(); ++it)
 	  result<<process_members(raw_template.substr(new_pos + 10, old_pos - new_pos - 12), id,
 				  *it, *roles);
@@ -512,7 +512,7 @@ std::string process_template(const std::string& raw_template, unsigned long long
     new_pos = raw_template.find("{{", old_pos);
   }
   result<<raw_template.substr(old_pos);
-  
+
   return result.str();
 }
 
@@ -557,12 +557,12 @@ void Output_Custom::print_item(const Node_Skeleton& skel,
   if (count == 0)
   {
     set_output_templates();
-    
+
     first_type = "node";
     first_id = skel.id.val();
   }
   ++count;
-  
+
   double lat = 100.0;
   double lon = 200.0;
   if (mode.mode & (Output_Mode::COORDS | Output_Mode::GEOMETRY | Output_Mode::BOUNDS | Output_Mode::CENTER))
@@ -577,7 +577,7 @@ void Output_Custom::print_item(const Node_Skeleton& skel,
 // struct Box_Coords
 // {
 //   Box_Coords() : south(100.0), west(200.0), north(0), east(0) {}
-//   
+//
 //   Box_Coords(Uint31_Index ll_upper)
 //   {
 //     pair< Uint32_Index, Uint32_Index > bbox_bounds = calc_bbox_bounds(ll_upper);
@@ -596,7 +596,7 @@ void Output_Custom::print_item(const Node_Skeleton& skel,
 //       east = ::lon(bbox_bounds.second.val() - 1, 0xffffffffu);
 //     }
 //   }
-//   
+//
 //   double south, west, north, east;
 // };
 
@@ -605,10 +605,10 @@ unsigned int detect_zoom(const Opaque_Geometry& geometry)
 {
   if (!geometry.has_bbox())
     return 16;
-  
+
   double delta_lat = geometry.north() - geometry.south();
   double delta_lon = fabs(geometry.west() - geometry.east());
-  
+
   double threshold = 0.012;
   unsigned int result = 15;
   while (delta_lat > threshold || delta_lon > threshold)
@@ -627,7 +627,7 @@ void Output_Custom::print_item(const Way_Skeleton& skel,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action,
-      const Way_Skeleton* new_skel,      
+      const Way_Skeleton* new_skel,
       const Opaque_Geometry* new_geometry,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
@@ -635,12 +635,12 @@ void Output_Custom::print_item(const Way_Skeleton& skel,
   if (count == 0)
   {
     set_output_templates();
-    
+
     first_type = "way";
     first_id = skel.id.val();
   }
   ++count;
-  
+
   if (geometry.has_bbox())
   {
     output += process_template(way_template, skel.id.val(), "way",
@@ -674,12 +674,12 @@ void Output_Custom::print_item(const Relation_Skeleton& skel,
   if (count == 0)
   {
     set_output_templates();
-    
+
     first_type = "relation";
     first_id = skel.id.val();
   }
   ++count;
-  
+
   if (geometry.has_bbox())
   {
     output += process_template(relation_template, skel.id.val(), "relation",

@@ -97,7 +97,7 @@ void loop_over_elements(const std::map< Index, std::vector< Object > >& source, 
       for (std::vector< Statement* >::iterator it = substatements.begin();
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
-    
+
       rman.union_inward(result_name, result_name);
     }
   }
@@ -108,13 +108,13 @@ void Foreach_Statement::execute(Resource_Manager& rman)
 {
   Set base_result_set;
   rman.swap_set(get_result_name(), base_result_set);
-  
+
   rman.push_stack_frame();
-  
+
   const Set* base_set = (input == get_result_name() ? &base_result_set : rman.get_set(input));
   if (!base_set)
     base_set = &base_result_set;
-  
+
   loop_over_elements(base_set->nodes, rman, substatements, get_result_name());
   loop_over_elements(base_set->attic_nodes, rman, substatements, get_result_name());
   loop_over_elements(base_set->ways, rman, substatements, get_result_name());
@@ -123,7 +123,7 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   loop_over_elements(base_set->attic_relations, rman, substatements, get_result_name());
   loop_over_elements(base_set->areas, rman, substatements, get_result_name());
   loop_over_elements(base_set->deriveds, rman, substatements, get_result_name());
-  
+
   rman.erase_set(input);
   rman.move_all_inward_except(get_result_name());
   rman.pop_stack_frame();

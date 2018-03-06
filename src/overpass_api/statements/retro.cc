@@ -29,7 +29,7 @@ Retro_Statement::Retro_Statement
     : Statement(line_number_), timestamp(0)
 {
   std::map< std::string, std::string > attributes;
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
 
@@ -37,7 +37,7 @@ Retro_Statement::Retro_Statement
 void Retro_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
-  
+
   if (!timestamp)
   {
     Evaluator* tag_value = dynamic_cast< Evaluator* >(statement);
@@ -50,7 +50,7 @@ void Retro_Statement::add_statement(Statement* statement, std::string text)
   {
     if (statement->get_name() == "newer")
       add_static_error("\"newer\" can appear only inside \"query\" statements.");
-    
+
     substatements.push_back(statement);
   }
 }
@@ -59,9 +59,9 @@ void Retro_Statement::add_statement(Statement* statement, std::string text)
 uint64 eval_timestamp(Evaluator& criterion, const Statement& stmt, Resource_Manager& rman)
 {
   Prepare_Task_Context context(criterion.request_context(), stmt, rman);
-  Owner< Eval_Task > task(criterion.get_string_task(context, 0));  
+  Owner< Eval_Task > task(criterion.get_string_task(context, 0));
   std::string valuation = (*task).eval(0);
-  
+
   return Timestamp(valuation).timestamp;
 }
 
@@ -70,14 +70,14 @@ void Retro_Statement::execute(Resource_Manager& rman)
 {
   if (!timestamp)
     return;
-  
+
   uint64 retro_timestamp = eval_timestamp(*timestamp, *this, rman);
   if (!retro_timestamp)
     return;
-  
+
   rman.push_stack_frame();
   rman.set_desired_timestamp(retro_timestamp);
-  
+
   for (std::vector< Statement* >::iterator it = substatements.begin(); it != substatements.end(); ++it)
     (*it)->execute(rman);
 

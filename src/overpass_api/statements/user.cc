@@ -121,11 +121,11 @@ void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   if (!into.attic_nodes.empty())
     user_filter_map_attic(into.attic_nodes, rman, user_ids,
 			  meta_settings().NODES_META, attic_settings().NODES_META);
-    
+
   if (!into.attic_ways.empty())
     user_filter_map_attic(into.attic_ways, rman, user_ids,
 			  meta_settings().WAYS_META, attic_settings().WAYS_META);
-    
+
   if (!into.attic_relations.empty())
     user_filter_map_attic(into.attic_relations, rman, user_ids,
 			  meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
@@ -147,22 +147,22 @@ Statement* User_Statement::Criterion_Maker::create_criterion(const Token_Node_Pt
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
   std::vector< std::string > users;
-  
+
   while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
   {
     users.push_back(tree_it.rhs()->token);
     tree_it = tree_it.lhs();
   }
-  
+
   if (tree_it->token == ":" && tree_it->rhs)
     users.push_back(tree_it.rhs()->token);
-  
+
   std::reverse(users.begin(), users.end());
-  
+
   std::map< std::string, std::string > attributes;
   attributes["into"] = into;
   attributes["type"] = result_type;
-  
+
   std::string prefix;
   if (tree_it->lhs && tree_it.lhs()->token == "user")
   {
@@ -172,7 +172,7 @@ Statement* User_Statement::Criterion_Maker::create_criterion(const Token_Node_Pt
   }
   else
     prefix = "uid";
-  
+
   std::vector< std::string >::const_iterator it = users.begin();
   if (it != users.end())
     attributes[prefix] = *it;

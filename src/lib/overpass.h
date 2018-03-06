@@ -29,7 +29,7 @@ struct Overpass_C_Node
   int id;
   double lat;
   double lon;
-  
+
   int num_tags;
   char** tags;
 };
@@ -47,7 +47,7 @@ struct Overpass_C_Way
   int id;
   int num_coords;
   Coord* coords;
-  
+
   int num_tags;
   char** tags;
 };

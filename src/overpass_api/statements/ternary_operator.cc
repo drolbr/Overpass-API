@@ -72,7 +72,7 @@ void Ternary_Evaluator::add_substatements(Statement* result, const std::string& 
     else if (error_output)
       error_output->add_parse_error(
           "Operator \"?\" needs a left-hand-side argument", tree_it->line_col.first);
-    
+
     Statement::Eval_Return_Type rhs_expected = Statement::string;
     Statement* lhs = stmt_factory.create_evaluator(
         tree_it.rhs().lhs(), tree_context, Any_Return_Type_Checker());
@@ -308,7 +308,7 @@ Requested_Context Ternary_Evaluator::request_context() const
       result.add(rhs->request_context());
     return result;
   }
-  
+
   return Requested_Context();
 }
 

@@ -35,9 +35,9 @@ public:
 
   explicit Zlib_Deflate(int level);
   ~Zlib_Deflate();
-  
+
   int compress(const void* in, int in_size, void* out, int out_buffer_size);
-  
+
 private:
   z_stream strm;
 };
@@ -55,9 +55,9 @@ public:
 
   Zlib_Inflate();
   ~Zlib_Inflate();
-  
+
   int decompress(const void* in, int in_size, void* out, int out_buffer_size);
-  
+
 private:
   z_stream strm;
 };

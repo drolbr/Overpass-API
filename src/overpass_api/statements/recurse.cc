@@ -57,11 +57,11 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
-  
+
   std::string from = "_";
   std::string role;
   bool role_found = false;
-  
+
   if (tree_it->token == ":" && tree_it->rhs)
   {
     role_found = true;
@@ -74,7 +74,7 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
     from = tree_it.rhs()->token;
     tree_it = tree_it.lhs();
   }
-  
+
   std::string type = tree_it->token;
   std::map< std::string, std::string > attributes;
   attributes["from"] = from;
@@ -139,7 +139,7 @@ Statement* Recurse_Statement::Criterion_Maker_2::create_criterion(const Token_No
 {
   Token_Node_Ptr tree_it = input_tree;
   uint line_nr = tree_it->line_col.first;
-  
+
   std::string from = "_";
 
   if (tree_it->token == "." && tree_it->rhs)
@@ -147,7 +147,7 @@ Statement* Recurse_Statement::Criterion_Maker_2::create_criterion(const Token_No
     from = tree_it.rhs()->token;
     tree_it = tree_it.lhs();
   }
-  
+
   std::string type = tree_it->token;
   std::map< std::string, std::string > attributes;
   attributes["from"] = from;
@@ -1005,7 +1005,7 @@ class Recurse_Constraint : public Query_Constraint
 {
   public:
     Recurse_Constraint(Recurse_Statement& stmt_) : stmt(&stmt_) {}
-			
+
     virtual bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
     virtual bool get_ranges

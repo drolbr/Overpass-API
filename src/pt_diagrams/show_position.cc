@@ -67,7 +67,7 @@ vector< Map_Configuration > read_config_file(const string& file_name)
     config.scale = atof(get_cs_part(buf, pos).c_str());
     config.name = buf.substr(pos+1, buf.size()-pos-2);
     result.push_back(config);
-    
+
     getline(in, buf);
   }
   return result;
@@ -75,9 +75,9 @@ vector< Map_Configuration > read_config_file(const string& file_name)
 
 bool is_inside(double lat, double lon, const Map_Configuration& config)
 {
-  double x = config.pivot_x + 
+  double x = config.pivot_x +
       (lon - config.pivot_lon)*cos(lat/90.0*acos(0))/360.0*40*1000*1000/config.scale;
-  double y = config.pivot_y - 
+  double y = config.pivot_y -
       (lat - config.pivot_lat)/360.0*40*1000*1000/config.scale;
   return (x >= 0.0 && x <= 600.0 && y >= 0.0 && y <= 600.0);
 }
@@ -86,23 +86,23 @@ int main(int argc, char *argv[])
 {
   string base_directory = "/opt/pt_diagrams/";
   string index_file_name = "index.csv";
-  
+
   string query_string = cgi_get_to_text();
-  
+
   string::size_type pos = 0;
   int file_id = atoi(get_cs_part(query_string, pos).c_str());
   double lat = atof(get_cs_part(query_string, pos).c_str());
   double lon = atof(get_cs_part(query_string, pos).c_str());
-  
+
   vector< Map_Configuration > config_data = read_config_file(base_directory + index_file_name);
-  
+
   int child_id = file_id;
   for (vector< Map_Configuration >::size_type i = 0; i < config_data.size(); ++i)
   {
     if (config_data[i].parent == file_id && is_inside(lat, lon, config_data[i]))
       child_id = i;
   }
-  
+
   cout<<"Content-type: text/html\n\n";
 
   cout<<

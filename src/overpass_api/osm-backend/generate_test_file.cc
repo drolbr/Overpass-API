@@ -41,7 +41,7 @@ struct V : public std::vector< T >
 struct Data_Modifier
 {
   virtual ~Data_Modifier() {}
-  
+
   virtual bool admit_node(uint id) const = 0;
   virtual bool admit_node_skeleton(uint id) const = 0;
   virtual bool admit_node_tags(uint id) const = 0;
@@ -2673,21 +2673,21 @@ struct Accept_Complete_7 : public Accept_All_Tags
   {
     if (iteration == 0)
       return id == 2;
-    
+
     if (id <= pattern_size/2*9)
       return (id % (pattern_size/2) != 0
           && id % (pattern_size/2) <= 10
           && id % (pattern_size/2) + (id/(pattern_size/2)) < iteration + 3
           && id / (pattern_size/2) < iteration);
-      
+
     if (id <= (pattern_size/2)*(pattern_size/2 - 1))
       return false;
-    
+
     uint delta = id - (pattern_size/2)*(pattern_size/2 - 1);
-    
+
     if (delta >= (pattern_size/2 - 1)*10)
       return false;
-    
+
     return (delta % (pattern_size/2 - 1) != 0
         && delta % (pattern_size/2 - 1) <= 9
         && delta % (pattern_size/2 - 1) < iteration + 2
@@ -3065,7 +3065,7 @@ void create_way_test_pattern(uint id, uint size, uint64 global_node_offset, cons
       create_way(way_id_offset + (i-1)*(size/2-1) + j,
 		 node_id_offset + (i-1)*size + j + 1,
 		 node_id_offset + i*size + j + 1, size, global_node_offset, modifier);
-		
+
   way_id_offset += size/2*(size/2-1);
 
   // Draw long straight ways from south to north.
@@ -3079,7 +3079,7 @@ void create_way_test_pattern(uint id, uint size, uint64 global_node_offset, cons
     create_way(way_id_offset + i - size/2,
 	       node_id_offset + size*i,
 	       node_id_offset + size*(i-1) + 1, 1, global_node_offset, modifier);
-	
+
   way_id_offset += size/2-1;
   // Draw diagonal ways from northwest to southeast
   for (uint i = 0; i < size/2; ++i)
@@ -5537,14 +5537,14 @@ int main(int argc, char* args[])
     create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, global_node_offset, modifier);
     create_way_test_pattern(0, pattern_size, global_node_offset, modifier);
     create_relation_test_pattern(0, pattern_size, global_node_offset, modifier);
-    
+
     delete modifier;
     modifier = new Accept_Complete_6(pattern_size, true);
 
     create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, global_node_offset, modifier);
     create_way_test_pattern(0, pattern_size, global_node_offset, modifier);
     create_relation_test_pattern(0, pattern_size, global_node_offset, modifier);
-    
+
     delete modifier;
     modifier = new Accept_Complete_6(pattern_size, true);
 
@@ -5565,7 +5565,7 @@ int main(int argc, char* args[])
       create_node_test_pattern(51.0, 52.0, 7.0, 8.0, 0, pattern_size, global_node_offset, modifier);
       create_way_test_pattern(0, pattern_size, global_node_offset, modifier);
       create_relation_test_pattern(0, pattern_size, global_node_offset, modifier);
-    
+
       delete modifier;
       modifier = new Accept_Complete_7(pattern_size, i);
     }

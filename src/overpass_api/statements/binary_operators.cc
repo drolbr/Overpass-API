@@ -42,7 +42,7 @@ void Evaluator_Pair_Operator::add_statement(Statement* statement, std::string te
 void Evaluator_Pair_Operator::add_substatements(Statement* result, const std::string& operator_name,
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Error_Output* error_output)
-{    
+{
   if (result)
   {
     Statement* lhs = stmt_factory.create_evaluator(
@@ -52,7 +52,7 @@ void Evaluator_Pair_Operator::add_substatements(Statement* result, const std::st
     else if (error_output)
       error_output->add_parse_error(std::string("Operator \"") + operator_name
           + "\" needs a left-hand-side argument", tree_it->line_col.first);
-    
+
     Statement* rhs = stmt_factory.create_evaluator(
         tree_it.rhs(), tree_context, Statement::Single_Return_Type_Checker(Statement::string));
     if (rhs)
@@ -125,7 +125,7 @@ std::string Binary_Eval_Task::eval(const Element_With_Context< Derived_Skeleton 
   return evaluator->process(lhs ? lhs->eval(data, key) : "", rhs ? rhs->eval(data, key) : "");
 }
 
-    
+
 Requested_Context Evaluator_Pair_Operator::request_context() const
 {
   if (lhs && rhs)
@@ -138,7 +138,7 @@ Requested_Context Evaluator_Pair_Operator::request_context() const
     return lhs->request_context();
   else if (rhs)
     return rhs->request_context();
-  
+
   return Requested_Context();
 }
 
@@ -179,15 +179,15 @@ Operator_Eval_Maker< Evaluator_Equal > Evaluator_Equal::evaluator_maker;
 std::string Evaluator_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return lhs_l == rhs_l ? "1" : "0";
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return lhs_d == rhs_d ? "1" : "0";
-  
+
   return lhs_s == rhs_s ? "1" : "0";
 }
 
@@ -202,15 +202,15 @@ Operator_Eval_Maker< Evaluator_Not_Equal > Evaluator_Not_Equal::evaluator_maker;
 std::string Evaluator_Not_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return lhs_l == rhs_l ? "0" : "1";
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return lhs_d == rhs_d ? "0" : "1";
-  
+
   return lhs_s == rhs_s ? "0" : "1";
 }
 
@@ -225,15 +225,15 @@ Operator_Eval_Maker< Evaluator_Less > Evaluator_Less::evaluator_maker;
 std::string Evaluator_Less::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return lhs_l < rhs_l ? "1" : "0";
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return lhs_d < rhs_d ? "1" : "0";
-  
+
   return lhs_s < rhs_s ? "1" : "0";
 }
 
@@ -248,15 +248,15 @@ Operator_Eval_Maker< Evaluator_Less_Equal > Evaluator_Less_Equal::evaluator_make
 std::string Evaluator_Less_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return lhs_l <= rhs_l ? "1" : "0";
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return lhs_d <= rhs_d ? "1" : "0";
-  
+
   return lhs_s <= rhs_s ? "1" : "0";
 }
 
@@ -271,15 +271,15 @@ Operator_Eval_Maker< Evaluator_Greater > Evaluator_Greater::evaluator_maker;
 std::string Evaluator_Greater::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return lhs_l > rhs_l ? "1" : "0";
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return lhs_d > rhs_d ? "1" : "0";
-  
+
   return lhs_s > rhs_s ? "1" : "0";
 }
 
@@ -294,15 +294,15 @@ Operator_Eval_Maker< Evaluator_Greater_Equal > Evaluator_Greater_Equal::evaluato
 std::string Evaluator_Greater_Equal::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return lhs_l >= rhs_l ? "1" : "0";
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return lhs_d >= rhs_d ? "1" : "0";
-  
+
   return lhs_s >= rhs_s ? "1" : "0";
 }
 
@@ -317,15 +317,15 @@ Operator_Eval_Maker< Evaluator_Plus > Evaluator_Plus::evaluator_maker;
 std::string Evaluator_Plus::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return to_string(lhs_l + rhs_l);
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d + rhs_d);
-  
+
   return lhs_s + rhs_s;
 }
 
@@ -340,15 +340,15 @@ Operator_Eval_Maker< Evaluator_Minus > Evaluator_Minus::evaluator_maker;
 std::string Evaluator_Minus::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return to_string(lhs_l - rhs_l);
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d - rhs_d);
-  
+
   return "NaN";
 }
 
@@ -363,15 +363,15 @@ Operator_Eval_Maker< Evaluator_Times > Evaluator_Times::evaluator_maker;
 std::string Evaluator_Times::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
   int64 lhs_l = 0;
-  int64 rhs_l = 0;  
+  int64 rhs_l = 0;
   if (try_int64(lhs_s, lhs_l) && try_int64(rhs_s, rhs_l))
     return to_string(lhs_l * rhs_l);
-  
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d * rhs_d);
-  
+
   return "NaN";
 }
 
@@ -385,12 +385,12 @@ Operator_Eval_Maker< Evaluator_Divided > Evaluator_Divided::evaluator_maker;
 
 std::string Evaluator_Divided::process(const std::string& lhs_s, const std::string& rhs_s) const
 {
-  // On purpose no int64 detection  
-  
+  // On purpose no int64 detection
+
   double lhs_d = 0;
-  double rhs_d = 0;  
+  double rhs_d = 0;
   if (try_double(lhs_s, lhs_d) && try_double(rhs_s, rhs_d))
     return to_string(lhs_d / rhs_d);
-  
+
   return "NaN";
 }

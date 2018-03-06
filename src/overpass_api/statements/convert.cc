@@ -31,17 +31,17 @@ Convert_Statement::Convert_Statement
     : Output_Statement(line_number_), geom_evaluator(0), id_evaluator(0), multi_evaluator(0)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["type"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   set_output(attributes["into"]);
-  
+
   input = attributes["from"];
-  
+
   if (attributes["type"] == "")
     add_static_error("The attribute type must be set to a nonempty string.");
   type = attributes["type"];
@@ -105,16 +105,16 @@ void generate_elems(const std::string& set_name,
     {
       Derived_Structure result(type, 0ull);
       bool id_fixed = false;
-  
+
       for (uint i = 0; i < tasks.size(); ++i)
       {
         if (tasks[i])
           tasks[i]->process(context_from.get_context(it_idx->first, *it_elem), declared_keys, result, id_fixed);
       }
-      
+
       if (!id_fixed)
         result.id = rman.get_global_settings().dispense_derived_id();
-      
+
       into.deriveds[Uint31_Index(0u)].push_back(result);
     }
   }
@@ -131,21 +131,21 @@ void Convert_Statement::execute(Resource_Manager& rman)
   }
   std::sort(declared_keys.begin(), declared_keys.end());
   declared_keys.erase(std::unique(declared_keys.begin(), declared_keys.end()), declared_keys.end());
-  
+
   Requested_Context requested_context;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     requested_context.add((*it)->request_context());
   requested_context.bind(input);
-  
+
   Prepare_Task_Context context(requested_context, *this, rman);
-  
+
   Owning_Array< Set_Prop_Task* > tasks;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     tasks.push_back((*it)->get_task(context, declared_keys));
 
   Set into;
   Set_With_Context* context_from = context.get_set(input);
-  
+
   if (context_from && context_from->base)
   {
     generate_elems< Uint32_Index, Node_Skeleton >(
@@ -177,7 +177,7 @@ void Convert_Statement::execute(Resource_Manager& rman)
         context_from->name, context_from->base->deriveds, *context_from, tasks,
         declared_keys, into, rman, type);
   }
-    
+
   transfer_output(rman, into);
   rman.health_check(*this);
 }

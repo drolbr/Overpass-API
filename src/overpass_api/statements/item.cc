@@ -190,11 +190,11 @@ void Item_Statement::execute(Resource_Manager& rman)
   if (input != get_result_name())
   {
     Set into;
-    
+
     const Set* input_set = rman.get_set(input);
     if (input_set)
       into = *input_set;
-    
+
     transfer_output(rman, into);
   }
 }

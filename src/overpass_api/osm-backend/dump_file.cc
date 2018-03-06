@@ -41,7 +41,7 @@ int main(int argc, char* args[])
     std::cout<<"Usage: "<<args[0]<<" db_dir target [--index=INDEX]\n";
     return 0;
   }
-  
+
   string db_dir(args[1]);
 
   uint32 index_int;
@@ -62,9 +62,9 @@ int main(int argc, char* args[])
     }
   }
   Uint31_Index index(index_int);
-  
+
   try
-  {    
+  {
     Nonsynced_Transaction transaction(false, false, db_dir, "");
 
     if (std::string("--nodes") == args[2])
@@ -607,6 +607,6 @@ int main(int argc, char* args[])
   {
     std::cerr<<e.origin<<' '<<e.filename<<' '<<e.error_number<<'\n';
   }
-  
+
   return 0;
 }

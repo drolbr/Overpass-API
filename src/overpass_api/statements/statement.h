@@ -41,7 +41,7 @@ class Query_Constraint
 			 const std::vector< Uint64 >& ids, bool invert_ids) { return false; }
     virtual bool collect(Resource_Manager& rman, Set& into,
 			 int type, const std::vector< Uint32_Index >& ids, bool invert_ids) { return false; }
-			
+
     virtual bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
       { return false; }
@@ -88,10 +88,10 @@ class Statement
 {
   public:
     enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible };
-    
+
     enum Eval_Return_Type { non_evaluator, string, container, geometry };
     static std::string eval_to_string(Statement::Eval_Return_Type eval_type);
-    
+
     struct Return_Type_Checker
     {
       virtual bool eval_required() const = 0;
@@ -99,16 +99,16 @@ class Statement
       virtual std::string expectation() const = 0;
       virtual ~Return_Type_Checker() {}
     };
-    
+
     struct Single_Return_Type_Checker : Return_Type_Checker
     {
       Single_Return_Type_Checker(Eval_Return_Type expected_) : expected(expected_) {}
-      
+
       virtual bool eval_required() const { return true; }
       virtual bool matches(Eval_Return_Type eval_type) const { return eval_type == expected; }
       virtual std::string expectation() const { return eval_to_string(expected); }
       virtual ~Single_Return_Type_Checker() {}
-    
+
     private:
       Eval_Return_Type expected;
     };

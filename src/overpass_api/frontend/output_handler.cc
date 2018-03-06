@@ -12,7 +12,7 @@ const std::string& member_type_name(uint32 type)
     MEMBER_TYPE.push_back("way");
     MEMBER_TYPE.push_back("relation");
   }
-  
+
   if (type < MEMBER_TYPE.size())
     return MEMBER_TYPE[type];
   else

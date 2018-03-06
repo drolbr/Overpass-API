@@ -86,7 +86,7 @@ struct Set_Prop_Plain_Task : public Set_Prop_Task
 private:
   Set_Prop_Plain_Task(const Set_Prop_Plain_Task&);
   const Set_Prop_Plain_Task& operator=(const Set_Prop_Plain_Task&);
-  
+
   Eval_Task* rhs;
   std::string key;
   Mode mode;
@@ -149,7 +149,7 @@ struct Set_Prop_Geometry_Task : public Set_Prop_Task
 private:
   Set_Prop_Geometry_Task(const Set_Prop_Plain_Task&);
   const Set_Prop_Geometry_Task& operator=(const Set_Prop_Plain_Task&);
-  
+
   Eval_Geometry_Task* rhs;
 };
 

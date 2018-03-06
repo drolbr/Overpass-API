@@ -42,13 +42,13 @@ class Nonsynced_Transaction : public Transaction
         (bool writeable, bool use_shadow,
 	 const std::string& db_dir, const std::string& file_name_extension);
     virtual ~Nonsynced_Transaction();
-    
+
     File_Blocks_Index_Base* data_index(const File_Properties*);
     Random_File_Index* random_index(const File_Properties*);
-    
+
     void flush();
     std::string get_db_dir() const { return db_dir; }
-    
+
   private:
     std::map< const File_Properties*, File_Blocks_Index_Base* >
       data_files;
@@ -69,7 +69,7 @@ inline Nonsynced_Transaction::Nonsynced_Transaction
     db_dir += "/";
 }
 
-    
+
 inline Nonsynced_Transaction::~Nonsynced_Transaction()
 {
   flush();
@@ -91,7 +91,7 @@ inline void Nonsynced_Transaction::flush()
 
 inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
     (const File_Properties* fp)
-{ 
+{
   std::map< const File_Properties*, File_Blocks_Index_Base* >::iterator
       it = data_files.find(fp);
   if (it != data_files.end())
@@ -106,12 +106,12 @@ inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
 
 
 inline Random_File_Index* Nonsynced_Transaction::random_index(const File_Properties* fp)
-{ 
+{
   std::map< const File_Properties*, Random_File_Index* >::iterator
       it = random_files.find(fp);
   if (it != random_files.end())
     return it->second;
-  
+
   random_files[fp] = new Random_File_Index(*fp, writeable, use_shadow, db_dir, file_name_extension);
   return random_files[fp];
 }

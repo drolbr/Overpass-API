@@ -289,7 +289,7 @@ void geom_test(Parsed_Query& global_settings, Transaction& transaction,
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, "_", 8, 14, "1000", global_node_offset);
-  
+
   Convert_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
 
   Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
@@ -307,7 +307,7 @@ void trace_test_1(Parsed_Query& global_settings, Transaction& transaction,
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_value_test(global_settings, rman, "_", 2, 3, "1000", global_node_offset);
-  
+
   Convert_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
 
   Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);
@@ -327,7 +327,7 @@ void trace_test_2(Parsed_Query& global_settings, Transaction& transaction,
 {
   Resource_Manager rman(transaction, &global_settings);
   prepare_relation_test(global_settings, rman, "_", 2, 6, 9, 10);
-  
+
   Convert_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
 
   Set_Prop_Statement stmt1(0, Attr()("keytype", "geometry").kvs(), global_settings);

@@ -28,12 +28,12 @@ void copy_file(const std::string& source, const std::string& dest)
 {
   if (!file_exists(source))
     return;
-  
+
   Raw_File source_file(source, O_RDONLY, S_666, "Dispatcher:1");
   uint64 size = source_file.size("Dispatcher:2");
   Raw_File dest_file(dest, O_RDWR|O_CREAT, S_666, "Dispatcher:3");
   dest_file.resize(size, "Dispatcher:4");
-  
+
   Void_Pointer< uint8 > buf(64*1024);
   while (size > 0)
   {
@@ -73,14 +73,14 @@ void Unix_Socket::open(const std::string& socket_name)
   if (socket_descriptor == -1)
     throw File_Error
         (errno, socket_name, "Unix_Socket::1");
-	
+
   if (max_num_reading_processes > 0)
   {
     if (fcntl(socket_descriptor, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
       throw File_Error
           (errno, socket_name, "Unix_Socket::2");
   }
-  
+
   struct sockaddr_un local;
   local.sun_family = AF_UNIX;
   if (socket_name.size() < sizeof local.sun_path - 1)
@@ -90,12 +90,12 @@ void Unix_Socket::open(const std::string& socket_name)
 #ifdef __APPLE__
   local.sun_len = socket_name.size() + 1;
 #endif
-  
+
   if (max_num_reading_processes > 0)
   {
     if (bind(socket_descriptor, (struct sockaddr*)&local,
         sizeof(struct sockaddr_un)) == -1)
-      throw File_Error(errno, socket_name, "Unix_Socket::4");	
+      throw File_Error(errno, socket_name, "Unix_Socket::4");
     if (chmod(socket_name.c_str(), S_666) == -1)
       throw File_Error(errno, socket_name, "Unix_Socket::5");
     if (listen(socket_descriptor, max_num_reading_processes) == -1)

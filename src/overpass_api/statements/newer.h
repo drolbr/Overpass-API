@@ -43,7 +43,7 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Newer_Statement >("newer") {}
   };
   static Statement_Maker statement_maker;
-    
+
   struct Criterion_Maker : public Statement::Criterion_Maker
   {
     virtual bool can_standalone(const std::string& type) { return false; }

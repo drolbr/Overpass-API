@@ -49,7 +49,7 @@ std::string getcwd()
     buf = getcwd(buf, size);
     if (errno != ERANGE)
       break;
-    
+
     free(buf);
     size *= 2;
   }
@@ -76,7 +76,7 @@ uint32 Blocking_Client_Socket::get_command()
     return Dispatcher::HANGUP;
   else if (state == processing_command)
     return last_command;
-  
+
   int bytes_read = recv(socket_descriptor, &last_command, sizeof(uint32), 0);
   if (bytes_read == -1)
     return 0;
@@ -98,7 +98,7 @@ std::vector< uint32 > Blocking_Client_Socket::get_arguments(int num_arguments)
   std::vector< uint32 > result;
   if (state == disconnected || state == waiting)
     return result;
-  
+
   for (int i = 0; i < num_arguments; ++i)
   {
     // Wait for each argument up to 0.1 seconds
@@ -128,13 +128,13 @@ void Blocking_Client_Socket::clear_state()
 {
   if (state == disconnected || state == waiting)
     return;
-  
+
   // remove any pending data. The connection should be clear at the end of the command.
   uint32 dummy;
   int bytes_read = recv(socket_descriptor, &dummy, sizeof(uint32), 0);
   while (bytes_read > 0)
     bytes_read = recv(socket_descriptor, &dummy, sizeof(uint32), 0);
-  
+
   if (bytes_read == 0)
   {
     state = disconnected;
@@ -154,12 +154,12 @@ void Blocking_Client_Socket::send_result(uint32 result)
 {
   if (state == disconnected || state == waiting)
     return;
-  
+
   clear_state();
 
   if (state == disconnected)
     return;
-  
+
   send(socket_descriptor, &result, sizeof(uint32), 0);
   state = waiting;
 }
@@ -170,17 +170,17 @@ Blocking_Client_Socket::~Blocking_Client_Socket()
   close(socket_descriptor);
 }
 
-  
+
 Blocking_Client_Socket* Connection_Per_Pid_Map::get(pid_t pid)
 {
-  std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);    
+  std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.find(pid);
   if (it != connection_per_pid.end())
     return it->second;
   else
     return 0;
 }
 
-  
+
 void Connection_Per_Pid_Map::set(pid_t pid, Blocking_Client_Socket* socket)
 {
   std::map< pid_t, Blocking_Client_Socket* >::iterator it = connection_per_pid.find(pid);
@@ -192,7 +192,7 @@ void Connection_Per_Pid_Map::set(pid_t pid, Blocking_Client_Socket* socket)
     connection_per_pid.erase(pid);
 }
 
-  
+
 void Connection_Per_Pid_Map::poll_command_round_robin(uint32& command, uint32& client_pid)
 {
   // poll all open connections round robin

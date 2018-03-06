@@ -385,7 +385,7 @@ public:
     Statement_Maker() : Generic_Statement_Maker< Evaluator_Set_Count >("eval-set-count") {}
   };
   static Statement_Maker statement_maker;
-    
+
   struct Evaluator_Maker : public Statement::Evaluator_Maker
   {
     virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, QL_Context tree_context,

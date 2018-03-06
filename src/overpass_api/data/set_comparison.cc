@@ -603,7 +603,7 @@ void Set_Comparison::compare_item(uint32 ll_upper, const Way_Skeleton& skel,
               geometry ? *geometry : std::vector< Quad_Coord >(),
               timestamp, meta ? *meta : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
-	
+
     ways_it->idx = 0xffu;
   }
 }
@@ -735,7 +735,7 @@ void Set_Comparison::compare_item(uint32 ll_upper, const Relation_Skeleton& skel
               geometry ? *geometry : std::vector< std::vector< Quad_Coord > >(),
               timestamp, meta ? *meta : OSM_Element_Metadata_Skeleton< Relation_Skeleton::Id_Type >(),
               tags ? *tags : std::vector< std::pair< std::string, std::string > >())));
-	
+
     relations_it->idx = 0xffu;
   }
 }

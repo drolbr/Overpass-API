@@ -74,7 +74,7 @@ void prepend_action(const Output_Handler::Feature_Action& action, bool allow_del
     std::cout<<"<action type=\"show_initial\">\n";
   else if (action == Output_Handler::show_to)
     std::cout<<"<action type=\"show_final\">\n";
-  
+
   if (allow_delta)
   {
     if (action == Output_Handler::modify)
@@ -103,7 +103,7 @@ void append_action(const Output_Handler::Feature_Action& action, bool is_new = f
     ;
   else if (action == Output_Handler::show_from || action == Output_Handler::show_to)
     std::cout<<"</action>\n";
-  
+
   if (allow_delta)
   {
     if (action == Output_Handler::modify)
@@ -304,7 +304,7 @@ void print_members(const Relation_Skeleton& skel, const Opaque_Geometry& geometr
       std::cout<<"    <member type=\""<<member_type_name(skel.members[i].type)
 	  <<"\" ref=\""<<skel.members[i].ref.val()
 	  <<"\" role=\""<<escape_xml(it != roles.end() ? it->second : "???")<<"\"";
-            
+
       if (skel.members[i].type == Relation_Entry::NODE)
       {
 	if (geometry.has_faithful_relation_geometry() && geometry.relation_pos_is_valid(i))
@@ -321,7 +321,7 @@ void print_members(const Relation_Skeleton& skel, const Opaque_Geometry& geometr
 	  bool has_some_geometry = false;
 	  for (uint j = 0; j < geometry.relation_way_size(i); ++j)
 	    has_some_geometry |= geometry.relation_pos_is_valid(i, j);
-	  
+
 	  if (!has_some_geometry)
 	    std::cout<<"/>\n";
 	  else
@@ -340,7 +340,7 @@ void print_members(const Relation_Skeleton& skel, const Opaque_Geometry& geometr
 	}
       }
       else
-        std::cout<<"/>\n";              
+        std::cout<<"/>\n";
     }
   }
 }
@@ -362,7 +362,7 @@ void print_node(const Node_Skeleton& skel,
         <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<'\"';
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
     print_meta_xml(*meta, *users);
-  
+
   bool inner_tags_printed = false;
   print_tags(tags, mode, inner_tags_printed);
   if (!inner_tags_printed)
@@ -384,7 +384,7 @@ void print_way(const Way_Skeleton& skel,
     std::cout<<" id=\""<<skel.id.val()<<'\"';
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
     print_meta_xml(*meta, *users);
-  
+
   bool inner_tags_printed = false;
   print_bounds(geometry, mode, inner_tags_printed);
   print_members(skel, geometry, mode, inner_tags_printed);
@@ -409,7 +409,7 @@ void print_relation(const Relation_Skeleton& skel,
     std::cout<<" id=\""<<skel.id.val()<<'\"';
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
     print_meta_xml(*meta, *users);
-  
+
   bool inner_tags_printed = false;
   print_bounds(geometry, mode, inner_tags_printed);
   if (roles)
@@ -437,7 +437,7 @@ void print_deleted(const std::string& type_name, const Id_Type& id,
   else
     std::cout<<" visible=\"true\"";
   if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);  
+    print_meta_xml(*meta, *users);
   std::cout<<"/>\n";
 }
 
@@ -455,19 +455,19 @@ void Output_XML::print_item(const Node_Skeleton& skel,
       const OSM_Element_Metadata_Skeleton< Node::Id_Type >* new_meta)
 {
   prepend_action(action);
-  
+
   print_node(skel, geometry, tags, meta, users, mode);
-  
+
   if (new_skel)
   {
     insert_action(action);
-    
+
     if (action == Output_Handler::erase || action == Output_Handler::push_away)
-      print_deleted("node", new_skel->id, action, new_meta, users, mode); 
+      print_deleted("node", new_skel->id, action, new_meta, users, mode);
     else
-      print_node(*new_skel, *new_geometry, new_tags, new_meta, users, mode); 
+      print_node(*new_skel, *new_geometry, new_tags, new_meta, users, mode);
   }
-  
+
   append_action(action, new_skel);
 }
 
@@ -479,25 +479,25 @@ void Output_XML::print_item(const Way_Skeleton& skel,
       const std::map< uint32, std::string >* users,
       Output_Mode mode,
       const Feature_Action& action,
-      const Way_Skeleton* new_skel,      
+      const Way_Skeleton* new_skel,
       const Opaque_Geometry* new_geometry,
       const std::vector< std::pair< std::string, std::string > >* new_tags,
       const OSM_Element_Metadata_Skeleton< Way::Id_Type >* new_meta)
 {
   prepend_action(action);
-  
+
   print_way(skel, geometry, tags, meta, users, mode);
-  
+
   if (new_skel)
   {
     insert_action(action);
-    
+
     if (action == Output_Handler::erase || action == Output_Handler::push_away)
-      print_deleted("way", new_skel->id, action, new_meta, users, mode); 
+      print_deleted("way", new_skel->id, action, new_meta, users, mode);
     else
-      print_way(*new_skel, *new_geometry, new_tags, new_meta, users, mode);    
+      print_way(*new_skel, *new_geometry, new_tags, new_meta, users, mode);
   }
-  
+
   append_action(action, new_skel);
 }
 
@@ -516,19 +516,19 @@ void Output_XML::print_item(const Relation_Skeleton& skel,
       const OSM_Element_Metadata_Skeleton< Relation::Id_Type >* new_meta)
 {
   prepend_action(action);
-  
+
   print_relation(skel, geometry, tags, meta, roles, users, mode);
-  
+
   if (new_skel)
   {
     insert_action(action);
-    
+
     if (action == Output_Handler::erase || action == Output_Handler::push_away)
       print_deleted("relation", new_skel->id, action, new_meta, users, mode);
     else
       print_relation(*new_skel, *new_geometry, new_tags, new_meta, roles, users, mode);
   }
-  
+
   append_action(action, new_skel);
 }
 
@@ -540,11 +540,11 @@ void Output_XML::print_item(const Derived_Skeleton& skel,
       const Feature_Action& action)
 {
   prepend_action(action, true);
-  
+
   std::cout<<"  <"<<skel.type_name;
   if (mode.mode & Output_Mode::ID)
     std::cout<<" id=\""<<skel.id.val()<<'\"';
-  
+
   bool inner_tags_printed = false;
   print_geometry(geometry, mode, inner_tags_printed, "    ");
   print_tags(tags, mode, inner_tags_printed);
@@ -552,6 +552,6 @@ void Output_XML::print_item(const Derived_Skeleton& skel,
     std::cout<<"/>\n";
   else
     std::cout<<"  </"<<skel.type_name<<">\n";
-  
+
   append_action(action, false, true);
 }

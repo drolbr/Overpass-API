@@ -323,7 +323,7 @@ void update_tags_local
       {
 	Tag_Index_Local index;
 	index.index = (*rit)->index & 0x7fffff00;
-	
+
 	for (std::vector< std::pair< std::string, std::string > >::const_iterator
 	  it2((*rit)->tags.begin()); it2 != (*rit)->tags.end(); ++it2)
 	{

@@ -41,7 +41,7 @@ bool assert_element_in_context(Error_Output* error_output,
           tree_it->line_col.first);
     return false;
   }
-  
+
   return true;
 }
 
@@ -56,7 +56,7 @@ Requested_Context& Requested_Context::add_usage(const std::string& set_name, uin
       return *this;
     }
   }
-  
+
   set_usage.push_back(Set_Usage(set_name, usage));
   return *this;
 }
@@ -70,14 +70,14 @@ Requested_Context& Requested_Context::add_usage(uint usage_)
 
 
 Requested_Context& Requested_Context::add_role_names()
-{ 
+{
   role_names_requested = true;
   return *this;
 }
 
 
 Requested_Context& Requested_Context::add_user_names()
-{ 
+{
   user_names_requested = true;
   return *this;
 }
@@ -95,10 +95,10 @@ void Requested_Context::add(const Requested_Context& rhs)
         continue;
       }
     }
-    
+
     set_usage.push_back(*rit);
   }
-  
+
   object_usage |= rhs.object_usage;
   role_names_requested |= rhs.role_names_requested;
   user_names_requested |= rhs.user_names_requested;
@@ -111,87 +111,87 @@ void Requested_Context::bind(const std::string& set_name)
   object_usage = 0;
 }
 
-  
+
 void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stmt, Resource_Manager& rman)
 {
   Transaction& transaction = *rman.get_transaction();
   base = &set;
-  
+
   if (usage & Set_Usage::TAGS)
   {
     tag_store_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(transaction);
     tag_store_nodes->prefetch_all(set.nodes);
-    
+
     if (!set.attic_nodes.empty())
     {
       tag_store_attic_nodes = new Tag_Store< Uint32_Index, Node_Skeleton >(transaction);
       tag_store_attic_nodes->prefetch_all(set.attic_nodes);
     }
-    
+
     tag_store_ways = new Tag_Store< Uint31_Index, Way_Skeleton >(transaction);
     tag_store_ways->prefetch_all(set.ways);
-    
+
     if (!set.attic_ways.empty())
     {
       tag_store_attic_ways = new Tag_Store< Uint31_Index, Way_Skeleton >(transaction);
       tag_store_attic_ways->prefetch_all(set.attic_ways);
     }
-    
+
     tag_store_relations = new Tag_Store< Uint31_Index, Relation_Skeleton >(transaction);
     tag_store_relations->prefetch_all(set.relations);
-    
+
     if (!set.attic_relations.empty())
     {
       tag_store_attic_relations = new Tag_Store< Uint31_Index, Relation_Skeleton >(transaction);
       tag_store_attic_relations->prefetch_all(set.attic_relations);
     }
-    
+
     if (!base->areas.empty())
     {
       tag_store_areas = new Tag_Store< Uint31_Index, Area_Skeleton >(transaction);
       tag_store_areas->prefetch_all(set.areas);
     }
-    
+
     tag_store_deriveds = new Tag_Store< Uint31_Index, Derived_Structure >(transaction);
     tag_store_deriveds->prefetch_all(set.deriveds);
   }
-  
+
   if (usage & Set_Usage::GEOMETRY)
   {
     use_geometry = true;
-    
+
     way_geometry_store = new Way_Geometry_Store(set.ways, stmt, rman);
     if (!set.attic_ways.empty())
       attic_way_geometry_store = new Way_Geometry_Store(set.attic_ways, stmt, rman);
-    
+
     relation_geometry_store = new Relation_Geometry_Store(set.relations, stmt, rman);
     if (!set.attic_relations.empty())
       attic_relation_geometry_store = new Relation_Geometry_Store(set.attic_relations, stmt, rman);
   }
-  
+
   if (usage & Set_Usage::META)
   {
     meta_collector_nodes = new Meta_Collector< Uint32_Index, Node_Skeleton::Id_Type >(
         set.nodes, transaction, current_meta_file_properties< Node_Skeleton >());
-    
+
     if (!set.attic_nodes.empty())
     {
       meta_collector_attic_nodes = new Attic_Meta_Collector< Uint32_Index, Node_Skeleton >(
           set.attic_nodes, transaction, true);
     }
-    
+
     meta_collector_ways = new Meta_Collector< Uint31_Index, Way_Skeleton::Id_Type >(
         set.ways, transaction, current_meta_file_properties< Way_Skeleton >());
-    
+
     if (!set.attic_ways.empty())
     {
       meta_collector_attic_ways = new Attic_Meta_Collector< Uint31_Index, Way_Skeleton >(
           set.attic_ways, transaction, true);
     }
-    
+
     meta_collector_relations = new Meta_Collector< Uint31_Index, Relation_Skeleton::Id_Type >(
         set.relations, transaction, current_meta_file_properties< Relation_Skeleton >());
-    
+
     if (!set.attic_relations.empty())
     {
       meta_collector_attic_relations = new Attic_Meta_Collector< Uint31_Index, Relation_Skeleton >(
@@ -260,7 +260,7 @@ Opaque_Geometry* new_opaque_geometry(const std::vector< Quad_Coord >& geometry)
     }
     return pw_geom;
   }
-  
+
   return new Null_Geometry();
 }
 
@@ -285,7 +285,7 @@ Opaque_Geometry* new_opaque_geometry(const std::vector< std::vector< Quad_Coord 
   if (is_complete)
   {
     Compound_Geometry* cp_geom = new Compound_Geometry();
-    
+
     for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
         it != geometry.end(); ++it)
     {
@@ -302,11 +302,11 @@ Opaque_Geometry* new_opaque_geometry(const std::vector< std::vector< Quad_Coord 
           coords.push_back(Point_Double(
               ::lat(it2->ll_upper, it2->ll_lower),
               ::lon(it2->ll_upper, it2->ll_lower)));
-          
+
         cp_geom->add_component(new Linestring_Geometry(coords));
       }
     }
-    
+
     return cp_geom;
   }
   else if (!geometry.empty())
@@ -336,10 +336,10 @@ Opaque_Geometry* new_opaque_geometry(const std::vector< std::vector< Quad_Coord 
         }
       }
     }
-    
+
     return pr_geom;
   }
-    
+
   return new Null_Geometry();
 }
 
@@ -437,17 +437,17 @@ Prepare_Task_Context::Prepare_Task_Context(
     Set_With_Context& context = contexts[std::distance(requested.set_usage.begin(), it)];
     context.name = it->set_name;
     context.parent = this;
-    
+
     const Set* input = rman.get_set(context.name);
     if (input)
       context.prefetch(it->usage, *input, stmt, rman);
     if (it->usage & Set_Usage::SET_KEY_VALUES)
       context.set_key_values = rman.get_set_key_values(context.name);
   }
-  
+
   if (requested.role_names_requested)
     relation_member_roles_ = &relation_member_roles(*rman.get_transaction());
-  
+
   if (requested.user_names_requested)
     users = &rman.users();
 }
@@ -468,7 +468,7 @@ uint32 Prepare_Task_Context::get_role_id(const std::string& role) const
 {
   if (!relation_member_roles_)
     return std::numeric_limits< uint32 >::max();
-    
+
   for (std::map< uint32, std::string >::const_iterator it = relation_member_roles_->begin();
       it != relation_member_roles_->end(); ++it)
   {

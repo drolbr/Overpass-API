@@ -36,36 +36,36 @@ class Statement_Dump
     struct Factory
     {
       Factory(Statement::Factory& stmt_factory_) : bbox_limitation(0), stmt_factory(&stmt_factory_) {}
-      
+
       Statement_Dump* create_statement(std::string element, int line_number,
 				       const std::map< std::string, std::string >& attributes);
       Statement_Dump* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
                                        const Statement::Return_Type_Checker& eval_type);
       Statement_Dump* create_criterion(const Token_Node_Ptr& tree_it,
                                   const std::string& type, bool& can_standalone, const std::string& into);
-      
+
       int bbox_limitation;
       Statement::Factory* stmt_factory;
     };
-    
+
     Statement_Dump(std::string name, const std::map< std::string, std::string >& attributes_, int line_number_,
         Statement* stmt = 0)
         : name_(name), attributes(attributes_), line_number(line_number_), non_dump_stmt(stmt) {}
     ~Statement_Dump();
-    
+
     void add_statement(Statement_Dump* statement, std::string text);
     std::string dump_xml() const;
     std::string dump_pretty_map_ql(Statement::Factory& stmt_factory);
     std::string dump_compact_map_ql(Statement::Factory& stmt_factory);
     std::string dump_bbox_map_ql(Statement::Factory& stmt_factory);
-    
+
     const std::string& name() const { return name_; }
     std::string attribute(const std::string& key) const;
-    
+
     void add_final_text(std::string text) {}
 
     Statement* create_non_dump_stmt(Statement::Factory& stmt_factory);
-    
+
   private:
     std::string name_;
     std::map< std::string, std::string > attributes;

@@ -60,7 +60,7 @@ int main(int argc, char* args[])
       {
 	Nonsynced_Transaction transaction(false, false, args[2], "");
 	Resource_Manager rman(transaction, &global_settings);
-	
+
 	const char* attributes[] = { 0 };
 	Union_Statement stmt(0, convert_c_pairs(attributes), global_settings);
 
@@ -68,20 +68,20 @@ int main(int argc, char* args[])
 	const char* attributes1[] = { "type", "node", "ref", buf.c_str(), 0 };
 	Id_Query_Statement stmt1(0, convert_c_pairs(attributes1), global_settings);
 	stmt.add_statement(&stmt1, "");
-	
+
 	const char* attributes2[] = { "type", "node-relation", 0 };
 	Recurse_Statement stmt2(0, convert_c_pairs(attributes2), global_settings);
 	stmt.add_statement(&stmt2, "");
-	
+
 	const char* attributes3[] = { "type", "way", 0 };
 	Query_Statement stmt3(0, convert_c_pairs(attributes3), global_settings);
-	
+
 	const char* attributes_kv[] = { "k", "way_key_11", "v", "way_value_2", 0 };
 	Has_Kv_Statement stmt4(0, convert_c_pairs(attributes_kv), global_settings);
 	stmt3.add_statement(&stmt4, "");
-	
+
 	stmt.add_statement(&stmt3, "");
-	
+
 	stmt.execute(rman);
 	{
 	  const char* attributes[] = { 0 };

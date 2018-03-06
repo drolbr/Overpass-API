@@ -42,7 +42,7 @@ Its syntax is
 struct Eval_Point_Geometry_Task : Eval_Geometry_Task
 {
   Eval_Point_Geometry_Task(Eval_Task* lat_, Eval_Task* lon_) : lat(lat_), lon(lon_) {}
-  
+
   virtual ~Eval_Point_Geometry_Task()
   {
     delete lat;
@@ -67,9 +67,9 @@ struct Eval_Point_Geometry_Task : Eval_Geometry_Task
       { return make_point(lat->eval(data, 0), lon->eval(data, 0)); }
   virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& data) const
       { return make_point(lat->eval(data, 0), lon->eval(data, 0)); }
-  
+
   static Opaque_Geometry* make_point(const std::string& lat, const std::string& lon);
-  
+
 private:
   Eval_Task* lat;
   Eval_Task* lon;
@@ -143,7 +143,7 @@ Its syntax is
 struct Eval_Linestring_Geometry_Task : Eval_Geometry_Task
 {
   Eval_Linestring_Geometry_Task(std::vector< Eval_Geometry_Task* >& points_) : points(points_) {}
-  
+
   virtual ~Eval_Linestring_Geometry_Task()
   {
     for (std::vector< Eval_Geometry_Task* >::iterator it = points.begin(); it != points.end(); ++it)
@@ -168,12 +168,12 @@ struct Eval_Linestring_Geometry_Task : Eval_Geometry_Task
       { return make_linestring(points, data); }
   virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& data) const
       { return make_linestring(points, data); }
-  
+
   static Opaque_Geometry* make_linestring(const std::vector< Eval_Geometry_Task* >& points);
   template< typename Context >
   static Opaque_Geometry* make_linestring(
       const std::vector< Eval_Geometry_Task* >& points, const Context& data);
-  
+
 private:
   std::vector< Eval_Geometry_Task* > points;
 };
@@ -257,7 +257,7 @@ Its syntax is
 struct Eval_Polygon_Geometry_Task : Eval_Geometry_Task
 {
   Eval_Polygon_Geometry_Task(std::vector< Eval_Geometry_Task* >& linestrings_) : linestrings(linestrings_) {}
-  
+
   virtual ~Eval_Polygon_Geometry_Task()
   {
     for (std::vector< Eval_Geometry_Task* >::iterator it = linestrings.begin(); it != linestrings.end(); ++it)
@@ -282,12 +282,12 @@ struct Eval_Polygon_Geometry_Task : Eval_Geometry_Task
       { return make_polygon(linestrings, data); }
   virtual Opaque_Geometry* eval(const Element_With_Context< Derived_Skeleton >& data) const
       { return make_polygon(linestrings, data); }
-  
+
   static Opaque_Geometry* make_polygon(const std::vector< Eval_Geometry_Task* >& linestrings);
   template< typename Context >
   static Opaque_Geometry* make_polygon(
       const std::vector< Eval_Geometry_Task* >& linestrings, const Context& data);
-  
+
 private:
   std::vector< Eval_Geometry_Task* > linestrings;
 };

@@ -37,7 +37,7 @@ Statement* Pivot_Statement::Criterion_Maker::create_criterion(const Token_Node_P
   std::string from = "_";
   if (tree_it->rhs && tree_it->token == ".")
       from = tree_it.rhs()->token;
-  
+
   std::map< std::string, std::string > attributes;
   attributes["from"] = from;
   attributes["into"] = into;
@@ -189,7 +189,7 @@ bool Pivot_Constraint::get_data
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
   collect_elems(rman, *osm_base_settings().NODES, intersect_ids, into.nodes);
-		
+
   return true;
 }
 
@@ -202,7 +202,7 @@ bool Pivot_Constraint::get_data
      bool invert_ids)
 {
   const Set* input_set = rman.get_set(stmt->get_input());
-  
+
   if (type == QUERY_WAY)
   {
     std::vector< Way::Id_Type > pivot_ids;
@@ -250,7 +250,7 @@ bool Pivot_Constraint::get_data
 void Pivot_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   const Set* input_set = rman.get_set(stmt->get_input());
-  
+
   if (input_set)
   {
     filter_elems(get_node_pivot_ids(input_set->areas), into.nodes);

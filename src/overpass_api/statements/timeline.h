@@ -40,17 +40,17 @@ In addition, it has tags <em>created</em> and <em>expired</em> that contain the 
 The base syntax is
 
   timeline(<Type>, <Ref>);
-  
+
 resp.
 
   timeline(<Type>, <Ref>, <Version>);
-  
+
 where <Type> is one of the three literals node, way, or relation.
 
 In addition, an output set <Set> can be specified:
 
   timeline(<Type>, <Ref>)->.<Set>;
-  
+
 resp.
 
   timeline(<Type>, <Ref>, <Version>)->.<Set>;
@@ -64,16 +64,16 @@ public:
                      Parsed_Query& global_settings);
   virtual std::string get_name() const { return "timeline"; }
   virtual void execute(Resource_Manager& rman);
-    
+
   static Generic_Statement_Maker< Timeline_Statement > statement_maker;
-    
+
   static std::string to_string(int type)
   {
     if (type == Statement::NODE)
       return "node";
     else if (type == Statement::WAY)
       return "way";
-    
+
     return "relation";
   }
 
@@ -83,7 +83,7 @@ public:
         " ref=\"" + ::to_string(ref) + "\"";
     if (version)
       result += " version=\"" + ::to_string(version) + "\"";
-      
+
     return result + dump_xml_result_name() + "/>\n";
   }
 
@@ -92,7 +92,7 @@ public:
     std::string result = "timeline(" + to_string(type) + "," + ::to_string(ref);
     if (version)
       result += "," + ::to_string(version);
-    
+
     return result + ")" + dump_ql_result_name();
   }
 
@@ -101,7 +101,7 @@ public:
     std::string result = indent + "timeline(" + to_string(type) + ", " + ::to_string(ref);
     if (version)
       result += ", " + ::to_string(version);
-    
+
     return result + ")" + dump_ql_result_name();
   }
 

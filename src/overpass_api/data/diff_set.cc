@@ -24,7 +24,7 @@
 Set Diff_Set::make_from_set() const
 {
   Set result;
-  
+
   for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator
       it = different_nodes.begin(); it != different_nodes.end(); ++it)
   {
@@ -37,7 +37,7 @@ Set Diff_Set::make_from_set() const
             Attic< Node_Skeleton >(it->first.elem, it->first.expiration_date));
     }
   }
-  
+
   for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::const_iterator it = different_ways.begin();
       it != different_ways.end(); ++it)
   {
@@ -50,7 +50,7 @@ Set Diff_Set::make_from_set() const
             Attic< Way_Skeleton >(it->first.elem, it->first.expiration_date));
     }
   }
-  
+
   for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::const_iterator it = different_relations.begin();
       it != different_relations.end(); ++it)
   {
@@ -63,7 +63,7 @@ Set Diff_Set::make_from_set() const
             Attic< Relation_Skeleton >(it->first.elem, it->first.expiration_date));
     }
   }
-  
+
   return result;
 }
 
@@ -71,7 +71,7 @@ Set Diff_Set::make_from_set() const
 Set Diff_Set::make_to_set() const
 {
   Set result;
-  
+
   for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::const_iterator
       it = different_nodes.begin(); it != different_nodes.end(); ++it)
   {
@@ -84,7 +84,7 @@ Set Diff_Set::make_to_set() const
             Attic< Node_Skeleton >(it->second.elem, it->second.expiration_date));
     }
   }
-  
+
   for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::const_iterator it = different_ways.begin();
       it != different_ways.end(); ++it)
   {
@@ -97,7 +97,7 @@ Set Diff_Set::make_to_set() const
             Attic< Way_Skeleton >(it->second.elem, it->second.expiration_date));
     }
   }
-  
+
   for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::const_iterator it = different_relations.begin();
       it != different_relations.end(); ++it)
   {
@@ -110,7 +110,7 @@ Set Diff_Set::make_to_set() const
             Attic< Relation_Skeleton >(it->second.elem, it->second.expiration_date));
     }
   }
-  
+
   return result;
 }
 
@@ -325,7 +325,7 @@ void print_deriveds(
     uint32 output_mode, Output_Handler* output)
 {
   Null_Geometry null_geom;
-  
+
   for (std::vector< Derived_Structure >::const_iterator it = lhs_deriveds.begin(); it != lhs_deriveds.end(); ++it)
     output->print_item(*it, it->get_geometry() ? *it->get_geometry() : null_geom, &it->tags,
         output_mode, Output_Handler::erase);
@@ -344,6 +344,6 @@ void print_diff_set(const Diff_Set& result,
   print_nodes(result.different_nodes, output_mode, output, users, add_deletion_information);
   print_ways(result.different_ways, output_mode, output, users, add_deletion_information);
   print_relations(result.different_relations, output_mode, output, users, roles, add_deletion_information);
-  
+
   print_deriveds(result.lhs_deriveds, result.rhs_deriveds, output_mode, output);
 }

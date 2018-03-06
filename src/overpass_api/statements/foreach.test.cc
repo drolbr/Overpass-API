@@ -51,7 +51,7 @@ Resource_Manager& fill_loop_set
   perform_id_query(partial_rman, "node", 1 + global_node_offset);
   Set target;
   rman.swap_set(set_name, target);
-  
+
   const Set* default_ = partial_rman.get_set("_");
   if (default_ && !default_->nodes.empty())
     target.nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
@@ -120,7 +120,7 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
-      
+
       Foreach_Statement(0, Attr().kvs(), global_settings).execute(rman);
       Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
     }
@@ -139,7 +139,7 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
-      
+
       Foreach_Statement(0, Attr()("from", "A")("into", "B").kvs(), global_settings).execute(rman);
       Print_Statement(0, Attr()("from", "A").kvs(), global_settings).execute(rman);
     }

@@ -205,13 +205,13 @@ Statement* Area_Query_Statement::Criterion_Maker::create_criterion(const Token_N
   uint line_nr = tree_it->line_col.first;
   std::string from = "_";
   std::string ref;
-  
+
   if (tree_it->token == ":" && tree_it->rhs)
   {
     ref = tree_it.rhs()->token;
     tree_it = tree_it.lhs();
   }
-  
+
   if (tree_it->token == "." && tree_it->rhs)
     from = tree_it.rhs()->token;
 

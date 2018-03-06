@@ -30,14 +30,14 @@ Make_Statement::Make_Statement
     : Output_Statement(line_number_), geom_evaluator(0), id_evaluator(0), multi_evaluator(0)
 {
   std::map< std::string, std::string > attributes;
-  
+
   attributes["into"] = "_";
   attributes["type"] = "";
-  
+
   eval_attributes_array(get_name(), attributes, input_attributes);
-  
+
   set_output(attributes["into"]);
-  
+
   if (attributes["type"] == "")
     add_static_error("The attribute type must be set to a nonempty string.");
 
@@ -98,32 +98,32 @@ void Make_Statement::execute(Resource_Manager& rman)
   }
   std::sort(declared_keys.begin(), declared_keys.end());
   declared_keys.erase(std::unique(declared_keys.begin(), declared_keys.end()), declared_keys.end());
-  
+
   Requested_Context requested_context;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     requested_context.add((*it)->request_context());
-  
+
   Prepare_Task_Context context(requested_context, *this, rman);
-  
+
   Owning_Array< Set_Prop_Task* > tasks;
   for (std::vector< Set_Prop_Statement* >::const_iterator it = evaluators.begin(); it != evaluators.end(); ++it)
     tasks.push_back((*it)->get_task(context, declared_keys));
-  
+
   Derived_Structure result(type, 0ull);
   bool id_fixed = false;
-  
+
   for (uint i = 0; i < tasks.size(); ++i)
   {
     if (tasks[i])
       tasks[i]->process(result, id_fixed);
   }
-  
+
   if (!id_fixed)
     result.id = rman.get_global_settings().dispense_derived_id();
-  
+
   Set into;
   into.deriveds[Uint31_Index(0u)].push_back(result);
-  
+
   transfer_output(rman, into);
   rman.health_check(*this);
 }

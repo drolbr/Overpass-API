@@ -15,7 +15,7 @@ std::string escape_csv(const std::string& input)
 {
   std::string result;
   bool quotes_needed = false;
-  
+
   for (int i = input.size() - 1; i >= 0; --i)
   {
     if (input[i] == '\n' || input[i] == ',')
@@ -29,7 +29,7 @@ std::string escape_csv(const std::string& input)
         result = result.substr(0, i) + "\"" + result.substr(i);
     }
   }
-  
+
   if (!quotes_needed)
     return input;
   else if (result.empty())
@@ -77,25 +77,25 @@ void Output_CSV::display_error(const std::string& text)
 std::string Output_CSV::dump_config() const
 {
   std::string result = "(";
-  
+
   for (std::vector< std::pair< std::string, bool > >::const_iterator it = csv_settings.keyfields.begin();
       it != csv_settings.keyfields.end(); ++it)
   {
     if (it != csv_settings.keyfields.begin())
       result += ",";
-      
+
     if (it->second)
       result += "::" + it->first;
     else
       result += "\"" + escape_cstr(it->first) + "\"";
   }
-  
+
   if (csv_settings.separator != "\t")
     result += std::string(";") + (csv_settings.with_headerline ? "true" : "false") + ";\""
         + escape_cstr(csv_settings.separator) + "\"";
   else if (!csv_settings.with_headerline)
     result += ";false";
-    
+
   return result + ")";
 }
 
@@ -202,7 +202,7 @@ void process_csv_line(int otype, const std::string& type, Id_Type id, const Opaq
           std::cout << get_count_tag(tags, "areas");
       }
     }
-      
+
     if (++it == csv_settings.keyfields.end())
       break;
     std::cout<<csv_settings.separator;

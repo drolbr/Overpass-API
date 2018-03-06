@@ -56,7 +56,7 @@ struct File_Error
 {
   File_Error(uint32 errno_, const std::string& filename_, const std::string& origin_)
   : error_number(errno_), filename(filename_), origin(origin_) {}
-  
+
   uint32 error_number;
   std::string filename;
   std::string origin;
@@ -66,7 +66,7 @@ struct File_Error
 struct File_Properties_Exception
 {
   File_Properties_Exception(int32 i) : id(i) {}
-  
+
   int32 id;
 };
 
@@ -93,7 +93,7 @@ struct File_Properties
   virtual std::vector< bool > get_data_footprint(const std::string& db_dir) const = 0;
   virtual std::vector< bool > get_map_footprint(const std::string& db_dir) const = 0;
   virtual uint32 id_max_size_of() const = 0;
-  
+
   // The returned object is of type File_Blocks_Index< .. >*
   // and goes into the ownership of the caller.
   virtual File_Blocks_Index_Base* new_data_index
@@ -107,7 +107,7 @@ class Raw_File
 {
   Raw_File(const Raw_File&);
   Raw_File operator=(const Raw_File&);
-  
+
   public:
     Raw_File(const std::string& name, int oflag, mode_t mode, const std::string& caller_id);
     ~Raw_File() { close(fd_); }
@@ -117,7 +117,7 @@ class Raw_File
     void read(uint8* buf, uint64 size, const std::string& caller_id) const;
     void write(uint8* buf, uint64 size, const std::string& caller_id) const;
     void seek(uint64 pos, const std::string& caller_id) const;
-    
+
   private:
     int fd_;
     std::string name;
@@ -130,11 +130,11 @@ class Void_Pointer
 {
   Void_Pointer(const Void_Pointer&);
   Void_Pointer& operator=(const Void_Pointer&);
-  
+
 public:
   explicit Void_Pointer(int block_size) { ptr = block_size > 0 ? (T*)malloc(block_size) : 0; }
   ~Void_Pointer() { clear(); }
-  
+
   void clear()
   {
     if (ptr)
@@ -148,7 +148,7 @@ public:
     if (block_size > 0)
       ptr = (T*)malloc(block_size);
   }
-  
+
   T* ptr;
 };
 
@@ -166,9 +166,9 @@ public:
   Unix_Socket(const std::string& socket_name = "", uint max_num_reading_processes = 0);
   void open(const std::string& socket_name);
   ~Unix_Socket();
-  
+
   int descriptor() const { return socket_descriptor; }
-  
+
 private:
   int socket_descriptor;
   uint max_num_reading_processes;

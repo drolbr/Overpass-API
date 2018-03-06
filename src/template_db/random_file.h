@@ -39,25 +39,25 @@ struct Random_File
 {
 private:
   Random_File(const Random_File& f) {}
-  
+
 public:
   Random_File(Random_File_Index*);
   ~Random_File();
-  
+
   Value get(Key pos);
   void put(Key pos, const Value& index);
-  
+
 private:
   bool changed;
   uint32 index_size;
   uint32 compression_factor;
-  
+
   Raw_File val_file;
   Random_File_Index* index;
   Void_Pointer< uint8 > cache;
   uint32 cache_pos;
   uint32 block_size;
-  
+
   Void_Pointer< uint8 > buffer;
 
   void move_cache_window(uint32 pos);
@@ -103,7 +103,7 @@ void Random_File< Key, Value >::put(Key pos, const Value& val)
 {
   if (!index->writeable())
     throw File_Error(0, index->get_map_file_name(), "Random_File:2");
-  
+
   move_cache_window(pos.val() / (block_size*compression_factor/index_size));
   val.to_data(cache.ptr + (pos.val() % (block_size*compression_factor/index_size))*index_size);
   changed = true;
@@ -128,7 +128,7 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
       uint32 compressed_size = Zlib_Deflate(1)
           .compress(cache.ptr, block_size * compression_factor, target, block_size * index->get_compression_factor());
       data_size = (compressed_size - 1) / block_size + 1;
-      zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size); 
+      zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size);
     }
     else if (index->get_compression_method() == Random_File_Index::LZ4_COMPRESSION)
     {
@@ -140,22 +140,22 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
     }
 
     uint32 disk_pos = allocate_block(data_size);
-    
+
     // Save the found position to the index.
     if (index->get_blocks().size() <= cache_pos)
       index->get_blocks().resize(cache_pos+1, Random_File_Index_Entry(index->npos, 1));
     Random_File_Index_Entry entry(disk_pos, data_size);
     index->get_blocks()[cache_pos] = entry;
-    
+
     // Write the data at the found position.
     val_file.seek((int64)disk_pos*block_size, "Random_File:21");
     val_file.write((uint8*)target, block_size * data_size, "Random_File:22");
   }
   changed = false;
-  
+
   if (pos == index->npos)
     return;
-  
+
   if ((index->get_blocks().size() <= pos) || (index->get_blocks()[pos].pos == index->npos))
   {
     // Reset the whole cache to zero.

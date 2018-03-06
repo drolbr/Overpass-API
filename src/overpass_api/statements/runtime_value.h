@@ -80,7 +80,7 @@ public:
   virtual void execute(Resource_Manager& rman) {}
 
   virtual Requested_Context request_context() const
-  { 
+  {
     return Requested_Context().add_usage(input, Set_Usage::SET_KEY_VALUES);
   }
 

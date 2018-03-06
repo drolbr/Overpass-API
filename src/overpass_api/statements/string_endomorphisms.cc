@@ -31,11 +31,11 @@ std::string Evaluator_Number::process(const std::string& rhs_s) const
   int64 rhs_l = 0;
   if (try_int64(rhs_s, rhs_l))
     return to_string(rhs_l);
-  
-  double rhs_d = 0;  
+
+  double rhs_d = 0;
   if (try_starts_with_double(rhs_s, rhs_d))
     return to_string(rhs_d);
-  
+
   return "NaN";
 }
 
@@ -52,11 +52,11 @@ std::string Evaluator_Is_Num::process(const std::string& rhs_s) const
   int64 rhs_l = 0;
   if (try_int64(rhs_s, rhs_l))
     return "1";
-  
-  double rhs_d = 0;  
+
+  double rhs_d = 0;
   if (try_starts_with_double(rhs_s, rhs_d))
     return "1";
-  
+
   return "0";
 }
 
@@ -85,7 +85,7 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
 {
   //First run: try for year, month, day, hour, minute, second
   std::string::size_type pos = 0;
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int year = 0;
@@ -94,7 +94,7 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
     year = 10*year + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int month = 0;
@@ -103,7 +103,7 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
     month = 10*month + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int day = 0;
@@ -112,7 +112,7 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
     day = 10*day + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int hour = 0;
@@ -121,7 +121,7 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
     hour = 10*hour + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int minute = 0;
@@ -130,7 +130,7 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
     minute = 10*minute + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int second = 0;
@@ -139,10 +139,10 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
     second = 10*second + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   if (year < 1000 || month > 12 || day > 31 || hour > 24 || minute > 60 || second > 60)
     return "NaD";
-  
+
   return to_string(year + month/16. + day/(16.*32)
       + hour/(16.*32*32) + minute/(16.*32*32*64) + second/(16.*32*32*64*64));
 }
@@ -159,7 +159,7 @@ std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
 {
   //First run: try for year, month, day, hour, minute, second
   std::string::size_type pos = 0;
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int year = 0;
@@ -168,7 +168,7 @@ std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
     year = 10*year + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int month = 0;
@@ -177,7 +177,7 @@ std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
     month = 10*month + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int day = 0;
@@ -186,7 +186,7 @@ std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
     day = 10*day + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int hour = 0;
@@ -195,7 +195,7 @@ std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
     hour = 10*hour + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int minute = 0;
@@ -204,7 +204,7 @@ std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
     minute = 10*minute + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   while (pos < rhs_s.size() && !isdigit(rhs_s[pos]))
     ++pos;
   unsigned int second = 0;
@@ -213,9 +213,9 @@ std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
     second = 10*second + (rhs_s[pos] - '0');
     ++pos;
   }
-  
+
   if (year < 1000 || month > 12 || day > 31 || hour > 24 || minute > 60 || second > 60)
     return "0";
-  
+
   return "1";
 }

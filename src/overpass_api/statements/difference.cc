@@ -69,12 +69,12 @@ void Difference_Statement::execute(Resource_Manager& rman)
 {
   if (substatements.empty())
     return;
-  
+
   rman.push_stack_frame();
 
   std::vector< Statement* >::iterator it = substatements.begin();
   (*it)->execute(rman);
-  
+
   rman.copy_inward((*it)->get_result_name(), get_result_name());
 
   ++it;
@@ -83,7 +83,7 @@ void Difference_Statement::execute(Resource_Manager& rman)
     (*it)->execute(rman);
     rman.substract_from_inward((*it)->get_result_name(), get_result_name());
   }
-  
+
   rman.move_all_inward_except(get_result_name());
   rman.pop_stack_frame();
 

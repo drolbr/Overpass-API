@@ -27,7 +27,7 @@ Opaque_Geometry* Eval_Point_Geometry_Task::make_point(const std::string& lat_s, 
   if (try_double(lat_s, lat_d) && lat_d >= -90. && lat_d <= 90.
       && try_double(lon_s, lon_d) && lon_d >= -180. && lon_d <= 180.)
     return new Point_Geometry(lat_d, lon_d);
-  
+
   return new Null_Geometry();
 }
 
@@ -104,7 +104,7 @@ Requested_Context Evaluator_Point::request_context() const
     return lat->request_context();
   else if (lon)
     return lon->request_context();
-  
+
   return Requested_Context();
 }
 
@@ -154,7 +154,7 @@ Statement* Evaluator_Linestring::Evaluator_Maker::create_evaluator(
 
   std::map< std::string, std::string > attributes;
   Evaluator_Linestring* result = new Evaluator_Linestring(tree_it->line_col.first, attributes, global_settings);
-  
+
   std::vector< Token_Node_Ptr > args;
   Token_Node_Ptr args_tree = tree_it.rhs();
   while (args_tree->token == ",")
@@ -164,7 +164,7 @@ Statement* Evaluator_Linestring::Evaluator_Maker::create_evaluator(
   }
   args.push_back(args_tree);
   std::reverse(args.begin(), args.end());
-  
+
   for (std::vector< Token_Node_Ptr >::const_iterator it = args.begin(); it != args.end(); ++it)
   {
     Evaluator* sub = dynamic_cast< Evaluator* >(
@@ -259,7 +259,7 @@ Statement* Evaluator_Polygon::Evaluator_Maker::create_evaluator(
 
   std::map< std::string, std::string > attributes;
   Evaluator_Polygon* result = new Evaluator_Polygon(tree_it->line_col.first, attributes, global_settings);
-  
+
   std::vector< Token_Node_Ptr > args;
   Token_Node_Ptr args_tree = tree_it.rhs();
   while (args_tree->token == ",")
@@ -269,7 +269,7 @@ Statement* Evaluator_Polygon::Evaluator_Maker::create_evaluator(
   }
   args.push_back(args_tree);
   std::reverse(args.begin(), args.end());
-  
+
   for (std::vector< Token_Node_Ptr >::const_iterator it = args.begin(); it != args.end(); ++it)
   {
     Evaluator* sub = dynamic_cast< Evaluator* >(

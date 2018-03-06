@@ -58,7 +58,7 @@ struct RelMember
   int type;
   uint32 ref;
   string role;
-  
+
   static const int NODE = 1;
   static const int WAY = 2;
   static const int RELATION = 3;
@@ -67,7 +67,7 @@ struct RelMember
 struct OSMData
 {
   ~OSMData();
-  
+
   map< uint32, Node* > nodes;
   map< uint32, Way* > ways;
   map< uint32, Relation* > relations;

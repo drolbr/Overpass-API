@@ -143,7 +143,7 @@ Set_Prop_Statement::Set_Prop_Statement
   else
     add_static_error("For the attribute \"keytype\" of the element \"set-prop\""
         " the only allowed values are \"tag\", \"id\", \"geometry\", or \"generic\".");
-    
+
   if (!attributes["from"].empty())
   {
     if (attributes["keytype"] == "generic")
@@ -181,10 +181,10 @@ std::string Set_Prop_Statement::dump_xml(const std::string& indent) const
     attributes = " keytype=\"generic\"";
   else
     attributes = std::string(" keytype=\"tag\" k=\"") + (key ? *key : "") + "\"";
-  
+
   if (!input.empty())
     attributes += " from=\"" + input + "\"";
-  
+
   return indent + "<set-prop" + attributes + ">\n"
       + tag_value->dump_xml(indent + "  ")
       + indent + "</set-prop>\n";
@@ -204,10 +204,10 @@ std::string Set_Prop_Statement::dump_compact_ql(const std::string&) const
     return std::string("!") + escape_cstr(key ? *key : "");
   else
     result = escape_cstr(key ? *key : "") + "=";
-  
+
   if (tag_value)
     return result + tag_value->dump_compact_ql("");
-  
+
   return result;
 }
 
@@ -290,18 +290,18 @@ Set_Prop_Task* Set_Prop_Statement::get_task(
   {
     if (mode == Set_Prop_Task::set_geometry)
       return new Set_Prop_Geometry_Task(tag_value ? tag_value->get_geometry_task(context) : 0);
-    
+
     return new Set_Prop_Plain_Task(tag_value ? tag_value->get_string_task(context, key) : 0,
         key ? *key : "", mode);
   }
-  
+
   Set_Prop_Generic_Task* result = new Set_Prop_Generic_Task();
-  
+
   Set_With_Context* input_set = context.get_set(input);
   if (input_set && input_set->base)
   {
     std::set< std::string > existing_keys;
-    
+
     eval_elems(existing_keys, *input_set, input_set->base->nodes, otherwise_set_keys);
     eval_elems(existing_keys, *input_set, input_set->base->attic_nodes, otherwise_set_keys);
     eval_elems(existing_keys, *input_set, input_set->base->ways, otherwise_set_keys);
@@ -310,11 +310,11 @@ Set_Prop_Task* Set_Prop_Statement::get_task(
     eval_elems(existing_keys, *input_set, input_set->base->attic_relations, otherwise_set_keys);
     eval_elems(existing_keys, *input_set, input_set->base->areas, otherwise_set_keys);
     eval_elems(existing_keys, *input_set, input_set->base->deriveds, otherwise_set_keys);
-    
+
     for (std::set< std::string >::const_iterator it = existing_keys.begin(); it != existing_keys.end(); ++it)
       result->add_key(*it, tag_value ? tag_value->get_string_task(context, &*it) : 0);
   }
-  
+
   return result;
 }
 

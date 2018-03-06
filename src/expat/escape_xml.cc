@@ -24,7 +24,7 @@
 std::string escape_xml(const std::string& s)
 {
   const char* digit = "0123456789abcdef";
-  
+
   std::string result;
   result.reserve(s.length()*2);
   for (std::string::size_type i(0); i < s.size(); ++i)

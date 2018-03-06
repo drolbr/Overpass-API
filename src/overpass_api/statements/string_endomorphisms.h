@@ -56,7 +56,7 @@ struct String_Endom_Evaluator_Maker : public Statement::Evaluator_Maker
     if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
         || !tree_it.assert_has_arguments(error_output, true))
       return 0;
-  
+
     std::map< std::string, std::string > attributes;
     Statement* result = new Evaluator_(tree_it->line_col.first, attributes, global_settings);
     if (result)
@@ -122,7 +122,7 @@ Their syntaxes are
 resp.
 
   is_number(<Evaluator>)
-  
+
 resp.
 
   suffix(<Evaluator>)
