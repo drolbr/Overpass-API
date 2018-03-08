@@ -57,6 +57,7 @@ Print_Statement::Print_Statement
   std::map< std::string, std::string > attributes;
 
   attributes["from"] = "_";
+  attributes["ids"] = "yes";
   attributes["mode"] = "body";
   attributes["order"] = "id";
   attributes["limit"] = "";
@@ -86,10 +87,10 @@ Print_Statement::Print_Statement
         | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
 	| Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META;
   else if (attributes["mode"] == "count")
-    mode = Output_Mode::COUNT;
+    mode = Output_Mode::ID | Output_Mode::COUNT;
   else
   {
-    mode = 0;
+    mode = Output_Mode::ID;
     std::ostringstream temp;
     temp<<"For the attribute \"mode\" of the element \"print\""
 	<<" the only allowed values are \"ids_only\", \"skeleton\", \"body\", \"tags\",  \"count\", or \"meta\".";
@@ -124,6 +125,18 @@ Print_Statement::Print_Statement
     std::ostringstream temp;
     temp<<"For the attribute \"geometry\" of the element \"print\""
         <<" the only allowed values are \"skeleton\", \"full\", \"bounds\", or \"center\".";
+    add_static_error(temp.str());
+  }
+
+  if (attributes["ids"] == "yes")
+    ;
+  else if (attributes["ids"] == "no")
+    mode = mode & ~Output_Mode::ID;
+  else
+  {
+    std::ostringstream temp;
+    temp<<"For the attribute \"ids\" of the element \"print\""
+        <<" the only allowed values are \"yes\" or \"no\".";
     add_static_error(temp.str());
   }
 

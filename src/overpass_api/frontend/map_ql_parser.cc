@@ -243,7 +243,7 @@ TStatement* create_retro_statement(typename TStatement::Factory& stmt_factory, u
 
 template< class TStatement >
 TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
-                                   std::string from, std::string mode, std::string order, std::string limit, std::string geometry,
+                                   std::string from, std::string mode, std::string order, std::string limit, std::string geometry, std::string show_ids,
                                    std::string south, std::string north, std::string west, std::string east,
                                   uint line_nr)
 {
@@ -253,6 +253,7 @@ TStatement* create_print_statement(typename TStatement::Factory& stmt_factory,
   attr["order"] = order;
   attr["limit"] = limit;
   attr["geometry"] = geometry;
+  attr["ids"] = show_ids;
   attr["s"] = south;
   attr["n"] = north;
   attr["w"] = west;
@@ -707,6 +708,7 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
     std::string order = "id";
     std::string limit = "";
     std::string geometry = "skeleton";
+    std::string show_ids = "yes";
     std::string south = "";
     std::string north = "";
     std::string west = "";
@@ -737,6 +739,8 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
         geometry = "bounds";
       else if (*token == "center")
         geometry = "center";
+      else if (*token == "noids")
+        show_ids = "no";
       else if (isdigit((*token)[0]))
 	limit = *token;
       else if (*token == "(")
@@ -763,7 +767,7 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
     if (statement == 0)
     {
       statement = create_print_statement< TStatement >
-          (stmt_factory, from == "" ? "_" : from, mode, order, limit, geometry,
+          (stmt_factory, from == "" ? "_" : from, mode, order, limit, geometry, show_ids,
            south, north, west, east,
            token.line_col().first);
     }

@@ -52,10 +52,10 @@ class Print_Statement : public Statement
         return " mode=\"tags\"";
       else if ((mode & Output_Mode::MEMBERS) == Output_Mode::MEMBERS)
         return " mode=\"skeleton\"";
-      else if ((mode & Output_Mode::ID) == Output_Mode::ID)
-        return " mode=\"ids_only\"";
+      else if ((mode & Output_Mode::COUNT) == Output_Mode::COUNT)
+        return " mode=\"count\"";
 
-      return " mode=\"count\"";
+      return " mode=\"ids_only\"";
     }
 
     static std::string mode_string_ql(Output_Mode mode)
@@ -68,10 +68,10 @@ class Print_Statement : public Statement
         return " tags";
       else if ((mode & Output_Mode::MEMBERS) == Output_Mode::MEMBERS)
         return " skel";
-      else if ((mode & Output_Mode::ID) == Output_Mode::ID)
-        return " ids";
+      else if ((mode & Output_Mode::COUNT) == Output_Mode::COUNT)
+        return " count";
 
-      return " count";
+      return " ids";
     }
 
     static std::string geometry_string_xml(Output_Mode mode)
@@ -104,6 +104,16 @@ class Print_Statement : public Statement
       return "";
     }
 
+    static std::string ids_string_xml(Output_Mode mode)
+    {
+      return (mode & Output_Mode::ID) ? "" : " ids=\"no\"";
+    }
+
+    static std::string ids_string_ql(Output_Mode mode)
+    {
+      return (mode & Output_Mode::ID) ? "" : " noids";
+    }
+
     virtual std::string dump_xml(const std::string& indent) const
     {
       return indent + "<print"
@@ -112,6 +122,7 @@ class Print_Statement : public Statement
           + (order == order_by_id ? "" : " order=\"quadtile\"")
           + (limit == std::numeric_limits< unsigned int >::max() ? "" : " limit=\"" + ::to_string(limit) + "\"")
           + geometry_string_xml(mode)
+          + ids_string_xml(mode)
           + (south > north ? "" : " s=\"" + to_string(south) + "\"")
           + (south > north ? "" : " w=\"" + to_string(west) + "\"")
           + (south > north ? "" : " n=\"" + to_string(north) + "\"")
@@ -129,6 +140,7 @@ class Print_Statement : public Statement
           + (order == order_by_id ? "" : " qt")
           + (limit == std::numeric_limits< unsigned int >::max() ? "" : " " + ::to_string(limit))
           + geometry_string_ql(mode)
+          + ids_string_ql(mode)
           + (south > north ? "" : "(" + to_string(south) + "," + to_string(west) + ","
               + to_string(north) + "," + to_string(east) + ")");
     }
