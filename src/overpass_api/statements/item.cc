@@ -100,17 +100,17 @@ bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
   const Set* input = rman.get_set(item->get_input_name());
   if (input)
   {
-    if (type == QUERY_WAY)
+    if (type & QUERY_WAY)
     {
       collect_elements(input->ways, into.ways, ids, invert_ids);
       collect_elements(input->attic_ways, into.attic_ways, ids, invert_ids);
     }
-    else if (type == QUERY_RELATION)
+    if (type & QUERY_RELATION)
     {
       collect_elements(input->relations, into.relations, ids, invert_ids);
       collect_elements(input->attic_relations, into.attic_relations, ids, invert_ids);
     }
-    else if (type == QUERY_AREA)
+    if (type & QUERY_AREA)
       collect_elements(input->areas, into.areas, ids, invert_ids);
   }
   else

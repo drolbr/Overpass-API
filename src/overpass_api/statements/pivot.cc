@@ -203,7 +203,7 @@ bool Pivot_Constraint::get_data
 {
   const Set* input_set = rman.get_set(stmt->get_input());
 
-  if (type == QUERY_WAY)
+  if (type & QUERY_WAY)
   {
     std::vector< Way::Id_Type > pivot_ids;
     if (input_set)
@@ -223,7 +223,7 @@ bool Pivot_Constraint::get_data
           intersect_ids.begin()), intersect_ids.end());
     collect_elems(rman, *osm_base_settings().WAYS, intersect_ids, into.ways);
   }
-  else if (type == QUERY_RELATION)
+  if (type & QUERY_RELATION)
   {
     std::vector< Relation::Id_Type > pivot_ids;
     if (input_set)

@@ -29,8 +29,9 @@
 
 const int QUERY_NODE = 1;
 const int QUERY_WAY = 2;
-const int QUERY_RELATION = 3;
-const int QUERY_AREA = 4;
+const int QUERY_RELATION = 4;
+const int QUERY_DERIVED = 8;
+const int QUERY_AREA = 16;
 
 
 typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } Answer_State;
@@ -62,6 +63,12 @@ class Query_Statement : public Output_Statement
         return "way";
       else if (type == QUERY_RELATION)
         return "relation";
+      else if (type == QUERY_DERIVED)
+        return "derived";
+      else if (type == QUERY_AREA)
+        return "area";
+      else if (type == (QUERY_NODE | QUERY_WAY | QUERY_RELATION))
+        return "nwr";
 
       return "area";
     }

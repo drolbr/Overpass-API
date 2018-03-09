@@ -58,6 +58,10 @@ Query_Statement::Query_Statement
     type = QUERY_WAY;
   else if (attributes["type"] == "relation")
     type = QUERY_RELATION;
+  else if (attributes["type"] == "derived")
+    type = QUERY_DERIVED;
+  else if (attributes["type"] == "nwr")
+    type = (QUERY_NODE | QUERY_WAY | QUERY_RELATION);
   else if (attributes["type"] == "area")
   {
     type = QUERY_AREA;
@@ -1274,7 +1278,11 @@ std::set< std::pair< Index, Index > > intersect_ranges
 
 void Query_Statement::execute(Resource_Manager& rman)
 {
-  Answer_State answer_state = nothing;
+  Answer_State node_answer_state = nothing;
+  Answer_State way_answer_state = nothing;
+  Answer_State relation_answer_state = nothing;
+  Answer_State area_answer_state = nothing;
+  Answer_State derived_answer_state = nothing;
   Set into;
   uint64 timestamp = rman.get_desired_timestamp();
   if (timestamp == 0)
@@ -1289,49 +1297,54 @@ void Query_Statement::execute(Resource_Manager& rman)
 
   {
     std::vector< Node::Id_Type > node_ids;
-    std::vector< Uint32_Index > ids;
+    std::vector< Way::Id_Type > way_ids;
+    std::vector< Relation::Id_Type > relation_ids;
+    std::vector< Area_Skeleton::Id_Type > area_ids;
+    std::vector< Derived_Skeleton::Id_Type > derived_ids;
     bool invert_ids = false;
 
     std::set< std::pair< Uint32_Index, Uint32_Index > > range_req_32;
     std::vector< Uint32_Index > range_vec_32;
-    std::set< std::pair< Uint31_Index, Uint31_Index > > range_req_31;
-    std::vector< Uint31_Index > range_vec_31;
+    std::set< std::pair< Uint31_Index, Uint31_Index > > way_range_req_31;
+    std::vector< Uint31_Index > way_range_vec_31;
+    std::set< std::pair< Uint31_Index, Uint31_Index > > relation_range_req_31;
+    std::vector< Uint31_Index > relation_range_vec_31;
 
-    if (type == QUERY_NODE)
+    if (type & QUERY_NODE)
     {
       progress_1< Node_Skeleton, Node::Id_Type, Uint32_Index >(
-	  node_ids, range_vec_32, invert_ids, timestamp, answer_state, check_keys_late,
+	  node_ids, range_vec_32, invert_ids, timestamp, node_answer_state, check_keys_late,
           *osm_base_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL, rman);
-      collect_nodes(node_ids, invert_ids, answer_state, into, rman);
+      collect_nodes(node_ids, invert_ids, node_answer_state, into, rman);
     }
-    else if (type == QUERY_WAY)
+    if (type & QUERY_WAY)
     {
       progress_1< Way_Skeleton, Way::Id_Type, Uint31_Index >(
-	  ids, range_vec_31, invert_ids, timestamp, answer_state, check_keys_late,
+	  way_ids, way_range_vec_31, invert_ids, timestamp, way_answer_state, check_keys_late,
           *osm_base_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL, rman);
-      collect_elems(ids, invert_ids, answer_state, into, rman);
+      collect_elems(way_ids, invert_ids, way_answer_state, into, rman);
     }
-    else if (type == QUERY_RELATION)
+    if (type & QUERY_RELATION)
     {
       progress_1< Relation_Skeleton, Relation::Id_Type, Uint31_Index >(
-	  ids, range_vec_31, invert_ids, timestamp, answer_state, check_keys_late,
+	  relation_ids, relation_range_vec_31, invert_ids, timestamp, relation_answer_state, check_keys_late,
           *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman);
-      collect_elems(ids, invert_ids, answer_state, into, rman);
+      collect_elems(relation_ids, invert_ids, relation_answer_state, into, rman);
     }
-    else if (type == QUERY_AREA)
+    if (type & QUERY_AREA)
     {
-      progress_1(ids, invert_ids, answer_state,
+      progress_1(area_ids, invert_ids, area_answer_state,
 		 check_keys_late, *area_settings().AREA_TAGS_GLOBAL, rman);
-      collect_elems(ids, invert_ids, answer_state, into, rman);
+      collect_elems(area_ids, invert_ids, area_answer_state, into, rman);
     }
 
     set_progress(2);
     rman.health_check(*this);
 
-    if (type == QUERY_NODE)
+    if (type & QUERY_NODE)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
+          it != constraints.end() && node_answer_state < data_collected; ++it)
       {
 	std::vector< Node::Id_Type > constraint_node_ids;
 	if ((*it)->get_node_ids(rman, constraint_node_ids))
@@ -1348,80 +1361,80 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  }
 
 	  if (node_ids.empty())
-	    answer_state = data_collected;
+	    node_answer_state = data_collected;
 	}
       }
     }
-    else if (type == QUERY_WAY)
+    if (type & QUERY_WAY)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
+          it != constraints.end() && way_answer_state < data_collected; ++it)
       {
 	std::vector< Way::Id_Type > constraint_way_ids;
 	if ((*it)->get_way_ids(rman, constraint_way_ids))
 	{
-	  if (ids.empty())
-	    ids.swap(constraint_way_ids);
+	  if (way_ids.empty())
+	    way_ids.swap(constraint_way_ids);
 	  else
 	  {
-	    std::vector< Way::Id_Type > new_ids(ids.size());
+	    std::vector< Way::Id_Type > new_ids(way_ids.size());
 	    new_ids.erase(std::set_intersection(
-	        ids.begin(), ids.end(), constraint_way_ids.begin(), constraint_way_ids.end(),
+	        way_ids.begin(), way_ids.end(), constraint_way_ids.begin(), constraint_way_ids.end(),
 	        new_ids.begin()), new_ids.end());
-	    ids.swap(new_ids);
+	    way_ids.swap(new_ids);
 	  }
 
-	  if (ids.empty())
-	    answer_state = data_collected;
+	  if (way_ids.empty())
+	    way_answer_state = data_collected;
 	}
       }
     }
-    else if (type == QUERY_RELATION)
+    if (type & QUERY_RELATION)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
+          it != constraints.end() && relation_answer_state < data_collected; ++it)
       {
 	std::vector< Relation::Id_Type > constraint_relation_ids;
 	if ((*it)->get_relation_ids(rman, constraint_relation_ids))
 	{
-	  if (ids.empty())
-	    ids.swap(constraint_relation_ids);
+	  if (relation_ids.empty())
+	    relation_ids.swap(constraint_relation_ids);
 	  else
 	  {
-	    std::vector< Relation::Id_Type > new_ids(ids.size());
+	    std::vector< Relation::Id_Type > new_ids(relation_ids.size());
 	    new_ids.erase(std::set_intersection(
-	        ids.begin(), ids.end(), constraint_relation_ids.begin(), constraint_relation_ids.end(),
+	        relation_ids.begin(), relation_ids.end(), constraint_relation_ids.begin(), constraint_relation_ids.end(),
 	        new_ids.begin()), new_ids.end());
-	    ids.swap(new_ids);
+	    relation_ids.swap(new_ids);
 	  }
 
-	  if (ids.empty())
-	    answer_state = data_collected;
+	  if (relation_ids.empty())
+	    relation_answer_state = data_collected;
 	}
       }
     }
 
-    if (type == QUERY_NODE)
+    if (type & QUERY_NODE)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
+          it != constraints.end() && node_answer_state < data_collected; ++it)
       {
         std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
         if ((*it)->get_ranges(rman, range_req))
         {
-          if (answer_state < ranges_collected)
+          if (node_answer_state < ranges_collected)
             range_req.swap(range_req_32);
           else
             intersect_ranges(range_req_32, range_req).swap(range_req_32);
-	  answer_state = ranges_collected;
+	  node_answer_state = ranges_collected;
         }
       }
 
       if (!range_vec_32.empty())
       {
-        if (answer_state < ranges_collected)
+        if (node_answer_state < ranges_collected)
         {
-          answer_state = ranges_collected;
+          node_answer_state = ranges_collected;
           range_req_32.clear();
           range_req_32.insert(std::make_pair(Uint32_Index(0u), Uint32_Index(0xffffffff)));
           intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
@@ -1430,63 +1443,132 @@ void Query_Statement::execute(Resource_Manager& rman)
           intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
       }
     }
-    else if (type == QUERY_WAY || type == QUERY_RELATION)
+    if ((type & QUERY_WAY) && way_answer_state < data_collected)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
+          it != constraints.end(); ++it)
       {
         std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
 	if ((*it)->get_ranges(rman, range_req))
         {
-          if (answer_state < ranges_collected)
-            range_req.swap(range_req_31);
+          if (way_answer_state < ranges_collected)
+            range_req.swap(way_range_req_31);
           else
-            intersect_ranges(range_req_31, range_req).swap(range_req_31);
-	  answer_state = ranges_collected;
+            intersect_ranges(way_range_req_31, range_req).swap(way_range_req_31);
+          if (way_answer_state < ranges_collected)
+            way_answer_state = ranges_collected;
         }
       }
 
-      if (!range_vec_31.empty())
+      if (!way_range_vec_31.empty())
       {
-        if (answer_state < ranges_collected)
+        if (way_answer_state < ranges_collected)
         {
-          answer_state = ranges_collected;
-          range_req_31.clear();
-          range_req_31.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
-          intersect_ranges(range_req_31, range_vec_31).swap(range_req_31);
+          way_answer_state = ranges_collected;
+          way_range_req_31.clear();
+          way_range_req_31.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
+          intersect_ranges(way_range_req_31, way_range_vec_31).swap(way_range_req_31);
         }
         else
-          intersect_ranges(range_req_31, range_vec_31).swap(range_req_31);
+          intersect_ranges(way_range_req_31, way_range_vec_31).swap(way_range_req_31);
+      }
+    }
+    if ((type & QUERY_RELATION) && relation_answer_state < data_collected)
+    {
+      for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end(); ++it)
+      {
+        std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
+	if ((*it)->get_ranges(rman, range_req))
+        {
+          if (relation_answer_state < ranges_collected)
+            range_req.swap(relation_range_req_31);
+          else
+            intersect_ranges(relation_range_req_31, range_req).swap(relation_range_req_31);
+          if (relation_answer_state < ranges_collected)
+            relation_answer_state = ranges_collected;
+        }
+      }
+
+      if (!relation_range_vec_31.empty())
+      {
+        if (relation_answer_state < ranges_collected)
+        {
+          relation_answer_state = ranges_collected;
+          relation_range_req_31.clear();
+          relation_range_req_31.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
+          intersect_ranges(relation_range_req_31, relation_range_vec_31).swap(relation_range_req_31);
+        }
+        else
+          intersect_ranges(relation_range_req_31, relation_range_vec_31).swap(relation_range_req_31);
       }
     }
 
     set_progress(3);
     rman.health_check(*this);
 
-    if (type == QUERY_NODE)
+    if (type & QUERY_NODE)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
+          it != constraints.end() && node_answer_state < data_collected; ++it)
       {
 	if ((*it)->get_data(*this, rman, into, range_req_32, node_ids, invert_ids))
-	  answer_state = data_collected;
+	  node_answer_state = data_collected;
       }
     }
-    else if (type == QUERY_WAY || type == QUERY_RELATION || type == QUERY_AREA)
+    if (type & QUERY_WAY)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && answer_state < data_collected; ++it)
+          it != constraints.end() && way_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, range_req_31, type, ids, invert_ids))
-	  answer_state = data_collected;
+	if ((*it)->get_data(*this, rman, into, way_range_req_31, type & QUERY_WAY, way_ids, invert_ids))
+	  way_answer_state = data_collected;
+      }
+    }
+    if (type & QUERY_RELATION)
+    {
+      for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && relation_answer_state < data_collected; ++it)
+      {
+	if ((*it)->get_data(*this, rman, into, relation_range_req_31, type & QUERY_RELATION,
+            relation_ids, invert_ids))
+	  relation_answer_state = data_collected;
+      }
+    }
+    if (type & QUERY_AREA)
+    {
+      for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && area_answer_state < data_collected; ++it)
+      {
+	if ((*it)->get_data(*this, rman, into, std::set< std::pair< Uint31_Index, Uint31_Index > >(),
+            type & QUERY_AREA, area_ids, invert_ids))
+	  area_answer_state = data_collected;
       }
     }
 
     set_progress(4);
     rman.health_check(*this);
 
-    if (answer_state == nothing && node_ids.empty() && ids.empty())
-      runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+    if (type & QUERY_NODE)
+    {
+      if (node_answer_state == nothing && node_ids.empty())
+        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+    }
+    if (type & QUERY_WAY)
+    {
+      if (way_answer_state == nothing && way_ids.empty())
+        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+    }
+    if (type & QUERY_RELATION)
+    {
+      if (relation_answer_state == nothing && relation_ids.empty())
+        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+    }
+    if (type & QUERY_AREA)
+    {
+      if (area_answer_state == nothing && area_ids.empty())
+        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+    }
 
 //     std::cout<<"progress 4\n";
 //     for (std::vector< Relation::Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
@@ -1498,11 +1580,11 @@ void Query_Statement::execute(Resource_Manager& rman)
 //       std::cout<<hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
 //     std::cout<<dec<<answer_state<<'\n';
 
-    if (type == QUERY_NODE)
+    if (type & QUERY_NODE)
     {
-      if (answer_state < data_collected)
+      if (node_answer_state < data_collected)
       {
-        if (range_req_32.empty() && answer_state < ranges_collected && !invert_ids)
+        if (range_req_32.empty() && node_answer_state < ranges_collected && !invert_ids)
 	{
           std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);
           for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
@@ -1514,42 +1596,42 @@ void Query_Statement::execute(Resource_Manager& rman)
              *osm_base_settings().NODES, *attic_settings().NODES);
       }
     }
-    else if (type == QUERY_WAY)
+    if (type & QUERY_WAY)
     {
-      if (answer_state < data_collected)
+      if (way_answer_state < data_collected)
       {
-        if (range_req_31.empty() && answer_state < ranges_collected && !invert_ids)
+        if (way_range_req_31.empty() && way_answer_state < ranges_collected && !invert_ids)
 	{
-          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(ids, rman);
+          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
           for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            range_req_31.insert(std::make_pair(*it, inc(*it)));
+            way_range_req_31.insert(std::make_pair(*it, inc(*it)));
 	}
 	::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
 	    (into.ways, into.attic_ways,
-             ids, invert_ids, range_req_31, *this, rman,
+             way_ids, invert_ids, way_range_req_31, *this, rman,
              *osm_base_settings().WAYS, *attic_settings().WAYS);
       }
     }
-    else if (type == QUERY_RELATION)
+    if (type & QUERY_RELATION)
     {
-      if (answer_state < data_collected)
+      if (relation_answer_state < data_collected)
       {
-        if (range_req_31.empty() && answer_state < ranges_collected && !invert_ids)
+        if (relation_range_req_31.empty() && relation_answer_state < ranges_collected && !invert_ids)
 	{
-          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman);
+          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids, rman);
           for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            range_req_31.insert(std::make_pair(*it, inc(*it)));
+            relation_range_req_31.insert(std::make_pair(*it, inc(*it)));
 	}
 	::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
 	    (into.relations, into.attic_relations,
-             ids, invert_ids, range_req_31, *this, rman,
+             relation_ids, invert_ids, relation_range_req_31, *this, rman,
              *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);
       }
     }
-    else if (type == QUERY_AREA)
+    if (type & QUERY_AREA)
     {
-      if (answer_state < data_collected)
-	get_elements_by_id_from_db(into.areas, ids, invert_ids, rman, *area_settings().AREAS);
+      if (area_answer_state < data_collected)
+	get_elements_by_id_from_db(into.areas, area_ids, invert_ids, rman, *area_settings().AREAS);
     }
   }
 
