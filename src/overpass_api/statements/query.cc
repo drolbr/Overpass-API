@@ -761,7 +761,7 @@ void Query_Statement::filter_by_tags
      uint64 timestamp, const File_Properties& file_prop, const File_Properties* attic_file_prop,
      Resource_Manager& rman, Transaction& transaction)
 {
-  // generate std::set of relevant coarse indices
+  // generate set of relevant coarse indices
   std::map< uint32, std::vector< typename TObject::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(ids_by_coarse, items);
   if (timestamp != NOW)
@@ -997,7 +997,7 @@ void Query_Statement::filter_by_tags
      const File_Properties& file_prop,
      Resource_Manager& rman, Transaction& transaction)
 {
-  // generate std::set of relevant coarse indices
+  // generate set of relevant coarse indices
   std::map< uint32, std::vector< typename TObject::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(ids_by_coarse, items);
 
@@ -1113,6 +1113,97 @@ void Query_Statement::filter_by_tags
   }
 
   items.swap(result);
+}
+
+
+void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derived_Structure > >& items)
+{
+  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::iterator it_idx = items.begin();
+      it_idx != items.end(); ++it_idx)
+  {
+    std::vector< Derived_Structure > result;
+    for (std::vector< Derived_Structure >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+    {
+      std::vector< std::pair< std::string, std::string > >::const_iterator it_kv = key_values.begin();
+      for (; it_kv != key_values.end(); ++it_kv)
+      {
+        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
+        for (; it_tag != it_elem->tags.end(); ++it_tag)
+        {
+          if (it_tag->first == it_kv->first && it_tag->second == it_kv->second)
+            break;
+        }
+        if (it_tag == it_elem->tags.end())
+          break;
+      }
+      if (it_kv != key_values.end())
+        continue;
+      
+      std::vector< std::string >::const_iterator it_k = keys.begin();
+      for (; it_k != keys.end(); ++it_k)
+      {
+        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
+        for (; it_tag != it_elem->tags.end(); ++it_tag)
+        {
+          if (it_tag->first == *it_k)
+            break;
+        }
+        if (it_tag == it_elem->tags.end())
+          break;
+      }
+      if (it_k != keys.end())
+        continue;
+      
+      std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator it_kr = key_regexes.begin();
+      for (; it_kr != key_regexes.end(); ++it_kr)
+      {
+        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
+        for (; it_tag != it_elem->tags.end(); ++it_tag)
+        {
+          if (it_tag->first == it_kr->first && it_kr->second->matches(it_tag->second))
+            break;
+        }
+        if (it_tag == it_elem->tags.end())
+          break;
+      }
+      if (it_kr != key_regexes.end())
+        continue;
+      
+      std::vector< std::pair< std::string, std::string > >::const_iterator it_nkv = key_nvalues.begin();
+      for (; it_nkv != key_nvalues.end(); ++it_nkv)
+      {
+        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
+        for (; it_tag != it_elem->tags.end(); ++it_tag)
+        {
+          if (it_tag->first == it_nkv->first && it_tag->second == it_nkv->second)
+            break;
+        }
+        if (it_tag != it_elem->tags.end())
+          break;
+      }
+      if (it_nkv != key_nvalues.end())
+        continue;
+      
+      std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator it_nkr = key_nregexes.begin();
+      for (; it_nkr != key_nregexes.end(); ++it_nkr)
+      {
+        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
+        for (; it_tag != it_elem->tags.end(); ++it_tag)
+        {
+          if (it_tag->first == it_nkr->first && it_nkr->second->matches(it_tag->second))
+            break;
+        }
+        if (it_tag != it_elem->tags.end())
+          break;
+      }
+      if (it_nkr != key_nregexes.end())
+        continue;
+      
+      result.push_back(*it_elem);
+    }
+    result.swap(it_idx->second);
+  }
 }
 
 
@@ -1234,6 +1325,17 @@ void Query_Statement::collect_elems(std::vector< Id_Type >& ids,
 }
 
 
+void Query_Statement::collect_elems(Answer_State& answer_state, Set& into, Resource_Manager& rman)
+{
+  for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end() && answer_state < data_collected; ++it)
+  {
+    if ((*it)->collect(rman, into))
+      answer_state = data_collected;
+  }
+}
+
+
 template< typename Index >
 std::set< std::pair< Index, Index > > intersect_ranges
     (const std::set< std::pair< Index, Index > >& range_a,
@@ -1300,7 +1402,6 @@ void Query_Statement::execute(Resource_Manager& rman)
     std::vector< Way::Id_Type > way_ids;
     std::vector< Relation::Id_Type > relation_ids;
     std::vector< Area_Skeleton::Id_Type > area_ids;
-    std::vector< Derived_Skeleton::Id_Type > derived_ids;
     bool invert_ids = false;
 
     std::set< std::pair< Uint32_Index, Uint32_Index > > range_req_32;
@@ -1330,6 +1431,11 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  relation_ids, relation_range_vec_31, invert_ids, timestamp, relation_answer_state, check_keys_late,
           *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman);
       collect_elems(relation_ids, invert_ids, relation_answer_state, into, rman);
+    }
+    if (type & QUERY_DERIVED)
+    {
+      collect_elems(derived_answer_state, into, rman);
+      filter_by_tags(into.deriveds);
     }
     if (type & QUERY_AREA)
     {
@@ -1715,6 +1821,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   clear_empty_indices(into.ways);
   clear_empty_indices(into.attic_ways);
   clear_empty_indices(into.relations);
+  clear_empty_indices(into.deriveds);
   clear_empty_indices(into.areas);
 
   transfer_output(rman, into);

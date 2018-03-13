@@ -31,6 +31,7 @@ class Item_Constraint : public Query_Constraint
 		 const std::vector< Uint64 >& ids, bool invert_ids);
     bool collect(Resource_Manager& rman, Set& into, int type,
 		 const std::vector< Uint32_Index >& ids, bool invert_ids);
+    bool collect(Resource_Manager& rman, Set& into);
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Item_Constraint() {}
 
@@ -120,8 +121,19 @@ bool Item_Constraint::collect(Resource_Manager& rman, Set& into,
     into.relations.clear();
     into.attic_relations.clear();
     into.areas.clear();
-    into.deriveds.clear();
   }
+  return true;
+}
+
+
+bool Item_Constraint::collect(Resource_Manager& rman, Set& into)
+{
+  const Set* input = rman.get_set(item->get_input_name());
+  if (input)
+    into.deriveds = input->deriveds;
+  else
+    into.deriveds.clear();
+
   return true;
 }
 

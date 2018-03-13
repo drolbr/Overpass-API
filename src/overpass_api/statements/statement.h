@@ -41,6 +41,7 @@ class Query_Constraint
 			 const std::vector< Uint64 >& ids, bool invert_ids) { return false; }
     virtual bool collect(Resource_Manager& rman, Set& into,
 			 int type, const std::vector< Uint32_Index >& ids, bool invert_ids) { return false; }
+    virtual bool collect(Resource_Manager& rman, Set& into) { return false; }
 
     virtual bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)

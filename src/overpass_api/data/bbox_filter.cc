@@ -61,6 +61,24 @@ void filter_by_bbox(const Bbox_Double& bbox, std::map< Index, std::vector< Coord
 }
 
 
+void filter_deriveds_by_bbox(const Bbox_Double& bbox,
+    std::map< Uint31_Index, std::vector< Derived_Structure > >& items)
+{
+  for (std::map< Uint31_Index, std::vector< Derived_Structure > >::iterator it_idx = items.begin();
+      it_idx != items.end(); ++it_idx)
+  {
+    std::vector< Derived_Structure > result;
+    for (std::vector< Derived_Structure >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+    {
+      if (it_elem->get_geometry() && it_elem->get_geometry()->relevant_to_bbox(bbox))
+        result.push_back(*it_elem);
+    }
+    result.swap(it_idx->second);
+  }
+}
+
+
 void Bbox_Filter::filter(Set& into) const
 {
   if (!bbox.valid())
@@ -80,6 +98,7 @@ void Bbox_Filter::filter(Set& into) const
   filter_relations_by_ranges(into.relations, ranges);
   filter_relations_by_ranges(into.attic_relations, ranges);
 
+  filter_deriveds_by_bbox(bbox, into.deriveds);
   //TODO: filter areas
 }
 

@@ -78,6 +78,12 @@ bool Bbox_Double::intersects(const Point_Double& from, const Point_Double& to) c
 }
 
 
+bool Point_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
+{
+  return bbox.contains(pt);
+}
+
+
 Bbox_Double* calc_bounds(const std::vector< Point_Double >& points)
 {
   double south = 100.0;
@@ -177,6 +183,24 @@ double Linestring_Geometry::east() const
     bounds = calc_bounds(points);
 
   return bounds->east;
+}
+
+
+bool Linestring_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
+{
+  for (std::vector< Point_Double >::const_iterator it = points.begin(); it != points.end(); ++it)
+  {
+    if (bbox.contains(*it))
+      return true;
+  }
+  
+  for (uint i = 1; i < points.size(); ++i)
+  {
+    if (bbox.intersects(points[i-1], points[i]))
+      return true;
+  }
+  
+  return false;
 }
 
 
@@ -287,6 +311,24 @@ void Partial_Way_Geometry::add_point(const Point_Double& point)
     has_coords = true;
   }
   points.push_back(point);
+}
+
+
+bool Partial_Way_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
+{
+  for (std::vector< Point_Double >::const_iterator it = points.begin(); it != points.end(); ++it)
+  {
+    if (it->lat < 100. && bbox.contains(*it))
+      return true;
+  }
+  
+  for (uint i = 1; i < points.size(); ++i)
+  {
+    if (points[i-1].lat < 100. && points[i].lat < 100. && bbox.intersects(points[i-1], points[i]))
+      return true;
+  }
+  
+  return false;
 }
 
 
@@ -421,6 +463,136 @@ void Free_Polygon_Geometry::add_linestring(const std::vector< Point_Double >& li
   linestrings.push_back(linestring);
   if (linestrings.back().front() != linestrings.back().back())
     linestrings.back().push_back(linestrings.back().front());
+}
+
+
+void toggle_if_inside(bool& is_inside, bool& on_vertex, bool& on_segment, double border_lat, double border_lon,
+    Point_Double pt, Point_Double lhs, Point_Double rhs)
+{
+  if (pt.lon < -179.9)
+  {
+    lhs.lon -= lhs.lon > 0 ? 360. : 0.;
+    rhs.lon -= rhs.lon > 0 ? 360. : 0.;
+  }
+  else if (pt.lon > 179.9)
+  {
+    lhs.lon += lhs.lon < 0 ? 360. : 0.;
+    rhs.lon += rhs.lon < 0 ? 360. : 0.;
+  }
+
+  if (lhs.lat == rhs.lat)
+  {
+    if (lhs.lat < pt.lat)
+      is_inside ^= ((lhs.lon - pt.lon)*(rhs.lon - pt.lon) < 0);
+    else if (lhs.lat == pt.lat)
+    {
+      if (pt.lon == lhs.lon || pt.lon == rhs.lon)
+        on_vertex = true;
+      else
+        on_segment |= ((lhs.lon - pt.lon)*(rhs.lon - pt.lon) < 0);
+    }
+    // no else required -- such a segment does not play a role
+  }
+  else if (lhs.lon == rhs.lon)
+  {
+    if ((pt.lat == lhs.lat && pt.lon == lhs.lon) || (pt.lat == rhs.lat && pt.lon == rhs.lon))
+      on_vertex = true;
+    else if (pt.lon == lhs.lon && (pt.lat - lhs.lat)*(pt.lat - rhs.lat) < 0)
+      on_segment = true;
+    else if (lhs.lon < pt.lon && (lhs.lat < border_lat || rhs.lat < border_lat))
+      is_inside = !is_inside;
+    // no else required -- such a segment does not play a role
+  }
+  else if ((lhs.lat - rhs.lat)*(lhs.lon - rhs.lon) < 0)
+    // The segment runs from nw to se or se to nw
+  {
+    if ((pt.lat == lhs.lat && pt.lon == lhs.lon) || (pt.lat == rhs.lat && pt.lon == rhs.lon))
+      on_vertex = true;
+    else if ((pt.lon - lhs.lon)*(pt.lon - rhs.lon) < 0)
+    {
+      double isect_lat = lhs.lat + (rhs.lat - lhs.lat)*(pt.lon - lhs.lon)/(rhs.lon - lhs.lon);
+      if (isect_lat < pt.lat)
+        is_inside = !is_inside;
+      else if (isect_lat == pt.lat)
+        on_segment = true;
+    }
+    else if (pt.lon == lhs.lon && rhs.lon < pt.lon)
+    {
+      if (lhs.lat < pt.lat)
+        is_inside = !is_inside;
+    }
+    else if (pt.lon == rhs.lon && lhs.lon < pt.lon)
+    {
+      if (rhs.lat < pt.lat)
+        is_inside = !is_inside;
+    }
+    else if ((border_lat - lhs.lat)*(border_lat - rhs.lat) < 0)
+    {
+      double isect_lon = lhs.lon + (rhs.lon - lhs.lon)*(border_lat - lhs.lat)/(rhs.lat - lhs.lat);
+      if (border_lon < isect_lon && isect_lon < pt.lon)
+        is_inside = !is_inside;
+    }
+  }
+  else
+    // The segment runs from sw to ne or ne to sw
+  {
+    if ((border_lat - lhs.lat)*(border_lat - rhs.lat) < 0)
+    {
+      double isect_lon = lhs.lon + (rhs.lon - lhs.lon)*(border_lat - lhs.lat)/(rhs.lat - lhs.lat);
+      if ((lhs.lon <= pt.lon || rhs.lon <= pt.lon) && (border_lon < isect_lon))
+        is_inside = !is_inside;
+    }
+    if ((pt.lat == lhs.lat && pt.lon == lhs.lon) || (pt.lat == rhs.lat && pt.lon == rhs.lon))
+    {
+      on_vertex = true;
+      return;
+    }
+
+    if ((pt.lon - lhs.lon)*(pt.lon - rhs.lon) < 0)
+    {
+      double isect_lat = lhs.lat + (rhs.lat - lhs.lat)*(pt.lon - lhs.lon)/(rhs.lon - lhs.lon);
+      if (isect_lat < pt.lat)
+        is_inside = !is_inside;
+      else if (isect_lat == pt.lat)
+        on_segment = true;
+    }
+    else if (pt.lon == lhs.lon && rhs.lon < pt.lon)
+    {
+      if (lhs.lat < pt.lat)
+        is_inside = !is_inside;
+    }
+    else if (pt.lon == rhs.lon && lhs.lon < pt.lon)
+    {
+      if (rhs.lat < pt.lat)
+        is_inside = !is_inside;
+    }
+  }
+}
+
+
+bool Free_Polygon_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
+{
+  for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
+      iti != linestrings.end(); ++iti)
+  {
+    for (std::vector< Point_Double >::const_iterator it = iti->begin(); it != iti->end(); ++it)
+    {
+      if (bbox.contains(*it))
+        return true;
+    }
+  }
+  
+  for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
+      iti != linestrings.end(); ++iti)
+  {
+    for (uint i = 1; i < iti->size(); ++i)
+    {
+      if (bbox.intersects((*iti)[i-1], (*iti)[i]))
+        return true;
+    }
+  }
+  
+  return false;
 }
 
 
@@ -1241,111 +1413,8 @@ Area_Oracle::point_status RHR_Polygon_Area_Oracle::get_point_status(int32 value,
 
   for (std::vector< unsigned int >::const_iterator seg_it = spi_it->second.begin();
       seg_it != spi_it->second.end(); ++seg_it)
-  {
-    double lhs_lat = (*all_segments)[*seg_it].lat;
-    double rhs_lat = (*all_segments)[*seg_it+1].lat;
-
-    double lhs_lon = (*all_segments)[*seg_it].lon;
-    double rhs_lon = (*all_segments)[*seg_it+1].lon;
-    if (lon < -179.9)
-    {
-      lhs_lon -= lhs_lon > 0 ? 360. : 0.;
-      rhs_lon -= rhs_lon > 0 ? 360. : 0.;
-    }
-    else if (lon > 179.9)
-    {
-      lhs_lon += lhs_lon < 0 ? 360. : 0.;
-      rhs_lon += rhs_lon < 0 ? 360. : 0.;
-    }
-
-    if (lhs_lat == rhs_lat)
-    {
-      if (lhs_lat < lat)
-        is_inside ^= ((lhs_lon - lon)*(rhs_lon - lon) < 0);
-      else if (lhs_lat == lat)
-      {
-        if (lon == lhs_lon || lon == rhs_lon)
-          on_vertex = true;
-        else
-          on_segment |= ((lhs_lon - lon)*(rhs_lon - lon) < 0);
-      }
-      // no else required -- such a segment does not play a role
-    }
-    else if (lhs_lon == rhs_lon)
-    {
-      if ((lat == lhs_lat && lon == lhs_lon) || (lat == rhs_lat && lon == rhs_lon))
-        on_vertex = true;
-      else if (lon == lhs_lon && (lat - lhs_lat)*(lat - rhs_lat) < 0)
-        on_segment = true;
-      else if (lhs_lon < lon && (lhs_lat < border_lat || rhs_lat < border_lat))
-        is_inside = !is_inside;
-      // no else required -- such a segment does not play a role
-    }
-    else if ((lhs_lat - rhs_lat)*(lhs_lon - rhs_lon) < 0)
-      // The segment runs from nw to se or se to nw
-    {
-      if ((lat == lhs_lat && lon == lhs_lon) || (lat == rhs_lat && lon == rhs_lon))
-        on_vertex = true;
-      else if ((lon - lhs_lon)*(lon - rhs_lon) < 0)
-      {
-        double isect_lat = lhs_lat + (rhs_lat - lhs_lat)*(lon - lhs_lon)/(rhs_lon - lhs_lon);
-        if (isect_lat < lat)
-          is_inside = !is_inside;
-        else if (isect_lat == lat)
-          on_segment = true;
-      }
-      else if (lon == lhs_lon && rhs_lon < lon)
-      {
-        if (lhs_lat < lat)
-          is_inside = !is_inside;
-      }
-      else if (lon == rhs_lon && lhs_lon < lon)
-      {
-        if (rhs_lat < lat)
-          is_inside = !is_inside;
-      }
-      else if ((border_lat - lhs_lat)*(border_lat - rhs_lat) < 0)
-      {
-        double isect_lon = lhs_lon + (rhs_lon - lhs_lon)*(border_lat - lhs_lat)/(rhs_lat - lhs_lat);
-        if (border_lon < isect_lon && isect_lon < lon)
-          is_inside = !is_inside;
-      }
-    }
-    else
-      // The segment runs from sw to ne or ne to sw
-    {
-      if ((border_lat - lhs_lat)*(border_lat - rhs_lat) < 0)
-      {
-        double isect_lon = lhs_lon + (rhs_lon - lhs_lon)*(border_lat - lhs_lat)/(rhs_lat - lhs_lat);
-        if ((lhs_lon <= lon || rhs_lon <= lon) && (border_lon < isect_lon))
-          is_inside = !is_inside;
-      }
-      if ((lat == lhs_lat && lon == lhs_lon) || (lat == rhs_lat && lon == rhs_lon))
-      {
-        on_vertex = true;
-        continue;
-      }
-
-      if ((lon - lhs_lon)*(lon - rhs_lon) < 0)
-      {
-        double isect_lat = lhs_lat + (rhs_lat - lhs_lat)*(lon - lhs_lon)/(rhs_lon - lhs_lon);
-        if (isect_lat < lat)
-          is_inside = !is_inside;
-        else if (isect_lat == lat)
-          on_segment = true;
-      }
-      else if (lon == lhs_lon && rhs_lon < lon)
-      {
-        if (lhs_lat < lat)
-          is_inside = !is_inside;
-      }
-      else if (lon == rhs_lon && lhs_lon < lon)
-      {
-        if (rhs_lat < lat)
-          is_inside = !is_inside;
-      }
-    }
-  }
+    toggle_if_inside(is_inside, on_vertex, on_segment, border_lat, border_lon, Point_Double(lat, lon),
+        (*all_segments)[*seg_it], (*all_segments)[*seg_it+1]);
 
   if (on_vertex)
     return 0x20 + 2*is_inside;
@@ -1528,6 +1597,44 @@ double RHR_Polygon_Geometry::east() const
     bounds = calc_bounds(linestrings);
 
   return bounds->east;
+}
+
+
+bool RHR_Polygon_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
+{
+  for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
+      iti != linestrings.end(); ++iti)
+  {
+    for (std::vector< Point_Double >::const_iterator it = iti->begin(); it != iti->end(); ++it)
+    {
+      if (bbox.contains(*it))
+        return true;
+    }
+  }
+  
+  for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
+      iti != linestrings.end(); ++iti)
+  {
+    for (uint i = 1; i < iti->size(); ++i)
+    {
+      if (bbox.intersects((*iti)[i-1], (*iti)[i]))
+        return true;
+    }
+  }
+  
+  bool is_inside = false;
+  bool on_vertex = false;
+  bool on_segment = false;
+  Point_Double bbox_center(bbox.center_lat(), bbox.center_lon());
+  
+  for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
+      iti != linestrings.end(); ++iti)
+  {
+    for (uint i = 1; i < iti->size(); ++i)
+      toggle_if_inside(is_inside, on_vertex, on_segment, -90., -180.,
+          bbox_center, (*iti)[i-1], (*iti)[i]);
+  }
+  return (is_inside || on_vertex || on_segment);
 }
 
 
@@ -1726,6 +1833,18 @@ void Compound_Geometry::add_component(Opaque_Geometry* component)
   delete bounds;
   bounds = 0;
   components.push_back(component);
+}
+
+
+bool Compound_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
+{
+  for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
+  {
+    if ((*it)->relevant_to_bbox(bbox))
+      return true;
+  }
+  
+  return false;
 }
 
 
@@ -1933,6 +2052,18 @@ void Partial_Relation_Geometry::add_way_placeholder()
   Partial_Way_Geometry* geom = dynamic_cast< Partial_Way_Geometry* >(components.back());
   if (geom)
     geom->add_point(Point_Double(100., 200.));
+}
+
+
+bool Partial_Relation_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
+{
+  for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
+  {
+    if ((*it)->relevant_to_bbox(bbox))
+      return true;
+  }
+  
+  return false;
 }
 
 

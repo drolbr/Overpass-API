@@ -169,6 +169,8 @@ class Query_Statement : public Output_Statement
          const File_Properties& file_prop,
          Resource_Manager& rman, Transaction& transaction);
 
+    void filter_by_tags(std::map< Uint31_Index, std::vector< Derived_Structure > >& items);
+
     template< typename Skeleton, typename Id_Type, typename Index >
     void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
                     bool& invert_ids, uint64 timestamp,
@@ -191,6 +193,8 @@ class Query_Statement : public Output_Statement
     void collect_elems(std::vector< Id_Type >& ids,
 				 bool& invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman);
+    
+    void collect_elems(Answer_State& answer_state, Set& into, Resource_Manager& rman);
 };
 
 
