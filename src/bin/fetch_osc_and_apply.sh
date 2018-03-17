@@ -60,7 +60,7 @@ fetch_and_apply_minute_diff()
   printf -v TDIGIT2 %03u $(($ARG % 1000))
   ARG=$(($ARG / 1000))
   printf -v TDIGIT1 %03u $ARG
-  
+
   REMOTE_PATH="$DIFF_URL/$TDIGIT1/$TDIGIT2/$TDIGIT3"
   REMOTE_DIFF="$REMOTE_PATH.osc.gz"
   REMOTE_STATE="$REMOTE_PATH.state.txt"
@@ -81,7 +81,7 @@ fetch_and_apply_minute_diff()
   ret=$?
   rm $TMP_DIFF 2>/dev/null
   rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
-  
+
   #Update the timestamp
   while [[ true ]];
   do
@@ -96,7 +96,7 @@ fetch_and_apply_minute_diff()
   	  cp $DB_DIR/osm_base_version $DB_DIR/osm_base_version_munin
   	  rm $TMP_STATE
   	  return $ret
-  	}; fi	
+  	}; fi
   done
 
 };

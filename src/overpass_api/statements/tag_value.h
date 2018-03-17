@@ -581,7 +581,7 @@ private:
 ==== Geometry ====
 
 The <em>geometry</em> operator returns the geometry of a single object
-as a geometry that can be put into the other geomtry converting operators.
+as a geometry that can be put into the other geometry converting operators.
 
 Its syntax is:
 

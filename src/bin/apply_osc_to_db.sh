@@ -104,7 +104,7 @@ apply_minute_diffs_augmented()
   ./process_augmented_diffs <$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc | gzip >$DB_DIR/augmented_diffs/$REPLICATE_FILENAME.osc.gz
   gzip <$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc >$DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc.gz
   rm $DB_DIR/augmented_diffs/id_sorted/$REPLICATE_FILENAME.osc
-  
+
   echo "osm_base=$DATA_VERSION" >$DB_DIR/augmented_diffs/$REPLICATE_FILENAME.state.txt
   echo $DIFF_COUNT >$DB_DIR/augmented_diffs/state.txt
   DIFF_COUNT=$(($DIFF_COUNT + 1))

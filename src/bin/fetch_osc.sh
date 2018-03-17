@@ -78,13 +78,13 @@ file_panic()
 {
   echo "fetch_osc()@"`date "+%F %T"`": upstream_delay $REPLICATE_ID" >>$LOCAL_DIR/fetch_osc.log
   REPLICATE_ID=$(($REPLICATE_ID - 1))
-  
+
   printf -v TDIGIT3 %03u $(($REPLICATE_ID % 1000))
   ARG=$(($REPLICATE_ID / 1000))
   printf -v TDIGIT2 %03u $(($ARG % 1000))
   ARG=$(($ARG / 1000))
   printf -v TDIGIT1 %03u $ARG
-  
+
   FILE_PANIC="true"
   until [[ ! -n $FILE_PANIC ]]; do {
     retry_fetch_file "$REMOTE_PATH/$TDIGIT3.osc.gz" "$LOCAL_PATH/$TDIGIT3.new.osc.gz" "gzip"
@@ -93,7 +93,7 @@ file_panic()
   until [[ ! -n $FILE_PANIC ]]; do {
     retry_fetch_file "$REMOTE_PATH/$TDIGIT3.state.txt" "$LOCAL_PATH/$TDIGIT3.new.state.txt" "text"
   }; done
-  
+
   RES_GZIP=`diff -q "$LOCAL_PATH/$TDIGIT3.osc.gz" "$LOCAL_PATH/$TDIGIT3.new.osc.gz"`
   RES_TEXT=`diff -q "$LOCAL_PATH/$TDIGIT3.state.txt" "$LOCAL_PATH/$TDIGIT3.new.state.txt"`
   if [[ -n $RES_GZIP || -n $RES_TEXT ]]; then
@@ -102,7 +102,7 @@ file_panic()
     echo "fetch_osc()@"`date "+%F %T"`": $RES_TEXT" >>$LOCAL_DIR/fetch_osc.log
     exit 1
   fi
-  
+
   rm "$LOCAL_PATH/$TDIGIT3.new.osc.gz"
   rm "$LOCAL_PATH/$TDIGIT3.new.state.txt"
 };
@@ -114,7 +114,7 @@ fetch_minute_diff()
   printf -v TDIGIT2 %03u $(($ARG % 1000))
   ARG=$(($ARG / 1000))
   printf -v TDIGIT1 %03u $ARG
-  
+
   LOCAL_PATH="$LOCAL_DIR/$TDIGIT1/$TDIGIT2"
   REMOTE_PATH="$SOURCE_DIR/$TDIGIT1/$TDIGIT2"
   mkdir -p "$LOCAL_DIR/$TDIGIT1/$TDIGIT2"

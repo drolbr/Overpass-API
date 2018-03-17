@@ -137,8 +137,9 @@ public:
 The function <em>trace</em> returns the trace of its argument.
 It expects a function that evaluates to a geometry.
 It then delivers a collection of all segments and nodes that appear in its input.
-Ways are split at points that are explicitly in the set.
-Every node and segments is contained at most once.
+Ways are split at points that are explicitly in the set
+and at points that belong to more than one way in the set.
+Every node and segment is contained at most once.
 
 Its syntax is
 

@@ -41,23 +41,23 @@ while [[ true ]]; do
       rm $FILE
     fi
   done
-  
+
   EPOCHSECS=$(($CURRENT_DIFF * 60 + 1347432900))
   SINCE=`date --utc --date="@$EPOCHSECS" '+%FT%H:%M:%SZ'`
   UNTIL=`date --utc --date="@$(($EPOCHSECS + 60))" '+%FT%H:%M:%SZ'`
-  
+
   while [[ `../cgi-bin/timestamp | tail -n 1` < $UNTIL ]]; do
     echo "`../cgi-bin/timestamp | tail -n 1` vs. $UNTIL"
     sleep 5
   done
-  
+
   FILE="$CACHE_DIR/$CURRENT_DIFF.osc.gz"
   echo -n "Create $FILE ..."
-  
+
   QUERY_STRING='[adiff:"'$SINCE'","'$UNTIL'"];(node(changed:"'$SINCE'","'$UNTIL'");way(changed:"'$SINCE'","'$UNTIL'");rel(changed:"'$SINCE'","'$UNTIL'"););out meta geom;'
   echo $QUERY_STRING | ./osm3s_query | gzip >"$FILE"
   echo " done."
-  
+
   echo $CURRENT_DIFF >"$CACHE_DIR/newest"
   CURRENT_DIFF=$(($CURRENT_DIFF + 1))
 

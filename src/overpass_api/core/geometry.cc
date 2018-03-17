@@ -193,13 +193,13 @@ bool Linestring_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
     if (bbox.contains(*it))
       return true;
   }
-  
+
   for (uint i = 1; i < points.size(); ++i)
   {
     if (bbox.intersects(points[i-1], points[i]))
       return true;
   }
-  
+
   return false;
 }
 
@@ -321,13 +321,13 @@ bool Partial_Way_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
     if (it->lat < 100. && bbox.contains(*it))
       return true;
   }
-  
+
   for (uint i = 1; i < points.size(); ++i)
   {
     if (points[i-1].lat < 100. && points[i].lat < 100. && bbox.intersects(points[i-1], points[i]))
       return true;
   }
-  
+
   return false;
 }
 
@@ -581,7 +581,7 @@ bool Free_Polygon_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
         return true;
     }
   }
-  
+
   for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
       iti != linestrings.end(); ++iti)
   {
@@ -591,7 +591,7 @@ bool Free_Polygon_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
         return true;
     }
   }
-  
+
   return false;
 }
 
@@ -1611,7 +1611,7 @@ bool RHR_Polygon_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
         return true;
     }
   }
-  
+
   for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
       iti != linestrings.end(); ++iti)
   {
@@ -1621,12 +1621,12 @@ bool RHR_Polygon_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
         return true;
     }
   }
-  
+
   bool is_inside = false;
   bool on_vertex = false;
   bool on_segment = false;
   Point_Double bbox_center(bbox.center_lat(), bbox.center_lon());
-  
+
   for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings.begin();
       iti != linestrings.end(); ++iti)
   {
@@ -1843,7 +1843,7 @@ bool Compound_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
     if ((*it)->relevant_to_bbox(bbox))
       return true;
   }
-  
+
   return false;
 }
 
@@ -2062,7 +2062,7 @@ bool Partial_Relation_Geometry::relevant_to_bbox(const Bbox_Double& bbox) const
     if ((*it)->relevant_to_bbox(bbox))
       return true;
   }
-  
+
   return false;
 }
 

@@ -193,7 +193,7 @@ class Query_Statement : public Output_Statement
     void collect_elems(std::vector< Id_Type >& ids,
 				 bool& invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman);
-    
+
     void collect_elems(Answer_State& answer_state, Set& into, Resource_Manager& rman);
 };
 

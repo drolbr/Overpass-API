@@ -40,7 +40,7 @@ user_test()
   $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 tags >run/$3/user_tags_$1_$2.log
   $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 bbox >run/$3/user_bbox_$1_$2.log
   $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE $1 uid=$2 tags_bbox >run/$3/user_bbox_tags_$1_$2.log
-  
+
   echo "\
 <osm-script timeout=\"86400\">\
 \
@@ -48,7 +48,7 @@ user_test()
 <print mode=\"meta\"/>\
 \
 </osm-script>
-" >run/$3/uid_query_$2.xml  
+" >run/$3/uid_query_$2.xml
   echo "\
 <osm-script timeout=\"86400\">\
 \
@@ -56,7 +56,7 @@ user_test()
 <print mode=\"meta\"/>\
 \
 </osm-script>
-" >run/$3/name_query_$2.xml  
+" >run/$3/name_query_$2.xml
 
   echo "\
 <osm-script timeout=\"86400\">\
@@ -78,8 +78,8 @@ user_test()
 <print mode=\"meta\"/>\
 \
 </osm-script>
-" >run/$3/tags_query_$2.xml  
-  
+" >run/$3/tags_query_$2.xml
+
   echo "\
 <osm-script timeout=\"86400\" bbox=\"10,1,10.5,1.5\">\
 \
@@ -87,7 +87,7 @@ user_test()
 <print mode=\"meta\"/>\
 \
 </osm-script>
-" >run/$3/uid_bbox_query_$2.xml  
+" >run/$3/uid_bbox_query_$2.xml
   echo "\
 <osm-script timeout=\"86400\" bbox=\"10,1,10.5,1.5\">\
 \
@@ -95,7 +95,7 @@ user_test()
 <print mode=\"meta\"/>\
 \
 </osm-script>
-" >run/$3/name_bbox_query_$2.xml  
+" >run/$3/name_bbox_query_$2.xml
 
   echo "\
 <osm-script timeout=\"86400\" bbox=\"10,1,10.5,1.5\">\
@@ -117,7 +117,7 @@ user_test()
 <print mode=\"meta\"/>\
 \
 </osm-script>
-" >run/$3/tags_bbox_query_$2.xml  
+" >run/$3/tags_bbox_query_$2.xml
 
   $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/uid_query_$2.xml >run/$3/uid_$1_$2.log
   $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/name_query_$2.xml >run/$3/name_$1_$2.log
@@ -126,7 +126,7 @@ user_test()
   RES=$RES`diff -q run/$3/user_$1_$2.log run/$3/uid_$1_$2.log`
   RES=$RES`diff -q run/$3/user_$1_$2.log run/$3/name_$1_$2.log`
   RES=$RES`diff -q run/$3/user_tags_$1_$2.log run/$3/tags_$1_$2.log`
-  
+
   $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/uid_bbox_query_$2.xml >run/$3/uid_bbox_$1_$2.log
   $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/name_bbox_query_$2.xml >run/$3/name_bbox_$1_$2.log
   $BASEDIR/bin/osm3s_query --db-dir=run/$3/ --concise <run/$3/tags_bbox_query_$2.xml >run/$3/tags_bbox_$1_$2.log

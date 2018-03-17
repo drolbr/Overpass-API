@@ -61,7 +61,7 @@ while [[ true ]]; do
   while [[ ! -e "$CLONE_DIR/trigger" ]]; do
   {
     sleep 15
-  }; done  
+  }; done
 
   rm -f "$CLONE_DIR/replicate_id"
   for I in $FILES_TO_HANDLE; do
@@ -81,18 +81,18 @@ while [[ true ]]; do
 #   compress_file nodes.map
 #   compress_file node_tags_local.bin
 #   compress_file node_tags_global.bin
-# 
+#
 #   compress_file ways.bin
 #   compress_file ways.map
 #   compress_file way_tags_local.bin
 #   compress_file way_tags_global.bin
-# 
+#
 #   compress_file relations.bin
 #   compress_file relations.map
 #   compress_file relation_roles.bin
 #   compress_file relation_tags_local.bin
 #   compress_file relation_tags_global.bin
-# 
+#
 #   compress_file nodes_meta.bin
 #   compress_file ways_meta.bin
 #   compress_file relations_meta.bin

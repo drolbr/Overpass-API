@@ -88,7 +88,7 @@ if [[ -n $RES || -s run/diff_updater_1/diff_stderr.log ]]; then
 # mkdir -p run/diff_updater_2
 # rm -fR run/diff_updater_2/*
 # $BASEDIR/bin/update_database --db-dir=run/diff_updater_2/ --version=mock-up-init <input/diff_updater_2/augmented_init.osm
-# 
+#
 # # do the differential update including start/stop of dispatcher
 # date +%T
 # $BASEDIR/bin/dispatcher --osm-base --db-dir=run/diff_updater_2/ &
@@ -97,7 +97,7 @@ if [[ -n $RES || -s run/diff_updater_1/diff_stderr.log ]]; then
 # $BASEDIR/bin/update_database --version=mock-up-diff --produce-diff <input/diff_updater_2/augmented_source.osm >run/diff_updater_2/augmented_diff.osm
 # cat run/diff_updater_2/transactions.log
 # $BASEDIR/bin/dispatcher --terminate
-# 
+#
 # # compare outcome to expected outcome
 # RES=`diff -q expected/diff_updater_2/augmented_diff.osm run/diff_updater_2/augmented_diff.osm`
 # if [[ -n $RES || ! -f run/diff_updater_2/augmented_diff.osm ]]; then

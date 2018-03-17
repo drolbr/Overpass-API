@@ -1139,7 +1139,7 @@ void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derive
       }
       if (it_kv != key_values.end())
         continue;
-      
+
       std::vector< std::string >::const_iterator it_k = keys.begin();
       for (; it_k != keys.end(); ++it_k)
       {
@@ -1154,7 +1154,7 @@ void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derive
       }
       if (it_k != keys.end())
         continue;
-      
+
       std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator it_kr = key_regexes.begin();
       for (; it_kr != key_regexes.end(); ++it_kr)
       {
@@ -1169,7 +1169,7 @@ void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derive
       }
       if (it_kr != key_regexes.end())
         continue;
-      
+
       std::vector< std::pair< std::string, std::string > >::const_iterator it_nkv = key_nvalues.begin();
       for (; it_nkv != key_nvalues.end(); ++it_nkv)
       {
@@ -1184,7 +1184,7 @@ void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derive
       }
       if (it_nkv != key_nvalues.end())
         continue;
-      
+
       std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator it_nkr = key_nregexes.begin();
       for (; it_nkr != key_nregexes.end(); ++it_nkr)
       {
@@ -1199,7 +1199,7 @@ void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derive
       }
       if (it_nkr != key_nregexes.end())
         continue;
-      
+
       result.push_back(*it_elem);
     }
     result.swap(it_idx->second);
