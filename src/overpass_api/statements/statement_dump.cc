@@ -176,8 +176,6 @@ std::string Statement_Dump::dump_compact_map_ql(Statement::Factory& stmt_factory
       result += "(" + name_ + ":)";
   }
 
-  if (name_ != "osm-script")
-    result += ";";
   return result;
 }
 
@@ -252,8 +250,6 @@ std::string Statement_Dump::dump_bbox_map_ql(Statement::Factory& stmt_factory)
       result += "(" + name_ + ":)";
   }
 
-  if (name_ != "osm-script")
-    result += ";";
   return result;
 }
 
@@ -321,8 +317,6 @@ std::string Statement_Dump::dump_pretty_map_ql(Statement::Factory& stmt_factory)
       result += "(" + name_ + ":)";
   }
 
-  if (name_ != "osm-script")
-    result += ";";
   return result;
 }
 

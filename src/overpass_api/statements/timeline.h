@@ -93,7 +93,7 @@ public:
     if (version)
       result += "," + ::to_string(version);
 
-    return result + ")" + dump_ql_result_name();
+    return result + ")" + dump_ql_result_name() + ";";
   }
 
   virtual std::string dump_pretty_ql(const std::string& indent) const
@@ -102,7 +102,7 @@ public:
     if (version)
       result += ", " + ::to_string(version);
 
-    return result + ")" + dump_ql_result_name();
+    return result + ")" + dump_ql_result_name() + ";";
   }
 
 private:

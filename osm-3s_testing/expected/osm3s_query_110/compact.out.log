@@ -1,1 +1,1 @@
-foreach.in->.out(node(w);out;);
+foreach.in->.out{node(w);out;}

@@ -113,7 +113,7 @@ class Query_Statement : public Output_Statement
         result += "(bbox)";
 
       return result + (pretty && proper_substatement_count > 1 && dump_ql_result_name() != "" ? "\n  " + indent : "")
-          + dump_ql_result_name();
+          + dump_ql_result_name() + ";";
     }
 
   private:

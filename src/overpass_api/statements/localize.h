@@ -92,7 +92,7 @@ public:
           + "," + to_string(north)
           + "," + to_string(east)
           + ")";
-    return result + dump_ql_result_name();
+    return result + dump_ql_result_name() + ";";
   }
 
   virtual std::string dump_pretty_ql(const std::string& indent) const

@@ -60,7 +60,7 @@ class Difference_Statement : public Output_Statement
       }
       result += ")";
 
-      return result + dump_ql_result_name();
+      return result + dump_ql_result_name() + ";";
     }
 
     virtual std::string dump_pretty_ql(const std::string& indent) const
@@ -76,7 +76,7 @@ class Difference_Statement : public Output_Statement
       }
       result += "\n)";
 
-      return result + dump_ql_result_name();
+      return result + dump_ql_result_name() + ";";
     }
 
   private:

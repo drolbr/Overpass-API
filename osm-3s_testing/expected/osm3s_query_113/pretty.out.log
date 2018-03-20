@@ -1,4 +1,4 @@
-foreach(
+foreach{
   node(w);
   out;
-);
+}

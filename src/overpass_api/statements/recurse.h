@@ -112,10 +112,10 @@ class Recurse_Statement : public Output_Statement
         return target_type + "(" + to_ql_representation(type)
             + (input != "_" ? std::string(".") + input : "")
             + (restrict_to_role ? std::string(":\"") + escape_cstr(role) + "\"" : "")
-            + ")" + dump_ql_result_name();
+            + ")" + dump_ql_result_name() + ";";
       else
         return (input != "_" ? std::string(".") + input + " " : "")
-            + to_ql_representation(type) + dump_ql_result_name();
+            + to_ql_representation(type) + dump_ql_result_name() + ";";
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
 

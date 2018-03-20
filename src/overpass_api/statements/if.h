@@ -41,20 +41,20 @@ The statement does not directly interact with any sets.
 The base syntax is
 
   if (<Evaluator>)
-  (
+  {
     <List of Substatements>
-  );
+  };
 
 resp.
 
   if (<Evaluator>)
-  (
+  {
     <List of Substatements>
-  )
+  }
   else
-  (
+  {
     <List of Substatements>
-  );
+  };
 
 where <Evaluator> is an evaulator and <List of Substatements> is a list of substatements.
 
@@ -98,19 +98,19 @@ public:
 
   virtual std::string dump_compact_ql(const std::string& indent) const
   {
-    std::string result = indent + "if(" + (criterion ? criterion->dump_compact_ql("") : "") + ")(";
+    std::string result = indent + "if(" + (criterion ? criterion->dump_compact_ql("") : "") + "){";
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
       result += (*it)->dump_compact_ql(indent) + ";";
 
     if (!else_statements.empty())
     {
-      result += ")else(";
+      result += "}else{";
       for (std::vector< Statement* >::const_iterator it = else_statements.begin();
           it != else_statements.end(); ++it)
-        result += (*it)->dump_compact_ql(indent) + ";";
+        result += (*it)->dump_compact_ql(indent);
     }
-    result += ")";
+    result += "}";
 
     return result;
   }
@@ -118,19 +118,19 @@ public:
   virtual std::string dump_pretty_ql(const std::string& indent) const
   {
     std::string result = indent + "if (" + (criterion ? criterion->dump_compact_ql("") : "") + ")\n"
-        + indent + "(";
+        + indent + "{";
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
       result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
 
     if (!else_statements.empty())
     {
-      result += "\n" + indent + ")\n" + indent + "else\n" + indent + "(\n";
+      result += "\n" + indent + "}\n" + indent + "else\n" + indent + "{\n";
       for (std::vector< Statement* >::const_iterator it = else_statements.begin();
           it != else_statements.end(); ++it)
-        result += (*it)->dump_compact_ql(indent + "  ") + ";";
+        result += (*it)->dump_compact_ql(indent + "  ");
     }
-    result += "\n" + indent + ")";
+    result += "\n" + indent + "}";
 
     return result;
   }

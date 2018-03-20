@@ -60,7 +60,7 @@ class For_Statement : public Statement
 
       result += "(" + (evaluator ? evaluator->dump_compact_ql(indent) :  "") + ")(";
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += (*it)->dump_compact_ql(indent) + ";";
+        result += (*it)->dump_compact_ql(indent);
       result += ")";
 
       return result;
@@ -71,10 +71,10 @@ class For_Statement : public Statement
       std::string result = indent + "for"
           + (input != "_" ? "." + input : "") + (output != "_" ? "->." + output : "") + "(";
 
-      result += "(" + (evaluator ? evaluator->dump_pretty_ql(indent) :  "") + ")(";
+      result += (evaluator ? evaluator->dump_pretty_ql(indent) :  "") + "){";
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
-      result += "\n)";
+        result += "\n" + (*it)->dump_pretty_ql(indent + "  ");
+      result += "\n}";
 
       return result;
     }

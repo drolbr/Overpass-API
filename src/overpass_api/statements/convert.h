@@ -96,7 +96,7 @@ public:
     }
     for (; it != evaluators.end(); ++it)
       result += "," + (*it ? (*it)->dump_compact_ql(indent + "  ") : "");
-    return result + dump_ql_result_name();
+    return result + dump_ql_result_name() + ";";
   }
 
   virtual std::string dump_pretty_ql(const std::string& indent) const
@@ -111,7 +111,7 @@ public:
     }
     for (; it != evaluators.end(); ++it)
       result += ",\n  " + indent + (*it ? (*it)->dump_pretty_ql(indent + "  ") : "");
-    return result + dump_ql_result_name();
+    return result + dump_ql_result_name() + ";";
   }
 
 private:

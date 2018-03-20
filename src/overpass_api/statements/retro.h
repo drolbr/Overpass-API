@@ -43,9 +43,9 @@ or morph elements from one point in time to the other.
 The base syntax is
 
   retro (<Evaluator>)
-  (
+  {
     <List of Substatements>
-  );
+  };
 
 where <Evaluator> is an evaulator and <List of Substatements> is a list of substatements.
 
@@ -79,11 +79,11 @@ public:
   {
     std::string result = indent + "retro("
         + (timestamp ? timestamp->dump_compact_ql("") : "")
-        + ")(";
+        + "){";
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-      result += (*it)->dump_compact_ql(indent) + ";";
-    result += ")";
+      result += (*it)->dump_compact_ql(indent);
+    result += "}";
 
     return result;
   }
@@ -93,11 +93,11 @@ public:
     std::string result = indent + "retro ("
         + (timestamp ? timestamp->dump_pretty_ql("") : "")
         + ")\n"
-        + indent + "(";
+        + indent + "{";
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-      result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
-    result += "\n" + indent + ")";
+      result += "\n" + (*it)->dump_pretty_ql(indent + "  ");
+    result += "\n" + indent + "}";
 
     return result;
   }

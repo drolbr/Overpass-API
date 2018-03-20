@@ -44,29 +44,29 @@ If the input set contains extra elements then the loop is executed again.
 
 The base syntax is
 
-  complete(
+  complete{
     <List of Substatements>
-  );
+  };
 
 where <List of Substatements> is a list of substatements.
 The input and output set can be specified between complete and the opening parenthesis,
 i.e. you set the input set
 
-  complete.<Name of Input Set>(
+  complete.<Name of Input Set>{
     <List of Substatements>
-  );
+  };
 
 or the output set
 
-  complete->.<Name of Output Set>(
+  complete->.<Name of Output Set>{
     <List of Substatements>
-  );
+  };
 
 or both
 
-  complete.<Name of Input Set>->.<Name of Output Set>(
+  complete.<Name of Input Set>->.<Name of Output Set>{
     <List of Substatements>
-  );
+  };
 
 */
 
@@ -98,11 +98,11 @@ public:
   {
     std::string result = indent + "complete"
         + (input != "_" ? "." + input : "")
-        + dump_ql_result_name() + "(";
+        + dump_ql_result_name() + "{";
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-      result += (*it)->dump_compact_ql(indent) + ";";
-    result += ")";
+      result += (*it)->dump_compact_ql(indent);
+    result += "}";
 
     return result;
   }
@@ -111,11 +111,11 @@ public:
   {
     std::string result = indent + "complete"
         + (input != "_" ? "." + input : "")
-        + dump_ql_result_name() + "(";
+        + dump_ql_result_name() + "{";
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-      result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
-    result += "\n)";
+      result += "\n" + (*it)->dump_pretty_ql(indent + "  ");
+    result += "\n}";
 
     return result;
   }

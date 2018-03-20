@@ -54,11 +54,11 @@ class Foreach_Statement : public Statement
     virtual std::string dump_compact_ql(const std::string& indent) const
     {
       std::string result = indent + "foreach"
-          + (input != "_" ? "." + input : "") + (output != "_" ? "->." + output : "") + "(";
+          + (input != "_" ? "." + input : "") + (output != "_" ? "->." + output : "") + "{";
 
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += (*it)->dump_compact_ql(indent) + ";";
-      result += ")";
+        result += (*it)->dump_compact_ql(indent);
+      result += "}";
 
       return result;
     }
@@ -66,11 +66,11 @@ class Foreach_Statement : public Statement
     virtual std::string dump_pretty_ql(const std::string& indent) const
     {
       std::string result = indent + "foreach"
-          + (input != "_" ? "." + input : "") + (output != "_" ? "->." + output : "") + "(";
+          + (input != "_" ? "." + input : "") + (output != "_" ? "->." + output : "") + "{";
 
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
-      result += "\n)";
+        result += "\n" + (*it)->dump_pretty_ql(indent + "  ");
+      result += "\n}";
 
       return result;
     }

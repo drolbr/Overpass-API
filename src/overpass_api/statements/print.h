@@ -142,7 +142,7 @@ class Print_Statement : public Statement
           + geometry_string_ql(mode)
           + ids_string_ql(mode)
           + (south > north ? "" : "(" + to_string(south) + "," + to_string(west) + ","
-              + to_string(north) + "," + to_string(east) + ")");
+              + to_string(north) + "," + to_string(east) + ")") + ";";
     }
 
   private:

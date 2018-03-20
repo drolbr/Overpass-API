@@ -53,10 +53,10 @@ class Union_Statement : public Output_Statement
       std::string result = indent + "(";
 
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += (*it)->dump_compact_ql(indent) + ";";
+        result += (*it)->dump_compact_ql(indent);
       result += ")";
 
-      return result + dump_ql_result_name();
+      return result + dump_ql_result_name() + ";";
     }
 
     virtual std::string dump_pretty_ql(const std::string& indent) const
@@ -64,10 +64,10 @@ class Union_Statement : public Output_Statement
       std::string result = indent + "(";
 
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
-        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
+        result += "\n" + (*it)->dump_pretty_ql(indent + "  ");
       result += "\n)";
 
-      return result + dump_ql_result_name();
+      return result + dump_ql_result_name() + ";";
     }
 
   private:
