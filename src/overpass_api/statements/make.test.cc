@@ -1495,6 +1495,33 @@ void hull_test_1(Parsed_Query& global_settings, Transaction& transaction,
     add_point("50.9991", "7.0009", geom_source, stmt_cont);
   }
 
+  if (test_level > 6)
+  {
+    Statement* geom_source = stmt_cont.add_stmt(
+        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+    geom_source = stmt_cont.add_stmt(
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+    add_point("51.", "6.9989", geom_source, stmt_cont);
+  }
+
+  if (test_level > 7)
+  {
+    Statement* geom_source = stmt_cont.add_stmt(
+        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+    geom_source = stmt_cont.add_stmt(
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+    add_point("51.0005", "6.9989", geom_source, stmt_cont);
+  }
+
+  if (test_level > 8)
+  {
+    Statement* geom_source = stmt_cont.add_stmt(
+        new Make_Statement(0, Attr()("type", "geom-source").kvs(), global_settings), &union_);
+    geom_source = stmt_cont.add_stmt(
+        new Set_Prop_Statement(0, Attr()("keytype", "geometry").kvs(), global_settings), geom_source);
+    add_point("51.003", "6.9988", geom_source, stmt_cont);
+  }
+
   union_.execute(rman);
 
   Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
@@ -1847,12 +1874,18 @@ int main(int argc, char* args[])
     if ((test_to_execute == "") || (test_to_execute == "125"))
       hull_test_1(global_settings, transaction, "hull", 6, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "126"))
-      hull_test_2(global_settings, transaction, "hull", 0, global_node_offset);
+      hull_test_1(global_settings, transaction, "hull", 7, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "127"))
-      hull_test_2(global_settings, transaction, "hull", 1, global_node_offset);
+      hull_test_1(global_settings, transaction, "hull", 8, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "128"))
-      triple_geom_test(global_settings, transaction, "test-ternary", "ternary-geom", "1");
+      hull_test_1(global_settings, transaction, "hull", 9, global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "129"))
+      hull_test_2(global_settings, transaction, "hull", 0, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "130"))
+      hull_test_2(global_settings, transaction, "hull", 1, global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "131"))
+      triple_geom_test(global_settings, transaction, "test-ternary", "ternary-geom", "1");
+    if ((test_to_execute == "") || (test_to_execute == "132"))
       triple_geom_test(global_settings, transaction, "test-ternary", "ternary-geom", "0");
 
     std::cout<<"</osm>\n";

@@ -2379,21 +2379,54 @@ void Proto_Hull::enhance(const Point_Double& rhs)
 
   if (from_it != segments.end() && from_it->edge*s_pt >= 1e-8)
   {
-    std::vector< Hull_Segment >::iterator to_it = from_it;
-    while (to_it != segments.end() && to_it->edge*s_pt >= 1e-8)
-      ++to_it;
-    --to_it;
+    if (segments.begin()->edge*s_pt >= 0)
+    {
+      from_it = segments.end();
+      --from_it;
+      while (from_it != segments.begin() && from_it->edge*s_pt >= 0)
+        --from_it;
+      ++from_it;
+      segments.erase(from_it, segments.end());
 
-    to_it->edge = Spherical_Vector(s_pt, to_it->s_pt);
-    if (from_it == to_it)
-      from_it = segments.insert(from_it, Hull_Segment(rhs, s_pt));
+      std::vector< Hull_Segment >::iterator to_it = segments.begin();
+      while (to_it != segments.end() && to_it->edge*s_pt >= 0)
+        ++to_it;
+      --to_it;
+      from_it = segments.begin();
+
+      to_it->edge = Spherical_Vector(s_pt, to_it->s_pt);
+      if (from_it == to_it)
+        from_it = segments.insert(from_it, Hull_Segment(rhs, s_pt));
+      else
+      {
+        ++from_it;
+        from_it = segments.erase(from_it, to_it);
+        --from_it;
+        *from_it = Hull_Segment(rhs, s_pt);
+      }
+    }
     else
     {
+      std::vector< Hull_Segment >::iterator to_it = from_it;
+      while (to_it != segments.end() && to_it->edge*s_pt >= 0)
+        ++to_it;
+      --to_it;
+      while (from_it != segments.begin() && from_it->edge*s_pt >= 0)
+        --from_it;
       ++from_it;
-      from_it = segments.erase(from_it, to_it);
-      --from_it;
-      *from_it = Hull_Segment(rhs, s_pt);
+
+      to_it->edge = Spherical_Vector(s_pt, to_it->s_pt);
+      if (from_it == to_it)
+        from_it = segments.insert(from_it, Hull_Segment(rhs, s_pt));
+      else
+      {
+        ++from_it;
+        from_it = segments.erase(from_it, to_it);
+        --from_it;
+        *from_it = Hull_Segment(rhs, s_pt);
+      }
     }
+
     if (from_it == segments.begin())
       from_it->edge = Spherical_Vector(segments.back().s_pt, s_pt);
     else

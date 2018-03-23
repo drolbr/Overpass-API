@@ -5111,6 +5111,46 @@ int main(int argc, char* args[])
       "  </hull>\n";
     if (std::string(args[2]) == "make_126")
       std::cout<<
+      "  <hull id=\"7\">\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.0000000\" lon=\"6.9989000\"/>\n"
+      "      <vertex lat=\"50.9993000\" lon=\"6.9993000\"/>\n"
+      "      <vertex lat=\"50.9990000\" lon=\"7.0000000\"/>\n"
+      "      <vertex lat=\"50.9991000\" lon=\"7.0009000\"/>\n"
+      "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
+      "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
+      "      <vertex lat=\"51.0000000\" lon=\"6.9989000\"/>\n"
+      "    </linestring>\n"
+      "  </hull>\n";
+    if (std::string(args[2]) == "make_127")
+      std::cout<<
+      "  <hull id=\"8\">\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.0005000\" lon=\"6.9989000\"/>\n"
+      "      <vertex lat=\"51.0000000\" lon=\"6.9989000\"/>\n"
+      "      <vertex lat=\"50.9993000\" lon=\"6.9993000\"/>\n"
+      "      <vertex lat=\"50.9990000\" lon=\"7.0000000\"/>\n"
+      "      <vertex lat=\"50.9991000\" lon=\"7.0009000\"/>\n"
+      "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
+      "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
+      "      <vertex lat=\"51.0005000\" lon=\"6.9989000\"/>\n"
+      "    </linestring>\n"
+      "  </hull>\n";
+    if (std::string(args[2]) == "make_128")
+      std::cout<<
+      "  <hull id=\"9\">\n"
+      "    <linestring>\n"
+      "      <vertex lat=\"51.0030000\" lon=\"6.9988000\"/>\n"
+      "      <vertex lat=\"51.0000000\" lon=\"6.9989000\"/>\n"
+      "      <vertex lat=\"50.9993000\" lon=\"6.9993000\"/>\n"
+      "      <vertex lat=\"50.9990000\" lon=\"7.0000000\"/>\n"
+      "      <vertex lat=\"50.9991000\" lon=\"7.0009000\"/>\n"
+      "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
+      "      <vertex lat=\"51.0030000\" lon=\"6.9988000\"/>\n"
+      "    </linestring>\n"
+      "  </hull>\n";
+    if (std::string(args[2]) == "make_129")
+      std::cout<<
       "  <hull id=\"2\">\n"
       "    <linestring>\n"
       "      <vertex lat=\"51.0000000\" lon=\"179.9980000\"/>\n"
@@ -5120,7 +5160,7 @@ int main(int argc, char* args[])
       "      <vertex lat=\"51.0000000\" lon=\"179.9980000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
-    if (std::string(args[2]) == "make_127")
+    if (std::string(args[2]) == "make_130")
       std::cout<<
       "  <hull id=\"2\">\n"
       "    <linestring>\n"
@@ -5131,12 +5171,12 @@ int main(int argc, char* args[])
       "      <vertex lat=\"51.0000000\" lon=\"179.9980000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
-    if (std::string(args[2]) == "make_128")
+    if (std::string(args[2]) == "make_131")
       std::cout<<
       "  <test-ternary id=\"1\">\n"
       "    <point lat=\"51.5000000\" lon=\"8.0000000\"/>\n"
       "  </test-ternary>\n";
-    if (std::string(args[2]) == "make_129")
+    if (std::string(args[2]) == "make_132")
       std::cout<<
       "  <test-ternary id=\"1\">\n"
       "    <point lat=\"52.5000000\" lon=\"10.0000000\"/>\n"
