@@ -992,7 +992,7 @@ bool Around_Statement::is_inside(double lat, double lon) const
         cit != mit->second.end(); ++cit)
     {
       if ((radius > 0 && great_circle_dist(cit->first, cit->second, lat, lon) <= radius)
-          || (cit->first == lat && cit->second == lon))
+          || (std::abs(cit->first - lat) < 1e-7 && std::abs(cit->second - lon) < 1e-7))
         return true;
     }
   }
