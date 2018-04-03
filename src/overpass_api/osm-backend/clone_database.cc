@@ -135,7 +135,7 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
 				     transaction, dest_db_dir, clone_settings);
   clone_bin_file< Uint32_Index >(*osm_base_settings().WAY_KEYS, *osm_base_settings().WAY_KEYS,
 				 transaction, dest_db_dir, clone_settings);
-  
+
   clone_bin_file< Uint31_Index >(*osm_base_settings().RELATIONS, *osm_base_settings().RELATIONS,
 				 transaction, dest_db_dir, clone_settings);
   clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(
@@ -178,7 +178,7 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
                                    transaction, dest_db_dir, clone_settings);
     clone_bin_file< Timestamp >(*attic_settings().NODE_CHANGELOG, *attic_settings().NODE_CHANGELOG,
                                 transaction, dest_db_dir, clone_settings);
-    
+
     clone_bin_file< Uint31_Index >(*attic_settings().WAYS, *attic_settings().WAYS,
                                    transaction, dest_db_dir, clone_settings);
     clone_map_file< Way_Skeleton::Id_Type, Uint31_Index >(*attic_settings().WAYS, transaction, dest_db_dir, clone_settings);
@@ -194,7 +194,7 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
                                    transaction, dest_db_dir, clone_settings);
     clone_bin_file< Timestamp >(*attic_settings().WAY_CHANGELOG, *attic_settings().WAY_CHANGELOG,
                                 transaction, dest_db_dir, clone_settings);
-    
+
     clone_bin_file< Uint31_Index >(*attic_settings().RELATIONS, *attic_settings().RELATIONS,
                                    transaction, dest_db_dir, clone_settings);
     clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir, clone_settings);

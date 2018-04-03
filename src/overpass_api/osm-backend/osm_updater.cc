@@ -581,18 +581,18 @@ void Osm_Updater::flush()
   {
     delete transaction;
     transaction = 0;
-    
+
     Logger logger(dispatcher_client->get_db_dir());
     std::ostringstream out;
     out<<"write_commit() start "<<global_read_counter();
     for (std::vector< uint64 >::const_iterator it = cpu_runtime.begin(); it != cpu_runtime.end(); ++it)
       out<<' '<<*it;
     logger.annotated_log(out.str());
-    
+
     dispatcher_client->write_commit();
     rename((dispatcher_client->get_db_dir() + "osm_base_version.shadow").c_str(),
 	   (dispatcher_client->get_db_dir() + "osm_base_version").c_str());
-    
+
     logger.annotated_log("write_commit() end");
     delete dispatcher_client;
     dispatcher_client = 0;

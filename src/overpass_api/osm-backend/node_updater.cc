@@ -477,7 +477,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 {
   if (cpu_stopwatch)
     cpu_stopwatch->start_cpu_timer(1);
-  
+
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
 
@@ -744,7 +744,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       callback->partial_finished();
     }
   }
-  
+
   if (cpu_stopwatch)
     cpu_stopwatch->stop_cpu_timer(1);
 }

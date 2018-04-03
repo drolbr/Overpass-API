@@ -234,7 +234,7 @@ struct Cpu_Timer
       : rman(&rman_), index(index_)
   { rman->start_cpu_timer(index); }
   ~Cpu_Timer() { rman->stop_cpu_timer(index); }
-  
+
 private:
   Resource_Manager* rman;
   uint index;

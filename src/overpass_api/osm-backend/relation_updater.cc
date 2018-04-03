@@ -1066,7 +1066,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 {
   if (cpu_stopwatch)
     cpu_stopwatch->start_cpu_timer(3);
-  
+
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
 
@@ -1317,7 +1317,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   if (!external_transaction)
     delete transaction;
-  
+
   if (cpu_stopwatch)
     cpu_stopwatch->stop_cpu_timer(3);
 }

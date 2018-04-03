@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024, global_settings);
       copy_file(dispatcher.resource_manager().get_transaction()->get_db_dir() + "/replicate_id",
 		clone_db_dir + "/replicate_id");
-      
+
       clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir, clone_settings);
 
       return 0;
@@ -284,14 +284,14 @@ int main(int argc, char *argv[])
     if (e.origin != "Dispatcher_Stub::Dispatcher_Stub::1")
     {
       std::ostringstream temp;
-      
+
       if (e.origin == "Dispatcher_Client::1")
         temp<<"The dispatcher (i.e. the database management system) is turned off.";
       else if (e.error_number == 0)
         temp<<"open64: "<<e.filename<<' '<<e.origin;
       else
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
-      
+
       if (error_output)
         error_output->runtime_error(temp.str());
     }

@@ -101,7 +101,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       }
       ++attic_it;
     }
-    
+
     std::vector< const Attic< typename Object::Delta >* > delta_refs;
     delta_refs.reserve(deltas.size());
     for (typename std::vector< Attic< typename Object::Delta > >::const_iterator it = deltas.begin();

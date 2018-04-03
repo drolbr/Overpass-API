@@ -795,7 +795,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
 {
   if (cpu_stopwatch)
     cpu_stopwatch->start_cpu_timer(2);
-  
+
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
 
@@ -1112,7 +1112,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
       callback->partial_finished();
     }
   }
-  
+
   if (cpu_stopwatch)
     cpu_stopwatch->stop_cpu_timer(2);
 }
