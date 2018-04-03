@@ -49,7 +49,8 @@ struct Random_File_Index
 public:
   Random_File_Index(const File_Properties& file_prop,
 	      bool writeable, bool use_shadow,
-	      const std::string& db_dir, const std::string& file_name_extension);
+	      const std::string& db_dir, const std::string& file_name_extension,
+              int compression_method_ = File_Blocks_Index_Base::USE_DEFAULT);
   ~Random_File_Index();
   bool writeable() const { return (empty_index_file_name != ""); }
   const std::string& file_name_extension() const { return file_name_extension_; }
@@ -71,9 +72,6 @@ public:
   }
 
   static const int FILE_FORMAT_VERSION = 1007053000;
-  static const int NO_COMPRESSION = 0;
-  static const int ZLIB_COMPRESSION = 1;
-  static const int LZ4_COMPRESSION = 2;
   const uint32 npos;
 
 private:
@@ -109,7 +107,7 @@ static const int VOID_BLOCK_ENTRY_SIZE = 8;
 inline Random_File_Index::Random_File_Index
     (const File_Properties& file_prop,
      bool writeable, bool use_shadow,
-     const std::string& db_dir, const std::string& file_name_extension) :
+     const std::string& db_dir, const std::string& file_name_extension, int compression_method_) :
     npos(std::numeric_limits< uint32 >::max()),
     index_file_name(db_dir + file_prop.get_file_name_trunk()
         + file_prop.get_id_suffix()
@@ -124,7 +122,8 @@ inline Random_File_Index::Random_File_Index
     void_blocks_initialized(false),
     block_size_(file_prop.get_map_block_size()),
     compression_factor(file_prop.get_map_compression_factor()),
-    compression_method(file_prop.get_map_compression_method()),
+    compression_method(compression_method_ == File_Blocks_Index_Base::USE_DEFAULT ?
+        file_prop.get_map_compression_method() : compression_method_),
     block_count(0)
 {
   uint64 file_size = 0;
@@ -173,7 +172,7 @@ inline Random_File_Index::Random_File_Index
 
           blocks.push_back(entry);
 
-          if (entry.size > guessed_compression_factor)
+          if (entry.size > guessed_compression_factor * 2) // increased buffer size for lz4
           {
             read_old_format = true;
             break;

@@ -39,8 +39,7 @@ fi
 
 # No mkdir - directory should be created and made world-writeable
 # by the maintainer to allow periodic cleanups.
-REQUEST_FILE=`mktemp /tmp/translate_xapi/XXXXXX`
-$BIN_DIR/translate_xapi --force-meta "${BUF}" >$REQUEST_FILE
+XML_REQUEST="`$BIN_DIR/translate_xapi --force-meta \"${BUF}\"`"
 EXITCODE=$?
 if [[ $EXITCODE -ne 0 ]]; then
 {
@@ -48,19 +47,17 @@ if [[ $EXITCODE -ne 0 ]]; then
   echo "Status: 400 Bad Request"
   echo
   echo "Error in [$BUF]:"
-  cat <$REQUEST_FILE
+  echo "$XML_REQUEST"
 };
 else
 {
   if [[ $DEBUG == "yes" ]]; then
   {
-    cat <$REQUEST_FILE
+    echo "$XML_REQUEST"
     echo
   };
   fi
   REQUEST_METHOD=
-  ./interpreter <$REQUEST_FILE
+  echo "$XML_REQUEST" | ./interpreter
 };
 fi
-
-rm $REQUEST_FILE

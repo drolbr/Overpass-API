@@ -54,6 +54,8 @@ evaluate_test()
       FAILED=YES
     }; else
     {
+      cat <"$FILE" | sed 's/Overpass API [^ ]* [a-f0-9]*/Overpass API/g' >"_$FILE"
+      mv "_$FILE" "$FILE"
       RES=`diff -q "../../expected/$DIRNAME/$FILE" "$FILE"`
       if [[ -n $RES ]]; then
       {

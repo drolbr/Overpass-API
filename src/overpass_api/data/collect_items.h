@@ -101,52 +101,58 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       }
       ++attic_it;
     }
+    
+    std::vector< const Attic< typename Object::Delta >* > delta_refs;
+    delta_refs.reserve(deltas.size());
+    for (typename std::vector< Attic< typename Object::Delta > >::const_iterator it = deltas.begin();
+        it != deltas.end(); ++it)
+      delta_refs.push_back(&*it);
 
     std::sort(skels.begin(), skels.end());
-    std::sort(deltas.begin(), deltas.end(), Delta_Comparator< Attic< typename Object::Delta > >());
+    std::sort(delta_refs.begin(), delta_refs.end(), Delta_Ref_Comparator< Attic< typename Object::Delta > >());
     std::sort(local_timestamp_by_id.begin(), local_timestamp_by_id.end());
 
     std::vector< Attic< Object > > attics;
     typename std::vector< Object >::const_iterator skels_it = skels.begin();
     Object reference;
-    for (typename std::vector< Attic< typename Object::Delta > >::const_iterator it = deltas.begin();
-         it != deltas.end(); ++it)
+    for (typename std::vector< const Attic< typename Object::Delta >* >::const_iterator it = delta_refs.begin();
+         it != delta_refs.end(); ++it)
     {
-      if (!(reference.id == it->id))
+      if (!(reference.id == (*it)->id))
       {
-        while (skels_it != skels.end() && skels_it->id < it->id)
+        while (skels_it != skels.end() && skels_it->id < (*it)->id)
           ++skels_it;
-        if (skels_it != skels.end() && skels_it->id == it->id)
+        if (skels_it != skels.end() && skels_it->id == (*it)->id)
           reference = *skels_it;
         else
           reference = Object();
       }
       try
       {
-	Attic< Object > attic_obj = Attic< Object >(it->expand(reference), it->timestamp);
+	Attic< Object > attic_obj = Attic< Object >((*it)->expand(reference), (*it)->timestamp);
         if (attic_obj.id.val() != 0)
 	{
           reference = attic_obj;
           typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
               tit = std::lower_bound(local_timestamp_by_id.begin(), local_timestamp_by_id.end(),
-				     std::make_pair(it->id, 0ull));
-	  if (tit != local_timestamp_by_id.end() && tit->first == it->id && tit->second == it->timestamp)
+				     std::make_pair((*it)->id, 0ull));
+	  if (tit != local_timestamp_by_id.end() && tit->first == (*it)->id && tit->second == (*it)->timestamp)
 	    attics.push_back(attic_obj);
 	}
         else
         {
           // Relation_Delta without a reference of the same index
           std::ostringstream out;
-	  out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp "
-	      <<Timestamp(it->timestamp).str()<<".";
+	  out<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
+	      <<Timestamp((*it)->timestamp).str()<<".";
           rman.log_and_display_error(out.str());
         }
       }
       catch (const std::exception& e)
       {
         std::ostringstream out;
-	out<<name_of_type< Object >()<<" "<<it->id.val()<<" cannot be expanded at timestamp "
-	    <<Timestamp(it->timestamp).str()<<": "<<e.what();
+	out<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
+	    <<Timestamp((*it)->timestamp).str()<<": "<<e.what();
         rman.log_and_display_error(out.str());
       }
     }

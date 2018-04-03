@@ -1502,6 +1502,26 @@
 </action>
 <action type="modify">
 <old>
+  <way id="1811" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="8.0100000" maxlat="10.0010000" maxlon="8.0100000"/>
+    <nd ref="18111" lat="10.0000000" lon="8.0100000"/>
+    <nd ref="18112" lat="10.0010000" lon="8.0100000"/>
+    <tag k="foo" v="bar_1811"/>
+    <tag k="foo_1811" v="bar"/>
+  </way>
+</old>
+<new>
+  <way id="1811" version="2" timestamp="2013-07-01T09:02:11Z" changeset="496" uid="42" user="foo">
+    <bounds minlat="10.0000000" minlon="8.0100000" maxlat="10.0010000" maxlon="8.0100000"/>
+    <nd ref="18112" lat="10.0010000" lon="8.0100000"/>
+    <nd ref="18111" lat="10.0000000" lon="8.0100000"/>
+    <tag k="foo" v="bar_1811"/>
+    <tag k="foo_1811" v="bar"/>
+  </way>
+</new>
+</action>
+<action type="modify">
+<old>
   <way id="2101" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <bounds minlat="11.0000000" minlon="1.0100000" maxlat="11.0020000" maxlon="1.0100000"/>
     <nd ref="21011" lat="11.0000000" lon="1.0100000"/>

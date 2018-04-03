@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
   std::string clone_db_dir = "";
   uint log_level = Error_Output::ASSISTING;
   Debug_Level debug_level = parser_execute;
+  Clone_Settings clone_settings;
   int area_level = 0;
   bool respect_timeout = true;
 
@@ -92,6 +93,51 @@ int main(int argc, char *argv[])
       if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
 	clone_db_dir += '/';
     }
+    else if (!(strncmp(argv[argpos], "--clone-compression=", 20)))
+    {
+      if (std::string(argv[argpos]).substr(20) == "no")
+        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+      else if (std::string(argv[argpos]).substr(20) == "gz")
+        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+#ifdef HAVE_LZ4
+      else if (std::string(argv[argpos]).substr(20) == "lz4")
+        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+#endif
+      else
+      {
+#ifdef HAVE_LZ4
+        std::cerr<<"For --clone-compression, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+#else
+        std::cerr<<"For --clone-compression, please use \"no\" or \"gz\" as value.\n";
+#endif
+        return 0;
+      }
+    }
+    else if (!(strncmp(argv[argpos], "--clone-map-compression=", 24)))
+    {
+      if (std::string(argv[argpos]).substr(24) == "no")
+        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+      else if (std::string(argv[argpos]).substr(24) == "gz")
+        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+#ifdef HAVE_LZ4
+      else if (std::string(argv[argpos]).substr(24) == "lz4")
+        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+#endif
+      else
+      {
+#ifdef HAVE_LZ4
+        std::cerr<<"For --clone-map-compression, please use \"no\", \"gz\", or \"lz4\" as value.\n";
+#else
+        std::cerr<<"For --clone-map-compression, please use \"no\" or \"gz\" as value.\n";
+#endif
+        return 0;
+      }
+    }
+    else if (!(strcmp(argv[argpos], "--version")))
+    {
+      std::cout<<"Overpass API version "<<basic_settings().version<<" "<<basic_settings().source_hash<<"\n";
+      return 0;
+    }
     else
     {
       std::cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
@@ -104,11 +150,14 @@ int main(int argc, char *argv[])
       "  --dump-bbox-ql: Don't execute the query but only dump the query in a suitable form\n"
       "        for an OpenLayers slippy map.\n"
       "  --clone=$TARGET_DIR: Write a consistent copy of the entire database to the given $TARGET_DIR.\n"
+      "  --clone-compression=$METHOD: Use a specific compression method $METHOD for clone bin files\n"
+      "  --clone-map-compression=$METHOD: Use a specific compression method $METHOD for clone map files\n"
       "  --rules: Ignore all time limits and allow area creation by this query.\n"
       "  --quiet: Don't print anything on stderr.\n"
       "  --concise: Print concise information on stderr.\n"
       "  --progress: Print also progress information on stderr.\n"
-      "  --verbose: Print everything that happens on stderr.\n";
+      "  --verbose: Print everything that happens on stderr.\n"
+      "  --version: Print version and exit.\n";
 
       return 0;
     }
@@ -130,8 +179,9 @@ int main(int argc, char *argv[])
 				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024, global_settings);
       copy_file(dispatcher.resource_manager().get_transaction()->get_db_dir() + "/replicate_id",
 		clone_db_dir + "/replicate_id");
+      
+      clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir, clone_settings);
 
-      clone_database(*dispatcher.resource_manager().get_transaction(), clone_db_dir);
       return 0;
     }
 
@@ -231,14 +281,20 @@ int main(int argc, char *argv[])
   }
   catch(File_Error e)
   {
-    std::ostringstream temp;
     if (e.origin != "Dispatcher_Stub::Dispatcher_Stub::1")
     {
-      temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
+      std::ostringstream temp;
+      
+      if (e.origin == "Dispatcher_Client::1")
+        temp<<"The dispatcher (i.e. the database management system) is turned off.";
+      else if (e.error_number == 0)
+        temp<<"open64: "<<e.filename<<' '<<e.origin;
+      else
+        temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
+      
       if (error_output)
         error_output->runtime_error(temp.str());
     }
-
     return 1;
   }
   catch(Resource_Error e)

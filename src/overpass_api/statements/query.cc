@@ -1380,6 +1380,8 @@ std::set< std::pair< Index, Index > > intersect_ranges
 
 void Query_Statement::execute(Resource_Manager& rman)
 {
+  Cpu_Timer cpu(rman, 1);
+
   Answer_State node_answer_state = nothing;
   Answer_State way_answer_state = nothing;
   Answer_State relation_answer_state = nothing;

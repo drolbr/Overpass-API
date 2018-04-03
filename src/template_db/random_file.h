@@ -122,7 +122,7 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
     uint32 data_size = compression_factor;
     void* target = cache.ptr;
 
-    if (index->get_compression_method() == Random_File_Index::ZLIB_COMPRESSION)
+    if (index->get_compression_method() == File_Blocks_Index_Base::ZLIB_COMPRESSION)
     {
       target = buffer.ptr;
       uint32 compressed_size = Zlib_Deflate(1)
@@ -130,7 +130,7 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
       data_size = (compressed_size - 1) / block_size + 1;
       zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size);
     }
-    else if (index->get_compression_method() == Random_File_Index::LZ4_COMPRESSION)
+    else if (index->get_compression_method() == File_Blocks_Index_Base::LZ4_COMPRESSION)
     {
       target = buffer.ptr;
       uint32 compressed_size = LZ4_Deflate()
@@ -165,15 +165,15 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
   else
   {
     val_file.seek((int64)(index->get_blocks()[pos].pos)*block_size, "Random_File:23");
-    if (index->get_compression_method() == Random_File_Index::NO_COMPRESSION)
+    if (index->get_compression_method() == File_Blocks_Index_Base::NO_COMPRESSION)
       val_file.read(cache.ptr, block_size * index->get_blocks()[pos].size, "Random_File:24");
-    else if (index->get_compression_method() == Random_File_Index::ZLIB_COMPRESSION)
+    else if (index->get_compression_method() == File_Blocks_Index_Base::ZLIB_COMPRESSION)
     {
       val_file.read(buffer.ptr, block_size * index->get_blocks()[pos].size, "Random_File:25");
       Zlib_Inflate().decompress
           (buffer.ptr, block_size * index->get_blocks()[pos].size, cache.ptr, block_size * index->get_compression_factor());
     }
-    else if (index->get_compression_method() == Random_File_Index::LZ4_COMPRESSION)
+    else if (index->get_compression_method() == File_Blocks_Index_Base::LZ4_COMPRESSION)
     {
       val_file.read(buffer.ptr, block_size * index->get_blocks()[pos].size, "Random_File:26");
       LZ4_Inflate().decompress

@@ -17,12 +17,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
 
-mkdir -p "/tmp/translate_xapi/"
-chmod 777 "/tmp/translate_xapi/"
+if [[ "`whoami`" != "root" ]]; then
+  echo "Usage: sudo $0"
+  exit 0
+fi
 
-while [[ true ]]; do
-{
-  find /tmp/translate_xapi/ -mmin +240 -exec rm {} \;
-  sleep 7200
-};
-done
+if [[ -s /etc/systemd/logind.conf ]]; then
+  cat /etc/systemd/logind.conf | grep -vE 'RemoveIPC' >_
+  echo "RemoveIPC=no" >>_
+  mv _ /etc/systemd/logind.conf
+fi

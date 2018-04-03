@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
         " [--compression-method=(no|gz)] [--map-compression-method=(no|gz)]\n";
 #endif
-    return 0;
+    return 1;
   }
 
   try
@@ -144,6 +144,7 @@ int main(int argc, char* argv[])
   catch (File_Error e)
   {
     report_file_error(e);
+    return 2;
   }
 
   return 0;

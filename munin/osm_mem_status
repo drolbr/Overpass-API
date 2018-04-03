@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+if [[ "$1" = "config" ]]; then
+{
+  echo 'graph_title Dispatcher granted memory'
+  echo 'graph_vlabel bytes'
+  echo "osm_mem_status.label osm_base"
+  echo "osm_mem_status.warning 8000000000"
+  echo "osm_mem_status.critical 16000000000"
+  exit 0
+}; fi
+
+GRANTED=`/opt/osm-3s/v0.7.54/bin/dispatcher --osm-base --status | grep -E "^Average claimed space:" | awk '{ print $4; }'`
+
+echo "osm_mem_status.value $GRANTED"
+

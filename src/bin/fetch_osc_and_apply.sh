@@ -19,16 +19,14 @@
 
 if [[ -z $1  ]]; then
 {
-  echo "Usage: $0 diff_url --meta=(yes|no)"
+  echo "Usage: $0 diff_url --meta=(yes|no|attic)"
   echo "Error : Set the URL to get diffs from (like http://planet.osm.org/replication/minute )"
   exit 0
 };
 fi
 
-TMP_DIFF=/tmp/diff.osc.gz
-TMP_DIFF_UNCOMPRESS=/tmp/diff.osc
-TMP_STATE=/tmp/state.txt
-DIFF_URL=$1
+SOURCE_DIR="$1"
+
 EXEC_DIR="`dirname $0`/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
@@ -37,96 +35,131 @@ if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 
 DB_DIR=`$EXEC_DIR/dispatcher --show-dir`
 
-if [[ ! ${DB_DIR:0:1} == "/" ]]; then
+META=
+
+if [[ $2 == "--meta=attic" ]]; then
+  META="--keep-attic"
+elif [[ $2 == "--meta=yes" || $3 == "--meta" ]]; then
+  META="--meta"
+elif [[ $2 == "--meta=no" ]]; then
+  META=
+else
 {
-  echo "Is dispatcher running ? cannot get the database directory path. Answer : $DB_DIR"
+  echo "You must specify --meta=yes or --meta=no"
   exit 0
 }; fi
 
-EXEC_DIR="`dirname $0`/"
-REPLICATE_ID=`cat $DB_DIR/replicate_id`
-if [[ -z $REPLICATE_ID ]] ;  then
-{
-  echo "Unable to get the last replicated ID of the Database"
-  echo "Please update $DB_DIR/replicate_id with a replication sequence number matching database age"
-  exit 0
-}; fi
 
-
-fetch_and_apply_minute_diff()
+get_replicate_filename()
 {
   printf -v TDIGIT3 %03u $(($1 % 1000))
   ARG=$(($1 / 1000))
   printf -v TDIGIT2 %03u $(($ARG % 1000))
   ARG=$(($ARG / 1000))
   printf -v TDIGIT1 %03u $ARG
-
-  REMOTE_PATH="$DIFF_URL/$TDIGIT1/$TDIGIT2/$TDIGIT3"
-  REMOTE_DIFF="$REMOTE_PATH.osc.gz"
-  REMOTE_STATE="$REMOTE_PATH.state.txt"
-
-  wget -q -O - "$REMOTE_DIFF" > $TMP_DIFF
-  if [[ ! $? == 0 ]] ; then # Diff failed to download (404, no answers, etc.)
-    rm $TMP_DIFF
-    return 1
-  fi
-  gunzip -c $TMP_DIFF > $TMP_DIFF_UNCOMPRESS
-  if [[ ! $? == 0 ]] ; then # For unknown reasons, the diff get sometimes corrupted or empty, don't try to apply
-  {
-    rm $TMP_DIFF 2>/dev/null
-    rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
-    return 2
-  } ; fi
-  cat $TMP_DIFF_UNCOMPRESS | $EXEC_DIR/update_database $2 >> /dev/null 2>&1
-  ret=$?
-  rm $TMP_DIFF 2>/dev/null
-  rm $TMP_DIFF_UNCOMPRESS 2>/dev/null
-
-  #Update the timestamp
-  while [[ true ]];
-  do
-  	wget -q -O - "$REMOTE_STATE" > $TMP_STATE
-  	if [[ ! $? == 0 ]] ; then # In case the state file wasn't there in time but the diff was, let's wait until it become available
-  	{
-  	  rm $TMP_SATE
-  	  sleep 1
-  	} else
-  	{
-  	  grep timestamp $TMP_STATE | cut -f2 -d\= > $DB_DIR/osm_base_version
-  	  cp $DB_DIR/osm_base_version $DB_DIR/osm_base_version_munin
-  	  rm $TMP_STATE
-  	  return $ret
-  	}; fi
-  done
-
+  REPLICATE_TRUNK_DIR=$TDIGIT1/$TDIGIT2/
+  REPLICATE_FILENAME=$TDIGIT1/$TDIGIT2/$TDIGIT3
 };
 
-#Default is no meta
-META_OPTION=
 
-if [[ $2 == "--meta=yes" ]]; then
+fetch_file()
 {
-  META_OPTION="--meta"
-}; fi
+  wget -nv -O "$2" "$1"
+};
 
 
-
-while [[ true ]];
-do
+collect_minute_diffs()
 {
-  REPLICATE_ID=$(($REPLICATE_ID + 1))
-  echo "`date '+%F %T'`: trying to apply $REPLICATE_ID" >>$DB_DIR/apply_osc_to_db.log
-  fetch_and_apply_minute_diff $REPLICATE_ID $META_OPTION
-  if [[ $? == 0 ]] ; then # Update success
+  TEMP_SOURCE_DIR=$1
+  TEMP_TARGET_DIR=$2
+  TARGET=$(($START + 1))
+
+  get_replicate_filename $TARGET
+  printf -v TARGET_FILE %09u $TARGET
+  
+  fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.state.txt" "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"
+  fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.osc.gz" "$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz"
+
+  while [[ ( -s "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt" ) && ( $(($START + 1440)) -ge $(($TARGET)) ) && ( `du -m "$TEMP_TARGET_DIR" | awk '{ print $1; }'` -le 64 ) ]];
+  do
   {
-    echo "$REPLICATE_ID" > $DB_DIR/replicate_id
-    echo "`date '+%F %T'`: update complete of $REPLICATE_ID" >>$DB_DIR/apply_osc_to_db.log
-  }
+    gunzip <"$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz" >"$TEMP_TARGET_DIR/$TARGET_FILE.osc"
+    
+    TARGET=$(($TARGET + 1))
+    get_replicate_filename $TARGET
+    printf -v TARGET_FILE %09u $TARGET
+    
+    fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.state.txt" "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"
+    fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.osc.gz" "$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz"
+  };
+  done
+  TARGET=$(($TARGET - 1))
+};
+
+
+apply_minute_diffs()
+{
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
+  EXITCODE=$?
+  while [[ $EXITCODE -ne 0 ]];
+  do
+  {
+    sleep 60
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
+    EXITCODE=$?
+  };
+  done
+  DIFF_COUNT=$(($DIFF_COUNT + 1))
+};
+
+
+update_state()
+{
+  get_replicate_filename $TARGET
+  printf -v TARGET_FILE %09u $TARGET
+  TIMESTAMP_LINE=`grep "^timestamp" <"$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"`
+  DATA_VERSION=${TIMESTAMP_LINE:10}
+};
+
+
+echo >>$DB_DIR/fetch_osc_and_apply.log
+
+mkdir -p $DB_DIR/augmented_diffs/
+DIFF_COUNT=0
+
+# update_state
+
+pushd "$EXEC_DIR"
+START=`cat $DB_DIR/replicate_id`
+
+while [[ true ]]; do
+{
+  echo "`date -u '+%F %T'`: updating from $START" >>$DB_DIR/fetch_osc_and_apply.log
+
+  TEMP_SOURCE_DIR=`mktemp -d /tmp/osm-3s_update_XXXXXX`
+  TEMP_TARGET_DIR=`mktemp -d /tmp/osm-3s_update_XXXXXX`
+  collect_minute_diffs $TEMP_SOURCE_DIR $TEMP_TARGET_DIR
+
+  if [[ $TARGET -gt $START ]]; then
+  {
+    echo "`date -u '+%F %T'`: updating to $TARGET" >>$DB_DIR/fetch_osc_and_apply.log
+
+    update_state
+    apply_minute_diffs $TEMP_TARGET_DIR
+    echo "$TARGET" >$DB_DIR/replicate_id
+
+    echo "`date -u '+%F %T'`: update complete" $TARGET >>$DB_DIR/fetch_osc_and_apply.log
+  };
   else
   {
-    REPLICATE_ID=$(($REPLICATE_ID - 1))
-    sleep 10 #Wait for the diff to be available
+    sleep 10
   }; fi
-};
-done
+
+  rm -f $TEMP_TARGET_DIR/*
+  rmdir $TEMP_TARGET_DIR
+  rm -f $TEMP_SOURCE_DIR/*
+  rmdir $TEMP_SOURCE_DIR
+
+  START=$TARGET
+}; done
 

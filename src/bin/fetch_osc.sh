@@ -76,7 +76,7 @@ retry_fetch_file()
 
 file_panic()
 {
-  echo "fetch_osc()@"`date "+%F %T"`": upstream_delay $REPLICATE_ID" >>$LOCAL_DIR/fetch_osc.log
+  echo "fetch_osc()@"`date -u "+%F %T"`": upstream_delay $REPLICATE_ID" >>$LOCAL_DIR/fetch_osc.log
   REPLICATE_ID=$(($REPLICATE_ID - 1))
 
   printf -v TDIGIT3 %03u $(($REPLICATE_ID % 1000))
@@ -97,9 +97,9 @@ file_panic()
   RES_GZIP=`diff -q "$LOCAL_PATH/$TDIGIT3.osc.gz" "$LOCAL_PATH/$TDIGIT3.new.osc.gz"`
   RES_TEXT=`diff -q "$LOCAL_PATH/$TDIGIT3.state.txt" "$LOCAL_PATH/$TDIGIT3.new.state.txt"`
   if [[ -n $RES_GZIP || -n $RES_TEXT ]]; then
-    echo "fetch_osc()@"`date "+%F %T"`": file_panic $REPLICATE_ID" >>$LOCAL_DIR/fetch_osc.log
-    echo "fetch_osc()@"`date "+%F %T"`": $RES_GZIP" >>$LOCAL_DIR/fetch_osc.log
-    echo "fetch_osc()@"`date "+%F %T"`": $RES_TEXT" >>$LOCAL_DIR/fetch_osc.log
+    echo "fetch_osc()@"`date -u "+%F %T"`": file_panic $REPLICATE_ID" >>$LOCAL_DIR/fetch_osc.log
+    echo "fetch_osc()@"`date -u "+%F %T"`": $RES_GZIP" >>$LOCAL_DIR/fetch_osc.log
+    echo "fetch_osc()@"`date -u "+%F %T"`": $RES_TEXT" >>$LOCAL_DIR/fetch_osc.log
     exit 1
   fi
 
@@ -137,7 +137,7 @@ do
 {
   REPLICATE_ID=$(($REPLICATE_ID + 1))
   fetch_minute_diff
-  echo "fetch_osc()@"`date "+%F %T"`": new_replicate_diff $REPLICATE_ID $TIMESTAMP" >>$LOCAL_DIR/fetch_osc.log
+  echo "fetch_osc()@"`date -u "+%F %T"`": new_replicate_diff $REPLICATE_ID $TIMESTAMP" >>$LOCAL_DIR/fetch_osc.log
   sleep 1
 };
 done

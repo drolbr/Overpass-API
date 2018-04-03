@@ -74,7 +74,7 @@ struct Node_Updater
       user_by_id[meta->user_id] = meta->user_name;
   }
 
-  void update(Osm_Backend_Callback* callback, bool partial);
+  void update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch, bool partial);
 
   const std::vector< std::pair< Node::Id_Type, Uint32_Index > >& get_moved_nodes() const
   {

@@ -36,6 +36,9 @@ struct Basic_Settings
   std::string logfile_name;
   std::string shared_name_base;
 
+  std::string version;
+  std::string source_hash;
+
   uint32 compression_method;
   uint32 map_compression_method;
 
@@ -123,6 +126,17 @@ struct Attic_Settings
   File_Properties* RELATION_CHANGELOG;
 
   Attic_Settings();
+};
+
+
+struct Clone_Settings
+{
+  uint32 compression_method;
+  uint32 map_compression_method;
+
+  Clone_Settings()
+      : compression_method(File_Blocks_Index_Base::USE_DEFAULT),
+      map_compression_method(File_Blocks_Index_Base::USE_DEFAULT) {}
 };
 
 

@@ -95,7 +95,7 @@ void end(const char *el)
     if (osm_element_count >= 4*1024*1024)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, true);
+      node_updater->update(callback, 0, true);
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -150,7 +150,7 @@ int main(int argc, char* args[])
       parse(stdin, start, end);
 
       callback->nodes_finished();
-      node_updater->update(callback, false);
+      node_updater->update(callback, 0, false);
 
       delete coord_source_out;
       delete tags_source_out;

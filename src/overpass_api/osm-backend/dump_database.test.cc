@@ -68,7 +68,7 @@ struct Ofstream_Collection
   }
 };
 
-void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
+void dump_nodes(Transaction& transaction, const std::string& db_dir, uint64 divisor, bool attic)
 {
   Ofstream_Collection node_db_out(db_dir + "after_node_", "_db.csv");
   Ofstream_Collection node_tags_local_out(db_dir + "after_node_tags_", "_local.csv");
@@ -79,7 +79,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
       it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
   {
-    std::ofstream* out(node_db_out.get(it.object().id.val() / 5000000));
+    std::ofstream* out(node_db_out.get(it.object().id.val() / divisor));
     (*out)<<std::dec<<it.object().id.val()<<'\t'<<std::setprecision(10)
 	<<::lat(it.index().val(), it.object().ll_lower)<<'\t'
 	<<::lon(it.index().val(), it.object().ll_lower)<<'\t'
@@ -93,7 +93,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
       it(nodes_local_db.flat_begin());
       !(it == nodes_local_db.flat_end()); ++it)
   {
-    std::ofstream* out(node_tags_local_out.get(it.object().val() / 5000000));
+    std::ofstream* out(node_tags_local_out.get(it.object().val() / divisor));
     (*out)<<std::dec<<std::hex<<it.index().index<<'\t'<<std::dec<<it.object().val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
   }
@@ -105,7 +105,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
       it(nodes_global_db.flat_begin());
       !(it == nodes_global_db.flat_end()); ++it)
   {
-    std::ofstream* out(node_tags_global_out.get(it.object().id.val() / 5000000));
+    std::ofstream* out(node_tags_global_out.get(it.object().id.val() / divisor));
     (*out)<<std::dec<<it.object().id.val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
   }
@@ -125,7 +125,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
     for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >::Flat_Iterator
         it(nodes_meta_db.flat_begin()); !(it == nodes_meta_db.flat_end()); ++it)
     {
-      std::ofstream* out(node_meta_db_out.get(it.object().ref.val() / 5000000));
+      std::ofstream* out(node_meta_db_out.get(it.object().ref.val() / divisor));
       (*out)<<std::dec<<it.object().ref.val()<<'\t'
           <<it.object().version<<'\t'
           <<((it.object().timestamp)>>26)<<' '
@@ -143,7 +143,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
     for (Block_Backend< Uint31_Index, Attic< Node_Skeleton > >::Flat_Iterator
         it(nodes_db.flat_begin()); !(it == nodes_db.flat_end()); ++it)
     {
-      std::ofstream* out(node_attic_db_out.get(it.object().id.val() / 5000000));
+      std::ofstream* out(node_attic_db_out.get(it.object().id.val() / divisor));
       (*out)<<std::dec<<it.object().id.val()<<'\t'<<std::setprecision(10)
           <<::lat(it.index().val(), it.object().ll_lower)<<'\t'
           <<::lon(it.index().val(), it.object().ll_lower)<<'\t'
@@ -161,7 +161,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
     for (Block_Backend< Uint31_Index, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
         it(nodes_undeleted_db.flat_begin()); !(it == nodes_undeleted_db.flat_end()); ++it)
     {
-      std::ofstream* out(node_undeleted_db_out.get(it.object().val() / 5000000));
+      std::ofstream* out(node_undeleted_db_out.get(it.object().val() / divisor));
       (*out)<<std::dec<<it.object().val()<<'\t'
           <<((it.object().timestamp)>>26)<<' '
           <<((it.object().timestamp & 0x3c00000)>>22)<<' '
@@ -177,7 +177,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
     for (Block_Backend< Node::Id_Type, Uint31_Index >::Flat_Iterator
         it(idx_db.flat_begin()); !(it == idx_db.flat_end()); ++it)
     {
-      std::ofstream* out(node_idx_list_out.get(it.index().val() / 5000000));
+      std::ofstream* out(node_idx_list_out.get(it.index().val() / divisor));
       (*out)<<std::dec<<it.index().val()<<'\t'<<std::hex<<it.object().val()<<'\n';
     }
 
@@ -186,7 +186,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
     for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >::Flat_Iterator
         it(nodes_attic_meta_db.flat_begin()); !(it == nodes_attic_meta_db.flat_end()); ++it)
     {
-      std::ofstream* out(node_attic_meta_db_out.get(it.object().ref.val() / 5000000));
+      std::ofstream* out(node_attic_meta_db_out.get(it.object().ref.val() / divisor));
       (*out)<<std::dec<<it.object().ref.val()<<'\t'
           <<it.object().version<<'\t'
           <<((it.object().timestamp)>>26)<<' '
@@ -205,7 +205,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
         it(nodes_local_db.flat_begin());
         !(it == nodes_local_db.flat_end()); ++it)
     {
-      std::ofstream* out(node_attic_tags_local_out.get(it.object().val() / 5000000));
+      std::ofstream* out(node_attic_tags_local_out.get(it.object().val() / divisor));
       (*out)<<std::hex<<it.index().index<<'\t'<<std::dec<<it.object().val()<<'\t'
           <<it.index().key<<'\t'<<it.index().value<<'\t'
           <<((it.object().timestamp)>>26)<<' '
@@ -222,7 +222,7 @@ void dump_nodes(Transaction& transaction, const std::string& db_dir, bool attic)
         it(nodes_global_db.flat_begin());
         !(it == nodes_global_db.flat_end()); ++it)
     {
-      std::ofstream* out(node_attic_tags_global_out.get(it.object().id.val() / 5000000));
+      std::ofstream* out(node_attic_tags_global_out.get(it.object().id.val() / divisor));
       (*out)<<it.object().id.val()<<'\t'
           <<it.index().key<<'\t'<<it.index().value<<'\t'
           <<((it.object().timestamp)>>26)<<' '
@@ -279,7 +279,7 @@ void check_nodes(Transaction& transaction)
   }
 }
 
-void dump_ways(Transaction& transaction, const std::string& db_dir)
+void dump_ways(Transaction& transaction, const std::string& db_dir, uint64 divisor, bool attic)
 {
   Ofstream_Collection way_db_out(db_dir + "after_way_", "_db.csv");
   Ofstream_Collection way_tags_local_out(db_dir + "after_way_tags_", "_local.csv");
@@ -291,10 +291,10 @@ void dump_ways(Transaction& transaction, const std::string& db_dir)
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
       it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
   {
-    std::ofstream* out(way_db_out.get(it.object().id.val() / 1000000));
-    (*out)<<it.object().id.val()<<'\t';
+    std::ofstream* out(way_db_out.get(it.object().id.val() / divisor));
+    (*out)<<it.object().id.val()<<'\t'<<std::hex<<it.index().val()<<'\t';
     for (uint i(0); i < it.object().nds.size(); ++i)
-      (*out)<<it.object().nds[i].val()<<' ';
+      (*out)<<std::dec<<it.object().nds[i].val()<<' ';
     (*out)<<'\n';
   }
 
@@ -305,7 +305,7 @@ void dump_ways(Transaction& transaction, const std::string& db_dir)
       it(ways_local_db.flat_begin());
       !(it == ways_local_db.flat_end()); ++it)
   {
-    std::ofstream* out(way_tags_local_out.get(it.object().val() / 1000000));
+    std::ofstream* out(way_tags_local_out.get(it.object().val() / divisor));
     (*out)<<it.object().val()<<'\t'
         <<it.index().key<<'\t'<<it.index().value<<'\n';
   }
@@ -317,9 +317,131 @@ void dump_ways(Transaction& transaction, const std::string& db_dir)
       it(ways_global_db.flat_begin());
       !(it == ways_global_db.flat_end()); ++it)
   {
-    std::ofstream* out(way_tags_global_out.get(it.object().id.val() / 1000000));
+    std::ofstream* out(way_tags_global_out.get(it.object().id.val() / divisor));
     (*out)<<it.object().id.val()<<'\t'
 	<<it.index().key<<'\t'<<it.index().value<<'\n';
+  }
+
+  if (attic)
+  {
+    Ofstream_Collection way_meta_db_out(db_dir + "after_way_meta_", "_db.csv");
+    Ofstream_Collection way_attic_db_out(db_dir + "after_way_attic_", "_db.csv");
+    Ofstream_Collection way_undeleted_db_out(db_dir + "after_way_undeleted_", "_db.csv");
+    Ofstream_Collection way_idx_list_out(db_dir + "after_way_idx_list_", "_db.csv");
+    Ofstream_Collection way_attic_meta_db_out(db_dir + "after_way_attic_meta_", "_db.csv");
+    Ofstream_Collection way_attic_tags_local_out(db_dir + "after_way_attic_tags_", "_local.csv");
+    Ofstream_Collection way_attic_tags_global_out(db_dir + "after_way_attic_tags_", "_global.csv");
+
+    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > ways_meta_db
+        (transaction.data_index(meta_settings().WAYS_META));
+    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::Flat_Iterator
+        it(ways_meta_db.flat_begin()); !(it == ways_meta_db.flat_end()); ++it)
+    {
+      std::ofstream* out(way_meta_db_out.get(it.object().ref.val() / divisor));
+      (*out)<<std::dec<<it.object().ref.val()<<'\t'
+          <<it.object().version<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\t'
+          <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
+          <<std::hex<<it.index().val()<<'\n';
+    }
+
+    Block_Backend< Uint31_Index, Attic< Way_Delta > > ways_db
+        (transaction.data_index(attic_settings().WAYS));
+    for (Block_Backend< Uint31_Index, Attic< Way_Delta > >::Flat_Iterator
+        it(ways_db.flat_begin()); !(it == ways_db.flat_end()); ++it)
+    {
+      std::ofstream* out(way_attic_db_out.get(it.object().id.val() / divisor));
+      (*out)<<std::dec<<it.object().id.val()<<'\t'<<std::setprecision(10)
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\t'
+          <<std::hex<<it.index().val()<<'\n';
+    }
+
+    Block_Backend< Uint31_Index, Attic< Way_Skeleton::Id_Type > > ways_undeleted_db
+        (transaction.data_index(attic_settings().WAYS_UNDELETED));
+    for (Block_Backend< Uint31_Index, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
+        it(ways_undeleted_db.flat_begin()); !(it == ways_undeleted_db.flat_end()); ++it)
+    {
+      std::ofstream* out(way_undeleted_db_out.get(it.object().val() / divisor));
+      (*out)<<std::dec<<it.object().val()<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\t'
+          <<std::hex<<it.index().val()<<'\n';
+    }
+
+    Block_Backend< Way::Id_Type, Uint31_Index > idx_db
+        (transaction.data_index(attic_settings().WAY_IDX_LIST));
+    for (Block_Backend< Way::Id_Type, Uint31_Index >::Flat_Iterator
+        it(idx_db.flat_begin()); !(it == idx_db.flat_end()); ++it)
+    {
+      std::ofstream* out(way_idx_list_out.get(it.index().val() / divisor));
+      (*out)<<std::dec<<it.index().val()<<'\t'<<std::hex<<it.object().val()<<'\n';
+    }
+
+    Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > ways_attic_meta_db
+        (transaction.data_index(attic_settings().WAYS_META));
+    for (Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::Flat_Iterator
+        it(ways_attic_meta_db.flat_begin()); !(it == ways_attic_meta_db.flat_end()); ++it)
+    {
+      std::ofstream* out(way_attic_meta_db_out.get(it.object().ref.val() / divisor));
+      (*out)<<std::dec<<it.object().ref.val()<<'\t'
+          <<it.object().version<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\t'
+          <<it.object().changeset<<'\t'<<it.object().user_id<<'\t'
+          <<std::hex<<it.index().val()<<'\n';
+    }
+
+    Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > > ways_local_db
+        (transaction.data_index(attic_settings().WAY_TAGS_LOCAL));
+    for (Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
+        it(ways_local_db.flat_begin());
+        !(it == ways_local_db.flat_end()); ++it)
+    {
+      std::ofstream* out(way_attic_tags_local_out.get(it.object().val() / divisor));
+      (*out)<<std::hex<<it.index().index<<'\t'<<std::dec<<it.object().val()<<'\t'
+          <<it.index().key<<'\t'<<it.index().value<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\n';
+    }
+
+    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > ways_global_db
+        (transaction.data_index(attic_settings().WAY_TAGS_GLOBAL));
+    for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > >::Flat_Iterator
+        it(ways_global_db.flat_begin());
+        !(it == ways_global_db.flat_end()); ++it)
+    {
+      std::ofstream* out(way_attic_tags_global_out.get(it.object().id.val() / divisor));
+      (*out)<<it.object().id.val()<<'\t'
+          <<it.index().key<<'\t'<<it.index().value<<'\t'
+          <<((it.object().timestamp)>>26)<<' '
+          <<((it.object().timestamp & 0x3c00000)>>22)<<' '
+          <<((it.object().timestamp & 0x3e0000)>>17)<<' '
+          <<((it.object().timestamp & 0x1f000)>>12)<<' '
+          <<((it.object().timestamp & 0xfc0)>>6)<<' '
+          <<(it.object().timestamp & 0x3f)<<'\n';
+    }
   }
 }
 
@@ -369,7 +491,7 @@ void check_ways(Transaction& transaction)
   }
 }
 
-void dump_relations(Transaction& transaction, const std::string& db_dir)
+void dump_relations(Transaction& transaction, const std::string& db_dir, uint64 divisor)
 {
   Ofstream_Collection relation_db_out(db_dir + "after_relation_", "_db.csv");
   Ofstream_Collection relation_tags_local_out(db_dir + "after_relation_tags_", "_local.csv");
@@ -389,7 +511,7 @@ void dump_relations(Transaction& transaction, const std::string& db_dir)
     for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
 	 it(relations_db.flat_begin()); !(it == relations_db.flat_end()); ++it)
     {
-      std::ofstream* out(relation_db_out.get(it.object().id.val() / 200000));
+      std::ofstream* out(relation_db_out.get(it.object().id.val() / divisor));
       (*out)<<it.object().id.val()<<'\t';
       for (uint i(0); i < it.object().members.size(); ++i)
 	(*out)<<it.object().members[i].ref.val()<<' '
@@ -405,7 +527,7 @@ void dump_relations(Transaction& transaction, const std::string& db_dir)
 	 it(relations_local_db.flat_begin());
          !(it == relations_local_db.flat_end()); ++it)
     {
-      std::ofstream* out(relation_tags_local_out.get(it.object().val() / 200000));
+      std::ofstream* out(relation_tags_local_out.get(it.object().val() / divisor));
       (*out)<<it.object().val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
@@ -417,7 +539,7 @@ void dump_relations(Transaction& transaction, const std::string& db_dir)
 	 it(relations_global_db.flat_begin());
          !(it == relations_global_db.flat_end()); ++it)
     {
-      std::ofstream* out(relation_tags_global_out.get(it.object().id.val() / 200000));
+      std::ofstream* out(relation_tags_global_out.get(it.object().id.val() / divisor));
       (*out)<<it.object().id.val()<<'\t'
 	  <<it.index().key<<'\t'<<it.index().value<<'\n';
     }
@@ -507,9 +629,9 @@ int main(int argc, char* argv[])
     Nonsynced_Transaction transaction(false, false, db_dir, "");
     if (dump)
     {
-      dump_nodes(transaction, db_dir, attic);
-      dump_ways(transaction, db_dir);
-      dump_relations(transaction, db_dir);
+      dump_nodes(transaction, db_dir, 10000000000, attic);
+      dump_ways(transaction, db_dir, 1000000000, attic);
+      dump_relations(transaction, db_dir, 1000000000);
     }
     else
     {

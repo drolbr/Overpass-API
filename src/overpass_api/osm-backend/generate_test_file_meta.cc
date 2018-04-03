@@ -16,6 +16,9 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#include "../core/settings.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <iomanip>
@@ -309,7 +312,8 @@ int main(int argc, char* args[])
 
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-  "<osm version=\"0.6\" generator=\"Overpass API\">\n"
+  "<osm version=\"0.6\" generator=\"Overpass API "<<basic_settings().version<<" "
+      <<basic_settings().source_hash.substr(0, 8)<<"\">\n"
   "<note>The data included in this document is from www.openstreetmap.org. "
   "The data is made available under ODbL.</note>\n"
   "<meta osm_base=\"mock-up-init\"/>\n\n";

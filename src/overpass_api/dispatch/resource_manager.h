@@ -227,4 +227,18 @@ struct Resource_Error
   uint runtime;
 };
 
+
+struct Cpu_Timer
+{
+  Cpu_Timer(Resource_Manager& rman_, uint index_)
+      : rman(&rman_), index(index_)
+  { rman->start_cpu_timer(index); }
+  ~Cpu_Timer() { rman->stop_cpu_timer(index); }
+  
+private:
+  Resource_Manager* rman;
+  uint index;
+};
+
+
 #endif

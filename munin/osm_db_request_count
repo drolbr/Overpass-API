@@ -9,15 +9,17 @@ if [[ "$1" = "config" ]]; then
   echo "overpass_request_started.label started"
   echo "overpass_request_started.type COUNTER"
   echo "overpass_request_started.cdef overpass_request_started,60,*"
+  echo "overpass_request_started.max 10000"
   echo "overpass_request_completed.label completed"
   echo "overpass_request_completed.type COUNTER"
   echo "overpass_request_completed.cdef overpass_request_completed,60,*"
+  echo "overpass_request_completed.max 10000"
   exit 0
 }; fi
 
-STARTED=`ls -l /OVERPASS_DB_DIR/started_count.dot | awk '{ print $5 }'` # adapt directory
+STARTED=`/OVERPASS_EXEC_DIR/bin/dispatcher --osm-base --status | grep -E '^Counter of started' | awk '{ print $5; }'` # adapt directory
 echo "overpass_request_started.value $STARTED"
 
-COMPLETED=`ls -l /OVERPASS_DB_DIR/completed_count.dot | awk '{ print $5 }'` # adapt directory
+COMPLETED=`/OVERPASS_EXEC_DIR/bin/dispatcher --osm-base --status | grep -E '^Counter of finished' | awk '{ print $5; }'` # adapt directory
 echo "overpass_request_completed.value $COMPLETED"
 

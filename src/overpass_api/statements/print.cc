@@ -776,8 +776,9 @@ std::vector< std::pair< std::string, std::string > > make_count_tags(const Set& 
 
 void Print_Statement::execute(Resource_Manager& rman)
 {
-  Diff_Action::_ action = rman.get_desired_action();
+  Cpu_Timer cpu(rman, 2);
 
+  Diff_Action::_ action = rman.get_desired_action();
   if (action == Diff_Action::collect_lhs
       || action == Diff_Action::collect_rhs_no_del || action == Diff_Action::collect_rhs_with_del)
   {

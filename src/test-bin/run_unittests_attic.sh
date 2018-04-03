@@ -189,6 +189,8 @@ for i in *.err; do
 done
 
 for i in *.out; do
+  cat <$i | sed 's/Overpass API [^ ]* [a-f0-9]*/Overpass API/g' >"_$i"
+  mv "_$i" "$i"
   diff -q "../../expected/attic_updater/$i" "$i"
 done
 
