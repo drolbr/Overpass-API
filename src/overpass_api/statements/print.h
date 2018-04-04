@@ -151,6 +151,7 @@ class Print_Statement : public Statement
     enum { order_by_id, order_by_quadtile } order;
     unsigned int limit;
     Set_Comparison* collection_print_target;
+    bool diff_valid;
 
     double south;
     double north;
