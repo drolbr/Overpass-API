@@ -315,9 +315,10 @@ Polygon_Query_Statement::Polygon_Query_Statement
 
   for (unsigned int i = 1; i < edges.size(); ++i)
     Area::calc_aligned_segments(segments, edges[i-1].first, edges[i-1].second, edges[i].first, edges[i].second);
-  Area::calc_aligned_segments(
-      segments, edges[edges.size()-1].first, edges[edges.size()-1].second, edges[0].first, edges[0].second);
-  sort(segments.begin(), segments.end());
+  if (!edges.empty())
+    Area::calc_aligned_segments(
+        segments, edges.back().first, edges.back().second, edges[0].first, edges[0].second);
+  std::sort(segments.begin(), segments.end());
 
   add_segment_blocks(segments);
 }
