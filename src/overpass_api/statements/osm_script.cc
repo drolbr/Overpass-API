@@ -169,6 +169,8 @@ Osm_Script_Statement::Osm_Script_Statement
     comparison_timestamp = Timestamp(attributes["from"]).timestamp;
     if (comparison_timestamp == 0)
       add_static_error("The attribute \"from\" must be empty or contain a timestamp exactly in the form \"yyyy-mm-ddThh:mm:ssZ\".");
+    else if (global_settings.get_output_handler() && !global_settings.get_output_handler()->supports_diff())
+      add_static_error("The selected output format does not support the diff or adiff mode.");
   }
 
   if (attributes["augmented"] != "")

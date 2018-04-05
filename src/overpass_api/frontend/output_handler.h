@@ -43,6 +43,8 @@ public:
   virtual void write_footer() = 0;
   virtual void display_remark(const std::string& text) = 0;
   virtual void display_error(const std::string& text) = 0;
+  
+  virtual bool supports_diff() const { return false; }
 
   virtual void print_global_bbox(const Bbox_Double& bbox) = 0;
 
