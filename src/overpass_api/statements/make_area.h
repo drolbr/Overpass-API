@@ -48,6 +48,7 @@ class Make_Area_Statement : public Output_Statement
 
   private:
     std::string input, pivot;
+    bool return_area;
 
     static std::pair< uint32, Uint64 > detect_pivot(const Set& pivot);
     static Node::Id_Type check_node_parity(const Set& pivot);

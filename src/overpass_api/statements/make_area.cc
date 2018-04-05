@@ -41,7 +41,7 @@ Generic_Statement_Maker< Make_Area_Statement > Make_Area_Statement::statement_ma
 
 Make_Area_Statement::Make_Area_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_)
+    : Output_Statement(line_number_), return_area(true)
 {
   is_used_ = true;
 
@@ -50,12 +50,22 @@ Make_Area_Statement::Make_Area_Statement
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["pivot"] = "";
+  attributes["return-area"] = "yes";
 
   eval_attributes_array(get_name(), attributes, input_attributes);
 
   input = attributes["from"];
   set_output(attributes["into"]);
   pivot = attributes["pivot"];
+  
+  if (attributes["return-area"] != "yes")
+  {
+    if (attributes["return-area"] == "no")
+      return_area = false;
+    else
+      add_static_error("For the attribute \"return-area\" of the element \"make-area\""
+        " the only allowed values are \"yes\" or \"no\", default is \"yes\".");
+  }
 }
 
 
@@ -408,7 +418,8 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
     area_updater->commit();
   }
 
-  into.areas[new_index].push_back(Area_Skeleton(new_location));
+  if (return_area)
+    into.areas[new_index].push_back(Area_Skeleton(new_location));
 
   transfer_output(rman, into);
   rman.health_check(*this);

@@ -62,12 +62,9 @@ Osm_Script_Statement::Osm_Script_Statement
 
   int64 max_space(atoll(attributes["element-limit"].c_str()));
   if (max_space <= 0)
-  {
-    std::ostringstream temp;
-    temp<<"For the attribute \"element-limit\" of the element \"osm-script\""
-        <<" the only allowed values are positive integers.";
-    add_static_error(temp.str());
-  }
+    add_static_error("For the attribute \"element-limit\" of the element \"osm-script\""
+        " the only allowed values are positive integers.");
+
   max_allowed_space = max_space;
 
 

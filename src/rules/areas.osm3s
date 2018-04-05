@@ -26,7 +26,7 @@
     <recurse type="relation-way" from="pivot"/>
     <recurse type="way-node"/>
   </union>
-  <make-area pivot="pivot"/>
+  <make-area pivot="pivot" return-area="no"/>
 </foreach>
 <union>
   <query type="way">
@@ -254,7 +254,7 @@
     <item set="pivot"/>
     <recurse type="way-node" from="pivot"/>
   </union>
-  <make-area pivot="pivot"/>
+  <make-area pivot="pivot" return-area="no"/>
 </foreach>
 
 </osm-script>
