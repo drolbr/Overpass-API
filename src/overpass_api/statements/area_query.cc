@@ -56,6 +56,16 @@ class Area_Constraint : public Query_Constraint
 };
 
 
+void copy_discrete_to_area_ranges(
+    const std::set< Uint31_Index >& area_blocks_req,
+    std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req)
+{
+  nodes_req.clear();
+  for (std::set< Uint31_Index >::const_iterator it = area_blocks_req.begin(); it != area_blocks_req.end(); ++it)
+    nodes_req.insert(std::make_pair(Uint32_Index(it->val()), Uint32_Index((it->val()) + 0x100)));
+}
+
+
 bool Area_Constraint::get_ranges
     (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
 {
@@ -65,10 +75,12 @@ bool Area_Constraint::get_ranges
     if (!input)
       return true;
 
-    area->get_ranges(input->areas, ranges, area_blocks_req, rman);
+    area->get_ranges(input->areas, area_blocks_req, rman);
   }
   else
-    area->get_ranges(ranges, area_blocks_req, rman);
+    area->get_ranges(area_blocks_req, rman);
+  
+  copy_discrete_to_area_ranges(area_blocks_req, ranges);
 
   return true;
 }
@@ -106,15 +118,14 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   std::set< Uint31_Index > area_blocks_req;
-  std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
   if (area->areas_from_input())
   {
     const Set* input = rman.get_set(area->get_input());
     if (input)
-      area->get_ranges(input->areas, range_req, area_blocks_req, rman);
+      area->get_ranges(input->areas, area_blocks_req, rman);
   }
   else
-    area->get_ranges(range_req, area_blocks_req, rman);
+    area->get_ranges(area_blocks_req, rman);
 
   //Process nodes
   area->collect_nodes(into.nodes, area_blocks_req, true, rman);
@@ -225,7 +236,7 @@ Statement* Area_Query_Statement::Criterion_Maker::create_criterion(const Token_N
 
 Area_Query_Statement::Area_Query_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_)
+    : Output_Statement(line_number_), area_blocks_req_filled(false)
 {
   is_used_ = true;
 
@@ -259,10 +270,25 @@ Area_Query_Statement::~Area_Query_Statement()
 }
 
 
-void Area_Query_Statement::get_ranges
-    (std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
-     std::set< Uint31_Index >& area_block_req,
-     Resource_Manager& rman)
+unsigned int Area_Query_Statement::count_ranges(Resource_Manager& rman)
+{
+  if (!area_blocks_req_filled)
+    fill_ranges(rman);
+  
+  return area_blocks_req.size();
+}
+
+
+void Area_Query_Statement::get_ranges(std::set< Uint31_Index >& area_blocks_req, Resource_Manager& rman)
+{
+  if (!area_blocks_req_filled)
+    fill_ranges(rman);
+  
+  area_blocks_req = this->area_blocks_req;
+}
+
+
+void Area_Query_Statement::fill_ranges(Resource_Manager& rman)
 {
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
       (rman.get_area_transaction()->data_index(area_settings().AREAS));
@@ -274,21 +300,16 @@ void Area_Query_Statement::get_ranges
     {
       for (std::vector< uint32 >::const_iterator it2(it.object().used_indices.begin());
           it2 != it.object().used_indices.end(); ++it2)
-      {
-	area_block_req.insert(Uint31_Index(*it2));
-	std::pair< Uint32_Index, Uint32_Index > range
-	    (std::make_pair(Uint32_Index(*it2), Uint32_Index((*it2) + 0x100)));
-	nodes_req.insert(range);
-      }
+        area_blocks_req.insert(Uint31_Index(*it2));
     }
   }
+  area_blocks_req_filled = true;
 }
 
 
 void Area_Query_Statement::get_ranges
     (const std::map< Uint31_Index, std::vector< Area_Skeleton > >& input_areas,
-     std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
-     std::set< Uint31_Index >& area_block_req,
+     std::set< Uint31_Index >& area_blocks_req,
      Resource_Manager& rman)
 {
   area_id.clear();
@@ -301,12 +322,7 @@ void Area_Query_Statement::get_ranges
 
       for (std::vector< uint32 >::const_iterator it3(it2->used_indices.begin());
           it3 != it2->used_indices.end(); ++it3)
-      {
-        area_block_req.insert(Uint31_Index(*it3));
-        std::pair< Uint32_Index, Uint32_Index > range
-	    (std::make_pair(Uint32_Index(*it3), Uint32_Index((*it3) + 0x100)));
-        nodes_req.insert(range);
-      }
+        area_blocks_req.insert(Uint31_Index(*it3));
     }
   }
 
@@ -317,7 +333,7 @@ void Area_Query_Statement::get_ranges
 bool Area_Constraint::delivers_data(Resource_Manager& rman)
 {
   if (!area->areas_from_input())
-    return false;
+    return (area->count_ranges(rman) < 12);
   else
   {
     const Set* input = rman.get_set(area->get_input());
