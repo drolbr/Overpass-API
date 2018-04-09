@@ -81,7 +81,7 @@ void add_to_set(Set& target, Uint31_Index idx, const Derived_Structure& skel)
 
 template< typename Index, typename Object >
 void loop_over_elements(const std::map< Index, std::vector< Object > >& source, Resource_Manager& rman,
-    std::vector< Statement* >& substatements, const std::string& result_name)
+    std::vector< Statement* >& substatements, const std::string& input, const std::string& result_name)
 {
   for (typename std::map< Index, std::vector< Object > >::const_iterator
       it = source.begin(); it != source.end(); ++it)
@@ -97,8 +97,6 @@ void loop_over_elements(const std::map< Index, std::vector< Object > >& source, 
       for (std::vector< Statement* >::iterator it = substatements.begin();
           it != substatements.end(); ++it)
 	(*it)->execute(rman);
-
-      rman.union_inward(result_name, result_name);
     }
   }
 }
@@ -115,16 +113,15 @@ void Foreach_Statement::execute(Resource_Manager& rman)
   if (!base_set)
     base_set = &base_result_set;
 
-  loop_over_elements(base_set->nodes, rman, substatements, get_result_name());
-  loop_over_elements(base_set->attic_nodes, rman, substatements, get_result_name());
-  loop_over_elements(base_set->ways, rman, substatements, get_result_name());
-  loop_over_elements(base_set->attic_ways, rman, substatements, get_result_name());
-  loop_over_elements(base_set->relations, rman, substatements, get_result_name());
-  loop_over_elements(base_set->attic_relations, rman, substatements, get_result_name());
-  loop_over_elements(base_set->areas, rman, substatements, get_result_name());
-  loop_over_elements(base_set->deriveds, rman, substatements, get_result_name());
+  loop_over_elements(base_set->nodes, rman, substatements, input, get_result_name());
+  loop_over_elements(base_set->attic_nodes, rman, substatements, input, get_result_name());
+  loop_over_elements(base_set->ways, rman, substatements, input, get_result_name());
+  loop_over_elements(base_set->attic_ways, rman, substatements, input, get_result_name());
+  loop_over_elements(base_set->relations, rman, substatements, input, get_result_name());
+  loop_over_elements(base_set->attic_relations, rman, substatements, input, get_result_name());
+  loop_over_elements(base_set->areas, rman, substatements, input, get_result_name());
+  loop_over_elements(base_set->deriveds, rman, substatements, input, get_result_name());
 
-  rman.erase_set(input);
   rman.move_all_inward_except(get_result_name());
   rman.pop_stack_frame();
 

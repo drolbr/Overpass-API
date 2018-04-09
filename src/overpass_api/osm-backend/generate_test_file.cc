@@ -2517,6 +2517,15 @@ struct Accept_Foreach_1 : public Accept_All_Tags
     uint way_id_offset;
 };
 
+struct Accept_Foreach_2 : public Accept_All_Tags
+{
+  Accept_Foreach_2(uint pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+};
+
 struct Accept_Union_1 : public Accept_All_Tags
 {
   Accept_Union_1(uint pattern_size_) : pattern_size(pattern_size_) {}
@@ -3608,13 +3617,12 @@ int main(int argc, char* args[])
     else if (std::string(args[2]) == "foreach_1")
       modifier = new Accept_Foreach_1(pattern_size);
     else if (std::string(args[2]) == "foreach_2")
-      // query 1 and 2 shall both return an empty std::set.
-      modifier = new Accept_Foreach_1(pattern_size);
+      modifier = new Accept_Foreach_2(pattern_size);
     else if (std::string(args[2]) == "foreach_3")
-      // query 1 and 3 shall both return an empty std::set.
+      // query 1 and 3 shall both return the same set.
       modifier = new Accept_Foreach_1(pattern_size);
     else if (std::string(args[2]) == "foreach_4")
-      // query 1 and 3 shall both return an empty std::set.
+      // query 1 and 4 shall both return the same set.
       modifier = new Accept_Foreach_1(pattern_size);
     else if (std::string(args[2]) == "union_1")
       modifier = new Accept_Union_1(pattern_size);

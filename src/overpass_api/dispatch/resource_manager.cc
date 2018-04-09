@@ -235,11 +235,29 @@ void Runtime_Stack_Frame::copy_outward(const std::string& inner_set_name, const 
 
 void Runtime_Stack_Frame::move_outward(const std::string& inner_set_name, const std::string& top_set_name)
 {
-  if (parent)
+  Runtime_Stack_Frame* source = parent;
+  
+  while (source && source->parent)
   {
-    size_per_set[top_set_name] = parent->size_per_set[inner_set_name];
+    std::map< std::string, Set >::iterator it = source->sets.find(inner_set_name);
+    if (it != source->sets.end())
+      break;
+
+    std::map< std::string, Diff_Set >::iterator it_diff = source->diff_sets.find(inner_set_name);
+    if (it_diff != source->diff_sets.end())
+      break;
+
+    source = source->parent;
+  }
+
+  if (source)
+  {
+    size_per_set[top_set_name] = source->size_per_set[inner_set_name];
     sets[top_set_name].clear();
-    parent->swap_set(inner_set_name, sets[top_set_name]);
+    if (source == parent)
+      source->swap_set(inner_set_name, sets[top_set_name]);
+    else
+      sets[top_set_name] = source->sets[inner_set_name];
   }
   diff_sets.erase(top_set_name);
   key_values.erase(top_set_name);

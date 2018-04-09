@@ -257,11 +257,8 @@ void For_Statement::execute(Resource_Manager& rman)
     for (std::vector< Statement* >::iterator it = substatements.begin();
         it != substatements.end(); ++it)
       (*it)->execute(rman);
-
-    rman.union_inward(get_result_name(), get_result_name());
   }
 
-  rman.erase_set(input);
   rman.move_all_inward_except(get_result_name());
   rman.pop_stack_frame();
 
