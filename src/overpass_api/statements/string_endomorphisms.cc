@@ -140,7 +140,7 @@ std::string Evaluator_Date::process(const std::string& rhs_s) const
     ++pos;
   }
 
-  if (year < 1000 || month > 12 || day > 31 || hour > 24 || minute > 60 || second > 60)
+  if (year < 1000 || month > 12 || day > 31 || hour > 23 || minute > 59 || second > 60)
     return "NaD";
 
   return to_string(year + month/16. + day/(16.*32)
@@ -214,7 +214,7 @@ std::string Evaluator_Is_Date::process(const std::string& rhs_s) const
     ++pos;
   }
 
-  if (year < 1000 || month > 12 || day > 31 || hour > 24 || minute > 60 || second > 60)
+  if (year < 1000 || month > 12 || day > 31 || hour > 23 || minute > 59 || second > 60)
     return "0";
 
   return "1";
