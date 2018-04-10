@@ -398,7 +398,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   for (std::map< Uint31_Index, std::vector< Area_Block > >::const_iterator
       it(area_blocks.begin()); it != area_blocks.end(); ++it)
     used_indices.push_back(it->first.val());
-  sort(used_indices.begin(), used_indices.end());
+  std::sort(used_indices.begin(), used_indices.end());
 
   Area_Location new_location(pivot_id, used_indices);
   new_location.tags = new_tags;

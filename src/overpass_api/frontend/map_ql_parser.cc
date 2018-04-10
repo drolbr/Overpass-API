@@ -200,9 +200,10 @@ TStatement* create_make_statement(typename TStatement::Factory& stmt_factory,
 
 template< class TStatement >
 TStatement* create_complete_statement(typename TStatement::Factory& stmt_factory,
-    std::string from, std::string into, uint line_nr)
+    std::string maxnum, std::string from, std::string into, uint line_nr)
 {
   std::map< std::string, std::string > attr;
+  attr["maxnum"] = maxnum;
   attr["from"] = from;
   attr["into"] = into;
   return stmt_factory.create_statement("complete", line_nr, attr);
@@ -550,7 +551,13 @@ TStatement* parse_complete(typename TStatement::Factory& stmt_factory, Parsed_Qu
 {
   std::pair< uint, uint > line_col = token.line_col();
   ++token;
-
+  std::string maxnum;
+  if (*token == "(")
+  {
+    ++token;
+    maxnum = get_text_token(token, error_output, "maximum loop number");
+    clear_until_after(token, error_output, ")");
+  }
   std::string from = probe_from(token, error_output);
   std::string into = probe_into(token, error_output);
   std::vector< TStatement* > substatements =
@@ -559,7 +566,7 @@ TStatement* parse_complete(typename TStatement::Factory& stmt_factory, Parsed_Qu
     ++token;
 
   TStatement* statement = create_complete_statement< TStatement >
-      (stmt_factory, from, into, line_col.first);
+      (stmt_factory, maxnum, from, into, line_col.first);
   for (typename std::vector< TStatement* >::const_iterator it = substatements.begin();
       it != substatements.end(); ++it)
     statement->add_statement(*it, "");

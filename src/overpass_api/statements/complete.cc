@@ -16,15 +16,8 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
-#include <cctype>
-#include <iostream>
-#include <list>
 #include <map>
-#include <set>
-#include <sstream>
 #include <string>
-#include <stdlib.h>
 #include <vector>
 
 #include "../data/abstract_processing.h"
@@ -36,17 +29,27 @@ Generic_Statement_Maker< Complete_Statement > Complete_Statement::statement_make
 
 Complete_Statement::Complete_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_)
+    : Output_Statement(line_number_), max_loop_num(4096)
 {
   std::map< std::string, std::string > attributes;
 
   attributes["from"] = "_";
   attributes["into"] = "_";
+  attributes["maxnum"] = "";
 
   eval_attributes_array(get_name(), attributes, input_attributes);
 
   input = attributes["from"];
   set_output(attributes["into"]);
+  
+  if (!attributes["maxnum"].empty())
+  {
+    long long maxnum = atoi(attributes["maxnum"].c_str());
+    if (maxnum <= 0 || maxnum > 1048576)
+      add_static_error("Maximum loop number for complete must be an integer between \"1\" and \"1048576\".");
+    else
+      max_loop_num = maxnum;
+  }
 }
 
 
@@ -70,6 +73,7 @@ void Complete_Statement::execute(Resource_Manager& rman)
 
   rman.push_stack_frame();
 
+  uint cnt = 0;
   do
   {
     rman.copy_outward(input, get_result_name());
@@ -79,7 +83,7 @@ void Complete_Statement::execute(Resource_Manager& rman)
 
     new_elements_found = rman.union_inward(input, input);
   }
-  while (new_elements_found);
+  while (new_elements_found && ++cnt <= max_loop_num);
 
   rman.copy_outward(input, get_result_name());
   rman.move_all_inward();

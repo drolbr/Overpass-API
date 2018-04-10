@@ -331,6 +331,9 @@ bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
   for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
       it = summand.begin(); it != summand.end(); ++it)
   {
+    if (it->second.empty())
+      continue;
+
     std::vector< TObject >& target = result[it->first];
     if (target.empty())
     {
@@ -339,12 +342,30 @@ bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
       continue;
     }
 
-    std::vector< TObject > other;
-    other.swap(target);
-    std::set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-	      back_inserter(target), Compare_By_Id< TObject >());
+    if (it->second.size() == 1 && target.size() > 64)
+    {
+      typename std::vector< TObject >::iterator it_target
+          = std::lower_bound(target.begin(), target.end(), it->second.front());
+      if (it_target == target.end())
+      {
+        target.push_back(it->second.front());
+        result_has_grown = true;
+      }
+      else if (!(*it_target == it->second.front()))
+      {
+        target.insert(it_target, it->second.front());
+        result_has_grown = true;
+      }
+    }
+    else
+    {
+      std::vector< TObject > other;
+      other.swap(target);
+      std::set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
+                back_inserter(target), Compare_By_Id< TObject >());
 
-    result_has_grown |= (target.size() > other.size());
+      result_has_grown |= (target.size() > other.size());
+    }
   }
 
   return result_has_grown;

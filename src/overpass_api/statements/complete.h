@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "../data/utils.h"
 #include "statement.h"
 
 
@@ -46,27 +47,42 @@ The base syntax is
 
   complete{
     <List of Substatements>
-  };
+  }
 
 where <List of Substatements> is a list of substatements.
+
+The maximum number of loops defaults to 4096.
+This value can be changed to any value between 1 and 1048576 for this loop.
+To do so, put the desired value in parentheses after the "complete" keyword:
+
+  complete(<Number>){
+    <List of Substatements>
+  }
+
 The input and output set can be specified between complete and the opening parenthesis,
 i.e. you set the input set
 
   complete.<Name of Input Set>{
     <List of Substatements>
-  };
+  }
 
 or the output set
 
   complete->.<Name of Output Set>{
     <List of Substatements>
-  };
+  }
 
 or both
 
   complete.<Name of Input Set>->.<Name of Output Set>{
     <List of Substatements>
-  };
+  }
+
+resp.
+
+  complete(<Number>).<Name of Input Set>->.<Name of Output Set>{
+    <List of Substatements>
+  }
 
 */
 
@@ -86,6 +102,7 @@ public:
   {
     std::string result = indent + "<complete"
         + (input != "_" ? " from=\"" + input + "\"" : "")
+        + (max_loop_num != 4096 ? " maxnum=\"" + to_string(max_loop_num) + "\"" : "")
         + dump_xml_result_name() + ">\n";
 
     for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
@@ -97,6 +114,7 @@ public:
   virtual std::string dump_compact_ql(const std::string& indent) const
   {
     std::string result = indent + "complete"
+        + (max_loop_num != 4096 ? "(" + to_string(max_loop_num) + ")" : "")
         + (input != "_" ? "." + input : "")
         + dump_ql_result_name() + "{";
 
@@ -110,6 +128,7 @@ public:
   virtual std::string dump_pretty_ql(const std::string& indent) const
   {
     std::string result = indent + "complete"
+        + (max_loop_num != 4096 ? "(" + to_string(max_loop_num) + ")" : "")
         + (input != "_" ? "." + input : "")
         + dump_ql_result_name() + "{";
 
@@ -122,6 +141,7 @@ public:
 
 private:
   std::string input;
+  uint max_loop_num;
   std::vector< Statement* > substatements;
 };
 
