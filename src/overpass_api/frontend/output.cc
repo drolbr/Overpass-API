@@ -90,6 +90,9 @@ Osm_Backend_Callback* get_quiet_callback()
 
 void report_file_error(const File_Error& e)
 {
-  std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
+  if (e.error_number)
+    std::cerr<<"File error caught: "
+        <<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
+  else
+    std::cerr<<"File error caught: "<<e.filename<<' '<<e.origin<<'\n';
 }
