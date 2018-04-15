@@ -1,3 +1,5 @@
 <osm-script>
-  <user type="node" name="Username" into="out"/>
+  <query into="out" type="node">
+    <user type="node" name="Username" into="out"/>
+  </query>
 </osm-script>

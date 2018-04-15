@@ -1,3 +1,5 @@
 <osm-script>
-  <user type="node" uid="496" into="out"/>
+  <query into="out" type="node">
+    <user type="node" uid="496" into="out"/>
+  </query>
 </osm-script>
