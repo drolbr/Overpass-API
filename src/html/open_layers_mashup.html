@@ -13,7 +13,7 @@
 
 <p>We demonstrate here how to build a custom POI map with <a href="http://www.openlayers.org/">OpenLayers</a> as framework and <em>Overpass API</em> as backend. This is the simplest possible way to get a custom POI map: you only need to serve the assembled JavaScript file from your server. The JavaScript logic is fetched from <a href="http://www.openlayers.org/">OpenLayers</a>, the background map is fetched from <a href="http://www.openstreetmap.org/">OpenStreetMap</a>, and the data is fetched from <a href="index.html">Overpass API</a>.</p>
 
-<p>In a step-by-step explanation, we start first with a simple map of <a href="#fixed">some fixed point POIs</a>. Then we go forward to <a href="#bbox">a map of generic POIs</a> like all schools. Finally, we explain <a href="#multilayer">how to show</a> multiple different kinds of objects in one map. All the examples are derived from the OpenLayers example in the <a href="http://wiki.openstreetmap.org/wiki/OpenLayers">OSM Wiki</a>.</p>
+<p>In a step-by-step explanation, we start first with a simple map of <a href="#fixed">some fixed point POIs</a>. Then we go forward to <a href="#bbox">a map of generic POIs</a> like all schools. Finally, we explain <a href="#multilayer">how to show</a> multiple different kinds of objects in one map. All the examples are derived from the OpenLayers example in the <a href="https://wiki.openstreetmap.org/wiki/OpenLayers">OSM Wiki</a>.</p>
 
 <p>OpenLayers is chosen for no particular reason. <a href="http://leaflet.cloudmade.com/">Leaflet</a> would be another suitable possible JavaScript framework, and there are <a href="http://ubahnverleih.de/osm/tourist/">working examples</a> with Leaflet.</p>
 
@@ -35,7 +35,7 @@
 </pre>
 <p>Here, the defining properties of this map are chosen. <em>lat</em> and <em>lon</em> set the point where the map is located at the beginning. <em>zoom</em> is the initial zoom. And finally, <em>data_url</em> chooses which data to highlight, in this case the bus stop with name &quot;Im Tannenbusch&quot;.</p>
 
-<p>The query language for <em>data_url</em> is Overpass QL which is introduced in the <a href="http://wiki.openstreetmap.org/Overpass_API/Language_Guide">language guide</a>. The <em>%22</em> is just an escaping for a quotation mark (&quot;). It is used to avoid confusing the JavaScript engine of the browser. If you want suggestions for the latitude and longitude or just to test whether your query works, you can run the search with slight modifications:<br/>
+<p>The query language for <em>data_url</em> is Overpass QL which is introduced in the <a href="https://wiki.openstreetmap.org/Overpass_API/Language_Guide">language guide</a>. The <em>%22</em> is just an escaping for a quotation mark (&quot;). It is used to avoid confusing the JavaScript engine of the browser. If you want suggestions for the latitude and longitude or just to test whether your query works, you can run the search with slight modifications:<br/>
 <a href="http://overpass-api.de/api/interpreter?data=[out:custom];node[name=%22Im Tannenbusch%22][highway=bus_stop];out+skel;&amp;redirect=no">http://overpass-api.de/api/interpreter?data=<strong>[out:custom];</strong>node[name=&quot;Im Tannenbusch&quot;][highway=bus_stop];out skel;<strong>&amp;redirect=no</strong></a><br/>
 This shows exactly the results that will be found by the query and therefore get marked on the map.</p>
 

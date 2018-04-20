@@ -22,7 +22,7 @@ VERSION=0.6.96
 EXEC_DIR="/srv/osm-3s/v$VERSION/"
 DB_DIR="/opt/osm-3s/v$VERSION/"
 REPLICATE_DIR="/home/roland/osm-replicate-diffs/"
-DOWNLOAD_DIFFS="http://planet.openstreetmap.org/minute-replicate/"
+DOWNLOAD_DIFFS="https://planet.openstreetmap.org/replication/minute/"
 META="--meta"
 AREAS="yes"
 

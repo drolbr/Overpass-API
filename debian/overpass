@@ -11,7 +11,7 @@
 
 #You can override those  variables in /etc/default/overpass
 
-DIFF_URL="http://planet.osm.org/replication/minute"
+DIFF_URL="https://planet.osm.org/replication/minute"
 DB_DIR=/var/lib/overpass/
 EXEC_DIR=/usr/local/bin/
 
@@ -20,7 +20,7 @@ LOG_DIR=/var/log/overpass/
 RUN_AS_USER=root
 META=yes
 
-#To enable area, setting this to yes isn't enought ! Please also read : http://wiki.openstreetmap.org/wiki/Talk:Overpass_API/install
+#To enable area, setting this to yes isn't enought ! Please also read : https://wiki.openstreetmap.org/wiki/Talk:Overpass_API/install
 AREA=no
 
 if test -f /etc/default/overpass; then

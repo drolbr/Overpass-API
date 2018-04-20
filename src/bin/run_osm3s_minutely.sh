@@ -38,7 +38,7 @@ where\n\
 \n\
 --minute-url=MINUTE_URL\n\
     Specify the URL to download the minute diffs from. The usual URL is\n\
-    http://planet.openstreetmap.org/minute-replicate/\n\
+    https://planet.openstreetmap.org/replication/minute/\n\
 \n\
 --meta=yes, --meta=no\n\
     Keep or keep not meta data in the database.\n\

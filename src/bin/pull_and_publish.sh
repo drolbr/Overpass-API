@@ -71,7 +71,7 @@ DB_DIR=/opt/osm-3s
 PLANET_DIR=/home/roland/osm-planet
 REPLICATE_DIR=/home/roland/osm-replicate-diffs/
 DOWNLOAD_PLANET=http://ftp.heanet.ie/mirrors/openstreetmap.org/
-DOWNLOAD_DIFFS=http://planet.openstreetmap.org/minute-replicate/
+DOWNLOAD_DIFFS=https://planet.openstreetmap.org/replication/minute/
 
 process_param()
 {

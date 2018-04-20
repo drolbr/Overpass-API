@@ -11,9 +11,9 @@
 
 <h1>Wiki template handling</h1>
 
-<p>The template Wiki mechanism of Overpass API works as follows: A wiki page only needs to call a <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Permanent_ID">link encapsulation template</a>. That expands into the longer link to query an Overpass API <a href="output_formats.html#custom">custom output page</a>. Normally, we are done here with a redirection or disambiguation page. But sometimes you want to get a custom formatted disambiguation page. How to write such a page is explained on the <a href="output_formats.html#custom">custom output page</a>. We explain here how to get a template onto the Overpass API server.</p>
+<p>The template Wiki mechanism of Overpass API works as follows: A wiki page only needs to call a <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Permanent_ID">link encapsulation template</a>. That expands into the longer link to query an Overpass API <a href="output_formats.html#custom">custom output page</a>. Normally, we are done here with a redirection or disambiguation page. But sometimes you want to get a custom formatted disambiguation page. How to write such a page is explained on the <a href="output_formats.html#custom">custom output page</a>. We explain here how to get a template onto the Overpass API server.</p>
 
-<p>To avoid that arbritrary files can be stored at the Overpass API server, it only fetches files from the <a href="http://wiki.openstreetmap.org/">OpenStreetMap wiki</a>, and only pages beginning with &quot;Template:&quot;. Thus, you need to store your template in the OpenStreetMap wiki and then to let Overpass API load that template.</p>
+<p>To avoid that arbritrary files can be stored at the Overpass API server, it only fetches files from the <a href="https://wiki.openstreetmap.org/">OpenStreetMap wiki</a>, and only pages beginning with &quot;Template:&quot;. Thus, you need to store your template in the OpenStreetMap wiki and then to let Overpass API load that template.</p>
 
 <p>Overpass API doesn't poll the wiki server without explicit order. To fetch a template named e.g. &quot;Template:Foobar&quot; from the wiki onto the Overpass API server, call</p>
 <pre>

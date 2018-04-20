@@ -11,7 +11,7 @@
 
 <h1>Complete installation guide</h1>
 
-<p>This is the complete installation guide. If it looks too complex, please have a look at the <a href="no_frills.html">quick installation guide</a>. There is also <a href="http://wiki.openstreetmap.org/wiki/OSM3S/install">an installation guide on the wiki</a> which covers most errors that have ever been occured during installation and startup.</p>
+<p>This is the complete installation guide. If it looks too complex, please have a look at the <a href="no_frills.html">quick installation guide</a>. There is also <a href="https://wiki.openstreetmap.org/wiki/OSM3S/install">an installation guide on the wiki</a> which covers most errors that have ever been occured during installation and startup.</p>
 
 <p>We cover here various base systems, in particular at least Ubuntu Linux and FreeBSD. We also cover different variants of installation and operation, including working with or without meta data, <a href="#xapi">the XAPI wrapper</a>, <a href="#areas">area creation</a>, and <a href="#custom_output">the management of custom output</a>.</p>
 
@@ -61,7 +61,7 @@
 
 <h2><a name="startup">Startup</a></h2>
 
-<p>The standard use case is to set up the database with the whole planet data and including meta data. If you haven't downloaded an <a href="http://wiki.openstreetmap.org/wiki/Planet.osm">OSM XML planet file</a> yet, you can fetch one for example with:</p>
+<p>The standard use case is to set up the database with the whole planet data and including meta data. If you haven't downloaded an <a href="https://wiki.openstreetmap.org/wiki/Planet.osm">OSM XML planet file</a> yet, you can fetch one for example with:</p>
 <pre>wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet/planet-latest.osm.bz2&quot;</pre>
 <p>This file has a size of about 60 GB. Thus, depending on your internet connection, it may take between 4 hours (fastest possible) and 66 hours (with 2 MBit) to download the file. If you are not working on your local machine, you may want the download to continue even if you logout. Use <em>nohup</em> for this:</p>
 <pre><strong>nohup</strong> wget -O planet.osm.bz2 &quot;http://ftp.heanet.ie/mirrors/openstreetmap.org/planet/planet-latest.osm.bz2&quot; <strong>&amp;</strong></pre>
@@ -86,16 +86,16 @@
 <p>(without <em>--meta</em> if you have not processed meta data)</p>
 <p>The dispatcher has been successfully started if you find a line &quot;<em>Dispatcher just started.</em>&quot; with correct date (in UTC) in the file <em>transactions.log</em> in the database directory.</p>
 
-<pre>nohup bin/fetch_osc.sh <em>id</em> &quot;http://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;</pre>
+<pre>nohup bin/fetch_osc.sh <em>id</em> &quot;https://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;</pre>
 <p>This should start to fill the directory <em>&quot;diffs/&quot;</em> with subdirectories which have three digits as name and finally contain files ending in <em>osc.gz</em> and <em>state.txt</em>.</p>
 
 <pre>nohup bin/apply_osc_to_db.sh &quot;diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 <p>(with <em>--meta=no</em> instead if you have not processed meta data or <em>--meta=attic</em> if you want to work with museum data)</p>
-<p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. If you have obtained your database by cloning, you find the replicate id in the file <em>replicate_id</em> in the database directory. If you have imported the database from an OSM file, search on <a href="http://planet.openstreetmap.org/replication/minute/">http://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
+<p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate. Once again, you need to replace parameters: you always need to replace <em>id</em> by the replicate id to start from. If you have obtained your database by cloning, you find the replicate id in the file <em>replicate_id</em> in the database directory. If you have imported the database from an OSM file, search on <a href="https://planet.openstreetmap.org/replication/minute/">https://planet.openstreetmap.org/replication/minute/</a> with your browser for the last replication diff that has been created before the planet creation date.</p>
 
 <p>The other parameters need only to be adapted if you have chosen a different directory in a previous step: 
 <em>&quot;db/&quot;</em> is the directory of the database,
-<em>&quot;http://planet.openstreetmap.org/minute-replicate/&quot;</em> is the replicate diff's remote source, and
+<em>&quot;https://planet.openstreetmap.org/replication/minute/&quot;</em> is the replicate diff's remote source, and
 <em>&quot;diffs/&quot;</em> is the directory where the minute diffs are stored until they have been applied.</p>
 
 <p>Congratulations! Now you have a database mirror that can serve the entire world and is always only a few minutes behind the OSM main database. We can now startup the additional modules:</p>
@@ -140,7 +140,7 @@ chmod 755 /path/to/osm-3s_v0.7.54/db</pre>
 
 <h2><a name="xapi">The XAPI Wrapper</a></h2>
 
-<p>The XAPI wrapper delivers the <a href="http://wiki.openstreetmap.org/wiki/Overpass_API#XAPI_Compatibility_Layer">XAPI compatibility layer</a>.
+<p>The XAPI wrapper delivers the <a href="https://wiki.openstreetmap.org/wiki/Overpass_API#XAPI_Compatibility_Layer">XAPI compatibility layer</a>.
 No changes to the Apache cofiguration or to the database are necessary.</p>
 
 
