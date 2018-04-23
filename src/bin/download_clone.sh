@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2008, 2009, 2010, 2011, 2012 Roland Olbricht
+# Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018 Roland Olbricht et al.
 #
 # This file is part of Overpass_API.
 #
@@ -15,7 +15,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
+# along with Overpass_API. If not, see <https://www.gnu.org/licenses/>.
 
 EXEC_DIR="`pwd`/../"
 CLONE_DIR="$1"

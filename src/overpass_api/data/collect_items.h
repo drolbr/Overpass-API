@@ -1,4 +1,4 @@
-/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Roland Olbricht et al.
+/** Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018 Roland Olbricht et al.
  *
  * This file is part of Overpass_API.
  *
@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 #ifndef DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
 #define DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
