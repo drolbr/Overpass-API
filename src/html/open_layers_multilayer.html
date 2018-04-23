@@ -39,13 +39,13 @@
               make_layer("http://overpass-api.de/api/interpreter?data=[timeout:1];node[amenity=school](bbox);out+skel;(way[amenity=school](bbox);node(w););out+skel;", "blue"),
               make_layer("http://overpass-api.de/api/interpreter?data=[timeout:1];node[amenity=university](bbox);out+skel;(way[amenity=university](bbox);node(w););out+skel;", "orange")
           ]);
-          
+
 	  var click = new OpenLayers.Control.Click(
 	      "http://overpass-api.de/api/interpreter?data="
 	          + "[timeout:5][out:popup(\"\";[amenity=kindergarten];\"name\";)(\"\";[amenity=school];\"name\";)(\"\";[amenity=university];\"name\";)];"
 	          + "(node(bbox);way(bbox););(._;<;);out;"
 		  + "&redirect=no&template=ids.popup", 0.0000001, map);
-		  
+
           map.addControl(click);
           click.activate();
       }

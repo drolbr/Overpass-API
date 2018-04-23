@@ -2,25 +2,25 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
   <title>OSM3S on Mapnik via Open Layers</title>
-  <script src="http://openlayers.org/api/2.11/OpenLayers.js"></script>
-  <script src="http://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
-  <script src="http://overpass-api.de/overpass.js"></script>
+  <script src="https://openlayers.org/api/2.11/OpenLayers.js"></script>
+  <script src="https://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script src="https://overpass-api.de/overpass.js"></script>
   <script type="text/javascript">
       var lat = "$LAT";
       var lon = "$LON";
       var zoom = "$ZOOM";
       var current_id = "$ID";
-      var data_url = "http://overpass-api.de/api/augmented_diff?id=";
+      var data_url = "https://overpass-api.de/api/augmented_diff?id=";
       var map;
 
-/**  
+/**
  * Class: AugmentedDiffsFormat
  *
  * Inherits from:
  *  - <OpenLayers.Format.XML>
  */
 AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
-    
+
     /**
      * Constructor: AugmentedDiffsFormat
      * Create a new parser for OSM.
@@ -30,29 +30,29 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
      *     this instance.
      */
     initialize: function(options) {
-    
+
         var layer_defaults = {};
         layer_defaults = OpenLayers.Util.extend(layer_defaults, options);
-        
+
         // OSM coordinates are always in longlat WGS84
         this.externalProjection = new OpenLayers.Projection("EPSG:4326");
-        
+
         OpenLayers.Format.XML.prototype.initialize.apply(this, [layer_defaults]);
     },
-    
+
     /**
      * APIMethod: read
      * Return a list of features from a OSM doc
-     *     
+     *
      * Parameters:
-     * doc - {Element} 
+     * doc - {Element}
      *
      * Returns:
      * Array({<OpenLayers.Feature.Vector>})
      */
     read: function(doc) {
-    
-        if (typeof doc == "string") { 
+
+        if (typeof doc == "string") {
             doc = OpenLayers.Format.XML.prototype.read.apply(this, [doc]);
         }
 
@@ -76,7 +76,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
             erasedWays[way_id] = keptWays[way_id];
             insertedWays[way_id] = keptWays[way_id];
         }
-        
+
         var deleteStyle = {
               strokeColor: "red",
               strokeOpacity: 0.5,
@@ -85,7 +85,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
               fillColor: "red",
               fillOpacity: 0.25
           };
-        
+
         var insertStyle = {
               strokeColor: "green",
               strokeOpacity: 0.5,
@@ -94,7 +94,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
               fillColor: "green",
               fillOpacity: 0.25
           };
-        
+
         var tagChangedStyle = {
               strokeColor: "yellow",
               strokeOpacity: 0.5,
@@ -103,7 +103,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
               fillColor: "yellow",
               fillOpacity: 0.25
           };
-          
+
         var unchangedStyle = {
               strokeColor: "grey",
               strokeOpacity: 0.5,
@@ -112,10 +112,10 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
               fillColor: "grey",
               fillOpacity: 0.25
           };
-          
+
         // Geoms will contain at least ways.length entries.
         var feat_list = [];
-        
+
         for (var way_id in erasedWays) {
             var feat = this.makeWayFeature(erasedWays[way_id], erasedNodes);
             if (insertedWays[way_id] &&
@@ -134,7 +134,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                 feat.style = deleteStyle;
             }
             feat_list.push(feat);
-        } 
+        }
         for (var way_id in insertedWays) {
             if (erasedWays[way_id] &&
                     this.equalGeometry(erasedWays[way_id], erasedNodes, insertedWays[way_id], insertedNodes))
@@ -143,20 +143,20 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
             this.enlargeBoundsWay(insertedWays[way_id], insertedNodes);
             feat.style = insertStyle;
             feat_list.push(feat);
-        } 
-        
+        }
+
         for (var node_id in erasedNodes) {
             var node = erasedNodes[node_id];
             if (!node.used) {
-            
+
                 var feat = new OpenLayers.Feature.Vector(
                     new OpenLayers.Geometry.Point(node['lon'], node['lat']), null);
                 if (this.internalProjection && this.externalProjection) {
-                    feat.geometry.transform(this.externalProjection, 
+                    feat.geometry.transform(this.externalProjection,
                         this.internalProjection);
-                }        
+                }
                 feat.osm_id = parseInt(node_id);
-                
+
                 if (insertedNodes[node_id] &&
                         insertedNodes[node_id].lon == node.lon &&
                         insertedNodes[node_id].lat == node.lat) {
@@ -174,25 +174,25 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                     feat.style = deleteStyle;
                 }
                 feat_list.push(feat);
-            }   
-        }        
+            }
+        }
         for (var node_id in insertedNodes) {
             var node = insertedNodes[node_id];
             if (!node.used) {
-            
+
                 this.enlargeBounds(node['lat'], node['lon']);
                 var feat = new OpenLayers.Feature.Vector(
                     new OpenLayers.Geometry.Point(node['lon'], node['lat']), null);
                 if (this.internalProjection && this.externalProjection) {
-                    feat.geometry.transform(this.externalProjection, 
+                    feat.geometry.transform(this.externalProjection,
                         this.internalProjection);
-                }        
-                feat.osm_id = parseInt(node_id); 
+                }
+                feat.osm_id = parseInt(node_id);
                 feat.style = insertStyle;
                 feat_list.push(feat);
-            }   
+            }
         }
-        
+
         if (this.minLat < 90.0)
         {
             var lonLat = new OpenLayers.LonLat(
@@ -219,11 +219,11 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                 map.zoomToExtent(extent);
             }
         }
-        
+
         return feat_list;
     },
 
-    
+
     parseNodes: function(doc, erasedNodes, keptNodes, insertedNodes) {
         var node_list = doc.getElementsByTagName("node");
         var lastTags;
@@ -246,7 +246,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                         'k': tags[j].getAttribute("k"),
                         'v': tags[j].getAttribute("v")
                         };
-                    
+
             } else if (node.parentNode.tagName == "action" &&
                     node.parentNode.getAttribute("type") == "info") {
                 keptNodes[id] = nodeObj;
@@ -272,14 +272,14 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
         }
     },
 
-    
+
     minLat: 90.0,
     maxLat: -90.0,
     minLon: 180.0,
     maxLon: -180.0,
-    
+
     enlargeBounds: function(lat, lon) {
-    
+
         if (lat < this.minLat)
             this.minLat = lat;
         if (lat > this.maxLat)
@@ -289,8 +289,8 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
         if (lon > this.maxLon)
             this.maxLon = lon;
     },
-    
-    
+
+
     enlargeBoundsWay: function(way, nodes) {
 
         for (var j = 0; j < way.nodes.length; j++) {
@@ -298,14 +298,14 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
 
             if (!node)
               continue;
-               
+
             this.enlargeBounds(node['lat'], node['lon']);
         }
     },
-    
+
     /**
      * Method: getWays
-     * Return the way items from a doc.  
+     * Return the way items from a doc.
      *
      * Parameters:
      * doc - {DOMElement} node to parse tags from
@@ -321,14 +321,14 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                 'id': id,
                 'tagsEqual': true
             };
-            
+
             var node_list = way.getElementsByTagName("nd");
-            
+
             wayObj.nodes = new Array(node_list.length);
-            
+
             for (var j = 0; j < node_list.length; j++) {
                 wayObj.nodes[j] = node_list[j].getAttribute("ref");
-            }  
+            }
             if (way.parentNode.tagName == "old") {
                 erasedWays[wayObj.id] = wayObj;
                 lastTags = [];
@@ -339,7 +339,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                         'k': tags[j].getAttribute("k"),
                         'v': tags[j].getAttribute("v")
                         };
-                        
+
             } else if (way.parentNode.tagName == "action" &&
                     way.parentNode.getAttribute("type") == "info") {
                 keptWays[id] = wayObj;
@@ -363,11 +363,11 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
                 }
             }
         }
-    },  
+    },
 
     makeWayFeature: function(way, nodes) {
         var point_list = new Array(way.nodes.length);
-            
+
         var missingNodes = "";
         for (var j = 0; j < way.nodes.length; j++) {
             var node = nodes[way.nodes[j]];
@@ -376,62 +376,62 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
               missingNodes += way.nodes[j] + "\n";
               continue;
             }
-               
+
             var point = new OpenLayers.Geometry.Point(node.lon, node.lat);
-               
-            // Since OSM is topological, we stash the node ID internally. 
+
+            // Since OSM is topological, we stash the node ID internally.
             point.osm_id = parseInt(way.nodes[j]);
             point_list[j] = point;
-               
-            // We don't display nodes if they're used inside other 
+
+            // We don't display nodes if they're used inside other
             // elements.
-            node.used = true; 
+            node.used = true;
         }
         if (missingNodes != "")
           alert("Way " + way.id + " lacks nodes\n" + missingNodes);
-            
+
         var geometry = new OpenLayers.Geometry.LineString(point_list);
         if (this.internalProjection && this.externalProjection) {
-            geometry.transform(this.externalProjection, 
+            geometry.transform(this.externalProjection,
                 this.internalProjection);
         }
-            
+
         var feat = new OpenLayers.Feature.Vector(geometry, way.tags);
         feat.osm_id = parseInt(way.id);
 
         return feat;
     },
-    
+
     equalGeometry: function(way1, nodes1, way2, nodes2) {
 
         if (way1.nodes.length != way2.nodes.length)
             return false;
-    
+
         for (var j = 0; j < way1.nodes.length; j++) {
             var node1 = nodes1[way1.nodes[j]];
             var node2 = nodes2[way2.nodes[j]];
             if (!node1 || !node2)
                 return false;
-               
+
             if (node1.lon != node2.lon || node1.lat != node2.lat)
                 return false;
         }
-        
+
         return true;
     },
-    
+
     /**
-     * APIMethod: write 
+     * APIMethod: write
      */
-    write: function(features) { 
+    write: function(features) {
         return "";
     },
 
-    CLASS_NAME: "AugmentedDiffsFormat" 
-});     
+    CLASS_NAME: "AugmentedDiffsFormat"
+});
 
       function add_layer(id) {
-      
+
           var styleMap = new OpenLayers.StyleMap({
               strokeColor: "blue",
               strokeOpacity: 0.5,
@@ -440,7 +440,7 @@ AugmentedDiffsFormat = OpenLayers.Class(OpenLayers.Format.XML, {
               fillColor: "blue",
               fillOpacity: 0.25
           });
-          
+
           var layer = new OpenLayers.Layer.Vector("Diff " + id, {
               strategies: [new OpenLayers.Strategy.BBOX()],
               protocol: new OpenLayers.Protocol.HTTP({

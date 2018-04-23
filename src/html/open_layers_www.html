@@ -37,13 +37,13 @@
           map.addLayers([
               make_layer("http://overpass-api.de/api/interpreter?data=node[amenity~\"^cafe$|^restaurant$|^fast_food$|^pub$\"](bbox)->.a;(node.a[website];node.a[url];);out+skel;way[amenity~\"^cafe$|^restaurant$|^fast_food$|^pub$\"](bbox)->.a;(way.a[website];way.a[url];);(._;>;);out+skel;", "blue")
           ]);
-          
+
 	  var click = new OpenLayers.Control.Click(
 	      "http://overpass-api.de/api/interpreter?data="
 	          + "[out:popup(\"Restaurants\";[amenity~\"^cafe$|^restaurant$|^fast_food$|^pub$\"];\"name\";)];"
 	          + "(node(bbox);way(bbox););(._;<;);out;"
 		  + "&redirect=no&template=ids.popup", 0.0003, map);
-		  
+
           map.addControl(click);
           click.activate();
       }

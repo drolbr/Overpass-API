@@ -14,7 +14,7 @@
 
       var layer = false;
       var layerMapnik = false;
-      
+
       function refreshData()
       {
           if (layer)
@@ -27,7 +27,7 @@
           var select_mindate = document.getElementById("select_mindate");
           if (select_mindate)
               mindate = select_mindate.value;
-              
+
           var maxdate = "";
           var select_maxdate = document.getElementById("select_maxdate");
           if (select_maxdate)
@@ -44,12 +44,12 @@
               fillColor: "blue",
               fillOpacity: 0.25
           });
-          
+
           var lookup = {
               "old": { strokeColor: "red", fillColor: "red" },
               "new": { strokeColor: "green", fillColor: "green" }
           }
-          
+
           styleMap.addUniqueValueRules("default", "state", lookup);
           layer = new OpenLayers.Layer.Vector("Polygon", {
               strategies: [new OpenLayers.Strategy.Fixed()],
@@ -76,27 +76,27 @@
           result += "-";
 
           var month = date.getUTCMonth() + 1;
-          result += (month <= 9 ? ("0" + month) : month); 
+          result += (month <= 9 ? ("0" + month) : month);
 
           result += "-";
 
           var day = date.getUTCDate();
-          result += (day <= 9 ? ("0" + day) : day); 
+          result += (day <= 9 ? ("0" + day) : day);
 
           result += "T";
 
           var hour = date.getUTCHours();
-          result += (hour <= 9 ? ("0" + hour) : hour); 
+          result += (hour <= 9 ? ("0" + hour) : hour);
 
           result += ":";
 
           var minute = date.getUTCMinutes();
-          result += (minute <= 9 ? ("0" + minute) : minute); 
+          result += (minute <= 9 ? ("0" + minute) : minute);
 
           result += ":";
 
           var second = date.getUTCSeconds();
-          result += (second <= 9 ? ("0" + second) : second); 
+          result += (second <= 9 ? ("0" + second) : second);
 
           result += "Z";
 
@@ -133,7 +133,7 @@
 
           refreshData();
       }
-      
+
       var textual_old = "";
       var textual_geometry_changed = "";
       var textual_new = "";
@@ -146,13 +146,13 @@
           var status_line = document.getElementById("status_line");
           if (status_line)
               status_line.innerHTML = status;
-          
+
           if (status == "Ready")
           {
               if (old_feat)
                   pushTextualResult(old_feat, false);
               old_feat = false;
-                  
+
               var textual_results_html = document.getElementById("textual_results");
               if (textual_results_html)
                   textual_results_html.innerHTML =
@@ -160,7 +160,7 @@
                       + textual_tags_changed + textual_unchanged;
           }
       }
-      
+
       function clearTextualResults()
       {
           textual_old = "";
@@ -172,18 +172,18 @@
           if (textual_results_html)
               textual_results_html.innerHTML = "";
       }
-      
-      
+
+
       function equal_geom(lhs, rhs)
       {
           if (lhs.x || lhs.y || rhs.x || rhs.y)
               return (lhs.x && lhs.y && rhs.x && rhs.y && lhs.x == rhs.x && lhs.y == rhs.y);
-              
+
           if (rhs.components && !lhs.components)
               return false;
           if (lhs.components && (!rhs.components || lhs.components.length != rhs.components.length))
               return false;
-              
+
           for (var i = 0; i < lhs.components.length; ++i)
           {
               if (!equal_geom(lhs.components[i], rhs.components[i]))
@@ -191,7 +191,7 @@
           }
           return true;
       }
-      
+
 
       function pushTextualResult(old_feat, new_feat)
       {
@@ -202,10 +202,10 @@
                   geometry_changed = !equal_geom(old_feat.geometry, new_feat.geometry);
               else
                   geometry_changed = (old_feat.geometry || new_feat.geometry);
-              
+
               var taglist = "";
               var tags_changed = false;
-              
+
               if (old_feat.tags)
               {
                   for (tag in old_feat.tags)
@@ -218,7 +218,7 @@
                       }
                   }
               }
-              
+
               if (new_feat.tags)
               {
                   for (tag in new_feat.tags)
@@ -231,7 +231,7 @@
                       }
                   }
               }
-              
+
               if (old_feat.tags && new_feat.tags)
               {
                   for (tag in new_feat.tags)
@@ -240,7 +240,7 @@
                           taglist += "<br/>&nbsp; &nbsp;" + tag + "=" + new_feat.tags[tag];
                   }
               }
-              
+
               var result = "<br/><br/>";
               if (geometry_changed)
                   result += "reshaped ";
@@ -248,12 +248,12 @@
                   result += "retagged ";
               else
                   result += "changed ";
-                  
+
               if (old_feat.type && old_feat.osm_id)
                   result += "<a href=\"http://osm.org/browse/"
                       + old_feat.type + "/" + old_feat.osm_id + "\"/>"
                       + old_feat.type + " " + old_feat.osm_id + "</a>";
-              
+
               if (geometry_changed)
                   textual_geometry_changed += result + taglist;
               else if (tags_changed)
@@ -264,43 +264,43 @@
           else if (old_feat)
           {
               var result = "<br/><br/><span style=\"color:red\">old ";
-                  
+
               if (old_feat.type && old_feat.osm_id)
                   result += "<a href=\"http://osm.org/browse/"
                       + old_feat.type + "/" + old_feat.osm_id + "\"/>"
                       + old_feat.type + " " + old_feat.osm_id + "</a>";
-                  
+
               result += "</span>";
-              
+
               if (old_feat.tags)
               {
                   for (tag in old_feat.tags)
                       result += "<br/>" + tag + "=" + old_feat.tags[tag];
               }
-              
+
               textual_old += result;
           }
           else
           {
               var result = "<br/><br/><span style=\"color:green\">new ";
-                  
+
               if (new_feat.type && new_feat.osm_id)
                   result += "<a href=\"http://osm.org/browse/"
                       + new_feat.type + "/" + new_feat.osm_id + "\"/>"
                       + new_feat.type + " " + new_feat.osm_id + "</a>";
-                  
+
               result += "</span>";
-              
+
               if (new_feat.tags)
               {
                   for (tag in new_feat.tags)
                       result += "<br/>" + tag + "=" + new_feat.tags[tag];
               }
-              
+
               textual_new += result;
           }
       }
-      
+
       function collectFeature(feature)
       {
           if (feature.data && feature.data.state && feature.data.state == "old")
@@ -332,7 +332,7 @@
       <input type="text" id="select_mindate" value=""></input>
       <input type="text" id="select_maxdate" value=""></input>
       <input type="submit" value="Fetch data" onclick="refreshData()"></input>
-    </form>  
+    </form>
     <div id="status_line" class="status_line">Ready</div>
     <div id="textual_results" class="textual_results"><br/>(no entries)</div>
   </div>

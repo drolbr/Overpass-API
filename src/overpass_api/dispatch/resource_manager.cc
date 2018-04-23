@@ -236,7 +236,7 @@ void Runtime_Stack_Frame::copy_outward(const std::string& inner_set_name, const 
 void Runtime_Stack_Frame::move_outward(const std::string& inner_set_name, const std::string& top_set_name)
 {
   Runtime_Stack_Frame* source = parent;
-  
+
   while (source && source->parent)
   {
     std::map< std::string, Set >::iterator it = source->sets.find(inner_set_name);

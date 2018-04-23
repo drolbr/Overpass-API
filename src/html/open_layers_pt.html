@@ -39,13 +39,13 @@
               make_layer("http://overpass-api.de/api/interpreter?data=rel[route~\"ferry|railway|train|tram|subway|light_rail|monorail\"](bbox);(way(r)(bbox);>;);out+skel;", "blue"),
               make_layer("http://overpass-api.de/api/interpreter?data=(node[highway~\"bus_stop|tram_stop\"](bbox);node[railway~\"halt|station|tram_stop\"](bbox););out+skel;", "black")
           ]);
-          
+
 	  var click = new OpenLayers.Control.Click(
 	      "http://overpass-api.de/api/interpreter?data="
 	          + "[out:popup(\"Stops\";[name][highway~\"bus_stop|tram_stop\"];[name][railway~\"halt|station|tram_stop\"];\"name\";)(\"Lines\";[route~\"bus|ferry|railway|train|tram|trolleybus|subway|light_rail|monorail\"];\"ref\";)];"
 	          + "(node(bbox);way(bbox););(._;<;);out;"
 		  + "&redirect=no&template=ids.popup", 0.0005, map);
-		  
+
           map.addControl(click);
           click.activate();
       }

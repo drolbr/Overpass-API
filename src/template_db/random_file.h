@@ -116,7 +116,7 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
   // The cache already contains the needed position.
   if ((pos == cache_pos) && (cache_pos != index->npos))
     return;
-  
+
   if (pos != index->npos && pos >= 256*1024*1024/Value::max_size_of())
     throw File_Error(0, index->get_map_file_name(), "Random_File: id too large for map file");
 

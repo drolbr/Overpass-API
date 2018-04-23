@@ -11,7 +11,7 @@
 
 <h1>Output formats</h1>
 
-<p>There are three different output formats available from Overpass API, and each of these output formats is available in different levels of details for the included data. While the level of detail is controlled with the parameters used for the respective <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">out</a> or <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">print</a> statement, we discuss here the available output formats:</p>
+<p>There are three different output formats available from Overpass API, and each of these output formats is available in different levels of details for the included data. While the level of detail is controlled with the parameters used for the respective <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">out</a> or <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Language_Guide#Control_output_format">print</a> statement, we discuss here the available output formats:</p>
 <ul>
 <li><a href="#xml">OSM XML</a>: The standard interchange format for OSM data.</li>
 <li><a href="#json">OSM JSON</a>: A more lightweight variant, looking like JavaScript source code, i.e. JSON.</li>
@@ -24,13 +24,13 @@
 
 <h2><a name="xml">OSM XML</a></h2>
 
-<p>The format generally follows the <a href="http://wiki.openstreetmap.org/wiki/XML">description in the wiki</a>. It doesn't contain a <em>bounds</em> tag, and it may contain certain additional tags. Anyway, in all cases <a href="http://www.w3.org/TR/REC-xml/">well-formed XML</a> is returned.</p>
+<p>The format generally follows the <a href="https://wiki.openstreetmap.org/wiki/XML">description in the wiki</a>. It doesn't contain a <em>bounds</em> tag, and it may contain certain additional tags. Anyway, in all cases <a href="https://www.w3.org/TR/REC-xml/">well-formed XML</a> is returned.</p>
 
 <p>A response (<a href="api/interpreter?data=out;">an example</a>) from Overpass API has always the following header and footer:</p>
 <pre>
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
 &lt;osm version=&quot;0.6&quot; generator=&quot;Overpass API&quot;&gt;
-&lt;note&gt;The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history &lt;/note&gt;
+&lt;note&gt;The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to https://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history &lt;/note&gt;
 &lt;meta osm_base=&quot;<em>date</em>&quot;/&gt;
 
 ...
@@ -48,14 +48,14 @@
 
 <p>Please note also the <em>note</em> tag. This always tells a copyright reminder and can be ignored when parsing the data for other purposes. By contrast, if you find an <em>error</em> tag, something seriously has gone wrong, most likely an internal server error. I suggest to handle this similar to a network outage and additionally to propagate the error message back to the user to make bug reports possible.</p>
 
-<p>The XML data itself, i.e. the tags <em>node</em>, <em>way</em> and <em>relation</em> are returned exactly <a href="http://wiki.openstreetmap.org/wiki/XML">as from the main server</a>.</p>
+<p>The XML data itself, i.e. the tags <em>node</em>, <em>way</em> and <em>relation</em> are returned exactly <a href="https://wiki.openstreetmap.org/wiki/XML">as from the main server</a>.</p>
 
 <p>If you request areas, you will get for each area an <em>area</em> tag with an attribute <em>id</em>. The tag contains as subtags all the tags that are set on the area or inherited by the area from the object it has been generated from.</p>
 
 
 <h2><a name="json">OSM JSON</a></h2>
 
-<p>Unfortunately, there are several slightly different syntaxes for OSM data in JSON. For that reason, we will describe the syntax used by Overpass API in detail here. At the lowest level, it is <a href="http://www.json.org/">well-formed JSON</a>. In particular, the following characters are escaped:</p>
+<p>Unfortunately, there are several slightly different syntaxes for OSM data in JSON. For that reason, we will describe the syntax used by Overpass API in detail here. At the lowest level, it is <a href="https://www.json.org/">well-formed JSON</a>. In particular, the following characters are escaped:</p>
 <table>
 <tr><th>Character</th><th>Escaped as literally</th></tr>
 <tr><td><em>&quot;</em> (quotation mark)</td><td>\&quot;</td></tr>
@@ -80,7 +80,7 @@
   &quot;generator&quot;: &quot;Overpass API&quot;,
   &quot;osm3s&quot;: {
     &quot;timestamp_osm_base&quot;: &quot;<em>date</em>&quot;,
-    &quot;copyright&quot;: &quot;The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to http://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history&quot;
+    &quot;copyright&quot;: &quot;The data included in this document is from www.openstreetmap.org. It has there been collected by a large group of contributors. For individual attribution of each item please refer to https://www.openstreetmap.org/api/0.6/[node|way|relation]/#id/history&quot;
   },
   &quot;elements&quot;: [
 
@@ -91,7 +91,7 @@
 </pre>
 <p>The payload is contained between the brackets after <em>elements</em>. Each element is contained in a pair of curly braces, and two elements are separate by a comma. The <em>date</em> is constructed in the same way as for the <a href="#xml.data">XML format</a>.</p>
 
-<p>We discuss the <em>node</em> representation (and <a href="#json.way">further down</a> the representations of 
+<p>We discuss the <em>node</em> representation (and <a href="#json.way">further down</a> the representations of
 <em>way</em>s and <em>relation</em>s) by examples:</p>
 
 <p>An example with the spatial data only:</p>
@@ -206,7 +206,7 @@
 
 <p>You can of course also change the destination URL. Add <em>url=</em>something to the end. For example, we replace the element view on the main database by a full map view in the above query:</p>
 <ul>
-<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B&amp;url=http://www.openstreetmap.org/?{{{type}}}={{{id}}}">/api/interpreter?data=[out:custom];rel[ref=&quot;A 555&quot;][network=BAB];out;<strong>&amp;url=http://www.openstreetmap.org/?{{{type}}}={{{id}}}</strong></a> (at the moment without disambiguation page).</li>
+<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B&amp;url=https://www.openstreetmap.org/?{{{type}}}={{{id}}}">/api/interpreter?data=[out:custom];rel[ref=&quot;A 555&quot;][network=BAB];out;<strong>&amp;url=https://www.openstreetmap.org/?{{{type}}}={{{id}}}</strong></a> (at the moment without disambiguation page).</li>
 </ul>
 <p>Note that the URL usually depends on the id and the type of the found results. To customize this, you can add the placeholders <em>{{{type}}}</em> and <em>{{{id}}}</em> anywhere in the URL; these will be replaced by the proper type (<em>node</em>, <em>way</em> or <em>relation</em>) and the id of the found object.</p>
 
@@ -220,7 +220,7 @@
 <li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B&amp;template=default.wiki">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;<strong>&amp;template=default.wiki</strong></a> (same as without template parameter).</li>
 <li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B&amp;template=base.wiki">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;<strong>&amp;template=base.wiki</strong></a> (use the basic layout instead).</li>
 </ul>
-<p>Technically, the template is taken from the subdirectory <em>templates</em> of the database directory of the server. For the public instances, there exist also a mechanism to upload a completetly custom template from the wiki to this directory. The upload mechanism is explained on <a href="http://wiki.openstreetmap.org/Overpass_API/Permanent_ID">the Wiki employment page</a>. The syntax of the template page is explained in the following:</p>
+<p>Technically, the template is taken from the subdirectory <em>templates</em> of the database directory of the server. For the public instances, there exist also a mechanism to upload a completetly custom template from the wiki to this directory. The upload mechanism is explained on <a href="https://wiki.openstreetmap.org/Overpass_API/Permanent_ID">the Wiki employment page</a>. The syntax of the template page is explained in the following:</p>
 
 <p>We first list <em>base.wiki</em> and then explain it in detail:</p>
 <pre>
@@ -230,19 +230,19 @@
 &lt;p&gt;Node &lt;strong&gt;{{{id}}}&lt;/strong&gt;,{{coords: lat: {{{lat}}}, lon: {{{lon}}},}}&lt;br/&gt;
 {{tags:{{{key}}} = {{{value}}}&lt;br/&gt;
 }}
-&lt;a href=&quot;http://www.openstreetmap.org/browse/node/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;https://www.openstreetmap.org/browse/node/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
 }}
 {{way:
 &lt;p&gt;Way &lt;strong&gt;{{{id}}}&lt;/strong&gt;,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}&lt;br/&gt;
 {{tags:{{{key}}} = {{{value}}}&lt;br/&gt;
 }}{{members:{{first: members: {{{ref}}}}}, {{{ref}}}}}&lt;br/&gt;
-&lt;a href=&quot;http://www.openstreetmap.org/browse/way/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;https://www.openstreetmap.org/browse/way/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
 }}
 {{relation:
 &lt;p&gt;Relation &lt;strong&gt;{{{id}}}&lt;/strong&gt;,{{bbox:{{none: no geographic reference}} bounding box south: {{{south}}}, west: {{{west}}}, north: {{{north}}}, east: {{{east}}},}}&lt;br/&gt;
 {{tags:{{{key}}} = {{{value}}}&lt;br/&gt;
 }}{{members:{{first: members: {{{type}}} &lt;strong&gt;{{{ref}}}&lt;/strong&gt; &amp;quot;{{{role}}}&amp;quot;}}, {{{type}}} &lt;strong&gt;{{{ref}}}&lt;/strong&gt; &amp;quot;{{{role}}}&amp;quot;}}&lt;br/&gt;
-&lt;a href=&quot;http://www.openstreetmap.org/browse/relation/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;https://www.openstreetmap.org/browse/relation/{{{id}}}&quot;&gt;Browse on openstreetmap.org&lt;/a&gt;&lt;/p&gt;
 }}
 </pre>
 
@@ -269,17 +269,17 @@
 
 <p>In the basic configuration, like in the example</p>
 <ul>
-<li><a href="http://overpass-api.de/api/interpreter?data=[out:popup];node(50.75,7.1,50.77,7.13);out;">http://overpass-api.de/api/interpreter?data=[out:popup];node(50.75,7.1,50.77,7.13);out;</a></li>
+<li><a href="https://overpass-api.de/api/interpreter?data=[out:popup];node(50.75,7.1,50.77,7.13);out;">https://overpass-api.de/api/interpreter?data=[out:popup];node(50.75,7.1,50.77,7.13);out;</a></li>
 </ul>
 <p>the results are sorted into several categories. For each object, the entry consists of the value of the <em>name</em> tag (or the Id, if the tag <em>name</em> is not set), and then a list of all the tags with keys and values. If one of the tags has a value that looks like a URL, the headline is equipped with a link to his URL.</p>
 
 <p>In the advanced configuration, you can select the categories yourself. For each category, you must set a headline, specify a filter, and choose the pivot tag. We explain all this with an example:</p>
 <ul>
-<li><a href="http://overpass-api.de/api/interpreter?data=[out:popup(&quot;Public Transport Stops&quot;;[name][highway~&quot;bus_stop|tram_stop&quot;];[name][railway~&quot;halt|station|tram_stop&quot;];&quot;name&quot;;)];(node(50.75,7.1,50.77,7.13);&lt;;);out;">http://overpass-api.de/api/interpreter?data=[out:popup(&quot;Public Transport Stops&quot;;[name][highway~&quot;bus_stop|tram_stop&quot;];[name][railway~&quot;halt|station|tram_stop&quot;];&quot;name&quot;;)];(node(50.75,7.1,50.77,7.13);&lt;;);out;</a></li>
+<li><a href="https://overpass-api.de/api/interpreter?data=[out:popup(&quot;Public Transport Stops&quot;;[name][highway~&quot;bus_stop|tram_stop&quot;];[name][railway~&quot;halt|station|tram_stop&quot;];&quot;name&quot;;)];(node(50.75,7.1,50.77,7.13);&lt;;);out;">https://overpass-api.de/api/interpreter?data=[out:popup(&quot;Public Transport Stops&quot;;[name][highway~&quot;bus_stop|tram_stop&quot;];[name][railway~&quot;halt|station|tram_stop&quot;];&quot;name&quot;;)];(node(50.75,7.1,50.77,7.13);&lt;;);out;</a></li>
 </ul>
 <p>The part up to the first semicolon, here <em>&quot;Public Transport Stops&quot;</em>, is the headline for this category, usually in quotation marks.</p>
 
-<p>All following parts but the last part up to a semicolon are interpreted as the filter: Each part is a sequence of one or more clauses in brackets. The bracket clauses have the same syntax as the <a href="http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#By_Tag">has-kv clauses</a>. The are combined by conjunction (with &quot;and&quot;). The so formed expressions are then combined by disjunction (with &quot;or&quot;). This has always exactly these two levels, so you need to bring other logical expressions to this normal form (which is always possible). Our example filter works as follows:</p>
+<p>All following parts but the last part up to a semicolon are interpreted as the filter: Each part is a sequence of one or more clauses in brackets. The bracket clauses have the same syntax as the <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#By_Tag">has-kv clauses</a>. The are combined by conjunction (with &quot;and&quot;). The so formed expressions are then combined by disjunction (with &quot;or&quot;). This has always exactly these two levels, so you need to bring other logical expressions to this normal form (which is always possible). Our example filter works as follows:</p>
 <ul>
 <li><em>[name]</em>: select only elements that have a name.</li>
 <li><em>[highway~&quot;bus_stop|tram_stop&quot;]</em>: select only elements that have a highway tag that contains <em>bus_stop</em> or <em>tram_stop</em> (the meaning of the given regular expression).</li>
@@ -292,7 +292,7 @@
 
 <p>You can combine multiple categories by writing them one after another:</p>
 <ul>
-<li><a href="http://overpass-api.de/api/interpreter?data=[out:popup(&quot;POIs&quot;;[name][highway!~&quot;.&quot;][railway!~&quot;.&quot;][landuse!~&quot;.&quot;][type!~&quot;route|network|associatedStreet&quot;][public_transport!~&quot;.&quot;][route!~&quot;bus|ferry|railway|train|tram|trolleybus|subway|light_rail&quot;];&quot;name&quot;;)(&quot;Streets&quot;;[highway~&quot;primary|secondary|tertiary|residential|unclassified&quot;];&quot;name&quot;;)(&quot;Public Transport Stops&quot;;[name][highway~&quot;bus_stop|tram_stop&quot;];[name][railway~&quot;halt|station|tram_stop&quot;];&quot;name&quot;;)(&quot;Public Transport Lines&quot;;[route~&quot;bus|ferry|railway|train|tram|trolleybus|subway|light_rail|monorail&quot;];&quot;ref&quot;;)];(node(50.75,7.1,50.77,7.13);&lt;;);out;">http://overpass-api.de/api/interpreter?data=[out:popup(&quot;POIs&quot;;[name][highway!~&quot;.&quot;][railway!~&quot;.&quot;][landuse!~&quot;.&quot;][type!~&quot;route|network|associatedStreet&quot;][public_transport!~&quot;.&quot;][route!~&quot;bus|ferry|railway|train|tram|trolleybus|subway|light_rail&quot;];&quot;name&quot;;)(&quot;Streets&quot;;[highway~&quot;primary|secondary|tertiary|residential|unclassified&quot;];&quot;name&quot;;)(&quot;Public Transport Stops&quot;;[name][highway~&quot;bus_stop|tram_stop&quot;];[name][railway~&quot;halt|station|tram_stop&quot;];&quot;name&quot;;)(&quot;Public Transport Lines&quot;;[route~&quot;bus|ferry|railway|train|tram|trolleybus|subway|light_rail|monorail&quot;];&quot;ref&quot;;)];(node(50.75,7.1,50.77,7.13);&lt;;);out;</a></li>
+<li><a href="https://overpass-api.de/api/interpreter?data=[out:popup(&quot;POIs&quot;;[name][highway!~&quot;.&quot;][railway!~&quot;.&quot;][landuse!~&quot;.&quot;][type!~&quot;route|network|associatedStreet&quot;][public_transport!~&quot;.&quot;][route!~&quot;bus|ferry|railway|train|tram|trolleybus|subway|light_rail&quot;];&quot;name&quot;;)(&quot;Streets&quot;;[highway~&quot;primary|secondary|tertiary|residential|unclassified&quot;];&quot;name&quot;;)(&quot;Public Transport Stops&quot;;[name][highway~&quot;bus_stop|tram_stop&quot;];[name][railway~&quot;halt|station|tram_stop&quot;];&quot;name&quot;;)(&quot;Public Transport Lines&quot;;[route~&quot;bus|ferry|railway|train|tram|trolleybus|subway|light_rail|monorail&quot;];&quot;ref&quot;;)];(node(50.75,7.1,50.77,7.13);&lt;;);out;">https://overpass-api.de/api/interpreter?data=[out:popup(&quot;POIs&quot;;[name][highway!~&quot;.&quot;][railway!~&quot;.&quot;][landuse!~&quot;.&quot;][type!~&quot;route|network|associatedStreet&quot;][public_transport!~&quot;.&quot;][route!~&quot;bus|ferry|railway|train|tram|trolleybus|subway|light_rail&quot;];&quot;name&quot;;)(&quot;Streets&quot;;[highway~&quot;primary|secondary|tertiary|residential|unclassified&quot;];&quot;name&quot;;)(&quot;Public Transport Stops&quot;;[name][highway~&quot;bus_stop|tram_stop&quot;];[name][railway~&quot;halt|station|tram_stop&quot;];&quot;name&quot;;)(&quot;Public Transport Lines&quot;;[route~&quot;bus|ferry|railway|train|tram|trolleybus|subway|light_rail|monorail&quot;];&quot;ref&quot;;)];(node(50.75,7.1,50.77,7.13);&lt;;);out;</a></li>
 </ul>
 
 </body>

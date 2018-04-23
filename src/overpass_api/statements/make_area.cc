@@ -57,7 +57,7 @@ Make_Area_Statement::Make_Area_Statement
   input = attributes["from"];
   set_output(attributes["into"]);
   pivot = attributes["pivot"];
-  
+
   if (attributes["return-area"] != "yes")
   {
     if (attributes["return-area"] == "no")

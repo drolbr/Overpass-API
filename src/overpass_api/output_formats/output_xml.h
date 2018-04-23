@@ -29,7 +29,7 @@ public:
   virtual void write_footer();
   virtual void display_remark(const std::string& text);
   virtual void display_error(const std::string& text);
-  
+
   virtual bool supports_diff() const { return true; }
 
   virtual void print_global_bbox(const Bbox_Double& bbox);

@@ -13,11 +13,11 @@
       var located = false;
       var map;
       var current_query = "";
-      
+
       var layerBoundaries = null;
-      
+
       var customLayers = new Array();
-      
+
       ZoomOutOSMFormat = OpenLayers.Class(OpenLayers.Format.OSM, {
 
           getNodes: function(doc)
@@ -114,13 +114,13 @@
             }
 
             return nodes;
-          },          
+          },
 
           CLASS_NAME: "DetectBoundsOSMFormat"
       });
 
       var osm_format = new DetectBoundsOSMFormat();
-      
+
       function make_bbox_detect_closure() {
           return function(evt) {
 
@@ -145,15 +145,15 @@
             map.zoomToExtent(extent);
           };
       }
-      
+
      var storedStatusText = "";
 
      function restoreStatusText() {
          setStatusText(storedStatusText);
      }
-     
+
      function pushStatusText(text) {
-     
+
 	  var html_node = document.getElementById("statusline");
 	  if (html_node != null)
 	  {
@@ -165,7 +165,7 @@
      }
 
      function showMap(position) {
-         setStatusText("Landkarte"/* um " + position.coords.latitude + "° Nord, " + position.coords.longitude + "° Ost"*/); 
+         setStatusText("Landkarte"/* um " + position.coords.latitude + "° Nord, " + position.coords.longitude + "° Ost"*/);
          var lonLat = new OpenLayers.LonLat(position.coords.longitude, position.coords.latitude).transform(new OpenLayers.Projection("EPSG:4326"), new OpenLayers.Projection("EPSG:900913"));
          var markers = new OpenLayers.Layer.Markers("Geolocation position");
          map.addLayer(markers);
@@ -173,7 +173,7 @@
          markers.addMarker(new OpenLayers.Marker(lonLat));
      }
 
-     
+
       function zShow(target) {
           document.getElementById("map").style.zIndex = "-1";
           document.getElementById("menu_search").style.zIndex = "-1";
@@ -182,7 +182,7 @@
 
           document.getElementById(target).style.zIndex = "1";
       }
-      
+
 
       function addMapBacklink(target_div) {
           var newElem = document.createElement("a");
@@ -193,8 +193,8 @@
           target_div.appendChild(document.createElement("br"));
           target_div.appendChild(document.createElement("br"));
       }
-    
-    
+
+
     function getIdentificatorString(osm_element)
     {
         if (osm_element.tags)
@@ -204,10 +204,10 @@
             else if (osm_element.tags.operator)
                 return osm_element.tags.operator;
         }
-            
+
         return null;
     }
-    
+
     var nominatim_identfier = "email=overpass";
 
     function getPostalAdress(osm_element)
@@ -228,7 +228,7 @@
                     async: false
                 });
                 var nominatim_result = JSON.parse(nominatim_req.responseText);
-                
+
                 var nominatim_road = "";
                 if (nominatim_result.address && nominatim_result.address.road)
                     nominatim_road = nominatim_result.address.road;
@@ -240,23 +240,23 @@
                     nominatim_road = nominatim_result.address.cycleway;
                 else if (nominatim_result.address && nominatim_result.address.path)
                     nominatim_road = nominatim_result.address.path;
-                    
+
                 var nominatim_house_number = "";
                 if (nominatim_result.address && nominatim_result.address.house_number)
                     nominatim_house_number = nominatim_result.address.house_number;
-                    
+
                 return nominatim_road + " " + nominatim_house_number;
             }
         }
     }
 
-    
+
      Click = OpenLayers.Class(OpenLayers.Control, {
-	
+
         genericUrl: "",
 	tolerance: 0.0,
 	map: "",
-      
+
 	defaultHandlerOptions: {
 	  'single': true,
 	  'double': false,
@@ -264,34 +264,34 @@
 	  'stopSingle': false,
 	  'stopDouble': false
 	},
-	
+
 	initialize: function(url, tolerance, map) {
 	  this.genericUrl = url;
 	  this.tolerance = tolerance;
 	  this.map = map;
-	
+
 	  this.handlerOptions = OpenLayers.Util.extend(
 	    {}, this.defaultHandlerOptions
 	  );
 	  OpenLayers.Control.prototype.initialize.apply(
 	    this, arguments
-	  ); 
+	  );
 	  this.handler = new OpenLayers.Handler.Click(
 	    this, {
 	      'click': this.trigger
 	    }, this.handlerOptions
 	  );
 	  this.handler.pixelTolerance = 20;
-	}, 
-	
+	},
+
 	trigger: function(evt) {
 	  var lonlat = map.getLonLatFromPixel(evt.xy)
 	      .transform(new OpenLayers.Projection("EPSG:900913"),
 		         new OpenLayers.Projection("EPSG:4326"));
-		         
+
           pushStatusText("Details");
 	  zShow("element_details");
-	  
+
 	  var rel_tolerance = this.tolerance * map.getScale();
 
           var request = OpenLayers.Request.GET({
@@ -313,7 +313,7 @@
           {
             var name_detected = false;
             var address_detected = false;
-          
+
             if (result.elements[i].tags)
             {
               identificator = getIdentificatorString(result.elements[i]);
@@ -325,7 +325,7 @@
                 target_div.appendChild(newElem);
                 target_div.appendChild(document.createElement("br"));
               }
-              
+
               address = getPostalAdress(result.elements[i]);
               if (address)
               {
@@ -335,7 +335,7 @@
                 target_div.appendChild(newElem);
                 target_div.appendChild(document.createElement("br"));
               }
-              
+
               if (!name_detected || !address_detected)
               {
                   for (var key in result.elements[i].tags)
@@ -350,10 +350,10 @@
               target_div.appendChild(document.createElement("br"));
             }
           }
-          
+
           target_div.style.overflow = "scroll";
 	}
-	
+
       });
 
      function init(){
@@ -399,7 +399,7 @@
           });
 
           map.setCenter(lonLat, zoom);
-          
+
           // Try W3C Geolocation
           if (!located)
           {
@@ -407,30 +407,30 @@
                   navigator.geolocation.getCurrentPosition(showMap,
                       function(position_error) {
                           alert(position_error.message);
-                      },                
+                      },
                       {
                           enableHighAccuracy: true
                       });
               else
                   alert("The W3C Geolocation API isn't availble.");
           }
-          
+
           var click = new Click("https://overpass-api.de/api/interpreter?data=[timeout:3][out:json];", 0.0000001, map);
           map.addControl(click);
           click.activate();
       }
 
-      
+
       function hideCustomLayers() {
           for (var i = 0; i < customLayers.length; ++i)
               map.removeLayer(customLayers[i]);//customLayers[i].display(false);
           customLayers = new Array();
       }
-      
+
       function showBoundaries() {
           hideCustomLayers();
       }
-      
+
       function showCustomLayer(query)
       {
           hideCustomLayers();
@@ -439,7 +439,7 @@
           customLayers.push(layer);
           layer.display(true);
       }
-      
+
       function showQueryLayer(conjunctions, desc)
       {
           setStatusText("Suche nach " + desc);
@@ -469,12 +469,12 @@
               else
                   query_value += ".{1,4}";
           }
-      
+
           setStatusText("Suche nach " + query_value);
           showCustomLayer("(node[name~\"" + query_value + "\",i](bbox);way[name~\"" + query_value + "\",i](bbox);>;rel[name~\"" + query_value + "\",i](bbox);>;);");
           current_query = "(node[name~\"" + query_value + "\",i](bbox);way[name~\"" + query_value + "\",i](bbox);rel[name~\"" + query_value + "\",i](bbox););";
       }
-      
+
       var queryLayers = {
           "ATM": ["[amenity=atm]", "[amenity=bank][atm!=no]"],
           "Sparkasse": ["[amenity=atm][name~\"[sS]parkasse\"]", "[amenity=bank][atm!=no][name~\"[sS]parkasse\"]", "[amenity=atm][operator~\"[sS]parkasse\"]", "[amenity=bank][atm!=no][operator~\"[sS]parkasse\"]"],
@@ -490,7 +490,7 @@
           "Post": ["[amenity=post_office]"],
           "DHL": ["[amenity=vending_machine][vending~'parcel_pickup'][operator=DHL]"],
           "Hermes": ["[amenity=post_office][operator=Hermes]"],
-          
+
           "Foodsource": ["[shop=supermarket]", "[shop=convenience]"],
           "Chemist": ["[shop=chemist]"],
           "Pharmacy": ["[amenity=pharmacy]"],
@@ -536,22 +536,22 @@
 
       function populateSearchForm() {
           var target_div = document.getElementById("menu_search");
-          
+
           var form = document.createElement("form");
           form.action = "#";
           form.acceptCharset = "UTF-8";
           form.setAttribute("onsubmit", "zShow(\"map\");showNameQueryLayer(document.getElementById(\"input_search\").value); clearChoiceMenu();return false");
-          
+
           var input = document.createElement("input");
           input.type = "text";
           input.id = "input_search";
           form.appendChild(input);
-          
+
           input = document.createElement("input");
           input.type = "submit";
           input.value = "Suchen";
           form.appendChild(input);
-          
+
           target_div.appendChild(form);
       }
 
@@ -572,7 +572,7 @@
           addPOIFolder("Shopping", "Einkaufen");
           addPOIFolder("Food", "Essen");
       }
-      
+
       function prepareServiceMenu() {
           clearChoiceMenu();
           addPOIFolder("Start", "zurück");
@@ -582,7 +582,7 @@
           addPOILayerChoice("Gasstation", "Tankstelle");
           addPOILayerChoice("WC", "WC");
       }
-      
+
       function prepareATMMenu() {
           clearChoiceMenu();
           addPOIFolder("Service", "zurück");
@@ -592,7 +592,7 @@
           addPOILayerChoice("Volksbank", "Volksbank");
           addPOILayerChoice("Sparda", "Cash Pool");
       }
-      
+
       function prepareParcelsMenu() {
           clearChoiceMenu();
           addPOIFolder("Service", "zurück");
@@ -601,7 +601,7 @@
           addPOILayerChoice("DHL", "Packstation");
           addPOILayerChoice("Hermes", "Hermes");
       }
-      
+
       function prepareShoppingMenu() {
           clearChoiceMenu();
           addPOIFolder("Start", "zurück");
@@ -612,7 +612,7 @@
           addPOILayerChoice("Bookstore", "Bücher");
           addPOILayerChoice("Flowers", "Blumen");
       }
-      
+
       function prepareFoodMenu() {
           clearChoiceMenu();
           addPOIFolder("Start", "zurück");
@@ -623,7 +623,7 @@
           addPOILayerChoice("Pub", "Kneipe");
           addPOILayerChoice("Fastfood", "Fastfood");
       }
-      
+
       function prepareRestaurantMenu() {
           clearChoiceMenu();
           addPOIFolder("Food", "zurück");
@@ -635,7 +635,7 @@
           addPOILayerChoice("Spain", "spanisch");
           addPOILayerChoice("OtherRestaurant", "sonstige");
       }
-      
+
   </script>
 </head>
 <body onload="init()">
@@ -649,11 +649,11 @@
   </div>
 
   <div id="map" class="smallmap" style="position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:1"></div>
-  
+
   <div id="menu_search" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; background-color:white">
     &nbsp;
   </div>
-  
+
   <div id="element_details" style="font-size:16pt; position:absolute; top:10%; left:0%; height:80%; width:100%; z-index:-1; overflow:scroll; background-color:white">
     &nbsp;
   </div>
@@ -668,6 +668,6 @@
     Symbole als Marker
     editierbar
   -->
-  
+
 </body>
 </html>

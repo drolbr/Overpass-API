@@ -79,7 +79,7 @@ bool Area_Constraint::get_ranges
   }
   else
     area->get_ranges(area_blocks_req, rman);
-  
+
   copy_discrete_to_area_ranges(area_blocks_req, ranges);
 
   return true;
@@ -274,7 +274,7 @@ unsigned int Area_Query_Statement::count_ranges(Resource_Manager& rman)
 {
   if (!area_blocks_req_filled)
     fill_ranges(rman);
-  
+
   return area_blocks_req.size();
 }
 
@@ -283,7 +283,7 @@ void Area_Query_Statement::get_ranges(std::set< Uint31_Index >& area_blocks_req,
 {
   if (!area_blocks_req_filled)
     fill_ranges(rman);
-  
+
   area_blocks_req = this->area_blocks_req;
 }
 

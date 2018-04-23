@@ -27,4 +27,4 @@ echo "<source lang=xml>"
 echo "$1" | ./osm3s_query --dump-xml --concise
 echo "</source>"
 echo
-echo "Display result: [http://overpass-api.de/api/convert?data=`echo "$1" | ./tocgi`&target=openlayers&zoom=12&lat=50.72&lon=7.1 OpenLayers map] [http://overpass-api.de/api/interpreter?data=%5Bout:json%5D;`echo "$1" | ./tocgi` JSON], [http://overpass-api.de/api/interpreter?data=`echo "$1" | ./tocgi` XML]."
+echo "Display result: [https://overpass-api.de/api/convert?data=`echo "$1" | ./tocgi`&target=openlayers&zoom=12&lat=50.72&lon=7.1 OpenLayers map] [https://overpass-api.de/api/interpreter?data=%5Bout:json%5D;`echo "$1" | ./tocgi` JSON], [https://overpass-api.de/api/interpreter?data=`echo "$1" | ./tocgi` XML]."

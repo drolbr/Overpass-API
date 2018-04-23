@@ -26,7 +26,7 @@ META=
 
 if [[ -z $1 ]]; then
 {
-  echo "Usage: $0 --db-dir=database_dir --source=http://dev.overpass-api.de/api_drolbr/ --meta=(yes|no|attic)"
+  echo "Usage: $0 --db-dir=database_dir --source=https://dev.overpass-api.de/api_drolbr/ --meta=(yes|no|attic)"
   exit 0
 }; fi
 

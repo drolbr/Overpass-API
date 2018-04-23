@@ -41,7 +41,7 @@ Complete_Statement::Complete_Statement
 
   input = attributes["from"];
   set_output(attributes["into"]);
-  
+
   if (!attributes["maxnum"].empty())
   {
     long long maxnum = atoi(attributes["maxnum"].c_str());

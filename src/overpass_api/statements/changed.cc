@@ -161,7 +161,7 @@ Ids_In_Set_Predicate< Index, Skeleton >::Ids_In_Set_Predicate(
         it_elem != it_idx->second.end(); ++it_elem)
       set_ids.push_back(it_elem->id);
   }
-  
+
   for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it_idx = attic.begin();
       it_idx != attic.end(); ++it_idx)
   {
@@ -169,7 +169,7 @@ Ids_In_Set_Predicate< Index, Skeleton >::Ids_In_Set_Predicate(
         it_elem != it_idx->second.end(); ++it_elem)
       set_ids.push_back(it_elem->id);
   }
-  
+
   std::sort(set_ids.begin(), set_ids.end());
   set_ids.erase(std::unique(set_ids.begin(), set_ids.end()), set_ids.end());
 }
