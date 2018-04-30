@@ -249,6 +249,7 @@ nobase_dist_HEADERS = \
   overpass_api/frontend/basic_formats.h\
   overpass_api/frontend/cgi-helper.h\
   overpass_api/frontend/console_output.h\
+  overpass_api/frontend/decode_text.h\
   overpass_api/frontend/map_ql_parser.h\
   overpass_api/frontend/output.h\
   overpass_api/frontend/output_handler.h\
@@ -351,5 +352,5 @@ EXTRA_DIST = \
   rules/areas_delta.osm3s
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-SUBDIRS = test-bin
-#SUBDIRS =
+#SUBDIRS = test-bin
+SUBDIRS =
