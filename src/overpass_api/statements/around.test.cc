@@ -22,9 +22,12 @@
 #include "../core/settings.h"
 #include "../output_formats/output_xml.h"
 #include "around.h"
+#include "binary_operators.h"
+#include "filter.h"
 #include "id_query.h"
 #include "print.h"
 #include "query.h"
+#include "tag_value.h"
 #include "testing_tools.h"
 #include "union.h"
 
@@ -98,7 +101,8 @@ void perform_polyline_print(uint pattern_size, std::string polyline,
 }
 
 
-void perform_polyline_in_query_print(std::string radius, std::string type, std::string polyline,
+void perform_polyline_in_query_print(uint pattern_size,
+    std::string radius, std::string type, std::string polyline,
     uint64 global_node_offset, Transaction& transaction)
 {
   Parsed_Query global_settings;
@@ -109,7 +113,13 @@ void perform_polyline_in_query_print(std::string radius, std::string type, std::
     Resource_Manager rman(transaction, &global_settings);
     Query_Statement query(0, Attr()("type", type).kvs(), global_settings);
     stmt_cont.add_stmt(new Around_Statement(0, Attr()("radius", radius)("polyline", polyline).kvs(),
-                     global_settings), &query);
+        global_settings), &query);
+    Statement* stmt = stmt_cont.add_stmt(new Filter_Statement(0, Attr().kvs(),
+        global_settings), &query);
+    stmt = stmt_cont.add_stmt(new Evaluator_Less(0, Attr().kvs(), global_settings), stmt);
+    stmt_cont.add_stmt(new Evaluator_Id(0, Attr().kvs(), global_settings), stmt);
+    stmt_cont.add_stmt(new Evaluator_Fixed(0, Attr()("v", to_string(pattern_size*pattern_size/2)).kvs(),
+        global_settings), stmt);
     query.execute(rman);
     Print_Statement(0, Attr()("order", "id").kvs(), global_settings).execute(rman);
   }
@@ -199,13 +209,13 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "16"))
     perform_polyline_print(pattern_size, "51.05,6.7,51.1,6.8,51.1,6.9,50.9,7.1", global_node_offset, transaction);
   if ((test_to_execute == "") || (test_to_execute == "17"))
-    perform_polyline_in_query_print(to_string(200000./pattern_size), "way", "51.1,6.9,50.9,7.1",
+    perform_polyline_in_query_print(pattern_size, to_string(200000./pattern_size), "way", "51.1,6.9,50.9,7.1",
         global_node_offset, transaction);
   if ((test_to_execute == "") || (test_to_execute == "18"))
-    perform_polyline_in_query_print(to_string(200000./pattern_size), "relation", "51.1,6.9,50.9,7.1",
+    perform_polyline_in_query_print(pattern_size, to_string(200000./pattern_size), "relation", "51.1,6.9,50.9,7.1",
         global_node_offset, transaction);
   if ((test_to_execute == "") || (test_to_execute == "19"))
-    perform_polyline_in_query_print("0.", "way",
+    perform_polyline_in_query_print(pattern_size, "0.", "way",
         to_string(51.+1./pattern_size) + "," + to_string(7.+1./pattern_size) + ","
         + to_string(51.+2./pattern_size) + "," + to_string(7.+1./pattern_size),
         global_node_offset, transaction);
