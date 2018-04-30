@@ -25,9 +25,9 @@ The comands are explained afterwards:</p>
 <pre>sudo apt-get install wget g++ make expat libexpat1-dev zlib1g-dev</pre>
 
 <p><a href="#install">Install the Overpass API software</a>:</p>
-<pre>wget https://dev.overpass-api.de/releases/osm-3s_v0.7.54.tar.gz
-gunzip &lt;osm-3s_v0.7.54.tar.gz | tar xvf -
-cd osm-3s_v0.7.54/
+<pre>wget https://dev.overpass-api.de/releases/osm-3s_v0.7.55.tar.gz
+gunzip &lt;osm-3s_v0.7.55.tar.gz | tar xvf -
+cd osm-3s_v0.7.55/
 ./configure
 make
 chmod 755 bin/*.sh cgi-bin/*.sh</pre>
@@ -42,7 +42,7 @@ bin/init_osm3s.sh planet.osm.bz2 &quot;db/&quot; &quot;./&quot; --meta</pre>
 <p><a href="#minute_updates">Activate minutely updates</a>:</p>
 <pre>mkdir -p diffs</pre>
 <pre>nohup bin/dispatcher --osm-base --meta --db-dir=&quot;db/&quot; &amp;
-chmod 666 &quot;db/osm3s_v0.7.54_osm_base&quot;
+chmod 666 &quot;db/osm3s_v0.7.55_osm_base&quot;
 nohup bin/fetch_osc.sh <em>id</em> &quot;https://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;
 nohup bin/apply_osc_to_db.sh &quot;diffs/&quot; auto --meta=yes &amp;</pre>
 
@@ -67,10 +67,10 @@ nohup bin/apply_osc_to_db.sh &quot;diffs/&quot; auto --meta=yes &amp;</pre>
 
 <h2><a name="install">Software Installation</a></h2>
 
-<p>First, you need to download <a href="https://dev.overpass-api.de/releases/osm-3s_v0.7.54.tar.gz">the tarball of the latest version</a>:</p>
-<pre>wget https://dev.overpass-api.de/releases/osm-3s_v0.7.54.tar.gz
-gunzip &lt;osm-3s_v0.7.54.tar.gz | tar xvf -
-cd osm-3s_v0.7.54/</pre>
+<p>First, you need to download <a href="https://dev.overpass-api.de/releases/osm-3s_v0.7.55.tar.gz">the tarball of the latest version</a>:</p>
+<pre>wget https://dev.overpass-api.de/releases/osm-3s_v0.7.55.tar.gz
+gunzip &lt;osm-3s_v0.7.55.tar.gz | tar xvf -
+cd osm-3s_v0.7.55/</pre>
 
 <p>You need to choose a directory where you put the executable files. You can later move them to a different directory. But the default choice of the installation program <em>automake</em>, /usr/bin, requires root permissions, although no root permissions are really necessary to run the program. I suggest subdirectories of the source code directory: this can be reached with &quot;`pwd`&quot;. To configure this output directory and detect necessary adaptions of your system, run in the <em>build</em> subdirectory:</p>
 <pre>../src/configure --prefix=&quot;`pwd`&quot;</pre>
@@ -114,7 +114,7 @@ cd osm-3s_v0.7.54/</pre>
 
 <p>But maybe you also want minutely updates. In this case, run the commands:</p>
 <pre>nohup bin/dispatcher --osm-base --meta --db-dir=&quot;db/&quot; &amp;</pre>
-<pre>chmod 666 &quot;db/osm3s_v0.7.54_osm_base&quot;</pre>
+<pre>chmod 666 &quot;db/osm3s_v0.7.55_osm_base&quot;</pre>
 <pre>nohup bin/fetch_osc.sh <em>id</em> &quot;https://planet.openstreetmap.org/replication/minute/&quot; &quot;diffs/&quot; &amp;</pre>
 <pre>nohup bin/apply_osc_to_db.sh &quot;diffs/&quot; <em>id</em> --meta=yes &amp;</pre>
 <p>These commands don't make sense without <em>nohup</em>, because the programs become daemons and never terminate.

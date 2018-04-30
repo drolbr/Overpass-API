@@ -206,7 +206,7 @@ bin_bbox_brim_query_LDADD = libexpatwrapper.la
 bin_translate_xapi_SOURCES = expat/translate_xapi.cc expat/escape_xml.cc
 bin_translate_xapi_LDADD = 
 
-distdir = osm-3s_v0.7.54
+distdir = osm-3s_v0.7.55
 
 nobase_dist_HEADERS = \
   expat/escape_json.h\
