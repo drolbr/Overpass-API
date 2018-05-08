@@ -30,7 +30,7 @@
 #include <string>
 
 
-/* == Geometry Endomorphisms ==
+/* === Geometry Endomorphisms ===
 
 Geometry endomorphisms are functions with one argument.
 Many of them help to normalize or check the value of its argument.
@@ -105,7 +105,7 @@ struct Evaluator_Geometry_Endom_Syntax : public Evaluator_Geometry_Unary_Functio
 };
 
 
-/* === Center ===
+/* ==== Center ====
 
 The function <em>center</em> returns the center of its argument.
 It expects a function that evaluates to a geometry.
@@ -132,7 +132,7 @@ public:
 };
 
 
-/* === Trace ===
+/* ==== Trace ====
 
 The function <em>trace</em> returns the trace of its argument.
 It expects a function that evaluates to a geometry.
@@ -162,7 +162,7 @@ public:
 };
 
 
-/* === Hull ===
+/* ==== Hull ====
 
 The function <em>hull</em> returns the convex hull of its argument.
 It expects a function that evaluates to a geometry

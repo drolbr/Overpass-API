@@ -31,7 +31,7 @@
 class Set_Prop_Statement;
 
 
-/* == The statement <em>convert</em> ==
+/* === The statement <em>convert</em> ===
 
 The statement <em>convert</em> produces per element in its input set one derived element.
 The content of this output element is controlled by the parameters of the statement.

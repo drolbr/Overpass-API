@@ -45,7 +45,8 @@ If the input set contains extra elements then the loop is executed again.
 
 The base syntax is
 
-  complete{
+  complete
+  {
     <List of Substatements>
   }
 
@@ -55,32 +56,37 @@ The maximum number of loops defaults to 4096.
 This value can be changed to any value between 1 and 1048576 for this loop.
 To do so, put the desired value in parentheses after the "complete" keyword:
 
-  complete(<Number>){
+  complete(<Number>)
+  {
     <List of Substatements>
   }
 
 The input and output set can be specified between complete and the opening parenthesis,
 i.e. you set the input set
 
-  complete.<Name of Input Set>{
+  complete.<Name of Input Set>
+  {
     <List of Substatements>
   }
 
 or the output set
 
-  complete->.<Name of Output Set>{
+  complete->.<Name of Output Set>
+  {
     <List of Substatements>
   }
 
 or both
 
-  complete.<Name of Input Set>->.<Name of Output Set>{
+  complete.<Name of Input Set>->.<Name of Output Set>
+  {
     <List of Substatements>
   }
 
 resp.
 
-  complete(<Number>).<Name of Input Set>->.<Name of Output Set>{
+  complete(<Number>).<Name of Input Set>->.<Name of Output Set>
+  {
     <List of Substatements>
   }
 

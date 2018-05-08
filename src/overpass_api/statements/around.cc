@@ -638,7 +638,7 @@ Around_Statement::Around_Statement
   {
     if (attributes["lat"] != "" || attributes["lon"] != "")
       add_static_error("In \"around\", the attribute \"polyline\" cannot be used if \"lat\" or \"lon\" are used.");
-    
+
     std::string& polystring = attributes["polyline"];
     std::string::size_type from = 0;
     std::string::size_type to = polystring.find(",");

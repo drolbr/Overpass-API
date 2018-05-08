@@ -28,7 +28,7 @@
 #include <vector>
 
 
-/* == The statement <em>local</em> ==
+/* === The statement <em>local</em> ===
 
 The statement <em>local</em> converts the given input into the localized representation of OSM data.
 The output parameter controls which classes of data are included.

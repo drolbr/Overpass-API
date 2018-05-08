@@ -26,7 +26,7 @@
 class Set_Comparison;
 
 
-/* === The statement <em>compare</em> ===
+/* === The block statement <em>compare</em> ===
 
 ''since v0.7.55''
 

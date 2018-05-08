@@ -31,7 +31,7 @@
 #include <vector>
 
 
-/* == List Represented Set Operators ==
+/* === List Represented Set Operators ===
 
 Sometimes there is a need to represent multiple values in a tag's value.
 Although by no means mandated by the data format,
@@ -193,7 +193,7 @@ struct Evaluator_Binary_Set_List_Operator_Syntax : public Evaluator_Binary_Funct
 };
 
 
-/* === List Represented Set Theoretic Operators ===
+/* ==== List Represented Set Theoretic Operators ====
 
 The function <em>lrs_in</em> returns "1"
 if its first argument is contained in the second argument treated as set.
@@ -263,7 +263,7 @@ public:
 };
 
 
-/* === List Represented Set Statistic Operators ===
+/* ==== List Represented Set Statistic Operators ====
 
 The function <em>lrs_min</em> returns the minimum of the elements in its argument treated as set.
 If all entries are numbers then the comparsion is numerical.

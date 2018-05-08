@@ -30,7 +30,7 @@
 #include <string>
 
 
-/* == String Endomorphisms ==
+/* === String Endomorphisms ===
 
 String endomorphisms are functions with one argument.
 Many of them help to normalize or check the value of its argument.
@@ -105,7 +105,7 @@ struct Evaluator_String_Endom_Syntax : public Evaluator_Unary_Function
 };
 
 
-/* === Number Check, Normalizer and Suffix ===
+/* ==== Number Check, Normalizer and Suffix ====
 
 The function <em>number</em> turns its argument into a number.
 If its argument starts with a number then <em>number</em> returns that number in a normalized format.
@@ -174,7 +174,7 @@ public:
 };
 
 
-/* === Date Check and Normalizer ===
+/* ==== Date Check and Normalizer ====
 
 The function <em>date</em> turns its argument into a number representing a date.
 If its argument is a date then <em>date</em> returns the number representing its argument's value.

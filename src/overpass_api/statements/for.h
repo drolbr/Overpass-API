@@ -27,6 +27,60 @@
 #include "statement.h"
 
 
+/* === The block statement ''for'' ===
+
+''since v0.7.55''
+
+The block statement ''for'' divides its input into subsets
+and executes all the statements in the loop body once for every subset.
+
+The input set is broken down as follows:
+For each element the given evaluator is evaulated
+and elements with the same value are grouped together.
+At the beginning of each loop execution,
+the output set is filled with the relevant subset.
+
+The base syntax is
+
+  for (<Evaluator>)
+  {
+    <List of Substatements>
+  }
+
+The input and output set can be specified between ''for'' and the opening parenthesis,
+i.e. you set the input set
+
+  for.<Name of Input Set> (<Evaluator>)
+  {
+    <List of Substatements>
+  }
+
+or the output set
+
+  for->.<Name of Output Set> (<Evaluator>)
+  {
+    <List of Substatements>
+  }
+
+or both
+
+  for.<Name of Input Set>->.<Name of Output Set> (<Evaluator>)
+  {
+    <List of Substatements>
+  }
+
+Within the loop, the value of the evaluator is available via the property ''val'' of the output set.
+I.e., with
+
+  <Output Set>.val
+
+you can access the value of the expression for this loop.
+
+With the special evaluator ''keys()'', one can loop over all the keys that exist in the subset.
+The respective subset for each key are the elements that have this key set.
+Unlike for a usual evaluator, the sets are not mutually distinct in that case.
+*/
+
 class For_Statement : public Statement
 {
   public:
@@ -58,10 +112,10 @@ class For_Statement : public Statement
       std::string result = indent + "for"
           + (input != "_" ? "." + input : "") + (output != "_" ? "->." + output : "");
 
-      result += "(" + (evaluator ? evaluator->dump_compact_ql(indent) :  "") + ")(";
+      result += "(" + (evaluator ? evaluator->dump_compact_ql(indent) :  "") + "){";
       for (std::vector< Statement* >::const_iterator it = substatements.begin(); it != substatements.end(); ++it)
         result += (*it)->dump_compact_ql(indent);
-      result += ")";
+      result += "}";
 
       return result;
     }

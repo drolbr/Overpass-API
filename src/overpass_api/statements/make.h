@@ -28,7 +28,7 @@
 #include <vector>
 
 
-/* == The statement <em>make</em> ==
+/* === The statement <em>make</em> ===
 
 The statement <em>make</em> produces per execution one derived element.
 The content of this output element is controlled by the parameters of the statement.

@@ -32,7 +32,7 @@
 #include <vector>
 
 
-/* == Fixed Value evaluator ==
+/* === Fixed Value evaluator ===
 
 This operator always returns a fixed value.
 It does not take any argument.
@@ -81,7 +81,7 @@ private:
 };
 
 
-/* == Element Dependend Operators ==
+/* === Element Dependend Operators ===
 
 Element dependend operators depend on one or no parameter.
 Their syntax varies,
@@ -92,7 +92,7 @@ This applies to convert, to filter, or to arguments of aggregate functions.
 They cannot be called directly from make.
 
 
-=== Id and Type of the Element ===
+==== Id and Type of the Element ====
 
 The operator <em>id</em> returns the id of the element.
 The operator <em>type</em> returns the type of the element.
@@ -211,7 +211,7 @@ public:
 };
 
 
-/* === Closedness ===
+/* ==== Closedness ====
 
 The operator <em>is_closed</em> returns whether the element is a closed way.
 The operator is undefined for any other type of element.
@@ -291,6 +291,10 @@ resp.
   is_tag(<Key name >)
 
 The <Key name> must be in quotation marks if it contains special characters.
+
+The tag operator can also be called with a substatement. Its syntax is then
+
+  t[<Substatement>]
 
 The generic tag operator returns the value of the tag of the key it is called for.
 It only can be called in the context of an element.
@@ -648,6 +652,11 @@ public:
 
 
 /* ==== Length ====
+
+The length operator return the length of the element.
+For ways this is the length of the way.
+For relations this is the sum of the lengthes of the members of type way.
+For nodes it is always zero.
 
 Its syntax is:
 

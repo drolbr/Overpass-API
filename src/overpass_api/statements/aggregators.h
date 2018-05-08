@@ -49,7 +49,7 @@ struct Geometry_Aggregator
 };
 
 
-/* == Aggregators ==
+/* === Aggregators ===
 
 Aggregators need for execution both a set to operate on and an evaluator as argument.
 That evaulator will loop over each element of the set, and the aggregator will combine its results.
@@ -226,7 +226,7 @@ public:
 };
 
 
-/* === Min and Max ===
+/* ==== Min and Max ====
 
 The basic syntax is
 
@@ -310,7 +310,7 @@ public:
 };
 
 
-/* === Sum ===
+/* ==== Sum ====
 
 The basic syntax is
 
@@ -352,7 +352,7 @@ public:
 };
 
 
-/* == Statistical Count ==
+/* === Statistical Count ===
 
 This variant of the <em>count</em> operator counts elements of a given type in a set.
 

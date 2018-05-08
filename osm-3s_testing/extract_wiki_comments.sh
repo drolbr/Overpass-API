@@ -2,9 +2,11 @@
 
 for i in \
   if.h \
+  for.h \
   complete.h \
   retro.h \
   compare.h \
+  print.h \
   timeline.h \
   localize.h \
   filter.h \

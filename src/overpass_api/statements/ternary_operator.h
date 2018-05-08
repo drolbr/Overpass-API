@@ -30,7 +30,7 @@
 #include <vector>
 
 
-/* == the Ternary Operator ==
+/* === The Ternary Operator ===
 
 The ternary operator needs for execution three operands.
 If the first operand evaluates to boolean true

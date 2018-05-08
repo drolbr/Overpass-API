@@ -41,6 +41,36 @@ class Regular_Expression;
 class Bbox_Query_Statement;
 
 
+/* === The Query Statement ===
+
+The most important statement is the ''query'' statement. This is not a single statement but rather consists of one of the type specifiers ''node'', ''way'', ''relation'' (or shorthand ''rel''), ''derived'', ''area'', or ''nwr'' (shorthand for nodes, ways or relations) followed by one or more filters. The result set is the set of all elements that match the conditions of all the filters.
+
+Example:
+
+<source lang="cpp">
+// one filter
+  node[name="Foo"];
+  way[name="Foo"];
+  rel[name="Foo"];
+  nwr[name="Foo"];
+  derived[name="Foo"];
+  area[name="Foo"];
+
+// many filters
+  node[name="Foo"][type="Bar"];
+</source>
+
+Here, ''node'', ''way'', ''rel'', ''nwr'', ''derived'', and ''area'' are the type specifier, ''[name="Foo"]'' resp. ''[type="Bar"]'' is the filter and the semicolon ends the statement.
+
+The ''query'' statement has a result set that can be changed with the usual postfix notation.
+
+<source lang="cpp">
+  node[name="Foo"]->.a;
+</source>
+
+The individual filters may have in addition input sets that can be changed in the individual filters. Please see for this at the respective filter.
+*/
+
 class Query_Statement : public Output_Statement
 {
   public:

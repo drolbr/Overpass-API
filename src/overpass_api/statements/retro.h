@@ -45,7 +45,7 @@ The base syntax is
   retro (<Evaluator>)
   {
     <List of Substatements>
-  };
+  }
 
 where <Evaluator> is an evaulator and <List of Substatements> is a list of substatements.
 

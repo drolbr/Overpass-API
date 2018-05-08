@@ -43,7 +43,7 @@ The base syntax is
   if (<Evaluator>)
   {
     <List of Substatements>
-  };
+  }
 
 resp.
 
@@ -54,7 +54,7 @@ resp.
   else
   {
     <List of Substatements>
-  };
+  }
 
 where <Evaluator> is an evaulator and <List of Substatements> is a list of substatements.
 

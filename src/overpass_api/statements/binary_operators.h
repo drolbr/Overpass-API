@@ -30,7 +30,7 @@
 #include <vector>
 
 
-/* == Binary Operators ==
+/* === Binary Operators ===
 
 Binary operators need for execution two operands.
 They are always written in infix notation.
@@ -157,7 +157,7 @@ struct Evaluator_Pair_Operator_Syntax : public Evaluator_Pair_Operator
 };
 
 
-/* === Boolean Disjunction ===
+/* ==== Boolean Disjunction ====
 
 The boolean disjunction evaluates to "1" if one or both of its arguments evaluate to a representation of boolean true.
 Otherwise it evaluates to "0".
@@ -187,7 +187,7 @@ struct Evaluator_Or : public Evaluator_Pair_Operator_Syntax< Evaluator_Or >
 };
 
 
-/* === Boolean Conjunction ===
+/* ==== Boolean Conjunction ====
 
 The boolean conjunction evaluates to "1" if both of its arguments evaluate to a representation of boolean true.
 Otherwise it evaluates to "0".
@@ -217,7 +217,7 @@ struct Evaluator_And : public Evaluator_Pair_Operator_Syntax< Evaluator_And >
 };
 
 
-/* === Equality and Inequality ===
+/* ==== Equality and Inequality ====
 
 The equaliy operator evaluates to "1" if both of its arguments are equal.
 Otherwise it evaluates to "0".
@@ -266,7 +266,7 @@ struct Evaluator_Not_Equal : public Evaluator_Pair_Operator_Syntax< Evaluator_No
 };
 
 
-/* === Less, Less-Equal, Greater, and Greater-Equal ===
+/* ==== Less, Less-Equal, Greater, and Greater-Equal ====
 
 These operators evaluate to "1" if their arguments compare respectively.
 Otherwise they evaluate to "0".
@@ -343,7 +343,7 @@ struct Evaluator_Greater_Equal : public Evaluator_Pair_Operator_Syntax< Evaluato
 };
 
 
-/* === Plus and Minus ===
+/* ==== Plus and Minus ====
 
 While both operators have the same priority, they accept different kinds of arguments.
 If the arguments are both integers then they are added resp. subtracted as integers.
@@ -391,7 +391,7 @@ struct Evaluator_Minus : public Evaluator_Pair_Operator_Syntax< Evaluator_Minus 
 };
 
 
-/* === Times and Divided ===
+/* ==== Times and Divided ====
 
 The times operator and the divided operator perform the respective arithmetic operations.
 If the arguments are both integers then they are multiplied as integers.

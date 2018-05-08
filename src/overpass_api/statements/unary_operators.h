@@ -31,7 +31,7 @@
 #include <vector>
 
 
-/* == Unary Operators ==
+/* === Unary Operators ===
 
 Unary operators need for execution an operand.
 They are always written in prefix notation.
@@ -102,7 +102,7 @@ struct Evaluator_Prefix_Operator_Syntax : public Evaluator_Prefix_Operator
 };
 
 
-/* === Boolean Negation ===
+/* ==== Boolean Negation ====
 
 The boolean negation evaluates to "1" if its argument evaluates to a representation of boolean false.
 Otherwise it evaluates to "1".
@@ -131,7 +131,7 @@ public:
 };
 
 
-/* === Unary Minus ===
+/* ==== Unary Minus ====
 
 The unary minus operator negates its argument.
 If the argument is an integer or a floating point number then it is negated as integer resp. floating point number.

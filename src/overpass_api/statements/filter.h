@@ -26,7 +26,7 @@
 #include "tag_value.h"
 
 
-/* == The Query Filter ==
+/* === The Query Filter ===
 
 The query filter can be added as condition to a query statement.
 It has an evaluator as argument
