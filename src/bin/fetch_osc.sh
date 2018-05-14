@@ -27,7 +27,7 @@ fi
 REPLICATE_ID=$1
 SOURCE_DIR=$2
 LOCAL_DIR=$3
-SLEEP_BETWEEN_DLS=15 # How long to sleep between download attempts (sec). Default: 15. See also FAIL_COUNTER_ALERT
+SLEEP_BETWEEN_DLS=${4:-15} # How long to sleep between download attempts (sec). Default: 15. See also FAIL_COUNTER_ALERT
 FAIL_COUNTER_ALERT=20 # After how many sleep cycles do we get nervous
 FAIL_COUNTER=0
 FILE_PANIC=
