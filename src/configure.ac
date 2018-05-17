@@ -16,6 +16,8 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
+AX_CXX_COMPILE_STDCXX_11( ,[mandatory])
+
 # Checks for libraries.
 AC_CHECK_LIB([expat], [XML_Parse])
 AC_SEARCH_LIBS([shm_open], [rt])
