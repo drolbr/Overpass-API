@@ -35,7 +35,7 @@
 class Bbox_Constraint : public Query_Constraint
 {
   public:
-    bool delivers_data(Resource_Manager& rman);
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman);
 
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_),
         filter_(Bbox_Double(bbox->get_south(), bbox->get_west(), bbox->get_north(), bbox->get_east())) {}
@@ -53,14 +53,14 @@ class Bbox_Constraint : public Query_Constraint
 };
 
 
-bool Bbox_Constraint::delivers_data(Resource_Manager& rman)
+Query_Filter_Strategy Bbox_Constraint::delivers_data(Resource_Manager& rman)
 {
   const Bbox_Double& bbox_ = filter_.get_bbox();
 
   if (!bbox_.valid())
-    return false;
+    return ids_required;
 
-  return (bbox_.north - bbox_.south) * (bbox_.east - bbox_.west) < 1.0;
+  return ((bbox_.north - bbox_.south) * (bbox_.east - bbox_.west) < 1.0) ? prefer_ranges : ids_useful;
 }
 
 

@@ -25,7 +25,7 @@ class Item_Constraint : public Query_Constraint
   public:
     Item_Constraint(Item_Statement& item_) : item(&item_) {}
 
-    bool delivers_data(Resource_Manager& rman) { return true; }
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
 
     bool collect_nodes(Resource_Manager& rman, Set& into,
 		 const std::vector< Uint64 >& ids, bool invert_ids);

@@ -32,10 +32,14 @@
 #include "../osm-backend/area_updater.h"
 
 
+typedef enum { ids_required, ids_useful, prefer_ranges } Query_Filter_Strategy;
+
+
 class Query_Constraint
 {
   public:
-    virtual bool delivers_data(Resource_Manager& rman) = 0;
+
+    virtual Query_Filter_Strategy delivers_data(Resource_Manager& rman) = 0;
 
     virtual bool collect_nodes(Resource_Manager& rman, Set& into,
 			 const std::vector< Uint64 >& ids, bool invert_ids) { return false; }

@@ -1011,7 +1011,7 @@ class Recurse_Constraint : public Query_Constraint
     virtual bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
 
-    bool delivers_data(Resource_Manager& rman) { return true; }
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
                           const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,

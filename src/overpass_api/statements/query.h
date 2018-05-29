@@ -164,12 +164,12 @@ class Query_Statement : public Output_Statement
     template< typename Skeleton, typename Id_Type >
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids
         (const File_Properties& file_prop, const File_Properties& attic_file_prop,
-         Resource_Manager& rman, uint64 timestamp, bool check_keys_late, bool& result_valid);
+         Resource_Manager& rman, uint64 timestamp, Query_Filter_Strategy& check_keys_late, bool& result_valid);
 
     template< class Id_Type >
     std::vector< Id_Type > collect_ids
         (const File_Properties& file_prop,
-         Resource_Manager& rman, bool check_keys_late);
+         Resource_Manager& rman, Query_Filter_Strategy check_keys_late);
 
     template< class Id_Type >
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_non_ids
@@ -204,13 +204,13 @@ class Query_Statement : public Output_Statement
     template< typename Skeleton, typename Id_Type, typename Index >
     void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
                     bool& invert_ids, uint64 timestamp,
-                    Answer_State& answer_state, bool check_keys_late,
+                    Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
                     const File_Properties& file_prop, const File_Properties& attic_file_prop,
                     Resource_Manager& rman);
 
     template< class Id_Type >
     void progress_1(std::vector< Id_Type >& ids, bool& invert_ids,
-                    Answer_State& answer_state, bool check_keys_late,
+                    Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
                     const File_Properties& file_prop,
                     Resource_Manager& rman);
 

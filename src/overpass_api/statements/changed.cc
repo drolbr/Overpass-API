@@ -180,7 +180,7 @@ class Changed_Constraint : public Query_Constraint
   public:
     Changed_Constraint(Changed_Statement& stmt_) : stmt(&stmt_) {}
 
-    bool delivers_data(Resource_Manager& rman) { return true; }
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
 
 //     bool get_ranges
 //         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);

@@ -37,7 +37,7 @@ class User_Constraint : public Query_Constraint
   public:
     User_Constraint(User_Statement& user_) : user(&user_) {}
 
-    bool delivers_data(Resource_Manager& rman) { return false; }
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return ids_required; }
 
     bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);

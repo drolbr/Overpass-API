@@ -9,9 +9,10 @@ for i in \
   print.h \
   timeline.h \
   localize.h \
-  filter.h \
   convert.h \
   make.h \
+  query.h \
+  filter.h \
   evaluator.h \
   tag_value.h \
   explicit_geometry.h \

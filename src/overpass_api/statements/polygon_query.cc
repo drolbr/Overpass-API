@@ -37,7 +37,7 @@
 class Polygon_Constraint : public Query_Constraint
 {
   public:
-    bool delivers_data(Resource_Manager& rman);
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman);
 
     Polygon_Constraint(Polygon_Query_Statement& polygon_) : polygon(&polygon_) {}
     bool get_ranges
@@ -53,9 +53,9 @@ class Polygon_Constraint : public Query_Constraint
 };
 
 
-bool Polygon_Constraint::delivers_data(Resource_Manager& rman)
+Query_Filter_Strategy Polygon_Constraint::delivers_data(Resource_Manager& rman)
 {
-  return polygon && !polygon->covers_large_area();
+  return (polygon && !polygon->covers_large_area()) ? prefer_ranges : ids_useful;
 }
 
 

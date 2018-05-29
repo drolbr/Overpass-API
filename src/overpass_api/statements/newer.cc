@@ -35,7 +35,7 @@ class Newer_Constraint : public Query_Constraint
   public:
     Newer_Constraint(Newer_Statement& newer) : timestamp(newer.get_timestamp()) {}
 
-    bool delivers_data(Resource_Manager& rman) { return false; }
+    Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return ids_required; }
 
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Newer_Constraint() {}
