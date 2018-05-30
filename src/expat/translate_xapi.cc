@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include <stdlib.h>
+
 
 std::string xapi_unescape(std::string input)
 {
@@ -64,25 +66,26 @@ std::string::size_type find_unescaped(const std::string& input, char c)
 }
 
 
-struct InputAnalizer
+struct InputAnalyzer
 {
-  InputAnalizer(const std::string& input, bool force_meta = false);
+  InputAnalyzer(const std::string& input, bool force_meta = false);
 
   std::string south, north, east, west;
   bool bbox_found;
   std::vector< std::pair< std::string, std::string > > key_value;
   std::string user;
-  std::string uid;
+  unsigned long uid;
   std::string newer;
-  std::string timeout;
+  unsigned int timeout;
   bool meta_found;
 };
 
-InputAnalizer::InputAnalizer(const std::string& input_, bool force_meta)
-    : bbox_found(false), meta_found(force_meta)
+InputAnalyzer::InputAnalyzer(const std::string& input_, bool force_meta)
+    : bbox_found(false), meta_found(force_meta), timeout(0), uid(0),
+      south(""), north(""), east(""), west(""), user(""), newer("")
 {
 #ifdef HOURLY_TIMEOUT
-  timeout = "3600";
+  timeout = 3600;
 #endif
 
   std::string input = input_;
@@ -125,7 +128,7 @@ InputAnalizer::InputAnalizer(const std::string& input_, bool force_meta)
     else if (input.substr(0, 6) == "[@uid=")
     {
       input = input.substr(6);
-      uid = input.substr(0, input.find(']'));
+      uid = atol(input.substr(0, input.find(']')).c_str());
       input = input.substr(input.find(']')+1);
     }
     else if (input.substr(0, 8) == "[@newer=")
@@ -137,7 +140,7 @@ InputAnalizer::InputAnalizer(const std::string& input_, bool force_meta)
     else if (input.substr(0, 10) == "[@timeout=")
     {
       input = input.substr(10);
-      timeout = input.substr(0, input.find(']'));
+      timeout = atoi(input.substr(0, input.find(']')).c_str());
       input = input.substr(input.find(']')+1);
     }
     else
@@ -159,129 +162,107 @@ InputAnalizer::InputAnalizer(const std::string& input_, bool force_meta)
 	  std::cout<<"Error: Expected '=' after key.\n";
 	throw std::string();
       }
-      if (key_value.back().second == "*")
-	key_value.back().second = "";
       input = input.substr(find_unescaped(input, ']')+1);
     }
   }
 }
 
-void print_meta(const InputAnalizer& analizer, std::string prefix)
+void print_meta_filter(const InputAnalyzer& analyzer)
 {
-  if (analizer.user != "")
-    std::cout<<prefix<<"<user name=\""<<escape_xml(analizer.user)<<"\"/>\n";
-  if (analizer.uid != "")
-    std::cout<<prefix<<"<user uid=\""<<escape_xml(analizer.uid)<<"\"/>\n";
-  if (analizer.newer != "")
-    std::cout<<prefix<<"<newer than=\""<<escape_xml(analizer.newer)<<"\"/>\n";
-}
-
-void print_meta(const InputAnalizer& analizer, std::string prefix, std::string type)
-{
-  if (analizer.user != "")
-    std::cout<<prefix<<"<user type=\""<<escape_xml(type)<<"\" name=\""<<escape_xml(analizer.user)<<"\"/>\n";
-  else if (analizer.uid != "")
-    std::cout<<prefix<<"<user type=\""<<escape_xml(type)<<"\" uid=\""<<escape_xml(analizer.uid)<<"\"/>\n";
-  if (analizer.newer != "")
-    std::cout<<prefix<<"<query type=\""<<escape_xml(type)<<"\">\n"
-                  "  <item/>\n"
-		  "  <newer than=\""<<escape_xml(analizer.newer)<<"\"/>\n"
-		  "</query>\n";
-}
-
-void print_bbox(const InputAnalizer& analizer, std::string prefix)
-{
-  std::cout<<prefix<<
-      "<bbox-query s=\""<<escape_xml(analizer.south)<<"\" n=\""<<escape_xml(analizer.north)
-      <<"\" w=\""<<escape_xml(analizer.west)<<"\" e=\""<<escape_xml(analizer.east)<<"\"/>\n";
+  if (analyzer.user != "")
+    std::cout<<"(user:\""<<escape_xml(analyzer.user)<<"\")";
+  if (analyzer.uid != 0)
+    std::cout<<"(uid:"<<analyzer.uid<<")";
+  if (analyzer.newer != "")
+    std::cout<<"(newer:\""<<escape_xml(analyzer.newer)<<"\")";
 }
 
 
-void print_key_values(const InputAnalizer& analizer, const std::string& space)
+void print_bbox(const InputAnalyzer& analyzer)
 {
-  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = analizer.key_value.begin();
-      it != analizer.key_value.end(); ++it)
+  std::cout<< "(" << escape_xml(analyzer.south) << ","
+                  << escape_xml(analyzer.west)  << ","
+                  << escape_xml(analyzer.north) << ","
+                  << escape_xml(analyzer.east)  << ")";
+}
+
+
+void print_key_values(const InputAnalyzer& analyzer)
+{
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator it = analyzer.key_value.begin();
+      it != analyzer.key_value.end(); ++it)
   {
     if (it->second == "*")
-      std::cout<<space<<"<has-kv k=\""<<escape_xml(xapi_unescape(it->first))<<"\"/>\n";
+      std::cout<<"[\""<<escape_xml(xapi_unescape(it->first))<<"\"]";
     else if (find_unescaped(it->second, '|') != std::string::npos)
-      std::cout<<space<<"<has-kv k=\""<<escape_xml(xapi_unescape(it->first))
-          <<"\" regv=\"^("<<escape_xml(xapi_unescape(it->second))<<")$\"/>\n";
+      std::cout<<"[\""<<escape_xml(xapi_unescape(it->first))<<"\""
+               <<"~\"^("<<escape_xml(xapi_unescape(it->second))<<")$\"]";
     else
-      std::cout<<space<<"<has-kv k=\""<<escape_xml(xapi_unescape(it->first))
-          <<"\" v=\""<<escape_xml(xapi_unescape(it->second))<<"\"/>\n";
+      std::cout<<"[\""<<escape_xml(xapi_unescape(it->first))<<"\""
+               <<"=\""<<escape_xml(xapi_unescape(it->second))<<"\"]";
   }
 }
 
 
-void print_print(const InputAnalizer& analizer)
+void print_out(const InputAnalyzer& analyzer)
 {
-  if (analizer.meta_found)
-    std::cout<<"<print mode=\"meta\"/>\n";
+  if (analyzer.meta_found)
+    std::cout<<"out meta;";
   else
-    std::cout<<"<print/>\n";
+    std::cout<<"out;";
 }
 
 void process_nodes(std::string input, bool is_star = false, bool force_meta = false)
 {
-  InputAnalizer analizer(input, force_meta);
-  if (analizer.timeout != "")
-    std::cout<<"<osm-script timeout=\""<<escape_xml(analizer.timeout)<<"\">\n\n";
+  InputAnalyzer analyzer(input, force_meta);
+  if (analyzer.timeout != 0)
+    std::cout<<"[timeout:"<<analyzer.timeout<<"];";
 
-  std::cout<<"<query type=\"node\">\n";
-  if (analizer.bbox_found)
-    print_bbox(analizer, "  ");
-  print_key_values(analizer, "  ");
-  print_meta(analizer, "  ");
-  std::cout<<"</query>\n";
+  std::cout<<"node";
+  if (analyzer.bbox_found)
+    print_bbox(analyzer);
+  print_key_values(analyzer);
+  print_meta_filter(analyzer);
+  std::cout<<";";
 
   if (!is_star)
-  {
-    print_print(analizer);
-    if (analizer.timeout != "")
-      std::cout<<"\n</osm-script>\n";
-  }
+    print_out(analyzer);
 }
 
 void process_ways(std::string input, bool is_star = false, bool force_meta = false)
 {
-  InputAnalizer analizer(input, force_meta);
-  if (!is_star && analizer.timeout != "")
-    std::cout<<"<osm-script timeout=\""<<escape_xml(analizer.timeout)<<"\">\n\n";
-  std::cout<<"<union>\n";
+  InputAnalyzer analyzer(input, force_meta);
+  if (!is_star && analyzer.timeout != 0)
+    std::cout<<"[timeout:"<<analyzer.timeout<<"];";
+  std::cout<<"(";
   if (is_star)
-    std::cout<<"  <item/>\n";
+    std::cout<<"._;";
 
-  std::cout<<"  <query type=\"way\">\n";
-  if (analizer.bbox_found)
-    print_bbox(analizer, "    ");
-  print_key_values(analizer, "    ");
-  print_meta(analizer, "    ");
-  std::cout<<"  </query>\n";
+  std::cout<<"way";
+  if (analyzer.bbox_found)
+    print_bbox(analyzer);
+  print_key_values(analyzer);
+  print_meta_filter(analyzer);
+  std::cout<<";";
 
-  std::cout<<"  <recurse type=\"way-node\"/>\n"
-        "</union>\n";
-  print_print(analizer);
-  if (!is_star && analizer.timeout != "")
-    std::cout<<"\n</osm-script>\n";
+  std::cout<<"node(w););";
+  print_out(analyzer);
 }
 
 void process_relations(std::string input, bool is_star = false, bool force_meta = false)
 {
-  InputAnalizer analizer(input, force_meta);
-  if (!is_star && analizer.timeout != "")
-    std::cout<<"<osm-script timeout=\""<<escape_xml(analizer.timeout)<<"\">\n\n";
+  InputAnalyzer analyzer(input, force_meta);
+  if (!is_star && analyzer.timeout != 0)
+    std::cout<<"[timeout:"<<analyzer.timeout<<"];";
 
-  std::cout<<"<query type=\"relation\">\n";
-  if (analizer.bbox_found)
-    print_bbox(analizer, "  ");
-  print_key_values(analizer, "  ");
-  print_meta(analizer, "  ");
-  std::cout<<"</query>\n";
+  std::cout<<"rel";
+  if (analyzer.bbox_found)
+    print_bbox(analyzer);
+  print_key_values(analyzer);
+  print_meta_filter(analyzer);
+  std::cout<<";";
 
-  print_print(analizer);
-  if (analizer.timeout != "")
-    std::cout<<"\n</osm-script>\n";
+  print_out(analyzer);
 }
 
 int main(int argc, char* argv[])
@@ -350,21 +331,19 @@ int main(int argc, char* argv[])
     std::string south, north, east, west;
     input = input.substr(9);
     west = input.substr(0, input.find(','));
-    input = input.substr(input.find(',')+1);
+    input = input.substr(input.find(',') + 1);
     south = input.substr(0, input.find(','));
-    input = input.substr(input.find(',')+1);
+    input = input.substr(input.find(',') + 1);
     east = input.substr(0, input.find(','));
-    input = input.substr(input.find(',')+1);
+    input = input.substr(input.find(',') + 1);
     north = input;
-    std::cout<<"<union>\n"
-          "  <bbox-query s=\""<<escape_xml(south)<<"\" n=\""<<escape_xml(north)<<"\" w=\""
-            <<escape_xml(west)<<"\" e=\""<<escape_xml(east)<<"\"/>\n"
-          "  <recurse type=\"node-relation\" into=\"foo\"/>\n"
-          "  <recurse type=\"node-way\"/>\n"
-	  "  <recurse type=\"way-node\" into=\"foo\"/>\n"
-	  "  <recurse type=\"way-relation\"/>\n"
-          "</union>\n"
-          "<print mode=\"meta\"/>\n";
+    std::cout << "(node(" << escape_xml(south) << "," << escape_xml(west) << ","
+              << escape_xml(north) << "," << escape_xml(east) << ");"
+                 "rel(bn)->.foo;"
+                 "way(bn);"
+                 "node(w)->.foo;"
+                 "rel(bw);"
+                 ");out meta;";
   }
   else
   {
