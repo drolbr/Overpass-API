@@ -90,6 +90,9 @@ void collect_attic_tags
 
   // Collect all id-matched tag information from the current tags
   while ((!(current_tag_it == current_items_db.range_end())) &&
+      (((current_tag_it.index().index) & 0x7fffff00) < coarse_index))
+    ++current_tag_it;
+  while ((!(current_tag_it == current_items_db.range_end())) &&
       (((current_tag_it.index().index) & 0x7fffff00) == coarse_index))
   {
     typename std::vector< Attic< Id_Type > >::const_iterator it_id
@@ -104,6 +107,9 @@ void collect_attic_tags
   }
 
   // Collect all id-matched tag information that is younger than the respective timestamp from the attic tags
+  while ((!(attic_tag_it == attic_items_db.range_end())) &&
+      (((attic_tag_it.index().index) & 0x7fffff00) < coarse_index))
+    ++attic_tag_it;
   while ((!(attic_tag_it == attic_items_db.range_end())) &&
       (((attic_tag_it.index().index) & 0x7fffff00) == coarse_index))
   {
@@ -243,6 +249,9 @@ void collect_tags_framed
    uint32 coarse_index,
    Id_Type lower_id_bound, Id_Type upper_id_bound)
 {
+  while ((!(tag_it == items_db.range_end())) &&
+      (((tag_it.index().index) & 0x7fffff00) < coarse_index))
+    ++tag_it;
   while ((!(tag_it == items_db.range_end())) &&
       (((tag_it.index().index) & 0x7fffff00) == coarse_index))
   {

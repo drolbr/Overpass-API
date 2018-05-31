@@ -271,10 +271,8 @@ void Set_Comparison::tags_quadtile_attic
   {
     for (typename std::vector< Attic< Object > >::const_iterator it2(item_it->second.begin());
         it2 != item_it->second.end(); ++it2)
-    {
       print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
                  meta_printer.get(item_it->first, it2->id, it2->timestamp), extra_data.users);
-    }
     ++item_it;
   }
 }
@@ -317,12 +315,8 @@ void Set_Comparison::tags_quadtile_attic
   Tag_Store< Index, Object > tag_store(*rman.get_transaction());
   tag_store.prefetch_all(items);
   // formulate meta query if meta data shall be printed
-  Meta_Collector< Index, typename Object::Id_Type > current_meta_printer
-      (items, *rman.get_transaction(),
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
-  Meta_Collector< Index, typename Object::Id_Type > attic_meta_printer
-      (items, *rman.get_transaction(),
-      (extra_data.mode & Output_Mode::META) ? attic_meta_file_properties< Object >() : 0);
+  Attic_Meta_Collector< Index, Object > meta_printer(
+      items, *rman.get_transaction(), extra_data.mode & Output_Mode::META);
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -332,14 +326,8 @@ void Set_Comparison::tags_quadtile_attic
         it2 != item_it->second.end(); ++it2)
     {
       if (std::binary_search(id_list.begin(), id_list.end(), it2->id))
-      {
-        const OSM_Element_Metadata_Skeleton< typename Object::Id_Type >* meta
-            = attic_meta_printer.get(item_it->first, it2->id, it2->timestamp);
-        if (!meta)
-          meta = current_meta_printer.get(item_it->first, it2->id, it2->timestamp);
         print_item(extra_data, item_it->first.val(), *it2, tag_store.get(item_it->first, *it2),
-                 meta, extra_data.users);
-      }
+                 meta_printer.get(item_it->first, it2->id, it2->timestamp), extra_data.users);
     }
     ++item_it;
   }
@@ -1201,6 +1189,24 @@ void clear_elems(std::vector< std::pair< Id_Type, std::string > >& lhs_set, std:
 }
 
 
+template< typename Index, typename Id_Type, typename Maybe_Attic >
+void filter_by_id(std::map< Index, std::vector< Maybe_Attic > >& items, const std::vector< Id_Type >& id_list)
+{
+  for (typename std::map< Index, std::vector< Maybe_Attic > >::iterator it_idx = items.begin();
+      it_idx != items.end(); ++it_idx)
+  {
+    std::vector< Maybe_Attic > result;
+    for (typename std::vector< Maybe_Attic >::const_iterator it_elem = it_idx->second.begin();
+        it_elem != it_idx->second.end(); ++it_elem)
+    {
+      if (std::binary_search(id_list.begin(), id_list.end(), it_elem->id))
+        result.push_back(*it_elem);
+    }
+    result.swap(it_idx->second);
+  }
+}
+
+
 Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement& stmt,
     const Set& input_set, Evaluator* evaluator, bool add_deletion_information)
 {
@@ -1267,8 +1273,15 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
       clear_elems(relation_values, changed_relations);
     }
   }
-
+  
   rman.set_desired_timestamp(lhs_timestamp_);
+  
+  filter_by_id(lhs_set_.nodes, changed_nodes);
+  filter_by_id(lhs_set_.attic_nodes, changed_nodes);
+  filter_by_id(lhs_set_.ways, changed_ways);
+  filter_by_id(lhs_set_.attic_ways, changed_ways);
+  filter_by_id(lhs_set_.relations, changed_relations);
+  filter_by_id(lhs_set_.attic_relations, changed_relations);
 
   Extra_Data_For_Diff extra_data_lhs(rman, stmt, lhs_set_, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
