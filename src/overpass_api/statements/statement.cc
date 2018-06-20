@@ -337,7 +337,10 @@ Statement* Statement::Factory::create_criterion(const Token_Node_Ptr& tree_it,
   if (it != Statement::maker_by_ql_criterion().end() && it->second)
   {
     can_standalone = it->second->can_standalone(type);
-    return it->second->create_criterion(tree_it, type, into, *this, global_settings, error_output);
+    Statement* result = it->second->create_criterion(tree_it, type, into, *this, global_settings, error_output);
+    if (result)
+      created_statements.push_back(result);
+    return result;
   }
 
   if (error_output)
