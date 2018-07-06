@@ -279,6 +279,113 @@ void Output_JSON::print_item(const Relation_Skeleton& skel,
 }
 
 
+void print_geometry(const Opaque_Geometry& geometry, const std::string& indent)
+{
+  if (geometry.has_components())
+  {
+    std::cout<<"{"
+        "\n"<<indent<<"  \"type\": \"GeometryCollection\","
+        "\n"<<indent<<"  \"geometries\": [";
+
+    bool first_printed = true;
+    const std::vector< Opaque_Geometry* >* components = geometry.get_components();
+    for (std::vector< Opaque_Geometry* >::const_iterator it = components->begin(); it != components->end(); ++it)
+    {
+      if (*it && (*it)->has_center())
+      {
+        if (first_printed)
+          first_printed = false;
+        else
+          std::cout<<",";
+
+        std::cout<<"\n"<<indent<<"    ";
+        print_geometry(**it, indent + "    ");
+      }
+    }
+
+    std::cout<<"\n"<<indent<<"  ]\n"<<indent<<"}";
+  }
+  else if (geometry.has_line_geometry())
+  {
+    std::cout<<"{"
+        "\n"<<indent<<"  \"type\": \"LineString\","
+        "\n"<<indent<<"  \"coordinates\": [";
+
+    const std::vector< Point_Double >* line = geometry.get_line_geometry();
+    for (std::vector< Point_Double >::const_iterator it = line->begin(); it != line->end(); ++it)
+      std::cout<<(it == line->begin() ? "" : ",")<<"\n"<<indent<<"    ["
+          <<std::fixed<<std::setprecision(7)<<it->lon<<", "
+          <<std::fixed<<std::setprecision(7)<<it->lat<<"]";
+
+    std::cout<<"\n"<<indent<<"  ]\n"<<indent<<"}";
+  }
+  else if (geometry.has_multiline_geometry())
+  {
+    std::cout<<"{"
+        "\n"<<indent<<"  \"type\": \"Polygon\","
+        "\n"<<indent<<"  \"coordinates\": [";
+
+    const std::vector< std::vector< Point_Double > >* linestrings = geometry.get_multiline_geometry();
+    for (std::vector< std::vector< Point_Double > >::const_iterator iti = linestrings->begin();
+        iti != linestrings->end(); ++iti)
+    {
+      std::cout<<(iti == linestrings->begin() ? "" : ",")<<"\n"<<indent<<"    [";
+      for (std::vector< Point_Double >::const_iterator it = iti->begin(); it != iti->end(); ++it)
+        std::cout<<(it == iti->begin() ? "" : ",")<<"\n"<<indent<<"      ["
+            <<std::fixed<<std::setprecision(7)<<it->lon<<", "
+            <<std::fixed<<std::setprecision(7)<<it->lat<<"]";
+      std::cout<<"\n"<<indent<<"    ]";
+    }
+
+    std::cout<<"\n"<<indent<<"  ]\n"<<indent<<"}";
+  }
+  else if (geometry.has_center())
+    std::cout<<"{"
+        "\n"<<indent<<"  \"type\": \"Point\","
+        "\n"<<indent<<"  \"coordinates\": [ "
+        <<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<", "
+        <<std::fixed<<std::setprecision(7)<<geometry.center_lat()<<" ]"
+    "\n"<<indent<<"}";
+}
+
+
+void print_geometry(const Opaque_Geometry& geometry, Output_Mode mode)
+{
+  if ((mode.mode & Output_Mode::GEOMETRY) && (geometry.has_center()))
+  {
+    std::cout<<",\n  \"geometry\": ";
+    print_geometry(geometry, "  ");
+  }
+  else if ((mode.mode & Output_Mode::BOUNDS) && geometry.has_bbox())
+    std::cout<<",\n  \"geometry\": {"
+        "\n    \"type\": \"Polygon\","
+        "\n    \"coordinates\": ["
+        "\n      ["
+            <<std::fixed<<std::setprecision(7)<<geometry.west()<<", "
+            <<std::fixed<<std::setprecision(7)<<geometry.south()<<"]"
+        ",\n      ["
+            <<std::fixed<<std::setprecision(7)<<geometry.east()<<", "
+            <<std::fixed<<std::setprecision(7)<<geometry.south()<<"]"
+        ",\n      ["
+            <<std::fixed<<std::setprecision(7)<<geometry.east()<<", "
+            <<std::fixed<<std::setprecision(7)<<geometry.north()<<"]"
+        ",\n      ["
+            <<std::fixed<<std::setprecision(7)<<geometry.west()<<", "
+            <<std::fixed<<std::setprecision(7)<<geometry.north()<<"]"
+        ",\n      ["
+            <<std::fixed<<std::setprecision(7)<<geometry.west()<<", "
+            <<std::fixed<<std::setprecision(7)<<geometry.south()<<"]"
+        "\n    ]\n  }";
+  else if ((mode.mode & Output_Mode::CENTER) && geometry.has_center())
+    std::cout<<",\n  \"geometry\": {"
+        "\n    \"type\": \"Point\","
+        "\n    \"coordinates\": [ "
+        <<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<", "
+        <<std::fixed<<std::setprecision(7)<<geometry.center_lat()<<" ]"
+        "\n  }";
+}
+
+
 void Output_JSON::print_item(const Derived_Skeleton& skel,
       const Opaque_Geometry& geometry,
       const std::vector< std::pair< std::string, std::string > >* tags,
@@ -291,6 +398,7 @@ void Output_JSON::print_item(const Derived_Skeleton& skel,
   if (mode.mode & Output_Mode::ID)
     std::cout<<",\n  \"id\": "<<skel.id.val();
 
+  print_geometry(geometry, mode);
   print_tags(tags);
   std::cout<<"\n}";
 }
