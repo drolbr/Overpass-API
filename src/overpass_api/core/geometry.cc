@@ -2368,22 +2368,22 @@ private:
 
 Proto_Hull::Proto_Hull(const Point_Double& s, const Point_Double& w, const Point_Double& n, const Point_Double& e)
 {
-  segments.push_back(Hull_Segment(w));
-  if (s != segments.back().ll_pt)
-    segments.push_back(Hull_Segment(s));
-  if (e != segments.back().ll_pt)
+  if (w.lon != e.lon)
+  {
+    segments.push_back(Hull_Segment(w));
     segments.push_back(Hull_Segment(e));
-  if (n != segments.back().ll_pt)
+  }
+  else if (n.lat != s.lat)
+  {
+    segments.push_back(Hull_Segment(s));
     segments.push_back(Hull_Segment(n));
-  if (segments.back().s_pt == segments.front().s_pt)
-    segments.pop_back();
+  }
 
-  for (unsigned int i = 1; i < segments.size(); ++i)
-    segments[i].edge = Spherical_Vector(segments[i-1].s_pt, segments[i].s_pt);
-  if (segments.size() > 1)
-    segments[0].edge = Spherical_Vector(segments.back().s_pt, segments.front().s_pt);
-  else
-    segments.clear();
+  if (!segments.empty())
+  {
+    segments[1].edge = Spherical_Vector(segments[0].s_pt, segments[1].s_pt);
+    segments[0].edge = Spherical_Vector(segments[1].s_pt, segments[0].s_pt);
+  }
 }
 
 

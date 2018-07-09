@@ -5157,29 +5157,30 @@ int main(int argc, char* args[])
       std::cout<<
       "  <hull id=\"2\">\n"
       "    <linestring>\n"
+      "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"6.9990000\"/>\n"
       "      <vertex lat=\"50.9990000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
       "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
-      "      <vertex lat=\"51.0000000\" lon=\"6.9990000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
     if (std::string(args[2]) == "make_123")
       std::cout<<
       "  <hull id=\"3\">\n"
       "    <linestring>\n"
+      "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"6.9990000\"/>\n"
       "      <vertex lat=\"50.9993000\" lon=\"6.9993000\"/>\n"
       "      <vertex lat=\"50.9990000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
       "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
-      "      <vertex lat=\"51.0000000\" lon=\"6.9990000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
     if (std::string(args[2]) == "make_124")
       std::cout<<
       "  <hull id=\"5\">\n"
       "    <linestring>\n"
+      "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"6.9990000\"/>\n"
       "      <vertex lat=\"50.9993000\" lon=\"6.9993000\"/>\n"
       "      <vertex lat=\"50.9990000\" lon=\"7.0000000\"/>\n"
@@ -5187,39 +5188,39 @@ int main(int argc, char* args[])
       "      <vertex lat=\"50.9995000\" lon=\"7.0006000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
       "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
-      "      <vertex lat=\"51.0000000\" lon=\"6.9990000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
     if (std::string(args[2]) == "make_125")
       std::cout<<
       "  <hull id=\"6\">\n"
       "    <linestring>\n"
+      "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"6.9990000\"/>\n"
       "      <vertex lat=\"50.9993000\" lon=\"6.9993000\"/>\n"
       "      <vertex lat=\"50.9990000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"50.9991000\" lon=\"7.0009000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
       "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
-      "      <vertex lat=\"51.0000000\" lon=\"6.9990000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
     if (std::string(args[2]) == "make_126")
       std::cout<<
       "  <hull id=\"7\">\n"
       "    <linestring>\n"
+      "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"6.9989000\"/>\n"
       "      <vertex lat=\"50.9993000\" lon=\"6.9993000\"/>\n"
       "      <vertex lat=\"50.9990000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"50.9991000\" lon=\"7.0009000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
       "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
-      "      <vertex lat=\"51.0000000\" lon=\"6.9989000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
     if (std::string(args[2]) == "make_127")
       std::cout<<
       "  <hull id=\"8\">\n"
       "    <linestring>\n"
+      "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
       "      <vertex lat=\"51.0005000\" lon=\"6.9989000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"6.9989000\"/>\n"
       "      <vertex lat=\"50.9993000\" lon=\"6.9993000\"/>\n"
@@ -5227,7 +5228,6 @@ int main(int argc, char* args[])
       "      <vertex lat=\"50.9991000\" lon=\"7.0009000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"7.0010000\"/>\n"
       "      <vertex lat=\"51.0010000\" lon=\"7.0000000\"/>\n"
-      "      <vertex lat=\"51.0005000\" lon=\"6.9989000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
     if (std::string(args[2]) == "make_128")
@@ -5258,11 +5258,11 @@ int main(int argc, char* args[])
       std::cout<<
       "  <hull id=\"2\">\n"
       "    <linestring>\n"
+      "      <vertex lat=\"51.0020000\" lon=\"-179.9990000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"179.9980000\"/>\n"
       "      <vertex lat=\"50.9980000\" lon=\"179.9990000\"/>\n"
       "      <vertex lat=\"51.0000000\" lon=\"-179.9980000\"/>\n"
       "      <vertex lat=\"51.0020000\" lon=\"-179.9990000\"/>\n"
-      "      <vertex lat=\"51.0000000\" lon=\"179.9980000\"/>\n"
       "    </linestring>\n"
       "  </hull>\n";
     if (std::string(args[2]) == "make_131")
