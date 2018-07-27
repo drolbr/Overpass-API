@@ -38,7 +38,7 @@ using namespace std;
 double middle_lon(const OSMData& current_data)
 {
   double east(-180.0), west(180.0);
-  for (map< uint32, Node* >::const_iterator it(current_data.nodes.begin());
+  for (map< uint64, Node* >::const_iterator it(current_data.nodes.begin());
   it != current_data.nodes.end(); ++it)
   {
     if (it->second->lon < west)
@@ -420,13 +420,13 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
   Features features;
 
   // Convert lons into relative lons w.r.t. to their real distance to the pivot_lon
-  for (map< uint32, Node* >::iterator it = osm_data.nodes.begin();
+  for (map< uint64, Node* >::iterator it = osm_data.nodes.begin();
       it != osm_data.nodes.end(); ++it)
     it->second->lon = transform_lon(it->second->lat, it->second->lon, pivot_lon);
 
   // Detect stops and attach them to ways.
   map< Way*, vector< Way_Position > > stops_per_way;
-  for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
+  for (map< uint64, Relation* >::const_iterator it(osm_data.relations.begin());
       it != osm_data.relations.end(); ++it)
   {
     string color(it->second->tags["color"]);
@@ -487,7 +487,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 //       it != osm_data.nodes.end(); ++it)
 //       node_buckets[Rough_Coord(it->second->lat, it->second->lon, deg_threshold)]
 // 			       .push_back(it->second);
-  for (map< uint32, Way* >::const_iterator it = osm_data.ways.begin();
+  for (map< uint64, Way* >::const_iterator it = osm_data.ways.begin();
       it != osm_data.ways.end(); ++it)
   {
     for (vector< Node* >::const_iterator it2 = it->second->nds.begin();
@@ -642,13 +642,9 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
 
   map< Placed_Segment, set< Way* > > segments;
   map< Placed_Segment, vector< Way_Position > > stops_per_segment;
-  for (map< uint32, Way* >::const_iterator it(osm_data.ways.begin());
+  for (map< uint64, Way* >::const_iterator it(osm_data.ways.begin());
       it != osm_data.ways.end(); ++it)
   {
-/*    for (vector< Way_Position >::const_iterator stop_it = stops_per_way[it->second].begin();
-        stop_it != stops_per_way[it->second].end(); ++stop_it)
-      cerr<<stop_it->name<<' '<<stop_it->way<<' '<<stop_it->segment_idx<<' '<<stop_it->pos<<'\n';*/
-
     if (it->second->nds.size() < 2)
       continue;
     vector< Node* >::const_iterator it2 = it->second->nds.begin();
@@ -809,7 +805,7 @@ Features extract_features(OSMData& osm_data, double pivot_lon, double threshold)
   }*/
 
   map< Way*, set< string > > colors_per_way;
-  for (map< uint32, Relation* >::const_iterator it(osm_data.relations.begin());
+  for (map< uint64, Relation* >::const_iterator it(osm_data.relations.begin());
       it != osm_data.relations.end(); ++it)
   {
     RouteFeature route_feature;
@@ -1011,7 +1007,7 @@ namespace
   Bbox calc_bbox(const OSMData& current_data)
   {
     double north(-90.0), south(90.0), east(-180.0), west(180.0);
-    for (map< uint32, Node* >::const_iterator it(current_data.nodes.begin());
+    for (map< uint64, Node* >::const_iterator it(current_data.nodes.begin());
     it != current_data.nodes.end(); ++it)
     {
       if (it->second->lat < south)
@@ -1360,12 +1356,25 @@ void sketch_features
 	unsigned int line_size = x_s.size();
 	if (display_front)
 	  out<<shifted(x_s[0], y_s[0], x_s[1], y_s[1], shifts[0], true);
+        bool first_point = !display_front;
 	for (unsigned int i = 1; i < line_size-1; ++i)
-	  out<<", "<<shifted(x_s[i-1], y_s[i-1], x_s[i], y_s[i], x_s[i+1], y_s[i+1],
+        {
+          if (first_point)
+            first_point = false;
+          else
+            out<<",";
+	  out<<shifted(x_s[i-1], y_s[i-1], x_s[i], y_s[i], x_s[i+1], y_s[i+1],
 			      shifts[i-1], shifts[i]);
+        }
 	if (display_back)
-	  out<<", "<<shifted(x_s[line_size-1], y_s[line_size-1],
+        {
+          if (first_point)
+            first_point = false;
+          else
+            out<<",";
+	  out<<shifted(x_s[line_size-1], y_s[line_size-1],
 			      x_s[line_size-2], y_s[line_size-2], -shifts[line_size-1], false);
+        }
       }
       out<<"\"/>\n";
     }
@@ -1488,6 +1497,18 @@ int main(int argc, char *argv[])
 
   Features features(extract_features
       (const_cast< OSMData& >(current_data), pivot_lon, threshold));
+  
+  // Debug output
+//   for (vector< RouteFeature >::const_iterator it = features.routes.begin(); it != features.routes.end(); ++it)
+//   {
+//     cerr<<it->color<<' '<<it->polysegs.size()<<'\n';
+//     for (vector< PolySegmentFeature >::const_iterator pit = it->polysegs.begin(); pit != it->polysegs.end(); ++pit)
+//     {
+//       cerr<<it->color<<"   "<<pit->shift<<' '<<pit->lat_lon.size()<<'\n';
+//       for (vector< NodeFeature >::const_iterator nit = pit->lat_lon.begin(); nit != pit->lat_lon.end(); ++nit)
+//         cerr<<it->color<<"     "<<nit->lat<<' '<<nit->lon<<'\n';
+//     }
+//   }
 
   if (!config_data.empty())
   {

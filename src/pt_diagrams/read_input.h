@@ -26,6 +26,7 @@
 using namespace std;
 
 typedef unsigned int uint32;
+typedef unsigned long long uint64;
 
 class OSMElement
 {
@@ -56,7 +57,7 @@ struct Relation : public OSMElement
 struct RelMember
 {
   int type;
-  uint32 ref;
+  uint64 ref;
   string role;
 
   static const int NODE = 1;
@@ -68,9 +69,9 @@ struct OSMData
 {
   ~OSMData();
 
-  map< uint32, Node* > nodes;
-  map< uint32, Way* > ways;
-  map< uint32, Relation* > relations;
+  map< uint64, Node* > nodes;
+  map< uint64, Way* > ways;
+  map< uint64, Relation* > relations;
 };
 
 const OSMData& read_osm();
