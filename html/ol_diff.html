@@ -10,6 +10,7 @@
       var lon = 7.100;
       var zoom = 18;
       var data_url = "http://overpass-api.de/api/interpreter";
+      var initial_request = "(node;way;relation;);out meta geom(bbox);";
       var map;
 
       var layer = false;
@@ -34,6 +35,11 @@
               maxdate = select_maxdate.value;
           if (maxdate != "")
               maxdate = ",\"" + maxdate + "\"";
+              
+          var request_script = "(node;way;relation;);out meta geom(bbox);";
+          var select_request_script = document.getElementById("select_request_script");
+          if (select_request_script)
+              request_script = select_request_script.value;
 
           //Initialise the vector layer using OpenLayers.Format.OSM
           var styleMap = new OpenLayers.StyleMap({
@@ -55,7 +61,7 @@
               strategies: [new OpenLayers.Strategy.Fixed()],
               protocol: new OpenLayers.Protocol.HTTP({
                   url: data_url + "?data=[adiff:\"" + mindate + "\"" + maxdate
-                      + "];(node(bbox);way(bbox);relation(bbox););out meta geom(bbox);&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
+                      + "][bbox];" + request_script + "&bbox=" + layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326").toBBOX(),
                   format: new OSMDiffFormat({
                       extent: layerMapnik.getExtent().transform("EPSG:900913", "EPSG:4326"),
                       setStatus: function(status) { setStatus(status); },
@@ -130,6 +136,10 @@
           var select_mindate = document.getElementById("select_mindate");
           if (select_mindate)
               select_mindate.value = fullDate(yesterday);
+
+          var select_request_script = document.getElementById("select_request_script");
+          if (select_request_script)
+              select_request_script.value = initial_request;
 
           refreshData();
       }
@@ -324,6 +334,26 @@
               pushTextualResult(false, feature);
       }
 
+      function showLink()
+      {      
+          var request_script = "(node;way;relation;);out meta geom(bbox);";
+          var select_request_script = document.getElementById("select_request_script");
+          if (select_request_script)
+              request_script = select_request_script.value;
+              
+          var lonLat = new OpenLayers.LonLat(map.center.lon, map.center.lat);
+          lonLat.transform("EPSG:900913", "EPSG:4326");
+
+          var textual_results_html = document.getElementById("textual_results");
+          if (textual_results_html)
+              textual_results_html.innerHTML = "http://overpass-api.de/api/recent_changes?"
+                  + "lat=" + lonLat.lat + "&amp;"
+                  + "lon=" + lonLat.lon + "&amp;"
+                  + "zoom=" + map.zoom + "&amp;"
+                  + "data=" + request_script;
+      }
+      
+      
   </script>
 </head>
 <body onload="init()">
@@ -332,13 +362,17 @@ OpenLayers.Layer.Vector.addFeatures([], {})
 OpenLayers.Layer.Vector.removeAllFeatures({})
 -->
   <div id="control_bar" class="control_bar" style="position:absolute; top:0%; left:0%; height:100%; width:30%; z-index:1">
-    <form action="#" acceptCharset="UTF-8" onsubmit="alert(&nbsp;foo&nbsp;);">
+    <form acceptCharset="UTF-8" onsubmit="alert(&nbsp;foo&nbsp;);">
       <input type="text" id="select_mindate" value=""></input>
       <input type="text" id="select_maxdate" value=""></input>
-      <input type="submit" value="Fetch data" onclick="refreshData()"></input>
+      <br/>
+      <textarea id="select_request_script" cols="40" rows="10"></textarea>
+      <br/>
+      <input type="button" value="Fetch data" onclick="refreshData()"></input>
+      <input type="button" value="Show link" onclick="showLink()"></input>
     </form>  
     <div id="status_line" class="status_line">Ready</div>
-    <div id="textual_results" class="textual_results"><br/>(no entries)</div>
+    <div id="textual_results" class="textual_results" style="height:70%; overflow-y:scroll"><br/>(no entries)</div>
   </div>
   <div id="map" class="smallmap" style="position:absolute; top:0%; left:30%; height:100%; width:70%; z-index:1"></div>
 
