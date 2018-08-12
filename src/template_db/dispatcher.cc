@@ -71,7 +71,7 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
 			 (socklen_t*)&sockaddr_un_dummy_size);
   if (socket_fd == -1)
   {
-    if (errno != EAGAIN && errno != EWOULDBLOCK)
+    if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EMFILE)
       throw File_Error
 	    (errno, "(socket)", "Dispatcher_Server::6");
   }
