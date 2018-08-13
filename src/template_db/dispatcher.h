@@ -49,7 +49,8 @@ struct Dispatcher_Logger
 
 struct Reader_Entry
 {
-  Reader_Entry(uint32 client_pid_, uint64 max_space_, uint32 max_time_, uint32 client_token_, uint32 start_time_)
+  Reader_Entry(uint32 client_pid_, uint64 max_space_, uint32 max_time_,
+      const std::string& client_token_, uint32 start_time_)
     : client_pid(client_pid_), max_space(max_space_), max_time(max_time_), start_time(start_time_),
       client_token(client_token_) {}
 
@@ -57,16 +58,16 @@ struct Reader_Entry
   uint64 max_space;
   uint32 max_time;
   uint32 start_time;
-  uint32 client_token;
+  std::string client_token;
 };
 
 
 struct Quota_Entry
 {
-  Quota_Entry(uint32 client_token_, uint32 expiration_time_)
+  Quota_Entry(const std::string& client_token_, uint32 expiration_time_)
     : client_token(client_token_), expiration_time(expiration_time_) {}
 
-  uint32 client_token;
+  std::string client_token;
   uint32 expiration_time;
 };
 
@@ -92,7 +93,7 @@ public:
 
   // Returns true if the process is acceptable in terms of server load and quotas
   // In this case it is registered as running
-  int probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space);
+  int probe(pid_t pid, const std::string& client_token, uint32 time_units, uint64 max_space);
 
   // Unregisters the process
   void remove(pid_t pid);
@@ -115,7 +116,7 @@ public:
   uint64 get_average_claimed_space() const { return average_used_space; }
 
 private:
-  std::map< uint32, std::vector< Pending_Client > > pending;
+  std::map< std::string, std::vector< Pending_Client > > pending;
   std::vector< Reader_Entry > active;
   std::vector< Quota_Entry > afterwards;
   uint32 global_used_time;

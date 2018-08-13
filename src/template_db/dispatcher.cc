@@ -106,17 +106,17 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
 }
 
 
-int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space)
+int Global_Resource_Planner::probe(pid_t pid, const std::string& client_token, uint32 time_units, uint64 max_space)
 {
-  std::map< uint32, std::vector< Pending_Client > >::iterator pending_it = pending.find(client_token);
-  Pending_Client* handle = 0;
   uint32 cur_time = time(0);
 
-  if (rate_limit > 0 && client_token > 0)
+  if (rate_limit > 0 && !client_token.empty())
   {
-    if (pending_it == pending.end())
-      pending_it = pending.insert(std::make_pair(client_token, std::vector< Pending_Client >())).first;
+    std::map< std::string, std::vector< Pending_Client > >::iterator pending_it =
+        pending.insert(std::make_pair(client_token, std::vector< Pending_Client >())).first;
+    Pending_Client* handle = 0;
 
+    // Reuse an existing handle in pending or create one
     for (std::vector< Pending_Client >::iterator handle_it = pending_it->second.begin();
         handle_it != pending_it->second.end(); ++handle_it)
     {
@@ -132,6 +132,19 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
       handle = &pending_it->second.back();
     }
 
+    // Simple checks: is the query acceptable from a global point of view?
+    if (global_available_time < global_used_time ||
+        time_units > (global_available_time - global_used_time)/2 ||
+        global_available_space < global_used_space ||
+        max_space > (global_available_space - global_used_space)/2)
+    {
+      if (cur_time - handle->first_seen < 15)
+        return 0;
+      else
+        return Dispatcher::QUERY_REJECTED;
+    }
+
+    // Enforce the rate limit: first count active requests ...
     uint32 token_count = 0;
     for (std::vector< Reader_Entry >::const_iterator it = active.begin(); it != active.end(); ++it)
     {
@@ -152,6 +165,7 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
       }
     }
 
+    // ... then the afterwards quota
     uint32 current_time = time(0);
     for (std::vector< Quota_Entry >::iterator it = afterwards.begin(); it != afterwards.end(); )
     {
@@ -180,26 +194,24 @@ int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_u
         return Dispatcher::RATE_LIMITED;
       }
     }
-  }
 
-  // Simple checks: is the query acceptable from a global point of view?
-  if (global_available_time < global_used_time ||
-      time_units > (global_available_time - global_used_time)/2 ||
-      global_available_space < global_used_space ||
-      max_space > (global_available_space - global_used_space)/2)
+    // Remove found handle from pending
+    if (handle)
+    {
+      *handle = pending_it->second.back();
+      pending_it->second.pop_back();
+      if (pending_it->second.empty())
+        pending.erase(pending_it);
+    }
+  }
+  else
   {
-    if (!handle || cur_time - handle->first_seen < 15)
+    // Simple checks: is the query acceptable from a global point of view?
+    if (global_available_time < global_used_time ||
+        time_units > (global_available_time - global_used_time)/2 ||
+        global_available_space < global_used_space ||
+        max_space > (global_available_space - global_used_space)/2)
       return 0;
-    else
-      return Dispatcher::QUERY_REJECTED;
-  }
-
-  if (handle)
-  {
-    *handle = pending_it->second.back();
-    pending_it->second.pop_back();
-    if (pending_it->second.empty())
-      pending.erase(pending_it);
   }
 
   active.push_back(Reader_Entry(pid, max_space, time_units, client_token, time(0)));
@@ -255,7 +267,7 @@ void Global_Resource_Planner::remove_entry(std::vector< Reader_Entry >::iterator
   global_used_space -= it->max_space;
   global_used_time -= it->max_time;
 
-  if (rate_limit > 0 && it->client_token > 0)
+  if (rate_limit > 0 && !it->client_token.empty())
   {
     // Calculate afterwards blocking time
     uint32 penalty_time =
@@ -289,7 +301,7 @@ void Global_Resource_Planner::remove(pid_t pid)
 
   if (!was_active)
   {
-    for (std::map< uint32, std::vector< Pending_Client > >::iterator pending_it = pending.begin();
+    for (std::map< std::string, std::vector< Pending_Client > >::iterator pending_it = pending.begin();
         pending_it != pending.end(); )
     {
       bool found = false;
@@ -309,7 +321,7 @@ void Global_Resource_Planner::remove(pid_t pid)
 
       if (found && pending_it->second.empty())
       {
-        uint32 client = pending_it->first;
+        std::string client = pending_it->first;
         pending.erase(pending_it);
         pending_it = pending.lower_bound(client);
       }
@@ -330,7 +342,7 @@ void Global_Resource_Planner::purge(Connection_Per_Pid_Map& connection_per_pid)
       ++it;
   }
 
-  for (std::map< uint32, std::vector< Pending_Client > >::iterator pending_it = pending.begin();
+  for (std::map< std::string, std::vector< Pending_Client > >::iterator pending_it = pending.begin();
       pending_it != pending.end(); )
   {
     for (std::vector< Pending_Client >::iterator handle_it = pending_it->second.begin();
@@ -347,7 +359,7 @@ void Global_Resource_Planner::purge(Connection_Per_Pid_Map& connection_per_pid)
 
     if (pending_it->second.empty())
     {
-      uint32 client = pending_it->first;
+      std::string client = pending_it->first;
       pending.erase(pending_it);
       pending_it = pending.lower_bound(client);
     }
@@ -649,6 +661,11 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	uint32 max_allowed_time = arguments[0];
 	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
 	uint32 client_token = arguments[3];
+        std::string client_token_(4, ' ');
+        client_token_[0] = client_token & 0xff;
+        client_token_[1] = (client_token>>8) & 0xff;
+        client_token_[2] = (client_token>>16) & 0xff;
+        client_token_[3] = (client_token>>24) & 0xff;
 
 	if (pending_commit)
 	{
@@ -656,7 +673,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 
-	command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
+	command = global_resource_planner.probe(client_pid, client_token_, max_allowed_time, max_allowed_space);
 	if (command == REQUEST_READ_AND_IDX)
 	  request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
 
@@ -684,12 +701,17 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	if (arguments.size() < 1)
 	  continue;
 	uint32 target_token = arguments[0];
+        std::string target_token_(4, ' ');
+        target_token_[0] = target_token & 0xff;
+        target_token_[1] = (target_token>>8) & 0xff;
+        target_token_[2] = (target_token>>16) & 0xff;
+        target_token_[3] = (target_token>>24) & 0xff;
 
 	pid_t target_pid = 0;
         for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
 	    it != global_resource_planner.get_active().end(); ++it)
 	{
-	  if (it->client_token == target_token)
+	  if (it->client_token == target_token_)
 	    target_pid = it->client_pid;
 	}
 
@@ -705,13 +727,18 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         if (arguments.size() < 1)
           continue;
         uint32 client_token = arguments[0];
+        std::string client_token_(4, ' ');
+        client_token_[0] = client_token & 0xff;
+        client_token_[1] = (client_token>>8) & 0xff;
+        client_token_[2] = (client_token>>16) & 0xff;
+        client_token_[3] = (client_token>>24) & 0xff;
 
         connection->send_data(global_resource_planner.get_rate_limit());
 
         for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
            it != global_resource_planner.get_active().end(); ++it)
         {
-          if (it->client_token != client_token)
+          if (it->client_token != client_token_)
             continue;
 
           if (processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
@@ -731,7 +758,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         for (std::vector< Quota_Entry >::const_iterator it = global_resource_planner.get_afterwards().begin();
             it != global_resource_planner.get_afterwards().end(); ++it)
         {
-          if (it->client_token == client_token)
+          if (it->client_token == client_token_)
             connection->send_data(it->expiration_time);
         }
 
