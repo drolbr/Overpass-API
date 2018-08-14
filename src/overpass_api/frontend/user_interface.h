@@ -31,7 +31,9 @@ std::map< std::string, std::string > get_xml_cgi(
 
 std::string get_xml_console(Error_Output* error_output, uint32 max_input_size = 1048576);
 
-uint32 probe_client_token();
+std::string probe_client_token();
+
+std::string resolve_client_token(const std::string& token);
 
 std::string probe_client_identifier();
 

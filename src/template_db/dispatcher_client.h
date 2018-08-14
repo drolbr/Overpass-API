@@ -67,7 +67,7 @@ class Dispatcher_Client
     Reading the index files should be taking a quick copy, because if any process
     is in this state, write_commits are blocked. */
     void request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
-			      uint32 client_token);
+			      const std::string& client_token);
 
     /** Changes the registered state from reading the index to reading the
     database. Can be safely called multiple times for the same process. */
@@ -88,9 +88,9 @@ class Dispatcher_Client
     void purge(uint32 pid);
 
     /** Query the pid of the instance with the given token. */
-    pid_t query_by_token(uint32 token);
+    pid_t query_by_token(const std::string& token);
 
-    Client_Status query_my_status(uint32 token);
+    Client_Status query_my_status(const std::string& token);
 
     void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units, int rate_limit);
 
@@ -111,6 +111,8 @@ class Dispatcher_Client
 
     template< class TObject >
     void send_message(TObject message, const std::string& source_pos);
+
+    void send_message(const std::string& message, const std::string& source_pos);
 };
 
 

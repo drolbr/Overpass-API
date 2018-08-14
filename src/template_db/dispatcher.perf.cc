@@ -225,6 +225,55 @@ struct Test_File : File_Properties
 //-----------------------------------------------------------------------------
 
 
+struct Simple_Dispatcher_Logger : Dispatcher_Logger
+{
+  typedef uint pid_t;
+
+  virtual void write_start(pid_t pid, const std::vector< pid_t >& registered) {}
+  virtual void write_rollback(pid_t pid) {}
+  virtual void write_commit(pid_t pid) {}
+  virtual void request_read_and_idx(
+      pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space, const std::string& client_token);
+  virtual void read_idx_finished(pid_t pid) {}
+  virtual void prolongate(pid_t pid) {}
+  virtual void idle_counter(uint32 idle_count) {}
+  virtual void read_finished(pid_t pid);
+  virtual void read_aborted(pid_t pid) {}
+  virtual void purge(pid_t pid) {}
+};
+
+
+std::string to_hex(const std::string& input)
+{
+  std::string result(input.size()*2, ' ');
+  for (uint i = 0; i < input.size(); ++i)
+  {
+    char upper = (input[i]>>4) & 0xf;
+    char lower = input[i] & 0xf;
+    result[i*2] = (upper > 9 ? upper + ('a' - 10) : upper + '0');
+    result[i*2+1] = (lower > 9 ? lower + ('a' - 10) : lower + '0');
+  }
+  return result;
+}
+
+
+void Simple_Dispatcher_Logger::request_read_and_idx
+    (pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space, const std::string& client_token)
+{
+  std::cout<<"request_read_and_idx of process "<<pid<<" timeout "<<max_allowed_time
+      <<" space "<<max_allowed_space<<" token "<<to_hex(client_token)<<'\n';
+}
+
+
+void Simple_Dispatcher_Logger::read_finished(pid_t pid)
+{
+  std::cout<<"read_finished of process "<<pid<<'\n';
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 void put_elem(uint32 idx, uint32 val, const Test_File& tf,
 	      const std::string& db_dir = BASE_DIRECTORY)
 {
@@ -252,7 +301,7 @@ int main(int argc, char* args[])
   if (argc > 1)
     test_to_execute = args[1];
 
-  if (test_to_execute == "server" && argc > 2)
+  if (test_to_execute == "server")
   {
     Test_File test_file("Test_File");
 
@@ -260,9 +309,10 @@ int main(int argc, char* args[])
     file_properties.push_back(&test_file);
     try
     {
+      Simple_Dispatcher_Logger logger;
       Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
 			    BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY,
-			    5, 180, 4ull*1024*1024*1024,  4*1024*1024, file_properties);
+			    5, 180, 4ull*1024*1024*1024,  4*1024*1024, file_properties, &logger);
       dispatcher.write_start(480);
       put_elem(0, 1, test_file);
       dispatcher.write_commit(0);
@@ -292,7 +342,7 @@ int main(int argc, char* args[])
       Dispatcher_Client dispatcher_client("osm3s_share_test");
       test_file.set_basedir(dispatcher_client.get_db_dir());
 
-      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0);
+      dispatcher_client.request_read_and_idx(24*60, 1024*1024, args[3]);
       dispatcher_client.read_idx_finished();
 
       {

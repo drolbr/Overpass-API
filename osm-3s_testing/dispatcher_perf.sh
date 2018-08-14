@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-/usr/bin/time -v ../build/dispatcher.perf server 1000000 &
+/usr/bin/time -v ../build/dispatcher.perf server 1000000 >server.log &
 
 sleep 1
 rm -f err.log

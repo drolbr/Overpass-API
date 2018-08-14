@@ -92,6 +92,19 @@ void Dispatcher_Client::send_message(TObject message, const std::string& source_
 }
 
 
+void Dispatcher_Client::send_message(const std::string& message, const std::string& source_pos)
+{
+  if (message.size() >= 128)
+    return;
+
+  char buf = message.size();
+  if (send(socket.descriptor(), &buf, 1, 0) == -1)
+    throw File_Error(errno, dispatcher_share_name, source_pos + "::1");
+  if (send(socket.descriptor(), &message[0], message.size(), 0) == -1)
+    throw File_Error(errno, dispatcher_share_name, source_pos + "::2");
+}
+
+
 uint32 Dispatcher_Client::ack_arrived()
 {
   uint32 answer = 0;
@@ -198,7 +211,7 @@ void Dispatcher_Client::write_commit()
 
 
 void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
-					     uint32 client_token)
+					     const std::string& client_token)
 {
 //   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 
@@ -272,7 +285,7 @@ void Dispatcher_Client::purge(uint32 pid)
 }
 
 
-pid_t Dispatcher_Client::query_by_token(uint32 token)
+pid_t Dispatcher_Client::query_by_token(const std::string& token)
 {
 //   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
 
@@ -283,9 +296,8 @@ pid_t Dispatcher_Client::query_by_token(uint32 token)
 }
 
 
-Client_Status Dispatcher_Client::query_my_status(uint32 token)
+Client_Status Dispatcher_Client::query_my_status(const std::string& token)
 {
-
   send_message(Dispatcher::QUERY_MY_STATUS, "Dispatcher_Client::query_my_status::socket::1");
   send_message(token, "Dispatcher_Client::query_my_status::socket::2");
 

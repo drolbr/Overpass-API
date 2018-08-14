@@ -93,13 +93,56 @@ uint32 Blocking_Client_Socket::get_command()
 }
 
 
-std::vector< uint32 > Blocking_Client_Socket::get_arguments(int num_arguments)
+std::string Blocking_Client_Socket::get_argument()
+{
+  if (state == disconnected || state == waiting)
+    return "";
+
+  uint counter = 0;
+  unsigned char buf;
+  int bytes_read = recv(socket_descriptor, &buf, 1, 0);
+  while (bytes_read == -1 && counter <= 100)
+  {
+    bytes_read = recv(socket_descriptor, &buf, 1, 0);
+    millisleep(1);
+    ++counter;
+  }
+  if (bytes_read == -1 || bytes_read > 1)
+    return "";
+  if (bytes_read == 0)
+  {
+    state = disconnected;
+    return "";
+  }
+
+  std::string result(buf, ' ');
+  bytes_read = recv(socket_descriptor, &result[0], buf, 0);
+  int pos = 0;
+  if (bytes_read >= 1)
+    pos += bytes_read;
+  while (bytes_read != 0 && pos < buf && counter <= 100)
+  {
+    bytes_read = recv(socket_descriptor, &result[pos], buf - pos, 0);
+    if (bytes_read >= 1)
+      pos += bytes_read;
+    millisleep(1);
+    ++counter;
+  }
+
+  if (pos < buf)
+    return "";
+
+  return result;
+}
+
+
+std::vector< uint32 > Blocking_Client_Socket::get_arguments(uint num_arguments)
 {
   std::vector< uint32 > result;
   if (state == disconnected || state == waiting)
     return result;
 
-  for (int i = 0; i < num_arguments; ++i)
+  for (uint i = 0; i < num_arguments; ++i)
   {
     // Wait for each argument up to 0.1 seconds
     result.push_back(0);

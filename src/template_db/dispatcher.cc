@@ -526,10 +526,10 @@ void Dispatcher::write_commit(pid_t pid)
 
 
 void Dispatcher::request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
-				      uint32 client_token)
+				      const std::string& client_token)
 {
   if (logger)
-    logger->request_read_and_idx(pid, max_allowed_time, max_allowed_space);
+    logger->request_read_and_idx(pid, max_allowed_time, max_allowed_space, client_token);
   ++requests_started_counter;
 
   transaction_insulator.request_read_and_idx(pid);
@@ -652,20 +652,20 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(4);
-	if (arguments.size() < 4)
+	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(3);
+	if (arguments.size() < 3)
 	{
 	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
 	}
+        std::string client_token = connection_per_pid.get(client_pid)->get_argument();
+        if (client_token.empty())
+        {
+	  connection_per_pid.get(client_pid)->send_result(0);
+	  continue;
+        }
 	uint32 max_allowed_time = arguments[0];
 	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
-	uint32 client_token = arguments[3];
-        std::string client_token_(4, ' ');
-        client_token_[0] = client_token & 0xff;
-        client_token_[1] = (client_token>>8) & 0xff;
-        client_token_[2] = (client_token>>16) & 0xff;
-        client_token_[3] = (client_token>>24) & 0xff;
 
 	if (pending_commit)
 	{
@@ -673,7 +673,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  continue;
 	}
 
-	command = global_resource_planner.probe(client_pid, client_token_, max_allowed_time, max_allowed_space);
+	command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
 	if (command == REQUEST_READ_AND_IDX)
 	  request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
 
@@ -697,21 +697,18 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == QUERY_BY_TOKEN)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
-	if (arguments.size() < 1)
+        std::string target_token = connection_per_pid.get(client_pid)->get_argument();
+        if (target_token.empty())
+        {
+	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
-	uint32 target_token = arguments[0];
-        std::string target_token_(4, ' ');
-        target_token_[0] = target_token & 0xff;
-        target_token_[1] = (target_token>>8) & 0xff;
-        target_token_[2] = (target_token>>16) & 0xff;
-        target_token_[3] = (target_token>>24) & 0xff;
+        }
 
 	pid_t target_pid = 0;
         for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
 	    it != global_resource_planner.get_active().end(); ++it)
 	{
-	  if (it->client_token == target_token_)
+	  if (it->client_token == target_token)
 	    target_pid = it->client_pid;
 	}
 
@@ -723,22 +720,19 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         if (!connection)
           continue;
 
-        std::vector< uint32 > arguments = connection->get_arguments(1);
-        if (arguments.size() < 1)
-          continue;
-        uint32 client_token = arguments[0];
-        std::string client_token_(4, ' ');
-        client_token_[0] = client_token & 0xff;
-        client_token_[1] = (client_token>>8) & 0xff;
-        client_token_[2] = (client_token>>16) & 0xff;
-        client_token_[3] = (client_token>>24) & 0xff;
+        std::string client_token = connection_per_pid.get(client_pid)->get_argument();
+        if (client_token.empty())
+        {
+	  connection_per_pid.get(client_pid)->send_result(0);
+	  continue;
+        }
 
         connection->send_data(global_resource_planner.get_rate_limit());
 
         for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
            it != global_resource_planner.get_active().end(); ++it)
         {
-          if (it->client_token != client_token_)
+          if (it->client_token != client_token)
             continue;
 
           if (processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
@@ -758,7 +752,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         for (std::vector< Quota_Entry >::const_iterator it = global_resource_planner.get_afterwards().begin();
             it != global_resource_planner.get_afterwards().end(); ++it)
         {
-          if (it->client_token == client_token_)
+          if (it->client_token == client_token)
             connection->send_data(it->expiration_time);
         }
 

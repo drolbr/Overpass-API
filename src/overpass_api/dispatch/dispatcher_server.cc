@@ -34,7 +34,8 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
   virtual void write_start(pid_t pid, const std::vector< pid_t >& registered);
   virtual void write_rollback(pid_t pid);
   virtual void write_commit(pid_t pid);
-  virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
+  virtual void request_read_and_idx(
+      pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space, const std::string& client_token);
   virtual void read_idx_finished(pid_t pid);
   virtual void prolongate(pid_t pid);
   virtual void idle_counter(uint32 idle_count);
@@ -71,11 +72,11 @@ void Default_Dispatcher_Logger::write_commit(pid_t pid)
 }
 
 void Default_Dispatcher_Logger::request_read_and_idx
-    (pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
+    (pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space, const std::string& client_token)
 {
   std::ostringstream out;
   out<<"request_read_and_idx of process "<<pid<<" timeout "<<max_allowed_time
-      <<" space "<<max_allowed_space<<'.';
+      <<" space "<<max_allowed_space<<" token "<<resolve_client_token(client_token)<<'.';
   logger->annotated_log(out.str());
 }
 
@@ -328,8 +329,8 @@ int main(int argc, char* argv[])
     try
     {
       time_t now = time(0);
-      uint32 client_token = probe_client_token();
-      std::cout<<"Connected as: "<<client_token<<'\n';
+      std::string client_token = probe_client_token();
+      std::cout<<"Connected as: "<<resolve_client_token(client_token)<<'\n';
       std::cout<<"Current time: "<<to_date(now)<<'\n';
 
       Dispatcher_Client client

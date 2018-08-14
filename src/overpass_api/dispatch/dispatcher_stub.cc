@@ -99,7 +99,7 @@ Dispatcher_Stub::Dispatcher_Stub
 
   if (db_dir == "")
   {
-    uint32 client_token = probe_client_token();
+    std::string client_token = probe_client_token();
     dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
     Logger logger(dispatcher_client->get_db_dir());
     try

@@ -36,8 +36,8 @@ struct Dispatcher_Logger
   virtual void write_start(pid_t pid, const std::vector< pid_t >& registered) = 0;
   virtual void write_rollback(pid_t pid) = 0;
   virtual void write_commit(pid_t pid) = 0;
-  virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
-      = 0;
+  virtual void request_read_and_idx(
+      pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space, const std::string& client_token) = 0;
   virtual void read_idx_finished(pid_t pid) = 0;
   virtual void prolongate(pid_t pid) = 0;
   virtual void idle_counter(uint32 idle_count) = 0;
@@ -228,7 +228,7 @@ class Dispatcher
         Reading the index files should be taking a quick copy, because if any process
 	is in this state, write_commits are blocked. */
     void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
-			      uint32 client_token);
+			      const std::string& client_token);
 
     /** Changes the registered state from reading the index to reading the
         database. Can be safely called multiple times for the same process. */
