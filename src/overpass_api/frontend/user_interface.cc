@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "basic_formats.h"
 #include "cgi-helper.h"
 #include "../../expat/expat_justparse_interface.h"
 #include "user_interface.h"
@@ -198,7 +199,7 @@ std::map< std::string, std::string > get_xml_cgi(
   {
     if (error_output)
       error_output->add_encoding_remark("The server now removes the CGI character escaping.");
-   decode_cgi_to_plain(input).swap(decoded);
+    decode_cgi_to_plain(input).swap(decoded);
     std::string jsonp = decoded["jsonp"];
     input = decoded["data"];
 
@@ -297,25 +298,6 @@ std::string parse_ipv4_address(const std::string ip_addr)
 }
 
 
-int decode_hex(const std::string& representation)
-{
-  int result = 0;
-  std::string::size_type pos = 0;
-
-  while (pos < representation.size())
-  {
-    if (representation[pos] >= '0' && representation[pos] <= '9')
-      result = (result<<4) | (representation[pos] - '0');
-    else if (representation[pos] >= 'a' && representation[pos] <= 'f')
-      result = (result<<4) | (representation[pos] - 'a' + 10);
-    else if (representation[pos] >= 'A' && representation[pos] <= 'F')
-      result = (result<<4) | (representation[pos] - 'A' + 10);
-    ++pos;
-  }
-  return result;
-}
-
-
 std::vector< uint16 > parse_short_ipv6_address(std::string ip_addr)
 {
   std::vector< uint16 > ipv6_address;
@@ -389,7 +371,7 @@ std::string probe_client_token()
 {
   std::string ip_addr = probe_client_identifier();
   if (ip_addr == "")
-    return "0";
+    return std::string(1, '\x0');
 
   if (ip_addr.find(".") != std::string::npos)
     return parse_ipv4_address(ip_addr);

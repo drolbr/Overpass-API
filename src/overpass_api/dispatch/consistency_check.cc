@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
     // open read transaction and log this.
     Parsed_Query global_settings;
     Dispatcher_Stub dispatcher(db_dir, error_output, "-- consistency check --\n", keep_meta, area_level,
-			       24*60*60, 1024*1024*1024, global_settings);
+			       24*60*60, 1024*1024*1024, "", global_settings);
     Resource_Manager& rman = dispatcher.resource_manager();
 
     // perform check

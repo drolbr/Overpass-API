@@ -49,8 +49,9 @@ class Dispatcher_Stub : public Watchdog_Callback
     // and registers the process. error_output_ must remain valid over the
     // entire lifetime of this object.
     Dispatcher_Stub(std::string db_dir_, Error_Output* error_output_, std::string xml_raw,
-		    meta_modes meta_, int area_level,
-		    uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings_);
+	meta_modes meta_, int area_level,
+        uint32 max_allowed_time, uint64 max_allowed_space, const std::string& api_key,
+        Parsed_Query& global_settings_);
 
     // Called once per minute from the resource manager
     virtual void ping() const;

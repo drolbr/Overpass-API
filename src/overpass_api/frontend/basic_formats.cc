@@ -29,6 +29,55 @@ std::string iso_string(uint64 timestamp)
 }
 
 
+int decode_hex(const std::string& representation)
+{
+  int result = 0;
+  std::string::size_type pos = 0;
+
+  while (pos < representation.size())
+  {
+    if (representation[pos] >= '0' && representation[pos] <= '9')
+      result = (result<<4) | (representation[pos] - '0');
+    else if (representation[pos] >= 'a' && representation[pos] <= 'f')
+      result = (result<<4) | (representation[pos] - 'a' + 10);
+    else if (representation[pos] >= 'A' && representation[pos] <= 'F')
+      result = (result<<4) | (representation[pos] - 'A' + 10);
+    ++pos;
+  }
+  return result;
+}
+
+
+std::string api_key_from_hex(const std::string& hex)
+{
+  if (hex.size() % 2 != 0)
+    return "";
+
+  std::string result(hex.size()/2, ' ');
+  std::string::size_type pos = 0;
+
+  while (pos < hex.size())
+  {
+    int val = 0;
+    if (hex[pos] >= '0' && hex[pos] <= '9')
+      val = hex[pos] - '0';
+    else if (hex[pos] >= 'a' && hex[pos] <= 'f')
+      val = hex[pos] - 'a' + 10;
+    else if (hex[pos] >= 'A' && hex[pos] <= 'F')
+      val = hex[pos] - 'A' + 10;
+    else
+      return "";
+    if (pos % 2 != 0)
+      result[pos/2] |= val;
+    else
+      result[pos/2] = (val<<4);
+
+    ++pos;
+  }
+  return result + '\x70';
+}
+
+
 void write_html_header
     (const std::string& timestamp, const std::string& area_timestamp, uint write_mime, bool write_js_init,
      bool write_remarks)

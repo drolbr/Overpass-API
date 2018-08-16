@@ -89,7 +89,7 @@ void set_limits(uint32 time, uint64 space)
 
 Dispatcher_Stub::Dispatcher_Stub
     (std::string db_dir_, Error_Output* error_output_, std::string xml_raw, meta_modes meta_, int area_level,
-     uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings)
+     uint32 max_allowed_time, uint64 max_allowed_space, const std::string& api_key, Parsed_Query& global_settings)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
       transaction(0), area_transaction(0), rman(0), meta(meta_)
@@ -99,7 +99,9 @@ Dispatcher_Stub::Dispatcher_Stub
 
   if (db_dir == "")
   {
-    std::string client_token = probe_client_token();
+    std::string client_token = api_key;
+    if (client_token.empty())
+      client_token = probe_client_token();
     dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
     Logger logger(dispatcher_client->get_db_dir());
     try

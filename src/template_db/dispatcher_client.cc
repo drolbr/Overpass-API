@@ -213,11 +213,10 @@ void Dispatcher_Client::write_commit()
 void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
 					     const std::string& client_token)
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
+  uint32 cur_time = time(0);
   uint counter = 0;
   uint32 ack = 0;
-  while (ack == 0 && ++counter <= 100)
+  while (ack == 0 && ++counter <= 100 && time(0) - cur_time <= 15)
   {
     send_message(Dispatcher::REQUEST_READ_AND_IDX,
 		 "Dispatcher_Client::request_read_and_idx::socket::1");

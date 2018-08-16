@@ -1366,6 +1366,13 @@ void generic_parse_and_validate_map_ql
       kv[0] = "element-limit";
     else if (kv[0] == "out")
       kv[0] = "output";
+    else if (kv[0] == "api_key")
+    {
+      kv[0] = "api-key";
+      if (!kv[1].empty() && ((kv[1][0] == '"' && kv[1][kv.size()-1] == '"')
+            || (kv[1][0] == '\'' && kv[1][kv.size()-1] == '\'')))
+        kv[1] = kv[1].substr(1, kv.size()-2);
+    }
     else if (kv[0] == "diff" || kv[0] == "adiff")
     {
       if (kv[0] == "adiff")

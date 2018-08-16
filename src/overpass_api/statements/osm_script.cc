@@ -21,6 +21,7 @@
 #include <sstream>
 
 #include "../core/settings.h"
+#include "../frontend/basic_formats.h"
 #include "../frontend/output_handler_parser.h"
 #include "bbox_query.h"
 #include "osm_script.h"
@@ -42,6 +43,7 @@ Osm_Script_Statement::Osm_Script_Statement
   attributes["bbox"] = "";
   attributes["timeout"] = "180";
   attributes["element-limit"] = "536870912";
+  attributes["api-key"] = "";
   attributes["output"] = "xml";
   attributes["output-config"] = "";
   attributes["date"] = "";
@@ -152,6 +154,16 @@ Osm_Script_Statement::Osm_Script_Statement
     if (south >= -90.0 && south <= 90.0 && north >= -90.0 && north <= 90.0
         && west >= -180.0 && west <= 180.0 && east >= -180.0 && east <= 180.0)
       global_settings.set_global_bbox(Bbox_Double(south, west, north, east));
+  }
+
+  if (attributes["api-key"] != "")
+  {
+    std::string api_key = api_key_from_hex(attributes["api-key"]);
+    if (api_key != "")
+      global_settings.set_api_key(api_key);
+    else
+      add_static_error("The attribute \"api-key\" must be empty "
+          "or contain a hexadecimal number with an even number of digits.");
   }
 
   if (attributes["date"] != "")

@@ -65,6 +65,12 @@ int main(int argc, char *argv[])
       return 0;
 
     error_output.set_output_handler(global_settings.get_output_handler());
+    if (global_settings.get_api_key().empty())
+    {
+      std::map< std::string, std::string >::const_iterator it = global_settings.get_input_params().find("apikey");
+      if (it != global_settings.get_input_params().end())
+        global_settings.set_api_key(api_key_from_hex(it->second));
+    }
 
     Osm_Script_Statement* osm_script = 0;
     if (!get_statement_stack()->empty())
@@ -92,8 +98,8 @@ int main(int argc, char *argv[])
       // open read transaction and log this.
       int area_level = determine_area_level(&error_output, 0);
       Dispatcher_Stub dispatcher("", &error_output, global_settings.get_input_params().find("data")->second,
-			         get_uses_meta_data(), area_level,
-				 max_allowed_time, max_allowed_space, global_settings);
+          get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space,
+          global_settings.get_api_key(), global_settings);
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
 

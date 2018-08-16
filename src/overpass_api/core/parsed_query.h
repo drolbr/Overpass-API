@@ -37,12 +37,14 @@ public:
   void set_output_handler(Output_Handler_Parser* parser,
 			  Tokenizer_Wrapper* token, Error_Output* error_output);
   void set_global_bbox(const Bbox_Double& bbox) { global_bbox_limitation = bbox; }
+  void set_api_key(const std::string& api_key_) { api_key = api_key_; }
 
   const std::map< std::string, std::string >& get_input_params() const { return input_params; }
   void set_input_params(const std::map< std::string, std::string >& input_params_) { input_params = input_params_; }
 
   void trigger_print_bounds() const;
   const Bbox_Double& get_global_bbox_limitation() const { return global_bbox_limitation; }
+  std::string get_api_key() const { return api_key; }
 
   Derived_Skeleton::Id_Type dispense_derived_id() { return ++last_dispensed_id; }
 
@@ -55,6 +57,7 @@ private:
   Bbox_Double global_bbox_limitation;
   std::map< std::string, std::string > input_params;
   Derived_Skeleton::Id_Type last_dispensed_id;
+  std::string api_key;
 };
 
 

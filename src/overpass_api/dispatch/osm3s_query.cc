@@ -176,7 +176,8 @@ int main(int argc, char *argv[])
       // open read transaction and log this.
       area_level = determine_area_level(error_output, area_level);
       Dispatcher_Stub dispatcher(db_dir, error_output, "-- clone database --",
-				 get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024, global_settings);
+          get_uses_meta_data(), area_level, 24*60*60, 1024*1024*1024,
+          respect_timeout ? global_settings.get_api_key() : "0", global_settings);
       copy_file(dispatcher.resource_manager().get_transaction()->get_db_dir() + "/replicate_id",
 		clone_db_dir + "/replicate_id");
 
@@ -221,8 +222,8 @@ int main(int argc, char *argv[])
     // open read transaction and log this.
     area_level = determine_area_level(error_output, area_level);
     Dispatcher_Stub dispatcher(db_dir, error_output, xml_raw,
-			       get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space,
-			       global_settings);
+        get_uses_meta_data(), area_level, max_allowed_time, max_allowed_space,
+        respect_timeout ? global_settings.get_api_key() : "0", global_settings);
     if (osm_script && osm_script->get_desired_timestamp())
       dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
 
