@@ -129,6 +129,14 @@ struct Attic_Settings
 };
 
 
+struct Api_Key_Settings
+{
+  File_Properties* API_KEYS;
+
+  Api_Key_Settings();
+};
+
+
 struct Clone_Settings
 {
   uint32 compression_method;
@@ -145,6 +153,7 @@ const Osm_Base_Settings& osm_base_settings();
 const Area_Settings& area_settings();
 const Meta_Settings& meta_settings();
 const Attic_Settings& attic_settings();
+const Api_Key_Settings& api_key_settings();
 
 void show_mem_status();
 

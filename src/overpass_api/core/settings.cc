@@ -255,6 +255,20 @@ const Attic_Settings& attic_settings()
 
 //-----------------------------------------------------------------------------
 
+Api_Key_Settings::Api_Key_Settings()
+:
+  API_KEYS(new OSM_File_Properties< Uint32_Index >
+      ("api_keys", 16*1024, 0))
+{}
+
+const Api_Key_Settings& api_key_settings()
+{
+  static Api_Key_Settings obj;
+  return obj;
+}
+
+//-----------------------------------------------------------------------------
+
 void show_mem_status()
 {
   std::ostringstream proc_file_name_("");

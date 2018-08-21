@@ -28,6 +28,7 @@
 
 #include "../core/settings.h"
 #include "../frontend/output.h"
+#include "api_key_updater.h"
 #include "osm_updater.h"
 
 
@@ -38,6 +39,7 @@ int main(int argc, char* argv[])
   bool transactional = true;
   meta_modes meta = only_data;
   bool abort = false;
+  bool api_keys = false;
   unsigned int flush_limit = 16*1024*1024;
 
   int argpos(1);
@@ -56,6 +58,8 @@ int main(int argc, char* argv[])
       meta = keep_meta;
     else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
       meta = keep_attic;
+    else if (!(strncmp(argv[argpos], "--api-keys", 10)))
+      api_keys = true;
     else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
     {
       flush_limit = atoll(std::string(argv[argpos]).substr(13).c_str()) *1024*1024;
@@ -109,6 +113,11 @@ int main(int argc, char* argv[])
     }
     ++argpos;
   }
+  if (api_keys && meta != only_data)
+  {
+    std::cerr<<"Cannot combine api keys and normal update (meta mode switches).\n";
+    abort = true;
+  }
   if (abort)
   {
 #ifdef HAVE_LZ4
@@ -123,17 +132,30 @@ int main(int argc, char* argv[])
 
   try
   {
-    if (transactional)
+    if (!api_keys)
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
-      //reading the main document
-      osm_updater.parse_file_completely(stdin);
+      if (transactional)
+      {
+        Osm_Updater osm_updater(get_verbatim_callback(), data_version, meta, flush_limit);
+        //reading the main document
+        osm_updater.parse_file_completely(stdin);
+      }
+      else
+      {
+        Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
+        //reading the main document
+        osm_updater.parse_file_completely(stdin);
+      }
     }
     else
     {
-      Osm_Updater osm_updater(get_verbatim_callback(), db_dir, data_version, meta, flush_limit);
-      //reading the main document
-      osm_updater.parse_file_completely(stdin);
+      if (db_dir.empty())
+      {
+        std::cerr<<"Db_dir required for api keys.\n";
+        return 4;
+      }
+      Api_Key_Updater api_key_updater(db_dir);
+      api_key_updater.parse_file_completely(stdin);
     }
   }
   catch(Context_Error e)
