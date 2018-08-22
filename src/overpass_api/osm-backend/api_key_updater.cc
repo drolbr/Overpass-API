@@ -46,6 +46,15 @@ void start_api_keys(const char *el, const char **attr)
         api_key.users_allowed = (std::string(attr[i+1]) == "yes");
       else if (!strcmp(attr[i], "rate-limit"))
         api_key.rate_limit = atoi(attr[i+1]);
+      else if (!strcmp(attr[i], "created"))
+        api_key.timestamp = Timestamp(
+            atol(attr[i+1]), //year
+            atoi(attr[i+1]+5), //month
+            atoi(attr[i+1]+8), //day
+            atoi(attr[i+1]+11), //hour
+            atoi(attr[i+1]+14), //minute
+            atoi(attr[i+1]+17) //second
+            ).timestamp;
     }
     new_keys->push_back(api_key);
   }

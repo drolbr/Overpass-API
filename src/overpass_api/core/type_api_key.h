@@ -46,6 +46,16 @@ inline uint32 assemble_uint32(const void* data)
 }
 
 
+inline uint64 assemble_uint40(const void* data)
+{
+  return ((uint64)(*((uint8*)data + 4))<<32)
+      | ((uint32)(*((uint8*)data + 3))<<24)
+      | ((uint32)(*((uint8*)data + 2))<<16)
+      | ((uint32)(*((uint8*)data + 1))<<8)
+      | (uint32)*(uint8*)data;
+}
+
+
 inline uint64 assemble_uint64(const void* data)
 {
   return ((uint64)(*((uint8*)data + 7))<<56)
@@ -68,6 +78,7 @@ struct Api_Key_Entry
   std::string key;
   bool users_allowed;
   uint16 rate_limit;
+  uint64 timestamp;
 
   Api_Key_Entry() : users_allowed(false), rate_limit(0) {}
 
@@ -76,16 +87,17 @@ struct Api_Key_Entry
     memcpy(&key[0], data, KEY_SIZE);
     users_allowed = *((uint8*)data + KEY_SIZE);
     rate_limit = assemble_uint16((uint8*)data + (KEY_SIZE + 1));
+    timestamp = assemble_uint40((uint8*)data + (KEY_SIZE + 3));
   }
 
   uint32 size_of() const
   {
-    return KEY_SIZE + 3;
+    return KEY_SIZE + 8;
   }
 
   static uint32 size_of(void* data)
   {
-    return KEY_SIZE + 3;
+    return KEY_SIZE + 8;
   }
 
   uint32 get_key() const
@@ -108,6 +120,7 @@ struct Api_Key_Entry
     memcpy(data, &key[0], KEY_SIZE);
     *((uint8*)data + KEY_SIZE) = users_allowed;
     memcpy((uint8*)data + (KEY_SIZE + 1), &rate_limit, 2);
+    memcpy((uint8*)data + (KEY_SIZE + 3), &timestamp, 5);
   }
 
   bool operator<(const Api_Key_Entry& a) const

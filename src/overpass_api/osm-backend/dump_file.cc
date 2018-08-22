@@ -609,7 +609,9 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint32_Index, Api_Key_Entry >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
         std::cout<<std::hex<<it.index().val()<<'\t'
-            <<resolve_client_token(it.object().key)<<'\t'<<it.object().users_allowed<<'\t'<<it.object().rate_limit<<'\n';
+            <<resolve_client_token(it.object().key)<<'\t'
+            <<it.object().users_allowed<<'\t'<<it.object().rate_limit<<'\t'
+            <<Timestamp(it.object().timestamp).str()<<'\n';
     }
     else
       std::cout<<"Unknown target.\n";
