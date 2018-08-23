@@ -199,7 +199,7 @@ class Dispatcher
 	       std::string index_share_name,
 	       std::string shadow_name,
 	       std::string db_dir,
-	       uint max_num_reading_processes, uint purge_timeout,
+	       uint max_num_reading_processes,
 	       uint64 total_available_space,
 	       uint64 total_available_time_units,
 	       const std::vector< File_Properties* >& controlled_files,

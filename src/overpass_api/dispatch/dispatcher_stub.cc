@@ -17,6 +17,7 @@
  */
 
 #include "dispatcher_stub.h"
+#include "../core/type_api_key.h"
 #include "../frontend/user_interface.h"
 #include "../statements/statement_dump.h"
 
@@ -192,6 +193,71 @@ Dispatcher_Stub::Dispatcher_Stub
       out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
       logger.annotated_log(out.str());
       throw;
+    }
+    
+    if (!api_key.empty())
+    {
+      Dispatcher_Client api_key_dispatcher_client(api_key_settings().shared_name);
+      Logger logger(api_key_dispatcher_client.get_db_dir());
+
+      try
+      {
+        logger.annotated_log("request_read_and_idx() api_key start");
+        api_key_dispatcher_client.request_read_and_idx(max_allowed_time, max_allowed_space, client_token);
+        logger.annotated_log("request_read_and_idx() api_key end");
+      }
+      catch (const File_Error& e)
+      {
+        std::ostringstream out;
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
+        logger.annotated_log(out.str());
+        throw;
+      }
+
+      Nonsynced_Transaction api_key_transaction(false, false, api_key_dispatcher_client.get_db_dir(), "");
+      api_key_transaction.data_index(api_key_settings().API_KEYS);
+
+      try
+      {
+        logger.annotated_log("read_idx_finished() api_key start");
+        api_key_dispatcher_client.read_idx_finished();
+        logger.annotated_log("read_idx_finished() api_key end");
+      }
+      catch (const File_Error& e)
+      {
+        std::ostringstream out;
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
+        logger.annotated_log(out.str());
+        throw;
+      }
+
+      std::vector< Uint32_Index > api_key_idx;
+      api_key_idx.push_back(Uint32_Index(Api_Key_Entry::get_key(api_key)));
+      bool found = false;
+      Block_Backend< Uint32_Index, Api_Key_Entry, std::vector< Uint32_Index >::const_iterator >
+        api_key_db(api_key_transaction.data_index(api_key_settings().API_KEYS));
+      for (Block_Backend< Uint32_Index, Api_Key_Entry, std::vector< Uint32_Index >::const_iterator >
+          ::Discrete_Iterator it = api_key_db.discrete_begin(api_key_idx.begin(), api_key_idx.end());
+          !(it == api_key_db.discrete_end()); ++it)
+      {
+        if (it.object().key == api_key)
+          found = true;
+      }
+
+      try
+      {
+        logger.annotated_log("read_finished() api_key start");
+        api_key_dispatcher_client.read_finished();
+        logger.annotated_log("read_finished() api_key end");
+      }
+      catch (const File_Error& e)
+      {
+        std::ostringstream out;
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
+        logger.annotated_log(out.str());
+      }
+
+      //std::cerr<<"DEBUG: found = "<<found<<'\n';
     }
 
     if (area_level > 0)

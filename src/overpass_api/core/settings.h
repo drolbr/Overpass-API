@@ -64,7 +64,6 @@ struct Osm_Base_Settings
 
   std::string shared_name;
   uint max_num_processes;
-  uint purge_timeout;
   uint64 total_available_space;
   uint64 total_available_time_units;
 
@@ -81,7 +80,6 @@ struct Area_Settings
 
   std::string shared_name;
   uint max_num_processes;
-  uint purge_timeout;
   uint64 total_available_space;
   uint64 total_available_time_units;
 
@@ -132,6 +130,11 @@ struct Attic_Settings
 struct Api_Key_Settings
 {
   File_Properties* API_KEYS;
+
+  std::string shared_name;
+  uint max_num_processes;
+  uint64 total_available_space;
+  uint64 total_available_time_units;
 
   Api_Key_Settings();
 };

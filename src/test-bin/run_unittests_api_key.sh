@@ -42,8 +42,11 @@ check_osm_against()
 mkdir -p run/api_key_test_db
 rm -fR run/api_key_test_db/*
 
+cat input/api_key_test_db/api_key_sample.osm | $BASEDIR/bin/update_database --api-keys --db-dir=run/api_key_test_db
+
 $BASEDIR/bin/dispatcher --osm-base --db-dir=run/api_key_test_db --time=400 &
 $BASEDIR/bin/dispatcher --areas --db-dir=run/api_key_test_db &
+$BASEDIR/bin/dispatcher --api-keys --db-dir=run/api_key_test_db &
 sleep 1
 
 echo "Based on IP address"
@@ -62,25 +65,25 @@ echo 'data=out;' | REMOTE_ADDR="3000:1234:5678:abcd::1" $BASEDIR/cgi-bin/interpr
 
 echo
 echo "Based on API key"
-echo 'data=out;&apikey=f00ba4' | $BASEDIR/cgi-bin/interpreter \
+echo 'data=out;&apikey=f00ba40012341234123412341234123412341234' | $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo 'data=out;&apikey=f00ba4' | REMOTE_ADDR="10.31.29.23" $BASEDIR/cgi-bin/interpreter \
+echo 'data=out;&apikey=f00ba40012341234123412341234123412341234' | REMOTE_ADDR="10.31.29.23" $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo 'data=out;&apikey=f00ba4' | REMOTE_ADDR="3000:1234:5678:abcd::1" $BASEDIR/cgi-bin/interpreter \
+echo 'data=out;&apikey=f00ba40012341234123412341234123412341234' | REMOTE_ADDR="3000:1234:5678:abcd::1" $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo 'apikey=f11ba5&data=out;' | $BASEDIR/cgi-bin/interpreter \
+echo 'apikey=f11ba50012341234123412341234123412341234&data=out;' | $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo 'apikey=f11ba5&data=out;' | REMOTE_ADDR="10.31.29.23" $BASEDIR/cgi-bin/interpreter \
+echo 'apikey=f11ba50012341234123412341234123412341234&data=out;' | REMOTE_ADDR="10.31.29.23" $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo 'apikey=f11ba5&data=out;' | REMOTE_ADDR="3000:1234:5678:abcd::1" $BASEDIR/cgi-bin/interpreter \
+echo 'apikey=f11ba50012341234123412341234123412341234&data=out;' | REMOTE_ADDR="3000:1234:5678:abcd::1" $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo '[api_key:f22ba6];out;' | $BASEDIR/cgi-bin/interpreter \
+echo '[api_key:f22ba60012341234123412341234123412341234];out;' | $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo '[api_key:f22ba6];out;' | REMOTE_ADDR="10.31.29.23" $BASEDIR/cgi-bin/interpreter \
+echo '[api_key:f22ba60012341234123412341234123412341234];out;' | REMOTE_ADDR="10.31.29.23" $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo '[api_key:f22ba6];out;' | REMOTE_ADDR="3000:1234:5678:abcd::1" $BASEDIR/cgi-bin/interpreter \
+echo '[api_key:f22ba60012341234123412341234123412341234];out;' | REMOTE_ADDR="3000:1234:5678:abcd::1" $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
-echo 'data=[api_key:"f22ba6"];out;&apikey=f00ba1;' | $BASEDIR/cgi-bin/interpreter \
+echo 'data=[api_key:"f22ba60012341234123412341234123412341234"];out;&apikey=f00ba10012341234123412341234123412341234;' | $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
 
 echo
@@ -100,6 +103,7 @@ echo '[timeout:900];out;' | $BASEDIR/bin/osm3s_query --rules \
 
 $BASEDIR/bin/dispatcher --osm-base --terminate
 $BASEDIR/bin/dispatcher --areas --terminate
+$BASEDIR/bin/dispatcher --api-keys --terminate
 
 cat run/api_key_test_db/transactions.log | grep -E 'request_read_and_idx of process' \
     | awk '{ print $13; }' | check_osm_against input/api_key_test_db/osm_base_client_tokens.tsv

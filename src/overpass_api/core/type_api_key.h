@@ -105,6 +105,11 @@ struct Api_Key_Entry
     return assemble_uint32(&key[0]);
   }
 
+  static uint32 get_key(const std::string& key)
+  {
+    return assemble_uint32(&key[0]);
+  }
+
   Id_Type get_id() const
   {
     return assemble_uint64(&key[0]);

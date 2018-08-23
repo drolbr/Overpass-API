@@ -221,6 +221,7 @@ uint64 eval_map(const std::map< Uint31_Index, std::vector< Area_Skeleton > >& ar
 struct Resource_Error
 {
   bool timed_out;
+  bool api_key_unknown;
   std::string stmt_name;
   uint line_number;
   uint64 size;

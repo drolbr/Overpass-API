@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
 {
   // read command line arguments
   std::string db_dir;
-  bool osm_base(false), areas(false), meta(false), attic(false),
+  bool osm_base(false), areas(false), api_keys(false), meta(false), attic(false),
       terminate(false), status(false), my_status(false), show_dir(false);
   uint32 purge_id = 0;
   bool query_token = false;
@@ -181,6 +181,8 @@ int main(int argc, char* argv[])
       osm_base = true;
     else if (std::string("--areas") == argv[argpos])
       areas = true;
+    else if (std::string("--api-keys") == argv[argpos])
+      api_keys = true;
     else if (std::string("--meta") == argv[argpos])
       meta = true;
     else if (std::string("--attic") == argv[argpos])
@@ -209,6 +211,7 @@ int main(int argc, char* argv[])
       "Accepted arguments are:\n"
       "  --osm-base: Start or talk to the dispatcher for the osm data.\n"
       "  --areas: Start or talk to the dispatcher for the areas data.\n"
+      "  --api-keys: Start or talk to the dispatcher for the api keys data.\n"
       "  --meta: When starting the osm data dispatcher, also care for meta data.\n"
       "  --attic: When starting the osm data dispatcher, also care for meta and museum data.\n"
       "  --db-dir=$DB_DIR: The directory where the database resides.\n"
@@ -228,24 +231,29 @@ int main(int argc, char* argv[])
     ++argpos;
   }
 
-  if (osm_base && areas)
+  if (osm_base && (areas || api_keys))
   {
-    std::cout<<"\"--areas\" and \"--osm-base\" need separate instances.\n";
+    std::cout<<"\""<<(areas ? "--areas" : "--api-keys")<<"\" and \"--osm-base\" need separate instances.\n";
     return 0;
   }
-  if (meta && areas)
+  if (meta && (areas || api_keys))
   {
-    std::cout<<"\"--areas\" and \"--meta\" cannot be combined.\n";
+    std::cout<<"\""<<(areas ? "--areas" : "--api-keys")<<"\" and \"--meta\" cannot be combined.\n";
     return 0;
   }
-  if (attic && areas)
+  if (attic && (areas || api_keys))
   {
-    std::cout<<"\"--areas\" and \"--attic\" cannot be combined.\n";
+    std::cout<<"\""<<(areas ? "--areas" : "--api-keys")<<"\" and \"--attic\" cannot be combined.\n";
     return 0;
   }
   if (meta && attic)
   {
     std::cout<<"\"--attic\" and \"--meta\" cannot be combined.\n";
+    return 0;
+  }
+  if (areas && api_keys)
+  {
+    std::cout<<"\"--areas\" and \"--api_keys\" need separate instances.\n";
     return 0;
   }
 
@@ -254,7 +262,8 @@ int main(int argc, char* argv[])
     try
     {
       Dispatcher_Client client
-          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+          (osm_base ? osm_base_settings().shared_name :
+           areas ? area_settings().shared_name : api_key_settings().shared_name);
       client.terminate();
     }
     catch (File_Error e)
@@ -269,7 +278,8 @@ int main(int argc, char* argv[])
     try
     {
       Dispatcher_Client client
-          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+          (osm_base ? osm_base_settings().shared_name :
+           areas ? area_settings().shared_name : api_key_settings().shared_name);
       client.output_status();
     }
     catch (File_Error e)
@@ -284,7 +294,8 @@ int main(int argc, char* argv[])
     try
     {
       Dispatcher_Client client
-          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+          (osm_base ? osm_base_settings().shared_name :
+           areas ? area_settings().shared_name : api_key_settings().shared_name);
       std::cout<<client.get_db_dir();
     }
     catch (File_Error e)
@@ -299,7 +310,8 @@ int main(int argc, char* argv[])
     try
     {
       Dispatcher_Client client
-          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+          (osm_base ? osm_base_settings().shared_name :
+           areas ? area_settings().shared_name : api_key_settings().shared_name);
       client.purge(purge_id);
     }
     catch (File_Error e)
@@ -313,7 +325,8 @@ int main(int argc, char* argv[])
     try
     {
       Dispatcher_Client client
-          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+          (osm_base ? osm_base_settings().shared_name :
+           areas ? area_settings().shared_name : api_key_settings().shared_name);
       pid_t pid = client.query_by_token(probe_client_token());
       if (pid > 0)
         std::cout<<pid<<'\n';
@@ -334,7 +347,8 @@ int main(int argc, char* argv[])
       std::cout<<"Current time: "<<to_date(now)<<'\n';
 
       Dispatcher_Client client
-          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+          (osm_base ? osm_base_settings().shared_name :
+           areas ? area_settings().shared_name : api_key_settings().shared_name);
       Client_Status status = client.query_my_status(probe_client_token());
       std::cout<<"Rate limit: "<<status.rate_limit<<'\n';
       if (status.slot_starts.size() + status.queries.size() < status.rate_limit)
@@ -357,7 +371,8 @@ int main(int argc, char* argv[])
     try
     {
       Dispatcher_Client client
-          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+          (osm_base ? osm_base_settings().shared_name :
+           areas ? area_settings().shared_name : api_key_settings().shared_name);
       client.set_global_limits(max_allowed_space, max_allowed_time_units, rate_limit);
     }
     catch (File_Error e)
@@ -430,13 +445,15 @@ int main(int argc, char* argv[])
     files_to_manage.push_back(area_settings().AREA_TAGS_LOCAL);
     files_to_manage.push_back(area_settings().AREA_TAGS_GLOBAL);
   }
+  else if (api_keys)
+    files_to_manage.push_back(api_key_settings().API_KEYS);
 
   if (suspicious_files_present)
     return 3;
 
-  if (!osm_base && !areas && !terminate)
+  if (!osm_base && !areas && !api_keys && !terminate)
   {
-    std::cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas | --osm-base (--meta | --attic)) --db-dir=Directory)\n";
+    std::cout<<"Usage: "<<argv[0]<<" (--terminate | (--osm-base | --areas | --api-keys | --osm-base (--meta | --attic)) --db-dir=Directory)\n";
     return 0;
   }
 
@@ -457,18 +474,20 @@ int main(int argc, char* argv[])
     Logger logger(db_dir);
     Default_Dispatcher_Logger disp_logger(logger);
     if (max_allowed_space <= 0)
-      max_allowed_space = areas ? area_settings().total_available_space : osm_base_settings().total_available_space;
+      max_allowed_space = osm_base ? osm_base_settings().total_available_space :
+          areas ? area_settings().total_available_space : api_key_settings().total_available_space;
     if (max_allowed_time_units <= 0)
-      max_allowed_time_units = areas ? area_settings().total_available_time_units
-          : osm_base_settings().total_available_time_units;
+      max_allowed_time_units = osm_base ? osm_base_settings().total_available_time_units :
+          areas ? area_settings().total_available_time_units : api_key_settings().total_available_time_units;
     Dispatcher dispatcher
-        (areas ? area_settings().shared_name : osm_base_settings().shared_name,
-         "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
-	 areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
-	 areas ? area_settings().purge_timeout : osm_base_settings().purge_timeout,
-	 max_allowed_space,
-	 max_allowed_time_units,
-	 files_to_manage, &disp_logger);
+        (osm_base ? osm_base_settings().shared_name :
+        areas ? area_settings().shared_name : api_key_settings().shared_name,
+        "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
+	osm_base ? osm_base_settings().max_num_processes :
+            areas ? area_settings().max_num_processes : api_key_settings().max_num_processes,
+	max_allowed_space,
+	max_allowed_time_units,
+	files_to_manage, &disp_logger);
     if (rate_limit > -1)
       dispatcher.set_rate_limit(rate_limit);
     dispatcher.standby_loop(0);

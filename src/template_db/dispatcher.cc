@@ -374,7 +374,7 @@ Dispatcher::Dispatcher
      std::string index_share_name,
      std::string shadow_name_,
      std::string db_dir_,
-     uint max_num_reading_processes_, uint purge_timeout_,
+     uint max_num_reading_processes_,
      uint64 total_available_space_,
      uint64 total_available_time_units_,
      const std::vector< File_Properties* >& controlled_files_,

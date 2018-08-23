@@ -145,7 +145,6 @@ Osm_Base_Settings::Osm_Base_Settings()
 
   shared_name(basic_settings().shared_name_base + "_osm_base"),
   max_num_processes(20),
-  purge_timeout(900),
   total_available_space(12ll*1024*1024*1024),
   total_available_time_units(256*1024)
 {}
@@ -170,7 +169,6 @@ Area_Settings::Area_Settings()
 
   shared_name(basic_settings().shared_name_base + "_areas"),
   max_num_processes(5),
-  purge_timeout(900),
   total_available_space(4ll*1024*1024*1024),
   total_available_time_units(256*1024)
 {}
@@ -258,7 +256,12 @@ const Attic_Settings& attic_settings()
 Api_Key_Settings::Api_Key_Settings()
 :
   API_KEYS(new OSM_File_Properties< Uint32_Index >
-      ("api_keys", 16*1024, 0))
+      ("api_keys", 16*1024, 0)),
+
+  shared_name(basic_settings().shared_name_base + "_api_keys"),
+  max_num_processes(100),
+  total_available_space(64ll*1024*1024*1024),
+  total_available_time_units(4*1024*1024)
 {}
 
 const Api_Key_Settings& api_key_settings()
