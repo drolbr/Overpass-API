@@ -34,7 +34,7 @@ check_osm_against()
     echo "Test successful."
   else
     echo "Test FAILED"
-    diff run/api_key_test_db/_ "$1"
+    diff -c run/api_key_test_db/_ "$1"
   fi
   rm run/api_key_test_db/_
 };
@@ -105,6 +105,7 @@ $BASEDIR/bin/dispatcher --osm-base --terminate
 $BASEDIR/bin/dispatcher --areas --terminate
 $BASEDIR/bin/dispatcher --api-keys --terminate
 
+echo
+echo "Log file check"
 cat run/api_key_test_db/transactions.log | grep -E 'request_read_and_idx of process' \
     | awk '{ print $13; }' | check_osm_against input/api_key_test_db/osm_base_client_tokens.tsv
-

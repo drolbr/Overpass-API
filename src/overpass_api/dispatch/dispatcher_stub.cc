@@ -194,8 +194,8 @@ Dispatcher_Stub::Dispatcher_Stub
       logger.annotated_log(out.str());
       throw;
     }
-    
-    if (!api_key.empty())
+
+    if (!api_key.empty() && api_key[api_key.size()-1] != '0')
     {
       Dispatcher_Client api_key_dispatcher_client(api_key_settings().shared_name);
       Logger logger(api_key_dispatcher_client.get_db_dir());
