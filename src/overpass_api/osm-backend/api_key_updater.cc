@@ -69,7 +69,7 @@ void Api_Key_Updater::finish_updater()
   Nonsynced_Transaction transaction(true, false, db_dir_, "");
   std::map< Uint32_Index, std::set< Api_Key_Entry > > attic_api_keys;
   std::map< Uint32_Index, std::set< Api_Key_Entry > > new_api_keys;
-  
+
   for (std::vector< Api_Key_Entry >::const_iterator it = new_keys->begin(); it != new_keys->end(); ++it)
   {
     attic_api_keys[it->get_key()].insert(*it);

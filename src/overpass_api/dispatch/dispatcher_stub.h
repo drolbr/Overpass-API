@@ -39,6 +39,17 @@
 #include <vector>
 
 
+struct Authorization_Error
+{
+  enum Cause { not_found, no_user_perm };
+
+  Authorization_Error(const std::string& api_key_, Cause cause_) : api_key(api_key_), cause(cause_) {}
+
+  std::string api_key;
+  Cause cause;
+};
+
+
 struct Exit_Error {};
 
 

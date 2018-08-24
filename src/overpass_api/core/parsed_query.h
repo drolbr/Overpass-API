@@ -30,7 +30,8 @@
 class Parsed_Query
 {
 public:
-  Parsed_Query() : output_handler(0), global_bbox_limitation(Bbox_Double::invalid), last_dispensed_id(0ull) {}
+  Parsed_Query() : output_handler(0), global_bbox_limitation(Bbox_Double::invalid), last_dispensed_id(0ull),
+      users_perm_required(false) {}
   ~Parsed_Query() { delete output_handler; }
 
   Output_Handler* get_output_handler() const { return output_handler; }
@@ -38,6 +39,7 @@ public:
 			  Tokenizer_Wrapper* token, Error_Output* error_output);
   void set_global_bbox(const Bbox_Double& bbox) { global_bbox_limitation = bbox; }
   void set_api_key(const std::string& api_key_) { api_key = api_key_; }
+  void flag_users_perm_required() { users_perm_required = true; }
 
   const std::map< std::string, std::string >& get_input_params() const { return input_params; }
   void set_input_params(const std::map< std::string, std::string >& input_params_) { input_params = input_params_; }
@@ -45,6 +47,7 @@ public:
   void trigger_print_bounds() const;
   const Bbox_Double& get_global_bbox_limitation() const { return global_bbox_limitation; }
   std::string get_api_key() const { return api_key; }
+  bool get_users_perm_required() const { return users_perm_required; }
 
   Derived_Skeleton::Id_Type dispense_derived_id() { return ++last_dispensed_id; }
 
@@ -58,6 +61,7 @@ private:
   std::map< std::string, std::string > input_params;
   Derived_Skeleton::Id_Type last_dispensed_id;
   std::string api_key;
+  bool users_perm_required;
 };
 
 

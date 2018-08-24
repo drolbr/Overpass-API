@@ -153,6 +153,16 @@ int main(int argc, char *argv[])
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
     error_output.runtime_error(temp.str());
   }
+  catch(Authorization_Error e)
+  {
+    error_output.write_html_header("", "", 403, false);
+    std::ostringstream temp;
+    if (e.cause == Authorization_Error::not_found)
+      temp<<"Api key \""<<e.api_key<<"\" not known or expired.";
+    else
+      temp<<"User related data requested, but api key is \""<<e.api_key<<"\" not authorized for that.";
+    error_output.runtime_error(temp.str());
+  }
   catch(Resource_Error e)
   {
     std::ostringstream temp;

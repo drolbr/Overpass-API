@@ -97,6 +97,9 @@ Print_Statement::Print_Statement
     add_static_error(temp.str());
   }
 
+  if (mode & Output_Mode::META)
+    global_settings.flag_users_perm_required();
+
   if (attributes["order"] == "id")
     order = order_by_id;
   else if (attributes["order"] == "quadtile")

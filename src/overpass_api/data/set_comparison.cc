@@ -1273,9 +1273,9 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
       clear_elems(relation_values, changed_relations);
     }
   }
-  
+
   rman.set_desired_timestamp(lhs_timestamp_);
-  
+
   filter_by_id(lhs_set_.nodes, changed_nodes);
   filter_by_id(lhs_set_.attic_nodes, changed_nodes);
   filter_by_id(lhs_set_.ways, changed_ways);

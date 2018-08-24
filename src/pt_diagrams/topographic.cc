@@ -1497,7 +1497,7 @@ int main(int argc, char *argv[])
 
   Features features(extract_features
       (const_cast< OSMData& >(current_data), pivot_lon, threshold));
-  
+
   // Debug output
 //   for (vector< RouteFeature >::const_iterator it = features.routes.begin(); it != features.routes.end(); ++it)
 //   {
