@@ -45,7 +45,7 @@ user_test()
 <osm-script timeout=\"86400\">\
 \
 <user uid=\"$2\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 </osm-script>
 " >run/$3/uid_query_$2.xml
@@ -53,7 +53,7 @@ user_test()
 <osm-script timeout=\"86400\">\
 \
 <user name=\"User_$2\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 </osm-script>
 " >run/$3/name_query_$2.xml
@@ -65,17 +65,17 @@ user_test()
   <user name=\"User_$2\"/>\
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <query type=\"way\">\
   <user name=\"User_$2\"/>\
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <query type=\"relation\">\
   <user name=\"User_$2\"/>\
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 </osm-script>
 " >run/$3/tags_query_$2.xml
@@ -84,7 +84,7 @@ user_test()
 <osm-script timeout=\"86400\" bbox=\"10,1,10.5,1.5\">\
 \
 <user uid=\"$2\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 </osm-script>
 " >run/$3/uid_bbox_query_$2.xml
@@ -92,7 +92,7 @@ user_test()
 <osm-script timeout=\"86400\" bbox=\"10,1,10.5,1.5\">\
 \
 <user name=\"User_$2\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 </osm-script>
 " >run/$3/name_bbox_query_$2.xml
@@ -104,17 +104,17 @@ user_test()
   <user name=\"User_$2\"/>\
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <query type=\"way\">\
   <user name=\"User_$2\"/>\
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <query type=\"relation\">\
   <user name=\"User_$2\"/>\
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 </osm-script>
 " >run/$3/tags_bbox_query_$2.xml
@@ -147,27 +147,27 @@ prepare_test()
 <osm-script timeout=\"86400\">\
 \
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"1.0\" e=\"2.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"2.0\" e=\"3.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"3.0\" e=\"4.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"4.0\" e=\"5.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"5.0\" e=\"6.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"6.0\" e=\"7.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"7.0\" e=\"8.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"8.0\" e=\"9.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"9.0\" e=\"10.0\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"1.0\" e=\"7.0\"/>\
 <recurse type=\"node-way\"/>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"1.0\" e=\"2.0\"/>\
 <recurse type=\"node-way\" into=\"ways\"/>\
@@ -175,42 +175,42 @@ prepare_test()
   <recurse type=\"node-relation\"/>\
   <recurse type=\"way-relation\" from=\"ways\"/>\
 </union>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"2.0\" e=\"3.0\"/>\
 <recurse type=\"node-way\" into=\"ways\"/>\
 <union>\
   <recurse type=\"node-relation\"/>\
   <recurse type=\"way-relation\" from=\"ways\"/>\
 </union>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"3.0\" e=\"4.0\"/>\
 <recurse type=\"node-way\" into=\"ways\"/>\
 <union>\
   <recurse type=\"node-relation\"/>\
   <recurse type=\"way-relation\" from=\"ways\"/>\
 </union>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"4.0\" e=\"5.0\"/>\
 <recurse type=\"node-way\" into=\"ways\"/>\
 <union>\
   <recurse type=\"node-relation\"/>\
   <recurse type=\"way-relation\" from=\"ways\"/>\
 </union>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"5.0\" e=\"6.0\"/>\
 <recurse type=\"node-way\" into=\"ways\"/>\
 <union>\
   <recurse type=\"node-relation\"/>\
   <recurse type=\"way-relation\" from=\"ways\"/>\
 </union>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <bbox-query s=\"10.0\" n=\"12.0\" w=\"6.0\" e=\"7.0\"/>\
 <recurse type=\"node-way\" into=\"ways\"/>\
 <union>\
   <recurse type=\"node-relation\"/>\
   <recurse type=\"way-relation\" from=\"ways\"/>\
 </union>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 </osm-script>
 " >run/$1/query.xml
@@ -222,17 +222,17 @@ prepare_test()
   <newer than=\"2004-01-01T00:00:00Z\"/>
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <query type=\"way\">\
   <newer than=\"2004-01-01T00:00:00Z\"/>
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 <query type=\"relation\">\
   <newer than=\"2004-01-01T00:00:00Z\"/>
   <has-kv k=\"foo\" v=\"bar\"/>\
 </query>\
-<print mode=\"meta\"/>\
+<print mode=\"attribution\"/>\
 \
 </osm-script>
 " >run/$1/newer_query.xml

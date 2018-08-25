@@ -41,7 +41,7 @@
 
 struct Authorization_Error
 {
-  enum Cause { not_found, no_user_perm };
+  enum Cause { not_found, no_user_perm, no_api_key_but_user_perm };
 
   Authorization_Error(const std::string& api_key_, Cause cause_) : api_key(api_key_), cause(cause_) {}
 

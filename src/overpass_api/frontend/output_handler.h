@@ -34,11 +34,12 @@ struct Output_Mode
   static const unsigned int MEMBERS = 0x8;
   static const unsigned int TAGS = 0x10;
   static const unsigned int VERSION = 0x20;
-  static const unsigned int META = 0x40;
-  static const unsigned int GEOMETRY = 0x80;
-  static const unsigned int BOUNDS = 0x100;
-  static const unsigned int CENTER = 0x200;
-  static const unsigned int COUNT = 0x400;
+  static const unsigned int TIMESTAMP = 0x40;
+  static const unsigned int ATTRIBUTION = 0x80;
+  static const unsigned int GEOMETRY = 0x100;
+  static const unsigned int BOUNDS = 0x200;
+  static const unsigned int CENTER = 0x400;
+  static const unsigned int COUNT = 0x800;
 
   operator unsigned int() const { return mode; }
   unsigned int mode;

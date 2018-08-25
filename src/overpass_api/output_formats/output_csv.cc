@@ -119,17 +119,17 @@ std::string Output_CSV::dump_config() const
 
 template< typename OSM_Element_Metadata_Skeleton >
 void print_meta(const std::string& keyfield,
-    const OSM_Element_Metadata_Skeleton& meta, const std::map< uint32, std::string >* users)
+    const OSM_Element_Metadata_Skeleton& meta, const std::map< uint32, std::string >* users, Output_Mode mode)
 {
-  if (keyfield == "version")
+  if (keyfield == "version" && (mode & Output_Mode::VERSION))
     std::cout<<meta.version;
-  else if (keyfield == "timestamp")
+  else if (keyfield == "timestamp" && (mode & Output_Mode::TIMESTAMP))
     std::cout<<Timestamp(meta.timestamp).str();
-  else if (keyfield == "changeset")
+  else if (keyfield == "changeset" && (mode & Output_Mode::ATTRIBUTION))
     std::cout<<meta.changeset;
-  else if (keyfield == "uid")
+  else if (keyfield == "uid" && (mode & Output_Mode::ATTRIBUTION))
     std::cout<<meta.user_id;
-  else if (users && keyfield == "user")
+  else if (users && keyfield == "user" && (mode & Output_Mode::ATTRIBUTION))
   {
     std::map< uint32, std::string >::const_iterator uit = users->find(meta.user_id);
     if (uit != users->end())
@@ -140,7 +140,7 @@ void print_meta(const std::string& keyfield,
 
 template< >
 void print_meta< int >(const std::string& keyfield,
-    const int& meta, const std::map< uint32, std::string >* users) {}
+    const int& meta, const std::map< uint32, std::string >* users, Output_Mode mode) {}
 
 std::string get_count_tag(const std::vector< std::pair< std::string, std::string> >* tags, std::string tag)
 {
@@ -182,7 +182,7 @@ void process_csv_line(int otype, const std::string& type, Id_Type id, const Opaq
     else
     {
       if (meta)
-        print_meta(it->first, *meta, users);
+        print_meta(it->first, *meta, users, mode);
 
       if (it->first == "id")
       {

@@ -99,10 +99,12 @@ mkdir -p input/update_database/templates/
 cp -p $BASEDIR/templates/* input/update_database/templates/
 $BASEDIR/test-bin/generate_test_file_meta 40 more_tags >input/update_database/stdin.log
 $BASEDIR/bin/update_database --db-dir=input/update_database/ --meta --version=mock-up-init <input/update_database/stdin.log
+$BASEDIR/bin/update_database --db-dir=input/update_database/ --api-keys <input/api_key_test_db/testing_api_key.xml
 
 # do the differential update including start/stop of dispatcher
 date +%T
 $BASEDIR/bin/dispatcher --osm-base --meta --db-dir=input/update_database/ &
+$BASEDIR/bin/dispatcher --api-keys --db-dir=input/update_database/ &
 sleep 1
 
 II=1
@@ -113,44 +115,44 @@ while [[ $II -lt 31 ]]; do
 }; done
 
 # Check whether all special fields are operational and independend from each other
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_1/stdin.log
-echo 'data=[out:csv(::id,::id;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_2/stdin.log
-echo 'data=[out:csv(::uid,::user,::changeset,::timestamp,::version,::lon,::lat,::id,::type;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_3/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_1/stdin.log
+echo 'data=[out:csv(::id,::id;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_2/stdin.log
+echo 'data=[out:csv(::uid,::user,::changeset,::timestamp,::version,::lon,::lat,::id,::type;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_3/stdin.log
 
 # Check normal fields, including empty entries and mixed with functional fields
-echo 'data=[out:csv(even,foo,odd;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_4/stdin.log
-echo 'data=[out:csv("even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_5/stdin.log
-echo 'data=[out:csv(even,::id,foo;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_6/stdin.log
-echo 'data=[out:csv("even",::id,"foo";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_7/stdin.log
+echo 'data=[out:csv(even,foo,odd;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_4/stdin.log
+echo 'data=[out:csv("even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_5/stdin.log
+echo 'data=[out:csv(even,::id,foo;true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_6/stdin.log
+echo 'data=[out:csv("even",::id,"foo";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_7/stdin.log
 
 # Check separation characters and strings
-echo 'data=[out:csv("even",::id,"foo";true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_8/stdin.log
-echo 'data=[out:csv("even",::id,"foo","odd","even";true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_9/stdin.log
-echo 'data=[out:csv("even",::id,::lat,::lon;true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_10/stdin.log
-echo 'data=[out:csv("even";true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_11/stdin.log
-echo 'data=[out:csv(::id;true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_12/stdin.log
-echo 'data=[out:csv("even",::id,"foo";true;"")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_13/stdin.log
-echo 'data=[out:csv("even",::id,"foo";true;" ")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_14/stdin.log
-echo 'data=[out:csv("even",::id,"foo";true;"---")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_15/stdin.log
+echo 'data=[out:csv("even",::id,"foo";true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_8/stdin.log
+echo 'data=[out:csv("even",::id,"foo","odd","even";true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_9/stdin.log
+echo 'data=[out:csv("even",::id,::lat,::lon;true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_10/stdin.log
+echo 'data=[out:csv("even";true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_11/stdin.log
+echo 'data=[out:csv(::id;true;",")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_12/stdin.log
+echo 'data=[out:csv("even",::id,"foo";true;"")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_13/stdin.log
+echo 'data=[out:csv("even",::id,"foo";true;" ")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_14/stdin.log
+echo 'data=[out:csv("even",::id,"foo";true;"---")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_15/stdin.log
 
 # Check w/o headlines
-echo 'data=[out:csv(even,foo,odd;false;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_16/stdin.log
-echo 'data=[out:csv("even","foo","odd";false;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_17/stdin.log
-echo 'data=[out:csv(even,::id,foo;false;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_18/stdin.log
-echo 'data=[out:csv("even",::id,"foo";false;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_19/stdin.log
+echo 'data=[out:csv(even,foo,odd;false;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_16/stdin.log
+echo 'data=[out:csv("even","foo","odd";false;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_17/stdin.log
+echo 'data=[out:csv(even,::id,foo;false;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_18/stdin.log
+echo 'data=[out:csv("even",::id,"foo";false;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out attribution;&apikey=0123456789012345678901234567890123456789' >input/output_csv_19/stdin.log
 
 # Check with empty result and various output modes
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_20/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out ids;' >input/output_csv_21/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out skel;' >input/output_csv_22/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out;' >input/output_csv_23/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out tags;' >input/output_csv_24/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out center;' >input/output_csv_25/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out center meta;' >input/output_csv_26/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out bb;' >input/output_csv_27/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out bb meta;' >input/output_csv_28/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out geom;' >input/output_csv_29/stdin.log
-echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,::changeset,::user,::uid,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out geom meta;' >input/output_csv_30/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out meta;' >input/output_csv_20/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out ids;' >input/output_csv_21/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out skel;' >input/output_csv_22/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out;' >input/output_csv_23/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out tags;' >input/output_csv_24/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out center;' >input/output_csv_25/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out center meta;' >input/output_csv_26/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out bb;' >input/output_csv_27/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out bb meta;' >input/output_csv_28/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out geom;' >input/output_csv_29/stdin.log
+echo 'data=[out:csv(::type,::id,::lat,::lon,::version,::timestamp,"even","foo","odd";true;"\t")];(node(1);node(2);node(7);node(14);way(1);way(2);way(7);way(14);rel(1);rel(2);rel(42);rel(161););out geom meta;' >input/output_csv_30/stdin.log
 
 II=1
 while [[ $II -lt 31 ]]; do
@@ -159,7 +161,8 @@ while [[ $II -lt 31 ]]; do
   II=$(($II + 1))
 }; done
 
-$BASEDIR/bin/dispatcher --terminate
+$BASEDIR/bin/dispatcher --osm-base --terminate
+$BASEDIR/bin/dispatcher --api-keys --terminate
 
 rm -fR input/update_database/*
 

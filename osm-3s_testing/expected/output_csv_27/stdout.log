@@ -1,15 +1,15 @@
 Content-type: text/csv
 
-@type	@id	@lat	@lon	@version	@timestamp	@changeset	@user	@uid	even	foo	odd
-node	1	10.0125000	1.0125000								
-node	2	10.0125000	1.0375000						yes		
-node	7	10.0125000	1.1625000							bar	
-node	14	10.0125000	1.3375000						yes	bar	
-way	1	10.0125000	1.0250000								
-way	2	10.0125000	1.0500000						yes		
-way	7	10.0125000	1.1750000							bar	
-way	14	10.0125000	1.3500000						yes	bar	
-relation	1	10.0125000	1.0250000								
-relation	2	10.0125000	1.0375000						yes		
-relation	42	10.0125000	2.0375000						yes	bar	
-relation	161	10.0125000	5.0250000							bar	
+@type	@id	@lat	@lon	@version	@timestamp	even	foo	odd
+node	1	10.0125000	1.0125000					
+node	2	10.0125000	1.0375000			yes		
+node	7	10.0125000	1.1625000				bar	
+node	14	10.0125000	1.3375000			yes	bar	
+way	1	10.0125000	1.0250000					
+way	2	10.0125000	1.0500000			yes		
+way	7	10.0125000	1.1750000				bar	
+way	14	10.0125000	1.3500000			yes	bar	
+relation	1	10.0125000	1.0250000					
+relation	2	10.0125000	1.0375000			yes		
+relation	42	10.0125000	2.0375000			yes	bar	
+relation	161	10.0125000	5.0250000				bar	

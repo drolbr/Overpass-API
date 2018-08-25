@@ -74,11 +74,24 @@ void Output_XML::print_global_bbox(const Bbox_Double& bbox)
 
 
 template< typename Id_Type >
-void print_meta_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
+void print_version_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta)
+{
+  std::cout<<" version=\""<<meta.version<<"\"";
+}
+
+
+template< typename Id_Type >
+void print_timestamp_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta)
+{
+  std::cout<<" timestamp=\""<<iso_string(meta.timestamp)<<"\"";
+}
+
+
+template< typename Id_Type >
+void print_attribution_xml(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
 		    const std::map< uint32, std::string >& users)
 {
-  std::cout<<" version=\""<<meta.version<<"\" timestamp=\""<<iso_string(meta.timestamp)
-      <<"\" changeset=\""<<meta.changeset<<"\" uid=\""<<meta.user_id<<"\"";
+  std::cout<<" changeset=\""<<meta.changeset<<"\" uid=\""<<meta.user_id<<"\"";
   std::map< uint32, std::string >::const_iterator it = users.find(meta.user_id);
   if (it != users.end())
     std::cout<<" user=\""<<escape_xml(it->second)<<"\"";
@@ -379,8 +392,12 @@ void print_node(const Node_Skeleton& skel,
       && geometry.has_center())
     std::cout<<" lat=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lat()
         <<"\" lon=\""<<std::fixed<<std::setprecision(7)<<geometry.center_lon()<<'\"';
-  if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);
+  if ((mode.mode & Output_Mode::VERSION) && meta)
+    print_version_xml(*meta);
+  if ((mode.mode & Output_Mode::TIMESTAMP) && meta)
+    print_timestamp_xml(*meta);
+  if ((mode.mode & Output_Mode::ATTRIBUTION) && meta && users)
+    print_attribution_xml(*meta, *users);
 
   bool inner_tags_printed = false;
   print_tags(tags, mode, inner_tags_printed);
@@ -401,8 +418,12 @@ void print_way(const Way_Skeleton& skel,
   std::cout<<"  <way";
   if (mode.mode & Output_Mode::ID)
     std::cout<<" id=\""<<skel.id.val()<<'\"';
-  if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);
+  if ((mode.mode & Output_Mode::VERSION) && meta)
+    print_version_xml(*meta);
+  if ((mode.mode & Output_Mode::TIMESTAMP) && meta)
+    print_timestamp_xml(*meta);
+  if ((mode.mode & Output_Mode::ATTRIBUTION) && meta && users)
+    print_attribution_xml(*meta, *users);
 
   bool inner_tags_printed = false;
   print_bounds(geometry, mode, inner_tags_printed);
@@ -426,8 +447,12 @@ void print_relation(const Relation_Skeleton& skel,
   std::cout<<"  <relation";
   if (mode.mode & Output_Mode::ID)
     std::cout<<" id=\""<<skel.id.val()<<'\"';
-  if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);
+  if ((mode.mode & Output_Mode::VERSION) && meta)
+    print_version_xml(*meta);
+  if ((mode.mode & Output_Mode::TIMESTAMP) && meta)
+    print_timestamp_xml(*meta);
+  if ((mode.mode & Output_Mode::ATTRIBUTION) && meta && users)
+    print_attribution_xml(*meta, *users);
 
   bool inner_tags_printed = false;
   print_bounds(geometry, mode, inner_tags_printed);
@@ -455,8 +480,12 @@ void print_deleted(const std::string& type_name, const Id_Type& id,
     std::cout<<" visible=\"false\"";
   else
     std::cout<<" visible=\"true\"";
-  if ((mode.mode & (Output_Mode::VERSION | Output_Mode::META)) && meta && users)
-    print_meta_xml(*meta, *users);
+  if ((mode.mode & Output_Mode::VERSION) && meta)
+    print_version_xml(*meta);
+  if ((mode.mode & Output_Mode::TIMESTAMP) && meta)
+    print_timestamp_xml(*meta);
+  if ((mode.mode & Output_Mode::ATTRIBUTION) && meta && users)
+    print_attribution_xml(*meta, *users);
   std::cout<<"/>\n";
 }
 

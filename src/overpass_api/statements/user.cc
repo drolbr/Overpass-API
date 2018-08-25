@@ -241,6 +241,7 @@ User_Statement::User_Statement
     add_static_error(temp.str());
   }
 
+  global_settings.flag_users_perm_required();
   result_type = attributes["type"];
 }
 

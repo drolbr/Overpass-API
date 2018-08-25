@@ -1115,7 +1115,7 @@ int main(int argc, char* args[])
     "</body>\n"
     "</html>\n";
   }
-  else if (std::string(args[2]) == "interpreter_46")
+  else if (std::string(args[2]) == "interpreter_46" || std::string(args[2]) == "interpreter_47")
   {
     std::cout<<
     "Content-type: application/json\n"
@@ -1137,10 +1137,13 @@ int main(int argc, char* args[])
     "  \"lat\": "<<std::setprecision(7)<<std::fixed<<10 + 0.5/pattern_size<<",\n"
     "  \"lon\": "<<std::setprecision(7)<<std::fixed<<1 + 6.5/pattern_size<<",\n"
     "  \"timestamp\": \"2001-01-01T00:00:07Z\",\n"
-    "  \"version\": 9,\n"
+    "  \"version\": 9,\n";
+    if (std::string(args[2]) == "interpreter_47")
+      std::cout<<
     "  \"changeset\": 18,\n"
     "  \"user\": \"User_11\",\n"
-    "  \"uid\": 11,\n"
+    "  \"uid\": 11,\n";
+    std::cout<<
     "  \"tags\": {\n"
     "    \"foo\": \"bar\"\n"
     "  }\n"
@@ -1149,10 +1152,13 @@ int main(int argc, char* args[])
     "  \"type\": \"way\",\n"
     "  \"id\": 1,\n"
     "  \"timestamp\": \"2002-01-01T00:00:01Z\",\n"
-    "  \"version\": 4,\n"
+    "  \"version\": 4,\n";
+    if (std::string(args[2]) == "interpreter_47")
+      std::cout<<
     "  \"changeset\": 13,\n"
     "  \"user\": \"User_12\",\n"
-    "  \"uid\": 12,\n"
+    "  \"uid\": 12,\n";
+    std::cout<<
     "  \"nodes\": [\n"
     "    1,\n"
     "    2\n"
@@ -1162,10 +1168,13 @@ int main(int argc, char* args[])
     "  \"type\": \"relation\",\n"
     "  \"id\": 1,\n"
     "  \"timestamp\": \"2003-01-01T00:00:01Z\",\n"
-    "  \"version\": 5,\n"
+    "  \"version\": 5,\n";
+    if (std::string(args[2]) == "interpreter_47")
+      std::cout<<
     "  \"changeset\": 14,\n"
     "  \"user\": \"User_13\",\n"
-    "  \"uid\": 13,\n"
+    "  \"uid\": 13,\n";
+    std::cout<<
     "  \"members\": [\n"
     "    {\n"
     "      \"type\": \"node\",\n"
@@ -1183,7 +1192,7 @@ int main(int argc, char* args[])
     "  ]\n"
     "}\n";
   }
-  else if (std::string(args[2]) == "interpreter_47")
+  else if (std::string(args[2]) == "interpreter_48" || std::string(args[2]) == "interpreter_49")
   {
     std::cout<<
     "Content-type: text/html; charset=utf-8\n"

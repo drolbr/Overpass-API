@@ -1,15 +1,15 @@
 Content-type: text/csv
 
-@type	@id	@lat	@lon	@version	@timestamp	@changeset	@user	@uid	even	foo	odd
-node	1	10.0125000	1.0125000	3	2001-01-01T00:00:01Z	12	User_11	11			
-node	2	10.0125000	1.0375000	4	2001-01-01T00:00:02Z	13	User_11	11	yes		
-node	7	10.0125000	1.1625000	9	2001-01-01T00:00:07Z	18	User_11	11		bar	
-node	14	10.0125000	1.3375000	16	2001-01-01T00:00:14Z	25	User_11	11	yes	bar	
-way	1			4	2002-01-01T00:00:01Z	13	User_12	12			
-way	2			5	2002-01-01T00:00:02Z	14	User_12	12	yes		
-way	7			10	2002-01-01T00:00:07Z	19	User_12	12		bar	
-way	14			17	2002-01-01T00:00:14Z	26	User_12	12	yes	bar	
-relation	1			5	2003-01-01T00:00:01Z	14	User_13	13			
-relation	2			6	2003-01-01T00:00:02Z	15	User_13	13	yes		
-relation	42			46	2003-01-01T00:00:42Z	55	User_13	13	yes	bar	
-relation	161			165	2003-01-01T00:02:41Z	174	User_14	14		bar	
+@type	@id	@lat	@lon	@version	@timestamp	even	foo	odd
+node	1	10.0125000	1.0125000	3	2001-01-01T00:00:01Z			
+node	2	10.0125000	1.0375000	4	2001-01-01T00:00:02Z	yes		
+node	7	10.0125000	1.1625000	9	2001-01-01T00:00:07Z		bar	
+node	14	10.0125000	1.3375000	16	2001-01-01T00:00:14Z	yes	bar	
+way	1			4	2002-01-01T00:00:01Z			
+way	2			5	2002-01-01T00:00:02Z	yes		
+way	7			10	2002-01-01T00:00:07Z		bar	
+way	14			17	2002-01-01T00:00:14Z	yes	bar	
+relation	1			5	2003-01-01T00:00:01Z			
+relation	2			6	2003-01-01T00:00:02Z	yes		
+relation	42			46	2003-01-01T00:00:42Z	yes	bar	
+relation	161			165	2003-01-01T00:02:41Z		bar	

@@ -85,7 +85,9 @@ class Print_Statement : public Statement
 
     static std::string mode_string_xml(Output_Mode mode)
     {
-      if ((mode & (Output_Mode::VERSION | Output_Mode::META)) == (Output_Mode::VERSION | Output_Mode::META))
+      if ((mode & Output_Mode::ATTRIBUTION) == Output_Mode::ATTRIBUTION)
+        return " mode=\"attribution\"";
+      else if ((mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP)) == (Output_Mode::VERSION | Output_Mode::TIMESTAMP))
         return " mode=\"meta\"";
       else if ((mode & (Output_Mode::MEMBERS | Output_Mode::TAGS)) == (Output_Mode::MEMBERS | Output_Mode::TAGS))
         return "";
@@ -101,7 +103,9 @@ class Print_Statement : public Statement
 
     static std::string mode_string_ql(Output_Mode mode)
     {
-      if ((mode & (Output_Mode::VERSION | Output_Mode::META)) == (Output_Mode::VERSION | Output_Mode::META))
+      if ((mode & Output_Mode::ATTRIBUTION) == Output_Mode::ATTRIBUTION)
+        return " attribution";
+      else if ((mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP)) == (Output_Mode::VERSION | Output_Mode::TIMESTAMP))
         return " meta";
       else if ((mode & (Output_Mode::MEMBERS | Output_Mode::TAGS)) == (Output_Mode::MEMBERS | Output_Mode::TAGS))
         return "";

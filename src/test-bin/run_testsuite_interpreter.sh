@@ -187,7 +187,7 @@ while [[ $II -lt 46 ]]; do
   II=$(($II + 1))
 }; done
 
-$BASEDIR/bin/dispatcher --terminate
+$BASEDIR/bin/dispatcher --osm-base --terminate
 
 rm -fR input/update_database/*
 rm -fR input/interpreter_*
@@ -200,31 +200,36 @@ mkdir -p input/update_database/templates/
 cp -p $BASEDIR/templates/* input/update_database/templates/
 $BASEDIR/test-bin/generate_test_file_meta $DATA_SIZE >input/update_database/stdin.log
 $BASEDIR/bin/update_database --db-dir=input/update_database/ --meta --version=mock-up-init <input/update_database/stdin.log
+$BASEDIR/bin/update_database --db-dir=input/update_database/ --api-keys <input/api_key_test_db/testing_api_key.xml
 
 # do the differential update including start/stop of dispatcher
 date +%T
 $BASEDIR/bin/dispatcher --osm-base --meta --db-dir=input/update_database/ &
+$BASEDIR/bin/dispatcher --api-keys --db-dir=input/update_database/ &
 sleep 1
 
 II=46
-while [[ $II -lt 48 ]]; do
+while [[ $II -lt 50 ]]; do
 {
   mkdir -p input/interpreter_$II/
   II=$(($II + 1))
 }; done
 
 echo "data=[out:json];(node(7);way(1);rel(1););out meta;" >input/interpreter_46/stdin.log
-echo "data=[out:custom];(node(7);way(1);rel(1););out meta;" >input/interpreter_47/stdin.log
+echo "data=[out:json];(node(7);way(1);rel(1););out attribution;&apikey=0123456789012345678901234567890123456789" >input/interpreter_47/stdin.log
+echo "data=[out:custom];(node(7);way(1);rel(1););out meta;" >input/interpreter_48/stdin.log
+echo "data=[out:custom];(node(7);way(1);rel(1););out attribution;&apikey=0123456789012345678901234567890123456789" >input/interpreter_49/stdin.log
 
 II=46
-while [[ $II -lt 48 ]]; do
+while [[ $II -lt 50 ]]; do
 {
   prepare_test_interpreter $II
   perform_test_interpreter $II
   II=$(($II + 1))
 }; done
 
-$BASEDIR/bin/dispatcher --terminate
+$BASEDIR/bin/dispatcher --osm-base --terminate
+$BASEDIR/bin/dispatcher --api-keys --terminate
 
 rm -fR input/update_database/*
 rm -fR input/interpreter_*

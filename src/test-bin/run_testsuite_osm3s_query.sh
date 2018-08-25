@@ -159,7 +159,7 @@ sleep 1
 rm -f input/update_database/transactions.log
 perform_test osm3s_query 18
 cat input/update_database/transactions.log
-$BASEDIR/bin/dispatcher --terminate
+$BASEDIR/bin/dispatcher --osm-base --terminate
 
 II=19
 while [[ $II -lt 58 ]]; do

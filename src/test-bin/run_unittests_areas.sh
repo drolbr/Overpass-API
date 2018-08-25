@@ -152,7 +152,7 @@ $BASEDIR/bin/osm3s_query <input/rule_processor/check_pivot.osm >run/rule_process
 
 echo "(area[triangle];area[shapes];area[multpoly];);out;" | $BASEDIR/bin/osm3s_query >result.osm
 
-$BASEDIR/bin/dispatcher --terminate
+$BASEDIR/bin/dispatcher --osm-base --terminate
 $BASEDIR/bin/dispatcher --areas --terminate
 
 pushd "run/rule_processor/" >/dev/null

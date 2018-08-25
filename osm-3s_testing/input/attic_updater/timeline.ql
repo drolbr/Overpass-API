@@ -151,33 +151,33 @@ timeline(rel,1941);out;
 make marker retro="2013-07-01T09:02:00Z"; out;
 retro("2013-07-01T09:02:00Z")
 (
-  node(10,4,10.1,4.1); out meta geom;
-  way(10,6,10.1,6.1); out meta geom;
-  rel(10,6,10.8,6.1); out meta geom;
+  node(10,4,10.1,4.1); out attribution geom;
+  way(10,6,10.1,6.1); out attribution geom;
+  rel(10,6,10.8,6.1); out attribution geom;
 );
 
 make marker retro="2013-07-01T09:03:00Z"; out;
 retro("2013-07-01T09:03:00Z")
 (
-  node(10,4,10.1,4.1); out meta geom;
-  way(10,6,10.1,6.1); out meta geom;
-  rel(10,6,10.8,6.1); out meta geom;
+  node(10,4,10.1,4.1); out attribution geom;
+  way(10,6,10.1,6.1); out attribution geom;
+  rel(10,6,10.8,6.1); out attribution geom;
 );
 
 make marker retro="2013-07-01T09:04:00Z"; out;
 retro("2013-07-01T09:04:00Z")
 (
-  node(10,4,10.1,4.1); out meta geom;
-  way(10,6,10.1,6.1); out meta geom;
-  rel(10,6,10.8,6.1); out meta geom;
+  node(10,4,10.1,4.1); out attribution geom;
+  way(10,6,10.1,6.1); out attribution geom;
+  rel(10,6,10.8,6.1); out attribution geom;
 );
 
 make marker retro="2013-07-01T09:05:00Z"; out;
 retro("2013-07-01T09:05:00Z")
 (
-  node(10,4,10.1,4.1); out meta geom;
-  way(10,6,10.1,6.1); out meta geom;
-  rel(10,6,10.8,6.1); out meta geom;
+  node(10,4,10.1,4.1); out attribution geom;
+  way(10,6,10.1,6.1); out attribution geom;
+  rel(10,6,10.8,6.1); out attribution geom;
 );
 
 make marker full_history="node 1402"; out;
@@ -186,7 +186,7 @@ foreach(
   out;
   retro(u(t["created"]))
   (
-    node(1402); out meta;
+    node(1402); out attribution;
   );
 );
 
@@ -196,8 +196,8 @@ foreach(
   out;
   retro(u(t["created"]))
   (
-    way(1505); out geom meta;
-    >; out meta;
+    way(1505); out geom attribution;
+    >; out attribution;
   );
 );
 
@@ -207,8 +207,8 @@ foreach(
   out;
   retro(u(t["created"]))
   (
-    way(1602); out geom meta;
-    >; out meta;
+    way(1602); out geom attribution;
+    >; out attribution;
   );
 );
 
@@ -218,7 +218,7 @@ foreach(
   out;
   retro(u(t["created"]))
   (
-    rel(1632); out geom meta;
-    >; out center meta;
+    rel(1632); out geom attribution;
+    >; out center attribution;
   );
 );

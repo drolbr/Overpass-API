@@ -741,6 +741,8 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
 	mode = "body";
       else if (*token == "meta")
 	mode = "meta";
+      else if (*token == "attribution")
+	mode = "attribution";
       else if (*token == "quirks")
 	mode = "quirks";
       else if (*token == "count")
@@ -775,7 +777,7 @@ TStatement* parse_output(typename TStatement::Factory& stmt_factory,
       {
 	if (error_output)
 	  error_output->add_parse_error
-	      (std::string("Invalid parameter for print: \"") + *token + "\"", token.line_col().first);
+	      (std::string("Invalid parameter for out: \"") + *token + "\"", token.line_col().first);
       }
       ++token;
     }

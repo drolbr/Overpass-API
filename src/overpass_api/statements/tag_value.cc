@@ -440,6 +440,7 @@ Evaluator_Changeset::Evaluator_Changeset
 {
   std::map< std::string, std::string > attributes;
   eval_attributes_array(get_name(), attributes, input_attributes);
+  global_settings.flag_users_perm_required();
 }
 
 
@@ -453,6 +454,7 @@ Evaluator_Uid::Evaluator_Uid
 {
   std::map< std::string, std::string > attributes;
   eval_attributes_array(get_name(), attributes, input_attributes);
+  global_settings.flag_users_perm_required();
 }
 
 
@@ -466,6 +468,7 @@ Evaluator_User::Evaluator_User
 {
   std::map< std::string, std::string > attributes;
   eval_attributes_array(get_name(), attributes, input_attributes);
+  global_settings.flag_users_perm_required();
 }
 
 

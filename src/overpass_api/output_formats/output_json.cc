@@ -79,15 +79,23 @@ void handle_first_elem(bool& first_elem)
 
 template< typename Id_Type >
 void print_meta_json(const OSM_Element_Metadata_Skeleton< Id_Type >& meta,
-		    const std::map< uint32, std::string >& users)
+    const std::map< uint32, std::string >* users, Output_Mode mode)
 {
-  std::cout<<",\n  \"timestamp\": \""<<iso_string(meta.timestamp)<<"\""
-        ",\n  \"version\": "<<meta.version<<
-	",\n  \"changeset\": "<<meta.changeset;
-  std::map< uint32, std::string >::const_iterator it = users.find(meta.user_id);
-  if (it != users.end())
-    std::cout<<",\n  \"user\": \""<<escape_cstr(it->second)<<"\"";
-  std::cout<<",\n  \"uid\": "<<meta.user_id;
+  if (mode & Output_Mode::TIMESTAMP)
+    std::cout<<",\n  \"timestamp\": \""<<iso_string(meta.timestamp)<<"\"";
+  if (mode & Output_Mode::VERSION)
+    std::cout<<",\n  \"version\": "<<meta.version;
+  if (mode & Output_Mode::ATTRIBUTION)
+  {
+    std::cout<<",\n  \"changeset\": "<<meta.changeset;
+    if (users)
+    {
+      std::map< uint32, std::string >::const_iterator it = users->find(meta.user_id);
+      if (it != users->end())
+        std::cout<<",\n  \"user\": \""<<escape_cstr(it->second)<<"\"";
+    }
+    std::cout<<",\n  \"uid\": "<<meta.user_id;
+  }
 }
 
 
@@ -127,7 +135,7 @@ void Output_JSON::print_item(const Node_Skeleton& skel,
     std::cout<<",\n  \"lat\": "<<std::fixed<<std::setprecision(7)<<geometry.center_lat()
         <<",\n  \"lon\": "<<std::fixed<<std::setprecision(7)<<geometry.center_lon();
   if (meta)
-    print_meta_json(*meta, *users);
+    print_meta_json(*meta, users, mode);
 
   print_tags(tags);
   std::cout<<"\n}";
@@ -170,7 +178,7 @@ void Output_JSON::print_item(const Way_Skeleton& skel,
     std::cout<<",\n  \"id\": "<<skel.id.val();
 
   if (meta)
-    print_meta_json(*meta, *users);
+    print_meta_json(*meta, users, mode);
 
   print_bounds(geometry, mode);
 
@@ -228,7 +236,7 @@ void Output_JSON::print_item(const Relation_Skeleton& skel,
     std::cout<<",\n  \"id\": "<<skel.id.val();
 
   if (meta)
-    print_meta_json(*meta, *users);
+    print_meta_json(*meta, users, mode);
 
   print_bounds(geometry, mode);
 

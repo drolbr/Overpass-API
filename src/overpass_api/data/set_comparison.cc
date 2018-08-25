@@ -54,7 +54,7 @@ Extra_Data_For_Diff::Extra_Data_For_Diff(
 
   roles = &relation_member_roles(*rman.get_transaction());
 
-  if (mode & Output_Mode::META)
+  if (mode & Output_Mode::ATTRIBUTION)
     users = &rman.users();
 }
 
@@ -236,7 +236,8 @@ void Set_Comparison::tags_quadtile
 
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION))
+          ? current_meta_file_properties< Object >() : 0);
 
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
@@ -263,7 +264,8 @@ void Set_Comparison::tags_quadtile_attic
   tag_store.prefetch_all(items);
   // formulate meta query if meta data shall be printed
   Attic_Meta_Collector< Index, Object > meta_printer(
-      items, *rman.get_transaction(), extra_data.mode & Output_Mode::META);
+      items, *rman.get_transaction(),
+      extra_data.mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION));
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -288,7 +290,8 @@ void Set_Comparison::tags_quadtile
 
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, *rman.get_transaction(),
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION))
+          ? current_meta_file_properties< Object >() : 0);
 
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
@@ -316,7 +319,8 @@ void Set_Comparison::tags_quadtile_attic
   tag_store.prefetch_all(items);
   // formulate meta query if meta data shall be printed
   Attic_Meta_Collector< Index, Object > meta_printer(
-      items, *rman.get_transaction(), extra_data.mode & Output_Mode::META);
+      items, *rman.get_transaction(),
+      extra_data.mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION));
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -1067,7 +1071,7 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
 
   Extra_Data_For_Diff extra_data_lhs(rman, stmt, lhs_set_, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
-      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION
       | Output_Mode::GEOMETRY, south, north, west, east);
 
   tags_quadtile(extra_data_lhs, lhs_set_.nodes, rman);
@@ -1088,7 +1092,7 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
 
   Extra_Data_For_Diff extra_data_rhs(rman, stmt, input_set, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
-      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION
       | Output_Mode::GEOMETRY, south, north, west, east);
 
   tags_quadtile(extra_data_rhs, input_set.nodes, rman);
@@ -1285,7 +1289,7 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
 
   Extra_Data_For_Diff extra_data_lhs(rman, stmt, lhs_set_, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
-      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION
       | Output_Mode::GEOMETRY, 1., 0., 0., 0.);
 
   tags_quadtile(extra_data_lhs, lhs_set_.nodes, changed_nodes, rman);
@@ -1306,7 +1310,7 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
 
   Extra_Data_For_Diff extra_data_rhs(rman, stmt, input_set, Output_Mode::ID
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
-      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
+      | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION
       | Output_Mode::GEOMETRY, 1., 0., 0., 0.);
 
   tags_quadtile(extra_data_rhs, input_set.nodes, changed_nodes, rman);

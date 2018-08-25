@@ -103,11 +103,13 @@ echo '[timeout:900];out;' | $BASEDIR/bin/osm3s_query --rules \
 
 echo
 echo "User data restriction test"
-echo '[api_key:"0000000012341234123412341234123412341234"];out meta;' | $BASEDIR/cgi-bin/interpreter \
+echo 'out attribution;' | $BASEDIR/cgi-bin/interpreter \
+    | check_osm_against input/api_key_test_db/no_api_key.osm
+echo '[api_key:"0000000012341234123412341234123412341234"];out attribution;' | $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/api_key_unknown.osm
-echo '[api_key:"7011734a731b8b14ad4c5637863adc28ca6f35bf"];out meta;' | $BASEDIR/cgi-bin/interpreter \
+echo '[api_key:"7011734a731b8b14ad4c5637863adc28ca6f35bf"];out attribution;' | $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/users_perm_required.osm
-echo '[api_key:"19873b516f79c9c9b01e91668c41bb1bfc2be9d5"];out meta;' | $BASEDIR/cgi-bin/interpreter \
+echo '[api_key:"19873b516f79c9c9b01e91668c41bb1bfc2be9d5"];out attribution;' | $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
 
 $BASEDIR/bin/dispatcher --osm-base --terminate

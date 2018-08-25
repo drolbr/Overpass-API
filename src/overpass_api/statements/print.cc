@@ -85,7 +85,11 @@ Print_Statement::Print_Statement
   else if (attributes["mode"] == "meta")
     mode = Output_Mode::ID
         | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
-	| Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META;
+	| Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::TIMESTAMP;
+  else if (attributes["mode"] == "attribution")
+    mode = Output_Mode::ID
+        | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
+	| Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION;
   else if (attributes["mode"] == "count")
     mode = Output_Mode::ID | Output_Mode::COUNT;
   else
@@ -97,7 +101,7 @@ Print_Statement::Print_Statement
     add_static_error(temp.str());
   }
 
-  if (mode & Output_Mode::META)
+  if (mode & Output_Mode::ATTRIBUTION)
     global_settings.flag_users_perm_required();
 
   if (attributes["order"] == "id")
@@ -242,7 +246,7 @@ Extra_Data::Extra_Data(
 
   roles = &relation_member_roles(*rman.get_transaction());
 
-  if (mode & Output_Mode::META)
+  if (mode & Output_Mode::ATTRIBUTION)
     users = &rman.users();
 }
 
@@ -368,7 +372,8 @@ void tags_quadtile_
 
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > meta_printer(items, transaction,
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION))
+          ? current_meta_file_properties< Object >() : 0);
 
   typename std::map< Index, std::vector< Object > >::const_iterator
       item_it(items.begin());
@@ -397,7 +402,9 @@ void tags_quadtile_attic_
   Tag_Store< Index, Object > tag_store(transaction);
   tag_store.prefetch_all(items);
 
-  Attic_Meta_Collector< Index, Object > meta_printer(items, transaction, extra_data.mode & Output_Mode::META);
+  Attic_Meta_Collector< Index, Object > meta_printer(
+      items, transaction,
+      extra_data.mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION));
 
   typename std::map< Index, std::vector< Attic< Object > > >::const_iterator
       item_it(items.begin());
@@ -662,7 +669,8 @@ void tags_by_id_attic
   // formulate meta query if meta data shall be printed
   Meta_Collector< Index, typename Object::Id_Type > only_current_meta_printer
       (current_items, transaction,
-      (extra_data.mode & Output_Mode::META) ? current_meta_file_properties< Object >() : 0);
+      (extra_data.mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION))
+          ? current_meta_file_properties< Object >() : 0);
 
   for (typename Object::Id_Type id_pos; id_pos < items_by_id.size(); id_pos += FLUSH_SIZE)
   {
@@ -688,7 +696,9 @@ void tags_by_id_attic
 		     only_current_meta_printer);
     only_current_meta_printer.reset();
 
-    Attic_Meta_Collector< Index, Object > meta_printer(attic_items, transaction, extra_data.mode & Output_Mode::META);
+    Attic_Meta_Collector< Index, Object > meta_printer(
+        attic_items, transaction,
+        extra_data.mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION));
     std::set< OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_metadata;
     collect_metadata(attic_metadata, attic_items, lower_id_bound, upper_id_bound, meta_printer);
 
@@ -730,7 +740,7 @@ void tags_by_id
    unsigned int mode, uint32 FLUSH_SIZE, Output_Handler& output, Resource_Manager& rman,
    uint32 limit, uint32& element_count)
 {
-  if (mode & Output_Mode::META)
+  if (mode & (Output_Mode::VERSION | Output_Mode::TIMESTAMP | Output_Mode::ATTRIBUTION))
   {
     if (rman.get_desired_timestamp() == NOW)
     {
