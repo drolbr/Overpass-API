@@ -54,9 +54,9 @@ class Difference_Statement : public Output_Statement
       std::vector< Statement* >::const_iterator it = substatements.begin();
       if (it != substatements.end())
       {
-        result += (*it)->dump_compact_ql(indent) + ";";
+        result += (*it)->dump_compact_ql(indent);
         for (++it; it != substatements.end(); ++it)
-          result += "-" + (*it)->dump_compact_ql(indent) + ";";
+          result += "-" + (*it)->dump_compact_ql(indent);
       }
       result += ")";
 
@@ -70,9 +70,9 @@ class Difference_Statement : public Output_Statement
       std::vector< Statement* >::const_iterator it = substatements.begin();
       if (it != substatements.end())
       {
-        result += "\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
+        result += "\n" + (*it)->dump_pretty_ql(indent + "  ");
         for (++it; it != substatements.end(); ++it)
-          result += "\n" + indent + "  -\n" + (*it)->dump_pretty_ql(indent + "  ") + ";";
+          result += "\n" + indent + "  -\n" + (*it)->dump_pretty_ql(indent + "  ");
       }
       result += "\n)";
 

@@ -106,6 +106,8 @@ Statement* Filter_Statement::Criterion_Maker::create_criterion(const Token_Node_
 {
   Statement* filter = 0;
   uint line_nr = tree_it->line_col.first;
+  
+  //TODO
 
   if (tree_it->token == ":" && tree_it->rhs)
   {
