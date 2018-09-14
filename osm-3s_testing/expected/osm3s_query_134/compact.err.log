@@ -1,0 +1,3 @@
+encoding remark: Please enter your query and terminate it with CTRL+D.
+line 3: parse error: if special character "=" is present in property name then the property name must be in quotes
+line 3: parse error: "=" cannot be used as binary operator

@@ -312,15 +312,6 @@ Statement* Statement::Factory::create_evaluator(
 }
 
 
-Token_Node_Ptr find_leftmost_token(Token_Node_Ptr tree_it)
-{
-  while (tree_it->lhs)
-    tree_it = tree_it.lhs();
-
-  return tree_it;
-}
-
-
 Statement* Statement::Factory::create_criterion(const Token_Node_Ptr& tree_it,
     const std::string& type, bool& can_standalone, const std::string& into)
 {

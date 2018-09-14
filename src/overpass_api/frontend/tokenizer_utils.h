@@ -67,11 +67,18 @@ struct Token_Node
 int operator_priority(const std::string& operator_name, bool unary);
 
 
+struct Token_Node_Ptr;
+
+
 struct Token_Tree
 {
   Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, bool parenthesis_expected);
+  Token_Tree(const Token_Node_Ptr& root, const Token_Node_Ptr& exclude);
 
   std::vector< Token_Node > tree;
+
+private:
+  uint add_tree_node(const Token_Node_Ptr& root, const Token_Node_Ptr& exclude);
 };
 
 
@@ -89,10 +96,16 @@ struct Token_Node_Ptr
   bool assert_has_input_set(Error_Output* error_output, bool expected) const;
   bool assert_has_arguments(Error_Output* error_output, bool expected) const;
 
+  bool operator==(const Token_Node_Ptr& rhs) const { return tree == rhs.tree && pos == rhs.pos; }
+
 private:
   const Token_Tree* tree;
   uint pos;
 };
+
+
+Token_Node_Ptr find_leftmost_token(Token_Node_Ptr tree_it);
+Token_Node_Ptr find_leftmost_but_one_token(Token_Node_Ptr tree_it);
 
 
 #endif

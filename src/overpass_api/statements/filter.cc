@@ -106,20 +106,24 @@ Statement* Filter_Statement::Criterion_Maker::create_criterion(const Token_Node_
 {
   Statement* filter = 0;
   uint line_nr = tree_it->line_col.first;
-  
-  //TODO
 
-  if (tree_it->token == ":" && tree_it->rhs)
-  {
-    Statement* criterion = stmt_factory.create_evaluator(
+  Statement* criterion = 0;
+  if (tree_it->token == ":" && tree_it->rhs && tree_it->lhs && tree_it.lhs()->token == "if")
+    criterion = stmt_factory.create_evaluator(
         tree_it.rhs(), Statement::elem_eval_possible, Statement::Single_Return_Type_Checker(Statement::string));
-    if (criterion)
-    {
-      std::map< std::string, std::string > attributes;
-      filter = new Filter_Statement(line_nr, attributes, global_settings);
-      if (filter)
-        filter->add_statement(criterion, "");
-    }
+  else
+  {
+    Token_Tree pruned(tree_it, find_leftmost_but_one_token(tree_it));
+    criterion = stmt_factory.create_evaluator(
+        Token_Node_Ptr(pruned).rhs(), Statement::elem_eval_possible,
+        Statement::Single_Return_Type_Checker(Statement::string));
+  }
+  if (criterion)
+  {
+    std::map< std::string, std::string > attributes;
+    filter = new Filter_Statement(line_nr, attributes, global_settings);
+    if (filter)
+      filter->add_statement(criterion, "");
   }
 
   return filter;

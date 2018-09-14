@@ -323,6 +323,30 @@ Token_Tree::Token_Tree(Tokenizer_Wrapper& token, Error_Output* error_output, boo
 }
 
 
+uint Token_Tree::add_tree_node(const Token_Node_Ptr& root, const Token_Node_Ptr& exclude)
+{
+  if (root == exclude)
+    return root->rhs ? add_tree_node(root.rhs(), exclude) : 0u;
+  else
+  {
+    Token_Node vertex(root->token, root->line_col);
+    vertex.lhs = root->lhs ? add_tree_node(root.lhs(), exclude) : 0u;
+    vertex.rhs = root->rhs ? add_tree_node(root.rhs(), exclude) : 0u;
+    tree.push_back(vertex);
+    return tree.size()-1;
+  }
+  return 0u;
+}
+
+
+Token_Tree::Token_Tree(const Token_Node_Ptr& root, const Token_Node_Ptr& exclude)
+{
+  tree.push_back(Token_Node("", std::make_pair(0u, 0u)));
+  uint result = add_tree_node(root, exclude);
+  tree[0].rhs = result;
+}
+
+
 const std::string* Token_Node_Ptr::function_name() const
 {
   if (tree && pos < tree->tree.size())
@@ -499,4 +523,22 @@ bool Token_Node_Ptr::assert_has_arguments(Error_Output* error_output, bool expec
           (tree && pos < tree->tree.size() ? operator*().line_col.first : 0));
     return false;
   }
+}
+
+
+Token_Node_Ptr find_leftmost_token(Token_Node_Ptr tree_it)
+{
+  while (tree_it->lhs)
+    tree_it = tree_it.lhs();
+
+  return tree_it;
+}
+
+
+Token_Node_Ptr find_leftmost_but_one_token(Token_Node_Ptr tree_it)
+{
+  while (tree_it->lhs && tree_it.lhs()->lhs)
+    tree_it = tree_it.lhs();
+
+  return tree_it;
 }

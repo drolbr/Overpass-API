@@ -1,0 +1,7 @@
+<osm-script>
+  <make into="_" type="foo">
+    <set-prop keytype="tag" k="a">
+      <eval-fixed v="b"/>
+    </set-prop>
+  </make>
+</osm-script>

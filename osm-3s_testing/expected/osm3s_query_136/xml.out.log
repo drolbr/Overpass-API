@@ -1,0 +1,11 @@
+<osm-script>
+  <query into="_" type="way">
+    <filter>
+      <eval-ternary>
+        <eval-is-tag k="a"/>
+        <eval-fixed v="1"/>
+        <eval-fixed v="3"/>
+      </eval-ternary>
+    </filter>
+  </query>
+</osm-script>
