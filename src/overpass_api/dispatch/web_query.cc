@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
     if (e.cause == Authorization_Error::not_found)
       temp<<"Api key \""<<e.api_key<<"\" not known or expired.";
     else if (e.cause == Authorization_Error::no_user_perm)
-      temp<<"User related data requested, but api key is \""<<e.api_key<<"\" not authorized for that.";
+      temp<<"User related data requested, but api key \""<<e.api_key<<"\" is not authorized for that.";
     else
       temp<<"User related data requested, but no api key provided.";
     error_output.runtime_error(temp.str());

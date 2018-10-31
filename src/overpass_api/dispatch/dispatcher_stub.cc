@@ -106,10 +106,7 @@ Dispatcher_Stub::Dispatcher_Stub
       client_token = probe_client_token();
 
       if (global_settings.get_users_perm_required())
-      {
-        std::string api_key_rep = resolve_client_token(api_key);
         throw Authorization_Error("", Authorization_Error::no_api_key_but_user_perm);
-      }
     }
     else if (api_key[api_key.size()-1] != '0')
     {
@@ -180,12 +177,12 @@ Dispatcher_Stub::Dispatcher_Stub
       if (!found)
       {
         std::string api_key_rep = resolve_client_token(api_key);
-        throw Authorization_Error(api_key_rep.substr(0, api_key_rep.size()-1), Authorization_Error::not_found);
+        throw Authorization_Error(api_key_rep, Authorization_Error::not_found);
       }
       else if (global_settings.get_users_perm_required() && !users_allowed)
       {
         std::string api_key_rep = resolve_client_token(api_key);
-        throw Authorization_Error(api_key_rep.substr(0, api_key_rep.size()-1), Authorization_Error::no_user_perm);
+        throw Authorization_Error(api_key_rep, Authorization_Error::no_user_perm);
       }
     }
 

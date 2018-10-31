@@ -12,7 +12,7 @@ Content-type: text/html; charset=utf-8
 <body>
 
 <p>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</p>
-<p><strong style="color:#FF0000">Error</strong>: runtime error: Api key "00000000123412341234123412341234123412347" not known or expired. </p>
+<p><strong style="color:#FF0000">Error</strong>: runtime error: Api key "000000001234123412341234123412341234123470" not known or expired. </p>
 
 </body>
 </html>

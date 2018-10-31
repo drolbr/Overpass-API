@@ -12,7 +12,7 @@ Content-type: text/html; charset=utf-8
 <body>
 
 <p>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</p>
-<p><strong style="color:#FF0000">Error</strong>: runtime error: User related data requested, but api key is "7011734a731b8b14ad4c5637863adc28ca6f35bf7" not authorized for that. </p>
+<p><strong style="color:#FF0000">Error</strong>: runtime error: User related data requested, but api key "7011734a731b8b14ad4c5637863adc28ca6f35bf70" is not authorized for that. </p>
 
 </body>
 </html>
