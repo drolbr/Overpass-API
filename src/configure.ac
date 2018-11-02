@@ -46,6 +46,7 @@ AC_FUNC_STAT
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([clock_gettime floor ftruncate getcwd munmap regcomp select shm_open socket sqrt strnlen])
 
+
 AC_ARG_ENABLE([lz4],
               AS_HELP_STRING([--enable-lz4],[enable lz4 compression algorithm]),,
               [enable_lz4="no"])
@@ -73,9 +74,36 @@ fi
 
 AC_SUBST(COMPRESS_LIBS, ["$COMPRESS_LIBS"])
 
+
+AC_ARG_ENABLE([curl],
+              AS_HELP_STRING([--enable-curl],[link curl library]),,
+              [enable_curl="no"])
+AS_IF([test x"$enable_curl" != "xno"], [want_curl="yes"], [want_curl="no"])
+
+LIBCURL=""
+AC_SUBST(LIBCURL, ["$LIBCURL"])
+
+if test "$want_curl" != "no"; then
+  AC_CHECK_HEADER(curl/curl.h, [
+    AC_CHECK_LIB(curl, curl_global_init, [
+      AC_DEFINE(HAVE_CURL, 1, [Define if you have curl library])
+      LIBCURL="$LIBCURL -lcurl"
+    ], [
+      if test "$want_curl" = "yes"; then
+	    AC_ERROR([Can't build with curl support: libcurl not found])
+      fi
+    ])
+  ], [
+    if test "$want_curl" = "yes"; then
+      AC_ERROR([Can't build with curl support: curl/curl.h not found])
+    fi
+  ])
+fi
+
+AC_SUBST(LIBCURL, ["$LIBCURL"])
+
+
 AC_CONFIG_FILES([Makefile test-bin/Makefile])
 #AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 AC_SYS_LARGEFILE
-
-

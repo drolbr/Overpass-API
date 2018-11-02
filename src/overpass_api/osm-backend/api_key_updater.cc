@@ -59,7 +59,7 @@ void start_api_keys(const char *el, const char **attr)
     }
     new_keys->push_back(api_key);
   }
-  else if (!strcmp(el, "revoke"))
+  else if (!strcmp(el, "revoked"))
   {
     Api_Key_Entry api_key;
     api_key.users_allowed = false;
@@ -98,7 +98,10 @@ void Api_Key_Updater::finish_updater()
     // The transaction must be flushed before we copy back the files
 
     Logger logger(dispatcher_client->get_db_dir());
-    logger.annotated_log("write_commit() api_keys start");
+    std::ostringstream out;
+    out<<"write_commit() api_keys start "<<(revoked_keys ? revoked_keys->size() : 0)
+        <<' '<<(new_keys ? new_keys->size() : 0);
+    logger.annotated_log(out.str());
 
     dispatcher_client->write_commit();
     rename((dispatcher_client->get_db_dir() + "api_keys_beyond.shadow").c_str(),
