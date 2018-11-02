@@ -30,6 +30,7 @@
 namespace
 {
   std::vector< Api_Key_Entry >* new_keys = 0;
+  std::vector< Api_Key_Entry >* revoked_keys = 0;
 }
 
 
@@ -58,6 +59,17 @@ void start_api_keys(const char *el, const char **attr)
     }
     new_keys->push_back(api_key);
   }
+  else if (!strcmp(el, "revoke"))
+  {
+    Api_Key_Entry api_key;
+    api_key.users_allowed = false;
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "key"))
+        api_key.key = api_key_from_hex(attr[i+1]);
+    }
+    revoked_keys->push_back(api_key);
+  }
 }
 
 
@@ -66,17 +78,41 @@ void end_api_keys(const char *el) {}
 
 void Api_Key_Updater::finish_updater()
 {
-  Nonsynced_Transaction transaction(true, false, db_dir_, "");
   std::map< Uint32_Index, std::set< Api_Key_Entry > > attic_api_keys;
   std::map< Uint32_Index, std::set< Api_Key_Entry > > new_api_keys;
 
+  for (std::vector< Api_Key_Entry >::const_iterator it = revoked_keys->begin(); it != revoked_keys->end(); ++it)
+    attic_api_keys[it->get_key()].insert(*it);
   for (std::vector< Api_Key_Entry >::const_iterator it = new_keys->begin(); it != new_keys->end(); ++it)
   {
     attic_api_keys[it->get_key()].insert(*it);
     new_api_keys[it->get_key()].insert(*it);
   }
 
-  update_elements(attic_api_keys, new_api_keys, transaction, *api_key_settings().API_KEYS);
+  if (dispatcher_client)
+  {
+    {
+      Nonsynced_Transaction transaction(true, true, dispatcher_client->get_db_dir(), "");
+      update_elements(attic_api_keys, new_api_keys, transaction, *api_key_settings().API_KEYS);
+    }
+    // The transaction must be flushed before we copy back the files
+
+    Logger logger(dispatcher_client->get_db_dir());
+    logger.annotated_log("write_commit() api_keys start");
+
+    dispatcher_client->write_commit();
+    rename((dispatcher_client->get_db_dir() + "api_keys_beyond.shadow").c_str(),
+        (dispatcher_client->get_db_dir() + "api_keys_beyond").c_str());
+
+    logger.annotated_log("write_commit() api_keys end");
+    delete dispatcher_client;
+    dispatcher_client = 0;
+  }
+  else
+  {
+    Nonsynced_Transaction transaction(true, false, db_dir_, "");
+    update_elements(attic_api_keys, new_api_keys, transaction, *api_key_settings().API_KEYS);
+  }
 }
 
 
@@ -88,10 +124,39 @@ void Api_Key_Updater::parse_file_completely(FILE* in)
 }
 
 
-Api_Key_Updater::Api_Key_Updater(const std::string& db_dir) : db_dir_(db_dir)
+void Api_Key_Updater::parse_completely(const std::string& input)
+{
+  Script_Parser().parse(input, start_api_keys, end_api_keys);
+
+  finish_updater();
+}
+
+
+Api_Key_Updater::Api_Key_Updater() : dispatcher_client(0)
 {
   delete(new_keys);
   new_keys = new std::vector< Api_Key_Entry >();
+  delete(revoked_keys);
+  revoked_keys = new std::vector< Api_Key_Entry >();
+
+  dispatcher_client = new Dispatcher_Client(api_key_settings().shared_name);
+  Logger logger(dispatcher_client->get_db_dir());
+  logger.annotated_log("write_start() api_keys start beyond=TODO");
+  dispatcher_client->write_start();
+  logger.annotated_log("write_start() api_keys end");
+}
+
+
+Api_Key_Updater::Api_Key_Updater(const std::string& db_dir) : db_dir_(db_dir), dispatcher_client(0)
+{
+  if (file_present(db_dir + api_key_settings().shared_name))
+    throw Context_Error("File " + db_dir + api_key_settings().shared_name + " present, "
+        "which indicates a running dispatcher. Delete file if no dispatcher is running.");
+
+  delete(new_keys);
+  new_keys = new std::vector< Api_Key_Entry >();
+  delete(revoked_keys);
+  revoked_keys = new std::vector< Api_Key_Entry >();
 }
 
 
@@ -99,4 +164,15 @@ Api_Key_Updater::~Api_Key_Updater()
 {
   delete new_keys;
   new_keys = 0;
+  delete(revoked_keys);
+  revoked_keys = 0;
+
+  if (dispatcher_client)
+  {
+    Logger logger(dispatcher_client->get_db_dir());
+    logger.annotated_log("write_rollback() api_keys start");
+    dispatcher_client->write_rollback();
+    logger.annotated_log("write_rollback() api_keys end");
+    delete dispatcher_client;
+  }
 }

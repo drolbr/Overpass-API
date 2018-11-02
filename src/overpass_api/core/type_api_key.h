@@ -80,7 +80,7 @@ struct Api_Key_Entry
   uint16 rate_limit;
   uint64 timestamp;
 
-  Api_Key_Entry() : users_allowed(false), rate_limit(0) {}
+  Api_Key_Entry() : users_allowed(true), rate_limit(0) {}
 
   Api_Key_Entry(void* data) : key(KEY_SIZE, ' '), users_allowed(false), rate_limit(0)
   {

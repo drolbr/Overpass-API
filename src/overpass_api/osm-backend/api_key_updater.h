@@ -20,20 +20,26 @@
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__API_KEY_UPDATER_H
 
 
+#include "../../template_db/dispatcher_client.h"
+
+
 #include <string>
 
 
 class Api_Key_Updater
 {
 public:
+  Api_Key_Updater();
   Api_Key_Updater(const std::string& db_dir);
   ~Api_Key_Updater();
 
   void parse_file_completely(FILE* in);
+  void parse_completely(const std::string& input);
   void finish_updater();
 
 private:
   std::string db_dir_;
+  Dispatcher_Client* dispatcher_client;
 };
 
 

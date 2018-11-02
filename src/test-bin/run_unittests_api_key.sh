@@ -112,6 +112,23 @@ echo '[api_key:"7011734a731b8b14ad4c5637863adc28ca6f35bf"];out attribution;' | $
 echo '[api_key:"19873b516f79c9c9b01e91668c41bb1bfc2be9d5"];out attribution;' | $BASEDIR/cgi-bin/interpreter \
     | check_osm_against input/api_key_test_db/http_empty.osm
 
+echo
+echo "Update test, before update"
+echo '[api_key:"19873b516f79c9c9b01e91668c41bb1bfc2be9d5"];out attribution;' | $BASEDIR/cgi-bin/interpreter \
+    | check_osm_against input/api_key_test_db/http_empty.osm
+echo '[api_key:"08fb278d4d003891c37b0733b146789163e9af30"];out attribution;' | $BASEDIR/cgi-bin/interpreter \
+    | sed 's/08fb278d4d003891c37b0733b146789163e9af30/0000000012341234123412341234123412341234/g' \
+    | check_osm_against input/api_key_test_db/api_key_unknown.osm
+echo -n "Performing update ..."
+cat input/api_key_test_db/api_key_update.osm | $BASEDIR/bin/update_database --api-keys
+echo "done"
+echo "Update test, after update"
+echo '[api_key:"19873b516f79c9c9b01e91668c41bb1bfc2be9d5"];out attribution;' | $BASEDIR/cgi-bin/interpreter \
+    | sed 's/19873b516f79c9c9b01e91668c41bb1bfc2be9d5/0000000012341234123412341234123412341234/g' \
+    | check_osm_against input/api_key_test_db/api_key_unknown.osm
+echo '[api_key:"08fb278d4d003891c37b0733b146789163e9af30"];out attribution;' | $BASEDIR/cgi-bin/interpreter \
+    | check_osm_against input/api_key_test_db/http_empty.osm
+
 $BASEDIR/bin/dispatcher --osm-base --terminate
 $BASEDIR/bin/dispatcher --areas --terminate
 $BASEDIR/bin/dispatcher --api-keys --terminate

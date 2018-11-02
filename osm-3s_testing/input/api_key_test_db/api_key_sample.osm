@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<osm-gdpr>
+<osm-apikeys>
 
   <apikey key="19873b516f79c9c9b01e91668c41bb1bfc2be9d5" created="2018-08-01T03:04:05Z" users="yes"/>
   <apikey key="7011734a731b8b14ad4c5637863adc28ca6f35bf" created="2018-08-01T03:04:06Z" users="no"/>
@@ -13,4 +13,4 @@
   <apikey key="f11ba50012341234123412341234123412341234"/>
   <apikey key="f22ba60012341234123412341234123412341234"/>
 
-</osm-gdpr>
+</osm-apikeys>

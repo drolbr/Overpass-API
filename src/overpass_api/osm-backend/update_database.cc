@@ -149,13 +149,16 @@ int main(int argc, char* argv[])
     }
     else
     {
-      if (db_dir.empty())
+      if (transactional)
       {
-        std::cerr<<"Db_dir required for api keys.\n";
-        return 4;
+        Api_Key_Updater api_key_updater;
+        api_key_updater.parse_file_completely(stdin);
       }
-      Api_Key_Updater api_key_updater(db_dir);
-      api_key_updater.parse_file_completely(stdin);
+      else
+      {
+        Api_Key_Updater api_key_updater(db_dir);
+        api_key_updater.parse_file_completely(stdin);
+      }
     }
   }
   catch(Context_Error e)
