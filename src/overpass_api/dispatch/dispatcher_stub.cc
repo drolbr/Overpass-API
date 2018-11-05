@@ -17,8 +17,11 @@
  */
 
 #include "dispatcher_stub.h"
+#include "../../curl/curl_client.h"
 #include "../core/type_api_key.h"
+#include "../data/utils.h"
 #include "../frontend/user_interface.h"
+#include "../osm-backend/api_key_updater.h"
 #include "../statements/statement_dump.h"
 
 #include <errno.h>
@@ -88,6 +91,97 @@ void set_limits(uint32 time, uint64 space)
 }
 
 
+void download_new_api_keys()
+{
+  Api_Key_Updater api_key_updater;
+
+  std::string url;
+  if (!file_present(api_key_updater.effective_db_dir() + api_key_settings().source_url_file))
+    return;
+
+  {
+    std::ifstream in((api_key_updater.effective_db_dir() + api_key_settings().source_url_file).c_str());
+    std::getline(in, url);
+  }
+  Api_Keys_Url_And_Params url_and_params(url);
+  if (!url_and_params.valid())
+    return;
+
+  std::string downloaded = Curl_Client().send_request(url);
+  if (api_key_updater.is_transactional())
+    Logger(api_key_updater.effective_db_dir()).annotated_log(
+        "Downloaded " + to_string(downloaded.size()) + " bytes from '" + url + "'");
+
+  api_key_updater.parse_completely(downloaded, url_and_params);
+}
+
+
+void query_api_key(const std::string& api_key, bool& found, bool& users_allowed)
+{
+  Dispatcher_Client api_key_dispatcher_client(api_key_settings().shared_name);
+  Logger logger(api_key_dispatcher_client.get_db_dir());
+
+  try
+  {
+    logger.annotated_log("request_read_and_idx() api_key start");
+    api_key_dispatcher_client.request_read_and_idx(1, 1, api_key);
+    logger.annotated_log("request_read_and_idx() api_key end");
+  }
+  catch (const File_Error& e)
+  {
+    std::ostringstream out;
+    out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
+    logger.annotated_log(out.str());
+    throw;
+  }
+
+  Nonsynced_Transaction api_key_transaction(false, false, api_key_dispatcher_client.get_db_dir(), "");
+  api_key_transaction.data_index(api_key_settings().API_KEYS);
+
+  try
+  {
+    logger.annotated_log("read_idx_finished() api_key start");
+    api_key_dispatcher_client.read_idx_finished();
+    logger.annotated_log("read_idx_finished() api_key end");
+  }
+  catch (const File_Error& e)
+  {
+    std::ostringstream out;
+    out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
+    logger.annotated_log(out.str());
+    throw;
+  }
+
+  std::vector< Uint32_Index > api_key_idx;
+  api_key_idx.push_back(Uint32_Index(Api_Key_Entry::get_key(api_key)));
+  Block_Backend< Uint32_Index, Api_Key_Entry, std::vector< Uint32_Index >::const_iterator >
+    api_key_db(api_key_transaction.data_index(api_key_settings().API_KEYS));
+  for (Block_Backend< Uint32_Index, Api_Key_Entry, std::vector< Uint32_Index >::const_iterator >
+      ::Discrete_Iterator it = api_key_db.discrete_begin(api_key_idx.begin(), api_key_idx.end());
+      !(it == api_key_db.discrete_end()); ++it)
+  {
+    if (it.object().key == api_key)
+    {
+      found = true;
+      users_allowed |= it.object().users_allowed;
+    }
+  }
+
+  try
+  {
+    logger.annotated_log("read_finished() api_key start");
+    api_key_dispatcher_client.read_finished();
+    logger.annotated_log("read_finished() api_key end");
+  }
+  catch (const File_Error& e)
+  {
+    std::ostringstream out;
+    out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
+    logger.annotated_log(out.str());
+  }
+}
+
+
 Dispatcher_Stub::Dispatcher_Stub
     (std::string db_dir_, Error_Output* error_output_, std::string xml_raw, meta_modes meta_, int area_level,
      uint32 max_allowed_time, uint64 max_allowed_space, const std::string& api_key, Parsed_Query& global_settings)
@@ -110,68 +204,16 @@ Dispatcher_Stub::Dispatcher_Stub
     }
     else if (api_key[api_key.size()-1] != '0')
     {
-      Dispatcher_Client api_key_dispatcher_client(api_key_settings().shared_name);
-      Logger logger(api_key_dispatcher_client.get_db_dir());
-
-      try
-      {
-        logger.annotated_log("request_read_and_idx() api_key start");
-        api_key_dispatcher_client.request_read_and_idx(max_allowed_time, max_allowed_space, client_token);
-        logger.annotated_log("request_read_and_idx() api_key end");
-      }
-      catch (const File_Error& e)
-      {
-        std::ostringstream out;
-        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
-        logger.annotated_log(out.str());
-        throw;
-      }
-
-      Nonsynced_Transaction api_key_transaction(false, false, api_key_dispatcher_client.get_db_dir(), "");
-      api_key_transaction.data_index(api_key_settings().API_KEYS);
-
-      try
-      {
-        logger.annotated_log("read_idx_finished() api_key start");
-        api_key_dispatcher_client.read_idx_finished();
-        logger.annotated_log("read_idx_finished() api_key end");
-      }
-      catch (const File_Error& e)
-      {
-        std::ostringstream out;
-        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
-        logger.annotated_log(out.str());
-        throw;
-      }
-
-      std::vector< Uint32_Index > api_key_idx;
-      api_key_idx.push_back(Uint32_Index(Api_Key_Entry::get_key(api_key)));
       bool found = false;
       bool users_allowed = false;
-      Block_Backend< Uint32_Index, Api_Key_Entry, std::vector< Uint32_Index >::const_iterator >
-        api_key_db(api_key_transaction.data_index(api_key_settings().API_KEYS));
-      for (Block_Backend< Uint32_Index, Api_Key_Entry, std::vector< Uint32_Index >::const_iterator >
-          ::Discrete_Iterator it = api_key_db.discrete_begin(api_key_idx.begin(), api_key_idx.end());
-          !(it == api_key_db.discrete_end()); ++it)
-      {
-        if (it.object().key == api_key)
-        {
-          found = true;
-          users_allowed |= it.object().users_allowed;
-        }
-      }
+      query_api_key(api_key, found, users_allowed);
 
-      try
+      if (!found || (global_settings.get_users_perm_required() && !users_allowed))
       {
-        logger.annotated_log("read_finished() api_key start");
-        api_key_dispatcher_client.read_finished();
-        logger.annotated_log("read_finished() api_key end");
-      }
-      catch (const File_Error& e)
-      {
-        std::ostringstream out;
-        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
-        logger.annotated_log(out.str());
+        //Download newest keys
+        download_new_api_keys();
+        // Then try again
+        query_api_key(api_key, found, users_allowed);
       }
 
       if (!found)
