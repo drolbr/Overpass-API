@@ -18,12 +18,14 @@
 
 #include "../../expat/expat_justparse_interface.h"
 #include "../core/type_api_key.h"
+#include "../data/utils.h"
 #include "../frontend/basic_formats.h"
 #include "api_key_updater.h"
 #include "basic_updater.h"
 
 
 #include <cstdio>
+#include <fstream>
 #include <vector>
 
 
@@ -31,6 +33,7 @@ namespace
 {
   std::vector< Api_Key_Entry >* new_keys = 0;
   std::vector< Api_Key_Entry >* revoked_keys = 0;
+  int64 maxkey = 0;
 }
 
 
@@ -70,13 +73,21 @@ void start_api_keys(const char *el, const char **attr)
     }
     revoked_keys->push_back(api_key);
   }
+  else if (!strcmp(el, "keyid"))
+  {
+    for (unsigned int i(0); attr[i]; i += 2)
+    {
+      if (!strcmp(attr[i], "max"))
+        maxkey = atoll(attr[i+1]);
+    }
+  }
 }
 
 
 void end_api_keys(const char *el) {}
 
 
-void Api_Key_Updater::finish_updater()
+void Api_Key_Updater::finish_updater(const Api_Keys_Url_And_Params& url_and_params)
 {
   std::map< Uint32_Index, std::set< Api_Key_Entry > > attic_api_keys;
   std::map< Uint32_Index, std::set< Api_Key_Entry > > new_api_keys;
@@ -97,6 +108,14 @@ void Api_Key_Updater::finish_updater()
     }
     // The transaction must be flushed before we copy back the files
 
+    if (url_and_params.valid())
+    {
+      std::ofstream out((dispatcher_client->get_db_dir() + api_key_settings().source_url_file).c_str());
+      out<<url_and_params.base_url
+          <<"?service="<<url_and_params.service
+          <<"&key="<<url_and_params.key
+          <<"&beyond="<<std::max(url_and_params.beyond, maxkey)<<'\n';
+    }
     Logger logger(dispatcher_client->get_db_dir());
     std::ostringstream out;
     out<<"write_commit() api_keys start "<<(revoked_keys ? revoked_keys->size() : 0)
@@ -115,7 +134,24 @@ void Api_Key_Updater::finish_updater()
   {
     Nonsynced_Transaction transaction(true, false, db_dir_, "");
     update_elements(attic_api_keys, new_api_keys, transaction, *api_key_settings().API_KEYS);
+
+    if (url_and_params.valid())
+    {
+      std::ofstream out((db_dir_ + api_key_settings().source_url_file).c_str());
+      out<<url_and_params.base_url
+          <<"?service="<<url_and_params.service
+          <<"&key="<<url_and_params.key
+          <<"&beyond="<<std::max(url_and_params.beyond, maxkey)<<'\n';
+    }
   }
+}
+
+
+std::string Api_Key_Updater::effective_db_dir() const
+{
+  if (dispatcher_client)
+    return dispatcher_client->get_db_dir();
+  return db_dir_;
 }
 
 
@@ -123,15 +159,15 @@ void Api_Key_Updater::parse_file_completely(FILE* in)
 {
   parse(stdin, start_api_keys, end_api_keys);
 
-  finish_updater();
+  finish_updater(Api_Keys_Url_And_Params());
 }
 
 
-void Api_Key_Updater::parse_completely(const std::string& input)
+void Api_Key_Updater::parse_completely(const std::string& file, const Api_Keys_Url_And_Params& url_and_params)
 {
-  Script_Parser().parse(input, start_api_keys, end_api_keys);
+  Script_Parser().parse(file, start_api_keys, end_api_keys);
 
-  finish_updater();
+  finish_updater(url_and_params);
 }
 
 
@@ -144,7 +180,7 @@ Api_Key_Updater::Api_Key_Updater() : dispatcher_client(0)
 
   dispatcher_client = new Dispatcher_Client(api_key_settings().shared_name);
   Logger logger(dispatcher_client->get_db_dir());
-  logger.annotated_log("write_start() api_keys start beyond=TODO");
+  logger.annotated_log("write_start() api_keys start");
   dispatcher_client->write_start();
   logger.annotated_log("write_start() api_keys end");
 }
@@ -178,4 +214,62 @@ Api_Key_Updater::~Api_Key_Updater()
     logger.annotated_log("write_rollback() api_keys end");
     delete dispatcher_client;
   }
+}
+
+
+Api_Keys_Url_And_Params::Api_Keys_Url_And_Params() : beyond_valid(false) {}
+
+
+Api_Keys_Url_And_Params::Api_Keys_Url_And_Params(const std::string& url) : beyond_valid(false)
+{
+  std::string::size_type start = url.find("?");
+  if (start == std::string::npos)
+  {
+    base_url = url;
+    return;
+  }
+  base_url = url.substr(0, start);
+
+  std::string::size_type end = url.find("&", start+1);
+  while (true)
+  {
+    std::string param = (end == std::string::npos ? url.substr(start+1) : url.substr(start+1, end-start-1));
+    if (param.substr(0, 8) == "service=")
+      service = param.substr(8);
+    else if (param.substr(0, 4) == "key=")
+      key = param.substr(4);
+    else if (param.substr(0, 7) == "beyond=")
+    {
+      beyond = atoll(param.substr(7).c_str());
+      beyond_valid = (beyond || (param.substr(7) == "0"));
+    }
+    else
+      unknown_param = param;
+    start = end;
+    if (end == std::string::npos)
+      break;
+    end = url.find("&", start+1);
+  }
+}
+
+
+bool Api_Keys_Url_And_Params::valid() const
+{
+  return !base_url.empty() && !service.empty() && !key.empty() && beyond_valid && unknown_param.empty();
+}
+
+
+std::string Api_Keys_Url_And_Params::error() const
+{
+  if (base_url.empty())
+    return "Base URL is empty.";
+  if (service.empty())
+    return "Parameter service is empty.";
+  if (key.empty())
+    return "Parameter key is empty.";
+  if (!beyond_valid)
+    return "Parameter beyond is not a nonnegative integer.";
+  if (!unknown_param.empty())
+    return "Unexpected param \"" + unknown_param + "\" in URL.";
+  return "";
 }

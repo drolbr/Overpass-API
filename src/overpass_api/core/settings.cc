@@ -259,6 +259,7 @@ Api_Key_Settings::Api_Key_Settings()
       ("api_keys", 16*1024, 0)),
 
   shared_name(basic_settings().shared_name_base + "_api_keys"),
+  source_url_file("api_keys.source.url"),
   max_num_processes(100),
   total_available_space(64ll*1024*1024*1024),
   total_available_time_units(4*1024*1024)

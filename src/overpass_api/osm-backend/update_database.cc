@@ -150,15 +150,9 @@ int main(int argc, char* argv[])
     else
     {
       if (transactional)
-      {
-        Api_Key_Updater api_key_updater;
-        api_key_updater.parse_file_completely(stdin);
-      }
+        Api_Key_Updater().parse_file_completely(stdin);
       else
-      {
-        Api_Key_Updater api_key_updater(db_dir);
-        api_key_updater.parse_file_completely(stdin);
-      }
+        Api_Key_Updater(db_dir).parse_file_completely(stdin);
     }
   }
   catch(Context_Error e)

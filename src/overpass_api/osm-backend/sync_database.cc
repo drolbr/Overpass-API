@@ -29,9 +29,37 @@
 #include "../../curl/curl_client.h"
 #include "../../expat/expat_justparse_interface.h"
 #include "../core/settings.h"
+#include "../data/utils.h"
 #include "../frontend/output.h"
 #include "api_key_updater.h"
 #include "osm_updater.h"
+
+
+void download_and_parse(Api_Key_Updater& api_key_updater, const std::string& url_from_cmdline)
+{
+  std::string url = url_from_cmdline;
+  if (file_present(api_key_updater.effective_db_dir() + api_key_settings().source_url_file))
+  {
+    if (!url.empty())
+      throw Context_Error("File " + api_key_updater.effective_db_dir() + api_key_settings().source_url_file
+          + " present which conflicts with URL by parameter.\n");
+
+    std::ifstream in((api_key_updater.effective_db_dir() + api_key_settings().source_url_file).c_str());
+    std::getline(in, url);
+  }
+  Api_Keys_Url_And_Params url_and_params(url);
+  if (!url_and_params.valid())
+    throw Context_Error("Bad URL: " + url_and_params.error());
+
+  std::string downloaded = Curl_Client().send_request(url);
+  if (api_key_updater.is_transactional())
+    Logger(api_key_updater.effective_db_dir()).annotated_log(
+        "Downloaded " + to_string(downloaded.size()) + " bytes from '" + url + "'");
+  else
+    std::cerr<<"Downloaded "<<downloaded.size()<<" bytes from '"<<url<<"'\n";
+
+  api_key_updater.parse_completely(downloaded, url_and_params);
+}
 
 
 int main(int argc, char* argv[])
@@ -74,39 +102,17 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  std::string delta_file;
-  try
-  {
-    Curl_Client client;
-    try
-    {
-      delta_file = client.send_request(url);
-    }
-    catch (const Curl_Client::Error& e)
-    {
-      std::cerr<<"Could not download "<<url<<": "<<e.what()<<"\n\n";
-      std::cerr<<client.get_payload_if_error()<<'\n';
-      return 6;
-    }
-  }
-  catch (const Curl_Client::Error& e)
-  {
-    std::cerr<<"Could not setup libcurl: "<<e.what()<<'\n';
-    return 5;
-  }
-  std::cerr<<"Downloaded "<<delta_file.size()<<" bytes.\n";
-
   try
   {
     if (transactional)
     {
       Api_Key_Updater api_key_updater;
-      api_key_updater.parse_completely(delta_file);
+      download_and_parse(api_key_updater, url);
     }
     else
     {
       Api_Key_Updater api_key_updater(db_dir);
-      api_key_updater.parse_completely(delta_file);
+      download_and_parse(api_key_updater, url);
     }
   }
   catch(Context_Error e)
@@ -123,6 +129,17 @@ int main(int argc, char* argv[])
   {
     std::cerr<<"Parser error: "<<e.message<<'\n';
     return 4;
+  }
+  catch (const Curl_Client::Setup_Error& e)
+  {
+    std::cerr<<"Could not setup libcurl: "<<e.what()<<'\n';
+    return 5;
+  }
+  catch (const Curl_Client::Download_Error& e)
+  {
+    std::cerr<<"Could not download "<<url<<": "<<e.what()<<"\n\n";
+    std::cerr<<e.payload()<<'\n';
+    return 6;
   }
 
   return 0;

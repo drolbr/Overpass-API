@@ -132,6 +132,7 @@ struct Api_Key_Settings
   File_Properties* API_KEYS;
 
   std::string shared_name;
+  std::string source_url_file;
   uint max_num_processes;
   uint64 total_available_space;
   uint64 total_available_time_units;

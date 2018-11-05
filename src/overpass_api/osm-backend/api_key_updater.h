@@ -26,6 +26,22 @@
 #include <string>
 
 
+struct Api_Keys_Url_And_Params
+{
+  Api_Keys_Url_And_Params();
+  Api_Keys_Url_And_Params(const std::string& url);
+  bool valid() const;
+  std::string error() const;
+
+  std::string base_url;
+  std::string service;
+  std::string key;
+  int64 beyond;
+  bool beyond_valid;
+  std::string unknown_param;
+};
+
+
 class Api_Key_Updater
 {
 public:
@@ -34,12 +50,15 @@ public:
   ~Api_Key_Updater();
 
   void parse_file_completely(FILE* in);
-  void parse_completely(const std::string& input);
-  void finish_updater();
+  void parse_completely(const std::string& file, const Api_Keys_Url_And_Params& url_and_params);
+  std::string effective_db_dir() const;
+  bool is_transactional() const { return dispatcher_client; }
 
 private:
   std::string db_dir_;
   Dispatcher_Client* dispatcher_client;
+
+  void finish_updater(const Api_Keys_Url_And_Params& url_and_params);
 };
 
 
