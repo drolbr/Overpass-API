@@ -786,6 +786,75 @@ void filter_ids_by_ntags
 
 
 template< class TIndex, class TObject >
+void filter_by_ids(
+    const std::map< uint32, std::vector< typename TObject::Id_Type > >& ids_by_coarse,
+    std::map< TIndex, std::vector< TObject > >& items,
+    std::map< TIndex, std::vector< Attic< TObject > > >* attic_items)
+{
+  std::map< TIndex, std::vector< TObject > > result;
+  std::map< TIndex, std::vector< Attic< TObject > > > attic_result;
+
+  typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it = items.begin();
+
+  if (!attic_items)
+  {
+    for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::const_iterator
+        it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    {
+      while ((item_it != items.end()) &&
+          ((item_it->first.val() & 0x7fffff00) == it->first))
+      {
+        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
+             eit != item_it->second.end(); ++eit)
+        {
+          if (binary_search(it->second.begin(), it->second.end(), eit->id))
+            result[item_it->first.val()].push_back(*eit);
+        }
+        ++item_it;
+      }
+    }
+  }
+  else
+  {
+    typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator attic_item_it
+        = attic_items->begin();
+
+    for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::const_iterator
+        it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
+    {
+      while ((item_it != items.end()) &&
+          ((item_it->first.val() & 0x7fffff00) == it->first))
+      {
+        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
+             eit != item_it->second.end(); ++eit)
+        {
+          if (binary_search(it->second.begin(), it->second.end(), eit->id))
+            result[item_it->first.val()].push_back(*eit);
+        }
+        ++item_it;
+      }
+
+      while ((attic_item_it != attic_items->end()) &&
+          ((attic_item_it->first.val() & 0x7fffff00) == it->first))
+      {
+        for (typename std::vector< Attic< TObject > >::const_iterator eit = attic_item_it->second.begin();
+             eit != attic_item_it->second.end(); ++eit)
+        {
+          if (binary_search(it->second.begin(), it->second.end(), eit->id))
+            attic_result[attic_item_it->first.val()].push_back(*eit);
+        }
+        ++attic_item_it;
+      }
+    }
+  }
+
+  items.swap(result);
+  if (attic_items)
+    attic_items->swap(attic_result);
+}
+
+
+template< class TIndex, class TObject >
 void Query_Statement::filter_by_tags
     (std::map< TIndex, std::vector< TObject > >& items,
      std::map< TIndex, std::vector< Attic< TObject > > >* attic_items,
@@ -826,9 +895,6 @@ void Query_Statement::filter_by_tags
     (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
      Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
 
-  typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it
-      = items.begin();
-
   if (timestamp == NOW)
   {
     for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
@@ -839,22 +905,7 @@ void Query_Statement::filter_by_tags
         coarse_count = 0;
         rman.health_check(*this);
       }
-      std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
-
-      filter_ids_by_tags(key_union, regkey_regexes, items_db, tag_it, it->first, ids_by_coarse_);
-
-      while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
-	     eit != item_it->second.end(); ++eit)
-        {
-          if (binary_search(ids_by_coarse_.begin(),
-              ids_by_coarse_.end(), eit->id))
-	    result[item_it->first.val()].push_back(*eit);
-        }
-        ++item_it;
-      }
+      filter_ids_by_tags(key_union, regkey_regexes, items_db, tag_it, it->first, it->second);
     }
   }
   else
@@ -877,43 +928,16 @@ void Query_Statement::filter_by_tags
         coarse_count = 0;
         rman.health_check(*this);
       }
-      std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
-
       filter_ids_by_tags(key_union, regkey_regexes, timestamp, items_db, tag_it, attic_items_db, attic_tag_it,
-                         it->first, ids_by_coarse_);
-
-      while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
-             eit != item_it->second.end(); ++eit)
-        {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
-            result[item_it->first.val()].push_back(*eit);
-        }
-        ++item_it;
-      }
-
-      while ((attic_item_it != attic_items->end()) &&
-          ((attic_item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< Attic< TObject > >::const_iterator eit = attic_item_it->second.begin();
-             eit != attic_item_it->second.end(); ++eit)
-        {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
-            attic_result[attic_item_it->first.val()].push_back(*eit);
-        }
-        ++attic_item_it;
-      }
+                         it->first, it->second);
     }
   }
 
-  items.swap(result);
-  if (attic_items)
-    attic_items->swap(attic_result);
-
   if (key_nregexes.empty() && key_nvalues.empty())
+  {
+    filter_by_ids(ids_by_coarse, items, attic_items);
     return;
+  }
 
   // prepare negated keys
   std::map< std::string, std::pair< std::vector< Regular_Expression* >, std::vector< std::string > > > nkey_union;
@@ -932,7 +956,6 @@ void Query_Statement::filter_by_tags
       ntag_it(items_db.range_begin
       (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
        Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-  item_it = items.begin();
 
   if (timestamp == NOW)
   {
@@ -944,23 +967,7 @@ void Query_Statement::filter_by_tags
         coarse_count = 0;
         rman.health_check(*this);
       }
-      std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
-
-      sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
-
-      filter_ids_by_ntags(nkey_union, items_db, ntag_it, it->first, ids_by_coarse_);
-
-      while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
-             eit != item_it->second.end(); ++eit)
-        {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
-            result[item_it->first.val()].push_back(*eit);
-        }
-        ++item_it;
-      }
+      filter_ids_by_ntags(nkey_union, items_db, ntag_it, it->first, it->second);
     }
   }
   else
@@ -983,42 +990,12 @@ void Query_Statement::filter_by_tags
         coarse_count = 0;
         rman.health_check(*this);
       }
-      std::vector< typename TObject::Id_Type >& ids_by_coarse_ = it->second;
-
-      sort(ids_by_coarse_.begin(), ids_by_coarse_.end());
-
       filter_ids_by_ntags(nkey_union, timestamp, items_db, ntag_it, attic_items_db, attic_ntag_it,
-                          it->first, ids_by_coarse_);
-
-      while ((item_it != items.end()) &&
-          ((item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
-             eit != item_it->second.end(); ++eit)
-        {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
-            result[item_it->first.val()].push_back(*eit);
-        }
-        ++item_it;
-      }
-
-      while ((attic_item_it != attic_items->end()) &&
-          ((attic_item_it->first.val() & 0x7fffff00) == it->first))
-      {
-        for (typename std::vector< Attic< TObject > >::const_iterator eit = attic_item_it->second.begin();
-             eit != attic_item_it->second.end(); ++eit)
-        {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
-            attic_result[attic_item_it->first.val()].push_back(*eit);
-        }
-        ++attic_item_it;
-      }
+                          it->first, it->second);
     }
   }
 
-  items.swap(result);
-  if (attic_items)
-    attic_items->swap(attic_result);
+  filter_by_ids(ids_by_coarse, items, attic_items);
 }
 
 

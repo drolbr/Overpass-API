@@ -120,7 +120,8 @@ void filter_ids_by_tags
     // There are keys missing for all objects with this index. Drop all.
     new_ids.clear();
 
-  sort(new_ids.begin(), new_ids.end());
+  std::sort(new_ids.begin(), new_ids.end());
+  new_ids.erase(std::unique(new_ids.begin(), new_ids.end()), new_ids.end());
 
   for (typename std::vector< std::vector< Id_Type > >::const_iterator it = matched_ids.begin();
       it != matched_ids.end(); ++it)
@@ -134,7 +135,8 @@ void filter_ids_by_tags
 	new_ids.push_back(*it2);
     }
 
-    sort(new_ids.begin(), new_ids.end());
+    std::sort(new_ids.begin(), new_ids.end());
+    new_ids.erase(std::unique(new_ids.begin(), new_ids.end()), new_ids.end());
   }
 }
 
