@@ -642,8 +642,6 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	else if (command == WRITE_COMMIT)
 	{
 	  global_resource_planner.purge(connection_per_pid);
-          if (logger)
-            logger->write_commit(client_pid);
 	  write_commit(client_pid);
 	}
 	else if (command == WRITE_ROLLBACK)

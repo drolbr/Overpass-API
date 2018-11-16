@@ -138,10 +138,14 @@ void Transaction_Insulator::copy_mains_to_shadows()
                 + (*it)->get_index_suffix(),
 		db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
 		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
+      chmod((db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
+		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str(), S_666);
       copy_file(db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
                 + (*it)->get_index_suffix(),
 		db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
 		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
+      chmod((db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
+		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix()).c_str(), S_666);
   }
 }
 

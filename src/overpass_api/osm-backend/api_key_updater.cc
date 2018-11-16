@@ -103,8 +103,21 @@ void Api_Key_Updater::finish_updater(const Api_Keys_Url_And_Params& url_and_para
   if (dispatcher_client)
   {
     {
-      Nonsynced_Transaction transaction(true, true, dispatcher_client->get_db_dir(), "");
-      update_elements(attic_api_keys, new_api_keys, transaction, *api_key_settings().API_KEYS);
+      try
+      {
+        Nonsynced_Transaction transaction(true, true, dispatcher_client->get_db_dir(), "");
+        update_elements(attic_api_keys, new_api_keys, transaction, *api_key_settings().API_KEYS);
+      }
+      catch (const File_Error& e)
+      {
+        std::ostringstream out;
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
+        Logger(dispatcher_client->get_db_dir()).annotated_log(out.str());
+      }
+      catch (...)
+      {
+        Logger(dispatcher_client->get_db_dir()).annotated_log("Unknown error during API key sync.");
+      }
     }
     // The transaction must be flushed before we copy back the files
 
