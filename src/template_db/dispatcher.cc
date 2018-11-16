@@ -373,18 +373,23 @@ Dispatcher::Dispatcher
     (std::string dispatcher_share_name_,
      std::string index_share_name,
      std::string shadow_name_,
+     bool block_writing_after_rollback_,
      std::string db_dir_,
      uint max_num_reading_processes_,
      uint64 total_available_space_,
      uint64 total_available_time_units_,
      const std::vector< File_Properties* >& controlled_files_,
-     Dispatcher_Logger* logger_)
+     Dispatcher_Logger* logger_,
+     Dispatcher_Status_Output* status_output_)
     : socket(dispatcher_share_name_, shadow_name_, db_dir_, max_num_reading_processes_),
       transaction_insulator(db_dir_, controlled_files_),
       shadow_name(shadow_name_),
       dispatcher_share_name(dispatcher_share_name_),
+      block_writing_after_rollback(block_writing_after_rollback_),
       logger(logger_),
+      status_output(status_output_),
       pending_commit(false),
+      writing_client(0),
       requests_started_counter(0),
       requests_finished_counter(0),
       global_resource_planner(total_available_time_units_, total_available_space_, 0)
@@ -471,14 +476,18 @@ void Dispatcher::write_start(pid_t pid)
       std::ifstream lock((shadow_name + ".lock").c_str());
       lock>>locked_pid;
       if (locked_pid == pid)
-	return;
+        return;
+      if (logger)
+        logger->write_conflict(pid, locked_pid);
+      else
+        std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     }
-    std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
     return;
   }
 
   try
   {
+    writing_client = pid;
     std::ofstream lock((shadow_name + ".lock").c_str());
     lock<<pid;
   }
@@ -488,6 +497,7 @@ void Dispatcher::write_start(pid_t pid)
 
 void Dispatcher::write_rollback(pid_t pid)
 {
+  writing_client = 0;
   if (logger)
     logger->write_rollback(pid);
   transaction_insulator.remove_shadows();
@@ -503,6 +513,7 @@ void Dispatcher::write_commit(pid_t pid)
     return;
   }
   pending_commit = false;
+  writing_client = 0;
 
   if (logger)
     logger->write_commit(pid);
@@ -521,6 +532,8 @@ void Dispatcher::write_commit(pid_t pid)
   remove(shadow_name.c_str());
   transaction_insulator.remove_shadows();
   remove((shadow_name + ".lock").c_str());
+
+  read_finished(pid);
   transaction_insulator.set_current_footprints();
 }
 
@@ -564,6 +577,9 @@ void Dispatcher::read_aborted(pid_t pid)
 {
   if (logger)
     logger->read_aborted(pid);
+
+  if (!block_writing_after_rollback && (pid_t)writing_client == pid)
+    write_rollback(pid);
 
   transaction_insulator.read_finished(pid);
 
@@ -626,6 +642,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	else if (command == WRITE_COMMIT)
 	{
 	  global_resource_planner.purge(connection_per_pid);
+          if (logger)
+            logger->write_commit(client_pid);
 	  write_commit(client_pid);
 	}
 	else if (command == WRITE_ROLLBACK)
@@ -796,48 +814,22 @@ void Dispatcher::output_status()
 {
   try
   {
-    std::ofstream status((shadow_name + ".status").c_str());
-
-    status<<"Number of not yet opened connections: "<<socket.num_started_connections()<<'\n'
-        <<"Number of connected clients: "<<connection_per_pid.base_map().size()<<'\n'
-        <<"Rate limit: "<<global_resource_planner.get_rate_limit()<<'\n'
-        <<"Total available space: "<<global_resource_planner.get_total_available_space()<<'\n'
-        <<"Total claimed space: "<<global_resource_planner.get_total_claimed_space()<<'\n'
-        <<"Average claimed space: "<<global_resource_planner.get_average_claimed_space()<<'\n'
-        <<"Total available time units: "<<global_resource_planner.get_total_available_time()<<'\n'
-        <<"Total claimed time units: "<<global_resource_planner.get_total_claimed_time()<<'\n'
-        <<"Average claimed time units: "<<global_resource_planner.get_average_claimed_time()<<'\n'
-        <<"Counter of started requests: "<<requests_started_counter<<'\n'
-        <<"Counter of finished requests: "<<requests_finished_counter<<'\n';
-
-    std::set< ::pid_t > collected_pids = transaction_insulator.registered_pids();
-
-    for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
-	 it != global_resource_planner.get_active().end(); ++it)
-    {
-      if (processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
-	status<<REQUEST_READ_AND_IDX;
-      else
-	status<<READ_IDX_FINISHED;
-      status<<' '<<it->client_pid<<' '<<it->client_token<<' '
-          <<it->max_space<<' '<<it->max_time<<' '<<it->start_time<<'\n';
-
-      collected_pids.insert(it->client_pid);
-    }
-
+    std::set< ::pid_t > connected_processes;
     for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();
-	 it != connection_per_pid.base_map().end(); ++it)
-    {
-      if (processes_reading_idx.find(it->first) == processes_reading_idx.end()
-	  && collected_pids.find(it->first) == collected_pids.end())
-	status<<"pending\t"<<it->first<<'\n';
-    }
+        it != connection_per_pid.base_map().end(); ++it)
+      connected_processes.insert(it->first);
 
-    for (std::vector< Quota_Entry >::const_iterator it = global_resource_planner.get_afterwards().begin();
-	 it != global_resource_planner.get_afterwards().end(); ++it)
-    {
-      status<<"quota\t"<<it->client_token<<' '<<it->expiration_time<<'\n';
-    }
+    if (status_output)
+      status_output->output_status(shadow_name + ".status",
+          socket.num_started_connections(), connection_per_pid.base_map().size(),
+          global_resource_planner.get_rate_limit(),
+          global_resource_planner.get_total_available_space(),
+          global_resource_planner.get_total_claimed_space(), global_resource_planner.get_average_claimed_space(),
+          global_resource_planner.get_total_available_time(),
+          global_resource_planner.get_total_claimed_time(), global_resource_planner.get_average_claimed_time(),
+          requests_started_counter, requests_finished_counter,
+          transaction_insulator.registered_pids(), processes_reading_idx, connected_processes,
+          global_resource_planner.get_active(), global_resource_planner.get_afterwards());
   }
   catch (...) {}
 }

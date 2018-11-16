@@ -22,6 +22,7 @@
 #include "../../template_db/dispatcher_client.h"
 
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -32,6 +33,7 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
   Default_Dispatcher_Logger(Logger& logger_) : logger(&logger_) {}
 
   virtual void write_start(pid_t pid, const std::vector< pid_t >& registered);
+  virtual void write_conflict(pid_t pid, pid_t locked_pid);
   virtual void write_rollback(pid_t pid);
   virtual void write_commit(pid_t pid);
   virtual void request_read_and_idx(
@@ -54,6 +56,13 @@ void Default_Dispatcher_Logger::write_start(pid_t pid, const std::vector< pid_t 
   for (std::vector< pid_t >::const_iterator it = registered.begin(); it != registered.end(); ++it)
     out<<' '<<*it;
   out<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::write_conflict(pid_t pid, pid_t locked_pid)
+{
+  std::ostringstream out;
+  out<<"write conflict: "<<pid<<" wants to write, but "<<locked_pid<<" holds the lock.\n";
   logger->annotated_log(out.str());
 }
 
@@ -120,6 +129,69 @@ void Default_Dispatcher_Logger::purge(pid_t pid)
   std::ostringstream out;
   out<<"purge of process "<<pid<<'.';
   logger->annotated_log(out.str());
+}
+
+
+
+struct Default_Dispatcher_Status_Output
+{
+  virtual void output_status(const std::string& target_file_name,
+      uint num_started_connections, uint num_connected_clients,
+      uint rate_limit, uint64 total_available_space, uint64 total_claimed_space, uint64 average_claimed_space,
+      uint total_available_time, uint total_claimed_time, uint average_claimed_time,
+      uint32 requests_started_counter, uint32 requests_finished_counter,
+      const std::set< ::pid_t >& collected_pids, const std::set< pid_t >& processes_reading_idx,
+      const std::set< ::pid_t >& connected_processes,
+      const std::vector< Reader_Entry >& active_requests, const std::vector< Quota_Entry >& afterwards) const;
+};
+
+
+void Default_Dispatcher_Status_Output::output_status(
+    const std::string& target_file_name, uint num_started_connections, uint num_connected_clients,
+    uint rate_limit, uint64 total_available_space, uint64 total_claimed_space, uint64 average_claimed_space,
+    uint total_available_time, uint total_claimed_time, uint average_claimed_time,
+    uint32 requests_started_counter, uint32 requests_finished_counter,
+    const std::set< ::pid_t >& collected_pids_, const std::set< pid_t >& processes_reading_idx,
+    const std::set< ::pid_t >& connected_processes,
+    const std::vector< Reader_Entry >& active_requests, const std::vector< Quota_Entry >& afterwards) const
+{
+  std::ofstream status(target_file_name.c_str());
+
+  status<<"Number of not yet opened connections: "<<num_started_connections<<'\n'
+      <<"Number of connected clients: "<<num_connected_clients<<'\n'
+      <<"Rate limit: "<<rate_limit<<'\n'
+      <<"Total available space: "<<total_available_space<<'\n'
+      <<"Total claimed space: "<<total_claimed_space<<'\n'
+      <<"Average claimed space: "<<average_claimed_space<<'\n'
+      <<"Total available time units: "<<total_available_time<<'\n'
+      <<"Total claimed time units: "<<total_claimed_time<<'\n'
+      <<"Average claimed time units: "<<average_claimed_time<<'\n'
+      <<"Counter of started requests: "<<requests_started_counter<<'\n'
+      <<"Counter of finished requests: "<<requests_finished_counter<<'\n';
+
+  std::set< ::pid_t > collected_pids = collected_pids_;
+
+  for (std::vector< Reader_Entry >::const_iterator it = active_requests.begin(); it != active_requests.end(); ++it)
+  {
+    if (processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
+      status<<Dispatcher::REQUEST_READ_AND_IDX;
+    else
+      status<<Dispatcher::READ_IDX_FINISHED;
+    status<<' '<<it->client_pid<<' '<<resolve_client_token(it->client_token)<<' '
+        <<it->max_space<<' '<<it->max_time<<' '<<it->start_time<<'\n';
+
+    collected_pids.insert(it->client_pid);
+  }
+
+  for (std::set< ::pid_t >::const_iterator it = connected_processes.begin(); it != connected_processes.end(); ++it)
+  {
+    if (processes_reading_idx.find(*it) == processes_reading_idx.end()
+        && collected_pids.find(*it) == collected_pids.end())
+      status<<"pending\t"<<*it<<'\n';
+  }
+
+  for (std::vector< Quota_Entry >::const_iterator it = afterwards.begin(); it != afterwards.end(); ++it)
+    status<<"quota\t"<<resolve_client_token(it->client_token)<<' '<<it->expiration_time<<'\n';
 }
 
 
@@ -482,7 +554,9 @@ int main(int argc, char* argv[])
     Dispatcher dispatcher
         (osm_base ? osm_base_settings().shared_name :
         areas ? area_settings().shared_name : api_key_settings().shared_name,
-        "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
+        "", db_dir + (areas ? "areas_shadow" : api_keys ? "api_keys_shadow" : "osm_base_shadow"),
+        !api_keys,
+        db_dir,
 	osm_base ? osm_base_settings().max_num_processes :
             areas ? area_settings().max_num_processes : api_key_settings().max_num_processes,
 	max_allowed_space,

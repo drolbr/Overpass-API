@@ -34,6 +34,7 @@ struct Dispatcher_Logger
   typedef uint pid_t;
 
   virtual void write_start(pid_t pid, const std::vector< pid_t >& registered) = 0;
+  virtual void write_conflict(pid_t pid, pid_t locked_pid) = 0;
   virtual void write_rollback(pid_t pid) = 0;
   virtual void write_commit(pid_t pid) = 0;
   virtual void request_read_and_idx(
@@ -78,6 +79,19 @@ struct Pending_Client
 
   pid_t pid;
   uint32 first_seen;
+};
+
+
+struct Dispatcher_Status_Output
+{
+  virtual void output_status(const std::string& target_file_name,
+      uint num_started_connections, uint num_connected_clients,
+      uint rate_limit, uint64 total_available_space, uint64 total_claimed_space, uint64 average_claimed_space,
+      uint total_available_time, uint total_claimed_time, uint average_claimed_time,
+      uint32 requests_started_counter, uint32 requests_finished_counter,
+      const std::set< ::pid_t >& collected_pids, const std::set< ::pid_t >& processes_reading_idx,
+      const std::set< ::pid_t >& connected_processes,
+      const std::vector< Reader_Entry >& active_requests, const std::vector< Quota_Entry >& afterwards) const = 0;
 };
 
 
@@ -198,12 +212,14 @@ class Dispatcher
     Dispatcher(std::string dispatcher_share_name,
 	       std::string index_share_name,
 	       std::string shadow_name,
+               bool block_writing_after_rollback,
 	       std::string db_dir,
 	       uint max_num_reading_processes,
 	       uint64 total_available_space,
 	       uint64 total_available_time_units,
 	       const std::vector< File_Properties* >& controlled_files,
-	       Dispatcher_Logger* logger = 0);
+	       Dispatcher_Logger* logger = 0,
+               Dispatcher_Status_Output* status_output = 0);
 
     ~Dispatcher();
 
@@ -257,14 +273,17 @@ class Dispatcher
     Dispatcher_Socket socket;
     Connection_Per_Pid_Map connection_per_pid;
     Transaction_Insulator transaction_insulator;
-    std::set< pid_t > processes_reading_idx;
+    std::set< ::pid_t > processes_reading_idx;
     std::string shadow_name;
     std::string dispatcher_share_name;
     int dispatcher_shm_fd;
     volatile uint8* dispatcher_shm_ptr;
+    bool block_writing_after_rollback;
     Dispatcher_Logger* logger;
+    Dispatcher_Status_Output* status_output;
     std::set< pid_t > disconnected;
     bool pending_commit;
+    ::pid_t writing_client;
     uint32 requests_started_counter;
     uint32 requests_finished_counter;
     Global_Resource_Planner global_resource_planner;
