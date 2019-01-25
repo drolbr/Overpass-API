@@ -175,7 +175,8 @@ void Dijkstra_Statement::execute(Resource_Manager& rman)
             if (it->second.best_dist < it_nbv->second.best_dist)
             {
               Derived_Structure new_link(*it_nb->link);
-              new_link.tags.push_back(std::make_pair("distance", to_string(it->second.best_dist)));
+              new_link.tags.push_back(std::make_pair("distance",
+                  to_string(it->second.best_dist + it_nb->cost/2)));
               into.deriveds[it_nb->idx].push_back(new_link);
             }
           }
