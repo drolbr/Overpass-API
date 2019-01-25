@@ -684,7 +684,7 @@ struct Length_Eval_Task : public Eval_Task
   virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
       { return "0"; }
   virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
-      { return "0"; }
+      { return data.geometry ? fixed_to_string(length(*data.geometry), 3) : "0"; }
 };
 
 
