@@ -16,8 +16,8 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__MAKE_H
-#define DE__OSM3S___OVERPASS_API__STATEMENTS__MAKE_H
+#ifndef DE__OSM3S___OVERPASS_API__STATEMENTS__LOCALIZE_H
+#define DE__OSM3S___OVERPASS_API__STATEMENTS__LOCALIZE_H
 
 
 #include "set_prop.h"

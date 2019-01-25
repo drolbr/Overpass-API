@@ -383,6 +383,17 @@ TStatement* create_localize_statement(typename TStatement::Factory& stmt_factory
 }
 
 
+template< class TStatement >
+TStatement* create_dijkstra_statement(typename TStatement::Factory& stmt_factory,
+    std::string from, std::string into, uint line_nr)
+{
+  std::map< std::string, std::string > attr;
+  attr["from"] = (from == "" ? "_" : from);
+  attr["into"] = into;
+  return stmt_factory.create_statement("dijkstra", line_nr, attr);
+}
+
+
 //-----------------------------------------------------------------------------
 
 std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
@@ -911,6 +922,20 @@ TStatement* parse_localize(typename TStatement::Factory& stmt_factory,
 }
 
 
+template< class TStatement >
+TStatement* parse_dijkstra(typename TStatement::Factory& stmt_factory,
+    Tokenizer_Wrapper& token, const std::string& from, Error_Output* error_output)
+{
+  uint line_col = token.line_col().first;
+  ++token;
+
+  std::string into = probe_into(token, error_output);
+  clear_until_after(token, error_output, ";");
+
+  return create_dijkstra_statement< TStatement >(stmt_factory, from, into, line_col);
+}
+
+
 struct Statement_Text
 {
   Statement_Text(std::string statement_ = "",
@@ -1317,6 +1342,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
     return parse_map_to_area< TStatement >(stmt_factory, token, from, error_output);
   else if (token.good() && *token == "local")
     return parse_localize< TStatement >(stmt_factory, token, from, error_output);
+  else if (token.good() && *token == "dijkstra")
+    return parse_dijkstra< TStatement >(stmt_factory, token, from, error_output);
   else if (token.good() && *token == "compare")
     return parse_compare< TStatement >(stmt_factory, parsed_query, token, from, error_output, depth);
 
