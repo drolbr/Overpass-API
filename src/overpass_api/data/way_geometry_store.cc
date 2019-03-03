@@ -132,6 +132,7 @@ Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
     const Statement& query, Resource_Manager& rman,
     double south_, double north_, double west_, double east_)
   : Way_Geometry_Store(ways, query, rman),
+    bbox_d(south_, west_, north_, east_),
     south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {}
 
@@ -141,6 +142,7 @@ Way_Bbox_Geometry_Store::Way_Bbox_Geometry_Store(
     const Statement& query, Resource_Manager& rman,
     double south_, double north_, double west_, double east_)
   : Way_Geometry_Store(ways, query, rman),
+    bbox_d(south_, west_, north_, east_),
     south(ilat_(south_)), north(ilat_(north_)), west(ilon_(west_)), east(ilon_(east_))
 {}
 
@@ -161,29 +163,64 @@ std::vector< Quad_Coord > Way_Bbox_Geometry_Store::get_geometry(const Way_Skelet
 {
   std::vector< Quad_Coord > result = Way_Geometry_Store::get_geometry(way);
 
-  if (result.empty())
+  if (result.empty() || north < south)
     ;
-  else if (result.size() == 1)
-  {
-    if (!matches_bbox(result.begin()->ll_upper, result.begin()->ll_lower))
-      *result.begin() = Quad_Coord(0u, 0u);
-  }
   else
   {
-    bool this_matches = matches_bbox(result[0].ll_upper, result[0].ll_lower);
-    bool next_matches = matches_bbox(result[1].ll_upper, result[1].ll_lower);
-    if (!this_matches && !next_matches)
-      result[0] = Quad_Coord(0u, 0u);
-    for (uint i = 1; i < result.size() - 1; ++i)
+    bool last_dropped = false;
+    for (uint i = 0; i < result.size(); ++i)
     {
-      bool last_matches = this_matches;
-      this_matches = next_matches;
-      next_matches = matches_bbox(result[i+1].ll_upper, result[i+1].ll_lower);
-      if (!last_matches && !this_matches && !next_matches)
-        result[i] = Quad_Coord(0u, 0u);
+      if (i < result.size()-1)
+      {
+        if (matches_bbox(result[i+1].ll_upper, result[i+1].ll_lower))
+        {
+          i += 2; // Next and following point are guaranteed inside
+          last_dropped = false;
+          continue;
+        }
+      }
+      if (!last_dropped)
+      {
+        if (matches_bbox(result[i].ll_upper, result[i].ll_lower))
+        {
+          ++i; // Next point is guaranteed inside
+          last_dropped = false;
+          continue;
+        }
+        if (i > 0 && matches_bbox(result[i-1].ll_upper, result[i-1].ll_lower))
+        {
+          last_dropped = false;
+          continue;
+        }
+      }
+      if (i < result.size()-1)
+      {
+        Point_Double first(
+            ::lat(result[i].ll_upper, result[i].ll_lower), ::lon(result[i].ll_upper, result[i].ll_lower));
+        Point_Double second(
+            ::lat(result[i+1].ll_upper, result[i+1].ll_lower), ::lon(result[i+1].ll_upper, result[i+1].ll_lower));
+        if (bbox_d.intersects(first, second))
+        {
+          ++i; // Next point is guaranteed inside
+          last_dropped = false;
+          continue;
+        }
+      }
+      if (!last_dropped && i > 0)
+      {
+        Point_Double first(
+            ::lat(result[i-1].ll_upper, result[i-1].ll_lower), ::lon(result[i-1].ll_upper, result[i-1].ll_lower));
+        Point_Double second(
+            ::lat(result[i].ll_upper, result[i].ll_lower), ::lon(result[i].ll_upper, result[i].ll_lower));
+        if (bbox_d.intersects(first, second))
+        {
+          last_dropped = false;
+          continue;
+        }
+      }
+      result[i] = Quad_Coord(0u, 0u);
+      last_dropped = true;
     }
-    if (!this_matches && !next_matches)
-      result[result.size()-1] = Quad_Coord(0u, 0u);
   }
 
   return result;

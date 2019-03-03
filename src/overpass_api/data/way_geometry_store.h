@@ -58,6 +58,7 @@ public:
   std::vector< Quad_Coord > get_geometry(const Way_Skeleton& way) const;
 
 private:
+  Bbox_Double bbox_d;
   uint32 south;
   uint32 north;
   int32 west;
