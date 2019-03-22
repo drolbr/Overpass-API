@@ -2,14 +2,14 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" lang="en"></meta>
   <title>OSM3S Experimental Diff</title>
-  <script src="http://openlayers.org/api/2.13.1/OpenLayers.js"></script>
-  <script src="http://overpass-api.de/OpenStreetMap.js"></script>
-  <script src="http://overpass-api.de/overpass.js"></script>
+  <script src="https://openlayers.org/api/2.13.1/OpenLayers.js"></script>
+  <script src="https://openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+  <script src="https://overpass-api.de/overpass.js"></script>
   <script type="text/javascript">
       var lat = 50.734;
       var lon = 7.100;
       var zoom = 18;
-      var data_url = "http://overpass-api.de/api/interpreter";
+      var data_url = "https://overpass-api.de/api/interpreter";
       var map;
 
       var layer = false;
@@ -250,7 +250,7 @@
                   result += "changed ";
 
               if (old_feat.type && old_feat.osm_id)
-                  result += "<a href=\"http://osm.org/browse/"
+                  result += "<a href=\"https://osm.org/browse/"
                       + old_feat.type + "/" + old_feat.osm_id + "\"/>"
                       + old_feat.type + " " + old_feat.osm_id + "</a>";
 
@@ -266,7 +266,7 @@
               var result = "<br/><br/><span style=\"color:red\">old ";
 
               if (old_feat.type && old_feat.osm_id)
-                  result += "<a href=\"http://osm.org/browse/"
+                  result += "<a href=\"https://osm.org/browse/"
                       + old_feat.type + "/" + old_feat.osm_id + "\"/>"
                       + old_feat.type + " " + old_feat.osm_id + "</a>";
 
@@ -285,7 +285,7 @@
               var result = "<br/><br/><span style=\"color:green\">new ";
 
               if (new_feat.type && new_feat.osm_id)
-                  result += "<a href=\"http://osm.org/browse/"
+                  result += "<a href=\"https://osm.org/browse/"
                       + new_feat.type + "/" + new_feat.osm_id + "\"/>"
                       + new_feat.type + " " + new_feat.osm_id + "</a>";
 
@@ -328,7 +328,7 @@
 </head>
 <body onload="init()">
   <div id="control_bar" class="control_bar" style="position:absolute; top:0%; left:0%; height:100%; width:30%; z-index:1">
-    <form action="#" acceptCharset="UTF-8" onsubmit="alert(&nbsp;foo&nbsp;);">
+    <form action="#" acceptCharset="UTF-8">
       <input type="text" id="select_mindate" value=""></input>
       <input type="text" id="select_maxdate" value=""></input>
       <input type="submit" value="Fetch data" onclick="refreshData()"></input>

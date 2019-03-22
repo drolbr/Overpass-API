@@ -101,9 +101,52 @@ int main(int argc, char *argv[])
  	  area_level > 0 ? dispatcher.get_area_timestamp() : "", true);
 
       Cpu_Timer cpu(dispatcher.resource_manager(), 0);
-      for (std::vector< Statement* >::const_iterator it(get_statement_stack()->begin());
-	   it != get_statement_stack()->end(); ++it)
-        (*it)->execute(dispatcher.resource_manager());
+      char* allow_header_c = getenv("HTTP_USER_AGENT");
+      std::string allow_header = ((allow_header_c) ? allow_header_c : "");
+      if (allow_header.empty() || allow_header.find("Mozilla") != std::string::npos)
+      {
+        global_settings.get_output_handler()->print_item(
+            Node_Skeleton(451000001), Point_Geometry(42., -5.), 0, 0, 0, Output_Mode::ID | Output_Mode::CENTER);
+        global_settings.get_output_handler()->print_item(
+            Node_Skeleton(451000002), Point_Geometry(56., 10.), 0, 0, 0, Output_Mode::ID | Output_Mode::CENTER);
+        global_settings.get_output_handler()->print_item(
+            Node_Skeleton(451000003), Point_Geometry(42., 25.), 0, 0, 0, Output_Mode::ID | Output_Mode::CENTER);
+
+        global_settings.get_output_handler()->print_item(
+            Node_Skeleton(451000004), Point_Geometry(44., 10.), 0, 0, 0, Output_Mode::ID | Output_Mode::CENTER);
+        global_settings.get_output_handler()->print_item(
+            Node_Skeleton(451000005), Point_Geometry(45., 10.), 0, 0, 0, Output_Mode::ID | Output_Mode::CENTER);
+        global_settings.get_output_handler()->print_item(
+            Node_Skeleton(451000006), Point_Geometry(54., 10.), 0, 0, 0, Output_Mode::ID | Output_Mode::CENTER);
+
+        std::vector< Node::Id_Type > nds;
+        std::vector< std::pair< std::string, std::string > > tags;
+        tags.push_back(std::make_pair("name", "Turned off to make you aware of the Directive on Copyright in the Digital Single Market protests until about 20:00 UTC"));
+        tags.push_back(std::make_pair("name:de", "Abgeschaltet wegen der Proteste gegen die Urheberrechtsreform bis ca. 21 Uhr"));
+        tags.push_back(std::make_pair("website", "https://www.openstreetmap.de/uf/en.html"));
+        tags.push_back(std::make_pair("website:de", "https://www.openstreetmap.de/uf/"));
+        nds.push_back(Uint64(451000005));
+        nds.push_back(Uint64(451000006));
+        global_settings.get_output_handler()->print_item(
+            Way_Skeleton(451002, nds, std::vector< Quad_Coord >()), Null_Geometry(), &tags, 0, 0,
+            Output_Mode::ID | Output_Mode::NDS | Output_Mode::TAGS);
+
+        nds.clear();
+        tags.push_back(std::make_pair("area", "yes"));
+        nds.push_back(Uint64(451000001));
+        nds.push_back(Uint64(451000002));
+        nds.push_back(Uint64(451000003));
+        nds.push_back(Uint64(451000001));
+        global_settings.get_output_handler()->print_item(
+            Way_Skeleton(451001, nds, std::vector< Quad_Coord >()), Null_Geometry(), &tags, 0, 0,
+            Output_Mode::ID | Output_Mode::NDS | Output_Mode::TAGS);
+      }
+      else
+      {
+        for (std::vector< Statement* >::const_iterator it(get_statement_stack()->begin());
+	    it != get_statement_stack()->end(); ++it)
+          (*it)->execute(dispatcher.resource_manager());
+      }
 
     //TODO
 //       if (osm_script && osm_script->get_type() == "popup")
