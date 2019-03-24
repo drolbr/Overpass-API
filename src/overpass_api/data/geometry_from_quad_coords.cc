@@ -228,10 +228,15 @@ const Opaque_Geometry& Geometry_From_Quad_Coords::make_relation_geom(
       }
     }
 
-    if (mode & Output_Mode::BOUNDS)
-      geom = new Bbox_Geometry(min_lat, min_lon, max_lat, max_lon);
+    if (min_lat <= max_lat)
+    {
+      if (mode & Output_Mode::BOUNDS)
+        geom = new Bbox_Geometry(min_lat, min_lon, max_lat, max_lon);
+      else
+        geom = new Point_Geometry((min_lat + max_lat) / 2., (min_lon + max_lon) / 2.);
+    }
     else
-      geom = new Point_Geometry((min_lat + max_lat) / 2., (min_lon + max_lon) / 2.);
+      geom = new Null_Geometry();
   }
   else
     geom = new Null_Geometry();
