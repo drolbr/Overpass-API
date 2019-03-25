@@ -1318,8 +1318,8 @@ void Query_Statement::collect_nodes(std::vector< Id_Type >& ids,
 }
 
 
-template< class Id_Type >
-void Query_Statement::collect_elems(std::vector< Id_Type >& ids,
+template< typename Id_Type >
+void Query_Statement::collect_elems(int type, std::vector< Id_Type >& ids,
 				 bool& invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman)
 {
@@ -1432,14 +1432,14 @@ void Query_Statement::execute(Resource_Manager& rman)
       progress_1< Way_Skeleton, Way::Id_Type, Uint31_Index >(
 	  way_ids, way_range_vec_31, invert_ids, timestamp, way_answer_state, check_keys_late,
           *osm_base_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL, rman);
-      collect_elems(way_ids, invert_ids, way_answer_state, into, rman);
+      collect_elems(QUERY_WAY, way_ids, invert_ids, way_answer_state, into, rman);
     }
     if (type & QUERY_RELATION)
     {
       progress_1< Relation_Skeleton, Relation::Id_Type, Uint31_Index >(
 	  relation_ids, relation_range_vec_31, invert_ids, timestamp, relation_answer_state, check_keys_late,
           *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman);
-      collect_elems(relation_ids, invert_ids, relation_answer_state, into, rman);
+      collect_elems(QUERY_RELATION, relation_ids, invert_ids, relation_answer_state, into, rman);
     }
     if (type & QUERY_DERIVED)
     {
@@ -1450,7 +1450,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       progress_1(area_ids, invert_ids, area_answer_state,
 		 check_keys_late, *area_settings().AREA_TAGS_GLOBAL, rman);
-      collect_elems(area_ids, invert_ids, area_answer_state, into, rman);
+      collect_elems(QUERY_AREA, area_ids, invert_ids, area_answer_state, into, rman);
     }
 
     set_progress(2);
