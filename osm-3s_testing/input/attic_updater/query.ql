@@ -679,6 +679,17 @@ rel(1742);rel(10.3,7,10.4,7.2)(r);out meta;
 rel(1842);rel(10.3,8,10.4,8.2)(r);out meta;
 
 node(11011);out ids;
+rel(1172);nwr(r);out meta;
+rel(1672);nwr(r);out meta;
+rel(1772);nwr(r);out meta;
+rel(1872);nwr(r);out meta;
+node(11013);out ids;
+rel(1172);nwr(10.7,1,10.8,1.2)(r);out meta;
+rel(1672);nwr(10.7,6,10.8,6.2)(r);out meta;
+rel(1772);nwr(10.7,7,10.8,7.2)(r);out meta;
+rel(1872);nwr(10.7,8,10.8,8.2)(r);out meta;
+
+node(11011);out ids;
 way(1302);>>;out meta;
 node(11012);out ids;
 rel(3000);>>;out meta;
@@ -862,6 +873,9 @@ node(11011);out ids;
 rel(1612);node(r:"");out meta;
 rel(1622);way(r:"");out meta;
 rel(1941);rel(r:"initial");out meta;
+rel(1672);nwr(r:"");out meta;
+node(11011);out ids;
+rel(1672);nwr(r:"none");out meta;
 node(11012);out ids;
 node(120210);rel(bn:"");out meta;
 node(11013);out ids;

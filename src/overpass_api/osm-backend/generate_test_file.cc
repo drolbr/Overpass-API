@@ -2499,6 +2499,47 @@ struct Accept_Query_159 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_160 : public Accept_All_Tags
+{
+  Accept_Query_160(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return id == 1 || id == 2
+      || id == pattern_size + 1 || id == pattern_size + 2; }
+  virtual bool admit_way(uint id) const { return id == 1 || id == 2
+      || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
+      || id == pattern_size*pattern_size/4 + pattern_size/2 + 1; }
+  virtual bool admit_relation(uint id) const { return id == 1 || id == 2; }
+
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_161 : public Accept_All_Tags
+{
+  Accept_Query_161(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return id == 2 || id == pattern_size + 2; }
+  virtual bool admit_way(uint id) const { return id == 1
+      || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
+      || id == pattern_size*pattern_size/4 + pattern_size/2 + 1; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_162 : public Accept_All_Tags
+{
+  Accept_Query_162(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return id == 2; }
+  virtual bool admit_relation(uint id) const { return id == 1; }
+
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -3688,6 +3729,12 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_158(pattern_size);
     else if (std::string(args[2]) == "query_159")
       modifier = new Accept_Query_159(pattern_size);
+    else if (std::string(args[2]) == "query_160")
+      modifier = new Accept_Query_160(pattern_size);
+    else if (std::string(args[2]) == "query_161")
+      modifier = new Accept_Query_161(pattern_size);
+    else if (std::string(args[2]) == "query_162")
+      modifier = new Accept_Query_162(pattern_size);
     else if (std::string(args[2]) == "foreach_1")
       modifier = new Accept_Foreach_1(pattern_size);
     else if (std::string(args[2]) == "foreach_2")

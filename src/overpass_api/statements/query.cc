@@ -1564,7 +1564,7 @@ void Query_Statement::execute(Resource_Manager& rman)
           it != constraints.end(); ++it)
       {
         std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
-	if ((*it)->get_ranges(rman, range_req))
+	if ((*it)->get_way_ranges(rman, range_req))
         {
           if (way_answer_state < ranges_collected)
             range_req.swap(way_range_req_31);
@@ -1594,7 +1594,7 @@ void Query_Statement::execute(Resource_Manager& rman)
           it != constraints.end(); ++it)
       {
         std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
-	if ((*it)->get_ranges(rman, range_req))
+	if ((*it)->get_relation_ranges(rman, range_req))
         {
           if (relation_answer_state < ranges_collected)
             range_req.swap(relation_range_req_31);

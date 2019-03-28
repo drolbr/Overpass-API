@@ -50,6 +50,12 @@ class Query_Constraint
     virtual bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
       { return false; }
+    virtual bool get_way_ranges
+        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+      { return get_ranges(rman, ranges); }
+    virtual bool get_relation_ranges
+        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+      { return get_ranges(rman, ranges); }
     virtual bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
       { return false; }

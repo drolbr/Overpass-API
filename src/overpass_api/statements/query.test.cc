@@ -905,6 +905,8 @@ void perform_query_with_recurse
 	stmt1("type", "relation")("ref", "6").stmt().execute(rman);
       else if (recurse_type == "relation-relation")
 	stmt1("type", "relation")("ref", "9").stmt().execute(rman);
+      else if (recurse_type == "relation-nwr")
+	stmt1("type", "relation")("ref", "10").stmt().execute(rman);
       else if (recurse_type == "node-way")
 	stmt1("type", "node")("lower", to_string(pattern_size*pattern_size - 4 + global_node_offset))
 	    ("upper", to_string(pattern_size*pattern_size - 1 + global_node_offset)).stmt().execute(rman);
@@ -999,6 +1001,8 @@ void perform_query_with_role_recurse
     query_type = "node";
   else if (recurse_type == "relation-way")
     query_type = "way";
+  else if (recurse_type == "relation-nwr")
+    query_type = "nwr";
 
   try
   {
@@ -1014,6 +1018,8 @@ void perform_query_with_role_recurse
         stmt1("type", "relation")("ref", "7").stmt().execute(rman);
       else if (recurse_type == "relation-relation")
         stmt1("type", "relation")("ref", "9").stmt().execute(rman);
+      else if (recurse_type == "relation-nwr")
+        stmt1("type", "relation")("ref", "10").stmt().execute(rman);
       else if (recurse_type == "node-relation")
         stmt1("type", "node")("lower", to_string(global_node_offset + 1))
             ("upper", to_string(global_node_offset + 4)).stmt().execute(rman);
@@ -1755,6 +1761,19 @@ int main(int argc, char* args[])
   if ((test_to_execute == "") || (test_to_execute == "159"))
     // Test a key-value std::pair via a filter set by a previous element
     perform_filter_from_previous_element("relation", 14, "relation_key_11", "relation_key_7", "_", args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "160"))
+    perform_query_with_recurse("nwr", "relation-nwr", "", "",
+        100.0, 100.0, 0.0, 0.0, false,
+        pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "161"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_role_recurse("relation-nwr", "two", "", "",
+        pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "162"))
+    // Test an around collecting relations from nodes based on way membership
+    perform_query_with_role_recurse("relation-nwr", "three", "", "",
+        pattern_size, global_node_offset, args[3]);
 
   std::cout<<"</osm>\n";
   return 0;
