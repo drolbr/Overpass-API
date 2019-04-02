@@ -42,7 +42,9 @@ struct Dispatcher_Logger
   virtual void prolongate(pid_t pid) = 0;
   virtual void idle_counter(uint32 idle_count) = 0;
   virtual void read_finished(pid_t pid) = 0;
+  virtual void query_my_status(pid_t pid) = 0;
   virtual void read_aborted(pid_t pid) = 0;
+  virtual void hangup(pid_t pid) = 0;
   virtual void purge(pid_t pid) = 0;
 };
 
@@ -105,6 +107,7 @@ public:
   void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
 
   const std::vector< Reader_Entry >& get_active() const { return active; }
+  bool is_active(pid_t client_pid) const;
   const std::vector< Quota_Entry >& get_afterwards() const { return afterwards; }
   uint32 get_total_claimed_time() const { return global_used_time; }
   uint32 get_total_available_time() const { return global_available_time; }
@@ -238,6 +241,9 @@ class Dispatcher
 
     /** Unregisters a reading process for other reasons. */
     void read_aborted(pid_t pid);
+
+    /** Unregisters a non-reading process. */
+    void hangup(pid_t pid);
 
     /** Other operations: -------------------------------------------------- */
 

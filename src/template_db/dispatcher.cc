@@ -106,6 +106,17 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
 }
 
 
+bool Global_Resource_Planner::is_active(pid_t pid) const
+{
+  for (std::vector< Reader_Entry >::const_iterator it = active.begin(); it != active.end(); ++it)
+  {
+    if (it->client_pid == pid)
+      return true;
+  }
+  return false;
+}
+
+
 int Global_Resource_Planner::probe(pid_t pid, uint32 client_token, uint32 time_units, uint64 max_space)
 {
   std::map< uint32, std::vector< Pending_Client > >::iterator pending_it = pending.find(client_token);
@@ -561,6 +572,19 @@ void Dispatcher::read_aborted(pid_t pid)
 }
 
 
+void Dispatcher::hangup(pid_t pid)
+{
+  if (logger)
+    logger->hangup(pid);
+
+  transaction_insulator.read_finished(pid);
+
+  processes_reading_idx.erase(pid);
+  disconnected.erase(pid);
+  global_resource_planner.remove(pid);
+}
+
+
 void Dispatcher::standby_loop(uint64 milliseconds)
 {
   uint32 counter = 0;
@@ -572,9 +596,6 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     uint32 command = 0;
     uint32 client_pid = 0;
     connection_per_pid.poll_command_round_robin(command, client_pid);
-
-    if (command == HANGUP)
-      command = READ_ABORTED;
 
     if (command == 0)
     {
@@ -621,10 +642,16 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
 	connection_per_pid.get(client_pid)->send_result(command);
       }
-      else if (command == HANGUP || command == READ_ABORTED || command == READ_FINISHED)
+      else if (command == HANGUP || command == READ_FINISHED)
       {
-	if (command == READ_ABORTED)
-	  read_aborted(client_pid);
+	if (command == HANGUP)
+        {
+          if (processes_reading_idx.find(client_pid) != processes_reading_idx.end()
+              || global_resource_planner.is_active(client_pid))
+            read_aborted(client_pid);
+          else
+            hangup(client_pid);
+        }
 	else if (command == READ_FINISHED)
 	{
 	  read_finished(client_pid);
@@ -705,6 +732,9 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         if (arguments.size() < 1)
           continue;
         uint32 client_token = arguments[0];
+
+        if (logger)
+          logger->query_my_status(client_pid);
 
         connection->send_data(global_resource_planner.get_rate_limit());
 
