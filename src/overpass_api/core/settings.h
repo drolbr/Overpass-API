@@ -98,6 +98,11 @@ struct Meta_Settings
   File_Properties* RELATIONS_META;
 
   Meta_Settings();
+
+  const std::vector< File_Properties* >& idxs() const;
+
+private:
+  std::vector< File_Properties* > idxs_;
 };
 
 
@@ -126,6 +131,11 @@ struct Attic_Settings
   File_Properties* RELATION_CHANGELOG;
 
   Attic_Settings();
+
+  const std::vector< File_Properties* >& idxs() const;
+
+private:
+  std::vector< File_Properties* > idxs_;
 };
 
 

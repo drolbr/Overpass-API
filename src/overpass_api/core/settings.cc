@@ -195,7 +195,21 @@ Meta_Settings::Meta_Settings()
       ("ways_meta", 512*1024, 0)),
   RELATIONS_META(new OSM_File_Properties< Uint31_Index >
       ("relations_meta", 512*1024, 0))
-{}
+{
+  idxs_.reserve(5);
+  idxs_.push_back(USER_DATA);
+  idxs_.push_back(USER_INDICES);
+  idxs_.push_back(NODES_META);
+  idxs_.push_back(WAYS_META);
+  idxs_.push_back(RELATIONS_META);
+}
+
+
+const std::vector< File_Properties* >& Meta_Settings::idxs() const
+{
+  return idxs_;
+}
+
 
 const Meta_Settings& meta_settings()
 {
@@ -245,7 +259,37 @@ Attic_Settings::Attic_Settings()
       ("relations_meta_attic", 512*1024, 0)),
   RELATION_CHANGELOG(new OSM_File_Properties< Timestamp >
       ("relation_changelog", 512*1024, 0))
-{}
+{
+  idxs_.reserve(21);
+  idxs_.push_back(NODES);
+  idxs_.push_back(NODES_UNDELETED);
+  idxs_.push_back(NODE_IDX_LIST);
+  idxs_.push_back(NODE_TAGS_LOCAL);
+  idxs_.push_back(NODE_TAGS_GLOBAL);
+  idxs_.push_back(NODES_META);
+  idxs_.push_back(NODE_CHANGELOG);
+  idxs_.push_back(WAYS);
+  idxs_.push_back(WAYS_UNDELETED);
+  idxs_.push_back(WAY_IDX_LIST);
+  idxs_.push_back(WAY_TAGS_LOCAL);
+  idxs_.push_back(WAY_TAGS_GLOBAL);
+  idxs_.push_back(WAYS_META);
+  idxs_.push_back(WAY_CHANGELOG);
+  idxs_.push_back(RELATIONS);
+  idxs_.push_back(RELATIONS_UNDELETED);
+  idxs_.push_back(RELATION_IDX_LIST);
+  idxs_.push_back(RELATION_TAGS_LOCAL);
+  idxs_.push_back(RELATION_TAGS_GLOBAL);
+  idxs_.push_back(RELATIONS_META);
+  idxs_.push_back(RELATION_CHANGELOG);
+}
+
+
+const std::vector< File_Properties* >& Attic_Settings::idxs() const
+{
+  return idxs_;
+}
+
 
 const Attic_Settings& attic_settings()
 {

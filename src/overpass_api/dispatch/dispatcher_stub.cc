@@ -140,36 +140,16 @@ Dispatcher_Stub::Dispatcher_Stub
 
     if (meta == keep_meta || meta == keep_attic)
     {
-      transaction->data_index(meta_settings().NODES_META);
-      transaction->data_index(meta_settings().WAYS_META);
-      transaction->data_index(meta_settings().RELATIONS_META);
-      transaction->data_index(meta_settings().USER_DATA);
-      transaction->data_index(meta_settings().USER_INDICES);
+      for (uint i = 0; i < meta_settings().idxs().size(); ++i)
+        transaction->data_index(meta_settings().idxs()[i]);
     }
 
     if (meta == keep_attic)
     {
-      transaction->data_index(attic_settings().NODES);
-      transaction->data_index(attic_settings().NODES_UNDELETED);
-      transaction->data_index(attic_settings().NODE_IDX_LIST);
-      transaction->data_index(attic_settings().NODE_TAGS_LOCAL);
-      transaction->data_index(attic_settings().NODE_TAGS_GLOBAL);
-      transaction->data_index(attic_settings().NODES_META);
-      transaction->data_index(attic_settings().NODE_CHANGELOG);
-      transaction->data_index(attic_settings().WAYS);
-      transaction->data_index(attic_settings().WAYS_UNDELETED);
-      transaction->data_index(attic_settings().WAY_IDX_LIST);
-      transaction->data_index(attic_settings().WAY_TAGS_LOCAL);
-      transaction->data_index(attic_settings().WAY_TAGS_GLOBAL);
-      transaction->data_index(attic_settings().WAYS_META);
-      transaction->data_index(attic_settings().WAY_CHANGELOG);
-      transaction->data_index(attic_settings().RELATIONS);
-      transaction->data_index(attic_settings().RELATIONS_UNDELETED);
-      transaction->data_index(attic_settings().RELATION_IDX_LIST);
-      transaction->data_index(attic_settings().RELATION_TAGS_LOCAL);
-      transaction->data_index(attic_settings().RELATION_TAGS_GLOBAL);
-      transaction->data_index(attic_settings().RELATIONS_META);
-      transaction->data_index(attic_settings().RELATION_CHANGELOG);
+      for (uint i = 0; i < meta_settings().idxs().size(); ++i)
+        transaction->data_index(meta_settings().idxs()[i]);
+      for (uint i = 0; i < attic_settings().idxs().size(); ++i)
+        transaction->data_index(attic_settings().idxs()[i]);
     }
 
     {
@@ -317,6 +297,68 @@ void Dispatcher_Stub::ping() const
     dispatcher_client->ping();
   if (area_dispatcher_client)
     area_dispatcher_client->ping();
+}
+
+
+bool Dispatcher_Stub::all_meta_empty() const
+{
+  for (uint i = 0; i < meta_settings().idxs().size(); ++i)
+  {
+    if (transaction->data_index(meta_settings().idxs()[i])
+        && !transaction->data_index(meta_settings().idxs()[i])->empty())
+      return false;
+  }
+  return true;
+}
+
+
+std::string basename(const std::string& filename)
+{
+  uint start = filename.size();
+  while (start > 0 && filename[--start] != '/')
+    ;
+  if (start < filename.size() && filename[start] == '/')
+    ++start;
+  uint end = start;
+  while (end < filename.size() && filename[end] != '.')
+    ++end;
+  return filename.substr(start, end-start);
+}
+
+
+bool Dispatcher_Stub::is_meta_file(const std::string& filename) const
+{
+  std::string trunk = basename(filename);
+  for (uint i = 0; i < meta_settings().idxs().size(); ++i)
+  {
+    if (meta_settings().idxs()[i] && meta_settings().idxs()[i]->get_file_name_trunk() == trunk)
+      return true;
+  }
+  return false;
+}
+
+
+bool Dispatcher_Stub::all_attic_empty() const
+{
+  for (uint i = 0; i < attic_settings().idxs().size(); ++i)
+  {
+    if (transaction->data_index(attic_settings().idxs()[i])
+        && !transaction->data_index(attic_settings().idxs()[i])->empty())
+      return false;
+  }
+  return true;
+}
+
+
+bool Dispatcher_Stub::is_attic_file(const std::string& filename) const
+{
+  std::string trunk = basename(filename);
+  for (uint i = 0; i < attic_settings().idxs().size(); ++i)
+  {
+    if (attic_settings().idxs()[i] && attic_settings().idxs()[i]->get_file_name_trunk() == trunk)
+      return true;
+  }
+  return false;
 }
 
 

@@ -61,6 +61,10 @@ class Dispatcher_Stub : public Watchdog_Callback
     std::string get_timestamp() { return timestamp; }
     std::string get_area_timestamp() { return area_timestamp; }
     Resource_Manager& resource_manager() { return *rman; }
+    bool all_meta_empty() const;
+    bool is_meta_file(const std::string& filename) const;
+    bool all_attic_empty() const;
+    bool is_attic_file(const std::string& filename) const;
 
   private:
     std::string db_dir, timestamp, area_timestamp;

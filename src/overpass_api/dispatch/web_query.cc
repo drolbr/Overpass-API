@@ -100,10 +100,24 @@ int main(int argc, char *argv[])
       error_output.write_payload_header(dispatcher.get_db_dir(), dispatcher.get_timestamp(),
  	  area_level > 0 ? dispatcher.get_area_timestamp() : "", true);
 
-      Cpu_Timer cpu(dispatcher.resource_manager(), 0);
-      for (std::vector< Statement* >::const_iterator it(get_statement_stack()->begin());
-	   it != get_statement_stack()->end(); ++it)
-        (*it)->execute(dispatcher.resource_manager());
+      try
+      {
+        Cpu_Timer cpu(dispatcher.resource_manager(), 0);
+        for (std::vector< Statement* >::const_iterator it(get_statement_stack()->begin());
+	    it != get_statement_stack()->end(); ++it)
+          (*it)->execute(dispatcher.resource_manager());
+      }
+      catch(const File_Error& e)
+      {
+        if (e.error_number == 2)
+        {
+          if (dispatcher.is_meta_file(e.filename) && dispatcher.all_meta_empty())
+            error_output.runtime_error("Tried to use meta file but no meta files available on this instance.");
+          else if (dispatcher.is_attic_file(e.filename) && dispatcher.all_attic_empty())
+            error_output.runtime_error("Tried to use museum file but no museum files available on this instance.");
+        }
+        throw;
+      }
 
     //TODO
 //       if (osm_script && osm_script->get_type() == "popup")
@@ -119,10 +133,10 @@ int main(int argc, char *argv[])
 //         error_output.write_footer();
     }
   }
-  catch(File_Error e)
+  catch(const File_Error& e)
   {
     std::ostringstream temp;
-    if (e.origin.substr(e.origin.size()-9) == "::timeout")
+    if (e.origin.size() >= 9 && e.origin.substr(e.origin.size()-9) == "::timeout")
     {
       error_output.write_html_header("", "", 504, false);
       if (error_output.http_method == http_get
@@ -130,7 +144,7 @@ int main(int argc, char *argv[])
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". The server is probably too busy to handle your request.";
     }
-    else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
+    else if (e.origin.size() >= 14 && e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
       if (error_output.http_method == http_get
