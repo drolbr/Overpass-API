@@ -260,7 +260,7 @@ public:
       timestamp_ref.second = timestamp;
 
       if (value_relevant)
-	timestamp_ref.first = timestamp;
+        timestamp_ref.first = timestamp;
     }
   }
 
@@ -360,57 +360,64 @@ void filter_ids_by_tags
   std::string current_key = void_tag_value();
   std::string current_value;
   std::vector< std::pair< uint64, bool > > relevant_listeners;
-  while ((!(tag_it == items_db.range_end())) &&
-      ((tag_it.index().index) & 0x7fffff00) == coarse_index)
+  while (true)
   {
-    if (current_key != tag_it.index().key)
+    bool current_finished =
+        (tag_it == items_db.range_end() || ((tag_it.index().index) & 0x7fffff00) != coarse_index);
+    bool attic_finished =
+        (attic_tag_it == attic_items_db.range_end()
+        || ((attic_tag_it.index().index) & 0x7fffff00) != coarse_index);
+
+    if (!attic_finished && (current_finished || attic_tag_it.index().key < tag_it.index().key))
     {
-      current_key = tag_it.index().key;
-      update_listeners_keys(tag_listeners, relevant_listeners, current_key);
-      current_value = void_tag_value() + " ";
-    }
+      if (current_key != attic_tag_it.index().key)
+      {
+        current_key = attic_tag_it.index().key;
+        update_listeners_keys(tag_listeners, relevant_listeners, current_key);
+        current_value = void_tag_value() + " ";
+      }
 
-    if (current_value != tag_it.index().value)
+      if (current_value != attic_tag_it.index().value)
+      {
+        current_value = attic_tag_it.index().value;
+        update_listeners_values(tag_listeners, relevant_listeners, current_value);
+      }
+
+      if (!relevant_listeners.empty() && timestamp < attic_tag_it.object().timestamp)
+      {
+        for (uint64 i = 0; i < relevant_listeners.size(); ++i)
+          tag_listeners[relevant_listeners[i].first]->eval_id(
+              attic_tag_it.object(), attic_tag_it.object().timestamp, relevant_listeners[i].second);
+      }
+
+      ++attic_tag_it;
+    }
+    else if (!current_finished)
     {
-      current_value = tag_it.index().value;
-      update_listeners_values(tag_listeners, relevant_listeners, current_value);
+      if (current_key != tag_it.index().key)
+      {
+        current_key = tag_it.index().key;
+        update_listeners_keys(tag_listeners, relevant_listeners, current_key);
+        current_value = void_tag_value() + " ";
+      }
+
+      if (current_value != tag_it.index().value)
+      {
+        current_value = tag_it.index().value;
+        update_listeners_values(tag_listeners, relevant_listeners, current_value);
+      }
+
+      if (!relevant_listeners.empty())
+      {
+        for (uint64 i = 0; i < relevant_listeners.size(); ++i)
+          tag_listeners[relevant_listeners[i].first]->eval_id(
+              tag_it.object(), NOW, relevant_listeners[i].second);
+      }
+
+      ++tag_it;
     }
-
-    if (!relevant_listeners.empty())
-    {
-      for (uint64 i = 0; i < relevant_listeners.size(); ++i)
-	tag_listeners[relevant_listeners[i].first]->eval_id(
-	    tag_it.object(), NOW, relevant_listeners[i].second);
-    }
-
-    ++tag_it;
-  }
-
-  current_key = void_tag_value();
-  while ((!(attic_tag_it == attic_items_db.range_end())) &&
-      ((attic_tag_it.index().index) & 0x7fffff00) == coarse_index)
-  {
-    if (current_key != attic_tag_it.index().key)
-    {
-      current_key = attic_tag_it.index().key;
-      update_listeners_keys(tag_listeners, relevant_listeners, current_key);
-      current_value = void_tag_value() + " ";
-    }
-
-    if (current_value != attic_tag_it.index().value)
-    {
-      current_value = attic_tag_it.index().value;
-      update_listeners_values(tag_listeners, relevant_listeners, current_value);
-    }
-
-    if (!relevant_listeners.empty() && timestamp < attic_tag_it.object().timestamp)
-    {
-      for (uint64 i = 0; i < relevant_listeners.size(); ++i)
-	tag_listeners[relevant_listeners[i].first]->eval_id(
-	    attic_tag_it.object(), attic_tag_it.object().timestamp, relevant_listeners[i].second);
-    }
-
-    ++attic_tag_it;
+    else
+      break;
   }
 
   for (uint64 i = 0; i < tag_listeners.size(); ++i)

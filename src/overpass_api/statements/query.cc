@@ -917,9 +917,6 @@ void Query_Statement::filter_by_tags
       (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
        Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
 
-    typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator attic_item_it
-        = attic_items->begin();
-
     for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
         it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
     {
@@ -978,9 +975,6 @@ void Query_Statement::filter_by_tags
       attic_ntag_it(attic_items_db.range_begin
       (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
        Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-
-    typename std::map< TIndex, std::vector< Attic< TObject > > >::const_iterator attic_item_it
-        = attic_items->begin();
 
     for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
         it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
