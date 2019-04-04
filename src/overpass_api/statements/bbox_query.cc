@@ -60,7 +60,7 @@ Query_Filter_Strategy Bbox_Constraint::delivers_data(Resource_Manager& rman)
   if (!bbox_.valid())
     return ids_required;
 
-  return ((bbox_.north - bbox_.south) * (bbox_.east - bbox_.west) < 1.0) ? prefer_ranges : ids_useful;
+  return ((bbox_.north - bbox_.south) * std::abs(bbox_.east - bbox_.west) < 1.0) ? prefer_ranges : ids_useful;
 }
 
 

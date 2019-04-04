@@ -59,38 +59,56 @@ bool Bbox_Double::contains(const Point_Double& point) const
 
 bool Bbox_Double::intersects(const Point_Double& from, const Point_Double& to) const
 {
-  // TODO: correct behaviour over 180°
-
   double from_lon = from.lon;
+  double to_lon = to.lon;
+  if (from.lon < 0. && to.lon - from.lon > 180.)
+    from_lon += 360.;
+  if (to.lon < 0. && from.lon - to.lon > 180.)
+    to_lon += 360.;
+
+  double delta_from = 0;
   if (from.lat < south)
   {
     if (to.lat < south)
       return false;
     // Otherwise just adjust from.lat and from.lon
-    from_lon += (to.lon - from.lon)*(south - from.lat)/(to.lat - from.lat);
+    delta_from = (to_lon - from_lon)*(south - from.lat)/(to.lat - from.lat);
   }
   else if (from.lat > north)
   {
     if (to.lat > north)
       return false;
     // Otherwise just adjust from.lat and from.lon
-    from_lon += (to.lon - from.lon)*(north - from.lat)/(to.lat - from.lat);
+    delta_from = (to_lon - from_lon)*(north - from.lat)/(to.lat - from.lat);
   }
 
-  double to_lon = to.lon;
   if (to.lat < south)
     // Adjust to.lat and to.lon
-    to_lon += (from.lon - to.lon)*(south - to.lat)/(from.lat - to.lat);
+    to_lon += (from_lon - to_lon)*(south - to.lat)/(from.lat - to.lat);
   else if (to.lat > north)
     // Adjust to.lat and to.lon
-    to_lon += (from.lon - to.lon)*(north - to.lat)/(from.lat - to.lat);
+    to_lon += (from_lon - to_lon)*(north - to.lat)/(from.lat - to.lat);
+  from_lon += delta_from;
 
   // Now we know that both latitudes are between south and north.
   // Thus we only need to check whether the segment touches the bbox in its east-west-extension.
-  if (from_lon < west && to_lon < west)
-    return false;
-  if (from_lon > east && to_lon > east)
-    return false;
+  // Note that the lons have now values between -180.0 and 360.0.
+  double min_lon = std::min(from_lon, to_lon);
+  double max_lon = std::max(from_lon, to_lon);
+  if (west <= east)
+  {
+    if (max_lon < 180.)
+      return min_lon <= east && max_lon >= west;
+    else if (min_lon > 180.)
+      return min_lon - 360. <= east && max_lon - 360. >= west;
+
+    return min_lon <= east && max_lon - 360. >= west;
+  }
+
+  if (max_lon < 180.)
+    return min_lon <= east || max_lon >= west;
+  else if (min_lon > 180.)
+    return min_lon - 360. <= east || max_lon - 360. >= west;
 
   return true;
 }
