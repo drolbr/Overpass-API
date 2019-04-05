@@ -1706,35 +1706,33 @@ Bbox_Double* calc_bounds(const std::vector< Opaque_Geometry* >& components)
 
   if (north == -100.0)
     return new Bbox_Double(Bbox_Double::invalid);
-  else if (wrapped || east - west > 180.0)
-    // In this special case we should check whether the bounding box should rather cross the date line
+  if (!wrapped && east - west <= 180.)
+    return new Bbox_Double(south, west, north, east);
+
+  west = 200.;
+  east = -200.;
+  for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
   {
-    double wrapped_west = 180.0;
-    double wrapped_east = -180.0;
+    if (!(*it)->has_bbox())
+      continue;
 
-    for (std::vector< Opaque_Geometry* >::const_iterator it = components.begin(); it != components.end(); ++it)
+    if ((*it)->east() <= 0)
     {
-      if ((*it)->east() <= 0)
-      {
-	wrapped_east = std::max(wrapped_east, (*it)->west());
-	if ((*it)->west() >= 0)
-	  wrapped_west = std::min(wrapped_west, (*it)->west());
-      }
-      else if ((*it)->west() >= 0)
-	wrapped_west = std::min(wrapped_west, (*it)->west());
-      else
-	// The components are too wildly distributed
-	return new Bbox_Double(south, -180.0, north, 180.0);
+      east = std::max(east, (*it)->east());
+      if ((*it)->west() >= 0)
+        west = std::min(west, (*it)->west());
     }
-
-    if (wrapped_west - wrapped_east > 180.0)
-      return new Bbox_Double(south, wrapped_west, north, wrapped_east);
+    else if ((*it)->west() >= 0)
+      west = std::min(west, (*it)->west());
     else
       // The components are too wildly distributed
       return new Bbox_Double(south, -180.0, north, 180.0);
   }
-  else
+
+  if (west - east > 180.)
     return new Bbox_Double(south, west, north, east);
+
+  return new Bbox_Double(south, -180.0, north, 180.0);
 }
 
 

@@ -235,6 +235,36 @@ const Opaque_Geometry& Geometry_From_Quad_Coords::make_relation_geom(
 
     if (min_lat <= max_lat)
     {
+      if (max_lon - min_lon >= 180.)
+      {
+        min_lon = 200.;
+        max_lon = -200.;
+
+        for (std::vector< std::vector< Quad_Coord > >::const_iterator it = geometry.begin();
+            it != geometry.end(); ++it)
+        {
+          if (it->size() == 1)
+          {
+            double lon = ::lon((*it)[0].ll_upper, (*it)[0].ll_lower);
+            if (lon < 0.)
+              max_lon = std::max(max_lon, lon);
+            else
+              min_lon = std::min(min_lon, lon);
+          }
+          else if (!it->empty())
+          {
+            for (std::vector< Quad_Coord >::const_iterator it2 = it->begin(); it2 != it->end(); ++it2)
+            {
+              double lon = ::lon(it2->ll_upper, it2->ll_lower);
+              if (lon < 0.)
+                max_lon = std::max(max_lon, lon);
+              else
+                min_lon = std::min(min_lon, lon);
+            }
+          }
+        }
+      }
+
       if (mode & Output_Mode::BOUNDS)
         geom = new Bbox_Geometry(min_lat, min_lon, max_lat, max_lon);
       else
