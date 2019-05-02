@@ -327,35 +327,35 @@ int main(int argc, char* args[])
     "The data is made available under ODbL.</p>\n";
     if (std::string(args[2]) == "interpreter_3")
       std::cout<<
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \"foo\" </p>\n"
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type &quot;foo&quot; </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: An empty query is not allowed </p>\n";
     else if (std::string(args[2]) == "interpreter_4")
       std::cout<<
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag \"foo\" in line 3. </p>\n";
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag &quot;foo&quot; in line 3. </p>\n";
     else if (std::string(args[2]) == "interpreter_5")
       std::cout<<
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \"foo\" </p>\n"
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type &quot;foo&quot; </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: An empty query is not allowed </p>\n";
     else if (std::string(args[2]) == "interpreter_6")
       std::cout<<
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: Unknown type \"foo\" </p>\n"
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: Unknown type &quot;foo&quot; </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: An empty query is not allowed </p>\n";
     else if (std::string(args[2]) == "interpreter_7")
       std::cout<<
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type \"foo\" </p>\n"
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: Unknown type &quot;foo&quot; </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 1: parse error: An empty query is not allowed </p>\n"
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: Unknown type \"foo\" </p>\n"
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: Unknown type &quot;foo&quot; </p>\n"
       "<p><strong style=\"color:#FF0000\">Error</strong>: line 2: parse error: An empty query is not allowed </p>\n";
     else if (std::string(args[2]) == "interpreter_8")
       std::cout<<
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag \"foo\" in line 3. </p>\n";
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag &quot;foo&quot; in line 3. </p>\n";
     else if (std::string(args[2]) == "interpreter_9")
       std::cout<<
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 4: static error: Unknown tag \"foo\" in line 4. </p>\n";
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 4: static error: Unknown tag &quot;foo&quot; in line 4. </p>\n";
     else if (std::string(args[2]) == "interpreter_10")
       std::cout<<
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag \"foo\" in line 3. </p>\n"
-      "<p><strong style=\"color:#FF0000\">Error</strong>: line 4: static error: Unknown tag \"foo\" in line 4. </p>\n";
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 3: static error: Unknown tag &quot;foo&quot; in line 3. </p>\n"
+      "<p><strong style=\"color:#FF0000\">Error</strong>: line 4: static error: Unknown tag &quot;foo&quot; in line 4. </p>\n";
     std::cout<<
     "\n"
     "</body>\n"

@@ -16,6 +16,7 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../expat/escape_xml.h"
 #include "output.h"
 #include "web_output.h"
 
@@ -286,7 +287,7 @@ void Web_Output::display_remark(const std::string& text)
     return;
   if (header_written == html)
     std::cout<<"<p><strong style=\"color:#00BB00\">Remark</strong>: "
-        <<text<<" </p>\n";
+        <<escape_xml(text)<<" </p>\n";
   else if (output_handler)
     output_handler->display_remark(text);
 }
@@ -299,7 +300,7 @@ void Web_Output::display_error(const std::string& text, uint write_mime)
     return;
   if (header_written == html)
     std::cout<<"<p><strong style=\"color:#FF0000\">Error</strong>: "
-        <<text<<" </p>\n";
+        <<escape_xml(text)<<" </p>\n";
   else if (output_handler)
     output_handler->display_error(text);
 }
