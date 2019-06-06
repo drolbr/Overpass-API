@@ -76,6 +76,8 @@ class Dispatcher_Stub : public Watchdog_Callback
     Nonsynced_Transaction* area_transaction;
     Resource_Manager* rman;
     meta_modes meta;
+
+    uint32 client_token;
 };
 
 

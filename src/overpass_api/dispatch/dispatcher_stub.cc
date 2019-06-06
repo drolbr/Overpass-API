@@ -92,14 +92,14 @@ Dispatcher_Stub::Dispatcher_Stub
      uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
-      transaction(0), area_transaction(0), rman(0), meta(meta_)
+      transaction(0), area_transaction(0), rman(0), meta(meta_), client_token(0)
 {
   if (max_allowed_time > 0)
     set_limits(2*max_allowed_time + 60, 2*max_allowed_space + 1024*1024*1024);
 
   if (db_dir == "")
   {
-    uint32 client_token = probe_client_token();
+    client_token = probe_client_token();
     dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
     Logger logger(dispatcher_client->get_db_dir());
     try
@@ -377,7 +377,7 @@ Dispatcher_Stub::~Dispatcher_Stub()
     try
     {
       std::ostringstream out;
-      out<<"read_finished() start "<<global_read_counter();
+      out<<"read_finished() start "<<client_token<<' '<<global_read_counter();
       for (std::vector< uint64 >::const_iterator it = cpu_runtime.begin(); it != cpu_runtime.end(); ++it)
         out<<' '<<*it;
       logger.annotated_log(out.str());
