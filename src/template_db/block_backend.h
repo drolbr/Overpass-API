@@ -340,6 +340,10 @@ struct Block_Backend
          typename std::set< TIndex >::const_iterator it,
          const typename std::set< TIndex >::const_iterator& end);
 
+    void flush_if_necessary_and_write_obj(
+        uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
+        uint32 idx_size, const TObject& obj);
+
     void create_from_scratch
         (typename File_Blocks_::Discrete_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_insert);
@@ -955,6 +959,31 @@ void Block_Backend< TIndex, TObject, TIterator >::calc_split_idxs
   }
 }
 
+
+template< class Index, class Object, class Iterator >
+void Block_Backend< Index, Object, Iterator >::flush_if_necessary_and_write_obj(
+    uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
+    uint32 idx_size, const Object& obj)
+{
+  uint32 obj_size = obj.size_of();
+
+  if (insert_ptr - (uint8*)start_ptr + obj_size > block_size)
+  {
+    *(uint32*)start_ptr = insert_ptr - (uint8*)start_ptr;
+    *(((uint32*)start_ptr)+1) = *(uint32*)start_ptr;
+    file_it = file_blocks.insert_block(file_it, start_ptr, (*(uint32*)start_ptr) - 4);
+    ++file_it;
+    insert_ptr = ((uint8*)start_ptr) + 8 + idx_size;
+    if (idx_size + obj_size + 8 > block_size)
+        throw File_Error
+            (0, data_filename, "Block_Backend: an item's size exceeds block size.");
+  }
+
+  obj.to_data(insert_ptr);
+  insert_ptr = insert_ptr + obj_size;
+}
+
+
 template< class TIndex, class TObject, class TIterator >
 void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     (typename File_Blocks_::Discrete_Iterator& file_it,
@@ -1035,25 +1064,9 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
 
       if (!(it->second.empty()))
       {
-	for (typename std::set< TObject >::const_iterator
-	  it2(it->second.begin()); it2 != it->second.end(); ++it2)
-	{
-	  if (pos - buffer.ptr + it2->size_of() > block_size)
-	  {
-	    *(uint32*)buffer.ptr = pos - buffer.ptr;
-	    *(uint32*)(buffer.ptr+4) = *(uint32*)buffer.ptr;
-	    file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, (*(uint32*)(buffer.ptr+4)) - 4);
-	    ++file_it;
-	    pos = buffer.ptr + 8 + it->first.size_of();
-	    if (it->first.size_of() + it2->size_of() + 8 > block_size)
-	      throw File_Error
-	       (0, data_filename,
-		"Block_Backend: an item's size exceeds block size.");
-	  }
-
-	  it2->to_data(pos);
-	  pos = pos + it2->size_of();
-	}
+        for (typename std::set< TObject >::const_iterator
+            it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+          flush_if_necessary_and_write_obj((uint64*)buffer.ptr, pos, file_it, it->first.size_of(), *it2);
       }
 
       *(uint32*)(buffer.ptr+4) = pos - buffer.ptr;
@@ -1068,6 +1081,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
   }
   ++file_it;
 }
+
 
 template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
@@ -1268,26 +1282,10 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
       if ((it->second.insert_it != to_insert.end()) &&
 	(!(it->second.insert_it->second.empty())))
       {
-	for (typename std::set< TObject >::const_iterator
-	  it2(it->second.insert_it->second.begin());
-	it2 != it->second.insert_it->second.end(); ++it2)
-	{
-	  if (pos - dest.ptr + it2->size_of() > block_size)
-	  {
-	    *(uint32*)dest.ptr = pos - dest.ptr;
-	    *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-	    file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
-	    ++file_it;
-	    pos = dest.ptr + 8 + it->first.size_of();
-	    if (it->first.size_of() + it2->size_of() + 8 > block_size)
-	      throw File_Error
-		    (0, data_filename,
-		     "Block_Backend: an item's size exceeds block size.");
-	  }
-
-	    it2->to_data(pos);
-	    pos = pos + it2->size_of();
-	}
+        for (typename std::set< TObject >::const_iterator
+            it2(it->second.insert_it->second.begin());
+            it2 != it->second.insert_it->second.end(); ++it2)
+          flush_if_necessary_and_write_obj((uint64*)dest.ptr, pos, file_it, it->first.size_of(), *it2);
       }
 
       if ((uint32)(pos - dest.ptr) == it->first.size_of() + 8)
@@ -1309,6 +1307,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   else
     file_it = file_blocks.replace_block(file_it, 0, 0);
 }
+
 
 template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
@@ -1419,22 +1418,8 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   {
     while (cur_insert != insert_it->second.end())
     {
-      if (pos - dest.ptr + cur_insert->size_of() + TIndex::size_of(source.ptr + 8)
-	>= block_size)
-      {
-	*(uint32*)dest.ptr = pos - dest.ptr;
-	*(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-	file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
-	++file_it;
-	pos = dest.ptr + 8 + TIndex::size_of(source.ptr + 8);
-	if (TIndex::size_of(source.ptr + 8) + cur_insert->size_of() + 8 > block_size)
-	  throw File_Error
-	  (0, data_filename,
-	   "Block_Backend: an item's size exceeds block size.");
-      }
-
-      cur_insert->to_data(pos);
-      pos = pos + cur_insert->size_of();
+      flush_if_necessary_and_write_obj(
+          (uint64*)dest.ptr, pos, file_it, TIndex::size_of(source.ptr + 8), *cur_insert);
       ++cur_insert;
     }
   }
@@ -1445,10 +1430,10 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
     *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
     file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
     ++file_it;
-
   }
   else
     file_it = file_blocks.replace_block(file_it, 0, 0);
 }
+
 
 #endif
