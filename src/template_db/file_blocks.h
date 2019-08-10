@@ -217,6 +217,7 @@ private:
   Void64_Pointer< uint64 > buffer;
 
   uint32 allocate_block(uint32 data_size);
+  void write_block(uint64* buf, uint32& data_size, uint32& pos);
 };
 
 
@@ -685,6 +686,34 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::allocate_block(uint32 d
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
+void File_Blocks< TIndex, TIterator, TRangeIterator >::write_block(uint64* buf, uint32& data_size, uint32& pos)
+{
+  data_size = *(uint32*)buf == 0 ? 0 : ((*(uint32*)buf) - 1) / block_size + 1;
+
+  void* target = buf;
+  if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
+  {
+    target = buffer.ptr;
+    data_size = (
+        Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * compression_factor)
+        - 1) / block_size + 1;
+  }
+  else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
+  {
+    target = buffer.ptr;
+    data_size = (
+        LZ4_Deflate().compress(buf, *(uint32*)buf, target, block_size * compression_factor * 2)
+        - 1) / block_size + 1;
+  }
+
+  pos = allocate_block(data_size);
+
+  data_file.seek(((int64)pos)*block_size, "File_Blocks::write_block::1");
+  data_file.write((uint8*)target, block_size * data_size, "File_Blocks::write_block::2");
+}
+
+
+template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::insert_block
     (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize)
@@ -692,34 +721,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   if (buf == 0)
     return it;
 
-  uint32 data_size = *(uint32*)buf == 0 ? 0 : ((*(uint32*)buf) - 1) / block_size + 1;
-
-  void* target = buf;
-  if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
-  {
-    target = buffer.ptr;
-    uint32 compressed_size = Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * compression_factor);
-    data_size = (compressed_size - 1) / block_size + 1;
-    zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size);
-  }
-  else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
-  {
-    target = buffer.ptr;
-    uint32 compressed_size = LZ4_Deflate().compress(buf, *(uint32*)buf, target, block_size * compression_factor * 2);
-    data_size = (compressed_size - 1) / block_size + 1;
-    zero_padding((uint8*)target + compressed_size, block_size * data_size - compressed_size);
-  }
-
-  uint32 pos = allocate_block(data_size);
-
-  // cerr<<dec<<pos<<"\t0x"; //Debug
-  // for (uint i = 0; i < TIndex::size_of(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32))); ++i)
-  //   cerr<<' '<<hex<<setw(2)<<setfill('0')
-  //       <<int(*(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32))+i)); // Debug
-  // cerr<<'\n';
-
-  data_file.seek(((int64)pos)*block_size, "File_Blocks::insert_block::1");
-  data_file.write((uint8*)target, block_size * data_size, "File_Blocks::insert_block::2");
+  uint32 data_size, pos;
+  write_block(buf, data_size, pos);
 
   TIndex index(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32)));
   File_Block_Index_Entry< TIndex > entry(index, pos, data_size, max_keysize);
@@ -744,24 +747,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
 {
   if (buf != 0)
   {
-    uint32 data_size = *(uint32*)buf == 0 ? 0 : ((*(uint32*)buf) - 1) / block_size + 1;
-
-    void* target = buf;
-    if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
-    {
-      target = buffer.ptr;
-      data_size = (Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * compression_factor) - 1) / block_size + 1;
-    }
-    else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
-    {
-      target = buffer.ptr;
-      data_size = (LZ4_Deflate().compress(buf, *(uint32*)buf, target, block_size * compression_factor * 2) - 1) / block_size + 1;
-    }
-
-    it.block_it->pos = allocate_block(data_size);
-
-    data_file.seek(((int64)it.block_it->pos)*block_size, "File_Blocks::replace_block::1");
-    data_file.write((uint8*)target, block_size * data_size, "File_Blocks::replace_block::2");
+    uint32 data_size;
+    write_block(buf, data_size, it.block_it->pos);
 
     it.block_it->index = TIndex((uint8*)buf+(sizeof(uint32)+sizeof(uint32)));
     it.block_it->max_keysize = max_keysize;

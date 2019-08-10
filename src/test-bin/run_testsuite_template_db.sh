@@ -137,32 +137,32 @@ perform_test_loop()
 
 dispatcher_client_server()
 {
-  mkdir -p "run/${EXEC}_server_$1"
-  pushd "run/${EXEC}_server_$1/" >/dev/null
+  mkdir -p "run/${EXEC}_s$1"
+  pushd "run/${EXEC}_s$1/" >/dev/null
   rm -f *
   $BASEDIR/test-bin/test_dispatcher server_3 &
   popd >/dev/null
 
   date +%T
-  ls "run/${EXEC}_server_$1/" >before.ls
+  ls "run/${EXEC}_s$1/" >before.ls
   perform_serial_test test_dispatcher $1
-  ls "run/${EXEC}_server_$1/" >"run/${EXEC}_$1/after.ls"
+  ls "run/${EXEC}_s$1/" >"run/${EXEC}_$1/after.ls"
   mv before.ls "run/${EXEC}_$1/before.ls"
   sleep 5
 };
 
 dispatcher_two_clients()
 {
-  mkdir -p "run/${EXEC}_server_$1"
-  pushd "run/${EXEC}_server_$1/" >/dev/null
+  mkdir -p "run/${EXEC}_s$1"
+  pushd "run/${EXEC}_s$1/" >/dev/null
   rm -f *
   $BASEDIR/test-bin/test_dispatcher server_10 &
   popd >/dev/null
 
   date +%T
-  ls "run/${EXEC}_server_$1/" >before.ls
+  ls "run/${EXEC}_s$1/" >before.ls
   perform_twin_test test_dispatcher $1
-  ls "run/${EXEC}_server_$1/" >"run/${EXEC}_$1/after.ls"
+  ls "run/${EXEC}_s$1/" >"run/${EXEC}_$1/after.ls"
   mv before.ls "run/${EXEC}_$1/before.ls"
   sleep 5
 };
