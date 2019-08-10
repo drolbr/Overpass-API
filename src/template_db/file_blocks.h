@@ -176,9 +176,11 @@ public:
   Range_Iterator range_begin(const TRangeIterator& begin, const TRangeIterator& end);
   const Range_Iterator& range_end() const { return *range_end_it; }
 
-  void* read_block(const File_Blocks_Basic_Iterator< TIndex >& it) const;
-  void* read_block
-      (const File_Blocks_Basic_Iterator< TIndex >& it, void* buffer) const;
+  uint64* read_block(
+      const File_Blocks_Basic_Iterator< TIndex >& it, uint64* temp_buffer, uint64* buffer_) const;
+  uint64* read_block(const File_Blocks_Basic_Iterator< TIndex >& it) const;
+  uint64* read_block(
+      const File_Blocks_Basic_Iterator< TIndex >& it, uint64* buffer) const;
 
   uint32 answer_size(const Flat_Iterator& it) const
   {
@@ -194,8 +196,8 @@ public:
   void reset_read_count() { read_count_ = 0; }
 
   Discrete_Iterator insert_block
-      (const Discrete_Iterator& it, void* buf, uint32 max_keysize);
-  Discrete_Iterator replace_block(Discrete_Iterator it, void* buf, uint32 max_keysize);
+      (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize);
+  Discrete_Iterator replace_block(Discrete_Iterator it, uint64* buf, uint32 max_keysize);
 
   const File_Blocks_Index< TIndex >& get_index() const { return *index; }
 
@@ -212,7 +214,7 @@ private:
   Range_Iterator* range_end_it;
 
   Raw_File data_file;
-  Void_Pointer< void > buffer;
+  Void64_Pointer< uint64 > buffer;
 
   uint32 allocate_block(uint32 data_size);
 };
@@ -459,11 +461,7 @@ File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator++()
 template< typename TIndex, typename TRangeIterator >
 void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
 {
-  if (this->block_it == this->block_end)
-    // We are done - there are no more file blocks left
-    return;
-
-  while (true)
+  while (!(this->block_it == this->block_end))
   {
     while ((index_it != index_end) &&
       (!(this->block_it->index < index_it.upper_bound())))
@@ -494,8 +492,6 @@ void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
       break;
 
     ++(this->block_it);
-    if (this->block_it == this->block_end)
-      break;
   }
 }
 
@@ -564,48 +560,22 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::range_begin(const TRangeIterat
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
-void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
-    (const File_Blocks_Basic_Iterator< TIndex >& it) const
+uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
+    (const File_Blocks_Basic_Iterator< TIndex >& it, uint64* temp_buffer, uint64* buffer_) const
 {
   data_file.seek((int64)(it.block_it->pos) * block_size, "File_Blocks::read_block::1");
+
   if (compression_method == File_Blocks_Index< TIndex >::NO_COMPRESSION)
-    data_file.read((uint8*)buffer.ptr, block_size * it.block_it->size, "File_Blocks::read_block::2");
+    data_file.read((uint8*)buffer_, block_size * it.block_it->size, "File_Blocks::read_block::2");
   else if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
   {
-    Void_Pointer< void > input(block_size * it.block_it->size);
-    data_file.read((uint8*)input.ptr, block_size * it.block_it->size, "File_Blocks::read_block::2");
-    Zlib_Inflate().decompress(input.ptr, block_size * it.block_it->size, buffer.ptr, block_size * compression_factor);
+    data_file.read((uint8*)temp_buffer, block_size * it.block_it->size, "File_Blocks::read_block::3");
+    Zlib_Inflate().decompress(temp_buffer, block_size * it.block_it->size, buffer_, block_size * compression_factor);
   }
   else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
   {
-    Void_Pointer< void > input(block_size * it.block_it->size);
-    data_file.read((uint8*)input.ptr, block_size * it.block_it->size, "File_Blocks::read_block::2");
-    LZ4_Inflate().decompress(input.ptr, block_size * it.block_it->size, buffer.ptr, block_size * compression_factor);
-  }
-
-  ++read_count_;
-  ++global_read_counter();
-  return buffer.ptr;
-}
-
-
-template< typename TIndex, typename TIterator, typename TRangeIterator >
-void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
-    (const File_Blocks_Basic_Iterator< TIndex >& it, void* buffer_) const
-{
-  data_file.seek((int64)(it.block_it->pos) * block_size, "File_Blocks::read_block::3");
-
-  if (compression_method == File_Blocks_Index< TIndex >::NO_COMPRESSION)
-    data_file.read((uint8*)buffer_, block_size * it.block_it->size, "File_Blocks::read_block::4");
-  else if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
-  {
-    data_file.read((uint8*)buffer.ptr, block_size * it.block_it->size, "File_Blocks::read_block::4");
-    Zlib_Inflate().decompress(buffer.ptr, block_size * it.block_it->size, buffer_, block_size * compression_factor);
-  }
-  else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
-  {
-    data_file.read((uint8*)buffer.ptr, block_size * it.block_it->size, "File_Blocks::read_block::4");
-    LZ4_Inflate().decompress(buffer.ptr, block_size * it.block_it->size, buffer_, block_size * compression_factor);
+    data_file.read((uint8*)temp_buffer, block_size * it.block_it->size, "File_Blocks::read_block::4");
+    LZ4_Inflate().decompress(temp_buffer, block_size * it.block_it->size, buffer_, block_size * compression_factor);
   }
 
   if (!(it.block_it->index ==
@@ -615,6 +585,22 @@ void* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
   ++read_count_;
   ++global_read_counter();
   return buffer_;
+}
+
+
+template< typename TIndex, typename TIterator, typename TRangeIterator >
+uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
+    (const File_Blocks_Basic_Iterator< TIndex >& it) const
+{
+  return read_block(it, Void64_Pointer< uint64 >(block_size * it.block_it->size).ptr, buffer.ptr);
+}
+
+
+template< typename TIndex, typename TIterator, typename TRangeIterator >
+uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
+    (const File_Blocks_Basic_Iterator< TIndex >& it, uint64* buffer_) const
+{
+  return read_block(it, buffer.ptr, buffer_);
 }
 
 
@@ -701,7 +687,7 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::allocate_block(uint32 d
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::insert_block
-    (const Discrete_Iterator& it, void* buf, uint32 max_keysize)
+    (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize)
 {
   if (buf == 0)
     return it;
@@ -754,7 +740,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::replace_block
-    (Discrete_Iterator it, void* buf, uint32 max_keysize)
+    (Discrete_Iterator it, uint64* buf, uint32 max_keysize)
 {
   if (buf != 0)
   {

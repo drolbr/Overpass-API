@@ -718,7 +718,7 @@ int main(int argc, char* args[])
     indices.clear();
     indices.push_back(IntIndex(49));
     indices.push_back(IntIndex(50));
-    void* buf = malloc(Test_File().get_block_size());
+    uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize = prepare_block(buf, indices);
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
@@ -744,7 +744,7 @@ int main(int argc, char* args[])
 
     indices.clear();
     indices.push_back(IntIndex(51));
-    void* buf = malloc(Test_File().get_block_size());
+    uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.replace_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
     free(buf);
@@ -770,7 +770,7 @@ int main(int argc, char* args[])
 
     indices.clear();
     indices.push_back(IntIndex(9));
-    void* buf = malloc(Test_File().get_block_size());
+    uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
 
@@ -813,7 +813,7 @@ int main(int argc, char* args[])
     ++it;
     indices.clear();
     indices.push_back(IntIndex(10));
-    void* buf = malloc(Test_File().get_block_size());
+    uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
@@ -868,7 +868,7 @@ int main(int argc, char* args[])
 
     work.clear();
     work.push_back(IntIndex(7));
-    void* buf = malloc(Test_File().get_block_size());
+    uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
     it = blocks.replace_block(it, buf, max_keysize);
     ++it;
@@ -979,7 +979,7 @@ int main(int argc, char* args[])
     {
       work.clear();
       work.push_back(IntIndex(i));
-      void* buf = malloc(Test_File().get_block_size());
+      uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
       uint32 max_keysize(prepare_block(buf, work));
       it = blocks.insert_block(it, buf, max_keysize);
       free(buf);
@@ -1038,7 +1038,7 @@ int main(int argc, char* args[])
 
     indices.clear();
     indices.push_back(IntIndex(40));
-    void* buf = malloc(Test_File().get_block_size());
+    uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
@@ -1086,7 +1086,7 @@ int main(int argc, char* args[])
 
     work.clear();
     work.push_back(IntIndex(8));
-    void* buf = malloc(Test_File().get_block_size());
+    uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
@@ -1182,7 +1182,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(20));
     indices.push_back(IntIndex(21));
     indices.push_back(IntIndex(22));
-    void* buf = malloc(Variable_Block_Test_File().get_block_size()
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size()
         * Variable_Block_Test_File().get_compression_factor());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
@@ -1207,7 +1207,7 @@ int main(int argc, char* args[])
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
     indices.clear();
     indices.push_back(IntIndex(30));
@@ -1336,7 +1336,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
 
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
     while (!(it == blocks.discrete_end()) && it.block_it->index < 25)
       ++it;
@@ -1372,7 +1372,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
 
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
     while (!(it == blocks.discrete_end()) && it.block_it->index < 26)
       ++it;
@@ -1408,7 +1408,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
 
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
     while (!(it == blocks.discrete_end()) && it.block_it->index < 60)
       ++it;
@@ -1445,7 +1445,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
 
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
     while (!(it == blocks.discrete_end()) && it.block_it->index < 65)
       ++it;
@@ -1483,7 +1483,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
 
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
     while (!(it == blocks.discrete_end()) && it.block_it->index < 68)
       ++it;
@@ -1520,7 +1520,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
 
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
     while (!(it == blocks.discrete_end()) && it.block_it->index < 70)
       ++it;
@@ -1558,7 +1558,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it = blocks.discrete_begin(indices.begin(), indices.end());
 
-    void* buf = malloc(Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
     while (!(it == blocks.discrete_end()) && it.block_it->index < 20)
       ++it;
@@ -1618,7 +1618,7 @@ int main(int argc, char* args[])
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
-    void* buf = malloc(Compressed_Test_File().get_block_size() * Compressed_Test_File().get_compression_factor());
+    uint64* buf = (uint64*)aligned_alloc(8, Compressed_Test_File().get_block_size() * Compressed_Test_File().get_compression_factor());
 
     indices.clear();
     for (int i = 20; i < 21; ++i)

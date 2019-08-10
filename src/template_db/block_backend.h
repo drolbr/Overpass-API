@@ -34,22 +34,22 @@ struct Block_Backend_Basic_Ref
   void set_pos(uint32 pos_) { pos = pos_; }
   void inc_pos(uint32 offset) { pos += offset;  }
 
-  void* get_load_target()
+  uint64* get_load_target()
   {
     ++count;
     return buffer.ptr;
   }
-  Void_Pointer< uint8 >& get_buffer() { return buffer; }
-  const Void_Pointer< uint8 >& get_buffer() const { return buffer; }
+  Void64_Pointer< uint64 >& get_buffer() { return buffer; }
+  const Void64_Pointer< uint64 >& get_buffer() const { return buffer; }
   uint32 get_used_block_size() const { return *(uint32*)buffer.ptr; }
 
-  void* get_ptr() const { return buffer.ptr + pos; }
+  void* get_ptr() const { return ((uint8*)buffer.ptr) + pos; }
   uint32 get_count() const { return count; }
 
 private:
   Block_Backend_Basic_Ref(const Block_Backend_Basic_Ref&);
 
-  Void_Pointer< uint8 > buffer;
+  Void64_Pointer< uint64 > buffer;
   uint32 count;
   uint32 pos;
 };
@@ -375,7 +375,8 @@ Block_Backend_Basic_Iterator< TIndex, TObject >::
       current_idx_pos(0), current_index(0), object_handle(*this)
 {
   memcpy(get_buffer().ptr, it.get_buffer().ptr, block_size);
-  current_idx_pos = (uint32*)(get_buffer().ptr + ((uint8*)it.current_idx_pos - it.get_buffer().ptr));
+  current_idx_pos = (uint32*)(((uint8*)get_buffer().ptr)
+      + ((uint8*)it.current_idx_pos - (uint8*)it.get_buffer().ptr));
 }
 
 
@@ -1002,7 +1003,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     if ((split_it != split.end()) && (it->first == *split_it))
     {
       *(uint32*)buffer.ptr = pos - buffer.ptr;
-      file_it = file_blocks.insert_block(file_it, buffer.ptr, max_size);
+      file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size);
       ++file_it;
       ++split_it;
       pos = buffer.ptr + 4;
@@ -1041,7 +1042,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
 	  {
 	    *(uint32*)buffer.ptr = pos - buffer.ptr;
 	    *(uint32*)(buffer.ptr+4) = *(uint32*)buffer.ptr;
-	    file_it = file_blocks.insert_block(file_it, buffer.ptr, (*(uint32*)(buffer.ptr+4)) - 4);
+	    file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, (*(uint32*)(buffer.ptr+4)) - 4);
 	    ++file_it;
 	    pos = buffer.ptr + 8 + it->first.size_of();
 	    if (it->first.size_of() + it2->size_of() + 8 > block_size)
@@ -1062,7 +1063,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
   if (pos > buffer.ptr + 4)
   {
     *(uint32*)buffer.ptr = pos - buffer.ptr;
-    file_it = file_blocks.insert_block(file_it, buffer.ptr, max_size);
+    file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size);
     ++file_it;
   }
   ++file_it;
@@ -1083,7 +1084,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   Void_Pointer< uint8 > source(block_size);
   Void_Pointer< uint8 > dest(block_size);
 
-  file_blocks.read_block(file_it, source.ptr);
+  file_blocks.read_block(file_it, (uint64*)source.ptr);
 
   // prepare a unified iterator over all indices, from file, to_delete
   // and to_insert
@@ -1192,7 +1193,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
     if ((split_it != split.end()) && (it->first == *split_it))
     {
       *(uint32*)dest.ptr = pos - dest.ptr;
-      file_it = file_blocks.insert_block(file_it, dest.ptr, max_size);
+      file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, max_size);
       ++file_it;
       ++split_it;
       pos = dest.ptr + 4;
@@ -1275,7 +1276,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 	  {
 	    *(uint32*)dest.ptr = pos - dest.ptr;
 	    *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-	    file_it = file_blocks.insert_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
+	    file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
 	    ++file_it;
 	    pos = dest.ptr + 8 + it->first.size_of();
 	    if (it->first.size_of() + it2->size_of() + 8 > block_size)
@@ -1301,7 +1302,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   if (pos > dest.ptr + 4)
   {
     *(uint32*)dest.ptr = pos - dest.ptr;
-    file_it = file_blocks.replace_block(file_it, dest.ptr, max_size);
+    file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, max_size);
     ++file_it;
 
   }
@@ -1332,7 +1333,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   {
     bool block_modified(false);
 
-    file_blocks.read_block(file_it, source.ptr);
+    file_blocks.read_block(file_it, (uint64*)source.ptr);
 
     uint8* spos(source.ptr + 8 + TIndex::size_of(source.ptr + 8));
     uint8* pos(dest.ptr + 8 + TIndex::size_of(source.ptr + 8));
@@ -1382,14 +1383,14 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
     {
       *(uint32*)dest.ptr = pos - dest.ptr;
       *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-      file_it = file_blocks.replace_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
+      file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
       ++file_it;
     }
     else
       file_it = file_blocks.replace_block(file_it, 0, 0);
   }
 
-  file_blocks.read_block(file_it, source.ptr);
+  file_blocks.read_block(file_it, (uint64*)source.ptr);
 
   uint8* spos(source.ptr + 8 + TIndex::size_of(source.ptr + 8));
   uint8* pos(dest.ptr + 8 + TIndex::size_of(source.ptr + 8));
@@ -1423,7 +1424,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
       {
 	*(uint32*)dest.ptr = pos - dest.ptr;
 	*(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-	file_it = file_blocks.insert_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
+	file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
 	++file_it;
 	pos = dest.ptr + 8 + TIndex::size_of(source.ptr + 8);
 	if (TIndex::size_of(source.ptr + 8) + cur_insert->size_of() + 8 > block_size)
@@ -1442,7 +1443,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   {
     *(uint32*)dest.ptr = pos - dest.ptr;
     *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-    file_it = file_blocks.replace_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
+    file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
     ++file_it;
 
   }

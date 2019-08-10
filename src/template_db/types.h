@@ -120,8 +120,8 @@ class Raw_File
     int fd() const { return fd_; }
     uint64 size(const std::string& caller_id) const;
     void resize(uint64 size, const std::string& caller_id) const;
-    void read(uint8* buf, uint64 size, const std::string& caller_id) const;
-    void write(uint8* buf, uint64 size, const std::string& caller_id) const;
+    void read(void* buf, uint64 size, const std::string& caller_id) const;
+    void write(void* buf, uint64 size, const std::string& caller_id) const;
     void seek(uint64 pos, const std::string& caller_id) const;
 
   private:
@@ -153,6 +153,39 @@ public:
     ptr = 0;
     if (block_size > 0)
       ptr = (T*)malloc(block_size);
+  }
+
+  T* ptr;
+};
+
+
+
+/** Simple RAII class to keep a pointer to some memory on the heap. Enforces 64 bit alignment. */
+template < class T >
+class Void64_Pointer
+{
+  Void64_Pointer(const Void64_Pointer&);
+  Void64_Pointer& operator=(const Void64_Pointer&);
+
+public:
+  explicit Void64_Pointer(int block_size)
+  { 
+    ptr = block_size > 0 ? (T*)aligned_alloc(8, block_size) : 0;
+  }
+  ~Void64_Pointer() { clear(); }
+
+  void clear()
+  {
+    if (ptr)
+      free(ptr);
+    ptr = 0;
+  }
+  void resize(int block_size)
+  {
+    clear();
+    ptr = 0;
+    if (block_size > 0)
+      ptr = (T*)aligned_alloc(8, block_size);
   }
 
   T* ptr;
@@ -213,14 +246,14 @@ inline void Raw_File::resize(uint64 size, const std::string& caller_id) const
     throw File_Error(errno, name, caller_id);
 }
 
-inline void Raw_File::read(uint8* buf, uint64 size, const std::string& caller_id) const
+inline void Raw_File::read(void* buf, uint64 size, const std::string& caller_id) const
 {
   uint64 foo = ::read(fd_, buf, size);
   if (foo != size)
     throw File_Error(errno, name, caller_id);
 }
 
-inline void Raw_File::write(uint8* buf, uint64 size, const std::string& caller_id) const
+inline void Raw_File::write(void* buf, uint64 size, const std::string& caller_id) const
 {
   uint64 foo = ::write(fd_, buf, size);
   if (foo != size)

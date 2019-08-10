@@ -68,7 +68,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 
     while (!(src_it == src_file.flat_end()))
     {
-      void* buf = src_file.read_block(src_it);
+      uint64* buf = src_file.read_block(src_it);
       zero_out_tails(buf, src_file_prop.get_block_size());
       dest_file.insert_block(dest_it, buf, src_it.block_it->max_keysize);
       ++src_it;
