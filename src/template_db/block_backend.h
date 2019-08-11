@@ -355,6 +355,15 @@ struct Block_Backend
          const std::map< TIndex, std::set< TObject > >& to_insert,
 	 Update_Logger& update_logger);
 
+    template< class Update_Logger >
+    void copy_and_delete_on_the_fly(
+        uint64* source_start_ptr, uint64* dest_start_ptr,
+        typename File_Blocks_::Discrete_Iterator& file_it, uint32 idx_size,
+        const std::map< TIndex, std::set< TObject > >& to_delete,
+        typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it,
+        bool& block_modified, uint8*& insert_ptr,
+        Update_Logger& update_logger);
+
     void flush_or_delete_block(
         uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
         uint32 idx_size);
@@ -1332,6 +1341,48 @@ void Block_Backend< TIndex, TObject, TIterator >::flush_or_delete_block(
 
 template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
+void Block_Backend< TIndex, TObject, TIterator >::copy_and_delete_on_the_fly(
+    uint64* source_start_ptr, uint64* dest_start_ptr,
+    typename File_Blocks_::Discrete_Iterator& file_it, uint32 idx_size,
+    const std::map< TIndex, std::set< TObject > >& to_delete,
+    typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it,
+    bool& block_modified, uint8*& insert_ptr,
+    Update_Logger& update_logger)
+{
+  file_blocks.read_block(file_it, source_start_ptr);
+  if (idx_size == 0)
+    idx_size = TIndex::size_of(source_start_ptr+1);
+
+  block_modified = false;
+  uint8* spos = ((uint8*)source_start_ptr) + 8 + idx_size;
+  insert_ptr = ((uint8*)dest_start_ptr) + 8 + idx_size;
+  memcpy(dest_start_ptr, source_start_ptr, spos - (uint8*)source_start_ptr);
+
+  //copy everything that is not deleted yet
+  if (*(uint32*)source_start_ptr != *(((uint32*)source_start_ptr)+1))
+    throw File_Error(0, data_filename, "Block_Backend: one index expected - several found.");
+
+  while ((uint32)(spos - (uint8*)source_start_ptr) < *(uint32*)source_start_ptr)
+  {
+    TObject obj(spos);
+    if ((delete_it == to_delete.end()) ||
+        (delete_it->second.find(obj) == delete_it->second.end()))
+    {
+      memcpy(insert_ptr, spos, obj.size_of());
+      insert_ptr = insert_ptr + obj.size_of();
+    }
+    else
+    {
+      block_modified = true;
+      update_logger.deletion(delete_it->first, obj);
+    }
+    spos = spos + obj.size_of();
+  }
+}
+
+
+template< class TIndex, class TObject, class TIterator >
+template< class Update_Logger >
 void Block_Backend< TIndex, TObject, TIterator >::update_segments
       (typename File_Blocks_::Discrete_Iterator& file_it,
        const std::map< TIndex, std::set< TObject > >& to_delete,
@@ -1345,40 +1396,25 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   typename std::map< TIndex, std::set< TObject > >::const_iterator
       insert_it(to_insert.find(*(file_it.lower_bound())));
 
+  uint32 idx_size = 0;
+  if (delete_it != to_delete.end())
+    idx_size = delete_it->first.size_of();
+  else if (insert_it != to_insert.end())
+    idx_size = insert_it->first.size_of();
+
   typename std::set< TObject >::const_iterator cur_insert;
   if (insert_it != to_insert.end())
     cur_insert = insert_it->second.begin();
 
   while (file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
   {
-    bool block_modified(false);
+    bool block_modified = false;
+    uint8* pos = 0;
 
-    file_blocks.read_block(file_it, (uint64*)source.ptr);
-
-    uint8* spos(source.ptr + 8 + TIndex::size_of(source.ptr + 8));
-    uint8* pos(dest.ptr + 8 + TIndex::size_of(source.ptr + 8));
-    memcpy(dest.ptr, source.ptr, spos - source.ptr);
-
-    //copy everything that is not deleted yet
-    if (*(uint32*)source.ptr != *((uint32*)(source.ptr + 4)))
-      throw File_Error(0, data_filename,
-	    "Block_Backend::1: one index expected - several found.");
-    while ((uint32)(spos - source.ptr) < *(uint32*)source.ptr)
-    {
-      TObject obj(spos);
-      if ((delete_it == to_delete.end()) ||
-	(delete_it->second.find(obj) == delete_it->second.end()))
-      {
-	memcpy(pos, spos, obj.size_of());
-	pos = pos + obj.size_of();
-      }
-      else
-      {
-	block_modified = true;
-	update_logger.deletion(delete_it->first, obj);
-      }
-      spos = spos + obj.size_of();
-    }
+    copy_and_delete_on_the_fly(
+        (uint64*)source.ptr, (uint64*)dest.ptr, file_it, idx_size,
+        to_delete, delete_it,
+        block_modified, pos, update_logger);
 
     // if nothing is modified, we keep the block untouched
     if (!block_modified)
@@ -1399,45 +1435,33 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
       }
     }
 
-    flush_or_delete_block((uint64*)dest.ptr, pos, file_it, TIndex::size_of(source.ptr + 8));
+    flush_or_delete_block((uint64*)dest.ptr, pos, file_it, idx_size);
   }
 
-  file_blocks.read_block(file_it, (uint64*)source.ptr);
+  bool block_modified = false;
+  uint8* pos = 0;
 
-  uint8* spos(source.ptr + 8 + TIndex::size_of(source.ptr + 8));
-  uint8* pos(dest.ptr + 8 + TIndex::size_of(source.ptr + 8));
-  memcpy(dest.ptr, source.ptr, spos - source.ptr);
-
-  //copy everything that is not deleted yet
-  if (*(uint32*)source.ptr != *((uint32*)(source.ptr + 4)))
-      throw File_Error(0, data_filename,
-	  "Block_Backend::2: one index expected - several found.");
-  while ((uint32)(spos - source.ptr) < *(uint32*)source.ptr)
-  {
-    TObject obj(spos);
-    if ((delete_it == to_delete.end()) ||
-      (delete_it->second.find(obj) == delete_it->second.end()))
-    {
-      memcpy(pos, spos, obj.size_of());
-      pos = pos + obj.size_of();
-    }
-    else
-      update_logger.deletion(delete_it->first, obj);
-    spos = spos + obj.size_of();
-  }
+  copy_and_delete_on_the_fly(
+      (uint64*)source.ptr, (uint64*)dest.ptr, file_it, idx_size,
+      to_delete, delete_it,
+      block_modified, pos, update_logger);
 
   // fill block with new data if any
   if (insert_it != to_insert.end())
   {
+    block_modified = true;
     while (cur_insert != insert_it->second.end())
     {
       flush_if_necessary_and_write_obj(
-          (uint64*)dest.ptr, pos, file_it, TIndex::size_of(source.ptr + 8), *cur_insert);
+          (uint64*)dest.ptr, pos, file_it, idx_size, *cur_insert);
       ++cur_insert;
     }
   }
 
-  flush_or_delete_block((uint64*)dest.ptr, pos, file_it, TIndex::size_of(source.ptr + 8));
+  if (block_modified)
+    flush_or_delete_block((uint64*)dest.ptr, pos, file_it, idx_size);
+  else
+    ++file_it;
 }
 
 
