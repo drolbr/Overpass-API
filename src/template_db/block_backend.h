@@ -1350,10 +1350,17 @@ void Block_Backend< TIndex, TObject, TIterator >::copy_and_delete_on_the_fly(
     Update_Logger& update_logger)
 {
   file_blocks.read_block(file_it, source_start_ptr);
-  if (idx_size == 0)
-    idx_size = TIndex::size_of(source_start_ptr+1);
 
   block_modified = false;
+  if (delete_it == to_delete.end())
+  {
+    memcpy(dest_start_ptr, source_start_ptr, *(uint32*)source_start_ptr);
+    insert_ptr = ((uint8*)dest_start_ptr) + *(uint32*)source_start_ptr;
+    return;
+  }
+
+  if (idx_size == 0)
+    idx_size = TIndex::size_of(source_start_ptr+1);
   uint8* spos = ((uint8*)source_start_ptr) + 8 + idx_size;
   insert_ptr = ((uint8*)dest_start_ptr) + 8 + idx_size;
   memcpy(dest_start_ptr, source_start_ptr, spos - (uint8*)source_start_ptr);
@@ -1365,8 +1372,7 @@ void Block_Backend< TIndex, TObject, TIterator >::copy_and_delete_on_the_fly(
   while ((uint32)(spos - (uint8*)source_start_ptr) < *(uint32*)source_start_ptr)
   {
     TObject obj(spos);
-    if ((delete_it == to_delete.end()) ||
-        (delete_it->second.find(obj) == delete_it->second.end()))
+    if (delete_it->second.find(obj) == delete_it->second.end())
     {
       memcpy(insert_ptr, spos, obj.size_of());
       insert_ptr = insert_ptr + obj.size_of();
