@@ -355,6 +355,10 @@ struct Block_Backend
          const std::map< TIndex, std::set< TObject > >& to_insert,
 	 Update_Logger& update_logger);
 
+    void flush_or_delete_block(
+        uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
+        uint32 idx_size);
+
     template< class Update_Logger >
     void update_segments
         (typename File_Blocks_::Discrete_Iterator& file_it,
@@ -969,9 +973,10 @@ void Block_Backend< Index, Object, Iterator >::flush_if_necessary_and_write_obj(
 
   if (insert_ptr - (uint8*)start_ptr + obj_size > block_size)
   {
-    *(uint32*)start_ptr = insert_ptr - (uint8*)start_ptr;
-    *(((uint32*)start_ptr)+1) = *(uint32*)start_ptr;
-    file_it = file_blocks.insert_block(file_it, start_ptr, (*(uint32*)start_ptr) - 4);
+    uint bytes_written = insert_ptr - (uint8*)start_ptr;
+    *(uint32*)start_ptr = bytes_written;
+    *(((uint32*)start_ptr)+1) = bytes_written;
+    file_it = file_blocks.insert_block(file_it, start_ptr, bytes_written - 4);
     ++file_it;
     insert_ptr = ((uint8*)start_ptr) + 8 + idx_size;
     if (idx_size + obj_size + 8 > block_size)
@@ -1302,7 +1307,23 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
     *(uint32*)dest.ptr = pos - dest.ptr;
     file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, max_size);
     ++file_it;
+  }
+  else
+    file_it = file_blocks.replace_block(file_it, 0, 0);
+}
 
+
+template< class TIndex, class TObject, class TIterator >
+void Block_Backend< TIndex, TObject, TIterator >::flush_or_delete_block(
+    uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it, uint32 idx_size)
+{
+  uint bytes_written = insert_ptr - (uint8*)start_ptr;
+  if (bytes_written > 8 + idx_size)
+  {
+    *(uint32*)start_ptr = bytes_written;
+    *(((uint32*)start_ptr)+1) = bytes_written;
+    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written - 4);
+    ++file_it;
   }
   else
     file_it = file_blocks.replace_block(file_it, 0, 0);
@@ -1378,15 +1399,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
       }
     }
 
-    if (pos > dest.ptr + 8 + TIndex::size_of(source.ptr + 8))
-    {
-      *(uint32*)dest.ptr = pos - dest.ptr;
-      *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-      file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
-      ++file_it;
-    }
-    else
-      file_it = file_blocks.replace_block(file_it, 0, 0);
+    flush_or_delete_block((uint64*)dest.ptr, pos, file_it, TIndex::size_of(source.ptr + 8));
   }
 
   file_blocks.read_block(file_it, (uint64*)source.ptr);
@@ -1424,15 +1437,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
     }
   }
 
-  if (pos > dest.ptr + 8 + TIndex::size_of(source.ptr + 8))
-  {
-    *(uint32*)dest.ptr = pos - dest.ptr;
-    *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-    file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, (*(uint32*)dest.ptr) - 4);
-    ++file_it;
-  }
-  else
-    file_it = file_blocks.replace_block(file_it, 0, 0);
+  flush_or_delete_block((uint64*)dest.ptr, pos, file_it, TIndex::size_of(source.ptr + 8));
 }
 
 
