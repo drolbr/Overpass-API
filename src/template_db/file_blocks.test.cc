@@ -380,19 +380,20 @@ void read_loop(
   {
     std::cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data = (uint8*)(blocks.read_block(it));
+    uint32 max_keysize = *(uint32*)(data+sizeof(uint32));
     std::cout<<", real size "<<(*(uint32*)data)<<" bytes, "
-    <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
+    <<"first block size "<<max_keysize<<" bytes, "
     <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
-    if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
+    if (max_keysize < (*(uint32*)data)-sizeof(uint32))
     {
       uint8* pos(data+sizeof(uint32));
       pos += *(uint32*)pos;
       std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
       <<"second index "<<*(uint32*)(pos+sizeof(uint32))<<'\n';
     }
-    else if (*(uint32*)(data+sizeof(uint32)) > (*(uint32*)data)-sizeof(uint32))
+    else if (max_keysize > (*(uint32*)data)-sizeof(uint32))
     {
-      uint32 large_block_size = (((*(uint32*)(data+4))+3)/block_size+1)*block_size;
+      uint32 large_block_size = ((max_keysize+3)/block_size+1)*block_size;
       std::cout<<"\nChecking "<<large_block_size<<" bytes for oversized object.\n";
 
       uint first_deviating = block_size;
@@ -420,8 +421,8 @@ void read_loop(
           break;
         }
         data = (uint8*)(blocks.read_block(it, false));
-        uint32 offset = i /4;
-        for (uint j = 0; j < block_size/4; ++j)
+        uint32 offset = i/4;
+        for (uint j = 0; 4*j < block_size && 4*j + i <= max_keysize; ++j)
         {
           if (*(uint32*)(data+4*j) != 3*(j + offset) + 91000)
           {
@@ -1288,13 +1289,13 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, block_size);
     uint32 max_keysize = prepare_large_block(
         buf, *indices.begin(), block_size, 2*block_size + block_size/2, 0);
-    it = blocks.insert_block(it, buf, block_size-8, max_keysize, *indices.begin());
+    it = blocks.insert_block(it, buf, block_size, max_keysize, *indices.begin());
     ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
     ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, 2*block_size/4);
-    it = blocks.insert_block(it, buf, block_size/2+8, block_size-4, *indices.begin());
+    it = blocks.insert_block(it, buf, block_size/2+4, block_size-4, *indices.begin());
     free(buf);
   }
   catch (File_Error e)
@@ -1355,10 +1356,10 @@ int main(int argc, char* args[])
 
     uint64* buf = (uint64*)aligned_alloc(8, block_size);
     uint32 max_keysize = prepare_large_block(buf, *indices.begin(), block_size, block_size-4, 0);
-    it = blocks.insert_block(it, buf, block_size-8, max_keysize, *indices.begin());
+    it = blocks.insert_block(it, buf, block_size, max_keysize, *indices.begin());
     ++it;
     prepare_large_block(buf, *indices.begin(), block_size, block_size-3, 0);
-    it = blocks.insert_block(it, buf, block_size-8, block_size, *indices.begin());
+    it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
     ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
     it = blocks.insert_block(it, buf, 1, 1, *indices.begin());
@@ -1384,13 +1385,25 @@ int main(int argc, char* args[])
     uint32 block_size = tf.get_block_size();
 
     std::list< IntIndex > indices;
-    indices.push_back(IntIndex(7));
+    indices.push_back(IntIndex(6));
     File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
         blocks.discrete_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, block_size);
-    uint32 max_keysize = prepare_large_block(buf, *indices.begin(), block_size, 3*block_size-3, 0);
-    it = blocks.insert_block(it, buf, block_size-8, max_keysize, *indices.begin());
+    uint32 max_keysize = prepare_large_block(
+        buf, *indices.begin(), block_size, 2*block_size + block_size/2 + 20, 0);
+    it = blocks.replace_block(it, buf, block_size, max_keysize, *indices.begin());
+    ++it;
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, 2*block_size/4);
+    it = blocks.replace_block(it, buf, block_size/2 + 24, block_size/2 + 24, *indices.begin());
+
+    indices.clear();
+    indices.push_back(IntIndex(7));
+    it = blocks.discrete_begin(indices.begin(), indices.end());
+
+    max_keysize = prepare_large_block(buf, *indices.begin(), block_size, 3*block_size-3, 0);
+    it = blocks.insert_block(it, buf, block_size, max_keysize, *indices.begin());
     ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
@@ -1402,7 +1415,7 @@ int main(int argc, char* args[])
     it = blocks.insert_block(it, buf, 1, 1, *indices.begin());
     ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 3*block_size-4, 0);
-    it = blocks.insert_block(it, buf, block_size-8, block_size, *indices.begin());
+    it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
     ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());

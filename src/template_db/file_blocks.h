@@ -28,6 +28,7 @@
 
 #include <cerrno>
 #include <cstdlib>
+#include <cstring>
 #include <list>
 
 /** Declarations: -----------------------------------------------------------*/
@@ -734,6 +735,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
 
   uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
   uint32 pos;
+  if (payload_size < block_size * compression_factor)
+    memset(((uint8*)buf) + payload_size, 0, block_size * compression_factor - payload_size);
   write_block(buf, data_size, pos);
 
   File_Block_Index_Entry< TIndex > entry(block_idx, pos, data_size, max_keysize);
@@ -770,6 +773,8 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     return erase_block(it);
 
   uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
+  if (payload_size < block_size * compression_factor)
+    memset(((uint8*)buf) + payload_size, 0, block_size * compression_factor - payload_size);
   write_block(buf, data_size, it.block_it->pos);
 
   it.block_it->index = block_idx;
