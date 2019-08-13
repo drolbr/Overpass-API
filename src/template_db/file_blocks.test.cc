@@ -720,7 +720,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(50));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
     free(buf);
   }
   catch (File_Error e)
@@ -746,7 +746,8 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(51));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.replace_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
+    blocks.replace_block(
+        blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize, IntIndex((void*)(buf+1)));
     free(buf);
   }
   catch (File_Error e)
@@ -772,12 +773,13 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(9));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
+    blocks.insert_block(
+        blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(89));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
     free(buf);
   }
   catch (File_Error e)
@@ -815,26 +817,26 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(10));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
     ++it;
 
     indices.clear();
     indices.push_back(IntIndex(63));
     max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
 
     indices.clear();
     indices.push_back(IntIndex(64));
     max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
 
     indices.clear();
     indices.push_back(IntIndex(65));
     max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     free(buf);
   }
   catch (File_Error e)
@@ -870,21 +872,21 @@ int main(int argc, char* args[])
     work.push_back(IntIndex(7));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
-    it = blocks.replace_block(it, buf, max_keysize);
+    it = blocks.replace_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
 
     work.clear();
     work.push_back(IntIndex(51));
     work.push_back(IntIndex(52));
     max_keysize = prepare_block(buf, work);
-    it = blocks.replace_block(it, buf, max_keysize);
+    it = blocks.replace_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
 
     work.clear();
     work.push_back(IntIndex(89));
     work.push_back(IntIndex(90));
     max_keysize = prepare_block(buf, work);
-    it = blocks.replace_block(it, buf, max_keysize);
+    it = blocks.replace_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     free(buf);
   }
   catch (File_Error e)
@@ -914,9 +916,9 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it(blocks.discrete_begin(indices.begin(), indices.end()));
 
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
   }
   catch (File_Error e)
   {
@@ -944,8 +946,8 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
         it(blocks.discrete_begin(indices.begin(), indices.end()));
 
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
   }
   catch (File_Error e)
   {
@@ -981,7 +983,7 @@ int main(int argc, char* args[])
       work.push_back(IntIndex(i));
       uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
       uint32 max_keysize(prepare_block(buf, work));
-      it = blocks.insert_block(it, buf, max_keysize);
+      it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
       free(buf);
       ++it;
     }
@@ -1014,7 +1016,7 @@ int main(int argc, char* args[])
 
     while (!(it == blocks.discrete_end()))
     {
-      it = blocks.replace_block(it, 0, 0);
+      it = blocks.erase_block(it);
     }
   }
   catch (File_Error e)
@@ -1040,18 +1042,18 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(40));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(60));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
     free(buf);
   }
   catch (File_Error e)
@@ -1088,45 +1090,45 @@ int main(int argc, char* args[])
     work.push_back(IntIndex(8));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
     ++it;
 
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
 
     work.clear();
     work.push_back(IntIndex(50));
     max_keysize = prepare_block(buf, work);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
     ++it;
 
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
+    it = blocks.erase_block(it);
 
     work.clear();
     work.push_back(IntIndex(90));
     max_keysize = prepare_block(buf, work);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
 
     work.clear();
     work.push_back(IntIndex(99));
     max_keysize = prepare_block(buf, work);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
     ++it;
     free(buf);
   }
@@ -1185,7 +1187,7 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size()
         * Variable_Block_Test_File().get_compression_factor());
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
     free(buf);
   }
   catch (File_Error e)
@@ -1214,36 +1216,36 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(31));
     indices.push_back(IntIndex(32));
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(33));
     indices.push_back(IntIndex(34));
     indices.push_back(IntIndex(35));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(36));
     indices.push_back(IntIndex(37));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(38));
     indices.push_back(IntIndex(39));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(40));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(41));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(50));
@@ -1254,24 +1256,24 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(55));
     indices.push_back(IntIndex(56));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(57));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(60));
     indices.push_back(IntIndex(61));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     indices.push_back(IntIndex(62));
     indices.push_back(IntIndex(63));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }
@@ -1301,15 +1303,15 @@ int main(int argc, char* args[])
         it = blocks.discrete_begin(indices.begin(), indices.end());
 
     ++it;
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
     ++it;
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
     ++it;
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
     ++it;
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
     ++it;
-    it = blocks.replace_block(it, 0, 0);
+    it = blocks.erase_block(it);
   }
   catch (File_Error e)
   {
@@ -1343,7 +1345,7 @@ int main(int argc, char* args[])
     indices.clear();
     indices.push_back(IntIndex(25));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }
@@ -1379,7 +1381,7 @@ int main(int argc, char* args[])
     indices.clear();
     indices.push_back(IntIndex(26));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }
@@ -1416,7 +1418,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(60));
     indices.push_back(IntIndex(61));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }
@@ -1454,7 +1456,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(66));
     indices.push_back(IntIndex(67));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }
@@ -1491,7 +1493,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(68));
     indices.push_back(IntIndex(69));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }
@@ -1529,7 +1531,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(71));
     indices.push_back(IntIndex(72));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }
@@ -1566,7 +1568,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(20));
     indices.push_back(IntIndex(22));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.replace_block(it, buf, max_keysize);
+    it = blocks.replace_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }
@@ -1624,19 +1626,19 @@ int main(int argc, char* args[])
     for (int i = 20; i < 21; ++i)
       indices.push_back(IntIndex(i));
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     for (int i = 100; i < 280; ++i)
       indices.push_back(IntIndex(i));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     indices.clear();
     for (int i = 1000; i < 1060; ++i)
       indices.push_back(IntIndex(i));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
 
     free(buf);
   }

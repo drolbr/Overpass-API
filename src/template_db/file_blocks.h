@@ -176,11 +176,9 @@ public:
   Range_Iterator range_begin(const TRangeIterator& begin, const TRangeIterator& end);
   const Range_Iterator& range_end() const { return *range_end_it; }
 
+  uint64* read_block(const File_Blocks_Basic_Iterator< TIndex >& it, bool check_idx = true) const;
   uint64* read_block(
-      const File_Blocks_Basic_Iterator< TIndex >& it, uint64* temp_buffer, uint64* buffer_) const;
-  uint64* read_block(const File_Blocks_Basic_Iterator< TIndex >& it) const;
-  uint64* read_block(
-      const File_Blocks_Basic_Iterator< TIndex >& it, uint64* buffer) const;
+      const File_Blocks_Basic_Iterator< TIndex >& it, uint64* buffer, bool check_idx = true) const;
 
   uint32 answer_size(const Flat_Iterator& it) const
   {
@@ -196,8 +194,9 @@ public:
   void reset_read_count() { read_count_ = 0; }
 
   Discrete_Iterator insert_block
-      (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize);
-  Discrete_Iterator replace_block(Discrete_Iterator it, uint64* buf, uint32 max_keysize);
+      (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize, const TIndex& block_idx);
+  Discrete_Iterator replace_block(Discrete_Iterator it, uint64* buf, uint32 max_keysize, const TIndex& block_idx);
+  Discrete_Iterator erase_block(Discrete_Iterator it);
 
   const File_Blocks_Index< TIndex >& get_index() const { return *index; }
 
@@ -216,6 +215,8 @@ private:
   Raw_File data_file;
   Void64_Pointer< uint64 > buffer;
 
+  uint64* read_block(
+      const File_Blocks_Basic_Iterator< TIndex >& it, uint64* temp_buffer, uint64* buffer_, bool check_idx) const;
   uint32 allocate_block(uint32 data_size);
   void write_block(uint64* buf, uint32& data_size, uint32& pos);
 };
@@ -562,7 +563,7 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::range_begin(const TRangeIterat
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
-    (const File_Blocks_Basic_Iterator< TIndex >& it, uint64* temp_buffer, uint64* buffer_) const
+    (const File_Blocks_Basic_Iterator< TIndex >& it, uint64* temp_buffer, uint64* buffer_, bool check_idx) const
 {
   data_file.seek((int64)(it.block_it->pos) * block_size, "File_Blocks::read_block::1");
 
@@ -579,7 +580,7 @@ uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     LZ4_Inflate().decompress(temp_buffer, block_size * it.block_it->size, buffer_, block_size * compression_factor);
   }
 
-  if (!(it.block_it->index ==
+  if (check_idx && !(it.block_it->index ==
         TIndex(((uint8*)buffer_)+(sizeof(uint32)+sizeof(uint32)))))
     throw File_Error(it.block_it->pos, index->get_data_file_name(),
 		     "File_Blocks::read_block: Index inconsistent");
@@ -591,17 +592,17 @@ uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
-    (const File_Blocks_Basic_Iterator< TIndex >& it) const
+    (const File_Blocks_Basic_Iterator< TIndex >& it, bool check_idx) const
 {
-  return read_block(it, Void64_Pointer< uint64 >(block_size * it.block_it->size).ptr, buffer.ptr);
+  return read_block(it, Void64_Pointer< uint64 >(block_size * it.block_it->size).ptr, buffer.ptr, check_idx);
 }
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
-    (const File_Blocks_Basic_Iterator< TIndex >& it, uint64* buffer_) const
+    (const File_Blocks_Basic_Iterator< TIndex >& it, uint64* buffer_, bool check_idx) const
 {
-  return read_block(it, buffer.ptr, buffer_);
+  return read_block(it, buffer.ptr, buffer_, check_idx);
 }
 
 
@@ -716,7 +717,7 @@ void File_Blocks< TIndex, TIterator, TRangeIterator >::write_block(uint64* buf, 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::insert_block
-    (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize)
+    (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize, const TIndex& block_idx)
 {
   if (buf == 0)
     return it;
@@ -724,16 +725,16 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   uint32 data_size, pos;
   write_block(buf, data_size, pos);
 
-  TIndex index(((uint8*)buf)+(sizeof(uint32)+sizeof(uint32)));
-  File_Block_Index_Entry< TIndex > entry(index, pos, data_size, max_keysize);
-  Discrete_Iterator return_it(it);
+  File_Block_Index_Entry< TIndex > entry(block_idx, pos, data_size, max_keysize);
+
+  Discrete_Iterator return_it = it;
   if (return_it.block_it == return_it.block_begin)
   {
-    return_it.block_it = this->index->get_blocks().insert(return_it.block_it, entry);
+    return_it.block_it = index->get_blocks().insert(return_it.block_it, entry);
     return_it.block_begin = return_it.block_it;
   }
   else
-    return_it.block_it = this->index->get_blocks().insert(return_it.block_it, entry);
+    return_it.block_it = index->get_blocks().insert(return_it.block_it, entry);
   return_it.just_inserted = true;
   return_it.is_empty = it.is_empty;
   return return_it;
@@ -743,32 +744,36 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::replace_block
-    (Discrete_Iterator it, uint64* buf, uint32 max_keysize)
+    (Discrete_Iterator it, uint64* buf, uint32 max_keysize, const TIndex& block_idx)
 {
-  if (buf != 0)
+  if (!buf)
+    return erase_block(it);
+
+  uint32 data_size;
+  write_block(buf, data_size, it.block_it->pos);
+
+  it.block_it->index = block_idx;
+  it.block_it->max_keysize = max_keysize;
+  it.block_it->size = data_size;
+
+  return it;
+}
+
+
+template< typename TIndex, typename TIterator, typename TRangeIterator >
+typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
+    File_Blocks< TIndex, TIterator, TRangeIterator >::erase_block(Discrete_Iterator it)
+{
+  Discrete_Iterator return_it = it;
+  ++return_it;
+  if (it.block_it == it.block_begin)
   {
-    uint32 data_size;
-    write_block(buf, data_size, it.block_it->pos);
-
-    it.block_it->index = TIndex((uint8*)buf+(sizeof(uint32)+sizeof(uint32)));
-    it.block_it->max_keysize = max_keysize;
-    it.block_it->size = data_size;
-
-    return it;
+    it.block_it = index->get_blocks().erase(it.block_it);
+    it.block_begin = it.block_it;
   }
   else
-  {
-    Discrete_Iterator return_it(it);
-    ++return_it;
-    if (it.block_it == it.block_begin)
-    {
-      it.block_it = index->get_blocks().erase(it.block_it);
-      it.block_begin = it.block_it;
-    }
-    else
-      it.block_it = index->get_blocks().erase(it.block_it);
-    return return_it;
-  }
+    it.block_it = index->get_blocks().erase(it.block_it);
+  return return_it;
 }
 
 #endif

@@ -985,7 +985,8 @@ void Block_Backend< Index, Object, Iterator >::flush_if_necessary_and_write_obj(
     uint bytes_written = insert_ptr - (uint8*)start_ptr;
     *(uint32*)start_ptr = bytes_written;
     *(((uint32*)start_ptr)+1) = bytes_written;
-    file_it = file_blocks.insert_block(file_it, start_ptr, bytes_written - 4);
+    file_it = file_blocks.insert_block(
+        file_it, start_ptr, bytes_written - 4, Index((uint8*)(start_ptr+1)));
     ++file_it;
     insert_ptr = ((uint8*)start_ptr) + 8 + idx_size;
     if (idx_size + obj_size + 8 > block_size)
@@ -1046,7 +1047,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     if ((split_it != split.end()) && (it->first == *split_it))
     {
       *(uint32*)buffer.ptr = pos - buffer.ptr;
-      file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size);
+      file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size, TIndex(buffer.ptr+8));
       ++file_it;
       ++split_it;
       pos = buffer.ptr + 4;
@@ -1090,7 +1091,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
   if (pos > buffer.ptr + 4)
   {
     *(uint32*)buffer.ptr = pos - buffer.ptr;
-    file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size);
+    file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size, TIndex(buffer.ptr+8));
     ++file_it;
   }
   ++file_it;
@@ -1221,7 +1222,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
     if ((split_it != split.end()) && (it->first == *split_it))
     {
       *(uint32*)dest.ptr = pos - dest.ptr;
-      file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, max_size);
+      file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, max_size, TIndex(dest.ptr+8));
       ++file_it;
       ++split_it;
       pos = dest.ptr + 4;
@@ -1314,11 +1315,11 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   if (pos > dest.ptr + 4)
   {
     *(uint32*)dest.ptr = pos - dest.ptr;
-    file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, max_size);
+    file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, max_size, TIndex(dest.ptr+8));
     ++file_it;
   }
   else
-    file_it = file_blocks.replace_block(file_it, 0, 0);
+    file_it = file_blocks.erase_block(file_it);
 }
 
 
@@ -1331,11 +1332,11 @@ void Block_Backend< TIndex, TObject, TIterator >::flush_or_delete_block(
   {
     *(uint32*)start_ptr = bytes_written;
     *(((uint32*)start_ptr)+1) = bytes_written;
-    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written - 4);
+    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written - 4, TIndex((uint8*)(start_ptr + 1)));
     ++file_it;
   }
   else
-    file_it = file_blocks.replace_block(file_it, 0, 0);
+    file_it = file_blocks.erase_block(file_it);
 }
 
 

@@ -70,7 +70,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
     {
       uint64* buf = src_file.read_block(src_it);
       zero_out_tails(buf, src_file_prop.get_block_size());
-      dest_file.insert_block(dest_it, buf, src_it.block_it->max_keysize);
+      dest_file.insert_block(dest_it, buf, src_it.block_it->max_keysize, TIndex((uint8*)(buf+1)));
       ++src_it;
       dest_it = dest_file.discrete_end();
     }
