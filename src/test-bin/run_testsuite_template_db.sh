@@ -171,7 +171,7 @@ dispatcher_two_clients()
 date +%T
 $BASEDIR/test-bin/file_blocks info
 date +%T
-perform_test_loop file_blocks 25
+perform_test_loop file_blocks 30
 date +%T
 perform_test_loop block_backend 13
 date +%T

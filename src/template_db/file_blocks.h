@@ -193,9 +193,12 @@ public:
   uint read_count() const { return read_count_; }
   void reset_read_count() { read_count_ = 0; }
 
-  Discrete_Iterator insert_block
-      (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize, const TIndex& block_idx);
-  Discrete_Iterator replace_block(Discrete_Iterator it, uint64* buf, uint32 max_keysize, const TIndex& block_idx);
+  Discrete_Iterator insert_block(const Discrete_Iterator& it, uint64* buf, uint32 max_keysize);
+  Discrete_Iterator insert_block(
+      const Discrete_Iterator& it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx);
+  Discrete_Iterator replace_block(const Discrete_Iterator& it, uint64* buf, uint32 max_keysize);
+  Discrete_Iterator replace_block(
+      Discrete_Iterator it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx);
   Discrete_Iterator erase_block(Discrete_Iterator it);
 
   const File_Blocks_Index< TIndex >& get_index() const { return *index; }
@@ -689,40 +692,48 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::allocate_block(uint32 d
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 void File_Blocks< TIndex, TIterator, TRangeIterator >::write_block(uint64* buf, uint32& data_size, uint32& pos)
 {
-  data_size = *(uint32*)buf == 0 ? 0 : ((*(uint32*)buf) - 1) / block_size + 1;
-
-  void* target = buf;
+  void* payload = buf;
   if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
   {
-    target = buffer.ptr;
+    payload = buffer.ptr;
     data_size = (
-        Zlib_Deflate(1).compress(buf, *(uint32*)buf, target, block_size * compression_factor)
+        Zlib_Deflate(1).compress(buf, *(uint32*)buf, payload, block_size * compression_factor)
         - 1) / block_size + 1;
   }
   else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
   {
-    target = buffer.ptr;
+    payload = buffer.ptr;
     data_size = (
-        LZ4_Deflate().compress(buf, *(uint32*)buf, target, block_size * compression_factor * 2)
+        LZ4_Deflate().compress(buf, *(uint32*)buf, payload, block_size * compression_factor * 2)
         - 1) / block_size + 1;
   }
 
   pos = allocate_block(data_size);
 
   data_file.seek(((int64)pos)*block_size, "File_Blocks::write_block::1");
-  data_file.write((uint8*)target, block_size * data_size, "File_Blocks::write_block::2");
+  data_file.write((uint8*)payload, block_size * data_size, "File_Blocks::write_block::2");
 }
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::insert_block
-    (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize, const TIndex& block_idx)
+    (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize)
+{
+  return insert_block(it, buf, *(uint32*)buf, max_keysize, TIndex((void*)(buf+1)));
+}
+
+
+template< typename TIndex, typename TIterator, typename TRangeIterator >
+typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
+    File_Blocks< TIndex, TIterator, TRangeIterator >::insert_block
+    (const Discrete_Iterator& it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx)
 {
   if (buf == 0)
     return it;
 
-  uint32 data_size, pos;
+  uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
+  uint32 pos;
   write_block(buf, data_size, pos);
 
   File_Block_Index_Entry< TIndex > entry(block_idx, pos, data_size, max_keysize);
@@ -744,12 +755,21 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::replace_block
-    (Discrete_Iterator it, uint64* buf, uint32 max_keysize, const TIndex& block_idx)
+    (const Discrete_Iterator& it, uint64* buf, uint32 max_keysize)
+{
+  return replace_block(it, buf, *(uint32*)buf, max_keysize, TIndex((void*)(buf+1)));
+}
+
+
+template< typename TIndex, typename TIterator, typename TRangeIterator >
+typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
+    File_Blocks< TIndex, TIterator, TRangeIterator >::replace_block
+    (Discrete_Iterator it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx)
 {
   if (!buf)
     return erase_block(it);
 
-  uint32 data_size;
+  uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
   write_block(buf, data_size, it.block_it->pos);
 
   it.block_it->index = block_idx;
@@ -769,7 +789,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
   if (it.block_it == it.block_begin)
   {
     it.block_it = index->get_blocks().erase(it.block_it);
-    it.block_begin = it.block_it;
+    return_it.block_begin = it.block_it;
   }
   else
     it.block_it = index->get_blocks().erase(it.block_it);

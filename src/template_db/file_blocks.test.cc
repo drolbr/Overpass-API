@@ -371,14 +371,15 @@ struct Compressed_Test_File : File_Properties
 
 //-----------------------------------------------------------------------------
 
-void read_loop
-    (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it)
+void read_loop(
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it,
+    uint32 block_size)
 {
   while (!(it == blocks.flat_end()))
   {
     std::cout<<"Predicted size "<<blocks.answer_size(it);
-    uint8* data((uint8*)(blocks.read_block(it)));
+    uint8* data = (uint8*)(blocks.read_block(it));
     std::cout<<", real size "<<(*(uint32*)data)<<" bytes, "
     <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
     <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
@@ -387,16 +388,66 @@ void read_loop
       uint8* pos(data+sizeof(uint32));
       pos += *(uint32*)pos;
       std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
-      <<"second index "<<*(uint32*)(pos+sizeof(uint32));
+      <<"second index "<<*(uint32*)(pos+sizeof(uint32))<<'\n';
     }
-    std::cout<<'\n';
-    ++it;
+    else if (*(uint32*)(data+sizeof(uint32)) > (*(uint32*)data)-sizeof(uint32))
+    {
+      uint32 large_block_size = (((*(uint32*)(data+4))+3)/block_size+1)*block_size;
+      std::cout<<"\nChecking "<<large_block_size<<" bytes for oversized object.\n";
+
+      uint first_deviating = block_size;
+      for (uint i = 5; i < block_size/4; ++i)
+      {
+        if (*(uint32*)(data+4*i) != 3*i + 91000)
+        {
+          first_deviating = i;
+          break;
+        }
+      }
+      if (first_deviating < block_size)
+        std::cout<<"Wrong block content at block 0, offset "<<4*first_deviating<<": "
+            "expected "<<(3*first_deviating + 91000)<<", found "
+            <<(*(uint32*)(data+4*first_deviating))<<'\n';
+      else
+        std::cout<<"Content ok in block 0.\n";
+
+      for (uint i = block_size; i < large_block_size; i += block_size)
+      {
+        ++it;
+        if (it == blocks.flat_end())
+        {
+          std::cout<<"Unexpected end of index inside oversized object.\n";
+          break;
+        }
+        data = (uint8*)(blocks.read_block(it, false));
+        uint32 offset = i /4;
+        for (uint j = 0; j < block_size/4; ++j)
+        {
+          if (*(uint32*)(data+4*j) != 3*(j + offset) + 91000)
+          {
+            first_deviating = j;
+            break;
+          }
+        }
+        if (first_deviating < block_size)
+          std::cout<<"Wrong block content at block "<<i/block_size<<", offset "<<4*first_deviating<<": "
+              "expected "<<(3*(first_deviating + offset) + 91000)<<", found "
+              <<(*(uint32*)(data+4*first_deviating))<<'\n';
+        else
+          std::cout<<"Content ok in block "<<i/block_size<<".\n";
+      }
+    }
+    else
+      std::cout<<'\n';
+    if (!(it == blocks.flat_end()))
+      ++it;
   }
 }
 
-void read_loop
-  (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator& it)
+void read_loop(
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator& it,
+    uint32 block_size)
 {
   while (!(it == blocks.discrete_end()))
   {
@@ -415,15 +466,31 @@ void read_loop
 	std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
 	    <<"second index "<<*(uint32*)(pos+sizeof(uint32));
       }
+      else if (*(uint32*)(data+sizeof(uint32)) > (*(uint32*)data)-sizeof(uint32))
+      {
+        uint32 large_block_size = (((*(uint32*)(data+4))+3)/block_size+1)*block_size;
+        std::cout<<"\nSkipping "<<large_block_size<<" bytes for oversized object.";
+        for (uint i = block_size; i < large_block_size; i += block_size)
+        {
+          ++it;
+          if (it == blocks.discrete_end())
+          {
+            std::cout<<"\nUnexpected end of index inside oversized object.";
+            break;
+          }
+        }
+      }
     }
     std::cout<<'\n';
-    ++it;
+    if (!(it == blocks.discrete_end()))
+      ++it;
   }
 }
 
-void read_loop
-  (File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-   File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator& it)
+void read_loop(
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator& it,
+    uint32 block_size)
 {
   while (!(it == blocks.range_end()))
   {
@@ -439,8 +506,23 @@ void read_loop
       std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
       <<"second index "<<*(uint32*)(pos+sizeof(uint32));
     }
+    else if (*(uint32*)(data+sizeof(uint32)) > (*(uint32*)data)-sizeof(uint32))
+    {
+      uint32 large_block_size = (((*(uint32*)(data+4))+3)/block_size+1)*block_size;
+      std::cout<<"\nSkipping "<<large_block_size<<" bytes for oversized object.";
+      for (uint i = block_size; i < large_block_size; i += block_size)
+      {
+        ++it;
+        if (it == blocks.range_end())
+        {
+          std::cout<<"\nUnexpected end of index inside oversized object.";
+          break;
+        }
+      }
+    }
     std::cout<<'\n';
-    ++it;
+    if (!(it == blocks.range_end()))
+      ++it;
   }
 }
 
@@ -454,6 +536,7 @@ void read_test()
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
+    uint32 block_size = tf.get_block_size();
 
     std::vector< bool > footprint = get_data_index_footprint< IntIndex >
         (Test_File(), BASE_DIRECTORY);
@@ -466,7 +549,7 @@ void read_test()
     std::cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
-    read_loop(blocks, fit);
+    read_loop(blocks, fit, block_size);
     std::cout<<"... all blocks read.\n";
 
     std::list< IntIndex > index_list;
@@ -475,7 +558,7 @@ void read_test()
     std::cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
 	it(blocks.discrete_begin(index_list.begin(), index_list.end()));
-    read_loop(blocks, it);
+    read_loop(blocks, it, block_size);
     std::cout<<"... all blocks read.\n";
 
     index_list.clear();
@@ -483,7 +566,7 @@ void read_test()
       index_list.push_back(&i);
     std::cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
-    read_loop(blocks, it);
+    read_loop(blocks, it, block_size);
     std::cout<<"... all blocks read.\n";
 
     std::list< std::pair< IntIndex, IntIndex > > range_list;
@@ -493,7 +576,7 @@ void read_test()
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator
 	rit(blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end())));
-    read_loop(blocks, rit);
+    read_loop(blocks, rit, block_size);
     std::cout<<"... all blocks read.\n";
 
     index_list.clear();
@@ -501,7 +584,7 @@ void read_test()
       index_list.push_back(&i);
     std::cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
-    read_loop(blocks, it);
+    read_loop(blocks, it, block_size);
     std::cout<<"... all blocks read.\n";
 
     range_list.clear();
@@ -511,7 +594,7 @@ void read_test()
     std::cout<<"Reading blocks with indices [90, 100[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
-    read_loop(blocks, rit);
+    read_loop(blocks, rit, block_size);
     std::cout<<"... all blocks read.\n";
 
     index_list.clear();
@@ -519,7 +602,7 @@ void read_test()
     index_list.push_back(&foo);
     std::cout<<"Reading blocks with index 50 ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
-    read_loop(blocks, it);
+    read_loop(blocks, it, block_size);
     std::cout<<"... all blocks read.\n";
 
     range_list.clear();
@@ -529,7 +612,7 @@ void read_test()
     std::cout<<"Reading blocks with indices [50, 51[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
-    read_loop(blocks, rit);
+    read_loop(blocks, rit, block_size);
     std::cout<<"... all blocks read.\n";
 
     range_list.clear();
@@ -545,13 +628,13 @@ void read_test()
     std::cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
     rit = blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end()));
-    read_loop(blocks, rit);
+    read_loop(blocks, rit, block_size);
     std::cout<<"... all blocks read.\n";
 
     index_list.clear();
     std::cout<<"Reading blocks with indices \\emptyset ...\n";
     it = blocks.discrete_begin(index_list.begin(), index_list.end());
-    read_loop(blocks, it);
+    read_loop(blocks, it, block_size);
     std::cout<<"... all blocks read.\n";
 
     std::cout<<"This block of read tests is complete.\n";
@@ -574,6 +657,7 @@ void variable_block_read_test()
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
+    uint32 block_size = tf.get_block_size();
 
     std::vector< bool > footprint = get_data_index_footprint< IntIndex >
         (Variable_Block_Test_File(), BASE_DIRECTORY);
@@ -586,7 +670,7 @@ void variable_block_read_test()
     std::cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
-    read_loop(blocks, fit);
+    read_loop(blocks, fit, block_size);
     std::cout<<"... all blocks read.\n";
 
     std::cout<<"This block of read tests is complete.\n";
@@ -609,6 +693,7 @@ void compressed_read_test()
     Compressed_Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
+    uint32 block_size = tf.get_block_size();
 
     std::vector< bool > footprint = get_data_index_footprint< IntIndex >
         (Variable_Block_Test_File(), BASE_DIRECTORY);
@@ -621,7 +706,7 @@ void compressed_read_test()
     std::cout<<"Reading all blocks ...\n";
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
-    read_loop(blocks, fit);
+    read_loop(blocks, fit, block_size);
     std::cout<<"... all blocks read.\n";
 
     std::cout<<"This block of read tests is complete.\n";
@@ -661,6 +746,23 @@ uint32 prepare_block(void* block, const std::list< IntIndex >& indices)
 
   return max_keysize;
 }
+
+
+uint32 prepare_large_block(void* block, IntIndex index, uint32 block_size, uint32 total_size, uint offset)
+{
+  for (uint i = 0; i < block_size/4; ++i)
+    *(((uint32*)block)+i) = 3*(i + offset) + 91000;
+
+  if (offset == 0)
+  {
+    *(uint32*)block = block_size;
+    *(((uint32*)block)+1) = total_size;
+    index.to_data(((uint32*)block)+2);
+  }
+
+  return total_size;
+}
+
 
 int main(int argc, char* args[])
 {
@@ -720,7 +822,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(50));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -747,7 +849,7 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.replace_block(
-        blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize, IntIndex((void*)(buf+1)));
+        blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -774,12 +876,12 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(
-        blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize, IntIndex((void*)(buf+1)));
+        blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(89));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -817,26 +919,26 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(10));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
     ++it;
 
     indices.clear();
     indices.push_back(IntIndex(63));
     max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
 
     indices.clear();
     indices.push_back(IntIndex(64));
     max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
 
     indices.clear();
     indices.push_back(IntIndex(65));
     max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -872,21 +974,21 @@ int main(int argc, char* args[])
     work.push_back(IntIndex(7));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
-    it = blocks.replace_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.replace_block(it, buf, max_keysize);
     ++it;
 
     work.clear();
     work.push_back(IntIndex(51));
     work.push_back(IntIndex(52));
     max_keysize = prepare_block(buf, work);
-    it = blocks.replace_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.replace_block(it, buf, max_keysize);
     ++it;
 
     work.clear();
     work.push_back(IntIndex(89));
     work.push_back(IntIndex(90));
     max_keysize = prepare_block(buf, work);
-    it = blocks.replace_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.replace_block(it, buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -983,7 +1085,7 @@ int main(int argc, char* args[])
       work.push_back(IntIndex(i));
       uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
       uint32 max_keysize(prepare_block(buf, work));
-      it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+      it = blocks.insert_block(it, buf, max_keysize);
       free(buf);
       ++it;
     }
@@ -1042,18 +1144,18 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(40));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(60));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -1090,9 +1192,9 @@ int main(int argc, char* args[])
     work.push_back(IntIndex(8));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
     ++it;
 
@@ -1104,9 +1206,9 @@ int main(int argc, char* args[])
     work.clear();
     work.push_back(IntIndex(50));
     max_keysize = prepare_block(buf, work);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
     ++it;
 
@@ -1118,17 +1220,17 @@ int main(int argc, char* args[])
     work.clear();
     work.push_back(IntIndex(90));
     max_keysize = prepare_block(buf, work);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
 
     work.clear();
     work.push_back(IntIndex(99));
     max_keysize = prepare_block(buf, work);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
     ++it;
     free(buf);
   }
@@ -1139,6 +1241,183 @@ int main(int argc, char* args[])
     std::cout<<"(This is unexpected)\n";
   }
   if ((test_to_execute == "") || (test_to_execute == "12"))
+    read_test();
+
+  if ((test_to_execute == "") || (test_to_execute == "13"))
+    std::cout<<"** Test deleting file content\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+    while (!(blocks.flat_begin() == blocks.flat_end()))
+    {
+      std::list< IntIndex > indices;
+      indices.push_back(blocks.flat_begin().block_begin->index);
+      File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+          blocks.discrete_begin(indices.begin(), indices.end());
+      while (!(it == blocks.discrete_end()))
+        it = blocks.erase_block(it);
+    }
+  }
+  catch (File_Error e)
+  {
+    std::cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    std::cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "13"))
+    read_test();
+
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+    std::cout<<"** Test one isolated oversized object\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+    uint32 block_size = tf.get_block_size();
+
+    std::list< IntIndex > indices;
+    indices.push_back(IntIndex(6));
+    File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+        blocks.discrete_begin(indices.begin(), indices.end());
+
+    uint64* buf = (uint64*)aligned_alloc(8, block_size);
+    uint32 max_keysize = prepare_large_block(
+        buf, *indices.begin(), block_size, 2*block_size + block_size/2, 0);
+    it = blocks.insert_block(it, buf, block_size-8, max_keysize, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
+    it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, 2*block_size/4);
+    it = blocks.insert_block(it, buf, block_size/2+8, block_size-4, *indices.begin());
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    std::cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    std::cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+    read_test();
+
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    std::cout<<"** Test one isolated oversized object plus one ordinary object\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+    uint32 block_size = tf.get_block_size();
+
+    std::list< IntIndex > indices;
+    indices.push_back(IntIndex(6));
+    File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+        blocks.discrete_begin(indices.begin(), indices.end());
+
+    ++it;
+    ++it;
+    ++it;
+    uint64* buf = (uint64*)aligned_alloc(8, block_size);
+    uint32 max_keysize = prepare_block(buf, indices);
+    it = blocks.insert_block(it, buf, max_keysize);
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    std::cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    std::cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    read_test();
+
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+    std::cout<<"** Test one ordinary object plus one isolated oversized object\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+    uint32 block_size = tf.get_block_size();
+
+    std::list< IntIndex > indices;
+    indices.push_back(IntIndex(5));
+    File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+        blocks.discrete_begin(indices.begin(), indices.end());
+
+    uint64* buf = (uint64*)aligned_alloc(8, block_size);
+    uint32 max_keysize = prepare_large_block(buf, *indices.begin(), block_size, block_size-4, 0);
+    it = blocks.insert_block(it, buf, block_size-8, max_keysize, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, block_size-3, 0);
+    it = blocks.insert_block(it, buf, block_size-8, block_size, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
+    it = blocks.insert_block(it, buf, 1, 1, *indices.begin());
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    std::cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    std::cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+    read_test();
+
+  if ((test_to_execute == "") || (test_to_execute == "17"))
+    std::cout<<"** Test deleting file content\n";
+  try
+  {
+    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Test_File tf;
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+        (transaction.data_index(&tf));
+    uint32 block_size = tf.get_block_size();
+
+    std::list< IntIndex > indices;
+    indices.push_back(IntIndex(7));
+    File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+        blocks.discrete_begin(indices.begin(), indices.end());
+
+    uint64* buf = (uint64*)aligned_alloc(8, block_size);
+    uint32 max_keysize = prepare_large_block(buf, *indices.begin(), block_size, 3*block_size-3, 0);
+    it = blocks.insert_block(it, buf, block_size-8, max_keysize, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
+    it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, 2*block_size/4);
+    it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, 3*block_size/4);
+    it = blocks.insert_block(it, buf, 1, 1, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 3*block_size-4, 0);
+    it = blocks.insert_block(it, buf, block_size-8, block_size, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
+    it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
+    ++it;
+    prepare_large_block(buf, *indices.begin(), block_size, 0, 2*block_size/4);
+    it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
+    free(buf);
+  }
+  catch (File_Error e)
+  {
+    std::cout<<"File error catched: "
+        <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    std::cout<<"(This is unexpected)\n";
+  }
+  if ((test_to_execute == "") || (test_to_execute == "17"))
     read_test();
 
   remove((BASE_DIRECTORY
@@ -1164,13 +1443,13 @@ int main(int argc, char* args[])
         + Variable_Block_Test_File().get_index_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(index_fd);
-  if ((test_to_execute == "") || (test_to_execute == "13"))
+  if ((test_to_execute == "") || (test_to_execute == "18"))
   {
     std::cout<<"** Test the behaviour for an empty file\n";
     variable_block_read_test();
   }
 
-  if ((test_to_execute == "") || (test_to_execute == "14"))
+  if ((test_to_execute == "") || (test_to_execute == "19"))
     std::cout<<"** Test the behaviour for a compressed file with one entry - part 1\n";
   try
   {
@@ -1187,7 +1466,7 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size()
         * Variable_Block_Test_File().get_compression_factor());
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -1196,10 +1475,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "14"))
+  if ((test_to_execute == "") || (test_to_execute == "19"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "15"))
+  if ((test_to_execute == "") || (test_to_execute == "20"))
     std::cout<<"** Test the behaviour for a compressed file with multiple small entries\n";
   try
   {
@@ -1216,36 +1495,36 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(31));
     indices.push_back(IntIndex(32));
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(33));
     indices.push_back(IntIndex(34));
     indices.push_back(IntIndex(35));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(36));
     indices.push_back(IntIndex(37));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(38));
     indices.push_back(IntIndex(39));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(40));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(41));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(50));
@@ -1256,24 +1535,24 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(55));
     indices.push_back(IntIndex(56));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(57));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(60));
     indices.push_back(IntIndex(61));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(62));
     indices.push_back(IntIndex(63));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     free(buf);
   }
@@ -1283,10 +1562,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "15"))
+  if ((test_to_execute == "") || (test_to_execute == "20"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "16"))
+  if ((test_to_execute == "") || (test_to_execute == "21"))
     std::cout<<"** Test the behaviour for a compressed file with multiple deletions\n";
   try
   {
@@ -1319,10 +1598,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "16"))
+  if ((test_to_execute == "") || (test_to_execute == "21"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "17"))
+  if ((test_to_execute == "") || (test_to_execute == "22"))
     std::cout<<"** Test the behaviour for the gap filling strategy - part 1\n";
   try
   {
@@ -1345,7 +1624,7 @@ int main(int argc, char* args[])
     indices.clear();
     indices.push_back(IntIndex(25));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1355,10 +1634,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "17"))
+  if ((test_to_execute == "") || (test_to_execute == "22"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "18"))
+  if ((test_to_execute == "") || (test_to_execute == "23"))
     std::cout<<"** Test the behaviour for the gap filling strategy - part 2\n";
   try
   {
@@ -1381,7 +1660,7 @@ int main(int argc, char* args[])
     indices.clear();
     indices.push_back(IntIndex(26));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1391,10 +1670,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "18"))
+  if ((test_to_execute == "") || (test_to_execute == "23"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "19"))
+  if ((test_to_execute == "") || (test_to_execute == "24"))
     std::cout<<"** Test the behaviour for the gap filling strategy - part 3\n";
   try
   {
@@ -1418,7 +1697,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(60));
     indices.push_back(IntIndex(61));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1428,10 +1707,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "19"))
+  if ((test_to_execute == "") || (test_to_execute == "24"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "20"))
+  if ((test_to_execute == "") || (test_to_execute == "25"))
     std::cout<<"** Test the behaviour for the gap filling strategy - part 4\n";
   try
   {
@@ -1456,7 +1735,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(66));
     indices.push_back(IntIndex(67));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1466,10 +1745,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "20"))
+  if ((test_to_execute == "") || (test_to_execute == "25"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "21"))
+  if ((test_to_execute == "") || (test_to_execute == "26"))
     std::cout<<"** Test the behaviour for the gap filling strategy - part 5\n";
   try
   {
@@ -1493,7 +1772,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(68));
     indices.push_back(IntIndex(69));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1503,10 +1782,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "21"))
+  if ((test_to_execute == "") || (test_to_execute == "26"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "22"))
+  if ((test_to_execute == "") || (test_to_execute == "27"))
     std::cout<<"** Test the behaviour for the gap filling strategy - part 6\n";
   try
   {
@@ -1531,7 +1810,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(71));
     indices.push_back(IntIndex(72));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1541,10 +1820,10 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "22"))
+  if ((test_to_execute == "") || (test_to_execute == "27"))
     variable_block_read_test();
 
-  if ((test_to_execute == "") || (test_to_execute == "23"))
+  if ((test_to_execute == "") || (test_to_execute == "28"))
     std::cout<<"** Test the behaviour for the gap filling strategy - with replace block\n";
   try
   {
@@ -1568,7 +1847,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(20));
     indices.push_back(IntIndex(22));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.replace_block(it, buf, max_keysize, IntIndex((void*)(buf+1)));
+    it = blocks.replace_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1578,7 +1857,7 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "23"))
+  if ((test_to_execute == "") || (test_to_execute == "28"))
     variable_block_read_test();
 
   remove((BASE_DIRECTORY
@@ -1604,13 +1883,13 @@ int main(int argc, char* args[])
         + Compressed_Test_File().get_index_suffix()).c_str(),
        O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
   close(index_fd);
-  if ((test_to_execute == "") || (test_to_execute == "24"))
+  if ((test_to_execute == "") || (test_to_execute == "29"))
   {
     std::cout<<"** Test the behaviour for an empty file\n";
     compressed_read_test();
   }
 
-  if ((test_to_execute == "") || (test_to_execute == "25"))
+  if ((test_to_execute == "") || (test_to_execute == "30"))
     std::cout<<"** Test the behaviour for a compressed file with some entries\n";
   try
   {
@@ -1626,19 +1905,19 @@ int main(int argc, char* args[])
     for (int i = 20; i < 21; ++i)
       indices.push_back(IntIndex(i));
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     for (int i = 100; i < 280; ++i)
       indices.push_back(IntIndex(i));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     indices.clear();
     for (int i = 1000; i < 1060; ++i)
       indices.push_back(IntIndex(i));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize, IntIndex((void*)(buf+1)));
+    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
 
     free(buf);
   }
@@ -1648,7 +1927,7 @@ int main(int argc, char* args[])
         <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
     std::cout<<"(This is unexpected)\n";
   }
-  if ((test_to_execute == "") || (test_to_execute == "25"))
+  if ((test_to_execute == "") || (test_to_execute == "30"))
     compressed_read_test();
 
   remove((BASE_DIRECTORY
