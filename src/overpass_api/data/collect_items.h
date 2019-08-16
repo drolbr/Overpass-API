@@ -380,10 +380,9 @@ void collect_items_range(const Statement* stmt, Resource_Manager& rman,
 		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
-  Block_Backend< Index, Object, typename Container::const_iterator > db
+  Block_Backend< Index, Object > db
       (rman.get_transaction()->data_index(&file_properties));
-  for (typename Block_Backend< Index, Object, typename Container
-      ::const_iterator >::Range_Iterator
+  for (typename Block_Backend< Index, Object >::Range_Iterator
       it(db.range_begin(req.begin(), req.end()));
 	   !(it == db.range_end()); ++it)
   {
@@ -404,9 +403,9 @@ void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& r
                    std::map< Index, std::vector< Object > >& result,
                    std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
-  Block_Backend< Index, Object, typename Container::const_iterator > current_db
+  Block_Backend< Index, Object > current_db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-  Block_Backend< Index, Attic< typename Object::Delta >, typename Container::const_iterator > attic_db
+  Block_Backend< Index, Attic< typename Object::Delta > > attic_db
       (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
   collect_items_by_timestamp(stmt, rman,
       current_db.range_begin(req.begin(), req.end()), current_db.range_end(),

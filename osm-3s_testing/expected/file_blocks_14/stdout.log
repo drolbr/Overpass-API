@@ -16,7 +16,6 @@ Reading blocks with indices {0, 1, ..., 9} ...
 Predicted size 0
 Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
-Predicted size 0
 ... all blocks read.
 Reading blocks with indices [0, 10[ ...
 Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6

@@ -187,6 +187,12 @@ public:
     if (block_size > 0)
       ptr = (T*)aligned_alloc(8, block_size);
   }
+  void swap(Void64_Pointer& rhs)
+  {
+    T* temp = ptr;
+    ptr = rhs.ptr;
+    rhs.ptr = temp;
+  }
 
   T* ptr;
 };

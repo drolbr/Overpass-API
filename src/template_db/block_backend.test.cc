@@ -74,25 +74,56 @@ struct IntIndex
     uint32 value;
 };
 
+
 struct IntObject
 {
   typedef uint32 Id_Type;
 
-  IntObject(void* data) : value(*(uint32*)data) {}
+  IntObject(void* data) : value(*(uint32*)data)
+  {
+    if (value >= 1000000000)
+    {
+      uint size = (value - 1000000000)%1000000 + 4;
+      for (uint i = 1; 4*i < size; ++i)
+      {
+        if (*(((uint32*)data)+i) != (0x55aa0000 | (i & 0xffff)))
+        {
+          value = -i;
+          break;
+        }
+      }
+      if (value > 0 && size%4 >= 3 && *(((uint8*)data)+size-3) != 0xa5)
+        value = -1000000003;
+      if (value > 0 && size%4 >= 2 && *(((uint8*)data)+size-2) != 0x5a)
+        value = -1000000002;
+      if (value > 0 && size%4 >= 1 && *(((uint8*)data)+size-1) != 0xa5)
+        value = -1000000001;
+    }
+  }
+
   IntObject(int i) : value(i) {}
 
   uint32 size_of() const
   {
-    return 4;
+    return value < 1000000000 ? 4 : (value - 1000000000)%1000000 + 4;
   }
 
   static uint32 size_of(void* data)
   {
-    return 4;
+    return *(uint32*)data < 1000000000 ? 4 : (*(uint32*)data - 1000000000)%1000000 + 4;
   }
 
   void to_data(void* data) const
   {
+    if (value >= 1000000000)
+    {
+      uint size = (value - 1000000000)%1000000 + 4;
+      *(((uint8*)data)+size-3) = 0xa5;
+      *(((uint8*)data)+size-2) = 0x5a;
+      *(((uint8*)data)+size-1) = 0xa5;
+      for (uint i = 1; 4*i < size; ++i)
+        *(((uint32*)data)+i) = (0x55aa0000 | (i & 0xffff));
+    }
     *(uint32*)data = value;
   }
 
@@ -107,8 +138,9 @@ struct IntObject
   }
 
   private:
-    uint32 value;
+    int32 value;
 };
+
 
 typedef std::list< IntIndex >::const_iterator IntIterator;
 
@@ -240,8 +272,7 @@ void fill_db
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    Block_Backend< IntIndex, IntObject > db_backend
-        (transaction.data_index(&tf));
+    Block_Backend< IntIndex, IntObject > db_backend(transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
   }
   catch (File_Error& e)
@@ -641,6 +672,59 @@ int main(int argc, char* args[])
   fill_db(to_delete, to_insert, 24);
   if ((test_to_execute == "") || (test_to_execute == "13"))
     read_test(13);
+
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+    std::cout<<"** Delete more items\n";
+  to_delete.clear();
+  to_insert.clear();
+  for (unsigned int i = 0; i < 100; ++i)
+  {
+    std::set< IntObject > objects;
+    for (unsigned int j = 1000; j < 2000; ++j)
+      objects.insert(IntObject(j));
+    to_delete[i] = objects;
+  }
+  {
+    std::set< IntObject > objects;
+    for (unsigned int j = 47; j <= 20047; j += 100)
+      objects.insert(IntObject(j));
+    to_delete[47] = objects;
+  }
+  {
+    std::set< IntObject > objects;
+    for (unsigned int j = 48; j <= 20048; j += 100)
+      objects.insert(IntObject(j));
+    to_delete[48] = objects;
+  }
+  {
+    std::set< IntObject > objects;
+    for (unsigned int j = 50; j <= 40050; j += 100)
+      objects.insert(IntObject(j));
+    to_delete[50] = objects;
+  }
+  {
+    std::set< IntObject > objects;
+    for (unsigned int j = 99; j <= 20099; j += 100)
+      objects.insert(IntObject(j));
+    to_delete[99] = objects;
+  }
+
+  fill_db(to_delete, to_insert, 26);
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+    read_test(14);
+
+
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    std::cout<<"** Insert an oversized object\n";
+  to_delete.clear();
+  to_insert.clear();
+  to_insert[6].insert(IntObject(1275));
+  to_insert[6].insert(IntObject(1000001276));
+  to_insert[6].insert(IntObject(1277));
+
+  fill_db(to_delete, to_insert, 28);
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    read_test(15);
 
   remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
       + Test_File().get_data_suffix()

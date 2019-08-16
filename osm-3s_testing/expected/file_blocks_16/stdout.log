@@ -26,7 +26,6 @@ Skipping 1024 bytes for oversized object.
 Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
 Predicted size 18, real size 22 bytes, first block size 18 bytes, first index 6
-Predicted size 0
 ... all blocks read.
 Reading blocks with indices [0, 10[ ...
 Predicted size 508, real size 512 bytes, first block size 508 bytes, first index 5
