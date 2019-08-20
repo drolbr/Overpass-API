@@ -206,6 +206,8 @@ public:
   Discrete_Iterator replace_block(
       Discrete_Iterator it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx);
   Discrete_Iterator erase_block(Discrete_Iterator it);
+  void erase_blocks(
+      typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_it, const Discrete_Iterator& it);
 
   const File_Blocks_Index< TIndex >& get_index() const { return *index; }
 
@@ -819,5 +821,17 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     it.block_it = index->get_blocks().erase(it.block_it);
   return return_it;
 }
+
+
+
+
+template< typename TIndex, typename TIterator, typename TRangeIterator >
+void File_Blocks< TIndex, TIterator, TRangeIterator >::erase_blocks(
+    typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_it, const Discrete_Iterator& it)
+{
+  while (block_it != it.block_it)
+    block_it = index->get_blocks().erase(block_it);
+}
+
 
 #endif

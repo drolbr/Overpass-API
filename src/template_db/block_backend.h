@@ -607,8 +607,17 @@ struct Block_Backend
         bool& block_modified, uint8*& insert_ptr,
         Update_Logger& update_logger);
 
+    template< class Update_Logger >
+    uint32 skip_deleted_objects(
+        uint64* source_start_ptr, uint64* dest_start_ptr,
+        const std::set< TObject >& objs_to_delete, uint32 idx_size,
+        Update_Logger& update_logger, const TIndex& idx);
+
+    bool read_block_or_blocks(
+        typename File_Blocks_::Discrete_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size);
+
     void flush_or_delete_block(
-        uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
+        uint64* start_ptr, uint8* insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
         uint32 idx_size);
 
     template< class Update_Logger >
@@ -817,7 +826,7 @@ void Block_Backend< Index, Object, Iterator >::flush_if_necessary_and_write_obj(
     {
       *(uint32*)start_ptr = bytes_written;
       *(((uint32*)start_ptr)+1) = bytes_written;
-      file_it = file_blocks.insert_block(file_it, start_ptr, bytes_written - 4);
+      file_it = file_blocks.insert_block(file_it, start_ptr, bytes_written);
       ++file_it;
     }
     if (idx_size + obj_size + 8 > block_size)
@@ -1192,14 +1201,14 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 
 template< class TIndex, class TObject, class TIterator >
 void Block_Backend< TIndex, TObject, TIterator >::flush_or_delete_block(
-    uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it, uint32 idx_size)
+    uint64* start_ptr, uint8* insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it, uint32 idx_size)
 {
   uint bytes_written = insert_ptr - (uint8*)start_ptr;
   if (bytes_written > 8 + idx_size)
   {
     *(uint32*)start_ptr = bytes_written;
     *(((uint32*)start_ptr)+1) = bytes_written;
-    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written - 4);
+    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written);
     ++file_it;
   }
   else
@@ -1256,6 +1265,91 @@ void Block_Backend< TIndex, TObject, TIterator >::copy_and_delete_on_the_fly(
 
 
 template< class TIndex, class TObject, class TIterator >
+bool Block_Backend< TIndex, TObject, TIterator >::read_block_or_blocks(
+    typename File_Blocks_::Discrete_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size)
+{
+  file_blocks.read_block(file_it, source.ptr);
+
+  if (*(((uint32*)source.ptr) + 1) > block_size)
+  {
+    uint32 new_buffer_size = (*(((uint32*)source.ptr) + 1)/block_size + 1) * block_size;
+    if (buffer_size < new_buffer_size)
+    {
+      Void64_Pointer< uint64 > new_source_buffer(new_buffer_size);
+      memcpy(new_source_buffer.ptr, source.ptr, block_size);
+      source.swap(new_source_buffer);
+
+      buffer_size = new_buffer_size;
+    }
+    for (uint i_offset = block_size; i_offset < new_buffer_size; i_offset += block_size)
+    {
+      ++file_it;
+      file_blocks.read_block(file_it, source.ptr + i_offset/8, false);
+    }
+
+    return true;
+  }
+  return false;
+}
+
+
+template< class TIndex, class TObject, class TIterator >
+template< class Update_Logger >
+uint32 Block_Backend< TIndex, TObject, TIterator >::skip_deleted_objects(
+    uint64* source_start_ptr, uint64* dest_start_ptr,
+    const std::set< TObject >& objs_to_delete, uint32 idx_size,
+    Update_Logger& update_logger, const TIndex& idx)
+{
+  uint32 src_obj_offset = 8 + idx_size;
+  uint32 dest_obj_offset = src_obj_offset;
+  uint32 src_size = *(uint32*)source_start_ptr;
+  memcpy(((uint8*)dest_start_ptr) + 8, ((uint8*)source_start_ptr) + 8, idx_size);
+
+  while (src_obj_offset < src_size)
+  {
+    TObject obj(((uint8*)source_start_ptr) + src_obj_offset);
+    if (objs_to_delete.find(obj) == objs_to_delete.end())
+    {
+      memcpy(
+          ((uint8*)dest_start_ptr) + dest_obj_offset, ((uint8*)source_start_ptr) + src_obj_offset,
+          obj.size_of());
+      dest_obj_offset += obj.size_of();
+    }
+    else
+      update_logger.deletion(idx, obj);
+
+    src_obj_offset += obj.size_of();
+  }
+
+  *(uint32*)dest_start_ptr = dest_obj_offset;
+  *(((uint32*)dest_start_ptr)+1) = dest_obj_offset;
+  memcpy(dest_start_ptr + 1, source_start_ptr + 1, idx_size);
+
+  return src_obj_offset == dest_obj_offset ? 0 : dest_obj_offset;
+}
+
+
+template< typename Object >
+void append_insertables(
+    uint64* dest_start_ptr, uint32 block_size,
+    typename std::set< Object >::const_iterator& cur_insert,
+    const typename std::set< Object >::const_iterator& cur_end)
+{
+  uint32 obj_append_offset = *(uint32*)dest_start_ptr;
+
+  while ((cur_insert != cur_end) && (obj_append_offset + cur_insert->size_of() < block_size))
+  {
+    cur_insert->to_data(((uint8*)dest_start_ptr) + obj_append_offset);
+    obj_append_offset += cur_insert->size_of();
+    ++cur_insert;
+  }
+
+  *(uint32*)dest_start_ptr = obj_append_offset;
+  *(((uint32*)dest_start_ptr)+1) = obj_append_offset;
+}
+
+
+template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
 void Block_Backend< TIndex, TObject, TIterator >::update_segments
       (typename File_Blocks_::Discrete_Iterator& file_it,
@@ -1263,72 +1357,108 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
        const std::map< TIndex, std::set< TObject > >& to_insert,
        Update_Logger& update_logger)
 {
-  Void64_Pointer< uint64 > source(block_size);
-  Void64_Pointer< uint64 > dest(block_size);
-  TIndex idx = *(file_it.lower_bound());
+  uint32 buffer_size = block_size;
+  Void64_Pointer< uint64 > source(buffer_size);
+  Void64_Pointer< uint64 > dest(buffer_size);
+  TIndex idx = file_it.block_it->index;
   typename std::map< TIndex, std::set< TObject > >::const_iterator
       delete_it(to_delete.find(idx));
   typename std::map< TIndex, std::set< TObject > >::const_iterator
       insert_it(to_insert.find(idx));
   uint32 idx_size = idx.size_of();
+  bool last_segment_belongs_to_oversized = false;
 
   typename std::set< TObject >::const_iterator cur_insert;
   if (insert_it != to_insert.end())
     cur_insert = insert_it->second.begin();
 
-  while (file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
+  while (!(file_it == file_blocks.discrete_end())
+      && file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
   {
-    bool block_modified = false;
-    uint8* pos = 0;
-
-    copy_and_delete_on_the_fly(
-        source.ptr, dest.ptr, file_it, idx_size,
-        to_delete, delete_it,
-        block_modified, pos, update_logger);
-
-    // if nothing is modified, we keep the block untouched
-    if (!block_modified)
+    typename std::list< File_Block_Index_Entry< TIndex > >::iterator delta_it = file_it.block_it;
+    bool oversized = read_block_or_blocks(file_it, source, buffer_size);
+    if (oversized)
     {
-      ++file_it;
-      continue;
+      last_segment_belongs_to_oversized =
+          file_it.block_type() == File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
+      if (!last_segment_belongs_to_oversized)
+        ++file_it;
+      TObject obj(((uint8*)source.ptr) + 8 + idx_size);
+      if (delete_it != to_delete.end() && delete_it->second.find(obj) != delete_it->second.end())
+        file_blocks.erase_blocks(delta_it, file_it);
     }
-
-    // fill block with new data if any
-    if (insert_it != to_insert.end())
+    else
     {
-      while ((cur_insert != insert_it->second.end())
-	&& (pos + cur_insert->size_of() < ((uint8*)dest.ptr) + block_size))
+      uint32 obj_append_offset = 0;
+      if (delete_it != to_delete.end())
+        obj_append_offset = skip_deleted_objects(
+            source.ptr, dest.ptr, delete_it->second, idx_size, update_logger, idx);
+      else
+        memcpy(dest.ptr, source.ptr, *(uint32*)source.ptr);
+
+      if (obj_append_offset)
       {
-	cur_insert->to_data(pos);
-	pos = pos + cur_insert->size_of();
-	++cur_insert;
+        if (insert_it != to_insert.end())
+          append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
+        flush_or_delete_block(dest.ptr, ((uint8*)dest.ptr) + *(uint32*)dest.ptr, file_it, idx_size);
       }
+      else if (insert_it != to_insert.end() && *(uint32*)source.ptr < block_size/2)
+      {
+        append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
+        flush_or_delete_block(dest.ptr, ((uint8*)dest.ptr) + *(uint32*)dest.ptr, file_it, idx_size);
+      }
+      else
+        ++file_it;
     }
-
-    flush_or_delete_block(dest.ptr, pos, file_it, idx_size);
   }
 
-  bool block_modified = false;
-  uint8* pos = 0;
+  uint32 obj_append_offset = 0;
+  bool is_modified = true;
+  if (!(file_it == file_blocks.discrete_end()) && !last_segment_belongs_to_oversized
+      && file_it.block_type() == File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
+  {
+    typename std::list< File_Block_Index_Entry< TIndex > >::iterator delta_it = file_it.block_it;
+    read_block_or_blocks(file_it, source, buffer_size);
 
-  copy_and_delete_on_the_fly(
-      source.ptr, dest.ptr, file_it, idx_size,
-      to_delete, delete_it,
-      block_modified, pos, update_logger);
+    if (delete_it != to_delete.end())
+      obj_append_offset = skip_deleted_objects(
+          source.ptr, dest.ptr, delete_it->second, idx_size, update_logger, idx);
+    else
+    {
+      memcpy(dest.ptr, source.ptr, *(uint32*)source.ptr);
+      is_modified = false;
+    }
 
-  // fill block with new data if any
+    if (is_modified && obj_append_offset)
+    {
+      if (insert_it != to_insert.end())
+        append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
+    }
+    else if (insert_it != to_insert.end() && *(uint32*)source.ptr < block_size/2)
+      append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
+    else
+      is_modified = false;
+
+    obj_append_offset = *(uint32*)dest.ptr;
+  }
+  else
+  {
+    idx.to_data(((uint8*)dest.ptr) + 8);
+    obj_append_offset = 8 + idx_size;
+  }
+
+  uint8* pos = ((uint8*)dest.ptr) + obj_append_offset;
   if (insert_it != to_insert.end())
   {
-    block_modified = true;
+    is_modified = true;
     while (cur_insert != insert_it->second.end())
     {
-      flush_if_necessary_and_write_obj(
-          dest.ptr, pos, file_it, idx, *cur_insert);
+      flush_if_necessary_and_write_obj(dest.ptr, pos, file_it, idx, *cur_insert);
       ++cur_insert;
     }
   }
 
-  if (block_modified)
+  if (is_modified)
     flush_or_delete_block(dest.ptr, pos, file_it, idx_size);
   else
     ++file_it;

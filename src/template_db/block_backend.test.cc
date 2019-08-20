@@ -81,7 +81,7 @@ struct IntObject
 
   IntObject(void* data) : value(*(uint32*)data)
   {
-    if (value >= 1000000000)
+    if (value >= 1000000000 && value <= 1100000000)
     {
       uint size = (value - 1000000000)%1000000 + 4;
       for (uint i = 1; 4*i < size; ++i)
@@ -105,17 +105,18 @@ struct IntObject
 
   uint32 size_of() const
   {
-    return value < 1000000000 ? 4 : (value - 1000000000)%1000000 + 4;
+    return value < 1000000000 || value > 1100000000 ? 4 : (value - 1000000000)%1000000 + 4;
   }
 
   static uint32 size_of(void* data)
   {
-    return *(uint32*)data < 1000000000 ? 4 : (*(uint32*)data - 1000000000)%1000000 + 4;
+    return *(uint32*)data < 1000000000 || *(uint32*)data > 1100000000
+        ? 4 : (*(uint32*)data - 1000000000)%1000000 + 4;
   }
 
   void to_data(void* data) const
   {
-    if (value >= 1000000000)
+    if (value >= 1000000000 && value <= 1100000000)
     {
       uint size = (value - 1000000000)%1000000 + 4;
       *(((uint8*)data)+size-3) = 0xa5;
