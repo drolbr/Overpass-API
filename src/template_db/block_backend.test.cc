@@ -675,6 +675,28 @@ int main(int argc, char* args[])
     read_test(13);
 
   if ((test_to_execute == "") || (test_to_execute == "14"))
+    std::cout<<"** Delete an item from a non-existing index between two segments\n";
+
+  to_delete.clear();
+  to_insert.clear();
+  to_delete[49].insert(IntObject(1049));
+  fill_db(to_delete, to_insert, 26);
+
+  if ((test_to_execute == "") || (test_to_execute == "14"))
+    read_test(14);
+
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    std::cout<<"** Insert an item after the segment at the end\n";
+
+  to_delete.clear();
+  to_insert.clear();
+  to_insert[100].insert(IntObject(1000));
+  fill_db(to_delete, to_insert, 28);
+
+  if ((test_to_execute == "") || (test_to_execute == "15"))
+    read_test(15);
+
+  if ((test_to_execute == "") || (test_to_execute == "16"))
     std::cout<<"** Delete more items\n";
   to_delete.clear();
   to_insert.clear();
@@ -709,13 +731,14 @@ int main(int argc, char* args[])
       objects.insert(IntObject(j));
     to_delete[99] = objects;
   }
+  to_delete[100].insert(IntObject(1000));
 
-  fill_db(to_delete, to_insert, 26);
-  if ((test_to_execute == "") || (test_to_execute == "14"))
+  fill_db(to_delete, to_insert, 30);
+  if ((test_to_execute == "") || (test_to_execute == "16"))
     read_test(14);
 
 
-  if ((test_to_execute == "") || (test_to_execute == "15"))
+  if ((test_to_execute == "") || (test_to_execute == "17"))
     std::cout<<"** Insert an oversized object\n";
   to_delete.clear();
   to_insert.clear();
@@ -723,8 +746,8 @@ int main(int argc, char* args[])
   to_insert[6].insert(IntObject(1000001276));
   to_insert[6].insert(IntObject(1277));
 
-  fill_db(to_delete, to_insert, 28);
-  if ((test_to_execute == "") || (test_to_execute == "15"))
+  fill_db(to_delete, to_insert, 32);
+  if ((test_to_execute == "") || (test_to_execute == "17"))
     read_test(15);
 
   remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()

@@ -173,7 +173,7 @@ $BASEDIR/test-bin/file_blocks info
 date +%T
 perform_test_loop file_blocks 30
 date +%T
-perform_test_loop block_backend 13
+perform_test_loop block_backend 16
 date +%T
 perform_test_loop random_file 8
 date +%T

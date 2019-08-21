@@ -117,7 +117,7 @@ Basic_Settings& basic_settings()
 
 Osm_Base_Settings::Osm_Base_Settings()
 :
-  NODES(new OSM_File_Properties< Uint32_Index >("nodes", 512*1024, 256*1024)),
+  NODES(new OSM_File_Properties< Uint32_Index >("nodes", 128*1024, 256*1024)),
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("node_tags_local", 512*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
@@ -125,7 +125,7 @@ Osm_Base_Settings::Osm_Base_Settings()
   NODE_KEYS(new OSM_File_Properties< Uint32_Index >
       ("node_keys", 512*1024, 0)),
 
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 256*1024)),
+  WAYS(new OSM_File_Properties< Uint31_Index >("ways", 128*1024, 256*1024)),
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("way_tags_local", 512*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >

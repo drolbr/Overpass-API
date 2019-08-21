@@ -668,7 +668,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update
   typename File_Blocks_::Discrete_Iterator file_it
       = file_blocks.discrete_begin(relevant_idxs.begin(), relevant_idxs.end(), true);
 
-  while (!(file_it == file_blocks.discrete_end()))
+  while (file_it.lower_bound() != relevant_idxs.end())
   {
     if (file_it.block_type() == File_Block_Index_Entry< TIndex >::EMPTY)
       create_from_scratch(file_it, to_insert);
@@ -888,13 +888,13 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     else
     {
       // only add nonempty indices
-      current_size += it->first.size_of();
+      current_size += fit->size_of();
       for (typename std::set< TObject >::const_iterator it2(it->second.begin());
           it2 != it->second.end(); ++it2)
         current_size += it2->size_of();
     }
 
-    sizes[it->first] += current_size;
+    sizes[*fit] += current_size;
     vsizes.push_back(current_size);
   }
   calc_split_idxs(split, vsizes, file_it.lower_bound(), file_it.upper_bound());
@@ -910,7 +910,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     typename std::map< TIndex, std::set< TObject > >::const_iterator
         it(to_insert.find(*fit));
 
-    if ((split_it != split.end()) && (it->first == *split_it))
+    if ((split_it != split.end()) && (*fit == *split_it))
     {
       if (pos > buffer.ptr + 4)
       {
@@ -923,38 +923,41 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
       max_size = 0;
     }
 
-    if (sizes[it->first] > max_size)
-      max_size = sizes[it->first];
+    if (sizes[*fit] > max_size)
+      max_size = sizes[*fit];
 
-    if (sizes[it->first] == 0)
+    if (sizes[*fit] == 0)
       continue;
-    else if (sizes[it->first] < block_size - 4)
+    else if (sizes[*fit] < block_size - 4)
     {
       uint8* current_pos(pos);
-      it->first.to_data(pos + 4);
-      pos = pos + it->first.size_of() + 4;
-      for (typename std::set< TObject >::const_iterator
-	it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      fit->to_data(pos + 4);
+      pos = pos + fit->size_of() + 4;
+      if (it != to_insert.end())
       {
-	it2->to_data(pos);
-	pos = pos + it2->size_of();
+        for (typename std::set< TObject >::const_iterator
+          it2(it->second.begin()); it2 != it->second.end(); ++it2)
+        {
+          it2->to_data(pos);
+          pos = pos + it2->size_of();
+        }
       }
       *(uint32*)current_pos = pos - buffer.ptr;
     }
     else
     {
-      it->first.to_data(pos + 4);
-      pos = pos + it->first.size_of() + 4;
+      fit->to_data(pos + 4);
+      pos = pos + fit->size_of() + 4;
 
-      if (!(it->second.empty()))
+      if (it != to_insert.end())
       {
         for (typename std::set< TObject >::const_iterator
             it2 = it->second.begin(); it2 != it->second.end(); ++it2)
           flush_if_necessary_and_write_obj(
-              (uint64*)buffer.ptr, pos, file_it, it->first, *it2);
+              (uint64*)buffer.ptr, pos, file_it, *fit, *it2);
       }
 
-      if (pos - buffer.ptr > it->first.size_of() + 8)
+      if (pos - buffer.ptr > fit->size_of() + 8)
       {
         *(uint32*)(buffer.ptr+4) = pos - buffer.ptr;
         max_size = (*(uint32*)(buffer.ptr + 4)) - 4;
