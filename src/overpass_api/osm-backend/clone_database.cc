@@ -62,17 +62,12 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
         Default_Range_Iterator< TIndex > >::Flat_Iterator
 	src_it = src_file.flat_begin();
 
-    typename File_Blocks< TIndex, typename std::set< TIndex >::const_iterator,
-        Default_Range_Iterator< TIndex > >::Discrete_Iterator
-	dest_it = dest_file.discrete_end();
-
     while (!(src_it == src_file.flat_end()))
     {
       uint64* buf = src_file.read_block(src_it);
       zero_out_tails(buf, src_file_prop.get_block_size());
-      dest_file.insert_block(dest_it, buf, src_it.block_it->max_keysize);
+      dest_file.insert_block(dest_file.write_end(), buf, src_it.block_it->max_keysize);
       ++src_it;
-      dest_it = dest_file.discrete_end();
     }
   }
   catch (File_Error e)

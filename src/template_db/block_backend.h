@@ -584,16 +584,16 @@ struct Block_Backend
          const typename std::set< TIndex >::const_iterator& end);
 
     void flush_if_necessary_and_write_obj(
-        uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
+        uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Write_Iterator& file_it,
         const TIndex& idx, const TObject& obj);
 
     void create_from_scratch
-        (typename File_Blocks_::Discrete_Iterator& file_it,
+        (typename File_Blocks_::Write_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_insert);
 
     template< class Update_Logger >
     void update_group
-        (typename File_Blocks_::Discrete_Iterator& file_it,
+        (typename File_Blocks_::Write_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_delete,
          const std::map< TIndex, std::set< TObject > >& to_insert,
 	 Update_Logger& update_logger);
@@ -601,7 +601,7 @@ struct Block_Backend
     template< class Update_Logger >
     void copy_and_delete_on_the_fly(
         uint64* source_start_ptr, uint64* dest_start_ptr,
-        typename File_Blocks_::Discrete_Iterator& file_it, uint32 idx_size,
+        typename File_Blocks_::Write_Iterator& file_it, uint32 idx_size,
         const std::map< TIndex, std::set< TObject > >& to_delete,
         typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it,
         bool& block_modified, uint8*& insert_ptr,
@@ -614,15 +614,15 @@ struct Block_Backend
         Update_Logger& update_logger, const TIndex& idx);
 
     bool read_block_or_blocks(
-        typename File_Blocks_::Discrete_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size);
+        typename File_Blocks_::Write_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size);
 
     void flush_or_delete_block(
-        uint64* start_ptr, uint8* insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
+        uint64* start_ptr, uint8* insert_ptr, typename File_Blocks_::Write_Iterator& file_it,
         uint32 idx_size);
 
     template< class Update_Logger >
     void update_segments
-        (typename File_Blocks_::Discrete_Iterator& file_it,
+        (typename File_Blocks_::Write_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_delete,
          const std::map< TIndex, std::set< TObject > >& to_insert,
 	 Update_Logger& update_logger);
@@ -665,8 +665,8 @@ void Block_Backend< TIndex, TObject, TIterator >::update
       it(to_insert.begin()); it != to_insert.end(); ++it)
     relevant_idxs.insert(it->first);
 
-  typename File_Blocks_::Discrete_Iterator file_it
-      = file_blocks.discrete_begin(relevant_idxs.begin(), relevant_idxs.end(), true);
+  typename File_Blocks_::Write_Iterator file_it
+      = file_blocks.write_begin(relevant_idxs.begin(), relevant_idxs.end(), true);
 
   while (file_it.lower_bound() != relevant_idxs.end())
   {
@@ -813,7 +813,7 @@ void Block_Backend< TIndex, TObject, TIterator >::calc_split_idxs
 
 template< class Index, class Object, class Iterator >
 void Block_Backend< Index, Object, Iterator >::flush_if_necessary_and_write_obj(
-    uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it,
+    uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Write_Iterator& file_it,
     const Index& idx, const Object& obj)
 {
   uint32 idx_size = idx.size_of();
@@ -867,7 +867,7 @@ void Block_Backend< Index, Object, Iterator >::flush_if_necessary_and_write_obj(
 
 template< class TIndex, class TObject, class TIterator >
 void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
-    (typename File_Blocks_::Discrete_Iterator& file_it,
+    (typename File_Blocks_::Write_Iterator& file_it,
      const std::map< TIndex, std::set< TObject > >& to_insert)
 {
   std::map< TIndex, uint32 > sizes;
@@ -979,7 +979,7 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
 template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
 void Block_Backend< TIndex, TObject, TIterator >::update_group
-    (typename File_Blocks_::Discrete_Iterator& file_it,
+    (typename File_Blocks_::Write_Iterator& file_it,
      const std::map< TIndex, std::set< TObject > >& to_delete,
      const std::map< TIndex, std::set< TObject > >& to_insert,
      Update_Logger& update_logger)
@@ -1204,7 +1204,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 
 template< class TIndex, class TObject, class TIterator >
 void Block_Backend< TIndex, TObject, TIterator >::flush_or_delete_block(
-    uint64* start_ptr, uint8* insert_ptr, typename File_Blocks_::Discrete_Iterator& file_it, uint32 idx_size)
+    uint64* start_ptr, uint8* insert_ptr, typename File_Blocks_::Write_Iterator& file_it, uint32 idx_size)
 {
   uint bytes_written = insert_ptr - (uint8*)start_ptr;
   if (bytes_written > 8 + idx_size)
@@ -1223,7 +1223,7 @@ template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
 void Block_Backend< TIndex, TObject, TIterator >::copy_and_delete_on_the_fly(
     uint64* source_start_ptr, uint64* dest_start_ptr,
-    typename File_Blocks_::Discrete_Iterator& file_it, uint32 idx_size,
+    typename File_Blocks_::Write_Iterator& file_it, uint32 idx_size,
     const std::map< TIndex, std::set< TObject > >& to_delete,
     typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it,
     bool& block_modified, uint8*& insert_ptr,
@@ -1269,7 +1269,7 @@ void Block_Backend< TIndex, TObject, TIterator >::copy_and_delete_on_the_fly(
 
 template< class TIndex, class TObject, class TIterator >
 bool Block_Backend< TIndex, TObject, TIterator >::read_block_or_blocks(
-    typename File_Blocks_::Discrete_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size)
+    typename File_Blocks_::Write_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size)
 {
   file_blocks.read_block(file_it, source.ptr);
 
@@ -1355,7 +1355,7 @@ void append_insertables(
 template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
 void Block_Backend< TIndex, TObject, TIterator >::update_segments
-      (typename File_Blocks_::Discrete_Iterator& file_it,
+      (typename File_Blocks_::Write_Iterator& file_it,
        const std::map< TIndex, std::set< TObject > >& to_delete,
        const std::map< TIndex, std::set< TObject > >& to_insert,
        Update_Logger& update_logger)
@@ -1375,7 +1375,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   if (insert_it != to_insert.end())
     cur_insert = insert_it->second.begin();
 
-  while (!(file_it == file_blocks.discrete_end())
+  while (!(file_it == file_blocks.write_end())
       && file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
   {
     typename std::list< File_Block_Index_Entry< TIndex > >::iterator delta_it = file_it.block_it;
@@ -1417,7 +1417,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
 
   uint32 obj_append_offset = 0;
   bool is_modified = true;
-  if (!(file_it == file_blocks.discrete_end()) && !last_segment_belongs_to_oversized
+  if (!(file_it == file_blocks.write_end()) && !last_segment_belongs_to_oversized
       && file_it.block_type() == File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
   {
     typename std::list< File_Block_Index_Entry< TIndex > >::iterator delta_it = file_it.block_it;

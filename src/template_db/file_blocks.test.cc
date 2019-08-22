@@ -823,7 +823,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(50));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -850,7 +850,7 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.replace_block(
-        blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
+        blocks.write_begin(indices.begin(), indices.end()), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -877,12 +877,12 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
     blocks.insert_block(
-        blocks.discrete_begin(indices.begin(), indices.end()), buf, max_keysize);
+        blocks.write_begin(indices.begin(), indices.end()), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(89));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -912,8 +912,8 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(65));
     indices.push_back(IntIndex(89));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-	it(blocks.discrete_begin(indices.begin(), indices.end()));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+	it(blocks.write_begin(indices.begin(), indices.end()));
 
     ++it;
     indices.clear();
@@ -968,8 +968,8 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(89));
     indices.push_back(IntIndex(90));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it(blocks.discrete_begin(indices.begin(), indices.end()));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it(blocks.write_begin(indices.begin(), indices.end()));
 
     work.clear();
     work.push_back(IntIndex(7));
@@ -1016,8 +1016,8 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(64));
     indices.push_back(IntIndex(65));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it(blocks.discrete_begin(indices.begin(), indices.end()));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it(blocks.write_begin(indices.begin(), indices.end()));
 
     it = blocks.erase_block(it);
     it = blocks.erase_block(it);
@@ -1046,8 +1046,8 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(7));
     indices.push_back(IntIndex(90));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it(blocks.discrete_begin(indices.begin(), indices.end()));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it(blocks.write_begin(indices.begin(), indices.end()));
 
     it = blocks.erase_block(it);
     it = blocks.erase_block(it);
@@ -1076,8 +1076,8 @@ int main(int argc, char* args[])
       indices.push_back(IntIndex(i));
     indices.push_back(IntIndex(63));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it(blocks.discrete_begin(indices.begin(), indices.end()));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it(blocks.write_begin(indices.begin(), indices.end()));
 
     ++it;
     for (unsigned int i(20); i < 30; ++i)
@@ -1114,10 +1114,10 @@ int main(int argc, char* args[])
     for (unsigned int i(0); i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it(blocks.discrete_begin(indices.begin(), indices.end()));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it(blocks.write_begin(indices.begin(), indices.end()));
 
-    while (!(it == blocks.discrete_end()))
+    while (!(it == blocks.write_end()))
     {
       it = blocks.erase_block(it);
     }
@@ -1145,18 +1145,18 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(40));
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(60));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -1186,8 +1186,8 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(90));
     indices.push_back(IntIndex(99));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it(blocks.discrete_begin(indices.begin(), indices.end()));
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it(blocks.write_begin(indices.begin(), indices.end()));
 
     work.clear();
     work.push_back(IntIndex(8));
@@ -1256,9 +1256,9 @@ int main(int argc, char* args[])
     {
       std::list< IntIndex > indices;
       indices.push_back(blocks.flat_begin().block_begin->index);
-      File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
-          blocks.discrete_begin(indices.begin(), indices.end());
-      while (!(it == blocks.discrete_end()))
+      File_Blocks_Write_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+          blocks.write_begin(indices.begin(), indices.end());
+      while (!(it == blocks.write_end()))
         it = blocks.erase_block(it);
     }
   }
@@ -1283,8 +1283,8 @@ int main(int argc, char* args[])
 
     std::list< IntIndex > indices;
     indices.push_back(IntIndex(6));
-    File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
-        blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks_Write_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+        blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, block_size);
     uint32 max_keysize = prepare_large_block(
@@ -1319,8 +1319,8 @@ int main(int argc, char* args[])
 
     std::list< IntIndex > indices;
     indices.push_back(IntIndex(6));
-    File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
-        blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks_Write_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+        blocks.write_begin(indices.begin(), indices.end());
 
     ++it;
     ++it;
@@ -1351,8 +1351,8 @@ int main(int argc, char* args[])
 
     std::list< IntIndex > indices;
     indices.push_back(IntIndex(5));
-    File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
-        blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks_Write_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+        blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, block_size);
     uint32 max_keysize = prepare_large_block(buf, *indices.begin(), block_size, block_size-4, 0);
@@ -1386,8 +1386,8 @@ int main(int argc, char* args[])
 
     std::list< IntIndex > indices;
     indices.push_back(IntIndex(6));
-    File_Blocks_Discrete_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
-        blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks_Write_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
+        blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, block_size);
     uint32 max_keysize = prepare_large_block(
@@ -1400,7 +1400,7 @@ int main(int argc, char* args[])
 
     indices.clear();
     indices.push_back(IntIndex(7));
-    it = blocks.discrete_begin(indices.begin(), indices.end());
+    it = blocks.write_begin(indices.begin(), indices.end());
 
     max_keysize = prepare_large_block(buf, *indices.begin(), block_size, 3*block_size-3, 0);
     it = blocks.insert_block(it, buf, block_size, max_keysize, *indices.begin());
@@ -1479,7 +1479,7 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size()
         * Variable_Block_Test_File().get_compression_factor());
     uint32 max_keysize(prepare_block(buf, indices));
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -1508,36 +1508,36 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(31));
     indices.push_back(IntIndex(32));
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(33));
     indices.push_back(IntIndex(34));
     indices.push_back(IntIndex(35));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(36));
     indices.push_back(IntIndex(37));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(38));
     indices.push_back(IntIndex(39));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(40));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(41));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(50));
@@ -1548,24 +1548,24 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(55));
     indices.push_back(IntIndex(56));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(57));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(60));
     indices.push_back(IntIndex(61));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     indices.push_back(IntIndex(62));
     indices.push_back(IntIndex(63));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     free(buf);
   }
@@ -1591,8 +1591,8 @@ int main(int argc, char* args[])
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it = blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it = blocks.write_begin(indices.begin(), indices.end());
 
     ++it;
     it = blocks.erase_block(it);
@@ -1627,12 +1627,12 @@ int main(int argc, char* args[])
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it = blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.discrete_end()) && it.block_it->index < 25)
+    while (!(it == blocks.write_end()) && it.block_it->index < 25)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(25));
@@ -1663,12 +1663,12 @@ int main(int argc, char* args[])
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it = blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.discrete_end()) && it.block_it->index < 26)
+    while (!(it == blocks.write_end()) && it.block_it->index < 26)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(26));
@@ -1699,12 +1699,12 @@ int main(int argc, char* args[])
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it = blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.discrete_end()) && it.block_it->index < 60)
+    while (!(it == blocks.write_end()) && it.block_it->index < 60)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(60));
@@ -1736,12 +1736,12 @@ int main(int argc, char* args[])
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it = blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.discrete_end()) && it.block_it->index < 65)
+    while (!(it == blocks.write_end()) && it.block_it->index < 65)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(65));
@@ -1774,12 +1774,12 @@ int main(int argc, char* args[])
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it = blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.discrete_end()) && it.block_it->index < 68)
+    while (!(it == blocks.write_end()) && it.block_it->index < 68)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(68));
@@ -1811,12 +1811,12 @@ int main(int argc, char* args[])
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it = blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.discrete_end()) && it.block_it->index < 70)
+    while (!(it == blocks.write_end()) && it.block_it->index < 70)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(70));
@@ -1849,12 +1849,12 @@ int main(int argc, char* args[])
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
-        it = blocks.discrete_begin(indices.begin(), indices.end());
+    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+        it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.discrete_end()) && it.block_it->index < 20)
+    while (!(it == blocks.write_end()) && it.block_it->index < 20)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(20));
@@ -1918,19 +1918,19 @@ int main(int argc, char* args[])
     for (int i = 20; i < 21; ++i)
       indices.push_back(IntIndex(i));
     uint32 max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     for (int i = 100; i < 280; ++i)
       indices.push_back(IntIndex(i));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     indices.clear();
     for (int i = 1000; i < 1060; ++i)
       indices.push_back(IntIndex(i));
     max_keysize = prepare_block(buf, indices);
-    blocks.insert_block(blocks.discrete_end(), buf, max_keysize);
+    blocks.insert_block(blocks.write_end(), buf, max_keysize);
 
     free(buf);
   }

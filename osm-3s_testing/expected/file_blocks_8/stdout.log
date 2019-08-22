@@ -6,11 +6,10 @@ Predicted size 508, real size 26 bytes, first block size 22 bytes, first index 1
 Predicted size 508, real size 79 bytes, first block size 75 bytes, first index 63
 ... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
-Predicted size 154, real size 26 bytes, first block size 22 bytes, first index 10
+Predicted size 110, real size 26 bytes, first block size 22 bytes, first index 10
 Predicted size 375, real size 79 bytes, first block size 75 bytes, first index 63
 ... all blocks read.
 Reading blocks with indices {0, 1, ..., 9} ...
-Predicted size 220, real size 26 bytes, first block size 22 bytes, first index 10
 ... all blocks read.
 Reading blocks with indices [0, 10[ ...
 ... all blocks read.

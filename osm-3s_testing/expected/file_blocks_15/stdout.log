@@ -10,11 +10,8 @@ Content ok in block 2.
 Predicted size 508, real size 22 bytes, first block size 18 bytes, first index 6
 ... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
-Predicted size 0
-Predicted size 0
 ... all blocks read.
 Reading blocks with indices {0, 1, ..., 9} ...
-Predicted size 0
 Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
 Predicted size 18, real size 22 bytes, first block size 18 bytes, first index 6
@@ -25,12 +22,10 @@ Skipping 1536 bytes for oversized object.
 Predicted size 508, real size 22 bytes, first block size 18 bytes, first index 6
 ... all blocks read.
 Reading blocks with indices {90, 91, ..., 99} ...
-Predicted size 0
 ... all blocks read.
 Reading blocks with indices [90, 100[ ...
 ... all blocks read.
 Reading blocks with index 50 ...
-Predicted size 0
 ... all blocks read.
 Reading blocks with indices [50, 51[ ...
 ... all blocks read.
