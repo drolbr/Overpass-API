@@ -41,17 +41,15 @@ struct File_Blocks_Basic_Iterator
 {
   File_Blocks_Basic_Iterator(
       const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& begin,
-      const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end,
-      bool is_empty_ = false)
-      : block_begin(begin), block_it(begin), block_end(end), is_empty(is_empty_ && begin == end) {}
+      const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end)
+      : block_begin(begin), block_it(begin), block_end(end) {}
 
   File_Blocks_Basic_Iterator(const File_Blocks_Basic_Iterator& a)
-      : block_begin(a.block_begin), block_it(a.block_it), block_end(a.block_end), is_empty(a.is_empty) {}
+      : block_begin(a.block_begin), block_it(a.block_it), block_end(a.block_end) {}
 
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_begin;
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_it;
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_end;
-  bool is_empty;
 };
 
 
@@ -162,24 +160,24 @@ struct File_Blocks_Write_Iterator : File_Blocks_Basic_Iterator< TIndex >
   File_Blocks_Write_Iterator
       (TIterator const& index_it_, TIterator const& index_end_,
        const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& begin,
-       const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end, bool is_empty = false)
-    : File_Blocks_Basic_Iterator< TIndex >(begin, end, is_empty),
+       const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end, bool is_empty_ = false)
+    : File_Blocks_Basic_Iterator< TIndex >(begin, end),
       index_lower(index_it_), index_upper(index_it_), index_end(index_end_),
-      just_inserted(false)
+      just_inserted(false), is_empty(is_empty_ && begin == end)
   {
     find_next_block();
-    if (is_empty && this->block_it == this->block_end && index_it_ != index_end_)
-      this->is_empty = true;
+    if (is_empty_ && this->block_it == this->block_end && index_it_ != index_end_)
+      is_empty = true;
   }
 
   File_Blocks_Write_Iterator
       (const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end)
-    : File_Blocks_Basic_Iterator< TIndex >(end, end) {}
+    : File_Blocks_Basic_Iterator< TIndex >(end, end), is_empty(false) {}
 
   File_Blocks_Write_Iterator(const File_Blocks_Write_Iterator& a)
     : File_Blocks_Basic_Iterator< TIndex >(a),
       index_lower(a.index_lower), index_upper(a.index_upper),
-      index_end(a.index_end), just_inserted(a.just_inserted) {}
+      index_end(a.index_end), just_inserted(a.just_inserted), is_empty(a.is_empty) {}
 
   ~File_Blocks_Write_Iterator() {}
 
@@ -198,6 +196,7 @@ struct File_Blocks_Write_Iterator : File_Blocks_Basic_Iterator< TIndex >
   TIterator index_upper;
   TIterator index_end;
   bool just_inserted;
+  bool is_empty;
 
 private:
   void find_next_block();
@@ -298,7 +297,7 @@ template< typename TIndex >
 bool File_Blocks_Flat_Iterator< TIndex >::operator==
 (const File_Blocks_Flat_Iterator& a) const
 {
-  return (this->block_it == a.block_it);
+  return this->block_it == a.block_it;
 }
 
 
