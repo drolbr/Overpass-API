@@ -81,7 +81,7 @@ struct IntObject
 
   IntObject(void* data) : value(*(uint32*)data)
   {
-    if (value >= 1000000000 && value <= 1100000000)
+    if (value >= 1000000000 && value/100000000%2 == 0)
     {
       uint size = (value - 1000000000)%1000000 + 4;
       for (uint i = 1; 4*i < size; ++i)
@@ -105,18 +105,18 @@ struct IntObject
 
   uint32 size_of() const
   {
-    return value < 1000000000 || value > 1100000000 ? 4 : (value - 1000000000)%1000000 + 4;
+    return value < 1000000000 || value/100000000%2 == 1 ? 4 : (value - 1000000000)%1000000 + 4;
   }
 
   static uint32 size_of(void* data)
   {
-    return *(uint32*)data < 1000000000 || *(uint32*)data > 1100000000
+    return *(uint32*)data < 1000000000 || *(uint32*)data/100000000%2 == 1
         ? 4 : (*(uint32*)data - 1000000000)%1000000 + 4;
   }
 
   void to_data(void* data) const
   {
-    if (value >= 1000000000 && value <= 1100000000)
+    if (value >= 1000000000 && value/100000000%2 == 0)
     {
       uint size = (value - 1000000000)%1000000 + 4;
       *(((uint8*)data)+size-3) = 0xa5;
@@ -735,20 +735,67 @@ int main(int argc, char* args[])
 
   fill_db(to_delete, to_insert, 30);
   if ((test_to_execute == "") || (test_to_execute == "16"))
-    read_test(14);
-
+    read_test(16);
 
   if ((test_to_execute == "") || (test_to_execute == "17"))
-    std::cout<<"** Insert an oversized object\n";
+    std::cout<<"** Insert some oversized objects\n";
   to_delete.clear();
   to_insert.clear();
-  to_insert[6].insert(IntObject(1275));
-  to_insert[6].insert(IntObject(1000001276));
-  to_insert[6].insert(IntObject(1277));
+  to_insert[2].insert(IntObject(1000001221));
+  to_insert[3].insert(IntObject(1230));
+  to_insert[3].insert(IntObject(1000001231));
+  to_insert[4].insert(IntObject(1000001241));
+  to_insert[4].insert(IntObject(1100001242));
+  to_insert[5].insert(IntObject(1000001251));
+  to_insert[5].insert(IntObject(1000001252));
+  to_insert[6].insert(IntObject(1000001261));
+  to_insert[6].insert(IntObject(1000001262));
+  to_insert[7].insert(IntObject(1000001271));
+  to_insert[7].insert(IntObject(1100001272));
+  to_insert[7].insert(IntObject(1200001273));
+  to_insert[8].insert(IntObject(1000001281));
 
   fill_db(to_delete, to_insert, 32);
   if ((test_to_execute == "") || (test_to_execute == "17"))
-    read_test(15);
+    read_test(17);
+
+  if ((test_to_execute == "") || (test_to_execute == "18"))
+    std::cout<<"** Keep the oversized objects\n";
+  to_delete.clear();
+  to_insert.clear();
+  to_delete[3].insert(IntObject(1230));
+  to_insert[3].insert(IntObject(1100001232));
+  to_insert[4].insert(IntObject(1240));
+  to_delete[4].insert(IntObject(1100001242));
+  to_insert[5].insert(IntObject(1000001251));
+  to_insert[5].insert(IntObject(1000001252));
+  to_insert[6].insert(IntObject(1000001261));
+  to_insert[6].insert(IntObject(1000001262));
+  to_insert[7].insert(IntObject(1000001271));
+  to_insert[7].insert(IntObject(11272));
+  to_insert[7].insert(IntObject(1200001273));
+
+  //fill_db(to_delete, to_insert, 34);
+  if ((test_to_execute == "") || (test_to_execute == "18"))
+    read_test(18);
+
+  if ((test_to_execute == "") || (test_to_execute == "19"))
+    std::cout<<"** Delete multiple oversized objects\n";
+  to_delete.clear();
+  to_insert.clear();
+  to_delete[2].insert(IntObject(1000001221));
+  to_delete[3].insert(IntObject(1000001231));
+  to_delete[4].insert(IntObject(1000001241));
+  to_delete[5].insert(IntObject(1000001251));
+  to_delete[6].insert(IntObject(1000001261));
+  to_delete[6].insert(IntObject(1000001262));
+  to_insert[7].insert(IntObject(1000001271));
+  to_delete[8].insert(IntObject(1000001281));
+  to_insert[8].insert(IntObject(1282));
+
+  //fill_db(to_delete, to_insert, 34);
+  if ((test_to_execute == "") || (test_to_execute == "19"))
+    read_test(19);
 
   remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
       + Test_File().get_data_suffix()
