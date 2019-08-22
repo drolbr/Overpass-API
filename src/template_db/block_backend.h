@@ -370,12 +370,6 @@ struct Discrete_File_Handle
   {
     if (file_it == file_end)
       return false;
-    while (file_it.is_empty)
-    {
-      ++file_it;
-      if (file_it == file_end)
-        return false;
-    }
     file_blocks->read_block(file_it, ptr, check_idx);
     ++file_it;
     return true;

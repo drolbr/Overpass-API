@@ -46,10 +46,7 @@ struct File_Blocks_Basic_Iterator
       : block_begin(begin), block_it(begin), block_end(end), is_empty(is_empty_ && begin == end) {}
 
   File_Blocks_Basic_Iterator(const File_Blocks_Basic_Iterator& a)
-  : block_begin(a.block_begin), block_it(a.block_it), block_end(a.block_end),
-    is_empty(a.is_empty) {}
-
-  int block_type() const;
+      : block_begin(a.block_begin), block_it(a.block_it), block_end(a.block_end), is_empty(a.is_empty) {}
 
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_begin;
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_it;
@@ -85,13 +82,11 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
   File_Blocks_Discrete_Iterator
       (TIterator const& index_it_, TIterator const& index_end_,
        const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& begin,
-       const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end, bool is_empty = false)
-    : File_Blocks_Basic_Iterator< TIndex >(begin, end, is_empty),
+       const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end)
+    : File_Blocks_Basic_Iterator< TIndex >(begin, end),
       index_lower(index_it_), index_upper(index_it_), index_end(index_end_)
   {
     find_next_block();
-    if (is_empty && this->block_it == this->block_end && index_it_ != index_end_)
-      this->is_empty = true;
   }
 
   File_Blocks_Discrete_Iterator
@@ -146,6 +141,8 @@ struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
 
   ~File_Blocks_Range_Iterator() {}
 
+  int block_type() const;
+
   const File_Blocks_Range_Iterator& operator=
       (const File_Blocks_Range_Iterator& a);
   bool operator==(const File_Blocks_Range_Iterator& b) const;
@@ -186,6 +183,8 @@ struct File_Blocks_Write_Iterator : File_Blocks_Basic_Iterator< TIndex >
 
   ~File_Blocks_Write_Iterator() {}
 
+  int block_type() const;
+
   const File_Blocks_Write_Iterator& operator=
       (const File_Blocks_Write_Iterator& a);
   bool operator==
@@ -222,7 +221,7 @@ public:
 
   Flat_Iterator flat_begin();
   const Flat_Iterator& flat_end() const { return *flat_end_it; }
-  Discrete_Iterator discrete_begin(const TIterator& begin, const TIterator& end, bool is_empty = false);
+  Discrete_Iterator discrete_begin(const TIterator& begin, const TIterator& end);
   const Discrete_Iterator& discrete_end() const { return *discrete_end_it; }
   Range_Iterator range_begin(const TRangeIterator& begin, const TRangeIterator& end);
   const Range_Iterator& range_end() const { return *range_end_it; }
@@ -279,45 +278,6 @@ private:
   uint32 allocate_block(uint32 data_size);
   void write_block(uint64* buf, uint32& data_size, uint32& pos);
 };
-
-
-/** Implementation File_Blocks_Basic_Iterator: ------------------------------*/
-
-template< typename TIndex >
-int File_Blocks_Basic_Iterator< TIndex >::block_type() const
-{
-  if ((block_it == block_end) || (is_empty))
-    return File_Block_Index_Entry< TIndex >::EMPTY;
-  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
-      it(block_it);
-  if (block_it == block_begin)
-  {
-    if (++it == block_end)
-      return File_Block_Index_Entry< TIndex >::GROUP;
-    else if (block_it->index == it->index)
-      return File_Block_Index_Entry< TIndex >::SEGMENT;
-    else
-      return File_Block_Index_Entry< TIndex >::GROUP;
-  }
-  ++it;
-  if (it == block_end)
-  {
-    --it;
-    --it;
-    if (it->index == block_it->index)
-      return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
-    else
-      return File_Block_Index_Entry< TIndex >::GROUP;
-  }
-  if (it->index == block_it->index)
-    return File_Block_Index_Entry< TIndex >::SEGMENT;
-  --it;
-  --it;
-  if (it->index == block_it->index)
-    return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
-  else
-    return File_Block_Index_Entry< TIndex >::GROUP;
-}
 
 
 /** Implementation File_Blocks_Flat_Iterator: -------------------------------*/
@@ -388,7 +348,7 @@ template< typename TIndex, typename TIterator >
 bool File_Blocks_Discrete_Iterator< TIndex, TIterator >::operator==
 (const File_Blocks_Discrete_Iterator< TIndex, TIterator >& a) const
 {
-  return ((this->block_it == a.block_it) && (this->is_empty == a.is_empty));
+  return this->block_it == a.block_it;
 }
 
 
@@ -396,21 +356,10 @@ template< typename TIndex, typename TIterator >
 File_Blocks_Discrete_Iterator< TIndex, TIterator >&
 File_Blocks_Discrete_Iterator< TIndex, TIterator >::operator++()
 {
-  int block_type = this->block_type();
-  if (block_type == File_Block_Index_Entry< TIndex >::EMPTY)
-  {
-    this->is_empty = false;
-    find_next_block();
-    return *this;
-  }
-  if (block_type == File_Block_Index_Entry< TIndex >::SEGMENT)
-  {
-    ++(this->block_it);
-    return *this;
-  }
-
+  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = this->block_it;
   ++(this->block_it);
-  find_next_block();
+  if (!(this->block_it->index == it->index))
+    find_next_block();
   return *this;
 }
 
@@ -419,7 +368,6 @@ template< typename TIndex, typename TIterator >
 void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
 {
   index_lower = index_upper;
-  this->is_empty = false;
 
   while (this->block_it != this->block_end)
   {
@@ -467,6 +415,43 @@ void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
 
 
 /** Implementation File_Blocks_Range_Iterator: ------------------------------*/
+
+template< typename TIndex, typename TIterator >
+int File_Blocks_Range_Iterator< TIndex, TIterator >::block_type() const
+{
+  if (this->block_it == this->block_end)
+    return File_Block_Index_Entry< TIndex >::EMPTY;
+  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
+      it(this->block_it);
+  if (this->block_it == this->block_begin)
+  {
+    if (++it == this->block_end)
+      return File_Block_Index_Entry< TIndex >::GROUP;
+    else if (this->block_it->index == it->index)
+      return File_Block_Index_Entry< TIndex >::SEGMENT;
+    else
+      return File_Block_Index_Entry< TIndex >::GROUP;
+  }
+  ++it;
+  if (it == this->block_end)
+  {
+    --it;
+    --it;
+    if (it->index == this->block_it->index)
+      return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
+    else
+      return File_Block_Index_Entry< TIndex >::GROUP;
+  }
+  if (it->index == this->block_it->index)
+    return File_Block_Index_Entry< TIndex >::SEGMENT;
+  --it;
+  --it;
+  if (it->index == this->block_it->index)
+    return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
+  else
+    return File_Block_Index_Entry< TIndex >::GROUP;
+}
+
 
 template< typename TIndex, typename TRangeIterator >
 const File_Blocks_Range_Iterator< TIndex, TRangeIterator >&
@@ -537,6 +522,43 @@ void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
 
 
 /** Implementation File_Blocks_Write_Iterator: ---------------------------*/
+
+template< typename TIndex, typename TIterator >
+int File_Blocks_Write_Iterator< TIndex, TIterator >::block_type() const
+{
+  if ((this->block_it == this->block_end) || (this->is_empty))
+    return File_Block_Index_Entry< TIndex >::EMPTY;
+  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
+      it(this->block_it);
+  if (this->block_it == this->block_begin)
+  {
+    if (++it == this->block_end)
+      return File_Block_Index_Entry< TIndex >::GROUP;
+    else if (this->block_it->index == it->index)
+      return File_Block_Index_Entry< TIndex >::SEGMENT;
+    else
+      return File_Block_Index_Entry< TIndex >::GROUP;
+  }
+  ++it;
+  if (it == this->block_end)
+  {
+    --it;
+    --it;
+    if (it->index == this->block_it->index)
+      return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
+    else
+      return File_Block_Index_Entry< TIndex >::GROUP;
+  }
+  if (it->index == this->block_it->index)
+    return File_Block_Index_Entry< TIndex >::SEGMENT;
+  --it;
+  --it;
+  if (it->index == this->block_it->index)
+    return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
+  else
+    return File_Block_Index_Entry< TIndex >::GROUP;
+}
+
 
 template< typename TIndex, typename TIterator >
 const File_Blocks_Write_Iterator< TIndex, TIterator >&
@@ -714,10 +736,10 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Flat_Iterator
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::discrete_begin
-    (const TIterator& begin, const TIterator& end, bool is_empty)
+    (const TIterator& begin, const TIterator& end)
 {
   return File_Blocks_Discrete_Iterator< TIndex, TIterator >
-      (begin, end, index->get_blocks().begin(), index->get_blocks().end(), is_empty);
+      (begin, end, index->get_blocks().begin(), index->get_blocks().end());
 }
 
 
@@ -792,7 +814,7 @@ template< typename TIndex, typename TIterator, typename TRangeIterator >
 uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::answer_size
     (const Discrete_Iterator& it) const
 {
-  if (it.is_empty)
+  if (it.block_it == it.block_end)
     return 0;
 
   uint32 count(0);
