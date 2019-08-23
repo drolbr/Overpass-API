@@ -1348,6 +1348,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
        const std::map< TIndex, std::set< TObject > >& to_insert,
        Update_Logger& update_logger)
 {
+  file_it.start_segments_mode();
   uint32 buffer_size = block_size;
   Void64_Pointer< uint64 > source(buffer_size);
   Void64_Pointer< uint64 > dest(buffer_size);
@@ -1357,23 +1358,18 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   typename std::map< TIndex, std::set< TObject > >::const_iterator
       insert_it(to_insert.find(idx));
   uint32 idx_size = idx.size_of();
-  bool last_segment_belongs_to_oversized = false;
 
   typename std::set< TObject >::const_iterator cur_insert;
   if (insert_it != to_insert.end())
     cur_insert = insert_it->second.begin();
 
-  while (!(file_it == file_blocks.write_end())
-      && file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
+  while (!(file_it == file_blocks.write_end()) && file_it.block_it->index == idx)
   {
     typename std::list< File_Block_Index_Entry< TIndex > >::iterator delta_it = file_it.block_it;
     bool oversized = read_block_or_blocks(file_it, source, buffer_size);
     if (oversized)
     {
-      last_segment_belongs_to_oversized =
-          file_it.block_type() == File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
-      if (!last_segment_belongs_to_oversized)
-        ++file_it;
+      ++file_it;
       TObject obj(((uint8*)source.ptr) + 8 + idx_size);
       if (delete_it != to_delete.end() && delete_it->second.find(obj) != delete_it->second.end())
         file_blocks.erase_blocks(delta_it, file_it);
@@ -1403,56 +1399,24 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
     }
   }
 
-  uint32 obj_append_offset = 0;
-  bool is_modified = true;
-  if (!(file_it == file_blocks.write_end()) && !last_segment_belongs_to_oversized
-      && file_it.block_type() == File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
-  {
-    typename std::list< File_Block_Index_Entry< TIndex > >::iterator delta_it = file_it.block_it;
-    read_block_or_blocks(file_it, source, buffer_size);
-
-    if (delete_it != to_delete.end())
-      obj_append_offset = skip_deleted_objects(
-          source.ptr, dest.ptr, delete_it->second, idx_size, update_logger, idx);
-    else
-    {
-      memcpy(dest.ptr, source.ptr, *(uint32*)source.ptr);
-      is_modified = false;
-    }
-
-    if (is_modified && obj_append_offset)
-    {
-      if (insert_it != to_insert.end())
-        append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
-    }
-    else if (insert_it != to_insert.end() && *(uint32*)source.ptr < block_size/2)
-      append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
-    else
-      is_modified = false;
-
-    obj_append_offset = *(uint32*)dest.ptr;
-  }
-  else
-  {
-    idx.to_data(((uint8*)dest.ptr) + 8);
-    obj_append_offset = 8 + idx_size;
-  }
-
-  uint8* pos = ((uint8*)dest.ptr) + obj_append_offset;
+  uint8* pos = ((uint8*)dest.ptr) + idx_size + 8;
+  memcpy(dest.ptr+1, source.ptr+1, idx_size);
   if (insert_it != to_insert.end())
   {
-    is_modified = true;
     while (cur_insert != insert_it->second.end())
     {
       flush_if_necessary_and_write_obj(dest.ptr, pos, file_it, idx, *cur_insert);
       ++cur_insert;
     }
   }
+  if (pos > ((uint8*)dest.ptr) + idx_size + 8)
+  {
+    *(uint32*)dest.ptr = pos - (uint8*)dest.ptr;
+    *(((uint32*)dest.ptr)+1) = pos - (uint8*)dest.ptr;
+    file_it = file_blocks.insert_block(file_it, dest.ptr, pos - (uint8*)dest.ptr - 4);
+  }
 
-  if (is_modified)
-    flush_or_delete_block(dest.ptr, pos, file_it, idx_size);
-  else
-    ++file_it;
+  file_it.end_segments_mode();
 }
 
 

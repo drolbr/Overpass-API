@@ -163,7 +163,7 @@ struct File_Blocks_Write_Iterator : File_Blocks_Basic_Iterator< TIndex >
        const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end, bool is_empty_ = false)
     : File_Blocks_Basic_Iterator< TIndex >(begin, end),
       index_lower(index_it_), index_upper(index_it_), index_end(index_end_),
-      is_empty(is_empty_ && begin == end)
+      is_empty(is_empty_ && begin == end), segments_mode(false)
   {
     find_next_block();
     if (is_empty_ && this->block_it == this->block_end && index_it_ != index_end_)
@@ -172,16 +172,22 @@ struct File_Blocks_Write_Iterator : File_Blocks_Basic_Iterator< TIndex >
 
   File_Blocks_Write_Iterator
       (const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end)
-    : File_Blocks_Basic_Iterator< TIndex >(end, end), is_empty(false) {}
+    : File_Blocks_Basic_Iterator< TIndex >(end, end), is_empty(false), segments_mode(false) {}
 
   File_Blocks_Write_Iterator(const File_Blocks_Write_Iterator& a)
     : File_Blocks_Basic_Iterator< TIndex >(a),
       index_lower(a.index_lower), index_upper(a.index_upper),
-      index_end(a.index_end), is_empty(a.is_empty) {}
+      index_end(a.index_end), is_empty(a.is_empty), segments_mode(a.segments_mode) {}
 
   ~File_Blocks_Write_Iterator() {}
 
   int block_type() const;
+  void start_segments_mode() { segments_mode = true; }
+  void end_segments_mode()
+  {
+    segments_mode = false;
+    find_next_block();
+  }
 
   const File_Blocks_Write_Iterator& operator=
       (const File_Blocks_Write_Iterator& a);
@@ -196,6 +202,7 @@ struct File_Blocks_Write_Iterator : File_Blocks_Basic_Iterator< TIndex >
   TIterator index_upper;
   TIterator index_end;
   bool is_empty;
+  bool segments_mode;
 
 private:
   void find_next_block();
@@ -590,7 +597,7 @@ File_Blocks_Write_Iterator< TIndex, TIterator >::operator++()
     find_next_block();
     return *this;
   }
-  if (block_type == File_Block_Index_Entry< TIndex >::SEGMENT)
+  if (segments_mode || block_type == File_Block_Index_Entry< TIndex >::SEGMENT)
   {
     ++(this->block_it);
     return *this;

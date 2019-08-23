@@ -84,7 +84,7 @@ struct IntObject
     if (value >= 1000000000 && value/100000000%2 == 0)
     {
       uint size = (value - 1000000000)%1000000 + 4;
-      for (uint i = 1; 4*i < size; ++i)
+      for (uint i = 1; 4*i < size - 3; ++i)
       {
         if (*(((uint32*)data)+i) != (0x55aa0000 | (i & 0xffff)))
         {
@@ -122,7 +122,7 @@ struct IntObject
       *(((uint8*)data)+size-3) = 0xa5;
       *(((uint8*)data)+size-2) = 0x5a;
       *(((uint8*)data)+size-1) = 0xa5;
-      for (uint i = 1; 4*i < size; ++i)
+      for (uint i = 1; 4*i < size - 3; ++i)
         *(((uint32*)data)+i) = (0x55aa0000 | (i & 0xffff));
     }
     *(uint32*)data = value;
@@ -767,15 +767,10 @@ int main(int argc, char* args[])
   to_insert[3].insert(IntObject(1100001232));
   to_insert[4].insert(IntObject(1240));
   to_delete[4].insert(IntObject(1100001242));
-  to_insert[5].insert(IntObject(1000001251));
-  to_insert[5].insert(IntObject(1000001252));
-  to_insert[6].insert(IntObject(1000001261));
-  to_insert[6].insert(IntObject(1000001262));
-  to_insert[7].insert(IntObject(1000001271));
+  to_insert[5].insert(IntObject(1000001253));
   to_insert[7].insert(IntObject(11272));
-  to_insert[7].insert(IntObject(1200001273));
 
-  //fill_db(to_delete, to_insert, 34);
+  fill_db(to_delete, to_insert, 34);
   if ((test_to_execute == "") || (test_to_execute == "18"))
     read_test(18);
 
@@ -789,11 +784,11 @@ int main(int argc, char* args[])
   to_delete[5].insert(IntObject(1000001251));
   to_delete[6].insert(IntObject(1000001261));
   to_delete[6].insert(IntObject(1000001262));
-  to_insert[7].insert(IntObject(1000001271));
+  to_delete[7].insert(IntObject(1200001273));
   to_delete[8].insert(IntObject(1000001281));
   to_insert[8].insert(IntObject(1282));
 
-  //fill_db(to_delete, to_insert, 34);
+  fill_db(to_delete, to_insert, 34);
   if ((test_to_execute == "") || (test_to_execute == "19"))
     read_test(19);
 
