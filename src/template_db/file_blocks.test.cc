@@ -913,7 +913,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(89));
 
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
-	it(blocks.write_begin(indices.begin(), indices.end()));
+	it = blocks.write_begin(indices.begin(), indices.end());
 
     ++it;
     indices.clear();
@@ -922,24 +922,21 @@ int main(int argc, char* args[])
     uint32 max_keysize(prepare_block(buf, indices));
     it = blocks.insert_block(it, buf, max_keysize);
     ++it;
-    ++it;
 
     indices.clear();
     indices.push_back(IntIndex(63));
     max_keysize = prepare_block(buf, indices);
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
 
     indices.clear();
     indices.push_back(IntIndex(64));
     max_keysize = prepare_block(buf, indices);
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
 
     indices.clear();
     indices.push_back(IntIndex(65));
     max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    blocks.insert_block(it, buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -1088,7 +1085,6 @@ int main(int argc, char* args[])
       uint32 max_keysize(prepare_block(buf, work));
       it = blocks.insert_block(it, buf, max_keysize);
       free(buf);
-      ++it;
     }
   }
   catch (File_Error e)
@@ -1194,9 +1190,7 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, Test_File().get_block_size());
     uint32 max_keysize(prepare_block(buf, work));
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
     ++it;
 
     it = blocks.erase_block(it);
@@ -1208,9 +1202,7 @@ int main(int argc, char* args[])
     work.push_back(IntIndex(50));
     max_keysize = prepare_block(buf, work);
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
     ++it;
 
     it = blocks.erase_block(it);
@@ -1222,17 +1214,13 @@ int main(int argc, char* args[])
     work.push_back(IntIndex(90));
     max_keysize = prepare_block(buf, work);
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
 
     work.clear();
     work.push_back(IntIndex(99));
     max_keysize = prepare_block(buf, work);
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
     it = blocks.insert_block(it, buf, max_keysize);
-    ++it;
     free(buf);
   }
   catch (File_Error e)
@@ -1290,12 +1278,10 @@ int main(int argc, char* args[])
     uint32 max_keysize = prepare_large_block(
         buf, *indices.begin(), block_size, 2*block_size + block_size/2, 0);
     it = blocks.insert_block(it, buf, block_size, max_keysize, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, 2*block_size/4);
-    it = blocks.insert_block(it, buf, block_size/2+4, block_size-4, *indices.begin());
+    blocks.insert_block(it, buf, block_size/2+4, block_size-4, *indices.begin());
     free(buf);
   }
   catch (File_Error e)
@@ -1327,7 +1313,7 @@ int main(int argc, char* args[])
     ++it;
     uint64* buf = (uint64*)aligned_alloc(8, block_size);
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    blocks.insert_block(it, buf, max_keysize);
     free(buf);
   }
   catch (File_Error e)
@@ -1357,12 +1343,10 @@ int main(int argc, char* args[])
     uint64* buf = (uint64*)aligned_alloc(8, block_size);
     uint32 max_keysize = prepare_large_block(buf, *indices.begin(), block_size, block_size-4, 0);
     it = blocks.insert_block(it, buf, block_size, max_keysize, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, block_size-3, 0);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
-    it = blocks.insert_block(it, buf, 1, 1, *indices.begin());
+    blocks.insert_block(it, buf, 1, 1, *indices.begin());
     free(buf);
   }
   catch (File_Error e)
@@ -1404,24 +1388,18 @@ int main(int argc, char* args[])
 
     max_keysize = prepare_large_block(buf, *indices.begin(), block_size, 3*block_size-3, 0);
     it = blocks.insert_block(it, buf, block_size, max_keysize, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, 2*block_size/4);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, 3*block_size/4);
     it = blocks.insert_block(it, buf, 1, 1, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 3*block_size-4, 0);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, block_size/4);
     it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
-    ++it;
     prepare_large_block(buf, *indices.begin(), block_size, 0, 2*block_size/4);
-    it = blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
+    blocks.insert_block(it, buf, block_size, block_size, *indices.begin());
     free(buf);
   }
   catch (File_Error e)
@@ -1637,7 +1615,7 @@ int main(int argc, char* args[])
     indices.clear();
     indices.push_back(IntIndex(25));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1673,7 +1651,7 @@ int main(int argc, char* args[])
     indices.clear();
     indices.push_back(IntIndex(26));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1710,7 +1688,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(60));
     indices.push_back(IntIndex(61));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1748,7 +1726,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(66));
     indices.push_back(IntIndex(67));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1785,7 +1763,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(68));
     indices.push_back(IntIndex(69));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
@@ -1823,7 +1801,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(71));
     indices.push_back(IntIndex(72));
     uint32 max_keysize = prepare_block(buf, indices);
-    it = blocks.insert_block(it, buf, max_keysize);
+    blocks.insert_block(it, buf, max_keysize);
 
     free(buf);
   }
