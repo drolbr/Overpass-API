@@ -1,0 +1,51 @@
+File error catched in part 1: 2 ./testfile.bin File_Blocks::File_Blocks::1
+(This is the expected correct behaviour)
+** Delete multiple oversized objects
+Read test
+Reading all blocks ...
+Index 3: 1100001232 
+Index 4: 1240 
+Index 5: 1000001252 1000001253 
+Index 7: 1000001271 1100001272 11272 
+Index 8: 1282 
+... all blocks read.
+Reading blocks with indices {0, 9, ..., 99} ...
+[empty]
+... all blocks read.
+Reading blocks with indices {0, 1, ..., 9} ...
+Index 3: 1100001232 
+Index 4: 1240 
+Index 5: 1000001252 1000001253 
+Index 7: 1000001271 1100001272 11272 
+Index 8: 1282 
+... all blocks read.
+Reading blocks with indices [0, 10[ ...
+Index 3: 1100001232 
+Index 4: 1240 
+Index 5: 1000001252 1000001253 
+Index 7: 1000001271 1100001272 11272 
+Index 8: 1282 
+... all blocks read.
+Reading blocks with indices {90, 91, ..., 99} ...
+[empty]
+... all blocks read.
+Reading blocks with indices [90, 100[ ...
+[empty]
+... all blocks read.
+Reading blocks with index 50 ...
+[empty]
+... all blocks read.
+Reading blocks with indices [50, 51[ ...
+[empty]
+... all blocks read.
+Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
+Index 3: 1100001232 
+Index 4: 1240 
+Index 5: 1000001252 1000001253 
+Index 7: 1000001271 1100001272 11272 
+Index 8: 1282 
+... all blocks read.
+Reading blocks with indices \emptyset ...
+[empty]
+... all blocks read.
+This block of read tests is complete.
