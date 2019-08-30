@@ -611,7 +611,7 @@ struct Block_Backend
         typename File_Blocks_::Write_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size);
 
     void flush_or_delete_block(
-        uint64* start_ptr, uint8* insert_ptr, typename File_Blocks_::Write_Iterator& file_it,
+        uint64* start_ptr, uint bytes_written, typename File_Blocks_::Write_Iterator& file_it,
         uint32 idx_size);
 
     template< class Update_Logger >
@@ -1089,7 +1089,8 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
     if ((split_it != split.end()) && (it->first == *split_it))
     {
       *(uint32*)dest.ptr = pos - dest.ptr;
-      file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, max_size);
+      if (pos - dest.ptr > 8)
+        file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, max_size);
       ++split_it;
       pos = dest.ptr + 4;
       max_size = 0;
@@ -1192,9 +1193,8 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 
 template< class TIndex, class TObject, class TIterator >
 void Block_Backend< TIndex, TObject, TIterator >::flush_or_delete_block(
-    uint64* start_ptr, uint8* insert_ptr, typename File_Blocks_::Write_Iterator& file_it, uint32 idx_size)
+    uint64* start_ptr, uint bytes_written, typename File_Blocks_::Write_Iterator& file_it, uint32 idx_size)
 {
-  uint bytes_written = insert_ptr - (uint8*)start_ptr;
   if (bytes_written > 8 + idx_size)
   {
     *(uint32*)start_ptr = bytes_written;
@@ -1376,6 +1376,12 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
     }
     else
     {
+      if (*(uint32*)source.ptr < 8 + idx_size)
+      { // something has seriously gone wrong - such a block shuld not exist
+        ++file_it;
+        continue;
+      }
+
       uint32 obj_append_offset = 0;
       if (delete_it != to_delete.end())
         obj_append_offset = skip_deleted_objects(
@@ -1387,12 +1393,12 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
       {
         if (insert_it != to_insert.end())
           append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
-        flush_or_delete_block(dest.ptr, ((uint8*)dest.ptr) + *(uint32*)dest.ptr, file_it, idx_size);
+        flush_or_delete_block(dest.ptr, *(uint32*)dest.ptr, file_it, idx_size);
       }
       else if (insert_it != to_insert.end() && *(uint32*)source.ptr < block_size/2)
       {
         append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
-        flush_or_delete_block(dest.ptr, ((uint8*)dest.ptr) + *(uint32*)dest.ptr, file_it, idx_size);
+        flush_or_delete_block(dest.ptr, *(uint32*)dest.ptr, file_it, idx_size);
       }
       else
         ++file_it;

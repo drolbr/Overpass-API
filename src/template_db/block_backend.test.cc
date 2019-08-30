@@ -697,6 +697,20 @@ int main(int argc, char* args[])
     read_test(15);
 
   if ((test_to_execute == "") || (test_to_execute == "16"))
+    std::cout<<"** Delete an object from a group block and block up an index immediately behind\n";
+
+  to_delete.clear();
+  to_delete[0].insert(IntObject(1000));
+  to_delete[9].insert(IntObject(1909));
+  to_insert.clear();
+  for (unsigned int j = 5004; j <= 20004; j += 100)
+    to_insert[4].insert(IntObject(j));
+  fill_db(to_delete, to_insert, 30);
+
+  if ((test_to_execute == "") || (test_to_execute == "16"))
+    read_test(16);
+
+  if ((test_to_execute == "") || (test_to_execute == "17"))
     std::cout<<"** Delete more items\n";
   to_delete.clear();
   to_insert.clear();
@@ -706,6 +720,12 @@ int main(int argc, char* args[])
     for (unsigned int j = 1000; j < 2000; ++j)
       objects.insert(IntObject(j));
     to_delete[i] = objects;
+  }
+  {
+    std::set< IntObject > objects;
+    for (unsigned int j = 5004; j <= 20004; j += 100)
+      objects.insert(IntObject(j));
+    to_delete[4] = objects;
   }
   {
     std::set< IntObject > objects;
@@ -733,11 +753,11 @@ int main(int argc, char* args[])
   }
   to_delete[100].insert(IntObject(1000));
 
-  fill_db(to_delete, to_insert, 30);
-  if ((test_to_execute == "") || (test_to_execute == "16"))
-    read_test(16);
-
+  fill_db(to_delete, to_insert, 32);
   if ((test_to_execute == "") || (test_to_execute == "17"))
+    read_test(17);
+
+  if ((test_to_execute == "") || (test_to_execute == "18"))
     std::cout<<"** Insert some oversized objects\n";
   to_delete.clear();
   to_insert.clear();
@@ -755,11 +775,11 @@ int main(int argc, char* args[])
   to_insert[7].insert(IntObject(1200001273));
   to_insert[8].insert(IntObject(1000001281));
 
-  fill_db(to_delete, to_insert, 32);
-  if ((test_to_execute == "") || (test_to_execute == "17"))
-    read_test(17);
-
+  fill_db(to_delete, to_insert, 34);
   if ((test_to_execute == "") || (test_to_execute == "18"))
+    read_test(18);
+
+  if ((test_to_execute == "") || (test_to_execute == "19"))
     std::cout<<"** Keep the oversized objects\n";
   to_delete.clear();
   to_insert.clear();
@@ -770,11 +790,11 @@ int main(int argc, char* args[])
   to_insert[5].insert(IntObject(1000001253));
   to_insert[7].insert(IntObject(11272));
 
-  fill_db(to_delete, to_insert, 34);
-  if ((test_to_execute == "") || (test_to_execute == "18"))
-    read_test(18);
-
+  fill_db(to_delete, to_insert, 36);
   if ((test_to_execute == "") || (test_to_execute == "19"))
+    read_test(19);
+
+  if ((test_to_execute == "") || (test_to_execute == "20"))
     std::cout<<"** Delete multiple oversized objects\n";
   to_delete.clear();
   to_insert.clear();
@@ -788,9 +808,9 @@ int main(int argc, char* args[])
   to_delete[8].insert(IntObject(1000001281));
   to_insert[8].insert(IntObject(1282));
 
-  fill_db(to_delete, to_insert, 34);
-  if ((test_to_execute == "") || (test_to_execute == "19"))
-    read_test(19);
+  fill_db(to_delete, to_insert, 38);
+  if ((test_to_execute == "") || (test_to_execute == "20"))
+    read_test(20);
 
   remove((BASE_DIRECTORY + Test_File().get_file_name_trunk()
       + Test_File().get_data_suffix()
