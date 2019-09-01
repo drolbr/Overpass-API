@@ -281,7 +281,7 @@ private:
   uint64* read_block(
       const File_Blocks_Basic_Iterator< TIndex >& it, uint64* temp_buffer, uint64* buffer_, bool check_idx) const;
   uint32 allocate_block(uint32 data_size);
-  void write_block(uint64* buf, uint32& data_size, uint32& pos);
+  void write_block(uint64* buf, uint32 uncompressed_size, uint32& data_size, uint32& pos);
 };
 
 
@@ -889,28 +889,28 @@ uint32 File_Blocks< TIndex, TIterator, TRangeIterator >::allocate_block(uint32 d
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
-void File_Blocks< TIndex, TIterator, TRangeIterator >::write_block(uint64* buf, uint32& data_size, uint32& pos)
+void File_Blocks< TIndex, TIterator, TRangeIterator >::write_block(uint64* buf, uint32 payload_size, uint32& block_count, uint32& pos)
 {
   void* payload = buf;
   if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
   {
     payload = buffer.ptr;
-    data_size = (
-        Zlib_Deflate(1).compress(buf, *(uint32*)buf, payload, block_size * compression_factor)
+    block_count = (
+        Zlib_Deflate(1).compress(buf, payload_size, payload, block_size * compression_factor)
         - 1) / block_size + 1;
   }
   else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
   {
     payload = buffer.ptr;
-    data_size = (
-        LZ4_Deflate().compress(buf, *(uint32*)buf, payload, block_size * compression_factor * 2)
+    block_count = (
+        LZ4_Deflate().compress(buf, payload_size, payload, block_size * compression_factor * 2)
         - 1) / block_size + 1;
   }
 
-  pos = allocate_block(data_size);
+  pos = allocate_block(block_count);
 
   data_file.seek(((int64)pos)*block_size, "File_Blocks::write_block::1");
-  data_file.write((uint8*)payload, block_size * data_size, "File_Blocks::write_block::2");
+  data_file.write((uint8*)payload, block_size * block_count, "File_Blocks::write_block::2");
 }
 
 
@@ -935,7 +935,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
   uint32 pos;
   if (payload_size < block_size * compression_factor)
     memset(((uint8*)buf) + payload_size, 0, block_size * compression_factor - payload_size);
-  write_block(buf, data_size, pos);
+  write_block(buf, payload_size, data_size, pos);
 
   File_Block_Index_Entry< TIndex > entry(block_idx, pos, data_size, max_keysize);
 
@@ -973,7 +973,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
   uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
   if (payload_size < block_size * compression_factor)
     memset(((uint8*)buf) + payload_size, 0, block_size * compression_factor - payload_size);
-  write_block(buf, data_size, it.block_it->pos);
+  write_block(buf, payload_size, data_size, it.block_it->pos);
 
   it.block_it->index = block_idx;
   it.block_it->max_keysize = max_keysize;
