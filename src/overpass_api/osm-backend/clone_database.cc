@@ -24,16 +24,6 @@
 #include "../../template_db/random_file.h"
 
 
-void zero_out_tails(void* buf, uint32 block_size)
-{
-  uint32 net_size = *(uint32*)buf;
-  if (block_size - net_size >= 4)
-    *(uint32*)(((uint8*)buf) + net_size) = 0;
-  for (uint i = (net_size+3)/4*4; i < block_size; i += 4)
-    *(uint32*)(((uint8*)buf) + i) = 0;
-}
-
-
 template< class TIndex >
 void clone_bin_file(const File_Properties& src_file_prop, const File_Properties& dest_file_prop,
 		    Transaction& transaction, std::string dest_db_dir, const Clone_Settings& clone_settings)
@@ -47,6 +37,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
       std::cout<<"Block sizes of source and destination format are incompatible.\n";
       return;
     }
+    uint32 block_size = src_file_prop.get_block_size() * src_file_prop.get_compression_factor();
 
     File_Blocks_Index< TIndex >& src_idx =
         *dynamic_cast< File_Blocks_Index< TIndex >* >(transaction.data_index(&src_file_prop));
@@ -62,11 +53,24 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
         Default_Range_Iterator< TIndex > >::Flat_Iterator
 	src_it = src_file.flat_begin();
 
+    uint32 max_keysize = 0;
     while (!(src_it == src_file.flat_end()))
     {
-      uint64* buf = src_file.read_block(src_it);
-      zero_out_tails(buf, src_file_prop.get_block_size());
-      dest_file.insert_block(dest_file.write_end(), buf, src_it.block_it->max_keysize);
+      if (max_keysize > 0)
+      {
+        uint64* buf = src_file.read_block(src_it, false);
+        dest_file.insert_block(
+            dest_file.write_end(), buf, std::min(max_keysize, block_size),
+            src_it.block_it->max_keysize, src_it.block_it->index);
+        max_keysize = std::max(max_keysize, block_size) - block_size;
+      }
+      else
+      {
+        uint64* buf = src_file.read_block(src_it);
+        dest_file.insert_block(dest_file.write_end(), buf, src_it.block_it->max_keysize);
+        if (src_it.block_it->max_keysize > block_size)
+          max_keysize = src_it.block_it->max_keysize - block_size;
+      }
       ++src_it;
     }
   }

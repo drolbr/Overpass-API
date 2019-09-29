@@ -771,12 +771,38 @@ uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
   else if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
   {
     data_file.read((uint8*)temp_buffer, block_size * it.block_it->size, "File_Blocks::read_block::3");
-    Zlib_Inflate().decompress(temp_buffer, block_size * it.block_it->size, buffer_, block_size * compression_factor);
+    try
+    {
+      Zlib_Inflate().decompress(
+          temp_buffer, block_size * it.block_it->size, buffer_, block_size * compression_factor);
+    }
+    catch (const Zlib_Inflate::Error& e)
+    {
+      std::ostringstream out;
+      out<<"File_Blocks::read_block: Zlib_Inflate::Error "<<e.error_code
+          <<" at offset "<<((int64)(it.block_it->pos) * block_size + 8)<<"; "
+          <<" in_size: "<<(block_size * it.block_it->size)<<", "
+          <<" out_size: "<<(block_size * compression_factor);
+      throw File_Error(it.block_it->pos, index->get_data_file_name(), out.str());
+    }
   }
   else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
   {
     data_file.read((uint8*)temp_buffer, block_size * it.block_it->size, "File_Blocks::read_block::4");
-    LZ4_Inflate().decompress(temp_buffer, block_size * it.block_it->size, buffer_, block_size * compression_factor);
+    try
+    {
+      LZ4_Inflate().decompress(
+          temp_buffer, block_size * it.block_it->size, buffer_, block_size * compression_factor);
+    }
+    catch (const LZ4_Inflate::Error& e)
+    {
+      std::ostringstream out;
+      out<<"File_Blocks::read_block: LZ4_Inflate::Error "<<e.error_code
+          <<" at offset "<<((int64)(it.block_it->pos) * block_size + 8)<<"; "
+          <<" in_size: "<<(block_size * it.block_it->size)<<", "
+          <<" out_size: "<<(block_size * compression_factor);
+      throw File_Error(it.block_it->pos, index->get_data_file_name(), out.str());
+    }
   }
 
   if (check_idx && !(it.block_it->index ==
