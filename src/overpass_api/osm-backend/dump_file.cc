@@ -42,7 +42,7 @@ int main(int argc, char* args[])
     return 0;
   }
 
-  string db_dir(args[1]);
+  std::string db_dir(args[1]);
 
   uint32 index_int;
   bool index_used = false;
@@ -74,8 +74,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint31_Index, Node_Skeleton >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\n';
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\n';
       }
     }
     else if (std::string("--nodes-meta") == args[2])
@@ -86,8 +86,8 @@ int main(int argc, char* args[])
                ::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().ref.val()<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().ref.val()<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -98,8 +98,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Local, Node_Skeleton::Id_Type >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().index<<'\t'
-            <<dec<<it.object().val()<<'\t'
+        std::cout<<std::hex<<it.index().index<<'\t'
+            <<std::dec<<it.object().val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
@@ -110,8 +110,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.object().idx.val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+        std::cout<<std::hex<<it.object().idx.val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
@@ -121,7 +121,7 @@ int main(int argc, char* args[])
           (transaction.data_index(osm_base_settings().NODE_KEYS));
       for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+        std::cout<<std::dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-node-idxs") == args[2])
     {
@@ -129,8 +129,8 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().NODE_IDX_LIST));
       for (Block_Backend< Node_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'
-            <<hex<<it.object().val()<<'\n';
+        std::cout<<std::dec<<it.index().val()<<'\t'
+            <<std::hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-nodes") == args[2])
     {
@@ -139,8 +139,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint31_Index, Attic< Node_Skeleton > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -152,8 +152,8 @@ int main(int argc, char* args[])
                ::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().ref.val()<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().ref.val()<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -164,8 +164,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Local, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().index<<'\t'
-            <<dec<<it.object().val()<<'\t'
+        std::cout<<std::hex<<it.index().index<<'\t'
+            <<std::dec<<it.object().val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
       }
@@ -177,8 +177,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >
                ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.object().idx.val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+        std::cout<<std::hex<<it.object().idx.val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
       }
@@ -190,9 +190,9 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint32_Index, Attic< Node_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().val()<<'\t'
-            <<dec<<it.object().timestamp<<'\n';
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().val()<<'\t'
+            <<std::dec<<it.object().timestamp<<'\n';
       }
     }
     else if (std::string("--node-changelog") == args[2])
@@ -202,9 +202,9 @@ int main(int argc, char* args[])
       for (Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<dec<<it.index().timestamp<<'\t'
-            <<hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<dec<<it.object().elem_id.val()<<'\n';
+        std::cout<<std::dec<<it.index().timestamp<<'\t'
+            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+            <<std::dec<<it.object().elem_id.val()<<'\n';
       }
     }
     else if (std::string("--ways") == args[2])
@@ -218,8 +218,8 @@ int main(int argc, char* args[])
         for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
              it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
         {
-          cout<<hex<<it.index().val()<<'\t'
-              <<dec<<it.object().id.val()<<'\n';
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\n';
         }
       }
       else
@@ -227,8 +227,8 @@ int main(int argc, char* args[])
         for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
              it(db.flat_begin()); !(it == db.flat_end()); ++it)
         {
-          cout<<hex<<it.index().val()<<'\t'
-              <<dec<<it.object().id.val()<<'\n';
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\n';
         }
       }
     }
@@ -236,7 +236,7 @@ int main(int argc, char* args[])
     {
       if (index_used)
       {
-        Random_File< Uint31_Index > random(transaction.random_index(osm_base_settings().WAYS));
+        Random_File< Way_Skeleton::Id_Type, Uint31_Index > random(transaction.random_index(osm_base_settings().WAYS));
 	std::cout<<"0x"<<std::hex<<random.get(index.val()).val()<<'\n';
       }
     }
@@ -248,8 +248,8 @@ int main(int argc, char* args[])
                ::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().ref.val()<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().ref.val()<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -260,8 +260,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Local, Way_Skeleton::Id_Type >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().index<<'\t'
-            <<dec<<it.object().val()<<'\t'
+        std::cout<<std::hex<<it.index().index<<'\t'
+            <<std::dec<<it.object().val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
@@ -272,8 +272,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.object().idx.val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+        std::cout<<std::hex<<it.object().idx.val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
@@ -283,7 +283,7 @@ int main(int argc, char* args[])
           (transaction.data_index(osm_base_settings().WAY_KEYS));
       for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+        std::cout<<std::dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-way-idxs") == args[2])
     {
@@ -305,8 +305,8 @@ int main(int argc, char* args[])
         for (Block_Backend< Uint31_Index, Attic< Way_Skeleton > >::Discrete_Iterator
              it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
         {
-          cout<<hex<<it.index().val()<<'\t'
-              <<dec<<it.object().id.val()<<'\t'
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
               <<it.object().timestamp<<'\n';
         }
       }
@@ -315,8 +315,8 @@ int main(int argc, char* args[])
         for (Block_Backend< Uint31_Index, Attic< Way_Skeleton > >::Flat_Iterator
              it(db.flat_begin()); !(it == db.flat_end()); ++it)
         {
-          cout<<hex<<it.index().val()<<'\t'
-              <<dec<<it.object().id.val()<<'\t'
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
               <<it.object().timestamp<<'\n';
         }
       }
@@ -332,8 +332,8 @@ int main(int argc, char* args[])
         for (Block_Backend< Uint31_Index, Attic< Way_Delta > >::Discrete_Iterator
              it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
         {
-          cout<<hex<<it.index().val()<<'\t'
-              <<dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
               <<it.object().timestamp<<'\n';
         }
       }
@@ -342,8 +342,8 @@ int main(int argc, char* args[])
         for (Block_Backend< Uint31_Index, Attic< Way_Delta > >::Flat_Iterator
              it(db.flat_begin()); !(it == db.flat_end()); ++it)
         {
-          cout<<hex<<it.index().val()<<'\t'
-              <<dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
+          std::cout<<std::hex<<it.index().val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
               <<it.object().timestamp<<'\n';
         }
       }
@@ -352,7 +352,7 @@ int main(int argc, char* args[])
     {
       if (index_used)
       {
-        Random_File< Uint31_Index > random(transaction.random_index(attic_settings().WAYS));
+        Random_File< Way_Skeleton::Id_Type, Uint31_Index > random(transaction.random_index(attic_settings().WAYS));
 	std::cout<<"0x"<<std::hex<<random.get(index.val()).val()<<'\n';
       }
     }
@@ -367,8 +367,8 @@ int main(int argc, char* args[])
         for (Block_Backend< Way::Id_Type, Uint31_Index >::Discrete_Iterator
              it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
         {
-          cout<<dec<<it.index().val()<<'\t'
-              <<hex<<it.object().val()<<'\n';
+          std::cout<<std::dec<<it.index().val()<<'\t'
+              <<std::hex<<it.object().val()<<'\n';
         }
       }
       else
@@ -376,8 +376,8 @@ int main(int argc, char* args[])
         for (Block_Backend< Way::Id_Type, Uint31_Index >::Flat_Iterator
              it(db.flat_begin()); !(it == db.flat_end()); ++it)
         {
-          cout<<dec<<it.index().val()<<'\t'
-              <<hex<<it.object().val()<<'\n';
+          std::cout<<std::dec<<it.index().val()<<'\t'
+              <<std::hex<<it.object().val()<<'\n';
         }
       }
     }
@@ -389,8 +389,8 @@ int main(int argc, char* args[])
                ::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().ref.val()<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().ref.val()<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -401,8 +401,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().index<<'\t'
-            <<dec<<it.object().val()<<'\t'
+        std::cout<<std::hex<<it.index().index<<'\t'
+            <<std::dec<<it.object().val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
       }
@@ -414,8 +414,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > >
                ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.object().idx.val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+        std::cout<<std::hex<<it.object().idx.val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
       }
@@ -427,9 +427,9 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint31_Index, Attic< Way_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().val()<<'\t'
-            <<dec<<it.object().timestamp<<'\n';
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().val()<<'\t'
+            <<std::dec<<it.object().timestamp<<'\n';
       }
     }
     else if (std::string("--way-changelog") == args[2])
@@ -439,9 +439,9 @@ int main(int argc, char* args[])
       for (Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<dec<<it.index().timestamp<<'\t'
-            <<hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<dec<<it.object().elem_id.val()<<'\n';
+        std::cout<<std::dec<<it.index().timestamp<<'\t'
+            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+            <<std::dec<<it.object().elem_id.val()<<'\n';
       }
     }
     else if (std::string("--rels") == args[2])
@@ -451,8 +451,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\n';
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\n';
       }
     }
     else if (std::string("--rel-roles") == args[2])
@@ -461,7 +461,7 @@ int main(int argc, char* args[])
           (transaction.data_index(osm_base_settings().RELATION_ROLES));
       for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+        std::cout<<std::dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
     }
     else if (std::string("--rels-meta") == args[2])
     {
@@ -471,8 +471,8 @@ int main(int argc, char* args[])
                ::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().ref.val()<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().ref.val()<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -483,8 +483,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Local, Relation_Skeleton::Id_Type >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().index<<'\t'
-            <<dec<<it.object().val()<<'\t'
+        std::cout<<std::hex<<it.index().index<<'\t'
+            <<std::dec<<it.object().val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
@@ -495,8 +495,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.object().idx.val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+        std::cout<<std::hex<<it.object().idx.val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
       }
     }
@@ -506,7 +506,7 @@ int main(int argc, char* args[])
           (transaction.data_index(osm_base_settings().RELATION_KEYS));
       for (Block_Backend< Uint32_Index, String_Object >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
+        std::cout<<std::dec<<it.index().val()<<'\t'<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-rel-idxs") == args[2])
     {
@@ -514,8 +514,8 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().RELATION_IDX_LIST));
       for (Block_Backend< Relation_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'
-            <<hex<<it.object().val()<<'\n';
+        std::cout<<std::dec<<it.index().val()<<'\t'
+            <<std::hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-rels") == args[2])
     {
@@ -524,8 +524,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint31_Index, Attic< Relation_Skeleton > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -536,8 +536,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Uint31_Index, Attic< Relation_Delta > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -549,8 +549,8 @@ int main(int argc, char* args[])
                ::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().val()<<'\t'
-            <<dec<<it.object().ref.val()<<'\t'
+        std::cout<<std::hex<<it.index().val()<<'\t'
+            <<std::dec<<it.object().ref.val()<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -561,8 +561,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Local, Attic< Relation_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.index().index<<'\t'
-            <<dec<<it.object().val()<<'\t'
+        std::cout<<std::hex<<it.index().index<<'\t'
+            <<std::dec<<it.object().val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
       }
@@ -574,8 +574,8 @@ int main(int argc, char* args[])
       for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > >
                ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<hex<<it.object().idx.val()<<'\t'
-            <<dec<<it.object().id.val()<<'\t'
+        std::cout<<std::hex<<it.object().idx.val()<<'\t'
+            <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\t'
             <<it.object().timestamp<<'\n';
       }
@@ -587,9 +587,9 @@ int main(int argc, char* args[])
       for (Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        cout<<dec<<it.index().timestamp<<'\t'
-            <<hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<dec<<it.object().elem_id.val()<<'\n';
+        std::cout<<std::dec<<it.index().timestamp<<'\t'
+            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+            <<std::dec<<it.object().elem_id.val()<<'\n';
       }
     }
     else if (std::string("--user") == args[2])
@@ -598,7 +598,7 @@ int main(int argc, char* args[])
           (transaction.data_index(meta_settings().USER_INDICES));
       for (Block_Backend< Uint32_Index, Uint31_Index >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        cout<<dec<<it.index().val()<<'\t'<<hex<<it.object().val()<<'\n';
+        std::cout<<std::dec<<it.index().val()<<'\t'<<std::hex<<it.object().val()<<'\n';
     }
     else
       std::cout<<"Unknown target.\n";
