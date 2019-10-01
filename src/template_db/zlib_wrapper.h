@@ -21,16 +21,15 @@
 
 #include "zlib.h"
 
-#include <exception>
+#include <stdexcept>
 
 
 class Zlib_Deflate
 {
 public:
-  struct Error : public std::exception
+  struct Error : public std::runtime_error
   {
-    Error(int error_code_) : error_code(error_code_) {}
-    virtual const char* what() const throw();
+    Error(int error_code_);
     int error_code;
   };
 
@@ -47,10 +46,9 @@ private:
 class Zlib_Inflate
 {
 public:
-  struct Error : public std::exception
+  struct Error : public std::runtime_error
   {
-    Error(int error_code_) : error_code(error_code_) {}
-    virtual const char* what() const throw();
+    Error(int error_code_);
     int error_code;
   };
 

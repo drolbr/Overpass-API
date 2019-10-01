@@ -20,9 +20,27 @@
 
 #include <cstdlib>
 #include <exception>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <vector>
+
+
+namespace
+{
+  template < typename T >
+  std::string to_string(T t)
+  {
+    std::ostringstream out;
+    out<<std::setprecision(14)<<t;
+    return out.str();
+  }
+}
+
+
+Zlib_Deflate::Error::Error(int error_code_)
+    : std::runtime_error("Zlib_Deflate: " + to_string(error_code_)), error_code(error_code_)
+{}
 
 
 Zlib_Deflate::Zlib_Deflate(int level)
@@ -56,6 +74,11 @@ int Zlib_Deflate::compress(const void* in, int in_size, void* out, int out_buffe
 
   return out_buffer_size - strm.avail_out;
 }
+
+
+Zlib_Inflate::Error::Error(int error_code_)
+    : std::runtime_error("Zlib_Inflate: " + to_string(error_code_)), error_code(error_code_)
+{}
 
 
 Zlib_Inflate::Zlib_Inflate()
@@ -92,20 +115,4 @@ int Zlib_Inflate::decompress(const void* in, int in_size, void* out, int out_buf
     throw Error(Z_BUF_ERROR); // Decompression incomplete
 
   return out_buffer_size - strm.avail_out;
-}
-
-
-const char* Zlib_Deflate::Error::what() const throw()
-{
-  std::ostringstream out;
-  out<<"Zlib_Deflate: "<<error_code;
-  return out.str().c_str();
-}
-
-
-const char* Zlib_Inflate::Error::what() const throw()
-{
-  std::ostringstream out;
-  out<<"Zlib_Inflate: "<<error_code;
-  return out.str().c_str();
 }

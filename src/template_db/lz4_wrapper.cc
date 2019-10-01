@@ -19,9 +19,27 @@
 #include "lz4_wrapper.h"
 
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+
+
+namespace
+{
+  template < typename T >
+  std::string to_string(T t)
+  {
+    std::ostringstream out;
+    out<<std::setprecision(14)<<t;
+    return out.str();
+  }
+}
+
+
+LZ4_Deflate::Error::Error(int error_code_)
+    : std::runtime_error("LZ4_Deflate: " + to_string(error_code_)), error_code(error_code_)
+{}
 
 
 LZ4_Deflate::LZ4_Deflate() { }
@@ -54,6 +72,12 @@ int LZ4_Deflate::compress(const void* in, int in_size, void* out, int out_buffer
 
 #endif
 }
+
+
+LZ4_Inflate::Error::Error(int error_code_)
+    : std::runtime_error("LZ4_Inflate: " + to_string(error_code_)), error_code(error_code_)
+{}
+
 
 LZ4_Inflate::LZ4_Inflate() { }
 
@@ -89,19 +113,4 @@ int LZ4_Inflate::decompress(const void* in, int in_size, void* out, int out_buff
   throw std::runtime_error("Overpass API was compiled without lz4 compression library support");
 
 #endif
-}
-
-const char* LZ4_Deflate::Error::what() const throw()
-{
-  std::ostringstream out;
-  out<<"LZ4_Deflate: "<<error_code;
-  return out.str().c_str();
-}
-
-
-const char* LZ4_Inflate::Error::what() const throw()
-{
-  std::ostringstream out;
-  out<<"LZ4_Inflate: "<<error_code;
-  return out.str().c_str();
 }
