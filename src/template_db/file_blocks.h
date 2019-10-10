@@ -124,7 +124,7 @@ struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
        const typename std::list< File_Block_Index_Entry< TIndex > >::iterator& end,
        const TRangeIterator& index_it_,  const TRangeIterator& index_end_)
     : File_Blocks_Basic_Iterator< TIndex >(begin, end),
-      index_it(index_it_), index_end(index_end_)
+      index_it(index_it_), index_end(index_end_), index_equals_last_index(false)
   {
     find_next_block();
   }
@@ -139,8 +139,6 @@ struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
 
   ~File_Blocks_Range_Iterator() {}
 
-  int block_type() const;
-
   const File_Blocks_Range_Iterator& operator=
       (const File_Blocks_Range_Iterator& a);
   bool operator==(const File_Blocks_Range_Iterator& b) const;
@@ -149,6 +147,7 @@ struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
 private:
   TRangeIterator index_it;
   TRangeIterator index_end;
+  bool index_equals_last_index;
 
   void find_next_block();
 };
@@ -421,43 +420,6 @@ void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
 
 /** Implementation File_Blocks_Range_Iterator: ------------------------------*/
 
-template< typename TIndex, typename TIterator >
-int File_Blocks_Range_Iterator< TIndex, TIterator >::block_type() const
-{
-  if (this->block_it == this->block_end)
-    return File_Block_Index_Entry< TIndex >::EMPTY;
-  typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
-      it(this->block_it);
-  if (this->block_it == this->block_begin)
-  {
-    if (++it == this->block_end)
-      return File_Block_Index_Entry< TIndex >::GROUP;
-    else if (this->block_it->index == it->index)
-      return File_Block_Index_Entry< TIndex >::SEGMENT;
-    else
-      return File_Block_Index_Entry< TIndex >::GROUP;
-  }
-  ++it;
-  if (it == this->block_end)
-  {
-    --it;
-    --it;
-    if (it->index == this->block_it->index)
-      return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
-    else
-      return File_Block_Index_Entry< TIndex >::GROUP;
-  }
-  if (it->index == this->block_it->index)
-    return File_Block_Index_Entry< TIndex >::SEGMENT;
-  --it;
-  --it;
-  if (it->index == this->block_it->index)
-    return File_Block_Index_Entry< TIndex >::LAST_SEGMENT;
-  else
-    return File_Block_Index_Entry< TIndex >::GROUP;
-}
-
-
 template< typename TIndex, typename TRangeIterator >
 const File_Blocks_Range_Iterator< TIndex, TRangeIterator >&
 File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator=
@@ -478,10 +440,24 @@ bool File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator==(const File
 }
 
 
+template< typename Iterator >
+bool index_equals_next_index(Iterator it, Iterator end)
+{
+  if (it == end)
+    return false;
+  Iterator next = it;
+  ++next;
+  if (next == end)
+    return false;
+  return it->index == next->index;
+}
+
+
 template< typename TIndex, typename TRangeIterator >
 File_Blocks_Range_Iterator< TIndex, TRangeIterator >&
 File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator++()
 {
+  index_equals_last_index = index_equals_next_index(this->block_it, this->block_end);
   ++(this->block_it);
   find_next_block();
   return *this;
@@ -513,14 +489,15 @@ void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
       if (!(this->block_it->index < index_it.lower_bound()))
 	// We have found a relevant block that is a segment
 	return;
+      index_equals_last_index = index_equals_next_index(this->block_it, this->block_end);
       ++(this->block_it);
       ++next_block;
     }
 
-    if ((this->block_type() != File_Block_Index_Entry< TIndex >::LAST_SEGMENT)
-      || (!(this->block_it->index < index_it.lower_bound())))
+    if (!index_equals_last_index || (!(this->block_it->index < index_it.lower_bound())))
       break;
 
+    index_equals_last_index = index_equals_next_index(this->block_it, this->block_end);
     ++(this->block_it);
   }
 }
@@ -764,6 +741,7 @@ template< typename TIndex, typename TIterator, typename TRangeIterator >
 uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
     (const File_Blocks_Basic_Iterator< TIndex >& it, uint64* temp_buffer, uint64* buffer_, bool check_idx) const
 {
+  clock_t start = clock();
   data_file.seek((int64)(it.block_it->pos) * block_size, "File_Blocks::read_block::1");
 
   if (compression_method == File_Blocks_Index< TIndex >::NO_COMPRESSION)
@@ -814,6 +792,7 @@ uint64* File_Blocks< TIndex, TIterator, TRangeIterator >::read_block
   }
   ++read_count_;
   ++global_read_counter();
+  global_cpu_sum() += clock() - start;
   return buffer_;
 }
 
