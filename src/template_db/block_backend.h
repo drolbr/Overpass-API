@@ -1352,7 +1352,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   uint32 buffer_size = block_size;
   Void64_Pointer< uint64 > source(buffer_size);
   Void64_Pointer< uint64 > dest(buffer_size);
-  TIndex idx = file_it.block_it->index;
+  TIndex idx = file_it.block().index;
   typename std::map< TIndex, std::set< TObject > >::const_iterator
       delete_it(to_delete.find(idx));
   typename std::map< TIndex, std::set< TObject > >::const_iterator
@@ -1363,9 +1363,9 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   if (insert_it != to_insert.end())
     cur_insert = insert_it->second.begin();
 
-  while (!(file_it == file_blocks.write_end()) && file_it.block_it->index == idx)
+  while (!(file_it == file_blocks.write_end()) && file_it.block().index == idx)
   {
-    typename std::list< File_Block_Index_Entry< TIndex > >::iterator delta_it = file_it.block_it;
+    typename File_Blocks_::Write_Iterator delta_it = file_it;
     bool oversized = read_block_or_blocks(file_it, source, buffer_size);
     if (oversized)
     {
