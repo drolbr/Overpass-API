@@ -181,6 +181,7 @@ struct File_Blocks_Write_Iterator
 
   ~File_Blocks_Write_Iterator() {}
 
+  bool is_end() const { return block_it == block_end && !is_empty; }
   int block_type() const;
   void start_segments_mode() { segments_mode = true; }
   void end_segments_mode()
@@ -241,7 +242,7 @@ public:
   Range_Iterator range_begin(const TRangeIterator& begin, const TRangeIterator& end);
   const Range_Iterator& range_end();
   Write_Iterator write_begin(const TIterator& begin, const TIterator& end, bool is_empty = false);
-  const Write_Iterator& write_end();
+  Write_Iterator write_end();
 
   uint64* read_block(const File_Blocks_Basic_Iterator< TIndex >& it, bool check_idx = true) const;
   uint64* read_block(
@@ -286,7 +287,6 @@ private:
   Flat_Iterator* flat_end_it;
   Discrete_Iterator* discrete_end_it;
   Range_Iterator* range_end_it;
-  Write_Iterator* write_end_it;
 
   Raw_File data_file;
   Void64_Pointer< uint64 > buffer;
@@ -732,7 +732,7 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
      compression_method(index->get_compression_method()),
      writeable(index->writeable()),
      read_count_(0),
-     flat_end_it(0), discrete_end_it(0), range_end_it(0), write_end_it(0),
+     flat_end_it(0), discrete_end_it(0), range_end_it(0),
      data_file(index->get_data_file_name(),
 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
 	       S_666, "File_Blocks::File_Blocks::1"),
@@ -746,7 +746,6 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::~File_Blocks()
   delete flat_end_it;
   delete discrete_end_it;
   delete range_end_it;
-  delete write_end_it;
 
   // cerr<<"~ "<<index->get_data_file_name()<<'\n'; //Debug
 }
@@ -820,12 +819,10 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
-const typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator&
+typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::write_end()
 {
-  if (!write_end_it)
-    write_end_it = new Write_Iterator(index->get_block_list().end());
-  return *write_end_it;
+  return File_Blocks_Write_Iterator< TIndex, TIterator >(index->get_block_list().end());
 }
 
 

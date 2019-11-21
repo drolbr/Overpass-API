@@ -1113,7 +1113,7 @@ int main(int argc, char* args[])
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
         it(blocks.write_begin(indices.begin(), indices.end()));
 
-    while (!(it == blocks.write_end()))
+    while (!it.is_end())
     {
       it = blocks.erase_block(it);
     }
@@ -1246,7 +1246,7 @@ int main(int argc, char* args[])
       indices.push_back(blocks.flat_begin().block_it->index);
       File_Blocks_Write_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
           blocks.write_begin(indices.begin(), indices.end());
-      while (!(it == blocks.write_end()))
+      while (!it.is_end())
         it = blocks.erase_block(it);
     }
   }
@@ -1610,7 +1610,7 @@ int main(int argc, char* args[])
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.write_end()) && it.block().index < 25)
+    while (!it.is_end() && it.block().index < 25)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(25));
@@ -1646,7 +1646,7 @@ int main(int argc, char* args[])
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.write_end()) && it.block().index < 26)
+    while (!it.is_end() && it.block().index < 26)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(26));
@@ -1682,7 +1682,7 @@ int main(int argc, char* args[])
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.write_end()) && it.block().index < 60)
+    while (!it.is_end() && it.block().index < 60)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(60));
@@ -1719,7 +1719,7 @@ int main(int argc, char* args[])
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.write_end()) && it.block().index < 65)
+    while (!it.is_end() && it.block().index < 65)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(65));
@@ -1757,7 +1757,7 @@ int main(int argc, char* args[])
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.write_end()) && it.block().index < 68)
+    while (!it.is_end() && it.block().index < 68)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(68));
@@ -1794,7 +1794,7 @@ int main(int argc, char* args[])
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.write_end()) && it.block().index < 70)
+    while (!it.is_end() && it.block().index < 70)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(70));
@@ -1832,7 +1832,7 @@ int main(int argc, char* args[])
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
 
-    while (!(it == blocks.write_end()) && it.block().index < 20)
+    while (!it.is_end() && it.block().index < 20)
       ++it;
     indices.clear();
     indices.push_back(IntIndex(20));

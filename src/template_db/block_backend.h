@@ -1363,7 +1363,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_segments
   if (insert_it != to_insert.end())
     cur_insert = insert_it->second.begin();
 
-  while (!(file_it == file_blocks.write_end()) && file_it.block().index == idx)
+  while (!file_it.is_end() && file_it.block().index == idx)
   {
     typename File_Blocks_::Write_Iterator delta_it = file_it;
     bool oversized = read_block_or_blocks(file_it, source, buffer_size);
