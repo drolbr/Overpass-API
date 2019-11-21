@@ -47,6 +47,8 @@ struct File_Blocks_Basic_Iterator
   File_Blocks_Basic_Iterator(const File_Blocks_Basic_Iterator& a)
       : block_it(a.block_it), block_end(a.block_end) {}
 
+  bool is_end() const { return block_it == block_end; }
+
   const File_Block_Index_Entry< TIndex >& block() const { return *block_it; }
 
   typename std::vector< File_Block_Index_Entry< TIndex > >::const_iterator block_it;
@@ -240,7 +242,7 @@ public:
   Discrete_Iterator discrete_begin(const TIterator& begin, const TIterator& end);
   const Discrete_Iterator& discrete_end();
   Range_Iterator range_begin(const TRangeIterator& begin, const TRangeIterator& end);
-  const Range_Iterator& range_end();
+  Range_Iterator range_end();
   Write_Iterator write_begin(const TIterator& begin, const TIterator& end, bool is_empty = false);
   Write_Iterator write_end();
 
@@ -286,7 +288,6 @@ private:
 
   Flat_Iterator* flat_end_it;
   Discrete_Iterator* discrete_end_it;
-  Range_Iterator* range_end_it;
 
   Raw_File data_file;
   Void64_Pointer< uint64 > buffer;
@@ -732,7 +733,7 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
      compression_method(index->get_compression_method()),
      writeable(index->writeable()),
      read_count_(0),
-     flat_end_it(0), discrete_end_it(0), range_end_it(0),
+     flat_end_it(0), discrete_end_it(0),
      data_file(index->get_data_file_name(),
 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
 	       S_666, "File_Blocks::File_Blocks::1"),
@@ -745,7 +746,6 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::~File_Blocks()
 {
   delete flat_end_it;
   delete discrete_end_it;
-  delete range_end_it;
 
   // cerr<<"~ "<<index->get_data_file_name()<<'\n'; //Debug
 }
@@ -799,12 +799,10 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::range_begin(const TRangeIterat
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
-const typename File_Blocks< TIndex, TIterator, TRangeIterator >::Range_Iterator&
-File_Blocks< TIndex, TIterator, TRangeIterator >::range_end()
+typename File_Blocks< TIndex, TIterator, TRangeIterator >::Range_Iterator
+    File_Blocks< TIndex, TIterator, TRangeIterator >::range_end()
 {
-  if (!range_end_it)
-    range_end_it = new Range_Iterator(index->get_blocks().end());
-  return *range_end_it;
+  return Range_Iterator(index->get_blocks().end());
 }
 
 
@@ -1044,8 +1042,6 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
   flat_end_it = 0;
   delete discrete_end_it;
   discrete_end_it = 0;
-  delete range_end_it;
-  range_end_it = 0;
 
   uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
   uint32 pos;
@@ -1078,8 +1074,6 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
   flat_end_it = 0;
   delete discrete_end_it;
   discrete_end_it = 0;
-  delete range_end_it;
-  range_end_it = 0;
 
   if (!buf)
     return erase_block(it);
@@ -1103,8 +1097,6 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
   flat_end_it = 0;
   delete discrete_end_it;
   discrete_end_it = 0;
-  delete range_end_it;
-  range_end_it = 0;
 
   it.erase_block(*index);
   return it;
