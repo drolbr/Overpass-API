@@ -450,7 +450,7 @@ void read_loop(
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator& it,
     uint32 block_size)
 {
-  while (!(it == blocks.discrete_end()))
+  while (!it.is_end())
   {
     uint32 answer_size(blocks.answer_size(it));
     std::cout<<"Predicted size "<<answer_size;
@@ -474,7 +474,7 @@ void read_loop(
         for (uint i = block_size; i < large_block_size; i += block_size)
         {
           ++it;
-          if (it == blocks.discrete_end())
+          if (it.is_end())
           {
             std::cout<<"\nUnexpected end of index inside oversized object.";
             break;
@@ -483,7 +483,7 @@ void read_loop(
       }
     }
     std::cout<<'\n';
-    if (!(it == blocks.discrete_end()))
+    if (!it.is_end())
       ++it;
   }
 }
