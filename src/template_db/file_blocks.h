@@ -235,12 +235,12 @@ private:
 
 public:
   File_Blocks(File_Blocks_Index_Base* index);
-  ~File_Blocks();
+  ~File_Blocks() {}
 
   Flat_Iterator flat_begin();
-  const Flat_Iterator& flat_end();
+  Flat_Iterator flat_end();
   Discrete_Iterator discrete_begin(const TIterator& begin, const TIterator& end);
-  Discrete_Iterator discrete_temp_end();
+  Discrete_Iterator discrete_end();
   Range_Iterator range_begin(const TRangeIterator& begin, const TRangeIterator& end);
   Range_Iterator range_end();
   Write_Iterator write_begin(const TIterator& begin, const TIterator& end, bool is_empty = false);
@@ -285,8 +285,6 @@ private:
   int compression_method;
   bool writeable;
   mutable uint read_count_;
-
-  Flat_Iterator* flat_end_it;
 
   Raw_File data_file;
   Void64_Pointer< uint64 > buffer;
@@ -732,21 +730,11 @@ File_Blocks< TIndex, TIterator, TRangeIterator >::File_Blocks
      compression_method(index->get_compression_method()),
      writeable(index->writeable()),
      read_count_(0),
-     flat_end_it(0),
      data_file(index->get_data_file_name(),
 	       writeable ? O_RDWR|O_CREAT : O_RDONLY,
 	       S_666, "File_Blocks::File_Blocks::1"),
      buffer(index->get_block_size() * index->get_compression_factor() * 2)      // increased buffer size for lz4
 {}
-
-
-template< typename TIndex, typename TIterator, typename TRangeIterator >
-File_Blocks< TIndex, TIterator, TRangeIterator >::~File_Blocks()
-{
-  delete flat_end_it;
-
-  // cerr<<"~ "<<index->get_data_file_name()<<'\n'; //Debug
-}
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
@@ -758,12 +746,10 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Flat_Iterator
 
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
-const typename File_Blocks< TIndex, TIterator, TRangeIterator >::Flat_Iterator&
+typename File_Blocks< TIndex, TIterator, TRangeIterator >::Flat_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::flat_end()
 {
-  if (!flat_end_it)
-    flat_end_it = new Flat_Iterator(index->get_blocks().end(), index->get_blocks().end());
-  return *flat_end_it;
+  return Flat_Iterator(index->get_blocks().end(), index->get_blocks().end());
 }
 
 
@@ -779,7 +765,7 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
 
 template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Discrete_Iterator
-    File_Blocks< TIndex, TIterator, TRangeIterator >::discrete_temp_end()
+    File_Blocks< TIndex, TIterator, TRangeIterator >::discrete_end()
 {
   return Discrete_Iterator(index->get_blocks().end());
 }
@@ -1034,9 +1020,6 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
   if (buf == 0)
     return it;
 
-  delete flat_end_it;
-  flat_end_it = 0;
-
   uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
   uint32 pos;
   if (payload_size < block_size * compression_factor)
@@ -1064,9 +1047,6 @@ typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::replace_block
     (Write_Iterator it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx)
 {
-  delete flat_end_it;
-  flat_end_it = 0;
-
   if (!buf)
     return erase_block(it);
 
@@ -1085,9 +1065,6 @@ template< typename TIndex, typename TIterator, typename TRangeIterator >
 typename File_Blocks< TIndex, TIterator, TRangeIterator >::Write_Iterator
     File_Blocks< TIndex, TIterator, TRangeIterator >::erase_block(Write_Iterator it)
 {
-  delete flat_end_it;
-  flat_end_it = 0;
-
   it.erase_block(*index);
   return it;
 }

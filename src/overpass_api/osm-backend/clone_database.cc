@@ -54,7 +54,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 	src_it = src_file.flat_begin();
 
     uint32 max_keysize = 0;
-    while (!(src_it == src_file.flat_end()))
+    while (!src_it.is_end())
     {
       if (max_keysize > 0)
       {

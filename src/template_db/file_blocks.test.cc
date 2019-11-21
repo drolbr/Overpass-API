@@ -376,7 +376,7 @@ void read_loop(
     File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it,
     uint32 block_size)
 {
-  while (!(it == blocks.flat_end()))
+  while (!it.is_end())
   {
     std::cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data = (uint8*)(blocks.read_block(it));
@@ -415,7 +415,7 @@ void read_loop(
       for (uint i = block_size; i < large_block_size; i += block_size)
       {
         ++it;
-        if (it == blocks.flat_end())
+        if (it.is_end())
         {
           std::cout<<"Unexpected end of index inside oversized object.\n";
           break;
@@ -440,7 +440,7 @@ void read_loop(
     }
     else
       std::cout<<'\n';
-    if (!(it == blocks.flat_end()))
+    if (!it.is_end())
       ++it;
   }
 }
@@ -1240,7 +1240,7 @@ int main(int argc, char* args[])
     Test_File tf;
     File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
         (transaction.data_index(&tf));
-    while (!(blocks.flat_begin() == blocks.flat_end()))
+    while (!blocks.flat_begin().is_end())
     {
       std::list< IntIndex > indices;
       indices.push_back(blocks.flat_begin().block_it->index);
