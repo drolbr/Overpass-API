@@ -186,9 +186,15 @@ void File_Blocks_Index< TIndex >::init_structure_params()
       if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
 	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
       block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
+      if (!block_size_)
+        throw File_Error(0, index_file_name, "File_Blocks_Index: Illegal block size");
       compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
+      if (!compression_factor || compression_factor > block_size_)
+        throw File_Error(0, index_file_name, "File_Blocks_Index: Illegal compression factor");
       compression_method = *(uint16*)(index_buf.ptr + 6);
     }
+    if (file_size % block_size_)
+      throw File_Error(0, index_file_name, "File_Blocks_Index: Data file size does not match block size");
     block_count = file_size / block_size_;
   }
 }
@@ -225,13 +231,15 @@ void File_Blocks_Index< TIndex >::init_blocks()
         TIndex index(index_buf.ptr + pos + 12);
         File_Block_Index_Entry< TIndex >
             entry(index,
-	    *(uint32*)(index_buf.ptr + pos),
-	    *(uint32*)(index_buf.ptr + pos + 4),
-	    *(uint32*)(index_buf.ptr + pos + 8));
+            *(uint32*)(index_buf.ptr + pos),
+            *(uint32*)(index_buf.ptr + pos + 4),
+            *(uint32*)(index_buf.ptr + pos + 8));
         blocks.push_back(entry);
         if (entry.pos >= block_count)
-	  throw File_Error(0, index_file_name, "File_Blocks_Index: bad pos in index file");
-	pos += 12;
+          throw File_Error(0, index_file_name, "File_Blocks_Index: bad pos in index file");
+        if (entry.pos + entry.size > block_count)
+          throw File_Error(0, index_file_name, "File_Blocks_Index: bad size in index file");
+        pos += 12;
         pos += TIndex::size_of(index_buf.ptr + pos);
       }
     }

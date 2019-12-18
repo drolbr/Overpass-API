@@ -33,7 +33,6 @@
 #include <unistd.h>
 
 
-#include <iostream>
 template < typename TVal >
 struct OSM_File_Properties : public File_Properties
 {
