@@ -83,6 +83,13 @@ Query_Statement::Query_Statement
   }
 }
 
+
+Query_Statement::~Query_Statement()
+{
+  delete global_bbox_statement;
+}
+
+
 void Query_Statement::add_statement(Statement* statement, std::string text)
 {
   assure_no_text(text, this->get_name());
@@ -1939,5 +1946,6 @@ Has_Kv_Statement::Has_Kv_Statement
 
 Has_Kv_Statement::~Has_Kv_Statement()
 {
+  delete key_regex;
   delete regex;
 }
