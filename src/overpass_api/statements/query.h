@@ -225,6 +225,8 @@ class Query_Statement : public Output_Statement
 				 Resource_Manager& rman);
 
     void collect_elems(Answer_State& answer_state, Set& into, Resource_Manager& rman);
+    void apply_all_filters(
+        Resource_Manager& rman, uint64 timestamp, Query_Filter_Strategy check_keys_late, Set& into);
 };
 
 

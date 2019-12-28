@@ -1386,6 +1386,52 @@ std::set< std::pair< Index, Index > > intersect_ranges
 }
 
 
+void Query_Statement::apply_all_filters(
+    Resource_Manager& rman, uint64 timestamp, Query_Filter_Strategy check_keys_late, Set& into)
+{
+  set_progress(5);
+  rman.health_check(*this);
+
+  for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    (*it)->filter(rman, into);
+
+  set_progress(6);
+  rman.health_check(*this);
+
+  filter_attic_elements(rman, timestamp, into.nodes, into.attic_nodes);
+  filter_attic_elements(rman, timestamp, into.ways, into.attic_ways);
+  filter_attic_elements(rman, timestamp, into.relations, into.attic_relations);
+
+  set_progress(7);
+  rman.health_check(*this);
+
+  if (check_keys_late == prefer_ranges)
+  {
+    filter_by_tags(into.nodes, &into.attic_nodes, timestamp,
+                   *osm_base_settings().NODE_TAGS_LOCAL, attic_settings().NODE_TAGS_LOCAL,
+		   rman, *rman.get_transaction());
+    filter_by_tags(into.ways, &into.attic_ways, timestamp,
+                   *osm_base_settings().WAY_TAGS_LOCAL, attic_settings().WAY_TAGS_LOCAL,
+		   rman, *rman.get_transaction());
+    filter_by_tags(into.relations, &into.attic_relations, timestamp,
+                   *osm_base_settings().RELATION_TAGS_LOCAL, attic_settings().RELATION_TAGS_LOCAL,
+		   rman, *rman.get_transaction());
+    if (rman.get_area_transaction())
+      filter_by_tags(into.areas,
+                     *area_settings().AREA_TAGS_LOCAL,
+		     rman, *rman.get_transaction());
+  }
+
+  set_progress(8);
+  rman.health_check(*this);
+
+  for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
+      it != constraints.end(); ++it)
+    (*it)->filter(*this, rman, into);
+}
+
+
 void Query_Statement::execute(Resource_Manager& rman)
 {
   Cpu_Timer cpu(rman, 1);
@@ -1396,6 +1442,7 @@ void Query_Statement::execute(Resource_Manager& rman)
   Answer_State area_answer_state = nothing;
   Answer_State derived_answer_state = nothing;
   Set into;
+  Set filtered;
   uint64 timestamp = rman.get_desired_timestamp();
   if (timestamp == 0)
     timestamp = NOW;
@@ -1686,30 +1733,37 @@ void Query_Statement::execute(Resource_Manager& rman)
         runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
     }
 
-//     std::cout<<"progress 4\n";
-//     for (std::vector< Relation::Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
-//       std::cout<<it->val()<<'\n';
-//     for (std::vector< Node::Id_Type >::const_iterator it = node_ids.begin(); it != node_ids.end(); ++it)
-//       std::cout<<it->val()<<'\n';
-//     for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = range_req_32.begin();
-//         it != range_req_32.end(); ++it)
-//       std::cout<<hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
-//     std::cout<<dec<<answer_state<<'\n';
-
     if (type & QUERY_NODE)
     {
       if (node_answer_state < data_collected)
       {
         if (range_req_32.empty() && node_answer_state < ranges_collected && !invert_ids)
-	{
+        {
           std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);
           for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
             range_req_32.insert(std::make_pair(*it, ++Uint32_Index(*it)));
-	}
-        ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-            (into.nodes, into.attic_nodes,
-             node_ids, invert_ids, range_req_32, *this, rman,
-             *osm_base_settings().NODES, *attic_settings().NODES);
+        }
+        if (range_req_32.empty())
+          ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+              (into.nodes, into.attic_nodes,
+              node_ids, invert_ids, range_req_32, 0, *this, rman,
+              *osm_base_settings().NODES, *attic_settings().NODES);
+        else
+        {
+          Uint32_Index min_idx = range_req_32.begin()->first;
+          while (::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
+              (into.nodes, into.attic_nodes,
+              node_ids, invert_ids, range_req_32, &min_idx, *this, rman,
+              *osm_base_settings().NODES, *attic_settings().NODES))
+          {
+            Set to_filter;
+            to_filter.nodes.swap(into.nodes);
+            to_filter.attic_nodes.swap(into.attic_nodes);
+            apply_all_filters(rman, timestamp, check_keys_late, to_filter);
+            indexed_set_union(filtered.nodes, to_filter.nodes);
+            indexed_set_union(filtered.attic_nodes, to_filter.attic_nodes);
+          }
+        }
       }
     }
     if (type & QUERY_WAY)
@@ -1717,15 +1771,32 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (way_answer_state < data_collected)
       {
         if (way_range_req_31.empty() && way_answer_state < ranges_collected && !invert_ids)
-	{
+        {
           std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
           for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
             way_range_req_31.insert(std::make_pair(*it, inc(*it)));
-	}
-	::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
-	    (into.ways, into.attic_ways,
-             way_ids, invert_ids, way_range_req_31, *this, rman,
-             *osm_base_settings().WAYS, *attic_settings().WAYS);
+        }
+        if (way_range_req_31.empty())
+          ::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
+              (into.ways, into.attic_ways,
+              way_ids, invert_ids, way_range_req_31, 0, *this, rman,
+              *osm_base_settings().WAYS, *attic_settings().WAYS);
+        else
+        {
+          Uint31_Index min_idx = way_range_req_31.begin()->first;
+          while (::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
+              (into.ways, into.attic_ways,
+              way_ids, invert_ids, way_range_req_31, &min_idx, *this, rman,
+              *osm_base_settings().WAYS, *attic_settings().WAYS))
+          {
+            Set to_filter;
+            to_filter.ways.swap(into.ways);
+            to_filter.attic_ways.swap(into.attic_ways);
+            apply_all_filters(rman, timestamp, check_keys_late, to_filter);
+            indexed_set_union(filtered.ways, to_filter.ways);
+            indexed_set_union(filtered.attic_ways, to_filter.attic_ways);
+          }
+        }
       }
     }
     if (type & QUERY_RELATION)
@@ -1733,15 +1804,32 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (relation_answer_state < data_collected)
       {
         if (relation_range_req_31.empty() && relation_answer_state < ranges_collected && !invert_ids)
-	{
+        {
           std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids, rman);
           for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
             relation_range_req_31.insert(std::make_pair(*it, inc(*it)));
-	}
-	::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
-	    (into.relations, into.attic_relations,
-             relation_ids, invert_ids, relation_range_req_31, *this, rman,
-             *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);
+        }
+        if (relation_range_req_31.empty())
+          ::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
+              (into.relations, into.attic_relations,
+              relation_ids, invert_ids, relation_range_req_31, 0, *this, rman,
+              *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);
+        else
+        {
+          Uint31_Index min_idx = relation_range_req_31.begin()->first;
+          while (::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
+              (into.relations, into.attic_relations,
+              relation_ids, invert_ids, relation_range_req_31, &min_idx, *this, rman,
+              *osm_base_settings().RELATIONS, *attic_settings().RELATIONS))
+          {
+            Set to_filter;
+            to_filter.relations.swap(into.relations);
+            to_filter.attic_relations.swap(into.attic_relations);
+            apply_all_filters(rman, timestamp, check_keys_late, to_filter);
+            indexed_set_union(filtered.relations, to_filter.relations);
+            indexed_set_union(filtered.attic_relations, to_filter.attic_relations);
+          }
+        }
       }
     }
     if (type & QUERY_AREA)
@@ -1751,77 +1839,15 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
   }
 
-  set_progress(5);
-  rman.health_check(*this);
-
-//   std::cout<<'\n';
-//   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = into.nodes.begin();
-//        it != into.nodes.end(); ++it)
-//   {
-//     for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-//       std::cout<<it2->id.val()<<'\n';
-//   }
-//   std::cout<<'\n';
-//   for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator
-//        it = into.attic_nodes.begin(); it != into.attic_nodes.end(); ++it)
-//   {
-//     for (std::vector< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-//       std::cout<<it2->id.val()<<'\t'<<it2->timestamp<<'\n';
-//   }
-//   std::cout<<'\n';
-//   std::cout<<'\n';
-//   for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator it = into.ways.begin();
-//        it != into.ways.end(); ++it)
-//   {
-//     for (std::vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-//       std::cout<<it2->id.val()<<'\n';
-//   }
-//   std::cout<<'\n';
-//   for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
-//        it = into.attic_ways.begin(); it != into.attic_ways.end(); ++it)
-//   {
-//     for (std::vector< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-//       std::cout<<it2->id.val()<<'\t'<<it2->timestamp<<'\n';
-//   }
-//   std::cout<<'\n';
-
-  for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    (*it)->filter(rman, into);
-
-  set_progress(6);
-  rman.health_check(*this);
-
-  filter_attic_elements(rman, timestamp, into.nodes, into.attic_nodes);
-  filter_attic_elements(rman, timestamp, into.ways, into.attic_ways);
-  filter_attic_elements(rman, timestamp, into.relations, into.attic_relations);
-
-  set_progress(7);
-  rman.health_check(*this);
-
-  if (check_keys_late == prefer_ranges)
-  {
-    filter_by_tags(into.nodes, &into.attic_nodes, timestamp,
-                   *osm_base_settings().NODE_TAGS_LOCAL, attic_settings().NODE_TAGS_LOCAL,
-		   rman, *rman.get_transaction());
-    filter_by_tags(into.ways, &into.attic_ways, timestamp,
-                   *osm_base_settings().WAY_TAGS_LOCAL, attic_settings().WAY_TAGS_LOCAL,
-		   rman, *rman.get_transaction());
-    filter_by_tags(into.relations, &into.attic_relations, timestamp,
-                   *osm_base_settings().RELATION_TAGS_LOCAL, attic_settings().RELATION_TAGS_LOCAL,
-		   rman, *rman.get_transaction());
-    if (rman.get_area_transaction())
-      filter_by_tags(into.areas,
-                     *area_settings().AREA_TAGS_LOCAL,
-		     rman, *rman.get_transaction());
-  }
-
-  set_progress(8);
-  rman.health_check(*this);
-
-  for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-      it != constraints.end(); ++it)
-    (*it)->filter(*this, rman, into);
+  apply_all_filters(rman, timestamp, check_keys_late, into);
+  indexed_set_union(into.nodes, filtered.nodes);
+  indexed_set_union(into.attic_nodes, filtered.attic_nodes);
+  indexed_set_union(into.ways, filtered.ways);
+  indexed_set_union(into.attic_ways, filtered.attic_ways);
+  indexed_set_union(into.relations, filtered.relations);
+  indexed_set_union(into.attic_relations, filtered.attic_relations);
+  indexed_set_union(into.areas, filtered.areas);
+  indexed_set_union(into.deriveds, filtered.deriveds);
 
   set_progress(9);
   rman.health_check(*this);

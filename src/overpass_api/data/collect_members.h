@@ -182,11 +182,11 @@ void filter_relations_by_ranges(std::map< Uint31_Index, std::vector< Relation_Sk
 
 
 template < typename TIndex, typename TObject >
-void get_elements_by_id_from_db
+bool get_elements_by_id_from_db
     (std::map< TIndex, std::vector< TObject > >& elements,
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
      const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
-     const std::set< std::pair< TIndex, TIndex > >& range_req,
+     const std::set< std::pair< TIndex, TIndex > >& range_req, TIndex* min_idx,
      const Statement& query, Resource_Manager& rman,
      File_Properties& file_prop, File_Properties& attic_file_prop)
 {
@@ -199,10 +199,17 @@ void get_elements_by_id_from_db
     if (timestamp == NOW)
     {
       if (range_req.empty())
-        return;
-      TIndex cur_idx = range_req.begin()->first;
+        return false;
+      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
       while (collect_items_range(&query, rman, file_prop, range_req,
-          Trivial_Predicate< TObject >(), cur_idx, elements));
+          Trivial_Predicate< TObject >(), cur_idx, elements))
+      {
+        if (min_idx)
+        {
+          *min_idx = cur_idx;
+          return true;
+        }
+      }
     }
     else
       collect_items_range_by_timestamp(&query, rman, range_req,
@@ -213,10 +220,17 @@ void get_elements_by_id_from_db
     if (timestamp == NOW)
     {
       if (range_req.empty())
-        return;
-      TIndex cur_idx = range_req.begin()->first;
+        return false;
+      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
       while (collect_items_range(&query, rman, file_prop, range_req,
-          Id_Predicate< TObject >(ids), cur_idx, elements));
+          Id_Predicate< TObject >(ids), cur_idx, elements))
+      {
+        if (min_idx)
+        {
+          *min_idx = cur_idx;
+          return true;
+        }
+      }
     }
     else
       collect_items_range_by_timestamp(&query, rman, range_req,
@@ -226,9 +240,16 @@ void get_elements_by_id_from_db
   {
     if (timestamp == NOW)
     {
-      TIndex cur_idx = range_req.begin()->first;
+      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
       while (collect_items_range(&query, rman, file_prop, range_req,
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx, elements));
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx, elements))
+      {
+        if (min_idx)
+        {
+          *min_idx = cur_idx;
+          return true;
+        }
+      }
     }
     else
       collect_items_range_by_timestamp(&query, rman, range_req,
@@ -246,6 +267,8 @@ void get_elements_by_id_from_db
           Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
           elements, attic_elements);
   }
+
+  return false;
 }
 
 
