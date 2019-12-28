@@ -76,10 +76,14 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
 {
   std::map< Uint32_Index, std::vector< Node_Skeleton > > result;
+  std::set< std::pair< Uint32_Index, Uint32_Index > > req
+      = small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end());
+  if (req.empty())
+    return result;
 
-  collect_items_range(stmt, rman, *osm_base_settings().NODES,
-                      small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end()),
-                      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), result);
+  Uint32_Index cur_idx = req.begin()->first;
+  while (collect_items_range(stmt, rman, *osm_base_settings().NODES,
+      req, Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), cur_idx, result));
 
   return result;
 }

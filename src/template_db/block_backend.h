@@ -247,6 +247,11 @@ struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObj
        const Default_Range_Iterator< TIndex >& index_it_,
        const Default_Range_Iterator< TIndex >& index_end_, uint32 block_size_);
 
+  Block_Backend_Range_Iterator
+      (File_Blocks_& file_blocks_,
+       const Default_Range_Iterator< TIndex >& index_it_,
+       const Default_Range_Iterator< TIndex >& index_end_, uint32 block_size_, const TIndex& min_idx);
+
   Block_Backend_Range_Iterator(const File_Blocks_& file_blocks_, uint32 block_size_)
     : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, true),
       file_blocks(file_blocks_), file_it(file_blocks_.range_end()),
@@ -271,6 +276,7 @@ struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObj
 private:
   // returns true if we have found something
   bool search_next_index();
+  bool search_next_index(const TIndex& min_idx);
 
   // returns true if we have found something
   bool read_block();
@@ -306,6 +312,10 @@ struct Block_Backend
         (Default_Range_Iterator< TIndex > begin,
          Default_Range_Iterator< TIndex > end)
         { return Range_Iterator(file_blocks, begin, end, block_size); }
+    Range_Iterator range_begin
+        (Default_Range_Iterator< TIndex > begin,
+         Default_Range_Iterator< TIndex > end, const TIndex& min_idx)
+        { return Range_Iterator(file_blocks, begin, end, block_size, min_idx); }
     const Range_Iterator& range_end() const { return *range_end_it; }
 
     template< class Update_Logger >
@@ -677,6 +687,36 @@ Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::Block_Backend_Range_
   }
 }
 
+
+template< class TIndex, class TObject, class TIterator >
+Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::Block_Backend_Range_Iterator
+    (File_Blocks_& file_blocks_,
+     const Default_Range_Iterator< TIndex >& index_it_,
+     const Default_Range_Iterator< TIndex >& index_end_, uint32 block_size_,
+     const TIndex& min_idx)
+  : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, false),
+    file_blocks(file_blocks_),
+    file_it(file_blocks_.range_begin(index_it_, index_end_)),
+    file_end(file_blocks_.range_end()),
+    index_it(index_it_), index_end(index_end_)
+{
+  while (!(index_it == index_end) && !(min_idx < index_it.upper_bound()))
+    ++index_it;
+
+  if (read_block())
+    return;
+  while (true)
+  {
+    if (search_next_index(min_idx))
+      return;
+
+    ++file_it;
+    if (read_block())
+      return;
+  }
+}
+
+
 template< class TIndex, class TObject, class TIterator >
 const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
     Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::operator=
@@ -689,12 +729,14 @@ const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
   return *this;
 }
 
+
 template< class TIndex, class TObject, class TIterator >
 bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::operator==
     (const Block_Backend_Range_Iterator& it) const
 {
   return ((this->get_pos() == it.get_pos()) && (file_it == it.file_it));
 }
+
 
 template< class TIndex, class TObject, class TIterator >
 const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
@@ -713,6 +755,7 @@ const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
       return *this;
   }
 }
+
 
 // returns true if we have found something
 template< class TIndex, class TObject, class TIterator >
@@ -752,6 +795,47 @@ bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_ind
 
   return false;
 }
+
+
+// returns true if we have found something
+template< class TIndex, class TObject, class TIterator >
+bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_index(const TIndex& min_idx)
+{
+  // search for the next suitable index
+  this->current_idx_pos = (uint32*)(this->get_ptr());
+  while (this->get_pos() < this->get_used_block_size())
+  {
+    this->inc_pos(4);
+
+    if (this->current_index)
+      delete this->current_index;
+    this->current_index = new TIndex(this->get_ptr());
+    while ((index_it != index_end) &&
+      (!(*(this->current_index) < index_it.upper_bound())))
+      ++(index_it);
+    if (index_it == index_end)
+    {
+      // there cannot be data anymore, because there is no valid index left
+      file_it = file_end;
+      this->set_pos(0);
+      return true;
+    }
+    if (!(*(this->current_index) < index_it.lower_bound()) && !(*(this->current_index) < min_idx))
+    {
+      // we have reached the next valid index
+      this->inc_pos(TIndex::size_of(this->get_ptr()));
+      return true;
+    }
+    delete this->current_index;
+    this->current_index = 0;
+
+    this->set_pos(*(this->current_idx_pos));
+    this->current_idx_pos = (uint32*)(this->get_ptr());
+  }
+
+  return false;
+}
+
 
 // returns true if we have found something
 template< class TIndex, class TObject, class TIterator >

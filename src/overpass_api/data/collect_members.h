@@ -197,8 +197,13 @@ void get_elements_by_id_from_db
   if (ids.empty())
   {
     if (timestamp == NOW)
-      collect_items_range(&query, rman, file_prop, range_req,
-          Trivial_Predicate< TObject >(), elements);
+    {
+      if (range_req.empty())
+        return;
+      TIndex cur_idx = range_req.begin()->first;
+      while (collect_items_range(&query, rman, file_prop, range_req,
+          Trivial_Predicate< TObject >(), cur_idx, elements));
+    }
     else
       collect_items_range_by_timestamp(&query, rman, range_req,
           Trivial_Predicate< TObject >(), elements, attic_elements);
@@ -206,8 +211,13 @@ void get_elements_by_id_from_db
   else if (!invert_ids)
   {
     if (timestamp == NOW)
-      collect_items_range(&query, rman, file_prop, range_req,
-          Id_Predicate< TObject >(ids), elements);
+    {
+      if (range_req.empty())
+        return;
+      TIndex cur_idx = range_req.begin()->first;
+      while (collect_items_range(&query, rman, file_prop, range_req,
+          Id_Predicate< TObject >(ids), cur_idx, elements));
+    }
     else
       collect_items_range_by_timestamp(&query, rman, range_req,
           Id_Predicate< TObject >(ids), elements, attic_elements);
@@ -215,9 +225,11 @@ void get_elements_by_id_from_db
   else if (!range_req.empty())
   {
     if (timestamp == NOW)
-      collect_items_range(&query, rman, file_prop, range_req,
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-          elements);
+    {
+      TIndex cur_idx = range_req.begin()->first;
+      while (collect_items_range(&query, rman, file_prop, range_req,
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx, elements));
+    }
     else
       collect_items_range_by_timestamp(&query, rman, range_req,
           Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),

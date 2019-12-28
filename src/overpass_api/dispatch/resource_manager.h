@@ -157,7 +157,7 @@ public:
 
   void log_and_display_error(std::string message);
 
-  void health_check(const Statement& stmt, uint32 extra_time = 0, uint64 extra_space = 0);
+  bool health_check(const Statement& stmt, uint32 extra_time = 0, uint64 extra_space = 0);
 
   void set_limits(uint32 max_allowed_time_, uint64 max_allowed_space_)
   {
