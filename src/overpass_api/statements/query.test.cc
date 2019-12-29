@@ -645,7 +645,8 @@ void perform_query_with_bbox
 
 void perform_filter_with_bbox
     (std::string type, std::string key1, std::string value1,
-     std::string south, std::string north, std::string west, std::string east, std::string db_dir)
+     std::string south, std::string north, std::string west, std::string east, std::string db_dir,
+     uint32 max_allowed_time = 0, uint64 max_allowed_space = 0)
 {
   try
   {
@@ -653,6 +654,9 @@ void perform_filter_with_bbox
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
+    if (max_allowed_space > 0)
+      rman.set_limits(max_allowed_time, max_allowed_space);
+
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -1774,6 +1778,12 @@ int main(int argc, char* args[])
     // Test an around collecting relations from nodes based on way membership
     perform_query_with_role_recurse("relation-nwr", "three", "", "",
         pattern_size, global_node_offset, args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "163"))
+    // Test whether chunked proessing works.
+    // Fur this purpose, test a bbox combined with a key-value std::pair via a filter
+    perform_filter_with_bbox("node", "node_key_15", "node_value_15",
+                            "-90.0", "90.0", "-120.0", "105.0", args[3], 900, 33554432);
 
   std::cout<<"</osm>\n";
   return 0;
