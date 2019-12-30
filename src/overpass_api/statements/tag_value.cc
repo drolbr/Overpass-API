@@ -404,6 +404,35 @@ Evaluator_Length::Evaluator_Length
 //-----------------------------------------------------------------------------
 
 
+Evaluator_Latitude::Statement_Maker Evaluator_Latitude::statement_maker;
+Element_Function_Maker< Evaluator_Latitude > Evaluator_Latitude::evaluator_maker;
+
+
+Evaluator_Latitude::Evaluator_Latitude
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+Evaluator_Longitude::Statement_Maker Evaluator_Longitude::statement_maker;
+Element_Function_Maker< Evaluator_Longitude > Evaluator_Longitude::evaluator_maker;
+
+
+Evaluator_Longitude::Evaluator_Longitude
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 Evaluator_Version::Statement_Maker Evaluator_Version::statement_maker;
 Element_Function_Maker< Evaluator_Version > Evaluator_Version::evaluator_maker;
 

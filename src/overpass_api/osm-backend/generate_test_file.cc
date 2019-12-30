@@ -5720,6 +5720,32 @@ int main(int argc, char* args[])
       "      <point "<<lat_lon_of_node(pattern_size + 2, pattern_size)<<"/>\n"
       "    </group>\n"
       "  </trace>\n";
+    if (std::string(args[2]) == "convert_14")
+      std::cout<<
+      "  <lat-lon id=\"2\">\n"
+      "    <tag k=\"lat\" v=\""<<std::fixed<<std::setprecision(7)<<(51. + .5/pattern_size)<<"\"/>\n"
+      "    <tag k=\"lon\" v=\""<<std::fixed<<std::setprecision(7)<<(7. + 6.5/pattern_size)<<"\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"3\">\n"
+      "    <tag k=\"lat\" v=\""<<std::fixed<<std::setprecision(7)<<(51. + .5/pattern_size)<<"\"/>\n"
+      "    <tag k=\"lon\" v=\""<<std::fixed<<std::setprecision(7)<<(7. + 13.5/pattern_size)<<"\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"4\">\n"
+      "    <tag k=\"lat\" v=\""<<std::fixed<<std::setprecision(7)<<(51. + 1.5/pattern_size)<<"\"/>\n"
+      "    <tag k=\"lon\" v=\""<<std::fixed<<std::setprecision(7)<<(7. + 7./pattern_size)<<"\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"5\">\n"
+      "    <tag k=\"lat\" v=\"51.5000000\"/>\n"
+      "    <tag k=\"lon\" v=\"7.5000000\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"6\">\n"
+      "    <tag k=\"lat\" v=\"NaN\"/>\n"
+      "    <tag k=\"lon\" v=\"NaN\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"8\">\n"
+      "    <tag k=\"lat\" v=\"-15.0000000\"/>\n"
+      "    <tag k=\"lon\" v=\"5.5500000\"/>\n"
+      "  </lat-lon>\n";
 
     std::cout<<"</osm>\n";
   }

@@ -46,6 +46,27 @@ Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uin
   return rman;
 }
 
+Resource_Manager& perform_multi_id_query(Resource_Manager& rman, std::string type, const std::vector< uint64 >& ids)
+{
+  Parsed_Query global_settings;
+
+  std::map< std::string, std::string > attributes;
+  attributes["type"] = type;
+  if (!ids.empty())
+    attributes["ref"] = to_string(ids[0]);
+  for (uint i = 1; i < ids.size(); ++i)
+  {
+    std::ostringstream out;
+    out<<"ref_"<<i;
+    attributes[out.str()] = to_string(ids[i]);
+  }
+
+  Id_Query_Statement stmt(1, attributes, global_settings);
+  stmt.execute(rman);
+
+  return rman;
+}
+
 int main(int argc, char* args[])
 {
   if (argc < 5)
@@ -199,14 +220,23 @@ int main(int argc, char* args[])
 
       for (uint i = 0; i < pattern_size/2; ++i)
       {
+        std::vector< uint64 > ids;
 	for (uint j = 1; j <= pattern_size/2; ++j)
-	{
-	  Resource_Manager rman(transaction, &global_settings);
-	  perform_id_query(rman, "node", pattern_size*i + j + global_node_offset);
-          const Set* default_ = rman.get_set("_");
-	  if (default_ && !default_->nodes.empty())
-	    total.nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
-	}
+          ids.push_back(pattern_size*i + j + global_node_offset);
+
+	Resource_Manager rman(transaction, &global_settings);
+	perform_multi_id_query(rman, "node", ids);
+        const Set* default_ = rman.get_set("_");
+	if (default_)
+        {
+          for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator
+              it1 = default_->nodes.begin(); it1 != default_->nodes.end(); ++it1)
+          {
+            for (std::vector< Node_Skeleton >::const_iterator it2 = it1->second.begin();
+                it2 != it1->second.end(); ++it2)
+              total.nodes[it1->first].push_back(*it2);
+          }
+        }
       }
       total_rman.swap_set("_", total);
       {

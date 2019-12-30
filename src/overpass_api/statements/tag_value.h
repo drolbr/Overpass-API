@@ -653,7 +653,7 @@ public:
 
 /* ==== Length ====
 
-The length operator return the length of the element.
+The length operator returns the length of the element.
 For ways this is the length of the way.
 For relations this is the sum of the lengthes of the members of type way.
 For nodes it is always zero.
@@ -716,6 +716,149 @@ public:
   virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
   virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
   { return new Length_Eval_Task(); }
+};
+
+
+/* ==== Latitude and Longitude ====
+
+The latitude and longitude operators return the respective coordinate of the element or the element's center.
+For nodes it is the latitude resp. longitude of the node's coordinate.
+For ways and relations it refers to the coordinate derived from the center of the bounding box.
+
+Their syntaxes are:
+
+  lat()
+
+resp.
+
+  lon()
+*/
+
+struct Latitude_Eval_Task : public Eval_Task
+{
+  Latitude_Eval_Task() {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lat(), 7) : "NaN"; }
+};
+
+
+class Evaluator_Latitude : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Latitude >
+  {
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Latitude >("eval-lat") {}
+  };
+  static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Latitude > evaluator_maker;
+
+  static std::string stmt_func_name() { return "lat"; }
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-lat/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return "lat()"; }
+
+  Evaluator_Latitude(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-lat"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Latitude() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
+
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  { return new Latitude_Eval_Task(); }
+};
+
+
+struct Longitude_Eval_Task : public Eval_Task
+{
+  Longitude_Eval_Task() {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Node_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Attic< Node_Skeleton > >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
+  virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
+      { return data.geometry &&
+          data.geometry->has_center() ? fixed_to_string(data.geometry->center_lon(), 7) : "NaN"; }
+};
+
+
+class Evaluator_Longitude : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Longitude >
+  {
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Longitude >("eval-lon") {}
+  };
+  static Statement_Maker statement_maker;
+  static Element_Function_Maker< Evaluator_Longitude > evaluator_maker;
+
+  static std::string stmt_func_name() { return "lon"; }
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-lon/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const
+  { return "lon()"; }
+
+  Evaluator_Longitude(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-lon"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Longitude() {}
+
+  virtual Requested_Context request_context() const { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
+
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  { return new Longitude_Eval_Task(); }
 };
 
 
