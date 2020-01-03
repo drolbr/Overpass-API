@@ -1326,7 +1326,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
     type = *token;
     if (type == "rel")
       type = "relation";
-    else if (type != "node" && type != "way" && type != "relation" && type != "nwr"
+    else if (type != "node" && type != "way" && type != "relation"
+        && type != "nwr" && type != "nw" && type != "wr" && type != "nr"
         && type != "derived" && type != "area")
     {
       if (error_output)

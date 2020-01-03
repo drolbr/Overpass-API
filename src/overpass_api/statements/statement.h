@@ -210,8 +210,9 @@ class Statement
 
     const static int NODE = 1;
     const static int WAY = 2;
-    const static int RELATION = 3;
-    const static int AREA = 4;
+    const static int RELATION = 4;
+    const static int AREA = 8;
+    const static int DERIVED = 16;
 
   private:
     static Error_Output* error_output;

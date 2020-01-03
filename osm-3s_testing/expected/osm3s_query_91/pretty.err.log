@@ -1,3 +1,3 @@
 encoding remark: Please enter your query and terminate it with CTRL+D.
 line 1: parse error: Unknown type "all"
-line 1: static error: For the attribute "type" of the element "query" the only allowed values are "node", "way", "relation" or "area".
+line 1: static error: For the attribute "type" of the element "query" the only allowed values are "node", "way", "relation", "nwr", "nw", "wr", "nr", or "area".

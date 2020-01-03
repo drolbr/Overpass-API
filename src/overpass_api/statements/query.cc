@@ -62,6 +62,12 @@ Query_Statement::Query_Statement
     type = QUERY_DERIVED;
   else if (attributes["type"] == "nwr")
     type = (QUERY_NODE | QUERY_WAY | QUERY_RELATION);
+  else if (attributes["type"] == "nw")
+    type = (QUERY_NODE | QUERY_WAY);
+  else if (attributes["type"] == "wr")
+    type = (QUERY_WAY | QUERY_RELATION);
+  else if (attributes["type"] == "nr")
+    type = (QUERY_NODE | QUERY_RELATION);
   else if (attributes["type"] == "area")
   {
     type = QUERY_AREA;
@@ -72,7 +78,7 @@ Query_Statement::Query_Statement
     type = 0;
     std::ostringstream temp;
     temp<<"For the attribute \"type\" of the element \"query\""
-	<<" the only allowed values are \"node\", \"way\", \"relation\" or \"area\".";
+        <<" the only allowed values are \"node\", \"way\", \"relation\", \"nwr\", \"nw\", \"wr\", \"nr\", or \"area\".";
     add_static_error(temp.str());
   }
 

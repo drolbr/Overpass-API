@@ -99,6 +99,12 @@ class Query_Statement : public Output_Statement
         return "area";
       else if (type == (QUERY_NODE | QUERY_WAY | QUERY_RELATION))
         return "nwr";
+      else if (type == (QUERY_NODE | QUERY_WAY))
+        return "nwr";
+      else if (type == (QUERY_WAY | QUERY_RELATION))
+        return "wr";
+      else if (type == (QUERY_NODE | QUERY_RELATION))
+        return "nr";
 
       return "area";
     }
