@@ -484,8 +484,14 @@ std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_mem
     return result;
 
   if (children_ranges)
-    collect_items_range(&stmt, rman, *osm_base_settings().RELATIONS, *children_ranges,
-			Id_Predicate< Relation_Skeleton >(intersect_ids), result);
+  {
+    if (!children_ranges->empty())
+    {
+      Uint31_Index cur_idx = children_ranges->begin()->first;
+      while (collect_items_range(&stmt, rman, *osm_base_settings().RELATIONS, *children_ranges,
+          Id_Predicate< Relation_Skeleton >(intersect_ids), cur_idx, result));
+    }
+  }
   else
   {
     std::vector< Uint31_Index > req =
@@ -637,8 +643,14 @@ std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
     return result;
 
   if (way_ranges)
-    collect_items_range(stmt, rman, *osm_base_settings().WAYS, *way_ranges,
-			Id_Predicate< Way_Skeleton >(intersect_ids), result);
+  {
+    if (!way_ranges->empty())
+    {
+      Uint31_Index cur_idx = way_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().WAYS, *way_ranges,
+          Id_Predicate< Way_Skeleton >(intersect_ids), cur_idx, result));
+    }
+  }
   else
   {
     std::vector< Uint31_Index > req =
@@ -771,14 +783,24 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > relation_node_members
     return result;
 
   if (node_ranges)
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
-			Id_Predicate< Node_Skeleton >(intersect_ids), result);
+  {
+    if (!node_ranges->empty())
+    {
+      Uint32_Index cur_idx = node_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
+          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result));
+    }
+  }
   else
   {
     std::set< std::pair< Uint32_Index, Uint32_Index > > req =
         relation_node_member_indices< Relation_Skeleton >(stmt, rman, relations.begin(), relations.end());
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
-			Id_Predicate< Node_Skeleton >(intersect_ids), result);
+    if (!req.empty())
+    {
+      Uint32_Index cur_idx = req.begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
+          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result));
+    }
   }
   return result;
 }
@@ -824,20 +846,30 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
 
   if (node_ranges)
   {
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
-                        Id_Predicate< Node_Skeleton >(intersect_ids), result.first);
-    collect_items_range(stmt, rman, *attic_settings().NODES, *node_ranges,
-                        Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), result.second);
+    if (!node_ranges->empty())
+    {
+      Uint32_Index cur_idx = node_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
+          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result.first));
+      cur_idx = node_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *attic_settings().NODES, *node_ranges,
+          Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), cur_idx, result.second));
+    }
   }
   else
   {
     std::set< std::pair< Uint32_Index, Uint32_Index > > req =
         relation_node_member_indices< Relation_Skeleton >(stmt, rman,
             relations.begin(), relations.end(), attic_relations.begin(), attic_relations.end());
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
-                        Id_Predicate< Node_Skeleton >(intersect_ids), result.first);
-    collect_items_range(stmt, rman, *attic_settings().NODES, req,
-                        Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), result.second);
+    if (!req.empty())
+    {
+      Uint32_Index cur_idx = req.begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
+          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result.first));
+      cur_idx = req.begin()->first;
+      while (collect_items_range(stmt, rman, *attic_settings().NODES, req,
+          Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), cur_idx, result.second));
+    }
   }
   keep_matching_skeletons(result.first, result.second, rman.get_desired_timestamp());
 
@@ -864,20 +896,30 @@ std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_me
 
   if (node_ranges)
   {
-    collect_items_range(stmt, rman, *osm_base_settings().NODES,
-                        *node_ranges, Id_Predicate< Node_Skeleton >(intersect_ids), current);
-    collect_items_range(stmt, rman, *attic_settings().NODES,
-                        *node_ranges, Id_Predicate< Node_Skeleton >(intersect_ids), attic);
+    if (!node_ranges->empty())
+    {
+      Uint32_Index cur_idx = node_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES,
+          *node_ranges, Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, current));
+      cur_idx = node_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *attic_settings().NODES,
+          *node_ranges, Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, attic));
+    }
   }
   else
   {
     std::set< std::pair< Uint32_Index, Uint32_Index > > req =
         relation_node_member_indices< Attic< Relation_Skeleton > >
             (stmt, rman, relations.begin(), relations.end());
-    collect_items_range(stmt, rman, *osm_base_settings().NODES,
-                        req, Id_Predicate< Node_Skeleton >(intersect_ids), current);
-    collect_items_range(stmt, rman, *attic_settings().NODES,
-                        req, Id_Predicate< Node_Skeleton >(intersect_ids), attic);
+    if (!req.empty())
+    {
+      Uint32_Index cur_idx = req.begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES,
+          req, Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, current));
+      cur_idx = req.begin()->first;
+      while (collect_items_range(stmt, rman, *attic_settings().NODES,
+          req, Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, attic));
+    }
   }
 
 
@@ -923,14 +965,24 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > way_members
     return result;
 
   if (node_ranges)
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
-			Id_Predicate< Node_Skeleton >(intersect_ids), result);
+  {
+    if (!node_ranges->empty())
+    {
+      Uint32_Index cur_idx = node_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
+          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result));
+    }
+  }
   else
   {
     std::set< std::pair< Uint32_Index, Uint32_Index > > req =
         way_nd_indices(stmt, rman, ways.begin(), ways.end());
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
-			Id_Predicate< Node_Skeleton >(intersect_ids), result);
+    if (!req.empty())
+    {
+      Uint32_Index cur_idx = req.begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
+          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result));
+    }
   }
 
   return result;
@@ -977,19 +1029,29 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
 
   if (node_ranges)
   {
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
-                        Id_Predicate< Node_Skeleton >(intersect_ids), result.first);
-    collect_items_range(stmt, rman, *attic_settings().NODES, *node_ranges,
-                        Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), result.second);
+    if (!node_ranges->empty())
+    {
+      Uint32_Index cur_idx = node_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
+          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result.first));
+      cur_idx = node_ranges->begin()->first;
+      while (collect_items_range(stmt, rman, *attic_settings().NODES, *node_ranges,
+                        Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), cur_idx, result.second));
+    }
   }
   else
   {
     std::set< std::pair< Uint32_Index, Uint32_Index > > req =
         way_nd_indices(stmt, rman, ways.begin(), ways.end(), attic_ways.begin(), attic_ways.end());
-    collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
-                        Id_Predicate< Node_Skeleton >(intersect_ids), result.first);
-    collect_items_range(stmt, rman, *attic_settings().NODES, req,
-                        Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), result.second);
+    if (!req.empty())
+    {
+      Uint32_Index cur_idx = req.begin()->first;
+      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
+          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result.first));
+      cur_idx = req.begin()->first;
+      while (collect_items_range(stmt, rman, *attic_settings().NODES, req,
+          Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), cur_idx, result.second));
+    }
   }
   keep_matching_skeletons(result.first, result.second, rman.get_desired_timestamp());
 

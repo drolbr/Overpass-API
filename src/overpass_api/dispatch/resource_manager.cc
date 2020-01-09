@@ -627,8 +627,10 @@ void Resource_Manager::log_and_display_error(std::string message)
 }
 
 
-void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, uint64 extra_space)
+bool Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, uint64 extra_space)
 {
+  bool extra_space_uses_half_empty = false;
+
   uint32 elapsed_time = 0;
   if (max_allowed_time > 0)
     elapsed_time = time(NULL) - start_time + extra_time;
@@ -654,12 +656,13 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
   uint64 size = 0;
   if (max_allowed_space > 0)
   {
-    size = extra_space;
     if (!runtime_stack.empty())
       size += runtime_stack.back()->total_size();
+    extra_space_uses_half_empty = (extra_space*2 >= max_allowed_space - size);
+    size += extra_space;
   }
 
-  if (elapsed_time > max_allowed_time)
+  if (elapsed_time > max_allowed_time || size > max_allowed_space)
   {
     if (error_output)
     {
@@ -668,46 +671,27 @@ void Resource_Manager::health_check(const Statement& stmt, uint32 extra_time, ui
            runtime_stack.back()->stack_progress());
     }
 
-    Resource_Error* error = new Resource_Error();
-    error->timed_out = true;
-    error->stmt_name = stmt.get_name();
-    error->line_number = stmt.get_line_number();
-    error->size = size;
-    error->runtime = elapsed_time;
+    Resource_Error error;
+    error.timed_out = (elapsed_time > max_allowed_time);
+    error.stmt_name = stmt.get_name();
+    error.line_number = stmt.get_line_number();
+    error.size = size;
+    error.runtime = elapsed_time;
 
     Logger logger(transaction->get_db_dir());
     std::ostringstream out;
-    out<<"Timeout: runtime "<<error->runtime<<" seconds, size "<<error->size<<" bytes, "
-        "in line "<<error->line_number<<", statement "<<error->stmt_name;
+    if (elapsed_time > max_allowed_time)
+      out<<"Timeout:";
+    else
+      out<<"Oversized:";
+    out<<" runtime "<<error.runtime<<" seconds, size "<<error.size<<" bytes, "
+        "in line "<<error.line_number<<", statement "<<error.stmt_name;
     logger.annotated_log(out.str());
 
-    throw *error;
+    throw error;
   }
 
-  if (size > max_allowed_space)
-  {
-    if (error_output)
-    {
-      error_output->display_statement_progress
-          (elapsed_time, stmt.get_name(), stmt.get_progress(), stmt.get_line_number(),
-           runtime_stack.back()->stack_progress());
-    }
-
-    Resource_Error* error = new Resource_Error();
-    error->timed_out = false;
-    error->stmt_name = stmt.get_name();
-    error->line_number = stmt.get_line_number();
-    error->size = size;
-    error->runtime = elapsed_time;
-
-    Logger logger(transaction->get_db_dir());
-    std::ostringstream out;
-    out<<"Oversized: runtime "<<error->runtime<<" seconds, size "<<error->size<<" bytes, "
-        "in line "<<error->line_number<<", statement "<<error->stmt_name;
-    logger.annotated_log(out.str());
-
-    throw *error;
-  }
+  return extra_space_uses_half_empty;
 }
 
 

@@ -122,6 +122,12 @@ public:
     delete tag_store_areas;
     delete tag_store_deriveds;
 
+    delete current_geometry;
+    delete way_geometry_store;
+    delete attic_way_geometry_store;
+    delete relation_geometry_store;
+    delete attic_relation_geometry_store;
+
     delete meta_collector_nodes;
     delete meta_collector_attic_nodes;
     delete meta_collector_ways;

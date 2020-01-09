@@ -543,6 +543,7 @@ struct Block_Backend
         (Default_Range_Iterator< TIndex > begin,
          Default_Range_Iterator< TIndex > end)
         { return Range_Iterator(file_blocks, begin, end, block_size); }
+
     const Range_Iterator& range_end() const { return *range_end_it; }
 
     template< class Update_Logger >

@@ -2540,6 +2540,18 @@ struct Accept_Query_162 : public Accept_All_Tags
     uint pattern_size;
 };
 
+struct Accept_Query_163 : public Accept_All_Tags
+{
+  Accept_Query_163(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return id % 15 == 0; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+  private:
+    uint pattern_size;
+};
+
 struct Accept_Foreach_1 : public Accept_All_Tags
 {
   Accept_Foreach_1(uint pattern_size_)
@@ -3735,6 +3747,8 @@ int main(int argc, char* args[])
       modifier = new Accept_Query_161(pattern_size);
     else if (std::string(args[2]) == "query_162")
       modifier = new Accept_Query_162(pattern_size);
+    else if (std::string(args[2]) == "query_163")
+      modifier = new Accept_Query_163(pattern_size);
     else if (std::string(args[2]) == "foreach_1")
       modifier = new Accept_Foreach_1(pattern_size);
     else if (std::string(args[2]) == "foreach_2")

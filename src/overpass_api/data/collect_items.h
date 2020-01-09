@@ -374,26 +374,54 @@ void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager
 
 
 template < class Index, class Object, class Container, class Predicate >
-void collect_items_range(const Statement* stmt, Resource_Manager& rman,
+bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
 		   File_Properties& file_properties,
-		   const Container& req, const Predicate& predicate,
+		   const Container& req, const Predicate& predicate, Index& cur_idx,
 		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
+  bool too_much_data = false;
   Block_Backend< Index, Object > db
       (rman.get_transaction()->data_index(&file_properties));
+
+  Default_Range_Iterator< Index > skipped = req.begin();
+  Default_Range_Iterator< Index > end = req.end();
+  std::set< std::pair< Index, Index > > shortened;
+  if (skipped != req.end() && !(skipped.lower_bound() == cur_idx))
+  {
+    while (skipped != req.end() && !(cur_idx < skipped.upper_bound()))
+      ++skipped;
+
+    if (skipped != req.end() && !(skipped.lower_bound() == cur_idx))
+    {
+      shortened.insert(std::make_pair(cur_idx, skipped.upper_bound()));
+      for (; skipped != end; ++skipped)
+        shortened.insert(*skipped);
+      skipped = shortened.begin();
+      end = shortened.end();
+    }
+  }
+
   for (typename Block_Backend< Index, Object >::Range_Iterator
-      it(db.range_begin(req.begin(), req.end()));
+      it(db.range_begin(skipped, end));
 	   !(it == db.range_end()); ++it)
   {
+    if (too_much_data && !(cur_idx == it.index()))
+    {
+      cur_idx = it.index();
+      return true;
+    }
     if (++count >= 256*1024 && stmt)
     {
       count = 0;
-      rman.health_check(*stmt, 0, eval_map(result));
+      too_much_data = rman.health_check(*stmt, 0, eval_map(result));
+      cur_idx = it.index();
     }
     if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
   }
+
+  return false;
 }
 
 

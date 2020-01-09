@@ -645,7 +645,8 @@ void perform_query_with_bbox
 
 void perform_filter_with_bbox
     (std::string type, std::string key1, std::string value1,
-     std::string south, std::string north, std::string west, std::string east, std::string db_dir)
+     std::string south, std::string north, std::string west, std::string east, std::string db_dir,
+     uint32 max_allowed_time = 0, uint64 max_allowed_space = 0)
 {
   try
   {
@@ -653,6 +654,9 @@ void perform_filter_with_bbox
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
+    if (max_allowed_space > 0)
+      rman.set_limits(max_allowed_time, max_allowed_space);
+
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", type);
@@ -1135,21 +1139,21 @@ int main(int argc, char* args[])
     // Test a key only which doesn't appear at all
     perform_query("node", "nowhere", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "6"))
-    // Test a key intersected with a small key and value std::pair
+    // Test a key intersected with a small key and value pair
     perform_query("node", "node_key_7", "", "node_key_11", "node_value_8", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "7"))
-    // Test a key intersected with a large key and value std::pair
+    // Test a key intersected with a large key and value pair
     perform_query("node", "node_key_7", "", "node_key_15", "node_value_15", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "8"))
-    // Test a bbox combined with a local key-value std::pair
+    // Test a bbox combined with a local key-value pair
     perform_query_with_bbox("node", "node_key_11", "node_value_2",
 			    "51.0", "51.2", "7.0", "8.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "9"))
-    // Test a bbox combined with a global key-value std::pair
+    // Test a bbox combined with a global key-value pair
     perform_query_with_bbox("node", "node_key_5", "node_value_5",
 			    "-10.0", "-1.0", "-15.0", "-3.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "10"))
-    // Test a bbox combined with a global key-value std::pair
+    // Test a bbox combined with a global key-value pair
     perform_query_with_bbox("node", "node_key_7", "",
 			    "-10.0", "-1.0", "-15.0", "-3.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "11"))
@@ -1174,10 +1178,10 @@ int main(int argc, char* args[])
     // Test a key only which doesn't appear at all
     perform_query("way", "nowhere", "", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "17"))
-    // Test a key intersected with a small key and value std::pair
+    // Test a key intersected with a small key and value pair
     perform_query("way", "way_key_7", "", "way_key_11", "way_value_8", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "18"))
-    // Test a key intersected with a large key and value std::pair
+    // Test a key intersected with a large key and value pair
     perform_query("way", "way_key_7", "", "way_key_15", "way_value_15", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "19"))
     // Test three key-values intersected
@@ -1207,28 +1211,28 @@ int main(int argc, char* args[])
 		  "relation_key_5", "relation_value_5", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "26"))
-    // Test an around combined with a local key-value std::pair
+    // Test an around combined with a local key-value pair
     perform_query_with_around("node", "node", "node_key_11", "", args[3], pattern_size, global_node_offset);
   if ((test_to_execute == "") || (test_to_execute == "27"))
-    // Test an around combined with a global key-value std::pair
+    // Test an around combined with a global key-value pair
     perform_query_with_around("node", "node", "node_key_7", "node_value_1", args[3],
 			      pattern_size, global_node_offset);
 
   if ((test_to_execute == "") || (test_to_execute == "28"))
-    // Test a bbox combined with a global key-value std::pair, yielding diagonal ways.
+    // Test a bbox combined with a global key-value pair, yielding diagonal ways.
     perform_query_with_bbox("way", "way_key_5", "way_value_5",
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "29"))
-    // Test a bbox combined with a global key-value std::pair, yielding horizontal and vertical ways.
+    // Test a bbox combined with a global key-value pair, yielding horizontal and vertical ways.
     perform_query_with_bbox("way", "way_key_5", "way_value_5",
 			    "57.5", "80.0", "75.0", "105.0", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "30"))
-    // Test a bbox combined with a global key-value std::pair, yielding diagonal ways.
+    // Test a bbox combined with a global key-value pair, yielding diagonal ways.
     perform_query_with_bbox("relation", "relation_key_2/4", "",
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "31"))
-    // Test a bbox combined with a global key-value std::pair, yielding horizontal and vertical ways.
+    // Test a bbox combined with a global key-value pair, yielding horizontal and vertical ways.
     perform_query_with_bbox("relation", "relation_key_2/4", "",
 			    "57.5", "80.0", "75.0", "105.0", args[3]);
 
@@ -1249,7 +1253,7 @@ int main(int argc, char* args[])
 			"relation_key_5", "^relation_.*_5$", true,
 			"", "", true, "", "", true, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "35"))
-    // Test regular expressions: A regular expression and a key-value std::pair
+    // Test regular expressions: A regular expression and a key-value pair
     perform_regex_query("relation",
 			"relation_key_2/4", "relation_value_0",
 			"relation_key_5", "^relation_.*_5$", true,
@@ -1626,10 +1630,10 @@ int main(int argc, char* args[])
 				  30.0 + 9.9/pattern_size, 30.0 + 10.1/pattern_size, -120.0, -60.0, args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "127"))
-    // Test an around combined with a local key-value std::pair
+    // Test an around combined with a local key-value pair
     perform_query_with_around("node", "node_key_11", "", args[3], pattern_size);
   if ((test_to_execute == "") || (test_to_execute == "128"))
-    // Test an around combined with a global key-value std::pair
+    // Test an around combined with a global key-value pair
     perform_query_with_around("node", "node_key_7", "node_value_1", args[3],
                               pattern_size);
 
@@ -1729,37 +1733,37 @@ int main(int argc, char* args[])
 	"^way_key_11$", "^way_value_..$", "^way_key_5", "^way", 0x66, true, 51, 51.5, 7, 8, args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "151"))
-    // Test a bbox combined with a key-value std::pair via a filter
+    // Test a bbox combined with a key-value pair via a filter
     perform_filter_with_bbox("node", "node_key_5", "node_value_5",
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "152"))
-    // Test a bbox combined with a key-value std::pair via a filter
+    // Test a bbox combined with a key-value pair via a filter
     perform_filter_with_bbox("way", "way_key_5", "way_value_5",
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "153"))
-    // Test a bbox combined with a key-value std::pair via a filter
+    // Test a bbox combined with a key-value pair via a filter
     perform_filter_with_bbox("relation", "relation_key_2/4", "relation_value_0",
 			    "12.5", "35.0", "-15.0", "45.0", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "154"))
-    // Test a key combined with a key-value std::pair via a filter
+    // Test a key combined with a key-value pair via a filter
     perform_filter_with_key("node", "node_key_5", "node_value_5", "node_key", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "155"))
-    // Test a key combined with a key-value std::pair via a filter
+    // Test a key combined with a key-value pair via a filter
     perform_filter_with_key("way", "way_key_5", "way_value_5", "way_key", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "156"))
-    // Test a key combined with a key-value std::pair via a filter
+    // Test a key combined with a key-value pair via a filter
     perform_filter_with_key("relation", "relation_key_5", "relation_value_5",
                             "relation_key_2/4", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "157"))
-    // Test a key-value std::pair via a filter set by a previous element
+    // Test a key-value pair via a filter set by a previous element
     perform_filter_from_previous_element("node", 14 + global_node_offset, "node_key_11", "node_key_7", "_", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "158"))
-    // Test a key-value std::pair via a filter set by a previous element
+    // Test a key-value pair via a filter set by a previous element
     perform_filter_from_previous_element("way", 14, "way_key_11", "way_key_7", "_", args[3]);
   if ((test_to_execute == "") || (test_to_execute == "159"))
-    // Test a key-value std::pair via a filter set by a previous element
+    // Test a key-value pair via a filter set by a previous element
     perform_filter_from_previous_element("relation", 14, "relation_key_11", "relation_key_7", "_", args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "160"))
@@ -1774,6 +1778,12 @@ int main(int argc, char* args[])
     // Test an around collecting relations from nodes based on way membership
     perform_query_with_role_recurse("relation-nwr", "three", "", "",
         pattern_size, global_node_offset, args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "163"))
+    // Test whether chunked proessing works.
+    // Fur this purpose, test a bbox combined with a key-value pair via a filter
+    perform_filter_with_bbox("node", "node_key_15", "node_value_15",
+                            "-90.0", "90.0", "-120.0", "105.0", args[3], 900, 33554432);
 
   std::cout<<"</osm>\n";
   return 0;
