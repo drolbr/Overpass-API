@@ -395,7 +395,7 @@ bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
     if (skipped != req.end() && !(skipped.lower_bound() == cur_idx))
     {
       shortened.insert(std::make_pair(cur_idx, skipped.upper_bound()));
-      for (; skipped != end; ++skipped)
+      for (++skipped; skipped != end; ++skipped)
         shortened.insert(*skipped);
       skipped = shortened.begin();
       end = shortened.end();
