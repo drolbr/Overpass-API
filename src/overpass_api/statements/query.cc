@@ -1582,6 +1582,30 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
+    if (type & QUERY_AREA)
+    {
+      for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && area_answer_state < data_collected; ++it)
+      {
+	std::vector< Area_Skeleton::Id_Type > constraint_area_ids;
+	if ((*it)->get_area_ids(rman, constraint_area_ids))
+	{
+	  if (area_ids.empty())
+	    area_ids.swap(constraint_area_ids);
+	  else
+	  {
+	    std::vector< Area_Skeleton::Id_Type > new_ids(area_ids.size());
+	    new_ids.erase(std::set_intersection(
+	        area_ids.begin(), area_ids.end(), constraint_area_ids.begin(), constraint_area_ids.end(),
+	        new_ids.begin()), new_ids.end());
+	    area_ids.swap(new_ids);
+	  }
+
+	  if (area_ids.empty())
+	    area_answer_state = data_collected;
+	}
+      }
+    }
 
     if (type & QUERY_NODE)
     {

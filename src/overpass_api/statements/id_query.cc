@@ -128,6 +128,8 @@ class Id_Query_Constraint : public Query_Constraint
         (Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids);
     bool get_relation_ids
         (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids);
+    bool get_area_ids
+        (Resource_Manager& rman, std::vector< Area_Skeleton::Id_Type >& ids);
 
     void filter(Resource_Manager& rman, Set& into);
     virtual ~Id_Query_Constraint() {}
@@ -161,6 +163,16 @@ bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< 
 {
   ids.clear();
   if (stmt->get_type() == Statement::RELATION || stmt->get_type() == 0)
+    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+
+  return true;
+}
+
+
+bool Id_Query_Constraint::get_area_ids(Resource_Manager& rman, std::vector< Area_Skeleton::Id_Type >& ids)
+{
+  ids.clear();
+  if (stmt->get_type() == Statement::AREA || stmt->get_type() == 0)
     ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
 
   return true;

@@ -69,6 +69,9 @@ class Query_Constraint
     virtual bool get_relation_ids
         (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
       { return false; }
+    virtual bool get_area_ids
+        (Resource_Manager& rman, std::vector< Area_Skeleton::Id_Type >& ids)
+      { return false; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
