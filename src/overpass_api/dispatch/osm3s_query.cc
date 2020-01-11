@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
   Clone_Settings clone_settings;
   int area_level = 0;
   bool respect_timeout = true;
+  std::string xml_raw;
 
   int argpos = 1;
   while (argpos < argc)
@@ -93,6 +94,8 @@ int main(int argc, char *argv[])
       if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
 	clone_db_dir += '/';
     }
+    else if (!(strncmp(argv[argpos], "--request=", 10)))
+      xml_raw = ((std::string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--clone-compression=", 20)))
     {
       if (std::string(argv[argpos]).substr(20) == "no")
@@ -153,6 +156,7 @@ int main(int argc, char *argv[])
       "  --clone-compression=$METHOD: Use a specific compression method $METHOD for clone bin files\n"
       "  --clone-map-compression=$METHOD: Use a specific compression method $METHOD for clone map files\n"
       "  --rules: Ignore all time limits and allow area creation by this query.\n"
+      "  --request=$QL: Use $QL instead of standard input as the request text.\n"
       "  --quiet: Don't print anything on stderr.\n"
       "  --concise: Print concise information on stderr.\n"
       "  --progress: Print also progress information on stderr.\n"
@@ -185,7 +189,8 @@ int main(int argc, char *argv[])
       return 0;
     }
 
-    std::string xml_raw(get_xml_console(error_output));
+    if (xml_raw.empty())
+      xml_raw = get_xml_console(error_output);
 
     if ((error_output) && (error_output->display_encoding_errors()))
       return 0;
