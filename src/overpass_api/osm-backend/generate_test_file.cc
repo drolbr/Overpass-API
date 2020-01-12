@@ -4022,6 +4022,10 @@ int main(int argc, char* args[])
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"nwr\" v=\"3\"/>\n"
+      "    <tag k=\"nw\" v=\"2\"/>\n"
+      "    <tag k=\"wr\" v=\"2\"/>\n"
+      "    <tag k=\"nr\" v=\"2\"/>\n"
       "    <tag k=\"tags\" v=\"5\"/>\n"
       "    <tag k=\"members\" v=\"4\"/>\n"
       "  </count-from-default>\n";
@@ -4032,6 +4036,10 @@ int main(int argc, char* args[])
       "    <tag k=\"ways\" v=\"0\"/>\n"
       "    <tag k=\"relations\" v=\"0\"/>\n"
       "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"nwr\" v=\"0\"/>\n"
+      "    <tag k=\"nw\" v=\"0\"/>\n"
+      "    <tag k=\"wr\" v=\"0\"/>\n"
+      "    <tag k=\"nr\" v=\"0\"/>\n"
       "    <tag k=\"tags\" v=\"0\"/>\n"
       "    <tag k=\"members\" v=\"0\"/>\n"
       "  </count-from-default>\n";
@@ -4042,6 +4050,10 @@ int main(int argc, char* args[])
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"nwr\" v=\"3\"/>\n"
+      "    <tag k=\"nw\" v=\"2\"/>\n"
+      "    <tag k=\"wr\" v=\"2\"/>\n"
+      "    <tag k=\"nr\" v=\"2\"/>\n"
       "    <tag k=\"tags\" v=\"5\"/>\n"
       "    <tag k=\"members\" v=\"4\"/>\n"
       "  </count-from-foo>\n";
