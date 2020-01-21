@@ -15,6 +15,8 @@ for i in \
   filter.h \
   evaluator.h \
   tag_value.h \
+  per_member.h \
+  item_geometry.h \
   explicit_geometry.h \
   aggregators.h \
   unary_operators.h \

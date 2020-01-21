@@ -23,6 +23,7 @@
 #include "geometry_endomorphisms.h"
 #include "id_query.h"
 #include "item.h"
+#include "item_geometry.h"
 #include "make.h"
 #include "print.h"
 #include "set_list_operators.h"

@@ -113,12 +113,14 @@ statements_cc = \
   overpass_api/statements/id_query.cc \
   overpass_api/statements/if.cc \
   overpass_api/statements/item.cc \
+  overpass_api/statements/item_geometry.cc \
   overpass_api/statements/localize.cc \
   overpass_api/statements/make_area.cc \
   overpass_api/statements/make.cc \
   overpass_api/statements/map_to_area.cc \
   overpass_api/statements/newer.cc \
   overpass_api/statements/osm_script.cc \
+  overpass_api/statements/per_member.cc \
   overpass_api/statements/pivot.cc \
   overpass_api/statements/polygon_query.cc \
   overpass_api/statements/print.cc \
@@ -291,12 +293,14 @@ nobase_dist_HEADERS = \
   overpass_api/statements/id_query.h\
   overpass_api/statements/if.h\
   overpass_api/statements/item.h\
+  overpass_api/statements/item_geometry.h\
   overpass_api/statements/localize.h\
   overpass_api/statements/make_area.h\
   overpass_api/statements/make.h\
   overpass_api/statements/map_to_area.h\
   overpass_api/statements/newer.h\
   overpass_api/statements/osm_script.h\
+  overpass_api/statements/per_member.h\
   overpass_api/statements/pivot.h\
   overpass_api/statements/polygon_query.h\
   overpass_api/statements/print.h\

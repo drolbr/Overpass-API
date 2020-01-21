@@ -72,6 +72,10 @@ bool assert_element_in_context(Error_Output* error_output,
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context);
 
 
+bool assert_member_in_context(Error_Output* error_output,
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context);
+
+
 struct Requested_Context
 {
   Requested_Context() : object_usage(0), role_names_requested(false), user_names_requested(false) {}
@@ -240,6 +244,15 @@ struct Eval_Task
       { return eval(key); }
   virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
       { return eval(key); }
+
+  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+      { return eval(data, key); }
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+      { return eval(data, key); }
+  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+      { return eval(data, key); }
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+      { return eval(data, key); }
 };
 
 
@@ -357,6 +370,23 @@ struct Element_Function_Maker : public Statement::Evaluator_Maker
 
 
 template< typename Evaluator_ >
+struct Member_Function_Maker : public Statement::Evaluator_Maker
+{
+  virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
+      Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
+  {
+    if (!tree_it.assert_is_function(error_output) || !tree_it.assert_has_input_set(error_output, false)
+        || !tree_it.assert_has_arguments(error_output, false)
+        || !assert_member_in_context(error_output, tree_it, tree_context))
+      return 0;
+
+    return new Evaluator_(tree_it->line_col.first, std::map< std::string, std::string >(), global_settings);
+  }
+  Member_Function_Maker() { Statement::maker_by_func_name()[Evaluator_::stmt_func_name()].push_back(this); }
+};
+
+
+template< typename Evaluator_ >
 struct Operator_Stmt_Maker : public Generic_Statement_Maker< Evaluator_ >
 {
   Operator_Stmt_Maker() : Generic_Statement_Maker< Evaluator_ >(Evaluator_::stmt_name()) {}
@@ -369,7 +399,8 @@ struct Operator_Eval_Maker : public Statement::Evaluator_Maker
   virtual Statement* create_evaluator(const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
       Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
   {
-    if (tree_context != Statement::evaluator_expected && tree_context != Statement::elem_eval_possible)
+    if (tree_context != Statement::evaluator_expected && tree_context != Statement::elem_eval_possible
+        && tree_context != Statement::member_eval_possible)
       return 0;
     if (!Evaluator_::applicable_by_subtree_structure(tree_it))
       return 0;

@@ -22,6 +22,7 @@
 #include "convert.h"
 #include "explicit_geometry.h"
 #include "geometry_endomorphisms.h"
+#include "item_geometry.h"
 #include "make.h"
 #include "print.h"
 #include "set_prop.h"

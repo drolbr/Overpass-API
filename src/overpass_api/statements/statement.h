@@ -101,7 +101,7 @@ class Query_Constraint
 class Statement
 {
   public:
-    enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible };
+    enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible, member_eval_possible };
 
     enum Eval_Return_Type { non_evaluator, string, container, geometry };
     static std::string eval_to_string(Statement::Eval_Return_Type eval_type);
