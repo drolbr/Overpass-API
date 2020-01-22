@@ -191,6 +191,7 @@ struct Prepare_Task_Context
   Set_With_Context* get_set(const std::string& set_name);
   uint32 get_role_id(const std::string& role) const;
   const std::string* get_user_name(uint32 user_id) const;
+  const std::map< uint32, std::string >* get_roles() const { return relation_member_roles_; }
 
 private:
   Array< Set_With_Context > contexts;

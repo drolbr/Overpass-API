@@ -18,12 +18,14 @@
 
 #include "../data/utils.h"
 #include "aggregators.h"
+#include "binary_operators.h"
 #include "id_query.h"
 #include "convert.h"
 #include "explicit_geometry.h"
 #include "geometry_endomorphisms.h"
 #include "item_geometry.h"
 #include "make.h"
+#include "per_member.h"
 #include "print.h"
 #include "set_prop.h"
 #include "tag_value.h"
@@ -332,6 +334,89 @@ void lat_lon_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void per_member_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  prepare_value_test(global_settings, rman, "_", 10, 10, "1000", global_node_offset);
+
+  Convert_Statement stmt1(0, Attr()("type", type).kvs(), global_settings);
+
+  Set_Prop_Statement stmt11(0, Attr()("k", "ref").kvs(), global_settings);
+  stmt1.add_statement(&stmt11, "");
+  Evaluator_Per_Member stmt110(0, Attr().kvs(), global_settings);
+  stmt11.add_statement(&stmt110, "");
+  Evaluator_Ref stmt1100(0, Attr().kvs(), global_settings);
+  stmt110.add_statement(&stmt1100, "");
+
+  Set_Prop_Statement stmt12(0, Attr()("k", "refpos").kvs(), global_settings);
+  stmt1.add_statement(&stmt12, "");
+  Evaluator_Per_Member stmt120(0, Attr().kvs(), global_settings);
+  stmt12.add_statement(&stmt120, "");
+  Evaluator_Plus stmt1200(0, Attr().kvs(), global_settings);
+  stmt120.add_statement(&stmt1200, "");
+  Evaluator_Plus stmt12001(0, Attr().kvs(), global_settings);
+  stmt1200.add_statement(&stmt12001, "");
+  Evaluator_Pos stmt120011(0, Attr().kvs(), global_settings);
+  stmt12001.add_statement(&stmt120011, "");
+  Evaluator_Fixed stmt120012(0, Attr()("v", ":").kvs(), global_settings);
+  stmt12001.add_statement(&stmt120012, "");
+  Evaluator_Ref stmt12002(0, Attr().kvs(), global_settings);
+  stmt1200.add_statement(&stmt12002, "");
+
+  Set_Prop_Statement stmt13(0, Attr()("k", "full").kvs(), global_settings);
+  stmt1.add_statement(&stmt13, "");
+  Evaluator_Per_Member stmt130(0, Attr().kvs(), global_settings);
+  stmt13.add_statement(&stmt130, "");
+  Evaluator_Plus stmt1300(0, Attr().kvs(), global_settings);
+  stmt130.add_statement(&stmt1300, "");
+  Evaluator_Plus stmt13001(0, Attr().kvs(), global_settings);
+  stmt1300.add_statement(&stmt13001, "");
+  Evaluator_Plus stmt130011(0, Attr().kvs(), global_settings);
+  stmt13001.add_statement(&stmt130011, "");
+  Evaluator_Plus stmt1300111(0, Attr().kvs(), global_settings);
+  stmt130011.add_statement(&stmt1300111, "");
+  Evaluator_Membertype stmt13001111(0, Attr().kvs(), global_settings);
+  stmt1300111.add_statement(&stmt13001111, "");
+  Evaluator_Fixed stmt13001112(0, Attr()("v", ",").kvs(), global_settings);
+  stmt1300111.add_statement(&stmt13001112, "");
+  Evaluator_Ref stmt1300112(0, Attr().kvs(), global_settings);
+  stmt130011.add_statement(&stmt1300112, "");
+  Evaluator_Fixed stmt130012(0, Attr()("v", ",").kvs(), global_settings);
+  stmt13001.add_statement(&stmt130012, "");
+  Evaluator_Role stmt13002(0, Attr().kvs(), global_settings);
+  stmt1300.add_statement(&stmt13002, "");
+
+  stmt1.execute(rman);
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+
+//   Make_Statement stmt2(0, Attr()("type", "derivee").kvs(), global_settings);
+//   Set_Prop_Statement stmt20(0, Attr()("keytype", "geometry").kvs(), global_settings);
+//   stmt2.add_statement(&stmt20, "");
+//   Evaluator_Point stmt200(0, Attr().kvs(), global_settings);
+//   stmt20.add_statement(&stmt200, "");
+//   Evaluator_Fixed stmt2001(0, Attr()("v", "-15.0").kvs(), global_settings);
+//   stmt200.add_statement(&stmt2001, "");
+//   Evaluator_Fixed stmt2002(0, Attr()("v", "5.55").kvs(), global_settings);
+//   stmt200.add_statement(&stmt2002, "");
+//   stmt2.execute(rman);
+// 
+//   Convert_Statement stmt3(0, Attr()("type", type).kvs(), global_settings);
+// 
+//   Set_Prop_Statement stmt31(0, Attr()("k", "lat").kvs(), global_settings);
+//   stmt3.add_statement(&stmt31, "");
+//   Evaluator_Latitude stmt310(0, Attr().kvs(), global_settings);
+//   stmt31.add_statement(&stmt310, "");
+//   Set_Prop_Statement stmt32(0, Attr()("k", "lon").kvs(), global_settings);
+//   stmt3.add_statement(&stmt32, "");
+//   Evaluator_Longitude stmt320(0, Attr().kvs(), global_settings);
+//   stmt32.add_statement(&stmt320, "");
+// 
+//  stmt3.execute(rman);
+//  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+}
+
+
 void geom_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, uint64 global_node_offset)
 {
@@ -439,6 +524,8 @@ int main(int argc, char* args[])
       trace_test_2(global_settings, transaction, "trace", global_node_offset);
     if ((test_to_execute == "") || (test_to_execute == "14"))
       lat_lon_test(global_settings, transaction, "lat-lon", global_node_offset);
+    if ((test_to_execute == "") || (test_to_execute == "15"))
+      per_member_test(global_settings, transaction, "per-member", global_node_offset);
 
     std::cout<<"</osm>\n";
   }

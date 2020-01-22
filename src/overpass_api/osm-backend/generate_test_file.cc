@@ -5808,6 +5808,28 @@ int main(int argc, char* args[])
       "    <tag k=\"lat\" v=\"-15.0000000\"/>\n"
       "    <tag k=\"lon\" v=\"5.5500000\"/>\n"
       "  </lat-lon>\n";
+    if (std::string(args[2]) == "convert_15")
+      std::cout<<
+      "  <per-member id=\"2\">\n"
+      "    <tag k=\"ref\" v=\"\"/>\n"
+      "    <tag k=\"refpos\" v=\"\"/>\n"
+      "    <tag k=\"full\" v=\"\"/>\n"
+      "  </per-member>\n"
+      "  <per-member id=\"3\">\n"
+      "    <tag k=\"ref\" v=\""<<(pattern_size + global_node_offset + 10)<<";"<<(pattern_size + global_node_offset + 11)<<"\"/>\n"
+      "    <tag k=\"refpos\" v=\"1:"<<(pattern_size + global_node_offset + 10)<<";2:"<<(pattern_size + global_node_offset + 11)<<"\"/>\n"
+      "    <tag k=\"full\" v=\"node,"<<(pattern_size + global_node_offset + 10)<<",;node,"<<(pattern_size + global_node_offset + 11)<<",\"/>\n"
+      "  </per-member>\n"
+      "  <per-member id=\"4\">\n"
+      "    <tag k=\"ref\" v=\"1;"<<(global_node_offset + 1)<<";1;"<<(global_node_offset + 2)<<";2;"<<(pattern_size + global_node_offset + 2)<<";"<<(pattern_size*pattern_size/4 - pattern_size/2 + 1)<<";"<<(pattern_size + global_node_offset + 1)<<";"<<(pattern_size*pattern_size/4 + pattern_size/2 + 1)<<";"<<(global_node_offset + 1)<<";2\"/>\n"
+      "    <tag k=\"refpos\" v=\"1:1;2:"<<(global_node_offset + 1)<<";3:1;4:"<<(global_node_offset + 2)<<";5:2;6:"<<(pattern_size + global_node_offset + 2)<<";7:"<<(pattern_size*pattern_size/4 - pattern_size/2 + 1)<<";8:"<<(pattern_size + global_node_offset + 1)<<";9:"<<(pattern_size*pattern_size/4 + pattern_size/2 + 1)<<";10:"<<(global_node_offset + 1)<<";11:2\"/>\n"
+      "    <tag k=\"full\" v=\"relation,1,three;node,"<<(global_node_offset + 1)<<",one;way,1,two;node,"<<(global_node_offset + 2)<<",two;way,2,three;node,"<<(pattern_size + global_node_offset + 2)<<",two;way,"<<(pattern_size*pattern_size/4 - pattern_size/2 + 1)<<",two;node,"<<(pattern_size + global_node_offset + 1)<<",one;way,"<<(pattern_size*pattern_size/4 + pattern_size/2 + 1)<<",two;node,"<<(global_node_offset + 1)<<",one;relation,2,zero\"/>\n"
+      "  </per-member>\n"
+      "  <per-member id=\"5\">\n"
+      "    <tag k=\"ref\" v=\"\"/>\n"
+      "    <tag k=\"refpos\" v=\"\"/>\n"
+      "    <tag k=\"full\" v=\"\"/>\n"
+      "  </per-member>\n";
 
     std::cout<<"</osm>\n";
   }

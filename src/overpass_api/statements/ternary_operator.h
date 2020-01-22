@@ -72,6 +72,11 @@ struct Ternary_Eval_Task : public Eval_Task
   virtual std::string eval(const Element_With_Context< Area_Skeleton >& data, const std::string* key) const;
   virtual std::string eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const;
 
+  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const;
+  virtual std::string eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const;
+
 private:
   Eval_Task* condition;
   Eval_Task* lhs;

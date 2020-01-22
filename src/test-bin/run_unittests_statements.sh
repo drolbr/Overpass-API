@@ -215,9 +215,9 @@ date +%T
 perform_test_loop make 132 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the make statement
-prepare_test_loop convert 14 $DATA_SIZE
+prepare_test_loop convert 15 $DATA_SIZE
 date +%T
-perform_test_loop convert 14 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
+perform_test_loop convert 15 "$DATA_SIZE ../../input/update_database/ $NODE_OFFSET"
 
 # Test the make statement
 prepare_test_loop if 6 $DATA_SIZE

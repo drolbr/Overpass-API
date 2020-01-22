@@ -124,3 +124,45 @@ Evaluator_Pos::Evaluator_Pos
   std::map< std::string, std::string > attributes;
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
+
+//-----------------------------------------------------------------------------
+
+Evaluator_Ref::Statement_Maker Evaluator_Ref::statement_maker;
+Member_Function_Maker< Evaluator_Ref > Evaluator_Ref::evaluator_maker;
+
+
+Evaluator_Ref::Evaluator_Ref
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+//-----------------------------------------------------------------------------
+
+Evaluator_Membertype::Statement_Maker Evaluator_Membertype::statement_maker;
+Member_Function_Maker< Evaluator_Membertype > Evaluator_Membertype::evaluator_maker;
+
+
+Evaluator_Membertype::Evaluator_Membertype
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+//-----------------------------------------------------------------------------
+
+Evaluator_Role::Statement_Maker Evaluator_Role::statement_maker;
+Member_Function_Maker< Evaluator_Role > Evaluator_Role::evaluator_maker;
+
+
+Evaluator_Role::Evaluator_Role
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}

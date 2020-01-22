@@ -125,6 +125,30 @@ std::string Binary_Eval_Task::eval(const Element_With_Context< Derived_Skeleton 
 }
 
 
+std::string Binary_Eval_Task::eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+{
+  return evaluator->process(lhs ? lhs->eval(pos, data, key) : "", rhs ? rhs->eval(pos, data, key) : "");
+}
+
+
+std::string Binary_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+{
+  return evaluator->process(lhs ? lhs->eval(pos, data, key) : "", rhs ? rhs->eval(pos, data, key) : "");
+}
+
+
+std::string Binary_Eval_Task::eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+{
+  return evaluator->process(lhs ? lhs->eval(pos, data, key) : "", rhs ? rhs->eval(pos, data, key) : "");
+}
+
+
+std::string Binary_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+{
+  return evaluator->process(lhs ? lhs->eval(pos, data, key) : "", rhs ? rhs->eval(pos, data, key) : "");
+}
+
+
 Requested_Context Evaluator_Pair_Operator::request_context() const
 {
   if (lhs && rhs)
