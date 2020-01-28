@@ -303,7 +303,9 @@ void Runtime_Stack_Frame::copy_inward(const std::string& top_set_name, const std
   if (it == sets.end())
   {
     Set* source = parent->get_set(top_set_name);
-    if (source != &parent->sets[inner_set_name])
+    if (!source)
+      parent->sets[inner_set_name] = Set();
+    else if (source != &parent->sets[inner_set_name])
       parent->sets[inner_set_name] = *source;
   }
   else
