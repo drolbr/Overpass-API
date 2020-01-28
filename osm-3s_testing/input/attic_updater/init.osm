@@ -54,14 +54,14 @@
        2505  tag deleted then same key with other val recreated within one diff
        2506  tag deleted then another tag created within one diff
        
-       2601 tag with empty value created, later removed
-       2602 tag with empty key created, later removed
-       2603 key with multiple values created, later removed
-       2604 key with one value created, second value added
-       2605 key with multiple values created, one value removed
-       2606 key with multiple values created, later removed, all in one changeset
-       2607 key with one value created, second value added, all in one changeset
-       2608 key with multiple values created, one value removed, all in one changeset
+       2601  tag with empty value created, later removed
+       2602  tag with empty key created, later removed
+       2603  key with multiple values created, later removed
+       2604  key with one value created, second value added
+       2605  key with multiple values created, one value removed
+       2606  key with multiple values created, later removed, all in one changeset
+       2607  key with one value created, second value added, all in one changeset
+       2608  key with multiple values created, one value removed, all in one changeset
 
   
        1101  created and then unchanged way
@@ -101,7 +101,10 @@
        1803  created, then in an update several times drastically changed updated way (exchanged a node, nodes change asynchronously)
   
        1811  created, then changed way. Then further change on referred nodes only. This checks correct meta data selection.
-       
+  
+       1911  first open, then closed, then shortened, then finally again open way
+       1912  first closed, then enhanced, then finally open way
+
        2101  2 extra tags created successively
        2102  2 extra tags created at once
        2103  2 tags created within one diff
@@ -260,11 +263,11 @@
        1872  created, then multiple times drastically changed updated relation (exchanged a node, nodes change asynchronously)
        1873  created, then in an update several times drastically changed updated relation (exchanged a node, nodes change asynchronously)
        
-       1901 empty relation
-       1911 relation with only one node member, updated once unchanged, once changed
-       1921 relation with only one way member, updated once unchanged, once changed
-       1922 relation with two big size way members, updated once unchanged, once changed
-       1941 relation with only one relation member, updated once unchanged, once changed
+       1901  empty relation
+       1911  relation with only one node member, updated once unchanged, once changed
+       1921  relation with only one way member, updated once unchanged, once changed
+       1922  relation with two big size way members, updated once unchanged, once changed
+       1941  relation with only one relation member, updated once unchanged, once changed
        
        2101  2 extra tags created successively
        2102  2 extra tags created at once
@@ -594,6 +597,15 @@
 
   <node id="18111" lat="10.0" lon="8.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>    
   <node id="18112" lat="10.001" lon="8.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+
+  <node id="19111" lat="10.001" lon="9.011" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="19112" lat="10.001" lon="9.012" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="19113" lat="10.002" lon="9.012" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="19114" lat="10.002" lon="9.011" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+
+  <node id="19121" lat="10.001" lon="9.0215" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="19123" lat="10.002" lon="9.022" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
+  <node id="19124" lat="10.002" lon="9.021" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
 
   <node id="21011" lat="11.0" lon="1.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>    
   <node id="21012" lat="11.001" lon="1.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo"/>
@@ -1345,6 +1357,23 @@
     <nd ref="18112"/>
     <tag k="foo" v="bar_1811"/>
     <tag k="foo_1811" v="bar"/>
+  </way>
+
+  <way id="1911" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+    <nd ref="19111"/>
+    <nd ref="19112"/>
+    <nd ref="19113"/>
+    <nd ref="19114"/>
+    <tag k="foo" v="bar_1911"/>
+    <tag k="foo_1911" v="bar"/>
+  </way>
+  <way id="1912" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+    <nd ref="19121"/>
+    <nd ref="19123"/>
+    <nd ref="19124"/>
+    <nd ref="19121"/>
+    <tag k="foo" v="bar_1912"/>
+    <tag k="foo_1912" v="bar"/>
   </way>
 
   <way id="2101" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">

@@ -387,33 +387,23 @@ void per_member_test(Parsed_Query& global_settings, Transaction& transaction,
   Evaluator_Role stmt13002(0, Attr().kvs(), global_settings);
   stmt1300.add_statement(&stmt13002, "");
 
+  Set_Prop_Statement stmt14(0, Attr()("k", "vertexrefpos").kvs(), global_settings);
+  stmt1.add_statement(&stmt14, "");
+  Evaluator_Per_Vertex stmt140(0, Attr().kvs(), global_settings);
+  stmt14.add_statement(&stmt140, "");
+  Evaluator_Plus stmt1400(0, Attr().kvs(), global_settings);
+  stmt140.add_statement(&stmt1400, "");
+  Evaluator_Plus stmt14001(0, Attr().kvs(), global_settings);
+  stmt1400.add_statement(&stmt14001, "");
+  Evaluator_Pos stmt140011(0, Attr().kvs(), global_settings);
+  stmt14001.add_statement(&stmt140011, "");
+  Evaluator_Fixed stmt140012(0, Attr()("v", ":").kvs(), global_settings);
+  stmt14001.add_statement(&stmt140012, "");
+  Evaluator_Ref stmt14002(0, Attr().kvs(), global_settings);
+  stmt1400.add_statement(&stmt14002, "");
+
   stmt1.execute(rman);
   Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
-
-//   Make_Statement stmt2(0, Attr()("type", "derivee").kvs(), global_settings);
-//   Set_Prop_Statement stmt20(0, Attr()("keytype", "geometry").kvs(), global_settings);
-//   stmt2.add_statement(&stmt20, "");
-//   Evaluator_Point stmt200(0, Attr().kvs(), global_settings);
-//   stmt20.add_statement(&stmt200, "");
-//   Evaluator_Fixed stmt2001(0, Attr()("v", "-15.0").kvs(), global_settings);
-//   stmt200.add_statement(&stmt2001, "");
-//   Evaluator_Fixed stmt2002(0, Attr()("v", "5.55").kvs(), global_settings);
-//   stmt200.add_statement(&stmt2002, "");
-//   stmt2.execute(rman);
-// 
-//   Convert_Statement stmt3(0, Attr()("type", type).kvs(), global_settings);
-// 
-//   Set_Prop_Statement stmt31(0, Attr()("k", "lat").kvs(), global_settings);
-//   stmt3.add_statement(&stmt31, "");
-//   Evaluator_Latitude stmt310(0, Attr().kvs(), global_settings);
-//   stmt31.add_statement(&stmt310, "");
-//   Set_Prop_Statement stmt32(0, Attr()("k", "lon").kvs(), global_settings);
-//   stmt3.add_statement(&stmt32, "");
-//   Evaluator_Longitude stmt320(0, Attr().kvs(), global_settings);
-//   stmt32.add_statement(&stmt320, "");
-// 
-//  stmt3.execute(rman);
-//  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
 }
 
 

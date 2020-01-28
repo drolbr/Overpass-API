@@ -163,6 +163,60 @@ public:
 };
 
 
+/* ==== Per Vertex ====
+
+For each element, the aggregator executes its argument once per (inner) vertex of the element.
+Otherwise it behaves similar to the per_member operator.
+For closed ways, this means that it is executed once for all vertices but the first member.
+For open ways, it is executed once for all vertices but the first and last member.
+For relations its behaviour is currently undefined.
+
+The syntax is
+
+  per_vertex(<Evaluator>)
+*/
+
+struct Per_Vertex_Eval_Task : public Eval_Task
+{
+  Per_Vertex_Eval_Task(Eval_Task* rhs) : rhs_task(rhs) {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const;
+
+private:
+  Owner< Eval_Task > rhs_task;
+};
+
+
+class Evaluator_Per_Vertex : public Per_Member_Aggregator_Syntax< Evaluator_Per_Vertex >
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Per_Vertex >
+  {
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Per_Vertex >("eval-per-vertex") {}
+  };
+  static Statement_Maker statement_maker;
+  static Per_Member_Aggregator_Maker< Evaluator_Per_Vertex > evaluator_maker;
+
+  static std::string stmt_func_name() { return "per_vertex"; }
+  static std::string stmt_name() { return "eval-per-vertex"; }
+
+  Evaluator_Per_Vertex(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Per_Vertex() {}
+
+  virtual Requested_Context request_context() const
+  { return (rhs ? rhs->request_context() : Requested_Context()).add_usage(Set_Usage::SKELETON); }
+
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; };
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key);
+};
+
+
 /* === Member Dependend Functions ===
 
 Member dependend functions can only be used when an element plus a position within the element is in context.

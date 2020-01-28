@@ -113,6 +113,63 @@ std::string Per_Member_Eval_Task::eval(const Element_With_Context< Attic< Relati
 
 //-----------------------------------------------------------------------------
 
+Evaluator_Per_Vertex::Statement_Maker Evaluator_Per_Vertex::statement_maker;
+Per_Member_Aggregator_Maker< Evaluator_Per_Vertex > Evaluator_Per_Vertex::evaluator_maker;
+
+
+Evaluator_Per_Vertex::Evaluator_Per_Vertex
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Per_Member_Aggregator_Syntax< Evaluator_Per_Vertex >(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+Eval_Task* Evaluator_Per_Vertex::get_string_task(Prepare_Task_Context& context, const std::string* key)
+{
+  if (!rhs)
+    return 0;
+
+  Eval_Task* rhs_task = rhs->get_string_task(context, key);
+  if (!rhs_task)
+    return 0;
+
+  return new Per_Vertex_Eval_Task(rhs_task);
+}
+
+
+std::string Per_Vertex_Eval_Task::eval(const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+{
+  std::string result;
+  if (data.object->nds.size() > 2)
+  {
+    result = rhs_task->eval(1, data, key);
+    for (uint i = 1; i < data.object->nds.size() - 1; ++i)
+      result += ";" + rhs_task->eval(i, data, key);
+    if (data.object->nds.front() == data.object->nds.back())
+      result += ";" + rhs_task->eval(data.object->nds.size() - 1, data, key);
+  }
+  return result;
+}
+
+
+std::string Per_Vertex_Eval_Task::eval(const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+{
+  std::string result;
+  if (data.object->nds.size() > 2)
+  {
+    result = rhs_task->eval(1, data, key);
+    for (uint i = 1; i < data.object->nds.size() - 1; ++i)
+      result += ";" + rhs_task->eval(i, data, key);
+    if (data.object->nds.front() == data.object->nds.back())
+      result += ";" + rhs_task->eval(data.object->nds.size() - 1, data, key);
+  }
+  return result;
+}
+
+//-----------------------------------------------------------------------------
+
 Evaluator_Pos::Statement_Maker Evaluator_Pos::statement_maker;
 Member_Function_Maker< Evaluator_Pos > Evaluator_Pos::evaluator_maker;
 

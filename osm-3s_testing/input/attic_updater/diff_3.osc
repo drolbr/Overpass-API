@@ -36,6 +36,23 @@
 <delete>
   <way id="1505" version="6" timestamp="2013-07-01T09:04:35" changeset="496" uid="42" user="foo"/>
 </delete>
+<modify>
+  <way id="1911" version="4" timestamp="2013-07-01T09:04:11" changeset="496" uid="42" user="foo">
+    <nd ref="19113"/>
+    <nd ref="19114"/>
+    <nd ref="19111"/>
+    <tag k="foo" v="bar_1911"/>
+    <tag k="foo_1911" v="bar"/>
+  </way>
+  <way id="1912" version="3" timestamp="2013-07-01T09:04:11" changeset="496" uid="42" user="foo">
+    <nd ref="19122"/>
+    <nd ref="19123"/>
+    <nd ref="19124"/>
+    <nd ref="19121"/>
+    <tag k="foo" v="bar_1912"/>
+    <tag k="foo_1912" v="bar"/>
+  </way>
+</modify>
 
 <delete>
   <relation id="1502" version="4" timestamp="2013-07-01T09:04:12" changeset="496" uid="42" user="foo"/>
