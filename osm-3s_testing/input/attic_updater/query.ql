@@ -610,6 +610,7 @@ node(10.99,3.0,11.01,3.07)["faa_2"~"new_vaa"]["fee_2"!~"new_vee"];out meta;
 node(12033);out ids;
 node(10.99,5.0,11.01,5.07)[changes][changes!~"^y"];out meta;
 
+make marker test="recurse";out;
 
 node(11011);out ids;
 way(1302);node(w);out meta;
@@ -889,6 +890,8 @@ node(120210);rel(bn:"foo");out meta;
 node(11013);out ids;
 way(13221);rel(bw:"foo");out meta;
 
+make marker test="contains queries";out;
+
 node(around:2500,10.0,4.0);out meta;
 way(around:2500,10.0,4.0);out meta;
 node(11011);out ids;
@@ -909,6 +912,8 @@ node(11011);out ids;
 rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
 node(11011);out ids;
 rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
+
+make marker test="various queries";out;
 
 node(uid:42)(10,4,10.1,4.1);out meta;
 way(uid:42)(10,4,10.1,4.1);out meta;
@@ -966,6 +971,10 @@ convert geometry ::id=id(), type=type(), length=length();
 out;
 rel(id:1333,1433,1673,1773,1873,1922);
 convert geometry ::id=id(), type=type(), length=length();
+out;
+
+way(id:1911,1912);
+convert per_member refpos=per_member(pos()+":"+ref()),vertexrefos=per_vertex(pos()+":"+ref());
 out;
 
 (node[foo];way[foo];rel[foo];)->.orig;

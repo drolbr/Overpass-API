@@ -145,7 +145,7 @@ std::string Per_Vertex_Eval_Task::eval(const Element_With_Context< Way_Skeleton 
   if (data.object->nds.size() > 2)
   {
     result = rhs_task->eval(1, data, key);
-    for (uint i = 1; i < data.object->nds.size() - 1; ++i)
+    for (uint i = 2; i < data.object->nds.size() - 1; ++i)
       result += ";" + rhs_task->eval(i, data, key);
     if (data.object->nds.front() == data.object->nds.back())
       result += ";" + rhs_task->eval(data.object->nds.size() - 1, data, key);
@@ -160,7 +160,7 @@ std::string Per_Vertex_Eval_Task::eval(const Element_With_Context< Attic< Way_Sk
   if (data.object->nds.size() > 2)
   {
     result = rhs_task->eval(1, data, key);
-    for (uint i = 1; i < data.object->nds.size() - 1; ++i)
+    for (uint i = 2; i < data.object->nds.size() - 1; ++i)
       result += ";" + rhs_task->eval(i, data, key);
     if (data.object->nds.front() == data.object->nds.back())
       result += ";" + rhs_task->eval(data.object->nds.size() - 1, data, key);

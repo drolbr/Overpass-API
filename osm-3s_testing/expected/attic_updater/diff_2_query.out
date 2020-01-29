@@ -11086,6 +11086,9 @@
   <node id="2505" lat="11.0000000" lon="5.0500000" version="5" timestamp="2013-07-01T09:03:45Z" changeset="496" uid="42" user="foo">
     <tag k="changes" v="indeed"/>
   </node>
+  <marker id="4">
+    <tag k="test" v="recurse"/>
+  </marker>
   <node id="11011"/>
   <node id="13021" lat="10.0000000" lon="3.0200020" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo"/>
   <node id="13022" lat="10.0010000" lon="3.0200010" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>
@@ -12419,6 +12422,9 @@
   <relation id="19411" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="12012"/>
   <node id="11013"/>
+  <marker id="5">
+    <tag k="test" v="contains queries"/>
+  </marker>
   <node id="14012" lat="10.0010000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="14013" lat="10.0020000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <way id="1401" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
@@ -12543,6 +12549,9 @@
     <tag k="foo" v="bar_1432"/>
     <tag k="foo_1432" v="bar"/>
   </relation>
+  <marker id="6">
+    <tag k="test" v="various queries"/>
+  </marker>
   <node id="1404" lat="10.0000000" lon="4.0400000" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1404"/>
     <tag k="foo_1404" v="bar"/>
@@ -13920,136 +13929,144 @@
     <tag k="type" v="relation"/>
     <tag k="length" v="222222.223"/>
   </geometry>
-  <for_test id="4">
+  <per_member id="7">
+    <tag k="refpos" v="1:19111;2:19113;3:19114;4:19111"/>
+    <tag k="vertexrefos" v="2:19113;3:19114;4:19111"/>
+  </per_member>
+  <per_member id="8">
+    <tag k="refpos" v="1:19121;2:19122;3:19123;4:19124;5:19121"/>
+    <tag k="vertexrefos" v="2:19122;3:19123;4:19124;5:19121"/>
+  </per_member>
+  <for_test id="9">
     <tag k="ver" v="1"/>
     <tag k="per_val" v="1"/>
     <tag k="refs" v="{node,1101};{node,1102};{relation,1111};{relation,1112};{relation,1113};{relation,1121};{relation,1122};{relation,1123};{relation,1131};{relation,1132};{relation,1133};{relation,1141};{relation,1142};{relation,1143};{relation,1171};{relation,1172};{relation,1173};{relation,1311};{relation,1312};{relation,1313};{relation,1314};{relation,1321};{relation,1322};{relation,1323};{relation,1324};{relation,1325};{relation,1326};{relation,1327};{relation,1331};{relation,1332};{relation,1333};{relation,1334};{relation,1411};{relation,1412};{relation,1413};{relation,1414};{relation,1421};{relation,1422};{relation,1423};{relation,1424};{relation,1425};{relation,1426};{relation,1427};{relation,1431};{relation,1432};{relation,1433};{relation,1434};{relation,1901};{way,1101};{way,1102};{way,1103};{way,1301};{way,1302};{way,1303};{way,1304};{way,1401};{way,1402};{way,1403};{way,1404}"/>
   </for_test>
-  <for_test id="5">
+  <for_test id="10">
     <tag k="ver" v="2"/>
     <tag k="per_val" v="2"/>
     <tag k="refs" v="{node,1201};{node,1301};{node,1401};{relation,1201};{relation,1611};{relation,1621};{relation,1631};{relation,1641};{relation,1671};{relation,1711};{relation,1721};{relation,1731};{relation,1741};{relation,1771};{relation,1811};{relation,1821};{relation,1831};{relation,1841};{relation,1871};{relation,1911};{relation,1921};{relation,1922};{relation,1941};{way,1201};{way,1601};{way,1701};{way,1801};{way,1811};{way,1912}"/>
   </for_test>
-  <for_test id="6">
+  <for_test id="11">
     <tag k="ver" v="3"/>
     <tag k="per_val" v="3"/>
     <tag k="refs" v="{node,1202};{node,1203};{node,1302};{node,1303};{node,1304};{node,1402};{node,1403};{node,1404};{node,1502};{node,1503};{node,1504};{node,1505};{relation,1202};{relation,1203};{relation,1502};{relation,1503};{relation,1504};{relation,1505};{relation,1612};{relation,1613};{relation,1622};{relation,1623};{relation,1632};{relation,1633};{relation,1642};{relation,1643};{relation,1672};{relation,1673};{relation,1712};{relation,1713};{relation,1722};{relation,1723};{relation,1732};{relation,1733};{relation,1742};{relation,1743};{relation,1772};{relation,1773};{relation,1812};{relation,1813};{relation,1822};{relation,1823};{relation,1832};{relation,1833};{relation,1842};{relation,1843};{relation,1872};{relation,1873};{way,1202};{way,1203};{way,1502};{way,1503};{way,1504};{way,1505};{way,1602};{way,1603};{way,1702};{way,1703};{way,1802};{way,1803};{way,1911}"/>
   </for_test>
-  <for_keys_test id="7">
+  <for_keys_test id="12">
     <tag k="key" v="foo"/>
     <tag k="values" v="bar_1101;bar_1102;bar_1103;bar_1111;bar_1112;bar_1113;bar_1121;bar_1122;bar_1123;bar_1131;bar_1132;bar_1133;bar_1141;bar_1142;bar_1143;bar_1171;bar_1172;bar_1173;bar_1201;bar_1202;bar_1203;bar_1301;bar_1302;bar_1303;bar_1304;bar_1311;bar_1312;bar_1313;bar_1314;bar_1321;bar_1322;bar_1323;bar_1324;bar_1325;bar_1326;bar_1327;bar_1331;bar_1332;bar_1333;bar_1334;bar_1401;bar_1402;bar_1403;bar_1404;bar_1411;bar_1412;bar_1413;bar_1414;bar_1421;bar_1422;bar_1423;bar_1424;bar_1425;bar_1426;bar_1427;bar_1431;bar_1432;bar_1433;bar_1434;bar_1502;bar_1503;bar_1504;bar_1505;bar_1601;bar_1602;bar_1603;bar_1611;bar_1612;bar_1613;bar_1621;bar_1622;bar_1623;bar_1631;bar_1632;bar_1633;bar_1641;bar_1642;bar_1643;bar_1671;bar_1672;bar_1673;bar_1701;bar_1702;bar_1703;bar_1711;bar_1712;bar_1713;bar_1721;bar_1722;bar_1723;bar_1731;bar_1732;bar_1733;bar_1741;bar_1742;bar_1743;bar_1771;bar_1772;bar_1773;bar_1801;bar_1802;bar_1803;bar_1811;bar_1812;bar_1813;bar_1821;bar_1822;bar_1823;bar_1831;bar_1832;bar_1833;bar_1841;bar_1842;bar_1843;bar_1871;bar_1872;bar_1873;bar_1901;bar_1911;bar_1912;bar_1921;bar_1922;bar_1941"/>
     <tag k="count" v="17;30;102;0"/>
     <tag k="length" v="21842344.624"/>
   </for_keys_test>
-  <for_keys_test id="8">
+  <for_keys_test id="13">
     <tag k="key" v="foo_1101"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="9">
+  <for_keys_test id="14">
     <tag k="key" v="foo_1102"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="10">
+  <for_keys_test id="15">
     <tag k="key" v="foo_1201"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;1;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="11">
+  <for_keys_test id="16">
     <tag k="key" v="foo_1202"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;1;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="12">
+  <for_keys_test id="17">
     <tag k="key" v="foo_1203"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;1;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="13">
+  <for_keys_test id="18">
     <tag k="key" v="foo_1301"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="222.111"/>
   </for_keys_test>
-  <for_keys_test id="14">
+  <for_keys_test id="19">
     <tag k="key" v="foo_1302"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="15">
+  <for_keys_test id="20">
     <tag k="key" v="foo_1303"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="16">
+  <for_keys_test id="21">
     <tag k="key" v="foo_1304"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="17">
+  <for_keys_test id="22">
     <tag k="key" v="foo_1401"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="1111111.111"/>
   </for_keys_test>
-  <for_keys_test id="18">
+  <for_keys_test id="23">
     <tag k="key" v="foo_1402"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="1094298.263"/>
   </for_keys_test>
-  <for_keys_test id="19">
+  <for_keys_test id="24">
     <tag k="key" v="foo_1403"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="2188223.565"/>
   </for_keys_test>
-  <for_keys_test id="20">
+  <for_keys_test id="25">
     <tag k="key" v="foo_1404"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;0;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="21">
+  <for_keys_test id="26">
     <tag k="key" v="foo_1502"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;1;0"/>
     <tag k="length" v="222.222"/>
   </for_keys_test>
-  <for_keys_test id="22">
+  <for_keys_test id="27">
     <tag k="key" v="foo_1503"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;1;0"/>
     <tag k="length" v="333.333"/>
   </for_keys_test>
-  <for_keys_test id="23">
+  <for_keys_test id="28">
     <tag k="key" v="foo_1504"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;1;0"/>
     <tag k="length" v="1094293.216"/>
   </for_keys_test>
-  <for_keys_test id="24">
+  <for_keys_test id="29">
     <tag k="key" v="foo_1505"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="1;1;1;0"/>
     <tag k="length" v="1094294.887"/>
   </for_keys_test>
-  <for_keys_test id="25">
+  <for_keys_test id="30">
     <tag k="key" v="foo_1811"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="0;1;1;0"/>
     <tag k="length" v="111.222"/>
   </for_keys_test>
-  <for_keys_test id="26">
+  <for_keys_test id="31">
     <tag k="key" v="foo_1911"/>
     <tag k="values" v="bar"/>
     <tag k="count" v="0;1;1;0"/>
