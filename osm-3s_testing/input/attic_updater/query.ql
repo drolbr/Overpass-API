@@ -974,7 +974,10 @@ convert geometry ::id=id(), type=type(), length=length();
 out;
 
 way(id:1911,1912);
-convert per_member refpos=per_member(pos()+":"+ref()),vertexrefos=per_vertex(pos()+":"+ref());
+convert per_member
+    refpos=per_member(pos()+":"+ref()),
+    vertexrefos=per_vertex(pos()+":"+ref()),
+    angleref=per_vertex(ref()+":"+angle());
 out;
 
 (node[foo];way[foo];rel[foo];)->.orig;

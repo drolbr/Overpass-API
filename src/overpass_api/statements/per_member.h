@@ -436,4 +436,66 @@ public:
 };
 
 
+/* ==== Angle of a Way at the Position of a Member ====
+
+This function returns the angle between the segment ending at this member and the segment starting there.
+It is so far only defined for ways.
+If the way is a closed way then for the last member the first segment is used as the starting segment.
+This function is intended to be used within the per_vertex() enumerator.
+
+The syntax is
+
+  role()
+*/
+
+struct Angle_Eval_Task : public Eval_Task
+{
+  Angle_Eval_Task() : cache_way_ref(0u), cache_geom_ref(0) {}
+
+  virtual std::string eval(const std::string* key) const { return ""; }
+
+  virtual std::string eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const;
+  virtual std::string eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const;
+
+private:
+  mutable Way_Skeleton::Id_Type cache_way_ref;
+  mutable const Opaque_Geometry* cache_geom_ref;
+  mutable std::vector< Cartesian > cached;
+
+  std::string prettyprinted_angle(uint pos) const;
+  void keep_cartesians_up_to_date(Way_Skeleton::Id_Type, const Opaque_Geometry*) const;
+};
+
+
+class Evaluator_Angle : public Evaluator
+{
+public:
+  struct Statement_Maker : public Generic_Statement_Maker< Evaluator_Angle >
+  {
+    Statement_Maker() : Generic_Statement_Maker< Evaluator_Angle >("eval-angle") {}
+  };
+  static Statement_Maker statement_maker;
+  static Member_Function_Maker< Evaluator_Angle > evaluator_maker;
+
+  static std::string stmt_func_name() { return "angle"; }
+  virtual std::string dump_xml(const std::string& indent) const
+  { return indent + "<eval-angle/>\n"; }
+  virtual std::string dump_compact_ql(const std::string&) const { return "angle()"; }
+
+  Evaluator_Angle(int line_number_, const std::map< std::string, std::string >& input_attributes,
+                   Parsed_Query& global_settings);
+  virtual std::string get_name() const { return "eval-angle"; }
+  virtual std::string get_result_name() const { return ""; }
+  virtual void execute(Resource_Manager& rman) {}
+  virtual ~Evaluator_Angle() {}
+
+  virtual Requested_Context request_context() const
+  { return Requested_Context().add_usage(Set_Usage::GEOMETRY); }
+
+  virtual Statement::Eval_Return_Type return_type() const { return Statement::string; }
+  virtual Eval_Task* get_string_task(Prepare_Task_Context& context, const std::string* key)
+  { return new Angle_Eval_Task(); }
+};
+
+
 #endif

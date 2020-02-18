@@ -223,3 +223,78 @@ Evaluator_Role::Evaluator_Role
   std::map< std::string, std::string > attributes;
   eval_attributes_array(get_name(), attributes, input_attributes);
 }
+
+//-----------------------------------------------------------------------------
+
+Evaluator_Angle::Statement_Maker Evaluator_Angle::statement_maker;
+Member_Function_Maker< Evaluator_Angle > Evaluator_Angle::evaluator_maker;
+
+
+Evaluator_Angle::Evaluator_Angle
+    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+    : Evaluator(line_number_)
+{
+  std::map< std::string, std::string > attributes;
+  eval_attributes_array(get_name(), attributes, input_attributes);
+}
+
+
+std::string Angle_Eval_Task::eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+{
+  if (!data.geometry)
+    return "";
+  keep_cartesians_up_to_date(data.object->id, data.geometry);
+
+  if (pos+1 < data.object->nds.size() || data.object->nds.front() == data.object->nds.back())
+    return prettyprinted_angle(pos);
+  return "";
+}
+
+
+std::string Angle_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+{
+  if (!data.geometry)
+    return "";
+  keep_cartesians_up_to_date(data.object->id, data.geometry);
+
+  if (pos+1 < data.object->nds.size() || data.object->nds.front() == data.object->nds.back())
+    return prettyprinted_angle(pos);
+  return "";
+}
+
+
+std::string Angle_Eval_Task::prettyprinted_angle(uint pos) const
+{
+  if (pos == 0)
+    return "";
+  const Cartesian& prev = cached[pos-1];
+  const Cartesian& mid = cached[pos];
+  const Cartesian& next = (pos+1 < cached.size() ? cached[pos+1] : cached[1]);
+
+  Cartesian in(mid.y*prev.z - mid.z*prev.y, mid.z*prev.x - mid.x*prev.z, mid.x*prev.y - mid.y*prev.x);
+  double lg_in = sqrt(in.x*in.x + in.y*in.y + in.z*in.z);
+  Cartesian out(next.y*mid.z - next.z*mid.y, next.z*mid.x - next.x*mid.z, next.x*mid.y - next.y*mid.x);
+  double lg_out = sqrt(out.x*out.x + out.y*out.y + out.z*out.z);
+  if (lg_in < 1e-10 || lg_out < 1e-10)
+    return "NaN";
+  double prod = (in.x*out.x + in.y*out.y + in.z*out.z)/lg_in/lg_out;
+  return fabs(prod) > 1 ? "0.000" : fixed_to_string(acos(prod)/acos(0)*90., 3);
+}
+
+
+void Angle_Eval_Task::keep_cartesians_up_to_date(Way_Skeleton::Id_Type ref, const Opaque_Geometry* current) const
+{
+  if (!(ref == cache_way_ref) || current != cache_geom_ref)
+  {
+    if (current && current->has_line_geometry())
+    {
+      cached.resize(current->way_size());
+      for (uint i = 0; i < current->way_size(); ++i)
+        cached[i] = current->way_pos_is_valid(i)
+            ? Cartesian(current->way_pos_lat(i), current->way_pos_lon(i)) : Cartesian();
+    }
+    else
+      cached.clear();
+    cache_geom_ref = current;
+  }
+}

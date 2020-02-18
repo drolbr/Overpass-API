@@ -13518,10 +13518,12 @@
   <per_member id="7">
     <tag k="refpos" v="1:19113;2:19114;3:19111"/>
     <tag k="vertexrefos" v="2:19114"/>
+    <tag k="angleref" v="19114:90.000"/>
   </per_member>
   <per_member id="8">
     <tag k="refpos" v="1:19122;2:19123;3:19124;4:19121"/>
     <tag k="vertexrefos" v="2:19123;3:19124"/>
+    <tag k="angleref" v="19123:90.000;19124:90.000"/>
   </per_member>
   <for_test id="9">
     <tag k="ver" v="1"/>

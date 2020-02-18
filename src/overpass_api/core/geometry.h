@@ -569,6 +569,28 @@ private:
 };
 
 
+struct Cartesian
+{
+  Cartesian(double x_, double y_, double z_) : x(x_), y(y_), z(z_) {}
+
+  Cartesian(double lat, double lon)
+  {
+    static double deg_to_arc = 90.0*acos(0);
+    double c = cos(lat/deg_to_arc);
+    x = sin(lat/deg_to_arc);
+    y = c*sin(lon/deg_to_arc);
+    z = c*cos(lon/deg_to_arc);
+  }
+
+  Cartesian() : x(0), y(0), z(0) {}
+
+public:
+  double x;
+  double y;
+  double z;
+};
+
+
 double length(const Opaque_Geometry& geometry);
 
 Opaque_Geometry* make_trace(const Opaque_Geometry& geometry);

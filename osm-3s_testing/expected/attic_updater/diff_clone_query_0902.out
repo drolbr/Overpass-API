@@ -12042,10 +12042,12 @@
   <per_member id="7">
     <tag k="refpos" v="1:19111;2:19112;3:19113;4:19114"/>
     <tag k="vertexrefos" v="2:19112;3:19113"/>
+    <tag k="angleref" v="19112:90.000;19113:90.000"/>
   </per_member>
   <per_member id="8">
     <tag k="refpos" v="1:19121;2:19123;3:19124;4:19121"/>
     <tag k="vertexrefos" v="2:19123;3:19124;4:19121"/>
+    <tag k="angleref" v="19123:116.508;19124:116.508;19121:126.985"/>
   </per_member>
   <for_test id="9">
     <tag k="ver" v="1"/>
