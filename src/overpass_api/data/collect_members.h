@@ -85,12 +85,6 @@ std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_me
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0);
 
-std::map< Uint32_Index, std::vector< Node_Skeleton > > way_members
-    (const Statement* stmt, Resource_Manager& rman,
-     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
-
 std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > way_members
     (const Statement* stmt, Resource_Manager& rman,
