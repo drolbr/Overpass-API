@@ -94,6 +94,7 @@ class Recurse_Statement : public Output_Statement
           + " type=\"" + to_xml_representation(type) + "\""
           + (role != "" ? std::string(" role=\"") + escape_xml(role) + "\"" : "")
           + (restrict_to_role ? " role-restricted=\"yes\"" : "")
+          + dump_xml_pos_restrictions()
           + dump_xml_result_name() + "/>\n";
     }
 
@@ -101,7 +102,9 @@ class Recurse_Statement : public Output_Statement
     {
       return std::string("(") + to_ql_representation(type)
           + (input != "_" ? std::string(".") + input : "")
-          + (restrict_to_role ? std::string(":\"") + escape_cstr(role) + "\"" : "")
+          + (restrict_to_role || !pos.empty() ? ":" : "")
+          + (restrict_to_role ? std::string("\"") + escape_cstr(role) + "\"" : "")
+          + dump_ql_pos_restrictions()
           + ")";
     }
 
@@ -111,7 +114,9 @@ class Recurse_Statement : public Output_Statement
       if (target_type != "")
         return target_type + "(" + to_ql_representation(type)
             + (input != "_" ? std::string(".") + input : "")
-            + (restrict_to_role ? std::string(":\"") + escape_cstr(role) + "\"" : "")
+            + (restrict_to_role || !pos.empty() ? ":" : "")
+            + (restrict_to_role ? std::string("\"") + escape_cstr(role) + "\"" : "")
+            + dump_ql_pos_restrictions()
             + ")" + dump_ql_result_name() + ";";
       else
         return (input != "_" ? std::string(".") + input + " " : "")
@@ -124,7 +129,28 @@ class Recurse_Statement : public Output_Statement
     unsigned int type;
     std::string role;
     bool restrict_to_role;
+    std::vector< int > pos;
     std::vector< Query_Constraint* > constraints;
+
+    std::string dump_ql_pos_restrictions() const
+    {
+      if (pos.empty())
+        return "";
+      std::string result = to_string(pos[0]);
+      for (uint i = 1; i < pos.size(); ++i)
+        result += "," + to_string(pos[i]);
+      return result;
+    }
+
+    std::string dump_xml_pos_restrictions() const
+    {
+      if (pos.empty())
+        return "";
+      std::string result = " pos=\"" + to_string(pos[0]);
+      for (uint i = 1; i < pos.size(); ++i)
+        result += "," + to_string(pos[i]);
+      return result + "\"";
+    }
 };
 
 

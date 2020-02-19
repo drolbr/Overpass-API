@@ -64,13 +64,19 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
   uint line_nr = tree_it->line_col.first;
 
   std::string from = "_";
-  std::string role;
+  std::vector< std::string > roles;
   bool role_found = false;
+
+  while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
+  {
+    roles.push_back(tree_it.rhs()->token);
+    tree_it = tree_it.lhs();
+  }
 
   if (tree_it->token == ":" && tree_it->rhs)
   {
     role_found = true;
-    role = decode_json(tree_it.rhs()->token, error_output);
+    roles.push_back(decode_json(tree_it.rhs()->token, error_output));
     tree_it = tree_it.lhs();
   }
 
@@ -141,8 +147,19 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
 
   if (role_found)
   {
-    attributes["role"] = role;
-    attributes["role-restricted"] = "yes";
+    if (type == "r" || result_type == "relation")
+    {
+      attributes["role"] = roles.back();
+      attributes["role-restricted"] = "yes";
+    }
+    else if (type == "w" || result_type == "way")
+    {
+      attributes["pos"] = roles[0];
+      for (uint i = 1; i < roles.size(); ++i)
+        attributes["pos"] += "," + roles[i];
+    }
+    else if (error_output)
+      error_output->add_parse_error("A recursion of type '" + type + "' cannot have restrictions.", line_nr);
   }
   return new Recurse_Statement(line_nr, attributes, global_settings);
 }
@@ -2386,6 +2403,7 @@ Recurse_Statement::Recurse_Statement
 
   attributes["from"] = "_";
   attributes["into"] = "_";
+  attributes["pos"] = "";
   attributes["type"] = "";
   attributes["role"] = "";
   attributes["role-restricted"] = "no";
@@ -2439,7 +2457,8 @@ Recurse_Statement::Recurse_Statement
 	<<"\"node-relation\", \"node-way\", \"down\", \"down-rel\", \"up\", or \"up-rel\".";
     add_static_error(temp.str());
   }
-  if (attributes["role"] != "" || attributes["role-restricted"] == "yes")
+
+  if (!attributes["role"].empty() || attributes["role-restricted"] == "yes")
   {
     if (type != RECURSE_RELATION_RELATION && type != RECURSE_RELATION_BACKWARDS
         && type != RECURSE_RELATION_WAY && type != RECURSE_RELATION_NODE
@@ -2458,6 +2477,33 @@ Recurse_Statement::Recurse_Statement
       role = attributes["role"];
       restrict_to_role = true;
     }
+  }
+
+  if (!attributes["pos"].empty())
+  {
+    if (type != RECURSE_WAY_NODE && type != RECURSE_NODE_WAY)
+      add_static_error("A role can only be specified for values \"way-node\" or \"node-way\",");
+    else
+    {
+      std::string::size_type startpos = 0;
+      std::string::size_type endpos = attributes["pos"].find(",");
+      while (endpos != std::string::npos)
+      {
+        pos.push_back(atoll(&attributes["pos"][startpos]));
+        if (pos.back() == 0)
+          add_static_error("Invalid pos '"
+              + (endpos != std::string::npos ?
+                  attributes["pos"].substr(startpos,endpos-startpos) : attributes["pos"].substr(startpos))
+              + "' in positions list.");
+        startpos = endpos + 1;
+        endpos = attributes["pos"].find(",", startpos);
+      }
+      pos.push_back(atoll(&attributes["pos"][startpos]));
+      if (pos.back() == 0)
+        add_static_error("Invalid pos '" + attributes["pos"].substr(startpos) + "' in positions list.");
+    }
+
+    std::sort(pos.begin(), pos.end());
   }
 }
 
@@ -2740,13 +2786,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     if (rman.get_desired_timestamp() == NOW)
       into.nodes = way_members(this, rman, input_set->ways);
     else
-    {
-      std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
-         std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > all_nodes
-         = way_members(this, rman, input_set->ways, input_set->attic_ways);
-      into.nodes.swap(all_nodes.first);
-      into.attic_nodes.swap(all_nodes.second);
-    }
+      swap_components(way_members(this, rman, input_set->ways, input_set->attic_ways),
+          into.nodes, into.attic_nodes);
   }
   else if (type == RECURSE_DOWN)
     add_nw_member_objects(rman, this, *input_set, into);
