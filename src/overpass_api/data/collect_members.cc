@@ -453,34 +453,32 @@ std::vector< Relation::Id_Type > relation_relation_member_ids
 }
 
 
+template< typename Id_Type >
+void sieve_first_arg(
+    std::vector< Id_Type >& working_ids, const std::vector< Id_Type >& extra_ids, bool invert_ids)
+{
+  std::vector< Id_Type > copy_ids = working_ids;
+  if (!invert_ids)
+    working_ids.erase(std::set_intersection
+        (extra_ids.begin(), extra_ids.end(), copy_ids.begin(), copy_ids.end(),
+         working_ids.begin()), working_ids.end());
+  else
+    working_ids.erase(std::set_difference
+        (copy_ids.begin(), copy_ids.end(), extra_ids.begin(), extra_ids.end(),
+         working_ids.begin()), working_ids.end());
+}
+
+
 std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges,
      const std::vector< Relation::Id_Type >* children_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Relation::Id_Type > intersect_ids;
+  std::vector< Relation::Id_Type > intersect_ids = relation_relation_member_ids(rman, parents, role_id);
+  rman.health_check(stmt);
   if (children_ids)
-  {
-    std::vector< Relation::Id_Type > children_ids_ = relation_relation_member_ids(rman, parents, role_id);
-    rman.health_check(stmt);
-    intersect_ids.resize(children_ids_.size(), Relation::Id_Type(0u));
-    if (!invert_ids)
-      intersect_ids.erase(set_intersection
-          (children_ids->begin(), children_ids->end(),
-	   children_ids_.begin(), children_ids_.end(),
-	  intersect_ids.begin()), intersect_ids.end());
-    else
-      intersect_ids.erase(set_difference
-          (children_ids_.begin(), children_ids_.end(),
-	   children_ids->begin(), children_ids->end(),
-	  intersect_ids.begin()), intersect_ids.end());
-  }
-  else
-  {
-    intersect_ids = relation_relation_member_ids(rman, parents, role_id);
-    rman.health_check(stmt);
-  }
+    sieve_first_arg(intersect_ids, *children_ids, invert_ids);
 
   std::map< Uint31_Index, std::vector< Relation_Skeleton > > result;
   if (intersect_ids.empty())
@@ -514,29 +512,11 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges,
      const std::vector< Relation::Id_Type >* children_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Relation::Id_Type > intersect_ids;
+  std::vector< Relation::Id_Type > intersect_ids =
+       relation_relation_member_ids(rman, parents, attic_parents, role_id);
+  rman.health_check(stmt);
   if (children_ids)
-  {
-    std::vector< Relation::Id_Type > children_ids_
-        = relation_relation_member_ids(rman, parents, attic_parents, role_id);
-    rman.health_check(stmt);
-    intersect_ids.resize(children_ids_.size(), Relation::Id_Type(0u));
-    if (!invert_ids)
-      intersect_ids.erase(set_intersection
-          (children_ids->begin(), children_ids->end(),
-           children_ids_.begin(), children_ids_.end(),
-          intersect_ids.begin()), intersect_ids.end());
-    else
-      intersect_ids.erase(set_difference
-          (children_ids_.begin(), children_ids_.end(),
-           children_ids->begin(), children_ids->end(),
-          intersect_ids.begin()), intersect_ids.end());
-  }
-  else
-  {
-    intersect_ids = relation_relation_member_ids(rman, parents, attic_parents, role_id);
-    rman.health_check(stmt);
-  }
+    sieve_first_arg(intersect_ids, *children_ids, invert_ids);
 
   std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
       std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > > result;
@@ -617,29 +597,11 @@ std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges,
      const std::vector< Way::Id_Type >* way_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Way::Id_Type > intersect_ids;
+  std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids(rman, relations, role_id);
+  if (stmt)
+    rman.health_check(*stmt);
   if (way_ids)
-  {
-    std::vector< Way::Id_Type > children_ids = relation_way_member_ids(rman, relations, role_id);
-    if (stmt)
-      rman.health_check(*stmt);
-    intersect_ids.resize(children_ids.size(), Way::Id_Type(0u));
-    if (!invert_ids)
-      intersect_ids.erase(set_intersection
-          (way_ids->begin(), way_ids->end(), children_ids.begin(), children_ids.end(),
-	  intersect_ids.begin()), intersect_ids.end());
-    else
-      intersect_ids.erase(set_difference
-          (children_ids.begin(), children_ids.end(),
-	  way_ids->begin(), way_ids->end(),
-	  intersect_ids.begin()), intersect_ids.end());
-  }
-  else
-  {
-    intersect_ids = relation_way_member_ids(rman, relations, role_id);
-    if (stmt)
-      rman.health_check(*stmt);
-  }
+    sieve_first_arg(intersect_ids, *way_ids, invert_ids);
 
   std::map< Uint31_Index, std::vector< Way_Skeleton > > result;
   if (intersect_ids.empty())
@@ -674,30 +636,11 @@ std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges,
      const std::vector< Way::Id_Type >* way_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Way::Id_Type > intersect_ids;
+  std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids(rman, relations, attic_relations, role_id);
+  if (stmt)
+    rman.health_check(*stmt);
   if (way_ids)
-  {
-    std::vector< Way::Id_Type > children_ids
-        = relation_way_member_ids(rman, relations, attic_relations, role_id);
-    if (stmt)
-      rman.health_check(*stmt);
-    intersect_ids.resize(children_ids.size(), Way::Id_Type(0u));
-    if (!invert_ids)
-      intersect_ids.erase(set_intersection
-          (way_ids->begin(), way_ids->end(), children_ids.begin(), children_ids.end(),
-          intersect_ids.begin()), intersect_ids.end());
-    else
-      intersect_ids.erase(set_difference
-          (children_ids.begin(), children_ids.end(),
-          way_ids->begin(), way_ids->end(),
-          intersect_ids.begin()), intersect_ids.end());
-  }
-  else
-  {
-    intersect_ids = relation_way_member_ids(rman, relations, attic_relations, role_id);
-    if (stmt)
-      rman.health_check(*stmt);
-  }
+    sieve_first_arg(intersect_ids, *way_ids, invert_ids);
 
   std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > result;
@@ -751,61 +694,50 @@ std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_memb
 }
 
 
+std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
+    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > paired_items_range(
+    const Statement* stmt, Resource_Manager& rman,
+    const std::vector< Node::Id_Type >& target_ids,
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
+{
+  std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
+      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > result;
+  if (target_ids.empty())
+    return result;
+
+  if (!ranges.empty())
+  {
+    Uint32_Index cur_idx = ranges.begin()->first;
+    while (collect_items_range(stmt, rman, *osm_base_settings().NODES, ranges,
+        Id_Predicate< Node_Skeleton >(target_ids), cur_idx, result.first));
+    if (rman.get_desired_timestamp() != NOW)
+    {
+      cur_idx = ranges.begin()->first;
+      while (collect_items_range(stmt, rman, *attic_settings().NODES, ranges,
+          Id_Predicate< Attic< Node_Skeleton > >(target_ids), cur_idx, result.second));
+      keep_matching_skeletons(result.first, result.second, rman.get_desired_timestamp());
+    }
+  }
+
+  return result;
+}
+
+
 std::map< Uint32_Index, std::vector< Node_Skeleton > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges,
      const std::vector< Node::Id_Type >* node_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Node::Id_Type > intersect_ids;
+  std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(rman, relations, role_id);
+  if (stmt)
+    rman.health_check(*stmt);
   if (node_ids)
-  {
-    std::vector< Node::Id_Type > children_ids = relation_node_member_ids(rman, relations, role_id);
-    if (stmt)
-      rman.health_check(*stmt);
-    intersect_ids.resize(children_ids.size(), Node::Id_Type(0ull));
-    if (!invert_ids)
-      intersect_ids.erase(set_intersection
-          (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
-	  intersect_ids.begin()), intersect_ids.end());
-    else
-      intersect_ids.erase(set_difference
-          (children_ids.begin(), children_ids.end(),
-	  node_ids->begin(), node_ids->end(),
-	  intersect_ids.begin()), intersect_ids.end());
-  }
-  else
-  {
-    intersect_ids = relation_node_member_ids(rman, relations, role_id);
-    if (stmt)
-      rman.health_check(*stmt);
-  }
+    sieve_first_arg(intersect_ids, *node_ids, invert_ids);
 
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > result;
-  if (intersect_ids.empty())
-    return result;
-
-  if (node_ranges)
-  {
-    if (!node_ranges->empty())
-    {
-      Uint32_Index cur_idx = node_ranges->begin()->first;
-      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
-          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result));
-    }
-  }
-  else
-  {
-    std::set< std::pair< Uint32_Index, Uint32_Index > > req =
-        relation_node_member_indices< Relation_Skeleton >(stmt, rman, relations.begin(), relations.end());
-    if (!req.empty())
-    {
-      Uint32_Index cur_idx = req.begin()->first;
-      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
-          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result));
-    }
-  }
-  return result;
+  return paired_items_range(stmt, rman, intersect_ids,
+      node_ranges ? *node_ranges : relation_node_member_indices< Relation_Skeleton >(stmt, rman,
+          relations.begin(), relations.end())).first;
 }
 
 
@@ -817,66 +749,15 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges,
      const std::vector< Node::Id_Type >* node_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Node::Id_Type > intersect_ids;
+  std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(rman, relations, attic_relations, role_id);
+  if (stmt)
+    rman.health_check(*stmt);
   if (node_ids)
-  {
-    std::vector< Node::Id_Type > children_ids
-        = relation_node_member_ids(rman, relations, attic_relations, role_id);
-    if (stmt)
-      rman.health_check(*stmt);
-    intersect_ids.resize(children_ids.size(), Node::Id_Type(0ull));
-    if (!invert_ids)
-      intersect_ids.erase(set_intersection
-          (node_ids->begin(), node_ids->end(), children_ids.begin(), children_ids.end(),
-          intersect_ids.begin()), intersect_ids.end());
-    else
-      intersect_ids.erase(set_difference
-          (children_ids.begin(), children_ids.end(),
-          node_ids->begin(), node_ids->end(),
-          intersect_ids.begin()), intersect_ids.end());
-  }
-  else
-  {
-    intersect_ids = relation_node_member_ids(rman, relations, attic_relations, role_id);
-    if (stmt)
-      rman.health_check(*stmt);
-  }
+    sieve_first_arg(intersect_ids, *node_ids, invert_ids);
 
-  std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
-      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > result;
-  if (intersect_ids.empty())
-    return result;
-
-  if (node_ranges)
-  {
-    if (!node_ranges->empty())
-    {
-      Uint32_Index cur_idx = node_ranges->begin()->first;
-      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, *node_ranges,
-          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result.first));
-      cur_idx = node_ranges->begin()->first;
-      while (collect_items_range(stmt, rman, *attic_settings().NODES, *node_ranges,
-          Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), cur_idx, result.second));
-    }
-  }
-  else
-  {
-    std::set< std::pair< Uint32_Index, Uint32_Index > > req =
-        relation_node_member_indices< Relation_Skeleton >(stmt, rman,
-            relations.begin(), relations.end(), attic_relations.begin(), attic_relations.end());
-    if (!req.empty())
-    {
-      Uint32_Index cur_idx = req.begin()->first;
-      while (collect_items_range(stmt, rman, *osm_base_settings().NODES, req,
-          Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, result.first));
-      cur_idx = req.begin()->first;
-      while (collect_items_range(stmt, rman, *attic_settings().NODES, req,
-          Id_Predicate< Attic< Node_Skeleton > >(intersect_ids), cur_idx, result.second));
-    }
-  }
-  keep_matching_skeletons(result.first, result.second, rman.get_desired_timestamp());
-
-  return result;
+  return paired_items_range(stmt, rman, intersect_ids,
+      node_ranges ? *node_ranges : relation_node_member_indices< Relation_Skeleton >(stmt, rman,
+          relations.begin(), relations.end(), attic_relations.begin(), attic_relations.end()));
 }
 
 
@@ -924,54 +805,7 @@ std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_me
           req, Id_Predicate< Node_Skeleton >(intersect_ids), cur_idx, attic));
     }
   }
-
-
   keep_matching_skeletons(result, current, attic, rman.get_desired_timestamp());
-
-  return result;
-}
-
-
-template< typename Id_Type >
-void sieve_first_arg(
-    std::vector< Id_Type >& working_ids, const std::vector< Id_Type >& extra_ids, bool invert_ids)
-{
-  std::vector< Id_Type > copy_ids = working_ids;
-  if (!invert_ids)
-    working_ids.erase(std::set_intersection
-        (extra_ids.begin(), extra_ids.end(), copy_ids.begin(), copy_ids.end(),
-         working_ids.begin()), working_ids.end());
-  else
-    working_ids.erase(std::set_difference
-        (copy_ids.begin(), copy_ids.end(), extra_ids.begin(), extra_ids.end(),
-         working_ids.begin()), working_ids.end());
-}
-
-
-std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
-    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > paired_items_range(
-    const Statement* stmt, Resource_Manager& rman,
-    const std::vector< Node::Id_Type >& target_ids,
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
-{
-  std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
-      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > result;
-  if (target_ids.empty())
-    return result;
-
-  if (!ranges.empty())
-  {
-    Uint32_Index cur_idx = ranges.begin()->first;
-    while (collect_items_range(stmt, rman, *osm_base_settings().NODES, ranges,
-        Id_Predicate< Node_Skeleton >(target_ids), cur_idx, result.first));
-    if (rman.get_desired_timestamp() != NOW)
-    {
-      cur_idx = ranges.begin()->first;
-      while (collect_items_range(stmt, rman, *attic_settings().NODES, ranges,
-          Id_Predicate< Attic< Node_Skeleton > >(target_ids), cur_idx, result.second));
-      keep_matching_skeletons(result.first, result.second, rman.get_desired_timestamp());
-    }
-  }
 
   return result;
 }
