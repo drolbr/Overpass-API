@@ -90,6 +90,7 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+     const std::vector< int >* pos,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
      const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
 
@@ -127,10 +128,13 @@ std::vector< Relation::Id_Type > relation_relation_member_ids
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
      const uint32* role_id = 0);
 
-std::vector< Node::Id_Type > way_nd_ids(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways);
-std::vector< Node::Id_Type > way_nd_ids
-    (const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways);
+std::vector< Node::Id_Type > way_nd_ids(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::vector< int >* pos);
+std::vector< Node::Id_Type > way_nd_ids(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+    const std::vector< int >* pos);
 
 const std::map< uint32, std::string >& relation_member_roles(Transaction& transaction);
 uint32 determine_role_id(Transaction& transaction, const std::string& role);

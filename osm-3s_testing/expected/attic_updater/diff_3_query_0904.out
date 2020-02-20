@@ -11105,6 +11105,11 @@
   <node id="18021" lat="10.0000000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="18022" lat="10.0010000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="18025" lat="10.0040000" lon="8.0200000" version="1" timestamp="2013-07-01T09:03:11Z" changeset="496" uid="42" user="foo"/>
+  <node id="19111" lat="10.0010000" lon="9.0110000"/>
+  <node id="19121" lat="10.0010000" lon="9.0210000"/>
+  <node id="19124" lat="10.0020000" lon="9.0210000"/>
+  <node id="19113" lat="10.0020000" lon="9.0120000"/>
+  <node id="19114" lat="10.0020000" lon="9.0110000"/>
   <node id="11012"/>
   <node id="13021" lat="10.0000000" lon="3.0200020" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo"/>
   <node id="13022" lat="10.0010000" lon="3.0200010" version="2" timestamp="2013-07-01T09:02:12Z" changeset="496" uid="42" user="foo"/>

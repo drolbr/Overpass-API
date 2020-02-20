@@ -124,6 +124,8 @@ class Recurse_Statement : public Output_Statement
     }
     virtual std::string dump_pretty_ql(const std::string& indent) const { return indent + dump_compact_ql(indent); }
 
+    const std::vector< int >* get_pos() const { return pos.empty() ? 0 : &pos; }
+
   private:
     std::string input;
     unsigned int type;
