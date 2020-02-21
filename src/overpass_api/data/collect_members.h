@@ -1088,12 +1088,14 @@ void collect_ways(const Statement& query, Resource_Manager& rman,
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result);
 
 
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      const std::vector< Way::Id_Type >& ids, bool invert_ids);
 
@@ -1102,6 +1104,7 @@ void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result);
 
@@ -1110,6 +1113,7 @@ void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result,
      const std::vector< Way::Id_Type >& ids, bool invert_ids);

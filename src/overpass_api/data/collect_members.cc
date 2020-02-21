@@ -1213,6 +1213,7 @@ void collect_ways(const Statement& query, Resource_Manager& rman,
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result)
 {
   std::vector< Uint64 > ids = extract_children_ids< Uint32_Index, Node_Skeleton, Uint64 >(nodes);
@@ -1221,13 +1222,14 @@ void collect_ways
   rman.health_check(stmt);
 
   collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
-      Get_Parent_Ways_Predicate(ids), result);
+      Get_Parent_Ways_Predicate(ids, pos), result);
 }
 
 
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      const std::vector< Way::Id_Type >& ids, bool invert_ids)
 {
@@ -1240,7 +1242,7 @@ void collect_ways
     collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
         And_Predicate< Way_Skeleton,
 	    Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
-	    (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids)), result);
+	    (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)), result);
   else
     collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
         And_Predicate< Way_Skeleton,
@@ -1248,7 +1250,7 @@ void collect_ways
 	    Get_Parent_Ways_Predicate >
 	    (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
 	      (Id_Predicate< Way_Skeleton >(ids)),
-	     Get_Parent_Ways_Predicate(children_ids)), result);
+	     Get_Parent_Ways_Predicate(children_ids, pos)), result);
 }
 
 
@@ -1256,6 +1258,7 @@ void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result)
 {
@@ -1277,7 +1280,7 @@ void collect_ways
     req.insert(*it);
 
   collect_items_discrete_by_timestamp(&stmt, rman, req,
-      Get_Parent_Ways_Predicate(ids), result, attic_result);
+      Get_Parent_Ways_Predicate(ids, pos), result, attic_result);
 }
 
 
@@ -1285,6 +1288,7 @@ void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result,
      const std::vector< Way::Id_Type >& ids, bool invert_ids)
@@ -1310,7 +1314,7 @@ void collect_ways
     collect_items_discrete_by_timestamp(&stmt, rman, req,
         And_Predicate< Way_Skeleton,
             Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
-            (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids)),
+            (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)),
         result, attic_result);
   else
     collect_items_discrete_by_timestamp(&stmt, rman, req,
@@ -1319,7 +1323,7 @@ void collect_ways
             Get_Parent_Ways_Predicate >
             (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
               (Id_Predicate< Way_Skeleton >(ids)),
-             Get_Parent_Ways_Predicate(children_ids)),
+             Get_Parent_Ways_Predicate(children_ids, pos)),
         result, attic_result);
 }
 

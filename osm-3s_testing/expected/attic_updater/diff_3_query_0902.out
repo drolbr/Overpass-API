@@ -9651,6 +9651,8 @@
   <node id="19121" lat="10.0010000" lon="9.0215000"/>
   <node id="19112" lat="10.0010000" lon="9.0120000"/>
   <node id="19113" lat="10.0020000" lon="9.0120000"/>
+  <way id="1911"/>
+  <way id="1912"/>
   <node id="11012"/>
   <node id="13021" lat="10.0000000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="13022" lat="10.0010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>

@@ -89,9 +89,9 @@ class Id_Predicate
   public:
     Id_Predicate(const std::vector< typename Object::Id_Type >& ids_)
       : ids(ids_) {}
-    bool match(const Object& obj) const { return binary_search(ids.begin(), ids.end(), obj.id); }
-    bool match(const Handle< Object >& h) const { return binary_search(ids.begin(), ids.end(), h.id()); }
-    bool match(const Handle< Attic< Object > >& h) const { return binary_search(ids.begin(), ids.end(), h.id()); }
+    bool match(const Object& obj) const { return std::binary_search(ids.begin(), ids.end(), obj.id); }
+    bool match(const Handle< Object >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
+    bool match(const Handle< Attic< Object > >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
 
   private:
     const std::vector< typename Object::Id_Type >& ids;
@@ -106,7 +106,7 @@ inline bool has_a_child_with_id
       it3 != relation.members.end(); ++it3)
   {
     if (it3->type == type &&
-        binary_search(ids.begin(), ids.end(), it3->ref))
+        std::binary_search(ids.begin(), ids.end(), it3->ref))
       return true;
   }
   return false;
@@ -120,7 +120,7 @@ inline bool has_a_child_with_id_and_role
       it3 != relation.members.end(); ++it3)
   {
     if (it3->type == type && it3->role == role_id &&
-        binary_search(ids.begin(), ids.end(), it3->ref))
+        std::binary_search(ids.begin(), ids.end(), it3->ref))
       return true;
   }
   return false;
@@ -128,13 +128,32 @@ inline bool has_a_child_with_id_and_role
 
 
 inline bool has_a_child_with_id
-    (const Way_Skeleton& way, const std::vector< Node::Id_Type >& ids)
+    (const Way_Skeleton& way, const std::vector< int >* pos, const std::vector< Node::Id_Type >& ids)
 {
-  for (std::vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
-      it3 != way.nds.end(); ++it3)
+  if (pos)
   {
-    if (binary_search(ids.begin(), ids.end(), *it3))
-      return true;
+    std::vector< int >::const_iterator it3 = pos->begin();
+    for (; it3 != pos->end() && *it3 < 0; ++it3)
+    {
+      if (*it3 + (int)way.nds.size() >= 0 &&
+          std::binary_search(ids.begin(), ids.end(), way.nds[*it3 + way.nds.size()]))
+        return true;
+    }
+    for (; it3 != pos->end(); ++it3)
+    {
+      if (*it3 > 0 && *it3 < (int)way.nds.size()+1 &&
+          std::binary_search(ids.begin(), ids.end(), way.nds[*it3-1]))
+        return true;
+    }
+  }
+  else
+  {
+    for (std::vector< Node::Id_Type >::const_iterator it3(way.nds.begin());
+        it3 != way.nds.end(); ++it3)
+    {
+      if (std::binary_search(ids.begin(), ids.end(), *it3))
+        return true;
+    }
   }
   return false;
 }
@@ -180,14 +199,15 @@ private:
 class Get_Parent_Ways_Predicate
 {
 public:
-  Get_Parent_Ways_Predicate(const std::vector< Node::Id_Type >& ids_)
-    : ids(ids_) {}
-  bool match(const Way_Skeleton& obj) const { return has_a_child_with_id(obj, ids); }
-  bool match(const Handle< Way_Skeleton >& h) const { return has_a_child_with_id(h.object(), ids); }
-  bool match(const Handle< Attic< Way_Skeleton > >& h) const { return has_a_child_with_id(h.object(), ids); }
+  Get_Parent_Ways_Predicate(const std::vector< Node::Id_Type >& ids_, const std::vector< int >* pos_)
+    : ids(ids_), pos(pos_) {}
+  bool match(const Way_Skeleton& obj) const { return has_a_child_with_id(obj, pos, ids); }
+  bool match(const Handle< Way_Skeleton >& h) const { return has_a_child_with_id(h.object(), pos, ids); }
+  bool match(const Handle< Attic< Way_Skeleton > >& h) const { return has_a_child_with_id(h.object(), pos, ids); }
 
 private:
   const std::vector< Node::Id_Type >& ids;
+  const std::vector< int >* pos;
 };
 
 

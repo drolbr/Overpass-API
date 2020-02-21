@@ -597,7 +597,7 @@
     <tag k="foo_1911" v="bar"/>
   </way>
 </modify>
-  
+
 <modify>
   <way id="2101" version="2" timestamp="2013-07-01T09:02:11" changeset="496" uid="42" user="foo">
     <nd ref="21011"/>
