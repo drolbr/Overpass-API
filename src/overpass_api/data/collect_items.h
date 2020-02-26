@@ -197,6 +197,26 @@ void filter_items_by_timestamp(
 }
 
 
+template< typename Object >
+void check_for_duplicated_objects(
+    const std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id, Resource_Manager& rman)
+{
+  // Debug-Feature. Can be disabled once no further bugs appear
+  for (typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::size_type i = 0;
+      i+1 < timestamp_by_id.size(); ++i)
+  {
+    if (timestamp_by_id[i].second == timestamp_by_id[i+1].second
+      && timestamp_by_id[i].first == timestamp_by_id[i+1].first)
+    {
+      std::ostringstream out;
+      out<<name_of_type< Object >()<<" "<<timestamp_by_id[i].first.val()
+          <<" appears multiple times at timestamp "<<Timestamp(timestamp_by_id[i].second).str();
+      rman.log_and_display_error(out.str());
+    }
+  }
+}
+
+
 template < class Index, class Object, class Current_Iterator, class Attic_Iterator, class Predicate >
 void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    Current_Iterator current_begin, Current_Iterator current_end,
@@ -215,18 +235,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
   filter_items_by_timestamp(timestamp_by_id, result);
   filter_items_by_timestamp(timestamp_by_id, attic_result);
 
-  // Debug-Feature. Can be disabled once no further bugs appear
-  for (typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::size_type i = 0; i+1 < timestamp_by_id.size(); ++i)
-  {
-    if (timestamp_by_id[i].second == timestamp_by_id[i+1].second
-      && timestamp_by_id[i].first == timestamp_by_id[i+1].first)
-    {
-      std::ostringstream out;
-      out<<name_of_type< Object >()<<" "<<timestamp_by_id[i].first.val()<<" appears multiple times at timestamp "
-	    <<Timestamp(timestamp_by_id[i].second).str();
-      rman.log_and_display_error(out.str());
-    }
-  }
+  check_for_duplicated_objects< Object >(timestamp_by_id, rman);
 }
 
 
@@ -248,18 +257,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
   filter_items_by_timestamp(timestamp_by_id, result);
   filter_items_by_timestamp(timestamp_by_id, attic_result);
 
-  // Debug-Feature. Can be disabled once no further bugs appear
-  for (std::vector< std::pair< Relation_Skeleton::Id_Type, uint64 > >::size_type i = 0; i+1 < timestamp_by_id.size(); ++i)
-  {
-    if (timestamp_by_id[i].second == timestamp_by_id[i+1].second
-      && timestamp_by_id[i].first == timestamp_by_id[i+1].first)
-    {
-      std::ostringstream out;
-      out<<name_of_type< Relation_Skeleton >()<<" "<<timestamp_by_id[i].first.val()<<" appears multiple times at timestamp "
-	    <<Timestamp(timestamp_by_id[i].second).str();
-      rman.log_and_display_error(out.str());
-    }
-  }
+  check_for_duplicated_objects< Relation_Skeleton >(timestamp_by_id, rman);
 }
 
 
@@ -281,18 +279,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
   filter_items_by_timestamp(timestamp_by_id, result);
   filter_items_by_timestamp(timestamp_by_id, attic_result);
 
-  // Debug-Feature. Can be disabled once no further bugs appear
-  for (std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > >::size_type i = 0; i+1 < timestamp_by_id.size(); ++i)
-  {
-    if (timestamp_by_id[i].second == timestamp_by_id[i+1].second
-      && timestamp_by_id[i].first == timestamp_by_id[i+1].first)
-    {
-      std::ostringstream out;
-      out<<name_of_type< Way_Skeleton >()<<" "<<timestamp_by_id[i].first.val()<<" appears multiple times at timestamp "
-	    <<Timestamp(timestamp_by_id[i].second).str();
-      rman.log_and_display_error(out.str());
-    }
-  }
+  check_for_duplicated_objects< Way_Skeleton >(timestamp_by_id, rman);
 }
 
 
