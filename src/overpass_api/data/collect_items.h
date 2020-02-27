@@ -34,140 +34,147 @@ inline uint64 timestamp_of(const Relation_Skeleton& skel) { return NOW; }
 
 
 template < class Index, class Object, class Iterator, class Predicate >
-void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
-    Iterator begin, Iterator end,
+void reconstruct_items(
+    Iterator& it, Iterator end, Index index,
     const Predicate& predicate,
-    std::map< Index, std::vector< Object > >& result,
+    std::vector< Object >& result,
     std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id,
-    uint64 timestamp)
+    uint64 timestamp, uint32& count)
 {
-  uint32 count = 0;
-  for (Iterator it = begin; !(it == end); ++it)
+  while (!(it == end) && it.index() == index)
   {
-    if (++count >= 64*1024)
-    {
-      count = 0;
-      if (stmt)
-        rman.health_check(*stmt, 0, eval_map(result));
-    }
+    ++count;
     if (timestamp < timestamp_of(it.object()))
     {
       timestamp_by_id.push_back(std::make_pair(it.object().id, timestamp_of(it.object())));
       if (predicate.match(it.object()))
-        result[it.index()].push_back(it.object());
+        result.push_back(it.object());
     }
+    ++it;
   }
 }
 
 
 template < class Index, class Object, class Attic_Iterator, class Current_Iterator, class Predicate >
 void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
-    Current_Iterator current_begin, Current_Iterator current_end,
-    Attic_Iterator attic_begin, Attic_Iterator attic_end,
+    Current_Iterator& current_it, Current_Iterator current_end,
+    Attic_Iterator& attic_it, Attic_Iterator attic_end, Index& idx,
     const Predicate& predicate,
-    std::map< Index, std::vector< Object > >& result,
-    std::map< Index, std::vector< Attic< Object > > >& attic_result,
+    std::vector< Object >& result, std::vector< Attic< Object > >& attic_result,
     std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id,
     uint64 timestamp)
 {
-  Current_Iterator current_it = current_begin;
-  Attic_Iterator attic_it = attic_begin;
-  while (!(current_it == current_end) || !(attic_it == attic_end))
+  std::vector< Object > skels;
+  std::vector< Attic< typename Object::Delta > > deltas;
+  std::vector< std::pair< typename Object::Id_Type, uint64 > > local_timestamp_by_id;
+
+  while (!(current_it == current_end) && current_it.index() == idx)
   {
-    Index idx = (current_it == current_end ? attic_it.index() : current_it.index());
-    if (!(attic_it == attic_end) && attic_it.index() < idx)
-      idx = attic_it.index();
+    timestamp_by_id.push_back(std::make_pair(current_it.object().id, NOW));
+    local_timestamp_by_id.push_back(std::make_pair(current_it.object().id, NOW));
+    skels.push_back(current_it.object());
+    ++current_it;
+  }
 
-    std::vector< Object > skels;
-    std::vector< Attic< typename Object::Delta > > deltas;
-    std::vector< std::pair< typename Object::Id_Type, uint64 > > local_timestamp_by_id;
-
-    while (!(current_it == current_end) && current_it.index() == idx)
+  while (!(attic_it == attic_end) && attic_it.index() == idx)
+  {
+    if (timestamp < attic_it.object().timestamp)
     {
-      timestamp_by_id.push_back(std::make_pair(current_it.object().id, NOW));
-      local_timestamp_by_id.push_back(std::make_pair(current_it.object().id, NOW));
-      skels.push_back(current_it.object());
-      ++current_it;
+      timestamp_by_id.push_back(std::make_pair(attic_it.object().id, attic_it.object().timestamp));
+      local_timestamp_by_id.push_back(std::make_pair(attic_it.object().id, attic_it.object().timestamp));
+      deltas.push_back(attic_it.object());
     }
+    ++attic_it;
+  }
 
-    while (!(attic_it == attic_end) && attic_it.index() == idx)
+  std::vector< const Attic< typename Object::Delta >* > delta_refs;
+  delta_refs.reserve(deltas.size());
+  for (typename std::vector< Attic< typename Object::Delta > >::const_iterator it = deltas.begin();
+      it != deltas.end(); ++it)
+    delta_refs.push_back(&*it);
+
+  std::sort(skels.begin(), skels.end());
+  std::sort(delta_refs.begin(), delta_refs.end(), Delta_Ref_Comparator< Attic< typename Object::Delta > >());
+  std::sort(local_timestamp_by_id.begin(), local_timestamp_by_id.end());
+
+  std::vector< Attic< Object > > attics;
+  typename std::vector< Object >::const_iterator skels_it = skels.begin();
+  Object reference;
+  for (typename std::vector< const Attic< typename Object::Delta >* >::const_iterator it = delta_refs.begin();
+        it != delta_refs.end(); ++it)
+  {
+    if (!(reference.id == (*it)->id))
     {
-      if (timestamp < attic_it.object().timestamp)
-      {
-        timestamp_by_id.push_back(std::make_pair(attic_it.object().id, attic_it.object().timestamp));
-        local_timestamp_by_id.push_back(std::make_pair(attic_it.object().id, attic_it.object().timestamp));
-        deltas.push_back(attic_it.object());
-      }
-      ++attic_it;
+      while (skels_it != skels.end() && skels_it->id < (*it)->id)
+        ++skels_it;
+      if (skels_it != skels.end() && skels_it->id == (*it)->id)
+        reference = *skels_it;
+      else
+        reference = Object();
     }
-
-    std::vector< const Attic< typename Object::Delta >* > delta_refs;
-    delta_refs.reserve(deltas.size());
-    for (typename std::vector< Attic< typename Object::Delta > >::const_iterator it = deltas.begin();
-        it != deltas.end(); ++it)
-      delta_refs.push_back(&*it);
-
-    std::sort(skels.begin(), skels.end());
-    std::sort(delta_refs.begin(), delta_refs.end(), Delta_Ref_Comparator< Attic< typename Object::Delta > >());
-    std::sort(local_timestamp_by_id.begin(), local_timestamp_by_id.end());
-
-    std::vector< Attic< Object > > attics;
-    typename std::vector< Object >::const_iterator skels_it = skels.begin();
-    Object reference;
-    for (typename std::vector< const Attic< typename Object::Delta >* >::const_iterator it = delta_refs.begin();
-         it != delta_refs.end(); ++it)
+    try
     {
-      if (!(reference.id == (*it)->id))
+      Attic< Object > attic_obj = Attic< Object >((*it)->expand(reference), (*it)->timestamp);
+      if (attic_obj.id.val() != 0)
       {
-        while (skels_it != skels.end() && skels_it->id < (*it)->id)
-          ++skels_it;
-        if (skels_it != skels.end() && skels_it->id == (*it)->id)
-          reference = *skels_it;
-        else
-          reference = Object();
+        reference = attic_obj;
+        typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
+            tit = std::lower_bound(local_timestamp_by_id.begin(), local_timestamp_by_id.end(),
+                                    std::make_pair((*it)->id, 0ull));
+        if (tit != local_timestamp_by_id.end() && tit->first == (*it)->id && tit->second == (*it)->timestamp)
+          attics.push_back(attic_obj);
       }
-      try
+      else
       {
-	Attic< Object > attic_obj = Attic< Object >((*it)->expand(reference), (*it)->timestamp);
-        if (attic_obj.id.val() != 0)
-	{
-          reference = attic_obj;
-          typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
-              tit = std::lower_bound(local_timestamp_by_id.begin(), local_timestamp_by_id.end(),
-				     std::make_pair((*it)->id, 0ull));
-	  if (tit != local_timestamp_by_id.end() && tit->first == (*it)->id && tit->second == (*it)->timestamp)
-	    attics.push_back(attic_obj);
-	}
-        else
-        {
-          // Relation_Delta without a reference of the same index
-          std::ostringstream out;
-	  out<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
-	      <<Timestamp((*it)->timestamp).str()<<".";
-          rman.log_and_display_error(out.str());
-        }
-      }
-      catch (const std::exception& e)
-      {
+        // Relation_Delta without a reference of the same index
         std::ostringstream out;
-	out<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
-	    <<Timestamp((*it)->timestamp).str()<<": "<<e.what();
+        out<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
+            <<Timestamp((*it)->timestamp).str()<<".";
         rman.log_and_display_error(out.str());
       }
     }
-
-    for (typename std::vector< Attic< Object > >::const_iterator it = attics.begin(); it != attics.end(); ++it)
+    catch (const std::exception& e)
     {
-      if (predicate.match(*it))
-        attic_result[idx].push_back(*it);
-    }
-
-    for (typename std::vector< Object >::const_iterator it = skels.begin(); it != skels.end(); ++it)
-    {
-      if (predicate.match(*it))
-        result[idx].push_back(*it);
+      std::ostringstream out;
+      out<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
+          <<Timestamp((*it)->timestamp).str()<<": "<<e.what();
+      rman.log_and_display_error(out.str());
     }
   }
+
+  for (typename std::vector< Attic< Object > >::const_iterator it = attics.begin(); it != attics.end(); ++it)
+  {
+    if (predicate.match(*it))
+      attic_result.push_back(*it);
+  }
+
+  for (typename std::vector< Object >::const_iterator it = skels.begin(); it != skels.end(); ++it)
+  {
+    if (predicate.match(*it))
+      result.push_back(*it);
+  }
+}
+
+
+template < class Object >
+void filter_items_by_timestamp(
+    const std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id,
+    std::vector< Object >& result)
+{
+  typename std::vector< Object >::iterator target_it = result.begin();
+  for (typename std::vector< Object >::iterator it2 = result.begin();
+        it2 != result.end(); ++it2)
+  {
+    typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
+        tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
+            std::make_pair(it2->id, 0ull));
+    if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == timestamp_of(*it2))
+    {
+      *target_it = *it2;
+      ++target_it;
+    }
+  }
+  result.erase(target_it, result.end());
 }
 
 
@@ -178,22 +185,7 @@ void filter_items_by_timestamp(
 {
   for (typename std::map< Index, std::vector< Object > >::iterator it = result.begin();
        it != result.end(); ++it)
-  {
-    typename std::vector< Object >::iterator target_it = it->second.begin();
-    for (typename std::vector< Object >::iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-    {
-      typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::const_iterator
-          tit = std::lower_bound(timestamp_by_id.begin(), timestamp_by_id.end(),
-              std::make_pair(it2->id, 0ull));
-      if (tit != timestamp_by_id.end() && tit->first == it2->id && tit->second == timestamp_of(*it2))
-      {
-        *target_it = *it2;
-        ++target_it;
-      }
-    }
-    it->second.erase(target_it, it->second.end());
-  }
+    filter_items_by_timestamp(timestamp_by_id, it->second);
 }
 
 
@@ -225,17 +217,36 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    std::map< Index, std::vector< Object > >& result,
                    std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
-  std::vector< std::pair< typename Object::Id_Type, uint64 > > timestamp_by_id;
+  uint32 count = 0;
+  while (!(current_begin == current_end) || !(attic_begin == attic_end))
+  {
+    std::vector< std::pair< typename Object::Id_Type, uint64 > > timestamp_by_id;
 
-  reconstruct_items(stmt, rman, current_begin, current_end, predicate, result, timestamp_by_id, timestamp);
-  reconstruct_items(stmt, rman, attic_begin, attic_end, predicate, attic_result, timestamp_by_id, timestamp);
+    if (++count >= 128*1024)
+    {
+      count = 0;
+      if (stmt)
+      {
+        rman.health_check(*stmt, 0, eval_map(result));
+        rman.health_check(*stmt, 0, eval_map(attic_result));
+      }
+    }
+    Index index =
+        (attic_begin == attic_end ||
+            (!(current_begin == current_end) && current_begin.index() < attic_begin.index())
+        ? current_begin.index() : attic_begin.index());
+    reconstruct_items(
+        current_begin, current_end, index, predicate, result[index], timestamp_by_id, timestamp, count);
+    reconstruct_items(
+        attic_begin, attic_end, index, predicate, attic_result[index], timestamp_by_id, timestamp, count);
 
-  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+    std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
 
-  filter_items_by_timestamp(timestamp_by_id, result);
-  filter_items_by_timestamp(timestamp_by_id, attic_result);
+    filter_items_by_timestamp(timestamp_by_id, result[index]);
+    filter_items_by_timestamp(timestamp_by_id, attic_result[index]);
 
-  check_for_duplicated_objects< Object >(timestamp_by_id, rman);
+    check_for_duplicated_objects< Object >(timestamp_by_id, rman);
+  }
 }
 
 
@@ -247,17 +258,35 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    std::map< Index, std::vector< Relation_Skeleton > >& result,
                    std::map< Index, std::vector< Attic< Relation_Skeleton > > >& attic_result)
 {
-  std::vector< std::pair< Relation_Skeleton::Id_Type, uint64 > > timestamp_by_id;
+  uint32 count = 0;
+  while (!(current_begin == current_end) || !(attic_begin == attic_end))
+  {
+    std::vector< std::pair< Relation_Skeleton::Id_Type, uint64 > > timestamp_by_id;
 
-  reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end,
-                    predicate, result, attic_result, timestamp_by_id, timestamp);
+    if (++count >= 128*1024)
+    {
+      count = 0;
+      if (stmt)
+      {
+        rman.health_check(*stmt, 0, eval_map(result));
+        rman.health_check(*stmt, 0, eval_map(attic_result));
+      }
+    }
+    Index index =
+        (attic_begin == attic_end ||
+            (!(current_begin == current_end) && current_begin.index() < attic_begin.index())
+        ? current_begin.index() : attic_begin.index());
 
-  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+    reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end, index,
+                      predicate, result[index], attic_result[index], timestamp_by_id, timestamp);
 
-  filter_items_by_timestamp(timestamp_by_id, result);
-  filter_items_by_timestamp(timestamp_by_id, attic_result);
+    std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
 
-  check_for_duplicated_objects< Relation_Skeleton >(timestamp_by_id, rman);
+    filter_items_by_timestamp(timestamp_by_id, result[index]);
+    filter_items_by_timestamp(timestamp_by_id, attic_result[index]);
+
+    check_for_duplicated_objects< Relation_Skeleton >(timestamp_by_id, rman);
+  }
 }
 
 
@@ -269,17 +298,35 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    std::map< Index, std::vector< Way_Skeleton > >& result,
                    std::map< Index, std::vector< Attic< Way_Skeleton > > >& attic_result)
 {
-  std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > > timestamp_by_id;
+  uint32 count = 0;
+  while (!(current_begin == current_end) || !(attic_begin == attic_end))
+  {
+    std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > > timestamp_by_id;
 
-  reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end,
-                    predicate, result, attic_result, timestamp_by_id, timestamp);
+    if (++count >= 128*1024)
+    {
+      count = 0;
+      if (stmt)
+      {
+        rman.health_check(*stmt, 0, eval_map(result));
+        rman.health_check(*stmt, 0, eval_map(attic_result));
+      }
+    }
+    Index index =
+        (attic_begin == attic_end ||
+            (!(current_begin == current_end) && current_begin.index() < attic_begin.index())
+        ? current_begin.index() : attic_begin.index());
 
-  std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
+    reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end, index,
+                      predicate, result[index], attic_result[index], timestamp_by_id, timestamp);
 
-  filter_items_by_timestamp(timestamp_by_id, result);
-  filter_items_by_timestamp(timestamp_by_id, attic_result);
+    std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
 
-  check_for_duplicated_objects< Way_Skeleton >(timestamp_by_id, rman);
+    filter_items_by_timestamp(timestamp_by_id, result[index]);
+    filter_items_by_timestamp(timestamp_by_id, attic_result[index]);
+
+    check_for_duplicated_objects< Way_Skeleton >(timestamp_by_id, rman);
+  }
 }
 
 

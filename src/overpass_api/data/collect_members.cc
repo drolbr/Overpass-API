@@ -575,59 +575,6 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
 }
 
 
-template< typename Index, typename Skeleton >
-void keep_matching_skeletons
-    (std::map< Index, std::vector< Attic< Skeleton > > >& result,
-     const std::map< Index, std::vector< Skeleton > >& current,
-     const std::map< Index, std::vector< Attic< Skeleton > > >& attic,
-     uint64 timestamp)
-{
-  std::map< typename Skeleton::Id_Type, uint64 > timestamp_by_id;
-
-  result.clear();
-
-  for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
-       it != current.end(); ++it)
-  {
-    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      timestamp_by_id[it2->id] = NOW;
-  }
-
-  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
-       it != attic.end(); ++it)
-  {
-    for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-    {
-      uint64& stored_timestamp = timestamp_by_id[it2->id];
-      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
-        stored_timestamp = it2->timestamp;
-    }
-  }
-
-  for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
-       it != current.end(); ++it)
-  {
-    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      if (timestamp_by_id[it2->id] == NOW)
-        result[it->first].push_back(Attic< Skeleton >(*it2, NOW));
-    }
-  }
-
-  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
-       it != attic.end(); ++it)
-  {
-    for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
-    {
-      if (timestamp_by_id[it2->id] == it2->timestamp)
-        result[it->first].push_back(Attic< Skeleton >(*it2, it2->timestamp));
-    }
-  }
-}
-
-
 std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
