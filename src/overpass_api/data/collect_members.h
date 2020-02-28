@@ -185,8 +185,7 @@ bool get_elements_by_id_from_db
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
      const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
      const std::set< std::pair< TIndex, TIndex > >& range_req, TIndex* min_idx,
-     const Statement& query, Resource_Manager& rman,
-     File_Properties& file_prop, File_Properties& attic_file_prop)
+     const Statement& query, Resource_Manager& rman)
 {
   uint64 timestamp = rman.get_desired_timestamp();
 
@@ -194,70 +193,59 @@ bool get_elements_by_id_from_db
   attic_elements.clear();
   if (ids.empty())
   {
-    if (timestamp == NOW)
+    if (range_req.empty())
+      return false;
+    TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
+    while (timestamp == NOW
+        ? collect_items_range(&query, rman, range_req, Trivial_Predicate< TObject >(), cur_idx, elements)
+        : collect_items_range_by_timestamp(&query, rman, range_req, Trivial_Predicate< TObject >(), cur_idx,
+              elements, attic_elements))
     {
-      if (range_req.empty())
-        return false;
-      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
-      while (collect_items_range(&query, rman, file_prop, range_req,
-          Trivial_Predicate< TObject >(), cur_idx, elements))
+      if (min_idx)
       {
-        if (min_idx)
-        {
-          *min_idx = cur_idx;
-          return true;
-        }
+        *min_idx = cur_idx;
+        return true;
       }
     }
-    else
-      collect_items_range_by_timestamp(&query, rman, range_req,
-          Trivial_Predicate< TObject >(), elements, attic_elements);
   }
   else if (!invert_ids)
   {
-    if (timestamp == NOW)
+    if (range_req.empty())
+      return false;
+    TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
+    while (timestamp == NOW
+        ? collect_items_range(&query, rman, range_req, Id_Predicate< TObject >(ids), cur_idx, elements)
+        : collect_items_range_by_timestamp(&query, rman, range_req, Id_Predicate< TObject >(ids), cur_idx,
+              elements, attic_elements))
     {
-      if (range_req.empty())
-        return false;
-      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
-      while (collect_items_range(&query, rman, file_prop, range_req,
-          Id_Predicate< TObject >(ids), cur_idx, elements))
+      if (min_idx)
       {
-        if (min_idx)
-        {
-          *min_idx = cur_idx;
-          return true;
-        }
+        *min_idx = cur_idx;
+        return true;
       }
     }
-    else
-      collect_items_range_by_timestamp(&query, rman, range_req,
-          Id_Predicate< TObject >(ids), elements, attic_elements);
   }
   else if (!range_req.empty())
   {
-    if (timestamp == NOW)
+    TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
+    while (timestamp == NOW
+        ? collect_items_range(&query, rman, range_req,
+              Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx, elements)
+        : collect_items_range_by_timestamp(&query, rman, range_req,
+              Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx,
+              elements, attic_elements))
     {
-      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
-      while (collect_items_range(&query, rman, file_prop, range_req,
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx, elements))
+      if (min_idx)
       {
-        if (min_idx)
-        {
-          *min_idx = cur_idx;
-          return true;
-        }
+        *min_idx = cur_idx;
+        return true;
       }
     }
-    else
-      collect_items_range_by_timestamp(&query, rman, range_req,
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-          elements, attic_elements);
   }
   else
   {
     if (timestamp == NOW)
-      collect_items_flat(query, rman, file_prop,
+      collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
           Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
           elements);
     else

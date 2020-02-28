@@ -210,10 +210,10 @@ void check_for_duplicated_objects(
 
 
 template < class Index, class Object, class Current_Iterator, class Attic_Iterator, class Predicate >
-void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
-                   const Predicate& predicate, uint64 timestamp,
+                   const Predicate& predicate, Index* cur_idx, uint64 timestamp,
                    std::map< Index, std::vector< Object > >& result,
                    std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
@@ -222,6 +222,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
   {
     std::vector< std::pair< typename Object::Id_Type, uint64 > > timestamp_by_id;
 
+    bool too_much_data = false;
     if (++count >= 128*1024)
     {
       count = 0;
@@ -235,6 +236,12 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
         (attic_begin == attic_end ||
             (!(current_begin == current_end) && current_begin.index() < attic_begin.index())
         ? current_begin.index() : attic_begin.index());
+    if (too_much_data && cur_idx)
+    {
+      *cur_idx = index;
+      return true;
+    }
+
     reconstruct_items(
         current_begin, current_end, index, predicate, result[index], timestamp_by_id, timestamp, count);
     reconstruct_items(
@@ -247,14 +254,15 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
 
     check_for_duplicated_objects< Object >(timestamp_by_id, rman);
   }
+  return false;
 }
 
 
 template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
-void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
-                   const Predicate& predicate, uint64 timestamp,
+                   const Predicate& predicate, Index* cur_idx, uint64 timestamp,
                    std::map< Index, std::vector< Relation_Skeleton > >& result,
                    std::map< Index, std::vector< Attic< Relation_Skeleton > > >& attic_result)
 {
@@ -263,6 +271,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
   {
     std::vector< std::pair< Relation_Skeleton::Id_Type, uint64 > > timestamp_by_id;
 
+    bool too_much_data = false;
     if (++count >= 128*1024)
     {
       count = 0;
@@ -276,6 +285,11 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
         (attic_begin == attic_end ||
             (!(current_begin == current_end) && current_begin.index() < attic_begin.index())
         ? current_begin.index() : attic_begin.index());
+    if (too_much_data && cur_idx)
+    {
+      *cur_idx = index;
+      return true;
+    }
 
     reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end, index,
                       predicate, result[index], attic_result[index], timestamp_by_id, timestamp);
@@ -287,14 +301,15 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
 
     check_for_duplicated_objects< Relation_Skeleton >(timestamp_by_id, rman);
   }
+  return false;
 }
 
 
 template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
-void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
-                   const Predicate& predicate, uint64 timestamp,
+                   const Predicate& predicate, Index* cur_idx, uint64 timestamp,
                    std::map< Index, std::vector< Way_Skeleton > >& result,
                    std::map< Index, std::vector< Attic< Way_Skeleton > > >& attic_result)
 {
@@ -303,6 +318,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
   {
     std::vector< std::pair< Way_Skeleton::Id_Type, uint64 > > timestamp_by_id;
 
+    bool too_much_data = false;
     if (++count >= 128*1024)
     {
       count = 0;
@@ -316,6 +332,11 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
         (attic_begin == attic_end ||
             (!(current_begin == current_end) && current_begin.index() < attic_begin.index())
         ? current_begin.index() : attic_begin.index());
+    if (too_much_data && cur_idx)
+    {
+      *cur_idx = index;
+      return true;
+    }
 
     reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end, index,
                       predicate, result[index], attic_result[index], timestamp_by_id, timestamp);
@@ -327,6 +348,7 @@ void collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
 
     check_for_duplicated_objects< Way_Skeleton >(timestamp_by_id, rman);
   }
+  return false;
 }
 
 
@@ -386,7 +408,7 @@ void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager
   collect_items_by_timestamp(stmt, rman,
       current_db.discrete_begin(req.begin(), req.end()), current_db.discrete_end(),
       attic_db.discrete_begin(req.begin(), req.end()), attic_db.discrete_end(),
-      predicate, rman.get_desired_timestamp(), result, attic_result);
+      predicate, (Index*)0, rman.get_desired_timestamp(), result, attic_result);
 }
 
 
@@ -403,20 +425,19 @@ void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager
   collect_items_by_timestamp(stmt, rman,
       current_db.discrete_begin(req.begin(), req.end()), current_db.discrete_end(),
       attic_db.discrete_begin(req.begin(), req.end()), attic_db.discrete_end(),
-      predicate, timestamp, result, attic_result);
+      predicate, (Index*)0, timestamp, result, attic_result);
 }
 
 
 template < class Index, class Object, class Container, class Predicate >
 bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
-		   File_Properties& file_properties,
-		   const Container& req, const Predicate& predicate, Index& cur_idx,
-		   std::map< Index, std::vector< Object > >& result)
+    const Container& req, const Predicate& predicate, Index& cur_idx,
+    std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
   bool too_much_data = false;
   Block_Backend< Index, Object, typename Container::const_iterator > db
-      (rman.get_transaction()->data_index(&file_properties));
+      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
   for (typename Block_Backend< Index, Object, typename Container::const_iterator >::Range_Iterator
       it(db.range_begin(req.begin(), req.end(), cur_idx));
       !(it == db.range_end()); ++it)
@@ -441,19 +462,19 @@ bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
 
 
 template < class Index, class Object, class Container, class Predicate >
-void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
-                   const Container& req, const Predicate& predicate,
-                   std::map< Index, std::vector< Object > >& result,
-                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
+bool collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+    const Container& req, const Predicate& predicate, Index& cur_idx,
+    std::map< Index, std::vector< Object > >& result,
+    std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object, typename Container::const_iterator > current_db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
   Block_Backend< Index, Attic< typename Object::Delta >, typename Container::const_iterator > attic_db
       (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
-  collect_items_by_timestamp(stmt, rman,
-      current_db.range_begin(req.begin(), req.end()), current_db.range_end(),
-      attic_db.range_begin(req.begin(), req.end()), attic_db.range_end(),
-      predicate, rman.get_desired_timestamp(), result, attic_result);
+  return collect_items_by_timestamp(stmt, rman,
+      current_db.range_begin(req.begin(), req.end(), cur_idx), current_db.range_end(),
+      attic_db.range_begin(req.begin(), req.end(), cur_idx), attic_db.range_end(),
+      predicate, &cur_idx, rman.get_desired_timestamp(), result, attic_result);
 }
 
 
@@ -492,7 +513,7 @@ void collect_items_flat_by_timestamp(const Statement& stmt, Resource_Manager& rm
   collect_items_by_timestamp(&stmt, rman,
       current_db.flat_begin(), current_db.flat_end(),
       attic_db.flat_begin(), attic_db.flat_end(),
-      predicate, rman.get_desired_timestamp(), result, attic_result);
+      predicate, (Index*)0, rman.get_desired_timestamp(), result, attic_result);
 }
 
 
