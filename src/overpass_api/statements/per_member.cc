@@ -295,6 +295,7 @@ void Angle_Eval_Task::keep_cartesians_up_to_date(Way_Skeleton::Id_Type ref, cons
     }
     else
       cached.clear();
+    cache_way_ref = ref;
     cache_geom_ref = current;
   }
 }

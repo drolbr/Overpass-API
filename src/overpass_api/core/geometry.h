@@ -575,11 +575,11 @@ struct Cartesian
 
   Cartesian(double lat, double lon)
   {
-    static double deg_to_arc = 90.0*acos(0);
-    double c = cos(lat/deg_to_arc);
-    x = sin(lat/deg_to_arc);
-    y = c*sin(lon/deg_to_arc);
-    z = c*cos(lon/deg_to_arc);
+    static double deg_to_arc = acos(0)/90.0;
+    double c = cos(lat*deg_to_arc);
+    x = sin(lat*deg_to_arc);
+    y = c*sin(lon*deg_to_arc);
+    z = c*cos(lon*deg_to_arc);
   }
 
   Cartesian() : x(0), y(0), z(0) {}
