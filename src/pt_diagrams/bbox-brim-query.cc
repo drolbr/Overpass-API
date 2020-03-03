@@ -23,8 +23,6 @@
 #include <iostream>
 #include <vector>
 
-using namespace std;
-
 double brim;
 
 const double PI = acos(0)*2;
@@ -33,13 +31,13 @@ struct Display_Class
 {
   Display_Class() : key(""), value(""), text(""), limit(-1) {}
 
-  string key;
-  string value;
-  string text;
+  std::string key;
+  std::string value;
+  std::string text;
   double limit;
 };
 
-vector< Display_Class > display_classes;
+std::vector< Display_Class > display_classes;
 
 void options_start(const char *el, const char **attr)
 {
@@ -76,7 +74,7 @@ void options_end(const char *el)
 
 int main(int argc, char *argv[])
 {
-  string network, ref, operator_;
+  std::string network, ref, operator_;
 
   brim = 0.0;
 
@@ -86,7 +84,7 @@ int main(int argc, char *argv[])
   {
     if (!strncmp("--options=", argv[argi], 10))
     {
-      FILE* options_file(fopen(((string)(argv[argi])).substr(10).c_str(), "r"));
+      FILE* options_file(fopen(((std::string)(argv[argi])).substr(10).c_str(), "r"));
       if (!options_file)
 	return 0;
       parse(options_file, options_start, options_end);
@@ -98,73 +96,45 @@ int main(int argc, char *argv[])
   while (argi < argc)
   {
     if (!strncmp("--size=", argv[argi], 7))
-      brim = atof(((string)(argv[argi])).substr(7).c_str());
+      brim = atof(((std::string)(argv[argi])).substr(7).c_str());
     if (!strncmp("--network=", argv[argi], 10))
-      network = string(argv[argi]).substr(10);
+      network = std::string(argv[argi]).substr(10);
     if (!strncmp("--ref=", argv[argi], 6))
-      ref = string(argv[argi]).substr(6);
+      ref = std::string(argv[argi]).substr(6);
     if (!strncmp("--operator=", argv[argi], 11))
-      operator_ = string(argv[argi]).substr(11);
+      operator_ = std::string(argv[argi]).substr(11);
     ++argi;
   }
 
-  cout<<"<osm-script>\n"
-      <<"\n"
-      <<"<query type=\"relation\">\n"
-      <<"  <has-kv k=\"network\" v=\""<<network<<"\"/>\n"
-      <<"  <has-kv k=\"ref\" v=\""<<ref<<"\"/>\n";
+  if (network.find(';') != std::string::npos)
+    std::cout<<"rel[network=\""<<network<<"\"]";
+  else
+    std::cout<<"rel(if:lrs_in(\""<<network<<"\", t[\"network\"]))";
+  std::cout<<"[ref=\""<<ref<<"\"]";
   if (operator_ != "")
-    cout<<"  <has-kv k=\"operator\" v=\""<<operator_<<"\"/>\n";
-  cout<<"</query>\n"
-      <<"<recurse type=\"relation-node\" into=\"stops\"/>\n";
+    std::cout<<"[operator=\""<<operator_<<"\"]";
+  std::cout<<";\n"
+      "node(r)->.stops;\n";
 
   if (brim == 0.0)
-  {
-    cout<<"<union>\n"
-        <<"  <item/>\n"
-	<<"  <item set=\"stops\"/>\n"
-	<<"</union>\n"
-	<<"<print/>\n"
-	<<"\n"
-	<<"</osm-script>\n";
-  }
+    std::cout<<"( ._; .stops; );\n"
+        "out;\n";
   else
   {
-    cout<<"<union>\n"
-        <<"  <query type=\"node\">\n"
-	<<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
-	<<"    <has-kv k=\"railway\"/>\n"
-	<<"  </query>\n"
-	<<"  <query type=\"node\">\n"
-	<<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
-	<<"    <has-kv k=\"highway\"/>\n"
-	<<"  </query>\n"
-	<<"  <query type=\"node\">\n"
-	<<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
-	<<"    <has-kv k=\"public_transport\"/>\n"
-	<<"  </query>\n"
-	<<"  <query type=\"node\">\n"
-	<<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
-	<<"    <has-kv k=\"amenity\" v=\"ferry_terminal\"/>\n"
-	<<"  </query>\n"
-	<<"</union>\n"
-	<<"<union>\n"
-	<<"  <item/>\n"
-	<<"  <recurse type=\"node-relation\"/>\n";
+    std::cout<<"(\n"
+        "  node(around.stops:"<<brim<<")[railway];\n"
+        "  node(around.stops:"<<brim<<")[highway];\n"
+        "  node(around.stops:"<<brim<<")[public_transport];\n"
+        "  node(around.stops:"<<brim<<")[amenity=ferry_terminal];\n"
+        ");\n"
+        "( ._; rel(bn);\n";
 
-    for (vector< Display_Class >::const_iterator it(display_classes.begin());
+    for (std::vector< Display_Class >::const_iterator it(display_classes.begin());
         it != display_classes.end(); ++it)
-    {
-      cout<<"  <query type=\"node\">\n"
-      <<"    <around from=\"stops\" radius=\""<<brim<<"\"/>\n"
-      <<"    <has-kv k=\""<<it->key<<"\" v=\""<<it->value<<"\"/>\n"
-      <<"  </query>\n";
-    }
+      std::cout<<"node(around.stops:"<<brim<<")["<<it->key<<"="<<it->value<<"]\n";
 
-    cout<<"</union>\n"
-        <<"<print/>\n"
-        <<"\n"
-        <<"</osm-script>\n";
+    std::cout<<"\n);\n"
+        "out;\n";
   }
 
   return 0;

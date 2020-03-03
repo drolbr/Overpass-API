@@ -82,7 +82,7 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members
     return result;
 
   Uint32_Index cur_idx = req.begin()->first;
-  while (collect_items_range(stmt, rman, *osm_base_settings().NODES,
+  while (collect_items_range(stmt, rman,
       req, Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), cur_idx, result));
 
   return result;
@@ -114,9 +114,14 @@ Way_Geometry_Store::Way_Geometry_Store
   // Retrieve all nodes referred by the ways.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > current;
   std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic;
-  collect_items_range_by_timestamp(&query, rman,
-      small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
-      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current, attic);
+  std::set< std::pair< Uint32_Index, Uint32_Index > > req
+      = small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end());
+  if (req.empty())
+    return;
+
+  Uint32_Index cur_idx = req.begin()->first;
+  while (collect_items_range_by_timestamp(&query, rman, req,
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), cur_idx, current, attic));
 
   keep_matching_skeletons(nodes, current, attic, rman.get_desired_timestamp());
 }

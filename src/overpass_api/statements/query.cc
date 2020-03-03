@@ -62,6 +62,12 @@ Query_Statement::Query_Statement
     type = QUERY_DERIVED;
   else if (attributes["type"] == "nwr")
     type = (QUERY_NODE | QUERY_WAY | QUERY_RELATION);
+  else if (attributes["type"] == "nw")
+    type = (QUERY_NODE | QUERY_WAY);
+  else if (attributes["type"] == "wr")
+    type = (QUERY_WAY | QUERY_RELATION);
+  else if (attributes["type"] == "nr")
+    type = (QUERY_NODE | QUERY_RELATION);
   else if (attributes["type"] == "area")
   {
     type = QUERY_AREA;
@@ -72,7 +78,7 @@ Query_Statement::Query_Statement
     type = 0;
     std::ostringstream temp;
     temp<<"For the attribute \"type\" of the element \"query\""
-	<<" the only allowed values are \"node\", \"way\", \"relation\" or \"area\".";
+        <<" the only allowed values are \"node\", \"way\", \"relation\", \"nwr\", \"nw\", \"wr\", \"nr\", or \"area\".";
     add_static_error(temp.str());
   }
 
@@ -1576,6 +1582,30 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
+    if (type & QUERY_AREA)
+    {
+      for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
+          it != constraints.end() && area_answer_state < data_collected; ++it)
+      {
+	std::vector< Area_Skeleton::Id_Type > constraint_area_ids;
+	if ((*it)->get_area_ids(rman, constraint_area_ids))
+	{
+	  if (area_ids.empty())
+	    area_ids.swap(constraint_area_ids);
+	  else
+	  {
+	    std::vector< Area_Skeleton::Id_Type > new_ids(area_ids.size());
+	    new_ids.erase(std::set_intersection(
+	        area_ids.begin(), area_ids.end(), constraint_area_ids.begin(), constraint_area_ids.end(),
+	        new_ids.begin()), new_ids.end());
+	    area_ids.swap(new_ids);
+	  }
+
+	  if (area_ids.empty())
+	    area_answer_state = data_collected;
+	}
+      }
+    }
 
     if (type & QUERY_NODE)
     {
@@ -1746,15 +1776,13 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (range_req_32.empty())
           ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
               (into.nodes, into.attic_nodes,
-              node_ids, invert_ids, range_req_32, 0, *this, rman,
-              *osm_base_settings().NODES, *attic_settings().NODES);
+              node_ids, invert_ids, range_req_32, 0, *this, rman);
         else
         {
           Uint32_Index min_idx = range_req_32.begin()->first;
           while (::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
               (into.nodes, into.attic_nodes,
-              node_ids, invert_ids, range_req_32, &min_idx, *this, rman,
-              *osm_base_settings().NODES, *attic_settings().NODES))
+              node_ids, invert_ids, range_req_32, &min_idx, *this, rman))
           {
             Set to_filter;
             to_filter.nodes.swap(into.nodes);
@@ -1779,15 +1807,13 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (way_range_req_31.empty())
           ::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
               (into.ways, into.attic_ways,
-              way_ids, invert_ids, way_range_req_31, 0, *this, rman,
-              *osm_base_settings().WAYS, *attic_settings().WAYS);
+              way_ids, invert_ids, way_range_req_31, 0, *this, rman);
         else
         {
           Uint31_Index min_idx = way_range_req_31.begin()->first;
           while (::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
               (into.ways, into.attic_ways,
-              way_ids, invert_ids, way_range_req_31, &min_idx, *this, rman,
-              *osm_base_settings().WAYS, *attic_settings().WAYS))
+              way_ids, invert_ids, way_range_req_31, &min_idx, *this, rman))
           {
             Set to_filter;
             to_filter.ways.swap(into.ways);
@@ -1812,15 +1838,13 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (relation_range_req_31.empty())
           ::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
               (into.relations, into.attic_relations,
-              relation_ids, invert_ids, relation_range_req_31, 0, *this, rman,
-              *osm_base_settings().RELATIONS, *attic_settings().RELATIONS);
+              relation_ids, invert_ids, relation_range_req_31, 0, *this, rman);
         else
         {
           Uint31_Index min_idx = relation_range_req_31.begin()->first;
           while (::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
               (into.relations, into.attic_relations,
-              relation_ids, invert_ids, relation_range_req_31, &min_idx, *this, rman,
-              *osm_base_settings().RELATIONS, *attic_settings().RELATIONS))
+              relation_ids, invert_ids, relation_range_req_31, &min_idx, *this, rman))
           {
             Set to_filter;
             to_filter.relations.swap(into.relations);

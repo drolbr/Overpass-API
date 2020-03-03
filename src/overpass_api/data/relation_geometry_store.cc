@@ -34,7 +34,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
 {
   if (relations.empty())
   {
-    // Turn off bounding bix, because it isn't needed anyway
+    // Turn off bounding box, because it isn't needed anyway
     north = 0;
     south = 1;
   }
@@ -126,24 +126,18 @@ Relation_Geometry_Store::Relation_Geometry_Store
 
   // Retrieve all ways referred by the relations.
   std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
-      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > ways_by_idx
+      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > ways_by_idx_pair
       = relation_way_members(&query, rman,
           std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
           north < south ? 0 : &way_ranges);
+  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_by_idx;
+  keep_matching_skeletons(ways_by_idx, ways_by_idx_pair.first, ways_by_idx_pair.second,
+      rman.get_desired_timestamp());
 
-  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways_by_idx.first.begin();
-      it != ways_by_idx.first.end(); ++it)
-  {
-    std::vector< Attic< Way_Skeleton > >& target = ways_by_idx.second[it->first];
-    for (std::vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-      target.push_back(Attic< Way_Skeleton >(*iit, NOW));
-  }
+  way_geometry_store = new Way_Geometry_Store(ways_by_idx, query, rman);
 
-  way_geometry_store = new Way_Geometry_Store(ways_by_idx.second, query, rman);
-
-  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::iterator it = ways_by_idx.second.begin();
-      it != ways_by_idx.second.end(); ++it)
+  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::iterator it = ways_by_idx.begin();
+      it != ways_by_idx.end(); ++it)
   {
     for (std::vector< Attic< Way_Skeleton > >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)

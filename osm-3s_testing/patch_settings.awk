@@ -4,7 +4,7 @@
   else if (substr($1,1,8) == "version(")
   {
     version = substr($1,10,length($1)-12);
-    split(version,a,"\.");
+    split(version,a,"\\.");
     if (a[4] != "")
       print "  version(\""a[1]"."a[2]"."a[3]"."++a[4]"\"),";
     else

@@ -362,6 +362,10 @@ The syntax variants
   count(ways)
   count(relations)
   count(deriveds)
+  count(nwr)
+  count(nw)
+  count(wr)
+  count(nr)
 
 counts elements in the default set <em>_</em>, and the syntax variant
 
@@ -369,6 +373,10 @@ counts elements in the default set <em>_</em>, and the syntax variant
   <Set>.count(ways)
   <Set>.count(relations)
   <Set>.count(deriveds)
+  <Set>.count(nwr)
+  <Set>.count(nw)
+  <Set>.count(wr)
+  <Set>.count(nr)
 
 counts elements in the set &lt;Set&gt;.
 */
@@ -376,7 +384,7 @@ counts elements in the set &lt;Set&gt;.
 class Evaluator_Set_Count : public Evaluator
 {
 public:
-  enum Objects { nothing, nodes, ways, relations, deriveds };
+  enum Objects { nothing, nodes, ways, relations, deriveds, nwr, nw, wr, nr };
   static std::string to_string(Objects objects);
   static bool try_parse_object_type(const std::string& input, Evaluator_Set_Count::Objects& result);
 

@@ -28,7 +28,8 @@ Statement* Evaluator_Set_Key::Evaluator_Maker::create_evaluator(
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context,
     Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output)
 {
-  if (tree_context != Statement::evaluator_expected && tree_context != Statement::elem_eval_possible)
+  if (tree_context != Statement::evaluator_expected && tree_context != Statement::elem_eval_possible
+      && tree_context != Statement::member_eval_possible)
     return 0;
   if (!tree_it->lhs || !tree_it->rhs || tree_it.lhs()->token.empty() || tree_it.rhs()->token.empty())
     return 0;

@@ -197,6 +197,46 @@ std::string Ternary_Eval_Task::eval(const Element_With_Context< Derived_Skeleton
 }
 
 
+std::string Ternary_Eval_Task::eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+{
+  if (!condition)
+    return "0";
+  if (string_represents_boolean_true(condition->eval(pos, data, key)))
+    return lhs ? lhs->eval(pos, data, key) : "";
+  return rhs ? rhs->eval(pos, data, key) : "";
+}
+
+
+std::string Ternary_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+{
+  if (!condition)
+    return "0";
+  if (string_represents_boolean_true(condition->eval(pos, data, key)))
+    return lhs ? lhs->eval(pos, data, key) : "";
+  return rhs ? rhs->eval(pos, data, key) : "";
+}
+
+
+std::string Ternary_Eval_Task::eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+{
+  if (!condition)
+    return "0";
+  if (string_represents_boolean_true(condition->eval(pos, data, key)))
+    return lhs ? lhs->eval(pos, data, key) : "";
+  return rhs ? rhs->eval(pos, data, key) : "";
+}
+
+
+std::string Ternary_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+{
+  if (!condition)
+    return "0";
+  if (string_represents_boolean_true(condition->eval(pos, data, key)))
+    return lhs ? lhs->eval(pos, data, key) : "";
+  return rhs ? rhs->eval(pos, data, key) : "";
+}
+
+
 Eval_Geometry_Task* Ternary_Evaluator::get_geometry_task(Prepare_Task_Context& context)
 {
   Eval_Task* cond_task = condition ? condition->get_string_task(context, 0) : 0;

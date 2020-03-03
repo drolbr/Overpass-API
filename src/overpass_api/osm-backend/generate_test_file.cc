@@ -2501,52 +2501,80 @@ struct Accept_Query_159 : public Accept_All_Tags
 
 struct Accept_Query_160 : public Accept_All_Tags
 {
-  Accept_Query_160(uint pattern_size_) : pattern_size(pattern_size_) {}
+  Accept_Query_160(uint pattern_size_, bool node_one_, bool node_two_,
+      bool way_two_, bool way_three_, bool rel_zero_, bool rel_three_)
+      : pattern_size(pattern_size_), node_one(node_one_), node_two(node_two_),
+          way_two(way_two_), way_three(way_three_), rel_zero(rel_zero_), rel_three(rel_three_) {}
 
-  virtual bool admit_node(uint id) const { return id == 1 || id == 2
-      || id == pattern_size + 1 || id == pattern_size + 2; }
-  virtual bool admit_way(uint id) const { return id == 1 || id == 2
-      || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
-      || id == pattern_size*pattern_size/4 + pattern_size/2 + 1; }
-  virtual bool admit_relation(uint id) const { return id == 1 || id == 2; }
-
-  private:
-    uint pattern_size;
-};
-
-struct Accept_Query_161 : public Accept_All_Tags
-{
-  Accept_Query_161(uint pattern_size_) : pattern_size(pattern_size_) {}
-
-  virtual bool admit_node(uint id) const { return id == 2 || id == pattern_size + 2; }
-  virtual bool admit_way(uint id) const { return id == 1
-      || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
-      || id == pattern_size*pattern_size/4 + pattern_size/2 + 1; }
-  virtual bool admit_relation(uint id) const { return false; }
+  virtual bool admit_node(uint id) const
+  { return (node_one && id == 1) || (node_two && id == 2)
+      || (node_one && id == pattern_size + 1) || (node_two && id == pattern_size + 2); }
+  virtual bool admit_way(uint id) const { return (way_three && id == 2)
+      || (way_two && (id == 1
+          || id == pattern_size*pattern_size/4 - pattern_size/2 + 1
+          || id == pattern_size*pattern_size/4 + pattern_size/2 + 1)); }
+  virtual bool admit_relation(uint id) const { return (rel_three && id == 1) || (rel_zero && id == 2); }
 
   private:
     uint pattern_size;
+    bool node_one, node_two, way_two, way_three, rel_zero, rel_three;
 };
 
-struct Accept_Query_162 : public Accept_All_Tags
+struct Accept_Query_170 : public Accept_All_Tags
 {
-  Accept_Query_162(uint pattern_size_) : pattern_size(pattern_size_) {}
-
-  virtual bool admit_node(uint id) const { return false; }
-  virtual bool admit_way(uint id) const { return id == 2; }
-  virtual bool admit_relation(uint id) const { return id == 1; }
-
-  private:
-    uint pattern_size;
-};
-
-struct Accept_Query_163 : public Accept_All_Tags
-{
-  Accept_Query_163(uint pattern_size_) : pattern_size(pattern_size_) {}
+  Accept_Query_170(uint pattern_size_) : pattern_size(pattern_size_) {}
 
   virtual bool admit_node(uint id) const { return id % 15 == 0; }
   virtual bool admit_way(uint id) const { return false; }
   virtual bool admit_relation(uint id) const { return false; }
+
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_171 : public Accept_All_Tags
+{
+  Accept_Query_171(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return id == 10; }
+  virtual bool admit_way(uint id) const { return id == 10; }
+  virtual bool admit_relation(uint id) const { return id == 10; }
+
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_172 : public Accept_All_Tags
+{
+  Accept_Query_172(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return id == 10; }
+  virtual bool admit_way(uint id) const { return id == 10; }
+  virtual bool admit_relation(uint id) const { return false; }
+
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_173 : public Accept_All_Tags
+{
+  Accept_Query_173(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return false; }
+  virtual bool admit_way(uint id) const { return id == 10; }
+  virtual bool admit_relation(uint id) const { return id == 10; }
+
+  private:
+    uint pattern_size;
+};
+
+struct Accept_Query_174 : public Accept_All_Tags
+{
+  Accept_Query_174(uint pattern_size_) : pattern_size(pattern_size_) {}
+
+  virtual bool admit_node(uint id) const { return id == 10; }
+  virtual bool admit_way(uint id) const { return false; }
+  virtual bool admit_relation(uint id) const { return id == 10; }
 
   private:
     uint pattern_size;
@@ -3742,13 +3770,35 @@ int main(int argc, char* args[])
     else if (std::string(args[2]) == "query_159")
       modifier = new Accept_Query_159(pattern_size);
     else if (std::string(args[2]) == "query_160")
-      modifier = new Accept_Query_160(pattern_size);
+      modifier = new Accept_Query_160(pattern_size, true, true, true, true, true, true);
     else if (std::string(args[2]) == "query_161")
-      modifier = new Accept_Query_161(pattern_size);
+      modifier = new Accept_Query_160(pattern_size, false, true, true, false, false, false);
     else if (std::string(args[2]) == "query_162")
-      modifier = new Accept_Query_162(pattern_size);
+      modifier = new Accept_Query_160(pattern_size, false, false, false, true, false, true);
     else if (std::string(args[2]) == "query_163")
-      modifier = new Accept_Query_163(pattern_size);
+      modifier = new Accept_Query_160(pattern_size, true, true, true, true, false, false);
+    else if (std::string(args[2]) == "query_164")
+      modifier = new Accept_Query_160(pattern_size, false, true, true, false, false, false);
+    else if (std::string(args[2]) == "query_165")
+      modifier = new Accept_Query_160(pattern_size, false, false, true, true, true, true);
+    else if (std::string(args[2]) == "query_166")
+      modifier = new Accept_Query_160(pattern_size, false, false, false, true, false, true);
+    else if (std::string(args[2]) == "query_167")
+      modifier = new Accept_Query_160(pattern_size, true, true, false, false, true, true);
+    else if (std::string(args[2]) == "query_168")
+      modifier = new Accept_Query_160(pattern_size, true, false, false, false, false, false);
+    else if (std::string(args[2]) == "query_169")
+      modifier = new Accept_Query_160(pattern_size, false, false, false, false, true, false);
+    else if (std::string(args[2]) == "query_170")
+      modifier = new Accept_Query_170(pattern_size);
+    else if (std::string(args[2]) == "query_171")
+      modifier = new Accept_Query_171(pattern_size);
+    else if (std::string(args[2]) == "query_172")
+      modifier = new Accept_Query_172(pattern_size);
+    else if (std::string(args[2]) == "query_173")
+      modifier = new Accept_Query_173(pattern_size);
+    else if (std::string(args[2]) == "query_174")
+      modifier = new Accept_Query_174(pattern_size);
     else if (std::string(args[2]) == "foreach_1")
       modifier = new Accept_Foreach_1(pattern_size);
     else if (std::string(args[2]) == "foreach_2")
@@ -3972,6 +4022,10 @@ int main(int argc, char* args[])
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"nwr\" v=\"3\"/>\n"
+      "    <tag k=\"nw\" v=\"2\"/>\n"
+      "    <tag k=\"wr\" v=\"2\"/>\n"
+      "    <tag k=\"nr\" v=\"2\"/>\n"
       "    <tag k=\"tags\" v=\"5\"/>\n"
       "    <tag k=\"members\" v=\"4\"/>\n"
       "  </count-from-default>\n";
@@ -3982,6 +4036,10 @@ int main(int argc, char* args[])
       "    <tag k=\"ways\" v=\"0\"/>\n"
       "    <tag k=\"relations\" v=\"0\"/>\n"
       "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"nwr\" v=\"0\"/>\n"
+      "    <tag k=\"nw\" v=\"0\"/>\n"
+      "    <tag k=\"wr\" v=\"0\"/>\n"
+      "    <tag k=\"nr\" v=\"0\"/>\n"
       "    <tag k=\"tags\" v=\"0\"/>\n"
       "    <tag k=\"members\" v=\"0\"/>\n"
       "  </count-from-default>\n";
@@ -3992,6 +4050,10 @@ int main(int argc, char* args[])
       "    <tag k=\"ways\" v=\"1\"/>\n"
       "    <tag k=\"relations\" v=\"1\"/>\n"
       "    <tag k=\"deriveds\" v=\"1\"/>\n"
+      "    <tag k=\"nwr\" v=\"3\"/>\n"
+      "    <tag k=\"nw\" v=\"2\"/>\n"
+      "    <tag k=\"wr\" v=\"2\"/>\n"
+      "    <tag k=\"nr\" v=\"2\"/>\n"
       "    <tag k=\"tags\" v=\"5\"/>\n"
       "    <tag k=\"members\" v=\"4\"/>\n"
       "  </count-from-foo>\n";
@@ -5720,6 +5782,58 @@ int main(int argc, char* args[])
       "      <point "<<lat_lon_of_node(pattern_size + 2, pattern_size)<<"/>\n"
       "    </group>\n"
       "  </trace>\n";
+    if (std::string(args[2]) == "convert_14")
+      std::cout<<
+      "  <lat-lon id=\"2\">\n"
+      "    <tag k=\"lat\" v=\""<<std::fixed<<std::setprecision(7)<<(51. + .5/pattern_size)<<"\"/>\n"
+      "    <tag k=\"lon\" v=\""<<std::fixed<<std::setprecision(7)<<(7. + 6.5/pattern_size)<<"\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"3\">\n"
+      "    <tag k=\"lat\" v=\""<<std::fixed<<std::setprecision(7)<<(51. + .5/pattern_size)<<"\"/>\n"
+      "    <tag k=\"lon\" v=\""<<std::fixed<<std::setprecision(7)<<(7. + 13.5/pattern_size)<<"\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"4\">\n"
+      "    <tag k=\"lat\" v=\""<<std::fixed<<std::setprecision(7)<<(51. + 1.5/pattern_size)<<"\"/>\n"
+      "    <tag k=\"lon\" v=\""<<std::fixed<<std::setprecision(7)<<(7. + 7./pattern_size)<<"\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"5\">\n"
+      "    <tag k=\"lat\" v=\"51.5000000\"/>\n"
+      "    <tag k=\"lon\" v=\"7.5000000\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"6\">\n"
+      "    <tag k=\"lat\" v=\"NaN\"/>\n"
+      "    <tag k=\"lon\" v=\"NaN\"/>\n"
+      "  </lat-lon>\n"
+      "  <lat-lon id=\"8\">\n"
+      "    <tag k=\"lat\" v=\"-15.0000000\"/>\n"
+      "    <tag k=\"lon\" v=\"5.5500000\"/>\n"
+      "  </lat-lon>\n";
+    if (std::string(args[2]) == "convert_15")
+      std::cout<<
+      "  <per-member id=\"2\">\n"
+      "    <tag k=\"ref\" v=\"\"/>\n"
+      "    <tag k=\"refpos\" v=\"\"/>\n"
+      "    <tag k=\"full\" v=\"\"/>\n"
+      "    <tag k=\"vertexrefpos\" v=\"\"/>\n"
+      "  </per-member>\n"
+      "  <per-member id=\"3\">\n"
+      "    <tag k=\"ref\" v=\""<<(pattern_size + global_node_offset + 10)<<";"<<(pattern_size + global_node_offset + 11)<<"\"/>\n"
+      "    <tag k=\"refpos\" v=\"1:"<<(pattern_size + global_node_offset + 10)<<";2:"<<(pattern_size + global_node_offset + 11)<<"\"/>\n"
+      "    <tag k=\"full\" v=\"node,"<<(pattern_size + global_node_offset + 10)<<",;node,"<<(pattern_size + global_node_offset + 11)<<",\"/>\n"
+      "    <tag k=\"vertexrefpos\" v=\"\"/>\n"
+      "  </per-member>\n"
+      "  <per-member id=\"4\">\n"
+      "    <tag k=\"ref\" v=\"1;"<<(global_node_offset + 1)<<";1;"<<(global_node_offset + 2)<<";2;"<<(pattern_size + global_node_offset + 2)<<";"<<(pattern_size*pattern_size/4 - pattern_size/2 + 1)<<";"<<(pattern_size + global_node_offset + 1)<<";"<<(pattern_size*pattern_size/4 + pattern_size/2 + 1)<<";"<<(global_node_offset + 1)<<";2\"/>\n"
+      "    <tag k=\"refpos\" v=\"1:1;2:"<<(global_node_offset + 1)<<";3:1;4:"<<(global_node_offset + 2)<<";5:2;6:"<<(pattern_size + global_node_offset + 2)<<";7:"<<(pattern_size*pattern_size/4 - pattern_size/2 + 1)<<";8:"<<(pattern_size + global_node_offset + 1)<<";9:"<<(pattern_size*pattern_size/4 + pattern_size/2 + 1)<<";10:"<<(global_node_offset + 1)<<";11:2\"/>\n"
+      "    <tag k=\"full\" v=\"relation,1,three;node,"<<(global_node_offset + 1)<<",one;way,1,two;node,"<<(global_node_offset + 2)<<",two;way,2,three;node,"<<(pattern_size + global_node_offset + 2)<<",two;way,"<<(pattern_size*pattern_size/4 - pattern_size/2 + 1)<<",two;node,"<<(pattern_size + global_node_offset + 1)<<",one;way,"<<(pattern_size*pattern_size/4 + pattern_size/2 + 1)<<",two;node,"<<(global_node_offset + 1)<<",one;relation,2,zero\"/>\n"
+      "    <tag k=\"vertexrefpos\" v=\"\"/>\n"
+      "  </per-member>\n"
+      "  <per-member id=\"5\">\n"
+      "    <tag k=\"ref\" v=\"\"/>\n"
+      "    <tag k=\"refpos\" v=\"\"/>\n"
+      "    <tag k=\"full\" v=\"\"/>\n"
+      "    <tag k=\"vertexrefpos\" v=\"\"/>\n"
+      "  </per-member>\n";
 
     std::cout<<"</osm>\n";
   }

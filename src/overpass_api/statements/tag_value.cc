@@ -114,23 +114,6 @@ Evaluator_Type::Evaluator_Type
 //-----------------------------------------------------------------------------
 
 
-Evaluator_Is_Closed::Statement_Maker Evaluator_Is_Closed::statement_maker;
-Element_Function_Maker< Evaluator_Is_Closed > Evaluator_Is_Closed::evaluator_maker;
-
-
-Evaluator_Is_Closed::Evaluator_Is_Closed
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator(line_number_)
-{
-  std::map< std::string, std::string > attributes;
-
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
-
-
-//-----------------------------------------------------------------------------
-
-
 std::string find_value(const std::vector< std::pair< std::string, std::string > >* tags, const std::string& key)
 {
   if (!tags)
@@ -361,38 +344,6 @@ std::vector< std::string > all_keys(const std::vector< std::pair< std::string, s
 
 
 Evaluator_All_Keys::Evaluator_All_Keys
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator(line_number_)
-{
-  std::map< std::string, std::string > attributes;
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
-
-
-//-----------------------------------------------------------------------------
-
-
-Evaluator_Geometry::Statement_Maker Evaluator_Geometry::statement_maker;
-Element_Function_Maker< Evaluator_Geometry > Evaluator_Geometry::evaluator_maker;
-
-
-Evaluator_Geometry::Evaluator_Geometry
-    (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Evaluator(line_number_)
-{
-  std::map< std::string, std::string > attributes;
-  eval_attributes_array(get_name(), attributes, input_attributes);
-}
-
-
-//-----------------------------------------------------------------------------
-
-
-Evaluator_Length::Statement_Maker Evaluator_Length::statement_maker;
-Element_Function_Maker< Evaluator_Length > Evaluator_Length::evaluator_maker;
-
-
-Evaluator_Length::Evaluator_Length
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Evaluator(line_number_)
 {

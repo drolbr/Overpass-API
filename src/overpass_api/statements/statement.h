@@ -69,6 +69,9 @@ class Query_Constraint
     virtual bool get_relation_ids
         (Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
       { return false; }
+    virtual bool get_area_ids
+        (Resource_Manager& rman, std::vector< Area_Skeleton::Id_Type >& ids)
+      { return false; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
 			  const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
@@ -98,7 +101,7 @@ class Query_Constraint
 class Statement
 {
   public:
-    enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible };
+    enum QL_Context { generic, in_convert, evaluator_expected, elem_eval_possible, member_eval_possible };
 
     enum Eval_Return_Type { non_evaluator, string, container, geometry };
     static std::string eval_to_string(Statement::Eval_Return_Type eval_type);
@@ -210,8 +213,9 @@ class Statement
 
     const static int NODE = 1;
     const static int WAY = 2;
-    const static int RELATION = 3;
-    const static int AREA = 4;
+    const static int RELATION = 4;
+    const static int AREA = 8;
+    const static int DERIVED = 16;
 
   private:
     static Error_Output* error_output;

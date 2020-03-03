@@ -385,6 +385,14 @@ bool Evaluator_Set_Count::try_parse_object_type(const std::string& input, Evalua
     result = Evaluator_Set_Count::relations;
   else if (input == "deriveds")
     result = Evaluator_Set_Count::deriveds;
+  else if (input == "nwr")
+    result = Evaluator_Set_Count::nwr;
+  else if (input == "nw")
+    result = Evaluator_Set_Count::nw;
+  else if (input == "wr")
+    result = Evaluator_Set_Count::wr;
+  else if (input == "nr")
+    result = Evaluator_Set_Count::nr;
   else
     return false;
   return true;
@@ -417,7 +425,8 @@ Statement* Evaluator_Set_Count::Evaluator_Maker::create_evaluator(
     return new Evaluator_Set_Count(tree_it->line_col.first, attributes, global_settings);
   else if (error_output)
     error_output->add_parse_error(
-        "\"count\" accepts only one of \"nodes\", \"ways\", \"relations\", or \"deriveds\" as type argument.",
+        "\"count\" accepts only one of \"nodes\", \"ways\", \"relations\", \"deriveds\","
+        " \"nwr\", \"nw\", \"wr\", or \"nr\" as type argument.",
         tree_it->line_col.first);
 
   return 0;
@@ -434,6 +443,14 @@ std::string Evaluator_Set_Count::to_string(Evaluator_Set_Count::Objects objects)
     return "relations";
   if (objects == deriveds)
     return "deriveds";
+  if (objects == nwr)
+    return "nwr";
+  if (objects == nw)
+    return "nw";
+  if (objects == wr)
+    return "wr";
+  if (objects == nr)
+    return "nr";
   return "nothing";
 }
 
@@ -455,7 +472,8 @@ Evaluator_Set_Count::Evaluator_Set_Count
   {
     std::ostringstream temp("");
     temp<<"For the attribute \"type\" of the element \"eval-set-count\""
-        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", or \"deriveds\" strings.";
+        <<" the only allowed values are \"nodes\", \"ways\", \"relations\", \"deriveds\","
+        " \"nwr\", \"nw\", \"wr\", or \"nr\" strings.";
     add_static_error(temp.str());
   }
 }
@@ -478,14 +496,14 @@ Eval_Task* Evaluator_Set_Count::get_string_task(Prepare_Task_Context& context, c
   unsigned int counter = 0;
   if (set && set->base)
   {
-    if (to_count == nodes)
-      counter = count(set->base->nodes) + count(set->base->attic_nodes);
-    if (to_count == ways)
-      counter = count(set->base->ways) + count(set->base->attic_ways);
-    if (to_count == relations)
-      counter = count(set->base->relations) + count(set->base->attic_relations);
+    if (to_count == nodes || to_count == nwr || to_count == nw || to_count == nr)
+      counter += count(set->base->nodes) + count(set->base->attic_nodes);
+    if (to_count == ways || to_count == nwr || to_count == nw || to_count == wr)
+      counter += count(set->base->ways) + count(set->base->attic_ways);
+    if (to_count == relations || to_count == nwr || to_count == wr || to_count == nr)
+      counter += count(set->base->relations) + count(set->base->attic_relations);
     if (to_count == deriveds)
-      counter = count(set->base->areas) + count(set->base->deriveds);
+      counter += count(set->base->areas) + count(set->base->deriveds);
   }
 
   return new Const_Eval_Task(::to_string(counter));

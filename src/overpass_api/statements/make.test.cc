@@ -23,6 +23,7 @@
 #include "geometry_endomorphisms.h"
 #include "id_query.h"
 #include "item.h"
+#include "item_geometry.h"
 #include "make.h"
 #include "print.h"
 #include "set_list_operators.h"
@@ -129,6 +130,26 @@ void count_test(Parsed_Query& global_settings, Transaction& transaction,
   subs = add_prop_stmt("deriveds", &stmt, stmt_cont);
   subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
       (from == "" ? Attr() : Attr()("from", from))("type", "deriveds").kvs(),
+      global_settings), subs);
+
+  subs = add_prop_stmt("nwr", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
+      (from == "" ? Attr() : Attr()("from", from))("type", "nwr").kvs(),
+      global_settings), subs);
+
+  subs = add_prop_stmt("nw", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
+      (from == "" ? Attr() : Attr()("from", from))("type", "nw").kvs(),
+      global_settings), subs);
+
+  subs = add_prop_stmt("wr", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
+      (from == "" ? Attr() : Attr()("from", from))("type", "wr").kvs(),
+      global_settings), subs);
+
+  subs = add_prop_stmt("nr", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Set_Count(0,
+      (from == "" ? Attr() : Attr()("from", from))("type", "nr").kvs(),
       global_settings), subs);
 
   subs = add_prop_stmt("tags", &stmt, stmt_cont);

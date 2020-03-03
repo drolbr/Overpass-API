@@ -85,17 +85,12 @@ std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_me
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0);
 
-std::map< Uint32_Index, std::vector< Node_Skeleton > > way_members
-    (const Statement* stmt, Resource_Manager& rman,
-     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
-
 std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+     const std::vector< int >* pos,
      const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
      const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
 
@@ -133,10 +128,13 @@ std::vector< Relation::Id_Type > relation_relation_member_ids
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
      const uint32* role_id = 0);
 
-std::vector< Node::Id_Type > way_nd_ids(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways);
-std::vector< Node::Id_Type > way_nd_ids
-    (const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways);
+std::vector< Node::Id_Type > way_nd_ids(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::vector< int >* pos);
+std::vector< Node::Id_Type > way_nd_ids(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+    const std::vector< int >* pos);
 
 const std::map< uint32, std::string >& relation_member_roles(Transaction& transaction);
 uint32 determine_role_id(Transaction& transaction, const std::string& role);
@@ -187,8 +185,7 @@ bool get_elements_by_id_from_db
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
      const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
      const std::set< std::pair< TIndex, TIndex > >& range_req, TIndex* min_idx,
-     const Statement& query, Resource_Manager& rman,
-     File_Properties& file_prop, File_Properties& attic_file_prop)
+     const Statement& query, Resource_Manager& rman)
 {
   uint64 timestamp = rman.get_desired_timestamp();
 
@@ -196,70 +193,59 @@ bool get_elements_by_id_from_db
   attic_elements.clear();
   if (ids.empty())
   {
-    if (timestamp == NOW)
+    if (range_req.empty())
+      return false;
+    TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
+    while (timestamp == NOW
+        ? collect_items_range(&query, rman, range_req, Trivial_Predicate< TObject >(), cur_idx, elements)
+        : collect_items_range_by_timestamp(&query, rman, range_req, Trivial_Predicate< TObject >(), cur_idx,
+              elements, attic_elements))
     {
-      if (range_req.empty())
-        return false;
-      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
-      while (collect_items_range(&query, rman, file_prop, range_req,
-          Trivial_Predicate< TObject >(), cur_idx, elements))
+      if (min_idx)
       {
-        if (min_idx)
-        {
-          *min_idx = cur_idx;
-          return true;
-        }
+        *min_idx = cur_idx;
+        return true;
       }
     }
-    else
-      collect_items_range_by_timestamp(&query, rman, range_req,
-          Trivial_Predicate< TObject >(), elements, attic_elements);
   }
   else if (!invert_ids)
   {
-    if (timestamp == NOW)
+    if (range_req.empty())
+      return false;
+    TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
+    while (timestamp == NOW
+        ? collect_items_range(&query, rman, range_req, Id_Predicate< TObject >(ids), cur_idx, elements)
+        : collect_items_range_by_timestamp(&query, rman, range_req, Id_Predicate< TObject >(ids), cur_idx,
+              elements, attic_elements))
     {
-      if (range_req.empty())
-        return false;
-      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
-      while (collect_items_range(&query, rman, file_prop, range_req,
-          Id_Predicate< TObject >(ids), cur_idx, elements))
+      if (min_idx)
       {
-        if (min_idx)
-        {
-          *min_idx = cur_idx;
-          return true;
-        }
+        *min_idx = cur_idx;
+        return true;
       }
     }
-    else
-      collect_items_range_by_timestamp(&query, rman, range_req,
-          Id_Predicate< TObject >(ids), elements, attic_elements);
   }
   else if (!range_req.empty())
   {
-    if (timestamp == NOW)
+    TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
+    while (timestamp == NOW
+        ? collect_items_range(&query, rman, range_req,
+              Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx, elements)
+        : collect_items_range_by_timestamp(&query, rman, range_req,
+              Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx,
+              elements, attic_elements))
     {
-      TIndex cur_idx = min_idx ? *min_idx : range_req.begin()->first;
-      while (collect_items_range(&query, rman, file_prop, range_req,
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)), cur_idx, elements))
+      if (min_idx)
       {
-        if (min_idx)
-        {
-          *min_idx = cur_idx;
-          return true;
-        }
+        *min_idx = cur_idx;
+        return true;
       }
     }
-    else
-      collect_items_range_by_timestamp(&query, rman, range_req,
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-          elements, attic_elements);
   }
   else
   {
     if (timestamp == NOW)
-      collect_items_flat(query, rman, file_prop,
+      collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
           Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
           elements);
     else
@@ -649,6 +635,59 @@ void keep_matching_skeletons
         local_into.push_back(*it2);
     }
     local_into.swap(it->second);
+  }
+}
+
+
+template< typename Index, typename Skeleton >
+void keep_matching_skeletons
+    (std::map< Index, std::vector< Attic< Skeleton > > >& result,
+     const std::map< Index, std::vector< Skeleton > >& current,
+     const std::map< Index, std::vector< Attic< Skeleton > > >& attic,
+     uint64 timestamp)
+{
+  std::map< typename Skeleton::Id_Type, uint64 > timestamp_by_id;
+
+  result.clear();
+
+  for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
+       it != current.end(); ++it)
+  {
+    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      timestamp_by_id[it2->id] = NOW;
+  }
+
+  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
+       it != attic.end(); ++it)
+  {
+    for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      uint64& stored_timestamp = timestamp_by_id[it2->id];
+      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
+        stored_timestamp = it2->timestamp;
+    }
+  }
+
+  for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
+       it != current.end(); ++it)
+  {
+    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == NOW)
+        result[it->first].push_back(Attic< Skeleton >(*it2, NOW));
+    }
+  }
+
+  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
+       it != attic.end(); ++it)
+  {
+    for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
+         it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == it2->timestamp)
+        result[it->first].push_back(Attic< Skeleton >(*it2, it2->timestamp));
+    }
   }
 }
 
@@ -1090,12 +1129,14 @@ void collect_ways(const Statement& query, Resource_Manager& rman,
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result);
 
 
 void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      const std::vector< Way::Id_Type >& ids, bool invert_ids);
 
@@ -1104,6 +1145,7 @@ void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result);
 
@@ -1112,6 +1154,7 @@ void collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+     const std::vector< int >* pos,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result,
      const std::vector< Way::Id_Type >& ids, bool invert_ids);
