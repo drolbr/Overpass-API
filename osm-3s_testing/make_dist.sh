@@ -3,7 +3,7 @@
 { git log | head -n 1 | awk '{ print $2; }'; cat ../src/overpass_api/core/settings.cc; } | awk -f patch_settings.awk >_
 mv _ ../src/overpass_api/core/settings.cc
 
-VERSION=`cat ../src/overpass_api/core/settings.cc | grep -E '^ *version' | awk '{ print substr($1,10,length($1)-12); }'`
+VERSION=$(cat ../src/overpass_api/core/settings.cc | grep -E '^ *version' | awk '{ print substr($1,10,length($1)-12); }')
 
 { echo "$VERSION"; cat ../src/configure.ac; } | awk -f patch_configure_ac.awk >_
 mv _ ../src/configure.ac
