@@ -8,7 +8,7 @@ VERSION=$(cat ../src/overpass_api/core/settings.cc | grep -E '^ *version' | awk 
 { echo "$VERSION"; cat ../src/configure.ac; } | awk -f patch_configure_ac.awk >_
 mv _ ../src/configure.ac
 
-cat ../src/Makefile.am | awk '{ if ($1 == "distdir") print $1" = osm3s_v'$VERSION'"; else print $0; }' >_
+cat ../src/Makefile.am | awk '{ if ($1 == "distdir") print $1" = osm-3s_v'$VERSION'"; else print $0; }' >_
 mv _ ../src/Makefile.am
 
 git commit -a -m "Automated commit for release $VERSION"
