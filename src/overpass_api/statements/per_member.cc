@@ -278,7 +278,8 @@ std::string Angle_Eval_Task::prettyprinted_angle(uint pos) const
   if (lg_in < 1e-10 || lg_out < 1e-10)
     return "NaN";
   double prod = (in.x*out.x + in.y*out.y + in.z*out.z)/lg_in/lg_out;
-  return fabs(prod) > 1 ? "0.000" : fixed_to_string(acos(prod)/acos(0)*90., 3);
+  double cw = (mid.x-prev.x)*out.x + (mid.y-prev.y)*out.y + (mid.z-prev.z)*out.z;
+  return fabs(prod) > 1 ? "0.000" : fixed_to_string(copysign(acos(prod)/acos(0)*90., cw), 3);
 }
 
 
