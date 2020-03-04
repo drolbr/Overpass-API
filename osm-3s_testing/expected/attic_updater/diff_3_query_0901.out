@@ -12,5 +12,14 @@
   <marker id="3">
     <tag k="test" v="tag queries"/>
   </marker>
+  <marker id="4">
+    <tag k="test" v="recurse"/>
+  </marker>
+  <marker id="5">
+    <tag k="test" v="contains queries"/>
+  </marker>
+  <marker id="6">
+    <tag k="test" v="various queries"/>
+  </marker>
 
 </osm>

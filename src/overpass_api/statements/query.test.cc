@@ -909,7 +909,8 @@ void perform_query_with_recurse
 	stmt1("type", "relation")("ref", "6").stmt().execute(rman);
       else if (recurse_type == "relation-relation")
 	stmt1("type", "relation")("ref", "9").stmt().execute(rman);
-      else if (recurse_type == "relation-nwr")
+      else if (recurse_type == "relation-nwr" || recurse_type == "relation-nw"
+          || recurse_type == "relation-wr" || recurse_type == "relation-nr")
 	stmt1("type", "relation")("ref", "10").stmt().execute(rman);
       else if (recurse_type == "node-way")
 	stmt1("type", "node")("lower", to_string(pattern_size*pattern_size - 4 + global_node_offset))
@@ -1007,6 +1008,12 @@ void perform_query_with_role_recurse
     query_type = "way";
   else if (recurse_type == "relation-nwr")
     query_type = "nwr";
+  else if (recurse_type == "relation-nw")
+    query_type = "nw";
+  else if (recurse_type == "relation-wr")
+    query_type = "wr";
+  else if (recurse_type == "relation-nr")
+    query_type = "nr";
 
   try
   {
@@ -1022,7 +1029,8 @@ void perform_query_with_role_recurse
         stmt1("type", "relation")("ref", "7").stmt().execute(rman);
       else if (recurse_type == "relation-relation")
         stmt1("type", "relation")("ref", "9").stmt().execute(rman);
-      else if (recurse_type == "relation-nwr")
+      else if (recurse_type == "relation-nwr" || recurse_type == "relation-nw"
+          || recurse_type == "relation-wr" || recurse_type == "relation-nr")
         stmt1("type", "relation")("ref", "10").stmt().execute(rman);
       else if (recurse_type == "node-relation")
         stmt1("type", "node")("lower", to_string(global_node_offset + 1))
@@ -1083,17 +1091,17 @@ void perform_query_with_id_query
       SProxy< Bbox_Query_Statement > stmt4;
       if (south <= 90.0 && north <= 90.0)
       {
-	stmt1.stmt().add_statement
-	    (&stmt4("n", to_string(north))("s", to_string(south))
-	           ("w", to_string(west))("e", to_string(east)).stmt(), "");
+        stmt1.stmt().add_statement
+            (&stmt4("n", to_string(north))("s", to_string(south))
+                    ("w", to_string(west))("e", to_string(east)).stmt(), "");
       }
 
       SProxy< Id_Query_Statement > stmt5;
       if (double_id_query)
-	stmt1.stmt().add_statement(&stmt5
-	    ("type", query_type)
-	    ("lower", to_string(9 + (query_type == "node" ? global_node_offset : 0)))
-	    ("upper", to_string(12 + (query_type == "node" ? global_node_offset : 0))).stmt(), "");
+        stmt1.stmt().add_statement(&stmt5
+            ("type", query_type)
+            ("lower", to_string(9 + (query_type == "node" ? global_node_offset : 0)))
+            ("upper", to_string(12 + (query_type == "node" ? global_node_offset : 0))).stmt(), "");
 
       stmt1.stmt().execute(rman);
     }
@@ -1105,6 +1113,38 @@ void perform_query_with_id_query
     <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
   }
 }
+
+
+void perform_query_with_two_ids_query(
+    std::string query_type, uint64 global_node_offset, std::string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", query_type);
+
+      SProxy< Id_Query_Statement > stmt2;
+      stmt1.stmt().add_statement(&stmt2
+          ("type", query_type)
+          ("ref", to_string(10))
+          ("ref_1", to_string(global_node_offset + 10)).stmt(), "");
+
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
 
 int main(int argc, char* args[])
 {
@@ -1771,19 +1811,54 @@ int main(int argc, char* args[])
         100.0, 100.0, 0.0, 0.0, false,
         pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "161"))
-    // Test an around collecting relations from nodes based on way membership
     perform_query_with_role_recurse("relation-nwr", "two", "", "",
         pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "162"))
-    // Test an around collecting relations from nodes based on way membership
     perform_query_with_role_recurse("relation-nwr", "three", "", "",
         pattern_size, global_node_offset, args[3]);
 
   if ((test_to_execute == "") || (test_to_execute == "163"))
-    // Test whether chunked proessing works.
-    // Fur this purpose, test a bbox combined with a key-value pair via a filter
+    perform_query_with_recurse("nw", "relation-nw", "", "",
+        100.0, 100.0, 0.0, 0.0, false,
+        pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "164"))
+    perform_query_with_role_recurse("relation-nw", "two", "", "",
+        pattern_size, global_node_offset, args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "165"))
+    perform_query_with_recurse("wr", "relation-wr", "", "",
+        100.0, 100.0, 0.0, 0.0, false,
+        pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "166"))
+    perform_query_with_role_recurse("relation-wr", "three", "", "",
+        pattern_size, global_node_offset, args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "167"))
+    perform_query_with_recurse("nr", "relation-nr", "", "",
+        100.0, 100.0, 0.0, 0.0, false,
+        pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "168"))
+    perform_query_with_role_recurse("relation-nr", "one", "", "",
+        pattern_size, global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "169"))
+    perform_query_with_role_recurse("relation-nr", "zero", "", "",
+        pattern_size, global_node_offset, args[3]);
+
+  if ((test_to_execute == "") || (test_to_execute == "170"))
+    // Test whether chunked processing works.
+    // For this purpose, test a bbox combined with a key-value pair via a filter
     perform_filter_with_bbox("node", "node_key_15", "node_value_15",
                             "-90.0", "90.0", "-120.0", "105.0", args[3], 900, 33554432);
+
+  // Test id-query types nwr, nw, wr, nr as subqueries
+  if ((test_to_execute == "") || (test_to_execute == "171"))
+    perform_query_with_two_ids_query("nwr", global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "172"))
+    perform_query_with_two_ids_query("nw", global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "173"))
+    perform_query_with_two_ids_query("wr", global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "174"))
+    perform_query_with_two_ids_query("nr", global_node_offset, args[3]);
 
   std::cout<<"</osm>\n";
   return 0;

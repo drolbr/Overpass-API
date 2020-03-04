@@ -31,12 +31,29 @@ const uint Set_Usage::SET_KEY_VALUES = 128;
 bool assert_element_in_context(Error_Output* error_output,
     const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context)
 {
-  if (tree_context != Statement::elem_eval_possible)
+  if (tree_context != Statement::elem_eval_possible && tree_context != Statement::member_eval_possible)
   {
     const std::string* func_name = tree_it.function_name();
     if (error_output)
       error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function")
           + " must be called in a context where it can evaluate an element",
+          tree_it->line_col.first);
+    return false;
+  }
+
+  return true;
+}
+
+
+bool assert_member_in_context(Error_Output* error_output,
+    const Token_Node_Ptr& tree_it, Statement::QL_Context tree_context)
+{
+  if (tree_context != Statement::member_eval_possible)
+  {
+    const std::string* func_name = tree_it.function_name();
+    if (error_output)
+      error_output->add_parse_error((func_name ? *func_name + "(...)" : "Void function")
+          + " must be called in a context where it can evaluate an element's member",
           tree_it->line_col.first);
     return false;
   }

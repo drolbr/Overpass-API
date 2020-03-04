@@ -379,7 +379,7 @@ void process(const std::string& key, Set_Prop_Task::Mode mode, Eval_Task* rhs,
 }
 
 
-void Set_Prop_Plain_Task::process(const Element_With_Context< Node_Skeleton>& data,
+void Set_Prop_Plain_Task::process(const Element_With_Context< Node_Skeleton >& data,
     const std::vector< std::string >& declared_keys, Derived_Structure& result, bool& id_set) const
 {
   ::process(key, mode, rhs, data, declared_keys, result, id_set);

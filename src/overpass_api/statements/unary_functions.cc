@@ -103,6 +103,30 @@ std::string Unary_Eval_Task::eval(const Element_With_Context< Derived_Skeleton >
 }
 
 
+std::string Unary_Eval_Task::eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+{
+  return evaluator->process(rhs ? rhs->eval(pos, data, key) : "");
+}
+
+
+std::string Unary_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+{
+  return evaluator->process(rhs ? rhs->eval(pos, data, key) : "");
+}
+
+
+std::string Unary_Eval_Task::eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+{
+  return evaluator->process(rhs ? rhs->eval(pos, data, key) : "");
+}
+
+
+std::string Unary_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+{
+  return evaluator->process(rhs ? rhs->eval(pos, data, key) : "");
+}
+
+
 //-----------------------------------------------------------------------------
 
 
@@ -288,4 +312,28 @@ std::string Binary_Func_Eval_Task::eval(const Element_With_Context< Area_Skeleto
 std::string Binary_Func_Eval_Task::eval(const Element_With_Context< Derived_Skeleton >& data, const std::string* key) const
 {
   return evaluator->process(first ? first->eval(data, key) : "", second ? second->eval(data, key) : "");
+}
+
+
+std::string Binary_Func_Eval_Task::eval(uint pos, const Element_With_Context< Way_Skeleton >& data, const std::string* key) const
+{
+  return evaluator->process(first ? first->eval(pos, data, key) : "", second ? second->eval(pos, data, key) : "");
+}
+
+
+std::string Binary_Func_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Way_Skeleton > >& data, const std::string* key) const
+{
+  return evaluator->process(first ? first->eval(pos, data, key) : "", second ? second->eval(pos, data, key) : "");
+}
+
+
+std::string Binary_Func_Eval_Task::eval(uint pos, const Element_With_Context< Relation_Skeleton >& data, const std::string* key) const
+{
+  return evaluator->process(first ? first->eval(pos, data, key) : "", second ? second->eval(pos, data, key) : "");
+}
+
+
+std::string Binary_Func_Eval_Task::eval(uint pos, const Element_With_Context< Attic< Relation_Skeleton > >& data, const std::string* key) const
+{
+  return evaluator->process(first ? first->eval(pos, data, key) : "", second ? second->eval(pos, data, key) : "");
 }

@@ -138,6 +138,7 @@
   <node id="18012" lat="10.0010000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="18013" lat="10.0020000" lon="8.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="18023" lat="10.0020000" lon="8.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="19121" lat="10.0010000" lon="9.0215000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="131110" lat="10.1010000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo"/>
   <node id="131210" lat="10.1010000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
   <node id="131220" lat="10.1020000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo"/>
@@ -315,6 +316,22 @@
     <nd ref="18112"/>
     <tag k="foo" v="bar_1811"/>
     <tag k="foo_1811" v="bar"/>
+  </way>
+  <way id="1911" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="19111"/>
+    <nd ref="19112"/>
+    <nd ref="19113"/>
+    <nd ref="19114"/>
+    <tag k="foo" v="bar_1911"/>
+    <tag k="foo_1911" v="bar"/>
+  </way>
+  <way id="1912" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+    <nd ref="19121"/>
+    <nd ref="19123"/>
+    <nd ref="19124"/>
+    <nd ref="19121"/>
+    <tag k="foo" v="bar_1912"/>
+    <tag k="foo_1912" v="bar"/>
   </way>
   <way id="2101" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
     <nd ref="21011"/>
