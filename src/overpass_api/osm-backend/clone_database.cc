@@ -53,23 +53,23 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
         Default_Range_Iterator< TIndex > >::Flat_Iterator
 	src_it = src_file.flat_begin();
 
-    uint32 max_keysize = 0;
+    uint32 excess_bytes = 0;
     while (!src_it.is_end())
     {
-      if (max_keysize > 0)
+      if (excess_bytes > 0)
       {
         uint64* buf = src_file.read_block(src_it, false);
         dest_file.insert_block(
-            dest_file.write_end(), buf, std::min(max_keysize, block_size),
+            dest_file.write_end(), buf, std::min(excess_bytes, block_size),
             src_it.block_it->max_keysize, src_it.block_it->index);
-        max_keysize = std::max(max_keysize, block_size) - block_size;
+        excess_bytes = std::max(excess_bytes, block_size) - block_size;
       }
       else
       {
         uint64* buf = src_file.read_block(src_it);
         dest_file.insert_block(dest_file.write_end(), buf, src_it.block_it->max_keysize);
-        if (src_it.block_it->max_keysize > block_size)
-          max_keysize = src_it.block_it->max_keysize - block_size;
+        if (src_it.block_it->max_keysize + 4 > block_size)
+          excess_bytes = src_it.block_it->max_keysize + 4 - block_size;
       }
       ++src_it;
     }
