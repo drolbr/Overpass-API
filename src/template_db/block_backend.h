@@ -821,7 +821,7 @@ void Block_Backend< Index, Object, Iterator >::flush_if_necessary_and_write_obj(
     {
       *(uint32*)start_ptr = bytes_written;
       *(((uint32*)start_ptr)+1) = bytes_written;
-      file_it = file_blocks.insert_block(file_it, start_ptr, bytes_written);
+      file_it = file_blocks.insert_block(file_it, start_ptr, bytes_written - 4);
     }
     if (idx_size + obj_size + 8 > block_size)
     {
@@ -1083,7 +1083,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   // really write data
   typename std::vector< TIndex >::const_iterator split_it(split.begin());
   pos = (dest.ptr + 4);
-  uint32 max_size(0);
+  uint32 max_size = 0;
   for (typename std::map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
     it(index_values.begin()); it != index_values.end(); ++it)
   {
@@ -1177,7 +1177,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 	pos = dest.ptr + 4;
 
       *(uint32*)(dest.ptr+4) = pos - dest.ptr;
-      max_size = (*(uint32*)(dest.ptr + 4)) - 4;
+      max_size = pos - dest.ptr - 4;
     }
   }
 
@@ -1200,7 +1200,7 @@ void Block_Backend< TIndex, TObject, TIterator >::flush_or_delete_block(
   {
     *(uint32*)start_ptr = bytes_written;
     *(((uint32*)start_ptr)+1) = bytes_written;
-    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written);
+    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written - 4);
     ++file_it;
   }
   else
