@@ -482,8 +482,7 @@ Evaluator_Set_Count::Evaluator_Set_Count
 Requested_Context Evaluator_Set_Count::request_context() const
 {
   Requested_Context result;
-  if (to_count == Evaluator_Set_Count::nodes || to_count == Evaluator_Set_Count::ways
-        || to_count == Evaluator_Set_Count::relations || to_count == Evaluator_Set_Count::deriveds)
+  if (to_count != Evaluator_Set_Count::nothing)
     result.add_usage(input, 1u);
   return result;
 }

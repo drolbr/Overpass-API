@@ -35,7 +35,7 @@ The block statement ''for'' divides its input into subsets
 and executes all the statements in the loop body once for every subset.
 
 The input set is broken down as follows:
-For each element the given evaluator is evaulated
+For each element the given evaluator is evaluated
 and elements with the same value are grouped together.
 At the beginning of each loop execution,
 the output set is filled with the relevant subset.
