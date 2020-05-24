@@ -1,3 +1,5 @@
+AM_CXXFLAGS= -std=c++11
+
 testbindir = ${prefix}/test-bin
 testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query complete difference foreach convert if make make_area polygon_query print query recurse union generate_test_file_areas generate_test_file_meta generate_test_file_interpreter index_computations four_field_index consistency_check
 dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_testsuite_template_db.sh run_testsuite_osm_backend.sh run_unittests_statements.sh run_testsuite_osm3s_query.sh run_testsuite_map_ql.sh run_testsuite_interpreter.sh run_testsuite_translate_xapi.sh run_testsuite_diff_updater.sh run_unittests_areas.sh run_unittests_meta.sh run_unittests_attic.sh run_unittests_output_csv.sh run_unittests_vlt.sh run_and_compare.sh

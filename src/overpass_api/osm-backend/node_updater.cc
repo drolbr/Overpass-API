@@ -473,6 +473,165 @@ Node_Updater::Node_Updater(std::string db_dir_, meta_modes meta_)
 }
 
 
+#include <iostream>
+struct New_Object_Meta_Context
+{
+  New_Object_Meta_Context(
+      Node_Skeleton::Id_Type id_, Uint31_Index own_idx_, uint32 ll_lower_, uint64 timestamp_)
+      : id(id_), own_idx(own_idx_), ll_lower(ll_lower_), timestamp(timestamp_),
+      replaced_idx(0u), replaced_timestamp(0), idx_of_next_version(0u), end_timestamp(0) {}
+
+  Node_Skeleton::Id_Type id;
+  Uint31_Index own_idx;
+  uint32 ll_lower;
+  uint64 timestamp;
+  Uint31_Index replaced_idx;
+  uint64 replaced_timestamp;
+  Uint31_Index idx_of_next_version;
+  uint64 end_timestamp;
+
+  bool operator<(const New_Object_Meta_Context& rhs)
+  {
+    return id < rhs.id || (!(rhs.id < id) &&
+        timestamp < rhs.timestamp);
+  }
+
+  bool operator==(const New_Object_Meta_Context& rhs)
+  {
+    return id == rhs.id && timestamp == rhs.timestamp;
+  }
+};
+
+
+// Preconditions: none
+// Remark: from several objects with the same id and timestamp only the highest version number is preserved
+std::vector< New_Object_Meta_Context > objectlist_by_id(const Data_By_Id< Node_Skeleton >& new_data)
+{
+  clock_t starttime = clock();
+  std::cerr<<"(objectlist_by_id ";
+
+  std::vector< New_Object_Meta_Context > result;
+  result.reserve(new_data.data.size());
+
+  for (const auto& item : new_data.data)
+    result.push_back(New_Object_Meta_Context(item.elem.id, item.idx, item.elem.ll_lower, item.meta.timestamp));
+
+  std::sort(result.begin(), result.end());
+  result.erase(std::unique(result.begin(), result.end()), result.end());
+
+  for (decltype(result.size()) i = 0; i+1 < result.size(); ++i)
+  {
+    if (result[i+1].id == result[i].id)
+    {
+      result[i].idx_of_next_version = result[i+1].own_idx;
+      result[i].end_timestamp = result[i+1].timestamp;
+    }
+  }
+
+  std::cerr<<(clock() - starttime)/1000<<") ";
+
+  return result;
+}
+
+
+std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+    add_new_current_nodes(const std::vector< New_Object_Meta_Context >& new_obj_context)
+{
+  clock_t starttime = clock();
+  std::cerr<<"(add_new_current_nodes ";
+
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > result;
+
+  for (const auto& obj : new_obj_context)
+  {
+    if (obj.end_timestamp == 0)
+      result[obj.own_idx].insert(
+          OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(obj.id, obj.timestamp));
+  }
+
+  std::cerr<<(clock() - starttime)/1000<<") ";
+
+  return result;
+}
+
+
+void write_nodes_mapfile(
+    const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& new_meta,
+    Transaction& transaction)
+{
+  clock_t starttime = clock();
+  std::cerr<<"(write_nodes_mapfile ";
+  uint32 entry_count = 0;
+
+  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions;
+  for (const auto& per_idx : new_meta)
+  {
+    for (const auto& entry : per_idx.second)
+      new_map_positions.push_back(std::make_pair(entry.ref, per_idx.first));
+
+    entry_count += per_idx.second.size();
+  }
+  std::sort(
+      new_map_positions.begin(), new_map_positions.end(),
+      [](
+          const std::pair< Node_Skeleton::Id_Type, Uint31_Index >& lhs,
+          const std::pair< Node_Skeleton::Id_Type, Uint31_Index >& rhs)
+      { return lhs.first < rhs.first; } );
+
+  std::cerr<<"#idx:"<<new_meta.size()<<" #objs:"<<entry_count<<' ';
+
+  {
+    clock_t starttime = clock();
+    std::cerr<<"(update_map_positions ";
+    update_map_positions(new_map_positions, transaction, *osm_base_settings().NODES);
+    std::cerr<<(clock() - starttime)/1000<<") ";
+  }
+
+  std::cerr<<(clock() - starttime)/1000<<") ";
+}
+
+
+void read_and_update_meta(Transaction& transaction, const Data_By_Id< Node_Skeleton >& new_data)
+{
+  clock_t starttime = clock();
+  std::cerr<<"(read_and_update_meta ";
+
+  std::vector< New_Object_Meta_Context > new_obj_context = objectlist_by_id(new_data);
+  std::cerr<<"#objs:"<<new_obj_context.size()<<' ';
+
+  //Id_By_Idx current_id_by_idx <- (strategy == scratch ? 0 : read_mapfile(input.node_ids, false));
+  //Move_Current_To_Attic <- read_nodes_meta(Nodes_Meta, current_id_by_idx, Id_Koord_Altidx_Nextidx_Begin_End&);
+
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_meta
+      = add_new_current_nodes(new_obj_context);
+
+  {
+    clock_t starttime = clock();
+    std::cerr<<"(update_elements ";
+    update_elements(
+        std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >(),
+        new_meta, transaction, *meta_settings().NODES_META);
+    std::cerr<<(clock() - starttime)/1000<<") ";
+  }
+
+  write_nodes_mapfile(new_meta, transaction);
+
+//   if (strategy == deep)
+//   {
+//     Ins_Attic <- add_new_attic_nodes(Move_Current_To_Attic, Id_Koord_Altidx_Nextidx_Begin_End&);
+// 
+//     Id_By_Idx attic_id_by_idx <- (strategy == deep ? 0 : read_mapfile(Potentially_Older_Ids(Id_Koord_Altidx_Nextidx_Begin_End), true));
+//     void <- read_attic_nodes_meta(Attic_Nodes_Meta, attic_id_by_idx, Id_Koord_Altidx_Nextidx_Begin_End&);
+//     void <- update_nodes_meta(Attic_Nodes_Meta&, 0, Ins(Move_Current_To_Attic) + Ins_Attic);
+//     void <- write_mapfile(0, Ins(Move_Current_To_Attic) + Ins_Attic);
+//   }
+
+  std::cerr<<(clock() - starttime)/1000<<") ";
+
+  //return Id_Koord_Altidx_Nextidx_Begin_End
+}
+
+
 void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch, bool partial)
 {
   if (cpu_stopwatch)
@@ -480,6 +639,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 
   if (!external_transaction)
     transaction = new Nonsynced_Transaction(true, false, db_dir, "");
+
+  read_and_update_meta(*transaction, new_data);
 
   // Prepare collecting all data of existing skeletons
   std::stable_sort(new_data.data.begin(), new_data.data.end());
@@ -544,7 +705,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   store_new_keys(new_data, keys, *transaction);
 
   // Update id indexes
-  update_map_positions(new_map_positions, *transaction, *osm_base_settings().NODES);
+  //update_map_positions(new_map_positions, *transaction, *osm_base_settings().NODES);
   callback->update_ids_finished();
 
   // Update skeletons
@@ -553,7 +714,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 
   // Update meta
   if (meta)
-    update_elements(attic_meta, new_meta, *transaction, *meta_settings().NODES_META);
+    ;//update_elements(attic_meta, new_meta, *transaction, *meta_settings().NODES_META);
 
   // Update local tags
   update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().NODE_TAGS_LOCAL);

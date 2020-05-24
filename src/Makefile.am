@@ -1,4 +1,6 @@
 
+AM_CXXFLAGS= -std=c++11
+
 bin_mandatory = bin/osm3s_query bin/dispatcher bin/update_database bin/update_from_dir
 bin_script_mandatory = \
   bin/apply_osc_to_db.sh\
