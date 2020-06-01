@@ -624,8 +624,120 @@ std::map< Uint31_Index, std::vector< Node_Skeleton::Id_Type > > read_current_map
 }
 
 
-std::map< Uint31_Index, std::vector< Node_Skeleton::Id_Type > > read_attic_mapfile(
-    Transaction& transaction, const std::vector< New_Object_Meta_Context >& new_obj_context)
+class Attic_Mapfile_IO
+{
+public:
+  Attic_Mapfile_IO(Transaction& transaction_) :transaction(transaction_) {}
+  std::map< Uint31_Index, std::vector< Node_Skeleton::Id_Type > > read_attic_mapfile(
+      const std::vector< New_Object_Meta_Context >& new_obj_context);
+  void write_attic_nodes_mapfile(
+      const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& new_meta);
+
+private:
+  Transaction& transaction;
+  std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists;
+};
+
+
+void Attic_Mapfile_IO::write_attic_nodes_mapfile(
+    const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& new_meta)
+{
+  Perflog_Tree perflog("write_attic_nodes_mapfile");
+  uint32 entry_count = 0;
+
+  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions;
+  for (const auto& per_idx : new_meta)
+  {
+    for (const auto& entry : per_idx.second)
+    {
+      if (new_map_positions.empty() || !(new_map_positions.back().first == entry.ref)
+          || !(new_map_positions.back().second == per_idx.first))
+        new_map_positions.push_back(std::make_pair(entry.ref, per_idx.first));
+    }
+
+    entry_count += per_idx.second.size();
+  }
+  std::sort(
+      new_map_positions.begin(), new_map_positions.end(),
+      [](
+          const std::pair< Node_Skeleton::Id_Type, Uint31_Index >& lhs,
+          const std::pair< Node_Skeleton::Id_Type, Uint31_Index >& rhs)
+      { return lhs.first < rhs.first || !(rhs.first < lhs.first && lhs.second < rhs.second); } );
+
+  std::cerr<<"#idx:"<<new_meta.size()<<" #objs:"<<entry_count<<' ';
+
+  std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists;
+  {
+    auto from = new_map_positions.begin();
+    auto to = new_map_positions.begin();
+    while (from != new_map_positions.end())
+    {
+      auto i_exist = existing_idx_lists.find(from->first);
+      if (i_exist != existing_idx_lists.end())
+      {
+        auto id = from->first;
+        while (from != new_map_positions.end() && from->first == id)
+        {
+          if (i_exist->second.find(from->second) == i_exist->second.end())
+            break;
+          ++from;
+        }
+        if (from != new_map_positions.end() && from->first == id)
+        {
+          auto idx_list = i_exist->second;
+          while (from != new_map_positions.end() && from->first == id)
+          {
+            idx_list.insert(from->second);
+            ++from;
+          }
+          new_attic_idx_lists.insert(std::make_pair(id, idx_list));
+          // keep entry in exising_idx_lists to mark it for deletion
+          // Remove entries from new_map_positions by not copying.
+        }
+        else
+          // All indices of the new objects are already present.
+          // They are, as intended, deleted from new_map_positions by not copying.
+          // The entry in exising_idx_lists shall be kept and therefore removed from the deletion list existing_idx_lists
+          existing_idx_lists.erase(i_exist);
+      }
+      else
+      {
+        std::set< Uint31_Index > idx_list;
+        auto next = from;
+        ++next;
+        while (next != new_map_positions.end() && from->first == next->first)
+        {
+          idx_list.insert(next->second);
+        }
+        if (idx_list.empty())
+          *to = *from;
+        else
+        {
+          idx_list.insert(from->second);
+          new_attic_idx_lists.insert(std::make_pair(from->first, idx_list));
+          *to = std::make_pair(from->first, 0xff);
+        }
+        ++from;
+        ++to;
+      }
+    }
+    new_map_positions.erase(to, new_map_positions.end());
+  }
+
+  {
+    Perflog_Tree perflog("update_map_positions");
+    update_map_positions(new_map_positions, transaction, *attic_settings().NODES);
+  }
+  {
+    Perflog_Tree perflog("update_idx_lists");
+    update_elements(
+        existing_idx_lists, new_attic_idx_lists, transaction, *attic_settings().NODE_IDX_LIST);
+  }
+}
+
+
+std::map< Uint31_Index, std::vector< Node_Skeleton::Id_Type > > Attic_Mapfile_IO::read_attic_mapfile(
+    const std::vector< New_Object_Meta_Context >& new_obj_context)
 {
   Perflog_Tree perflog("read_attic_mapfile");
 
@@ -649,10 +761,8 @@ std::map< Uint31_Index, std::vector< Node_Skeleton::Id_Type > > read_attic_mapfi
     get_existing_map_positions(ids_to_update, transaction, *attic_settings().NODES)
         .swap(existing_attic_map_positions);
   }
-  std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists;
   {
     Perflog_Tree perflog("get_existing_idx_lists");
-
     get_existing_idx_lists(ids_to_update, existing_attic_map_positions,
             transaction, *attic_settings().NODE_IDX_LIST).swap(existing_idx_lists);
   }
@@ -740,6 +850,52 @@ std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::
 }
 
 
+void read_attic_nodes_meta(
+    Transaction& transaction,
+    const std::map< Uint31_Index, std::vector< Node_Skeleton::Id_Type > >& ids_per_idx,
+    std::vector< New_Object_Meta_Context >& new_obj_context)
+{
+  Perflog_Tree perflog("read_attic_nodes_meta");
+
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > existing_meta;
+  {
+    Perflog_Tree perflog("get_existing_meta");
+    get_existing_meta< OSM_Element_Metadata_Skeleton< Node::Id_Type > >(
+        ids_per_idx, transaction, *attic_settings().NODES_META).swap(existing_meta);
+  }
+
+  for (auto& idx : existing_meta)
+  {
+    for (const auto& obj : idx.second)
+    {
+      auto new_obj_it = std::lower_bound(new_obj_context.begin(), new_obj_context.end(),
+          New_Object_Meta_Context(obj, 0u, 0));
+      if (new_obj_it != new_obj_context.end() && new_obj_it->meta.ref == obj.ref)
+      {
+        if (new_obj_it->replaced_timestamp < obj.timestamp)
+        {
+          new_obj_it->replaced_idx = idx.first;
+          new_obj_it->replaced_timestamp = obj.timestamp;
+        }
+      }
+      if (new_obj_it != new_obj_context.begin())
+      {
+        --new_obj_it;
+        // assert: new_obj_it->end_timestamp != 0
+        // because end_timestamp is set for all but the most recent version of an object
+        // and we cannot arrive at the most recent version of an object here.
+        if (new_obj_it->meta.ref == obj.ref &&
+            (obj.timestamp < new_obj_it->end_timestamp))
+        {
+          new_obj_it->idx_of_next_version = idx.first;
+          new_obj_it->end_timestamp = obj.timestamp;
+        }
+      }
+    }
+  }
+}
+
+
 std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
     add_new_attic_nodes(
         const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& current_to_attic,
@@ -766,11 +922,11 @@ std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::
  *   and then all those entries have older timestamp than the current entry.
  * - If there is an entry for a given id at index idx in the current nodes meta file
  *   then there is an entry in the nodes meta map file mapping the id to idx.
- * - If there is are one or more entries for a given id at index idx in the attic nodes meta file
- *   then there is an entry in the nodes meta map file or the idx list file mapping the id to idx.
+ * - If there are one or more entries for a given id at index idx in the attic nodes meta file
+ *   then there is an entry in the nodes meta map file or the idx list file mapping the id to idx resp idxs.
  * Preconditions: none
  */
-void read_and_update_meta(
+std::vector< New_Object_Meta_Context > read_and_update_meta(
     Transaction& transaction, const Data_By_Id< Node_Skeleton >& new_data, meta_modes strategy)
 {
   Perflog_Tree perflog("read_and_update_meta");
@@ -798,14 +954,20 @@ void read_and_update_meta(
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_attic
         = add_new_attic_nodes(current_to_attic, new_obj_context);
 
+    Attic_Mapfile_IO attic_mapfile(transaction);
     std::map< Uint31_Index, std::vector< Node_Skeleton::Id_Type > > attic_ids_per_idx
-        = read_attic_mapfile(transaction, new_obj_context);
-//     void <- read_attic_nodes_meta(Attic_Nodes_Meta, attic_id_by_idx, Id_Koord_Altidx_Nextidx_Begin_End&);
-//     void <- update_nodes_meta(Attic_Nodes_Meta&, 0, Ins(Move_Current_To_Attic) + Ins_Attic);
-//     void <- write_mapfile(0, Ins(Move_Current_To_Attic) + Ins_Attic);
+        = attic_mapfile.read_attic_mapfile(new_obj_context);
+    read_attic_nodes_meta(transaction, current_ids_per_idx, new_obj_context);
+
+    {
+      Perflog_Tree perflog("update_elements");
+      update_elements(decltype(new_attic)(), new_attic, transaction, *attic_settings().NODES_META);
+    }
+
+    attic_mapfile.write_attic_nodes_mapfile(new_attic);
   }
 
-  //return Id_Koord_Altidx_Nextidx_Begin_End
+  return new_obj_context;
 }
 /* Postconditions:
  * - For every entry that has existed before the function call in the current or attic nodes meta file
