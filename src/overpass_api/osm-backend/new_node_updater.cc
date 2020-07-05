@@ -166,7 +166,13 @@ void adapt_pre_event_list(
  * is the minimum of e.end before the call and the begin dates of all entries m in meta
  * with m.id == e.id and e.begin < m.time
  */
-//TODO: to_delete für current_meta ebenfalls hier erzeugen?
+
+
+// Collects all elements from current_meta that become outdated due to pre_events
+collect_current_meta_to_move(
+    const Pre_Event_List& pre_events,
+    const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& current_meta,
+    std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >& to_move);
 
 
 //TODO: compute_update_attic_meta
@@ -261,30 +267,88 @@ void create_update_for_nodes_undelete(
 // is feasible from the event list, using event_date, id, new_coord, and new_mult
 
 
-void update_nodes()
+template< typename Index, typename Object >
+File_Handle
+{
+  File_Handle(const File_Blocks_Index_Base* data_index, const auto& req)
+      : db(data_index), it(db.discrete_begin(req.begin(), req.end()), end(db.discrete_end()) {}
+
+  std::vector< Object > obj_with_idx(Index idx);
+
+private:
+  Block_Backend< Index, Object, typename std::vector< Index >::const_iterator > db;
+  typename Block_Backend< Index, Object >::Discrete_Iterator it;
+  typename Block_Backend< Index, Object >::Discrete_Iterator end;
+};
+
+
+void update_nodes(Transaction& transaction, const Data_From_Osc& new_data)
 {
   // before the first pass by idx
-  ...
+  std::map< Uint31_Index, Id_Dates_Per_Idx > id_dates_by_idx =
+      read_idx_list(Id_Dates_Global(new_data));
+  auto req = idx_list(id_dates_by_idx);
 
   std::map< Uint31_Index, Node_Skeletons_Per_Idx > skels_per_idx;
+  Pre_Event_List pre_events(/*TODO: aus new_data*/);
+
+  File_Handle< Uint31_Index, Node_Skeleton > nodes_bin(
+      transaction.data_index(osm_base_settings().NODES), req);
+  File_Handle< Uint31_Index, Node_Skeleton > nodes_attic_bin(
+      transaction.data_index(attic_settings().NODES), req);
+  File_Handle< Uint31_Index, Node_Skeleton > nodes_meta_bin(
+      transaction.data_index(meta_settings().NODES_META), req);
+  File_Handle< Uint31_Index, Node_Skeleton > nodes_meta_bin(
+      transaction.data_index(attic_settings().NODES_META), req);
+  File_Handle< Uint31_Index, Node_Skeleton > nodes_undeleted_bin(
+      transaction.data_index(attic_settings().NODES_UNDELETED), req);
+
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
+      nodes_meta_to_move_to_attic;
 
   // first pass by idx
-  for (auto i_idx : id_dates_bx_idx)
+  for (auto i_idx : id_dates_by_idx)
   {
     Uint31_Index working_idx = i_idx->first;
     Node_Skeletons_Per_Idx& skels = skels_per_idx[working_idx];
-    Coord_Dates_Per_Idx coord_dates(/*TODO*/);
+    Coord_Dates_Per_Idx coord_dates(/*TODO: aus new_data*/);
+
+    std::vector< Node_Skeleton > current_nodes = nodes_bin.obj_with_idx(working_idx);
+    std::vector< Attic< Node_Skeleton > > attic_nodes = nodes_attic_bin.obj_with_idx(working_idx);
 
     collect_relevant_coords_current(i_idx->second, current_nodes, coord_dates);
     collect_relevant_coords_attic(i_idx->second, attic_nodes, coord_dates);
 
-    extract_relevant_current(i_idx->second, ..., coord_dates, current_nodes).swap(skels.current);
-    extract_relevant_attic(i_idx->second, ..., coord_dates, attic_nodes).swap(skels.attic);
+    Id_Dates_Per_Idx coord_sharing_ids;
+    extract_relevant_current(i_idx->second, coord_sharing_ids, coord_dates, current_nodes).swap(skels.current);
+    extract_relevant_attic(i_idx->second, coord_sharing_ids, coord_dates, attic_nodes).swap(skels.attic);
 
-    extract_first_appearance(i_idx->second, ..., current_meta, attic_meta).swap(skels.first_appearance);
-    extract_relevant_undeleted(i_idx->second, ...).swap(skels.undeleted);
-    ...
+    std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta =
+        nodes_meta_bin.obj_with_idx(working_idx);
+    std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > attic_meta =
+        nodes_attic_meta_bin.obj_with_idx(working_idx);
+
+    extract_first_appearance(i_idx->second, coord_sharing_ids, current_meta, attic_meta)
+        .swap(skels.first_appearance);
+    extract_relevant_undeleted(i_idx->second, coord_sharing_ids, nodes_undeleted_bin.obj_with_idx(working_idx))
+        .swap(skels.undeleted);
+
+    adapt_pre_event_list(current_meta, pre_events);
+    adapt_pre_event_list(attic_meta, pre_events);
+
+    collect_current_meta_to_move(pre_events, current_meta, nodes_meta_to_move_to_attic[working_idx]);
   }
+
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
+      nodes_meta_to_add;
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
+      nodes_attic_meta_to_add;
+  create_update_for_nodes_meta(
+      pre_events, nodes_meta_to_move_to_attic, nodes_meta_to_add, nodes_attic_meta_to_add);
+
+  // compute nodes_map, nodes_attic_map and nodes_idx_lists from id_dates_by_idx, nodes_meta_to_add, and nodes_attic_meta_to_add
+  // write meta, nodes_map, nodes_attic_map, nodes_idx_lists
+  ...
 
   std::map< Uint31_Index, std::set< Node_Skeleton > > nodes_to_delete;
   std::map< Uint31_Index, std::set< Node_Skeleton > > nodes_to_add;
@@ -294,7 +358,7 @@ void update_nodes()
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > > nodes_undelete_to_add;
 
   // second pass by idx
-  for (auto i_idx : id_dates_bx_idx)
+  for (auto i_idx : id_dates_by_idx)
   {
     Uint31_Index working_idx = i_idx->first;
     Node_Skeletons_Per_Idx& skels = skels_per_idx[working_idx];
@@ -308,6 +372,8 @@ void update_nodes()
         events, nodes_undelete_to_delete[working_idx], nodes_undelete_to_add[working_idx]);
   }
 
-  // write the files
+  // write nodes, nodes_attic, nodes_undelete
   ...
+
+  //TODO: tags, nodes_for_ways
 }
