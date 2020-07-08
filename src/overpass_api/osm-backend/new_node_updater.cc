@@ -23,12 +23,8 @@ struct Id_Dates
 
 
 /* Uses files nodes.map, nodes_attic.map, node_idx_lists */
-Id_Dates read_idx_list(
-    const Id_Dates_Global& ids);
+Id_Dates read_idx_list(const Id_Dates_Global& ids);
 //TODO
-
-
-typedef std::vector< Attic< Coord > > Coord_Dates_Per_Idx;
 
 
 //TODO: prefill coords with new coords
@@ -83,17 +79,17 @@ struct Node_Skeletons_Per_Idx
 std::vector< Node_Skeleton > extract_relevant_current(
     const Id_Dates_Per_Idx& id_dates,
     Id_Dates_Per_Idx& coord_sharing_ids,
-    const Coord_Dates_Per_Idx& coord_dates,
+    const Coord_Dates_Per_Idx& coord_dates_per_idx,
     const std::vector< Node_Skeleton >& current);
 /* Assertions:
  * An object r is in the result if and only if it is in attic and
  * - its id is in id_dates  or
- * - its coordinate is in coord_dates
+ * - its coordinate is in coord_dates_per_idx
  * NB: an extra condition could be applied to avoid too old objects,
  * but is avoided at the moment for the sake of simplicity.
  *
  * An object r is in coord_sharing_ids if r.id is not in id_dates
- * but the coord of the object e with e.id == r.id is in coord_dates.
+ * but the coord of the object e with e.id == r.id is in coord_dates_per_idx.
  */
 
 
@@ -101,17 +97,17 @@ std::vector< Node_Skeleton > extract_relevant_current(
 std::vector< Attic< Node_Skeleton > > extract_relevant_attic(
     const Id_Dates_Per_Idx& id_dates,
     Id_Dates_Per_Idx& coord_sharing_ids,
-    const Coord_Dates_Per_Idx& coord_dates,
+    const Coord_Dates_Per_Idx& coord_dates_per_idx,
     const std::vector< Attic< Node_Skeleton > >& attic);
 /* Assertions:
  * An object r is in the result if and only if it is in attic and
  * - its id is in id_dates  or
- * - its coordinate is in coord_dates
+ * - its coordinate is in coord_dates_per_idx
  * NB: an extra condition could be applied to avoid too old objects,
  * but is avoided at the moment for the sake of simplicity.
  *
  * An object r is in coord_sharing_ids if r.id is not in id_dates
- * but the coord of the object e with e.id == r.id is in coord_dates.
+ * but the coord of the object e with e.id == r.id is in coord_dates_per_idx.
  */
 
 
@@ -285,12 +281,14 @@ private:
 void update_nodes(Transaction& transaction, const Data_From_Osc& new_data)
 {
   // before the first pass by idx
+  Mapfile_IO mapfile_io;
   std::map< Uint31_Index, Id_Dates_Per_Idx > id_dates_by_idx =
-      read_idx_list(Id_Dates_Global(new_data));
+      mapfile_io.read_idx_list(new_data.node_id_dates());
   auto req = idx_list(id_dates_by_idx);
 
   std::map< Uint31_Index, Node_Skeletons_Per_Idx > skels_per_idx;
-  Pre_Event_List pre_events(/*TODO: aus new_data*/);
+  Pre_Event_List pre_events = new_data.node_pre_events();
+  std::map< Uint31_Index, Coord_Dates_Per_Idx > coord_dates = new_data.node_coord_dates();
 
   File_Handle< Uint31_Index, Node_Skeleton > nodes_bin(
       transaction.data_index(osm_base_settings().NODES), req);
@@ -311,17 +309,17 @@ void update_nodes(Transaction& transaction, const Data_From_Osc& new_data)
   {
     Uint31_Index working_idx = i_idx->first;
     Node_Skeletons_Per_Idx& skels = skels_per_idx[working_idx];
-    Coord_Dates_Per_Idx coord_dates(/*TODO: aus new_data*/);
+    Coord_Dates_Per_Idx coord_dates_per_idx = coord_dates[working_idx];
 
     std::vector< Node_Skeleton > current_nodes = nodes_bin.obj_with_idx(working_idx);
     std::vector< Attic< Node_Skeleton > > attic_nodes = nodes_attic_bin.obj_with_idx(working_idx);
 
-    collect_relevant_coords_current(i_idx->second, current_nodes, coord_dates);
-    collect_relevant_coords_attic(i_idx->second, attic_nodes, coord_dates);
+    collect_relevant_coords_current(i_idx->second, current_nodes, coord_dates_per_idx);
+    collect_relevant_coords_attic(i_idx->second, attic_nodes, coord_dates_per_idx);
 
     Id_Dates_Per_Idx coord_sharing_ids;
-    extract_relevant_current(i_idx->second, coord_sharing_ids, coord_dates, current_nodes).swap(skels.current);
-    extract_relevant_attic(i_idx->second, coord_sharing_ids, coord_dates, attic_nodes).swap(skels.attic);
+    extract_relevant_current(i_idx->second, coord_sharing_ids, coord_dates_per_idx, current_nodes).swap(skels.current);
+    extract_relevant_attic(i_idx->second, coord_sharing_ids, coord_dates_per_idx, attic_nodes).swap(skels.attic);
 
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta =
         nodes_meta_bin.obj_with_idx(working_idx);
@@ -348,7 +346,10 @@ void update_nodes(Transaction& transaction, const Data_From_Osc& new_data)
 
   // compute nodes_map, nodes_attic_map and nodes_idx_lists from id_dates_by_idx, nodes_meta_to_add, and nodes_attic_meta_to_add
   // write meta, nodes_map, nodes_attic_map, nodes_idx_lists
-  ...
+  mapfile_io.compute_and_write_idx_lists(nodes_meta_to_move_to_attic, nodes_meta_to_add, nodes_attic_meta_to_add);
+  update_elements(nodes_meta_to_move_to_attic, nodes_meta_to_add, *transaction, *meta_settings().NODES_META);
+  update_elements(
+      decltype(nodes_attic_meta_to_add)(), nodes_attic_meta_to_add, *transaction, *attic_settings().NODES_META);
 
   std::map< Uint31_Index, std::set< Node_Skeleton > > nodes_to_delete;
   std::map< Uint31_Index, std::set< Node_Skeleton > > nodes_to_add;
@@ -373,7 +374,10 @@ void update_nodes(Transaction& transaction, const Data_From_Osc& new_data)
   }
 
   // write nodes, nodes_attic, nodes_undelete
-  ...
+  update_elements(nodes_to_delete, nodes_to_add, *transaction, *osm_base_settings().NODES);
+  update_elements(nodes_attic_to_delete, nodes_attic_to_add, *transaction, *attic_settings().NODES);
+  update_elements(
+      nodes_undelete_to_delete, nodes_undelete_to_add, *transaction, *attic_settings().NODES_UNDELETED);
 
   //TODO: tags, nodes_for_ways
 }
