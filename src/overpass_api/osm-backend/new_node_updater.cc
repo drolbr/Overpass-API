@@ -309,7 +309,7 @@ void update_nodes(Transaction& transaction, const Data_From_Osc& new_data)
   {
     Uint31_Index working_idx = i_idx->first;
     Node_Skeletons_Per_Idx& skels = skels_per_idx[working_idx];
-    Coord_Dates_Per_Idx coord_dates_per_idx = coord_dates[working_idx];
+    Coord_Dates_Per_Idx& coord_dates_per_idx = coord_dates[working_idx];
 
     std::vector< Node_Skeleton > current_nodes = nodes_bin.obj_with_idx(working_idx);
     std::vector< Attic< Node_Skeleton > > attic_nodes = nodes_attic_bin.obj_with_idx(working_idx);
