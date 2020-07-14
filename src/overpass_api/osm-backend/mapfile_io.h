@@ -4,13 +4,11 @@
 
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
+#include "new_basic_updater.h"
 
 #include <cstdint>
 #include <map>
 #include <vector>
-
-
-typedef std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Id_Dates_Per_Idx;
 
 
 class Mapfile_IO

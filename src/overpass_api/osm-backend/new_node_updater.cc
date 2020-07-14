@@ -33,35 +33,6 @@ Id_Dates read_idx_list(const Id_Dates_Global& ids);
 //TODO: Read files nodes, nodes_attic, nodes_meta, nodes_meta_attic
 
 
-// Adds to the result all coordinates from nodes whose ids appear in id_dates
-void collect_relevant_coords_current(
-    const Id_Dates_Per_Idx& id_dates,
-    const std::vector< Node_Skeleton >& current,
-    Coord_Dates_Per_Idx& result);
-/* Assertions:
- * An object r is contained in the result if and only if
- * it is already contained in the result before the function or
- * if there exists a node n in attic and an entry e in id_dates such
- * that e.id == n.id == r.id and r.date == e.date
- */
-
-
-// Adds to the result all coordinates from nodes whose ids appear in id_dates
-void collect_relevant_coords_attic(
-    const Id_Dates_Per_Idx& id_dates,
-    const std::vector< Attic< Node_Skeleton > >& attic,
-    Coord_Dates_Per_Idx& result);
-/* Assertions:
- * An object r is contained in the result if and only if
- * it is already contained in the result before the function or
- * if there exists a node n in attic and an entry e in id_dates such
- * that e.id == n.id == r.id and r.date == e.date < n.end
- *
- * NB: Could be optimized away if we know beforehand
- * that no current_meta in this idx is younger than the oldest date from id_dates.
- */
-
-
 /* Invariants:
  * - events are sorted by (id, time)
  * Note: specific for a given working_idx
@@ -73,42 +44,6 @@ struct Node_Skeletons_Per_Idx
   std::vector< Attic< Node_Skeleton::Id_Type > > undeleted;
   Id_Dates_Per_Idx first_appearance;
 };
-
-
-// Keeps from all the objects in the idx only those that are relevant for the event list
-std::vector< Node_Skeleton > extract_relevant_current(
-    const Id_Dates_Per_Idx& id_dates,
-    Id_Dates_Per_Idx& coord_sharing_ids,
-    const Coord_Dates_Per_Idx& coord_dates_per_idx,
-    const std::vector< Node_Skeleton >& current);
-/* Assertions:
- * An object r is in the result if and only if it is in attic and
- * - its id is in id_dates  or
- * - its coordinate is in coord_dates_per_idx
- * NB: an extra condition could be applied to avoid too old objects,
- * but is avoided at the moment for the sake of simplicity.
- *
- * An object r is in coord_sharing_ids if r.id is not in id_dates
- * but the coord of the object e with e.id == r.id is in coord_dates_per_idx.
- */
-
-
-// Keeps from all the objects in the idx only those that are relevant for the event list
-std::vector< Attic< Node_Skeleton > > extract_relevant_attic(
-    const Id_Dates_Per_Idx& id_dates,
-    Id_Dates_Per_Idx& coord_sharing_ids,
-    const Coord_Dates_Per_Idx& coord_dates_per_idx,
-    const std::vector< Attic< Node_Skeleton > >& attic);
-/* Assertions:
- * An object r is in the result if and only if it is in attic and
- * - its id is in id_dates  or
- * - its coordinate is in coord_dates_per_idx
- * NB: an extra condition could be applied to avoid too old objects,
- * but is avoided at the moment for the sake of simplicity.
- *
- * An object r is in coord_sharing_ids if r.id is not in id_dates
- * but the coord of the object e with e.id == r.id is in coord_dates_per_idx.
- */
 
 
 // Collects the relevant first appearance

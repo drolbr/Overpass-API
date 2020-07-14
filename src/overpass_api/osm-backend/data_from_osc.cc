@@ -52,19 +52,7 @@ std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Data_From_Osc::node
       result.push_back(std::make_pair(j, i.meta.timestamp));
   }
 
-  std::sort(result.begin(), result.end(),
-      [](const std::pair< Node_Skeleton::Id_Type, uint64_t >& lhs, const std::pair< Node_Skeleton::Id_Type, uint64_t >& rhs)
-      { return lhs.first.val() < rhs.first.val() || (!(rhs.first.val() < lhs.first.val())
-          && lhs.second < rhs.second); });
-  auto i_to = result.begin();
-  Node_Skeleton::Id_Type last_id(0ull); 
-  for (auto i_from = result.begin(); i_from != result.end(); ++i_from)
-  {
-    if (i_from == result.begin() || !(last_id == i_from->first))
-      *(i_to++) = *i_from;
-    last_id = i_from->first;
-  }
-  result.erase(i_to, result.end());
+  keep_oldest_per_first(result);
 
   return result;
 }
@@ -103,19 +91,7 @@ std::map< Uint31_Index, Coord_Dates_Per_Idx > Data_From_Osc::node_coord_dates() 
   }
 
   for (auto& i : result)
-  {
-    std::sort(i.second.begin(), i.second.end(), [](const Attic< Uint32 >& lhs, const Attic< Uint32 >& rhs)
-        { return lhs.val() < rhs.val() || (!(rhs.val() < lhs.val()) && lhs.timestamp < rhs.timestamp); });
-    auto i_to = i.second.begin();
-    Uint32 last_coord(0u);
-    for (auto i_from = i.second.begin(); i_from != i.second.end(); ++i_from)
-    {
-      if (i_from == i.second.begin() || !(last_coord == i_from->val()))
-        *(i_to++) = *i_from;
-      last_coord = i_from->val();
-    }
-    i.second.erase(i_to, i.second.end());
-  }
+    keep_oldest_per_coord(i.second);
 
   return result;
 }

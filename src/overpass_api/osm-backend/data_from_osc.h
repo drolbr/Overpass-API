@@ -3,6 +3,7 @@
 
 
 #include "basic_updater.h"
+#include "new_basic_updater.h"
 
 #include <cstdint>
 #include <map>
@@ -21,6 +22,11 @@ struct Node_Pre_Event
   bool operator==(const Node_Pre_Event& rhs) const
   { return entry->elem == rhs.entry->elem && entry->meta == rhs.entry->meta
       && timestamp_end == rhs.timestamp_end; }
+
+  bool operator<(const Node_Pre_Event& rhs) const
+  { return entry->elem.id < rhs.entry->elem.id || (!(rhs.entry->elem.id < entry->elem.id)
+      && (entry->meta.timestamp < rhs.entry->meta.timestamp || (!(rhs.entry->meta.timestamp < entry->meta.timestamp)
+      && entry->meta.version < rhs.entry->meta.version))); }
 };
 
 
@@ -28,10 +34,6 @@ struct Pre_Event_List
 {
   std::vector< Node_Pre_Event > data;
 };
-
-
-typedef Uint32_Index Uint32;
-typedef std::vector< Attic< Uint32 > > Coord_Dates_Per_Idx;
 
 
 class Data_From_Osc
