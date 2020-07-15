@@ -128,4 +128,72 @@ private:
 };
 
 
+template< typename Key >
+class Compare_Set
+{
+public:
+  Compare_Set(const std::string& title_) : title(title_)
+  {
+    std::cerr<<title<<" ... ";
+  }
+
+  Compare_Set& operator()(const Key& key)
+  {
+    target.insert(key);
+    return *this;
+  }
+
+  bool operator()(const std::set< Key >& candidate) const
+  {
+    bool all_ok = true;
+    if (candidate.size() != target.size())
+    {
+      notify_failed(all_ok);
+      std::cerr<<title<<": "<<target.size()<<" elements expected, "<<candidate.size()<<" elements found.\n";
+    }
+    auto i_target = target.begin();
+    auto i_candidate = candidate.begin();
+    while (i_target != target.end())
+    {
+      while (i_candidate != candidate.end() && *i_candidate < *i_target)
+      {
+        notify_failed(all_ok);
+        std::cerr<<title<<": unexpected key skipped.\n";
+        ++i_candidate;
+      }
+      if (i_candidate == candidate.end() || *i_target < *i_candidate)
+      {
+        notify_failed(all_ok);
+        std::cerr<<title<<": expected key missing.\n";
+      }
+      if (i_candidate != candidate.end())
+        ++i_candidate;
+      ++i_target;
+    }
+    while (i_candidate != candidate.end())
+    {
+      notify_failed(all_ok);
+      std::cerr<<title<<": unexpected key skipped.\n";
+      ++i_candidate;
+    }
+    if (all_ok)
+      std::cerr<<"ok.\n";
+    return all_ok;
+  }
+
+private:
+  static void notify_failed(bool& all_ok)
+  {
+    if (all_ok)
+    {
+      std::cerr<<"FAILED!\n";
+      all_ok = false;
+    }
+  }
+
+  std::string title;
+  std::set< Key > target;
+};
+
+
 #endif

@@ -69,43 +69,6 @@ std::vector< Attic< Node_Skeleton > > extract_relevant_undeleted(
  */
 
 
-/* Invariants:
- * - events are sorted by (id, time)
- */
-struct Pre_Event_List
-{
-  // id
-  // begin
-  // end
-  // visible
-  // coord
-};
-
-
-Pre_Event_List::Pre_Event_List(New_Data& new_data);
-// TODO
-
-
-// Changes the entry of end in the pre_event_list where applicable.
-// Runs twice, once for current and once for attic
-void adapt_pre_event_list(
-    const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
-    Pre_Event_List& pre_events);
-/* Assertions:
- * The of elements in pre_events are the same before and after the call except their value for end.
- * For every entry e in pre_events the value of e.end
- * is the minimum of e.end before the call and the begin dates of all entries m in meta
- * with m.id == e.id and e.begin < m.time
- */
-
-
-// Collects all elements from current_meta that become outdated due to pre_events
-collect_current_meta_to_move(
-    const Pre_Event_List& pre_events,
-    const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& current_meta,
-    std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >& to_move);
-
-
 //TODO: compute_update_attic_meta
 
 
