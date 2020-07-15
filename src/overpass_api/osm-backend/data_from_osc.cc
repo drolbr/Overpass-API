@@ -14,7 +14,7 @@ void Data_From_Osc::set_node(const Node& node, const OSM_Element_Metadata* meta)
 void Data_From_Osc::set_node_deleted(Node::Id_Type id, const OSM_Element_Metadata* meta)
 {
   nodes.data.push_back(Data_By_Id< Node_Skeleton >::Entry
-      (Uint31_Index(0u), Node_Skeleton(id, 0u),
+      (Uint31_Index(0u), Node_Skeleton(0ull, 0u),
       meta ? OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(id, *meta)
           : OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(id, default_timestamp)));
 }
@@ -33,7 +33,7 @@ void Data_From_Osc::set_way(const Way& way, const OSM_Element_Metadata* meta)
 void Data_From_Osc::set_way_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta)
 {
   ways.data.push_back(Data_By_Id< Way_Skeleton >::Entry
-      (Uint31_Index(0u), Way_Skeleton(id),
+      (Uint31_Index(0u), Way_Skeleton(0ull),
       meta ? OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(id, *meta)
           : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(id, default_timestamp)));
 }
@@ -44,7 +44,7 @@ std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Data_From_Osc::node
   std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > result;
 
   for (const auto& i : nodes.data)
-    result.push_back(std::make_pair(i.elem.id, i.meta.timestamp));
+    result.push_back(std::make_pair(i.meta.ref, i.meta.timestamp));
 
   for (const auto& i : ways.data)
   {
@@ -66,13 +66,13 @@ Pre_Event_List Data_From_Osc::node_pre_events() const
     result.data.push_back(Node_Pre_Event(i));
 
   std::sort(result.data.begin(), result.data.end(), [](const Node_Pre_Event& lhs, const Node_Pre_Event& rhs)
-      { return lhs.entry->elem.id < rhs.entry->elem.id || (!(rhs.entry->elem.id < lhs.entry->elem.id)
+      { return lhs.entry->meta.ref < rhs.entry->meta.ref || (!(rhs.entry->meta.ref < lhs.entry->meta.ref)
             && (lhs.entry->meta.timestamp < rhs.entry->meta.timestamp || (!(rhs.entry->meta.timestamp < lhs.entry->meta.timestamp)
             && lhs.entry->meta.version < rhs.entry->meta.version))); } );
 
   for (decltype(result.data.size()) i = 0; i+1 < result.data.size(); ++i)
   {
-    if (result.data[i+1].entry->elem.id == result.data[i].entry->elem.id)
+    if (result.data[i+1].entry->meta.ref == result.data[i].entry->meta.ref)
       result.data[i].timestamp_end = result.data[i+1].entry->meta.timestamp;
   }
 

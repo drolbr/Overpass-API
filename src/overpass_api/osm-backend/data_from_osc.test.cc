@@ -129,7 +129,7 @@ int main(int argc, char* args[])
     meta.timestamp = 1006;
     meta.version = 6;
     Data_By_Id< Node_Skeleton >::Entry entry6(
-        Uint31_Index(0u), Node_Skeleton(496ull), OSM_Element_Metadata_Skeleton< Uint64 >(496ull, meta));
+        Uint31_Index(0u), Node_Skeleton(0ull, 0u), OSM_Element_Metadata_Skeleton< Uint64 >(496ull, meta));
     bool all_ok = true;
     all_ok &= Compare_Vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >("node_id_dates")
         (std::make_pair(Uint64(494), 1004))
@@ -165,7 +165,7 @@ int main(int argc, char* args[])
     meta.version = 3;
     data_from_osc.set_node_deleted(Uint64(496ull), &meta);
     Data_By_Id< Node_Skeleton >::Entry entry3(
-        Uint31_Index(0u), Node_Skeleton(496ull), OSM_Element_Metadata_Skeleton< Uint64 >(496ull, meta));
+        Uint31_Index(0u), Node_Skeleton(0ull, 0u), OSM_Element_Metadata_Skeleton< Uint64 >(496ull, meta));
     meta.timestamp = 1401;
     meta.version = 4;
     data_from_osc.set_node(Node(Uint64(496ull), 51.25, 7.15), &meta);
