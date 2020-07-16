@@ -12,15 +12,15 @@
 
 struct Node_Pre_Event
 {
-  Node_Pre_Event(const Data_By_Id< Node_Skeleton >::Entry& entry_) : entry(&entry_), timestamp_end(NOW) {}
-  Node_Pre_Event(const Data_By_Id< Node_Skeleton >::Entry& entry_, uint64_t timestamp_end_)
+  Node_Pre_Event(Data_By_Id< Node_Skeleton >::Entry& entry_) : entry(&entry_), timestamp_end(NOW) {}
+  Node_Pre_Event(Data_By_Id< Node_Skeleton >::Entry& entry_, uint64_t timestamp_end_)
     : entry(&entry_), timestamp_end(timestamp_end_) {}
 
-  const Data_By_Id< Node_Skeleton >::Entry* entry;
+  Data_By_Id< Node_Skeleton >::Entry* entry;
   uint64_t timestamp_end;
 
   bool operator==(const Node_Pre_Event& rhs) const
-  { return entry->elem == rhs.entry->elem && entry->meta == rhs.entry->meta
+  { return entry->elem == rhs.entry->elem && entry->meta == rhs.entry->meta && entry->idx == rhs.entry->idx
       && timestamp_end == rhs.timestamp_end; }
 
   bool operator<(const Node_Pre_Event& rhs) const
@@ -33,6 +33,7 @@ struct Node_Pre_Event
 struct Pre_Event_List
 {
   std::vector< Node_Pre_Event > data;
+  std::vector< Node_Pre_Event > timestamp_last_not_deleted;
 };
 
 
@@ -47,7 +48,7 @@ public:
   void set_way_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta = 0);
 
   std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > node_id_dates() const;
-  Pre_Event_List node_pre_events() const;
+  Pre_Event_List node_pre_events();
   std::map< Uint31_Index, Coord_Dates_Per_Idx > node_coord_dates() const;
 
 private:

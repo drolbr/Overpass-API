@@ -12,6 +12,8 @@ int main(int argc, char* args[])
         (data_from_osc.node_id_dates());
     all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events")
         (data_from_osc.node_pre_events().data);
+    all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events.timestamp_last_not_deleted")
+        (data_from_osc.node_pre_events().timestamp_last_not_deleted);
     all_ok &= Compare_Map< Uint31_Index, Coord_Dates_Per_Idx >("node_coord_dates")
         (data_from_osc.node_coord_dates());
   }
@@ -33,6 +35,8 @@ int main(int argc, char* args[])
     all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events")
         (Node_Pre_Event(entry))
         (data_from_osc.node_pre_events().data);
+    all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events.timestamp_last_not_deleted")
+        (data_from_osc.node_pre_events().timestamp_last_not_deleted);
     all_ok &= Compare_Map< Uint31_Index, Coord_Dates_Per_Idx >("node_coord_dates")
         (ll_upper_(51.25, 7.15), std::vector< Attic< Uint32 > >(1, Attic< Uint32 >(ll_lower(51.25, 7.15), 1000)))
         (data_from_osc.node_coord_dates());
@@ -56,6 +60,8 @@ int main(int argc, char* args[])
         (data_from_osc.node_id_dates());
     all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events")
         (data_from_osc.node_pre_events().data);
+    all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events.timestamp_last_not_deleted")
+        (data_from_osc.node_pre_events().timestamp_last_not_deleted);
     all_ok &= Compare_Map< Uint31_Index, Coord_Dates_Per_Idx >("node_coord_dates")
         (data_from_osc.node_coord_dates());
   }
@@ -99,6 +105,8 @@ int main(int argc, char* args[])
         (Node_Pre_Event(entry1))
         (Node_Pre_Event(entry2))
         (data_from_osc.node_pre_events().data);
+    all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events.timestamp_last_not_deleted")
+        (data_from_osc.node_pre_events().timestamp_last_not_deleted);
     all_ok &= Compare_Map< Uint31_Index, Coord_Dates_Per_Idx >("node_coord_dates")
         (ll_upper_(51.25, 7.15), coord_dates)
         (data_from_osc.node_coord_dates());
@@ -141,6 +149,9 @@ int main(int argc, char* args[])
         (Node_Pre_Event(entry5))
         (Node_Pre_Event(entry6))
         (data_from_osc.node_pre_events().data);
+    all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events.timestamp_last_not_deleted")
+        (Node_Pre_Event(entry6, 0ull))
+        (data_from_osc.node_pre_events().timestamp_last_not_deleted);
     all_ok &= Compare_Map< Uint31_Index, Coord_Dates_Per_Idx >("node_coord_dates")
         (ll_upper_(51.25, 7.45), std::vector< Attic< Uint32 > >(1, Attic< Uint32 >(ll_lower(51.25, 7.45), 1004)))
         (ll_upper_(51.25, 7.55), std::vector< Attic< Uint32 > >(1, Attic< Uint32 >(ll_lower(51.25, 7.55), 1005)))
@@ -165,7 +176,7 @@ int main(int argc, char* args[])
     meta.version = 3;
     data_from_osc.set_node_deleted(Uint64(496ull), &meta);
     Data_By_Id< Node_Skeleton >::Entry entry3(
-        Uint31_Index(0u), Node_Skeleton(0ull, 0u), OSM_Element_Metadata_Skeleton< Uint64 >(496ull, meta));
+        ll_upper_(51.25, 7.25), Node_Skeleton(0ull, 0u), OSM_Element_Metadata_Skeleton< Uint64 >(496ull, meta));
     meta.timestamp = 1401;
     meta.version = 4;
     data_from_osc.set_node(Node(Uint64(496ull), 51.25, 7.15), &meta);
@@ -191,6 +202,9 @@ int main(int argc, char* args[])
         (Node_Pre_Event(entry4, 1502))
         (Node_Pre_Event(entry5))
         (data_from_osc.node_pre_events().data);
+    all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events.timestamp_last_not_deleted")
+        (Node_Pre_Event(entry3, 0ull))
+        (data_from_osc.node_pre_events().timestamp_last_not_deleted);
     all_ok &= Compare_Map< Uint31_Index, Coord_Dates_Per_Idx >("node_coord_dates")
         (ll_upper_(51.25, 7.15), std::vector< Attic< Uint32 > >(1, Attic< Uint32 >(ll_lower(51.25, 7.15), 1100)))
         (ll_upper_(51.25, 7.25), coord_dates)

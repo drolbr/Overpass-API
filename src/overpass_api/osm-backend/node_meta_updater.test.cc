@@ -11,7 +11,7 @@ int main(int argc, char* args[])
 
     Pre_Event_List pre_events;
     Node_Meta_Updater::adapt_pre_event_list(
-        std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >(), pre_events);
+        Uint31_Index(0u), std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >(), pre_events);
     all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list")
         (pre_events.data);
 
@@ -44,14 +44,14 @@ int main(int argc, char* args[])
         ll_upper_(51.25, 7.15008), Node_Skeleton(498ull),
         OSM_Element_Metadata_Skeleton< Uint64 >(498ull, 1008)));
     Pre_Event_List pre_events;
-    for (const auto& i : entries)
+    for (auto& i : entries)
       pre_events.data.push_back(Node_Pre_Event(i));
 
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta;
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(494ull, 1104));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1106));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(498ull, 1108));
-    Node_Meta_Updater::adapt_pre_event_list(current_meta, pre_events);
+    Node_Meta_Updater::adapt_pre_event_list(ll_upper_(51.25, 7.15006), current_meta, pre_events);
     all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list")
         (Node_Pre_Event(entries[0], 1104))
         (Node_Pre_Event(entries[1]))
@@ -84,11 +84,75 @@ int main(int argc, char* args[])
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1100));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1400));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1600));
-    Node_Meta_Updater::adapt_pre_event_list(current_meta, pre_events);
+    Node_Meta_Updater::adapt_pre_event_list(ll_upper_(51.25, 7.15006), current_meta, pre_events);
     all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list")
         (Node_Pre_Event(entries[0], 1300))
         (Node_Pre_Event(entries[1], 1400))
         (Node_Pre_Event(entries[2], 1600))
+        (pre_events.data);
+  }
+  {
+    std::cerr<<"\nTest whether pre_events processes deleted items:\n";
+    Data_From_Osc data_from_osc;
+    bool all_ok = true;
+
+    std::vector< Data_By_Id< Node_Skeleton >::Entry > entries;
+    entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        Uint31_Index(0u), Node_Skeleton(0ull, 0u),
+        OSM_Element_Metadata_Skeleton< Uint64 >(493ull, 1203)));
+    entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        Uint31_Index(0u), Node_Skeleton(0ull, 0u),
+        OSM_Element_Metadata_Skeleton< Uint64 >(494ull, 1204)));
+    entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        Uint31_Index(0u), Node_Skeleton(0ull, 0u),
+        OSM_Element_Metadata_Skeleton< Uint64 >(495ull, 1205)));
+    entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        Uint31_Index(0u), Node_Skeleton(0ull, 0u),
+        OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1206)));
+    Pre_Event_List pre_events;
+    for (auto& i : entries)
+      pre_events.data.push_back(Node_Pre_Event(i));
+    for (auto& i : entries)
+      pre_events.timestamp_last_not_deleted.push_back(Node_Pre_Event(i, 0u));
+
+    std::vector< Data_By_Id< Node_Skeleton >::Entry > expected;
+    expected.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Node_Skeleton(0ull, 0u),
+        OSM_Element_Metadata_Skeleton< Uint64 >(493ull, 1203)));
+    expected.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Node_Skeleton(0ull, 0u),
+        OSM_Element_Metadata_Skeleton< Uint64 >(494ull, 1204)));
+    expected.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Node_Skeleton(0ull, 0u),
+        OSM_Element_Metadata_Skeleton< Uint64 >(495ull, 1205)));
+    expected.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        ll_upper_(51.25, 7.25), Node_Skeleton(0ull, 0u),
+        OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1206)));
+
+    std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta;
+    current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(493ull, 1103));
+    current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(494ull, 1004));
+    current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(495ull, 1105));
+    Node_Meta_Updater::adapt_pre_event_list(ll_upper_(51.25, 7.15), current_meta, pre_events);
+    all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list.first")
+        (Node_Pre_Event(expected[0], NOW))
+        (Node_Pre_Event(expected[1], NOW))
+        (Node_Pre_Event(expected[2], NOW))
+        (Node_Pre_Event(entries[3], NOW))
+        (pre_events.data);
+
+    expected[1].idx = ll_upper_(51.25, 7.25);
+    current_meta.clear();
+    current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(493ull, 1003));
+    current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(494ull, 1104));
+    current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1006));
+    current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1106));
+    Node_Meta_Updater::adapt_pre_event_list(ll_upper_(51.25, 7.25), current_meta, pre_events);
+    all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list.second")
+        (Node_Pre_Event(expected[0], NOW))
+        (Node_Pre_Event(expected[1], NOW))
+        (Node_Pre_Event(expected[2], NOW))
+        (Node_Pre_Event(expected[3], NOW))
         (pre_events.data);
   }
   {
@@ -110,7 +174,7 @@ int main(int argc, char* args[])
         ll_upper_(51.25, 7.15006), Node_Skeleton(496ull),
         OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1206)));
     Pre_Event_List pre_events;
-    for (const auto& i : entries)
+    for (auto& i : entries)
       pre_events.data.push_back(Node_Pre_Event(i));
 
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta;

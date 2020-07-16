@@ -185,7 +185,7 @@ void update_nodes(Transaction& transaction, const Data_From_Osc& new_data)
   auto req = idx_list(id_dates_by_idx);
 
   std::map< Uint31_Index, Node_Skeletons_Per_Idx > skels_per_idx;
-  Pre_Event_List pre_events = new_data.node_pre_events();
+  Pre_Event_List pre_events = new_data.node_pre_events(); //TODO: deletion idxs vorbesetzen
   std::map< Uint31_Index, Coord_Dates_Per_Idx > coord_dates = new_data.node_coord_dates();
 
   File_Handle< Uint31_Index, Node_Skeleton > nodes_bin(

@@ -58,11 +58,11 @@ std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Data_From_Osc::node
 }
 
 
-Pre_Event_List Data_From_Osc::node_pre_events() const
+Pre_Event_List Data_From_Osc::node_pre_events()
 {
   Pre_Event_List result;
 
-  for (const auto& i : nodes.data)
+  for (auto& i : nodes.data)
     result.data.push_back(Node_Pre_Event(i));
 
   std::sort(result.data.begin(), result.data.end(), [](const Node_Pre_Event& lhs, const Node_Pre_Event& rhs)
@@ -73,7 +73,17 @@ Pre_Event_List Data_From_Osc::node_pre_events() const
   for (decltype(result.data.size()) i = 0; i+1 < result.data.size(); ++i)
   {
     if (result.data[i+1].entry->meta.ref == result.data[i].entry->meta.ref)
+    {
       result.data[i].timestamp_end = result.data[i+1].entry->meta.timestamp;
+      if (!result.data[i+1].entry->elem.id.val())
+        result.data[i+1].entry->idx = result.data[i].entry->idx;
+    }
+  }
+
+  for (auto& i : result.data)
+  {
+    if (!i.entry->elem.id.val())
+      result.timestamp_last_not_deleted.push_back(Node_Pre_Event(*i.entry, 0ull));
   }
 
   return result;
@@ -86,7 +96,7 @@ std::map< Uint31_Index, Coord_Dates_Per_Idx > Data_From_Osc::node_coord_dates() 
 
   for (const auto& i : nodes.data)
   {
-    if (!(i.idx == Uint31_Index(0u)))
+    if (i.elem.id.val())
       result[i.idx].push_back(Attic< Uint32 >(i.elem.ll_lower, i.meta.timestamp));
   }
 

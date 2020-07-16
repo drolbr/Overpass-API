@@ -90,7 +90,7 @@ std::vector< Attic< Node_Skeleton > > Node_Skeleton_Updater::extract_relevant_at
     bool found = false;
     for (const auto& j : id_dates)
     {
-      if (i.id == j.first && j.second < i.timestamp)
+      if (i.id == j.first && j.second <= i.timestamp)
       {
         result.push_back(i);
         found = true;
