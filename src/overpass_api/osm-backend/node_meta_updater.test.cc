@@ -6,7 +6,6 @@ int main(int argc, char* args[])
 {
   {
     std::cerr<<"Test empty input:\n";
-    Data_From_Osc data_from_osc;
     bool all_ok = true;
 
     Pre_Event_List pre_events;
@@ -21,10 +20,24 @@ int main(int argc, char* args[])
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >
         ("collect_current_meta_to_move")
         (to_move);
+
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        global_to_move;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        nodes_meta_to_add;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        nodes_attic_meta_to_add;
+    Node_Meta_Updater::create_update_for_nodes_meta(
+        pre_events, global_to_move, nodes_meta_to_add, nodes_attic_meta_to_add);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        ("create_update_for_nodes_meta.current")
+        (nodes_meta_to_add);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        ("create_update_for_nodes_meta.attic")
+        (nodes_attic_meta_to_add);
   }
   {
     std::cerr<<"\nTest whether pre_events respects ids:\n";
-    Data_From_Osc data_from_osc;
     bool all_ok = true;
 
     std::vector< Data_By_Id< Node_Skeleton >::Entry > entries;
@@ -62,7 +75,6 @@ int main(int argc, char* args[])
   }
   {
     std::cerr<<"\nTest whether pre_events respects timestamps:\n";
-    Data_From_Osc data_from_osc;
     bool all_ok = true;
 
     std::vector< Data_By_Id< Node_Skeleton >::Entry > entries;
@@ -93,7 +105,6 @@ int main(int argc, char* args[])
   }
   {
     std::cerr<<"\nTest whether pre_events processes deleted items:\n";
-    Data_From_Osc data_from_osc;
     bool all_ok = true;
 
     std::vector< Data_By_Id< Node_Skeleton >::Entry > entries;
@@ -157,7 +168,6 @@ int main(int argc, char* args[])
   }
   {
     std::cerr<<"\nTest all cases of collect_current_meta_to_move:\n";
-    Data_From_Osc data_from_osc;
     bool all_ok = true;
 
     std::vector< Data_By_Id< Node_Skeleton >::Entry > entries;
@@ -190,6 +200,42 @@ int main(int argc, char* args[])
         (OSM_Element_Metadata_Skeleton< Uint64 >(495ull, 1105))
         (OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1106))
         (to_move);
+  }
+  {
+    std::cerr<<"Test create_update_for_nodes_meta:\n";
+    bool all_ok = true;
+
+    std::vector< Data_By_Id< Node_Skeleton >::Entry > entries;
+    entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Node_Skeleton(496ull),
+        OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1000)));
+    entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Node_Skeleton(496ull),
+        OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1100)));
+    Pre_Event_List pre_events;
+    pre_events.data.push_back(Node_Pre_Event(entries[0], 1100));
+    pre_events.data.push_back(Node_Pre_Event(entries[1], NOW));
+
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        global_to_move;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        nodes_meta_to_add;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        nodes_attic_meta_to_add;
+    Node_Meta_Updater::create_update_for_nodes_meta(
+        pre_events, global_to_move, nodes_meta_to_add, nodes_attic_meta_to_add);
+    std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_expected;
+    current_expected.insert(entries[1].meta);
+    std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > attic_expected;
+    attic_expected.insert(entries[0].meta);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        ("create_update_for_nodes_meta.current")
+        (ll_upper_(51.25, 7.15), current_expected)
+        (nodes_meta_to_add);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
+        ("create_update_for_nodes_meta.attic")
+        (ll_upper_(51.25, 7.15), attic_expected)
+        (nodes_attic_meta_to_add);
   }
 
   return 0;

@@ -54,3 +54,21 @@ void Node_Meta_Updater::collect_current_meta_to_move(
       to_move.insert(i);
   }
 }
+
+
+void Node_Meta_Updater::create_update_for_nodes_meta(
+      const Pre_Event_List& pre_events,
+      const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& to_move,
+      std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& current_to_add,
+      std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& attic_to_add)
+{
+  attic_to_add = to_move;
+
+  for (const auto& i : pre_events.data)
+  {
+    if (i.timestamp_end == NOW)
+      current_to_add[i.entry->idx].insert(i.entry->meta);
+    else
+      attic_to_add[i.entry->idx].insert(i.entry->meta);
+  }
+}
