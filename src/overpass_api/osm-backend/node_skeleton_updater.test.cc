@@ -39,18 +39,18 @@ int main(int argc, char* args[])
   }
   {
     std::cerr<<"\nTest single results:\n";
-    Id_Dates_Per_Idx id_dates;
-    id_dates.push_back(std::make_pair(Uint64(494ull), 1004ull));
-    id_dates.push_back(std::make_pair(Uint64(496ull), 1006ull));
-    Coord_Dates_Per_Idx coord_result;
-    coord_result.push_back(Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15001)), 1001));
-    coord_result.push_back(Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15009)), 1009));
+    Id_Dates_Per_Idx id_dates =
+        { std::make_pair(Uint64(494ull), 1004ull),
+          std::make_pair(Uint64(496ull), 1006ull) };
+    Coord_Dates_Per_Idx coord_result =
+        { Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15001)), 1001),
+          Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15009)), 1009) };
     bool all_ok = true;
 
-    std::vector< Node_Skeleton > current_skels;
-    current_skels.push_back(Node_Skeleton(496ull, ll_lower(51.25, 7.15006)));
-    current_skels.push_back(Node_Skeleton(1000496ull, ll_lower(51.25, 7.15006)));
-    current_skels.push_back(Node_Skeleton(495ull, ll_lower(51.25, 7.15005)));
+    std::vector< Node_Skeleton > current_skels =
+        { Node_Skeleton(496ull, ll_lower(51.25, 7.15006)),
+          Node_Skeleton(1000496ull, ll_lower(51.25, 7.15006)),
+          Node_Skeleton(495ull, ll_lower(51.25, 7.15005)) };
     Node_Skeleton_Updater::collect_relevant_coords_current(
         id_dates, current_skels, coord_result);
     all_ok &= Compare_Vector< Attic< Uint32 > >("collect_relevant_coords_current")
@@ -97,30 +97,30 @@ int main(int argc, char* args[])
   }
   {
     std::cerr<<"\nTest timestamp ordering:\n";
-    Id_Dates_Per_Idx id_dates;
-    id_dates.push_back(std::make_pair(Uint64(10491ull), 1601ull));
-    id_dates.push_back(std::make_pair(Uint64(20491ull), 1501ull));
-    id_dates.push_back(std::make_pair(Uint64(10492ull), 1402ull));
-    id_dates.push_back(std::make_pair(Uint64(30492ull), 1302ull));
-    id_dates.push_back(std::make_pair(Uint64(10493ull), 1403ull));
-    id_dates.push_back(std::make_pair(Uint64(20493ull), 1603ull));
-    id_dates.push_back(std::make_pair(Uint64(10494ull), 1404ull));
-    id_dates.push_back(std::make_pair(Uint64(20494ull), 1604ull));
-    Coord_Dates_Per_Idx coord_result;
-    coord_result.push_back(Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15001)), 1400));
-    coord_result.push_back(Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15002)), 1600));
-    coord_result.push_back(Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15003)), 1500));
+    Id_Dates_Per_Idx id_dates =
+        { std::make_pair(Uint64(10491ull), 1601ull),
+          std::make_pair(Uint64(20491ull), 1501ull),
+          std::make_pair(Uint64(10492ull), 1402ull),
+          std::make_pair(Uint64(30492ull), 1302ull),
+          std::make_pair(Uint64(10493ull), 1403ull),
+          std::make_pair(Uint64(20493ull), 1603ull),
+          std::make_pair(Uint64(10494ull), 1404ull),
+          std::make_pair(Uint64(20494ull), 1604ull) };
+    Coord_Dates_Per_Idx coord_result =
+        { Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15001)), 1400),
+          Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15002)), 1600),
+          Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15003)), 1500) };
     bool all_ok = true;
 
-    std::vector< Node_Skeleton > current_skels;
-    current_skels.push_back(Node_Skeleton(10491ull, ll_lower(51.25, 7.15001)));
-    current_skels.push_back(Node_Skeleton(20491ull, ll_lower(51.25, 7.15001)));
-    current_skels.push_back(Node_Skeleton(10492ull, ll_lower(51.25, 7.15002)));
-    current_skels.push_back(Node_Skeleton(20492ull, ll_lower(51.25, 7.15002)));
-    current_skels.push_back(Node_Skeleton(10493ull, ll_lower(51.25, 7.15003)));
-    current_skels.push_back(Node_Skeleton(20493ull, ll_lower(51.25, 7.15003)));
-    current_skels.push_back(Node_Skeleton(10494ull, ll_lower(51.25, 7.15004)));
-    current_skels.push_back(Node_Skeleton(20494ull, ll_lower(51.25, 7.15004)));
+    std::vector< Node_Skeleton > current_skels =
+        { Node_Skeleton(10491ull, ll_lower(51.25, 7.15001)),
+          Node_Skeleton(20491ull, ll_lower(51.25, 7.15001)),
+          Node_Skeleton(10492ull, ll_lower(51.25, 7.15002)),
+          Node_Skeleton(20492ull, ll_lower(51.25, 7.15002)),
+          Node_Skeleton(10493ull, ll_lower(51.25, 7.15003)),
+          Node_Skeleton(20493ull, ll_lower(51.25, 7.15003)),
+          Node_Skeleton(10494ull, ll_lower(51.25, 7.15004)),
+          Node_Skeleton(20494ull, ll_lower(51.25, 7.15004)) };
     Node_Skeleton_Updater::collect_relevant_coords_current(
         id_dates, current_skels, coord_result);
     all_ok &= Compare_Vector< Attic< Uint32 > >("collect_relevant_coords_current")

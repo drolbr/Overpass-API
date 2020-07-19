@@ -3,33 +3,6 @@
 #include <vector>
 
 
-struct Id_Dates_Global
-{
-  // Set of (id, min_date)
-};
-//TODO
-
-
-Id_Dates_Global::Id_Dates_Global(const New_Data& new_data);
-//TODO
-
-
-struct Id_Dates
-{
-  // Per idx:
-  // Set of (id, min_date)
-};
-//TODO
-
-
-/* Uses files nodes.map, nodes_attic.map, node_idx_lists */
-Id_Dates read_idx_list(const Id_Dates_Global& ids);
-//TODO
-
-
-//TODO: prefill coords with new coords
-
-
 //TODO: Read files nodes, nodes_attic, nodes_meta, nodes_meta_attic
 
 
@@ -44,32 +17,6 @@ struct Node_Skeletons_Per_Idx
   std::vector< Attic< Node_Skeleton::Id_Type > > undeleted;
   Id_Dates_Per_Idx first_appearance;
 };
-
-
-// Collects the relevant first appearance
-Id_Dates_Per_Idx extract_first_appearance(
-    const Id_Dates_Per_Idx& id_dates,
-    const Id_Dates_Per_Idx& coord_sharing_ids,
-    const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& current,
-    const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& attic);
-/* Assertions:
- * An object r is in the result if and only if
- * there is an entry e in id_dates or coord_sharing_ids such that e.id == r.id and
- * from all elements E={f|f in current or attic, f.id == r.id} it is r.date = min_{f\in E}(f.date)
- */
-
-
-// Collects the relevant undelete entries
-/* Uses file nodes_undelete.bin */
-std::vector< Attic< Node_Skeleton > > extract_relevant_undeleted(
-    const Id_Dates_Per_Idx& id_dates, const Id_Dates_Per_Idx& coord_sharing_ids);
-/* Assertions:
- * An object r is in the result if and only if
- * there is an entry e in id_dates or coord_sharing_id_dates such that e.id == r.id and e.min_date < r.date
- */
-
-
-//TODO: compute_update_attic_meta
 
 
 /* Invariants:

@@ -4,6 +4,7 @@
 
 #include "../core/datatypes.h"
 
+#include <cstdint>
 #include <vector>
 
 

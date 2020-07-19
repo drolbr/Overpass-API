@@ -2,6 +2,13 @@
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__TEST_TOOLS_H
 
 
+#include <iostream>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
+
 template< typename Obj >
 class Compare_Vector
 {
