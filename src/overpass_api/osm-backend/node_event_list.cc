@@ -104,7 +104,8 @@ namespace
     bool is_begin;
 
     bool operator<(const Lower_Coord_Usage& rhs) const
-    { return ll_lower < rhs.ll_lower || (!(rhs.ll_lower < ll_lower) && timestamp < rhs.timestamp); }
+    { return ll_lower < rhs.ll_lower || (!(rhs.ll_lower < ll_lower)
+        && (timestamp < rhs.timestamp || (!(rhs.timestamp < timestamp) && is_begin < rhs.is_begin))); }
   };
 
 
@@ -160,36 +161,33 @@ namespace
 
       for (decltype(existing_data.size()) i = 0; i < existing_data.size(); ++i)
       {
-        auto j_ll = std::lower_bound(ll_lower_usage.begin(), ll_lower_usage.end(),
-            Lower_Coord_Usage{ existing_data[i].ll_lower_after, existing_data[i].timestamp, false } );
+        auto j_ll = std::upper_bound(ll_lower_usage.begin(), ll_lower_usage.end(),
+            Lower_Coord_Usage{ existing_data[i].ll_lower_after, existing_data[i].timestamp, true } );
         if (j_ll == ll_lower_usage.end() || j_ll->ll_lower != existing_data[i].ll_lower_after)
-          data.push_back(existing_data[i]);
-        else if (i+1 < existing_data.size() && existing_data[i].id == existing_data[i+1].id
-            && existing_data[i+1].timestamp <= j_ll->timestamp)
         {
-          if (j_ll->is_begin)
-            data.push_back(existing_data[i]);
-          else
+          data.push_back(existing_data[i]);
+          if (j_ll != ll_lower_usage.begin())
           {
-            data.push_back(existing_data[i]);
-            data.back().multiple_after = true;
+            --j_ll;
+            if (j_ll->ll_lower == existing_data[i].ll_lower_after)
+              data.back().multiple_after = j_ll->is_begin;
           }
         }
         else
         {
-          if (j_ll->is_begin)
+          data.push_back(existing_data[i]);
+          data.back().multiple_after = !j_ll->is_begin;
+          while (j_ll != ll_lower_usage.end() && j_ll->ll_lower == existing_data[i].ll_lower_after
+              && (i+1 >= existing_data.size() || !(existing_data[i].id == existing_data[i+1].id)
+                  || j_ll->timestamp < existing_data[i+1].timestamp))
           {
-            data.push_back(existing_data[i]);
-            data.push_back(existing_data[i]);
-            data.back().multiple_after = true;
-            data.back().timestamp = j_ll->timestamp;
-          }
-          else
-          {
-            data.push_back(existing_data[i]);
-            data.back().multiple_after = true;
-            data.push_back(existing_data[i]);
-            data.back().timestamp = j_ll->timestamp;
+            if (data.back().timestamp != j_ll->timestamp)
+            {
+              data.push_back(existing_data[i]);
+              data.back().timestamp = j_ll->timestamp;
+            }
+            data.back().multiple_after = j_ll->is_begin;
+            ++j_ll;
           }
         }
       }

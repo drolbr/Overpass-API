@@ -602,8 +602,210 @@ int main(int argc, char* args[])
         ({ Node_Event{ 496ull, 2000, true, ll_lower(51.25, 7.150062), true, ll_lower(51.25, 7.150062), false } })
         (events.data);
   }
-  //TODO:
-  // - Multi-Coord
+  {
+    std::cerr<<"\nTest exact match for multicoords:\n";
+    Node_Skeletons_Per_Idx skels;
+    skels.current = {
+        Node_Skeleton(495ull, ll_lower(51.25, 7.15)),
+        Node_Skeleton(496ull, ll_lower(51.25, 7.15)) };
+    skels.attic = {
+        Attic< Node_Skeleton >(Node_Skeleton(493ull, ll_lower(51.25, 7.15001)), 2000),
+        Attic< Node_Skeleton >(Node_Skeleton(494ull, ll_lower(51.25, 7.15001)), 2000) };
+    skels.first_appearance = {
+        std::make_pair(Uint64(493ull), 1000),
+        std::make_pair(Uint64(494ull), 1000),
+        std::make_pair(Uint64(495ull), 3000),
+        std::make_pair(Uint64(496ull), 3000) };
+    Pre_Event_List pre_events;
+
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_events);
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Node_Event >("data")
+        ({ Node_Event{ 493ull, 1000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 493ull, 2000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 494ull, 1000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 494ull, 2000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 495ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        (events.data);
+  }
+  {
+    std::cerr<<"\nTest partial overlap for multicoords:\n";
+    Node_Skeletons_Per_Idx skels;
+    skels.current = {
+        Node_Skeleton(495ull, ll_lower(51.25, 7.15)),
+        Node_Skeleton(496ull, ll_lower(51.25, 7.15)) };
+    skels.attic = {
+        Attic< Node_Skeleton >(Node_Skeleton(492ull, ll_lower(51.25, 7.15)), 4000),
+        Attic< Node_Skeleton >(Node_Skeleton(493ull, ll_lower(51.25, 7.15001)), 3000),
+        Attic< Node_Skeleton >(Node_Skeleton(494ull, ll_lower(51.25, 7.15001)), 4000) };
+    skels.first_appearance = {
+        std::make_pair(Uint64(492ull), 1000),
+        std::make_pair(Uint64(493ull), 1000),
+        std::make_pair(Uint64(494ull), 2000),
+        std::make_pair(Uint64(495ull), 3000),
+        std::make_pair(Uint64(496ull), 5000) };
+    Pre_Event_List pre_events;
+
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_events);
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Node_Event >("data")
+        ({ Node_Event{ 492ull, 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        ({ Node_Event{ 492ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 492ull, 4000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 493ull, 1000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), false } })
+        ({ Node_Event{ 493ull, 2000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 493ull, 3000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 494ull, 2000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 494ull, 3000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), false } })
+        ({ Node_Event{ 494ull, 4000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 495ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 495ull, 4000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        ({ Node_Event{ 495ull, 5000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 5000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        (events.data);
+  }
+  {
+    std::cerr<<"\nTest inclusion for multicoords:\n";
+    Node_Skeletons_Per_Idx skels;
+    skels.current = {
+        Node_Skeleton(496ull, ll_lower(51.25, 7.15)) };
+    skels.attic = {
+        Attic< Node_Skeleton >(Node_Skeleton(494ull, ll_lower(51.25, 7.15001)), 4000),
+        Attic< Node_Skeleton >(Node_Skeleton(495ull, ll_lower(51.25, 7.15001)), 3000),
+        Attic< Node_Skeleton >(Node_Skeleton(495ull, ll_lower(51.25, 7.15)), 4000) };
+    skels.first_appearance = {
+        std::make_pair(Uint64(494ull), 1000),
+        std::make_pair(Uint64(495ull), 2000),
+        std::make_pair(Uint64(496ull), 2000) };
+    Pre_Event_List pre_events;
+
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_events);
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Node_Event >("data")
+        ({ Node_Event{ 494ull, 1000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), false } })
+        ({ Node_Event{ 494ull, 2000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 494ull, 3000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), false } })
+        ({ Node_Event{ 494ull, 4000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 495ull, 2000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 495ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 495ull, 4000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 496ull, 2000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        ({ Node_Event{ 496ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 4000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        (events.data);
+  }
+  {
+    std::cerr<<"\nTest gap for multicoords:\n";
+    Node_Skeletons_Per_Idx skels;
+    skels.current = {
+        Node_Skeleton(495ull, ll_lower(51.25, 7.15)),
+        Node_Skeleton(496ull, ll_lower(51.25, 7.15)) };
+    skels.attic = {
+        Attic< Node_Skeleton >(Node_Skeleton(494ull, ll_lower(51.25, 7.15)), 4000),
+        Attic< Node_Skeleton >(Node_Skeleton(495ull, ll_lower(51.25, 7.15)), 2000),
+        Attic< Node_Skeleton >(Node_Skeleton(495ull, ll_lower(51.25, 7.15)), 6000) };
+    skels.undeleted = {
+        Attic< Node_Skeleton::Id_Type >(Uint64(495ull), 3000),
+        Attic< Node_Skeleton::Id_Type >(Uint64(495ull), 7000) };
+    skels.first_appearance = {
+        std::make_pair(Uint64(494ull), 1000),
+        std::make_pair(Uint64(495ull), 1000),
+        std::make_pair(Uint64(496ull), 5000) };
+    Pre_Event_List pre_events;
+
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_events);
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Node_Event >("data")
+        ({ Node_Event{ 494ull, 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 494ull, 2000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        ({ Node_Event{ 494ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 494ull, 4000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 495ull, 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 495ull, 2000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 495ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 495ull, 4000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        ({ Node_Event{ 495ull, 5000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 495ull, 6000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 495ull, 7000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 5000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 6000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        ({ Node_Event{ 496ull, 7000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        (events.data);
+  }
+  {
+    std::cerr<<"\nTest ladder for multicoords:\n";
+    Node_Skeletons_Per_Idx skels;
+    skels.current = {
+        Node_Skeleton(495ull, ll_lower(51.25, 7.15)),
+        Node_Skeleton(496ull, ll_lower(51.25, 7.15)) };
+    skels.attic = {
+        Attic< Node_Skeleton >(Node_Skeleton(493ull, ll_lower(51.25, 7.15)), 2000),
+        Attic< Node_Skeleton >(Node_Skeleton(494ull, ll_lower(51.25, 7.15)), 4000),
+        Attic< Node_Skeleton >(Node_Skeleton(496ull, ll_lower(51.25, 7.15)), 3000) };
+    skels.first_appearance = {
+        std::make_pair(Uint64(493ull), 1000),
+        std::make_pair(Uint64(494ull), 2000),
+        std::make_pair(Uint64(495ull), 4000),
+        std::make_pair(Uint64(496ull), 1000) };
+    Pre_Event_List pre_events;
+
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_events);
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Node_Event >("data")
+        ({ Node_Event{ 493ull, 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 493ull, 2000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 494ull, 2000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 494ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 494ull, 4000, false, 0u, false, 0u, false } })
+        ({ Node_Event{ 495ull, 4000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 2000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 4000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        (events.data);
+  }
+  {
+    std::cerr<<"\nTest multiplicity greater two for multicoords:\n";
+    Node_Skeletons_Per_Idx skels;
+    skels.current = {
+        Node_Skeleton(494ull, ll_lower(51.25, 7.15)),
+        Node_Skeleton(495ull, ll_lower(51.25, 7.15)),
+        Node_Skeleton(496ull, ll_lower(51.25, 7.15)),
+        Node_Skeleton(497ull, ll_lower(51.25, 7.15001)),
+        Node_Skeleton(498ull, ll_lower(51.25, 7.15001)) };
+    skels.attic = {
+        Attic< Node_Skeleton >(Node_Skeleton(494ull, ll_lower(51.25, 7.15)), 4000),
+        Attic< Node_Skeleton >(Node_Skeleton(494ull, ll_lower(51.25, 7.15001)), 5000),
+        Attic< Node_Skeleton >(Node_Skeleton(495ull, ll_lower(51.25, 7.15)), 4000),
+        Attic< Node_Skeleton >(Node_Skeleton(495ull, ll_lower(51.25, 7.15001)), 5000) };
+    skels.first_appearance = {
+        std::make_pair(Uint64(494ull), 2000),
+        std::make_pair(Uint64(495ull), 3000),
+        std::make_pair(Uint64(496ull), 1000),
+        std::make_pair(Uint64(497ull), 5000),
+        std::make_pair(Uint64(498ull), 1000) };
+    Pre_Event_List pre_events;
+
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_events);
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Node_Event >("data")
+        ({ Node_Event{ 494ull, 2000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 494ull, 4000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 494ull, 5000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 495ull, 3000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 495ull, 4000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 495ull, 5000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        ({ Node_Event{ 496ull, 2000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 496ull, 4000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
+        ({ Node_Event{ 496ull, 5000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), true } })
+        ({ Node_Event{ 497ull, 5000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 498ull, 1000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), false } })
+        ({ Node_Event{ 498ull, 4000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        ({ Node_Event{ 498ull, 5000, true, ll_lower(51.25, 7.15001), true, ll_lower(51.25, 7.15001), true } })
+        (events.data);
+  }
 
   return 0;
 }
