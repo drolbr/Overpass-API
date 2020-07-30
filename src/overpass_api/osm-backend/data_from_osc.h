@@ -47,8 +47,10 @@ public:
   void set_way(const Way& node, const OSM_Element_Metadata* meta = 0);
   void set_way_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta = 0);
 
-  std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > node_id_dates() const;
+  // not const: Pre_Event_List has pointers to entry and those entries are intended to be mutable
   Pre_Event_List node_pre_events();
+
+  std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > node_id_dates() const;
   std::map< Uint31_Index, Coord_Dates_Per_Idx > node_coord_dates() const;
 
 private:
