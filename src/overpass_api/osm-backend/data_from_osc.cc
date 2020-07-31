@@ -39,25 +39,6 @@ void Data_From_Osc::set_way_deleted(Way::Id_Type id, const OSM_Element_Metadata*
 }
 
 
-std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Data_From_Osc::node_id_dates() const
-{
-  std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > result;
-
-  for (const auto& i : nodes.data)
-    result.push_back(std::make_pair(i.meta.ref, i.meta.timestamp));
-
-  for (const auto& i : ways.data)
-  {
-    for (const auto& j : i.elem.nds)
-      result.push_back(std::make_pair(j, i.meta.timestamp));
-  }
-
-  keep_oldest_per_first(result);
-
-  return result;
-}
-
-
 Pre_Event_List Data_From_Osc::node_pre_events()
 {
   Pre_Event_List result;
@@ -90,9 +71,83 @@ Pre_Event_List Data_From_Osc::node_pre_events()
 }
 
 
-std::map< Uint31_Index, Coord_Dates_Per_Idx > Data_From_Osc::node_coord_dates() const
+namespace
 {
-  std::map< Uint31_Index, Coord_Dates_Per_Idx > result;
+  void keep_oldest_timestamp(std::vector< Pre_Event_Ref >& arg, const Pre_Event_List& events)
+  {
+    std::sort(arg.begin(), arg.end(),
+        [](const Pre_Event_Ref& lhs, const Pre_Event_Ref& rhs)
+        { return lhs.ref < rhs.ref || (!(rhs.ref < lhs.ref) && lhs.timestamp < rhs.timestamp); });
+    auto i_to = arg.begin();
+    Node_Skeleton::Id_Type last_id(0ull); 
+    for (auto i_from = arg.begin(); i_from != arg.end(); ++i_from)
+    {
+      if (i_from == arg.begin() || !(last_id == i_from->ref))
+        *(i_to++) = *i_from;
+      else if (i_from->offset < (i_to-1)->offset)
+        (i_to-1)->offset = i_from->offset;
+
+      last_id = i_from->ref;
+    }
+    arg.erase(i_to, arg.end());
+  }
+}
+
+
+Pre_Event_Refs Data_From_Osc::node_pre_event_refs(Pre_Event_List& events) const
+{
+  Pre_Event_Refs result;
+
+  if (!events.data.empty())
+    result.push_back(Pre_Event_Ref{ events.data[0].entry->meta.ref, events.data[0].entry->meta.timestamp, 0 });
+  for (unsigned int i = 1; i < events.data.size(); ++i)
+  {
+    if (!(events.data[i-1].entry->meta.ref == events.data[i].entry->meta.ref))
+      result.push_back(Pre_Event_Ref{ events.data[i].entry->meta.ref, events.data[i].entry->meta.timestamp, i });
+  }
+
+  for (const auto& i : ways.data)
+  {
+    for (const auto& j : i.elem.nds)
+      result.push_back(Pre_Event_Ref{ j, i.meta.timestamp, (unsigned int)events.data.size() });
+  }
+
+  keep_oldest_timestamp(result, events);
+
+  return result;
+}
+
+
+std::map< Uint31_Index, Pre_Event_Refs > Data_From_Osc::pre_event_refs_by_idx(Pre_Event_List& events) const
+{
+  std::map< Uint31_Index, Pre_Event_Refs > result;
+
+  unsigned int last_id_begin = 0;
+  for (unsigned int i = 0; i < events.data.size(); ++i)
+  {
+    if (i > 0 && !(events.data[i-1].entry->meta.ref == events.data[i].entry->meta.ref))
+      last_id_begin = i;
+
+    if (events.data[i].entry->idx.val())
+    {
+      Pre_Event_Refs& target = result[events.data[i].entry->idx];
+      if (target.empty() || !(target.back().offset == last_id_begin))
+        target.push_back(
+            Pre_Event_Ref{
+                events.data[i].entry->meta.ref, events.data[last_id_begin].entry->meta.timestamp, last_id_begin });
+    }
+  }
+
+  for (auto& i : result)
+    keep_oldest_timestamp(i.second, events);
+
+  return result;
+}
+
+
+std::map< Uint31_Index, Coord_Dates > Data_From_Osc::node_coord_dates() const
+{
+  std::map< Uint31_Index, Coord_Dates > result;
 
   for (const auto& i : nodes.data)
   {

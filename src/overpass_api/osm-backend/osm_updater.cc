@@ -16,6 +16,8 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "data_from_osc.h"
+#include "new_node_updater.h"
 #include "node_updater.h"
 #include "osm_updater.h"
 #include "relation_updater.h"
@@ -50,7 +52,9 @@
 
 namespace
 {
-  Node_Updater* node_updater(0);
+  Transaction* global_transaction = 0;
+  Data_From_Osc data_from_osc;
+  //Node_Updater* node_updater(0);
   Node current_node;
   Way_Updater* way_updater(0);
   Way current_way;
@@ -181,13 +185,14 @@ namespace
   inline void node_end()
   {
     if (modify_mode == DELETE)
-      node_updater->set_id_deleted(current_node.id, meta);
+      data_from_osc.set_node_deleted(current_node.id, meta);
     else
-      node_updater->set_node(current_node, meta);
+      data_from_osc.set_node(current_node, meta);
     if (osm_element_count >= flush_limit)
     {
       callback->node_elapsed(current_node.id);
-      node_updater->update(callback, cpu_stopwatch, true);
+      update_nodes(*global_transaction, data_from_osc);
+      data_from_osc = Data_From_Osc();
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -200,7 +205,7 @@ namespace
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, cpu_stopwatch, false);
+      update_nodes(*global_transaction, data_from_osc);
       //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
       callback->parser_started();
       osm_element_count = 0;
@@ -242,15 +247,15 @@ namespace
   inline void way_end()
   {
     if (modify_mode == DELETE)
-      way_updater->set_id_deleted(current_way.id, meta);
+      data_from_osc.set_way_deleted(current_way.id, meta);
     else
-      way_updater->set_way(current_way, meta);
+      data_from_osc.set_way(current_way, meta);
     if (osm_element_count >= flush_limit)
     {
       callback->way_elapsed(current_way.id);
-      way_updater->update(callback, cpu_stopwatch, true,
-                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
-                          node_updater->get_new_attic_skeletons());
+//       way_updater->update(callback, cpu_stopwatch, true,
+//                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+//                           node_updater->get_new_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -267,11 +272,11 @@ namespace
     if (osm_element_count >= flush_limit)
     {
       callback->relation_elapsed(current_relation.id);
-      relation_updater->update(callback, cpu_stopwatch,
-                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
-                          node_updater->get_new_attic_skeletons(),
-                          way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
-                          way_updater->get_new_attic_skeletons());
+//       relation_updater->update(callback, cpu_stopwatch,
+//                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+//                           node_updater->get_new_attic_skeletons(),
+//                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
+//                           way_updater->get_new_attic_skeletons());
       callback->parser_started();
       osm_element_count = 0;
     }
@@ -284,7 +289,7 @@ namespace
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      node_updater->update(callback, cpu_stopwatch, false);
+      update_nodes(*global_transaction, data_from_osc);
 //       relation_updater->update_moved_idxs
 //           (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
@@ -294,9 +299,9 @@ namespace
     else if (state == IN_WAYS)
     {
       callback->ways_finished();
-      way_updater->update(callback, cpu_stopwatch, false,
-                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
-                          node_updater->get_new_attic_skeletons());
+//       way_updater->update(callback, cpu_stopwatch, false,
+//                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+//                           node_updater->get_new_attic_skeletons());
 //       relation_updater->update_moved_idxs
 //           (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
       callback->parser_started();
@@ -451,25 +456,25 @@ void Osm_Updater::finish_updater()
 
   if (state == IN_NODES)
   {
-    node_updater->update(callback, cpu_stopwatch, false);
+    update_nodes(*global_transaction, data_from_osc);
     //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
     state = IN_WAYS;
   }
   if (state == IN_WAYS)
   {
-    way_updater->update(callback, cpu_stopwatch, false,
-                        node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
-                        node_updater->get_new_attic_skeletons());
+//     way_updater->update(callback, cpu_stopwatch, false,
+//                         node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+//                         node_updater->get_new_attic_skeletons());
 //     relation_updater->update_moved_idxs
 //         (node_updater->get_moved_nodes(), way_updater->get_moved_ways(), update_relation_logger);
     state = IN_RELATIONS;
   }
   if (state == IN_RELATIONS)
-    relation_updater->update(callback, cpu_stopwatch,
-                          node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
-                          node_updater->get_new_attic_skeletons(),
-                          way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
-                          way_updater->get_new_attic_skeletons());
+;//     relation_updater->update(callback, cpu_stopwatch,
+//                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
+//                           node_updater->get_new_attic_skeletons(),
+//                           way_updater->get_new_skeletons(), way_updater->get_attic_skeletons(),
+//                           way_updater->get_new_attic_skeletons());
 
   flush();
   callback->parser_succeeded();
@@ -515,7 +520,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
     version<<data_version_<<'\n';
   }
 
-  node_updater_ = new Node_Updater(*transaction, meta);
+  global_transaction = transaction;
   way_updater_ = new Way_Updater(*transaction, meta);
   relation_updater_ = new Relation_Updater(*transaction, meta);
   flush_limit = flush_limit_;
@@ -524,7 +529,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
 
   state = 0;
   osm_element_count = 0;
-  node_updater = node_updater_;
+  //node_updater = node_updater_;
   way_updater = way_updater_;
   relation_updater = relation_updater_;
   callback = callback_;
@@ -548,7 +553,8 @@ Osm_Updater::Osm_Updater
     version<<data_version_<<'\n';
   }
 
-  node_updater_ = new Node_Updater(db_dir, meta);
+  transaction = new Nonsynced_Transaction(true, false, db_dir, "");
+  global_transaction = transaction;
   way_updater_ = new Way_Updater(db_dir, meta);
   relation_updater_ = new Relation_Updater(db_dir, meta);
   flush_limit = flush_limit_;
@@ -557,7 +563,7 @@ Osm_Updater::Osm_Updater
 
   state = 0;
   osm_element_count = 0;
-  node_updater = node_updater_;
+  //node_updater = node_updater_;
   way_updater = way_updater_;
   relation_updater = relation_updater_;
   callback = callback_;
@@ -567,8 +573,8 @@ Osm_Updater::Osm_Updater
 
 void Osm_Updater::flush()
 {
-  delete node_updater_;
-  node_updater_ = new Node_Updater(db_dir_, meta ? keep_meta : only_data);
+  //delete node_updater_;
+  //node_updater_ = new Node_Updater(db_dir_, meta ? keep_meta : only_data);
   delete way_updater_;
   way_updater_ = new Way_Updater(db_dir_, meta);
   delete relation_updater_;
@@ -601,16 +607,16 @@ void Osm_Updater::flush()
 
 Osm_Updater::~Osm_Updater()
 {
-  delete node_updater_;
+  //delete node_updater_;
   delete way_updater_;
   delete relation_updater_;
   if (::meta)
     delete ::meta;
 
+  delete transaction;
+
   if (dispatcher_client)
   {
-    if (transaction)
-      delete transaction;
     Logger logger(dispatcher_client->get_db_dir());
     logger.annotated_log("write_rollback() start");
     dispatcher_client->write_rollback();

@@ -21,7 +21,7 @@ void keep_oldest_per_first(std::vector< std::pair< Node_Skeleton::Id_Type, uint6
 }
 
 
-void keep_oldest_per_coord(Coord_Dates_Per_Idx& arg)
+void keep_oldest_per_coord(Coord_Dates& arg)
 {
   std::sort(arg.begin(), arg.end(), [](const Attic< Uint32 >& lhs, const Attic< Uint32 >& rhs)
       { return lhs.val() < rhs.val() || (!(rhs.val() < lhs.val()) && lhs.timestamp < rhs.timestamp); });

@@ -2,16 +2,16 @@
 
 
 void Node_Skeleton_Updater::collect_relevant_coords_current(
-    const Id_Dates_Per_Idx& id_dates,
+    const Pre_Event_Refs& pre_event_refs,
     const std::vector< Node_Skeleton >& current,
-    Coord_Dates_Per_Idx& result)
+    Coord_Dates& result)
 {
   for (const auto& i : current)
   {
-    for (const auto& j : id_dates)
+    for (const auto& j : pre_event_refs)
     {
-      if (i.id == j.first)
-        result.push_back(Attic< Uint32 >(i.ll_lower, j.second));
+      if (i.id == j.ref)
+        result.push_back(Attic< Uint32 >(i.ll_lower, j.timestamp));
     }
   }
 
@@ -19,18 +19,18 @@ void Node_Skeleton_Updater::collect_relevant_coords_current(
 }
 
 
-// Adds to the result all coordinates from nodes whose ids appear in id_dates
+// Adds to the result all coordinates from nodes whose ids appear in pre_event_refs
 void Node_Skeleton_Updater::collect_relevant_coords_attic(
-    const Id_Dates_Per_Idx& id_dates,
+    const Pre_Event_Refs& pre_event_refs,
     const std::vector< Attic< Node_Skeleton > >& attic,
-    Coord_Dates_Per_Idx& result)
+    Coord_Dates& result)
 {
   for (const auto& i : attic)
   {
-    for (const auto& j : id_dates)
+    for (const auto& j : pre_event_refs)
     {
-      if (i.id == j.first && j.second < i.timestamp)
-        result.push_back(Attic< Uint32 >(i.ll_lower, j.second));
+      if (i.id == j.ref && j.timestamp < i.timestamp)
+        result.push_back(Attic< Uint32 >(i.ll_lower, j.timestamp));
     }
   }
 
@@ -40,9 +40,9 @@ void Node_Skeleton_Updater::collect_relevant_coords_attic(
 
 // Keeps from all the objects in the idx only those that are relevant for the event list
 std::vector< Node_Skeleton > Node_Skeleton_Updater::extract_relevant_current(
-    const Id_Dates_Per_Idx& id_dates,
-    Id_Dates_Per_Idx& coord_sharing_ids,
-    const Coord_Dates_Per_Idx& coord_dates_per_idx,
+    const Pre_Event_Refs& pre_event_refs,
+    Id_Dates& coord_sharing_ids,
+    const Coord_Dates& coord_dates_per_idx,
     const std::vector< Node_Skeleton >& current)
 {
   std::vector< Node_Skeleton > result;
@@ -50,9 +50,9 @@ std::vector< Node_Skeleton > Node_Skeleton_Updater::extract_relevant_current(
   for (const auto& i : current)
   {
     bool found = false;
-    for (const auto& j : id_dates)
+    for (const auto& j : pre_event_refs)
     {
-      if (i.id == j.first)
+      if (i.id == j.ref)
       {
         result.push_back(i);
         found = true;
@@ -78,9 +78,9 @@ std::vector< Node_Skeleton > Node_Skeleton_Updater::extract_relevant_current(
 
 // Keeps from all the objects in the idx only those that are relevant for the event list
 std::vector< Attic< Node_Skeleton > > Node_Skeleton_Updater::extract_relevant_attic(
-    const Id_Dates_Per_Idx& id_dates,
-    Id_Dates_Per_Idx& coord_sharing_ids,
-    const Coord_Dates_Per_Idx& coord_dates_per_idx,
+    const Pre_Event_Refs& pre_event_refs,
+    Id_Dates& coord_sharing_ids,
+    const Coord_Dates& coord_dates_per_idx,
     const std::vector< Attic< Node_Skeleton > >& attic)
 {
   std::vector< Attic< Node_Skeleton > > result;
@@ -88,9 +88,9 @@ std::vector< Attic< Node_Skeleton > > Node_Skeleton_Updater::extract_relevant_at
   for (const auto& i : attic)
   {
     bool found = false;
-    for (const auto& j : id_dates)
+    for (const auto& j : pre_event_refs)
     {
-      if (i.id == j.first && j.second <= i.timestamp)
+      if (i.id == j.ref && j.timestamp <= i.timestamp)
       {
         result.push_back(i);
         found = true;

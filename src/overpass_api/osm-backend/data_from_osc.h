@@ -50,10 +50,11 @@ public:
   // not const: Pre_Event_List has pointers to entry and those entries are intended to be mutable
   Pre_Event_List node_pre_events();
 
-  std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > node_id_dates() const;
-  std::map< Uint31_Index, Coord_Dates_Per_Idx > node_coord_dates() const;
+  Pre_Event_Refs node_pre_event_refs(Pre_Event_List& events) const;
+  std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_by_idx(Pre_Event_List& events) const;
+  std::map< Uint31_Index, Coord_Dates > node_coord_dates() const;
 
-private:
+//private:
   uint64_t default_timestamp;
   Data_By_Id< Node_Skeleton > nodes;
   Data_By_Id< Way_Skeleton > ways;

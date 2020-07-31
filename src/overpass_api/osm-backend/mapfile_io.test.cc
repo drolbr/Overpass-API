@@ -28,8 +28,10 @@ int main(int argc, char* args[])
     id_dates.push_back(std::make_pair(Uint64(495ull), 1200));
     id_dates.push_back(std::make_pair(Uint64(496ull), 1200));
  
-    Compare_Map< Uint31_Index, Id_Dates_Per_Idx >("read_idx_list")
-        (mapfile_io.read_idx_list(id_dates));
+    std::map< Uint31_Index, Id_Dates > id_dates_per_idx;
+    mapfile_io.read_idx_list(id_dates, id_dates_per_idx);
+    Compare_Map< Uint31_Index, Id_Dates >("read_idx_list")
+        (id_dates_per_idx);
 
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_current;
     new_current[ll_upper_(51.25, 7.45)].insert(
@@ -63,7 +65,9 @@ int main(int argc, char* args[])
     id_dates.push_back(std::make_pair(Uint64(497ull), 1200));
     id_dates.push_back(std::make_pair(Uint64(498ull), 1200));
 
-    Compare_Map< Uint31_Index, Id_Dates_Per_Idx >("read_idx_list")
+    std::map< Uint31_Index, Id_Dates > id_dates_per_idx;
+    mapfile_io.read_idx_list(id_dates, id_dates_per_idx);
+    Compare_Map< Uint31_Index, Id_Dates >("read_idx_list")
         (ll_upper_(51.25, 7.45), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
             std::make_pair(Uint64(494ull), 1200)))
         (ll_upper_(51.25, 7.55), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
@@ -72,7 +76,7 @@ int main(int argc, char* args[])
             std::make_pair(Uint64(496ull), 1200)))
         (ll_upper_(51.35, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
             std::make_pair(Uint64(496ull), 1200)))
-        (mapfile_io.read_idx_list(id_dates));
+        (id_dates_per_idx);
 
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > moved;
     moved[ll_upper_(51.25, 7.55)].insert(
@@ -112,7 +116,9 @@ int main(int argc, char* args[])
     id_dates.push_back(std::make_pair(Uint64(496ull), 1200));
     id_dates.push_back(std::make_pair(Uint64(497ull), 1200));
 
-    Compare_Map< Uint31_Index, Id_Dates_Per_Idx >("read_idx_list")
+    std::map< Uint31_Index, Id_Dates > id_dates_per_idx;
+    mapfile_io.read_idx_list(id_dates, id_dates_per_idx);
+    Compare_Map< Uint31_Index, Id_Dates >("read_idx_list")
         (ll_upper_(51.25, 7.55), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
             std::make_pair(Uint64(495ull), 1200)))
         (ll_upper_(51.15, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
@@ -127,7 +133,7 @@ int main(int argc, char* args[])
             std::make_pair(Uint64(497ull), 1200)))
         (ll_upper_(51.45, 7.75), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
             std::make_pair(Uint64(497ull), 1200)))
-        (mapfile_io.read_idx_list(id_dates));
+        (id_dates_per_idx);
 
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > moved;
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_current;
@@ -160,7 +166,9 @@ int main(int argc, char* args[])
     id_dates.push_back(std::make_pair(Uint64(497ull), 1200));
     id_dates.push_back(std::make_pair(Uint64(498ull), 1200));
 
-    Compare_Map< Uint31_Index, Id_Dates_Per_Idx >("read_idx_list")
+    std::map< Uint31_Index, Id_Dates > id_dates_per_idx;
+    mapfile_io.read_idx_list(id_dates, id_dates_per_idx);
+    Compare_Map< Uint31_Index, Id_Dates >("read_idx_list")
         (ll_upper_(51.15, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
             std::make_pair(Uint64(496ull), 1200)))
         (ll_upper_(51.25, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
@@ -185,7 +193,7 @@ int main(int argc, char* args[])
             std::make_pair(Uint64(498ull), 1200)))
         (ll_upper_(51.65, 7.85), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
             std::make_pair(Uint64(498ull), 1200)))
-        (mapfile_io.read_idx_list(id_dates));
+        (id_dates_per_idx);
   }
 
   return 0;

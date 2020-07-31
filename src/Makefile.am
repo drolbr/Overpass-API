@@ -173,8 +173,7 @@ liboutput_la_LIBADD =
 libsettings_la_SOURCES = overpass_api/core/settings.cc
 libsettings_la_LIBADD =
 
-osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backend/basic_updater.cc overpass_api/osm-backend/node_updater.cc overpass_api/osm-backend/nodes_meta_updater.cc overpass_api/osm-backend/way_updater.cc overpass_api/osm-backend/relation_updater.cc overpass_api/osm-backend/osm_updater.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc expat/escape_xml.cc
-
+osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backend/basic_updater.cc overpass_api/osm-backend/data_from_osc.cc overpass_api/osm-backend/mapfile_io.cc overpass_api/osm-backend/new_basic_updater.cc overpass_api/osm-backend/new_node_updater.cc overpass_api/osm-backend/node_event_list.cc overpass_api/osm-backend/node_meta_updater.cc overpass_api/osm-backend/node_skeleton_updater.cc overpass_api/osm-backend/prepare_node_update.cc overpass_api/osm-backend/update_events_preparer.cc overpass_api/osm-backend/way_updater.cc overpass_api/osm-backend/relation_updater.cc overpass_api/osm-backend/osm_updater.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc expat/escape_xml.cc
 
 bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_database.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
@@ -264,11 +263,21 @@ nobase_dist_HEADERS = \
   overpass_api/osm-backend/area_updater.h\
   overpass_api/osm-backend/basic_updater.h\
   overpass_api/osm-backend/clone_database.h\
+  overpass_api/osm-backend/data_from_osc.h\
+  overpass_api/osm-backend/mapfile_io.h\
   overpass_api/osm-backend/meta_updater.h\
+  overpass_api/osm-backend/new_basic_updater.h\
+  overpass_api/osm-backend/new_node_updater.h\
+  overpass_api/osm-backend/node_event_list.h\
+  overpass_api/osm-backend/node_meta_updater.h\
+  overpass_api/osm-backend/node_skeleton_updater.h\
+  overpass_api/osm-backend/nodes_meta_updater.h\
   overpass_api/osm-backend/node_updater.h\
   overpass_api/osm-backend/osm_updater.h\
+  overpass_api/osm-backend/prepare_node_update.h\
   overpass_api/osm-backend/relation_updater.h\
   overpass_api/osm-backend/tags_updater.h\
+  overpass_api/osm-backend/update_events_preparer.h\
   overpass_api/osm-backend/way_updater.h\
   overpass_api/output_formats/output_csv.h\
   overpass_api/output_formats/output_custom.h\

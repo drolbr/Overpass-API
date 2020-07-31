@@ -1,5 +1,6 @@
 #include "data_from_osc.h"
 #include "mapfile_io.h"
+#include "new_node_updater.h"
 #include "node_event_list.h"
 #include "node_meta_updater.h"
 #include "node_skeleton_updater.h"
@@ -65,17 +66,52 @@ std::vector< Index > idx_list(const std::map< Index, Object >& arg)
 }
 
 
+class Perflog_Tree
+{
+public:
+  Perflog_Tree(const std::string& name) : starttime(clock())
+  {
+    std::cerr<<"("<<name<<' ';
+  }
+
+  ~Perflog_Tree()
+  {
+    std::cerr<<(clock() - starttime)/1000<<") ";
+  }
+
+private:
+  clock_t starttime;
+};
+
+
 void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
 {
+  Perflog_Tree perf("update_nodes");
+  std::cerr<<new_data.nodes.data.size()<<' '<<new_data.ways.data.size()<<'\n';
+
   // before the first pass by idx
   Mapfile_IO mapfile_io(transaction);
-  std::map< Uint31_Index, Id_Dates_Per_Idx > id_dates_by_idx =
-      mapfile_io.read_idx_list(new_data.node_id_dates());
-  auto req = idx_list(id_dates_by_idx);
+  std::unique_ptr< Perflog_Tree > dyn_perf(new Perflog_Tree("new_data.node_pre_events"));
+  Pre_Event_List pre_events = new_data.node_pre_events(); //TODO: deletion idxs vorbesetzen
+  std::cerr<<pre_events.data.size()<<' '<<pre_events.timestamp_last_not_deleted.size()<<'\n';
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("new_data.pre_event_refs_by_idx"));
+  std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_by_idx = new_data.pre_event_refs_by_idx(pre_events);
+  std::cerr<<pre_event_refs_by_idx.size()<<' ';
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("mapfile_io.read_idx_list"));
+  mapfile_io.read_idx_list(new_data.node_pre_event_refs(pre_events), pre_event_refs_by_idx);
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("idx_list ff"));
+  auto req = idx_list(pre_event_refs_by_idx);
+  std::cerr<<pre_event_refs_by_idx.size()<<' '<<req.size()<<'\n';
 
   std::map< Uint31_Index, Node_Skeletons_Per_Idx > skels_per_idx;
-  Pre_Event_List pre_events = new_data.node_pre_events(); //TODO: deletion idxs vorbesetzen
-  std::map< Uint31_Index, Coord_Dates_Per_Idx > coord_dates = new_data.node_coord_dates();
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("new_data.node_coord_dates"));
+  std::map< Uint31_Index, Coord_Dates > coord_dates = new_data.node_coord_dates();
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("nodes_bin ff"));
 
   File_Handle< Uint31_Index, Node_Skeleton > nodes_bin(
       transaction.data_index(osm_base_settings().NODES), req);
@@ -91,12 +127,16 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
       nodes_meta_to_move_to_attic;
 
-  // first pass by idx
-  for (auto i_idx : id_dates_by_idx)
+  //TODO: pre_events_ref by idx: pre_events gemäß id_dates_per_idx
+  //NB: indirection necessary to convey timestamp_end between different idxs if any.
+
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("first pass by idx"));
+  for (auto i_idx : pre_event_refs_by_idx)
   {
     Uint31_Index working_idx = i_idx.first;
     Node_Skeletons_Per_Idx& skels = skels_per_idx[working_idx];
-    Coord_Dates_Per_Idx& coord_dates_per_idx = coord_dates[working_idx];
+    Coord_Dates& coord_dates_per_idx = coord_dates[working_idx];
 
     std::vector< Node_Skeleton > current_nodes = nodes_bin.obj_with_idx(working_idx);
     std::vector< Attic< Node_Skeleton > > attic_nodes = nodes_attic_bin.obj_with_idx(working_idx);
@@ -104,7 +144,7 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
     Node_Skeleton_Updater::collect_relevant_coords_current(i_idx.second, current_nodes, coord_dates_per_idx);
     Node_Skeleton_Updater::collect_relevant_coords_attic(i_idx.second, attic_nodes, coord_dates_per_idx);
 
-    Id_Dates_Per_Idx coord_sharing_ids;
+    Id_Dates coord_sharing_ids;
     Node_Skeleton_Updater::extract_relevant_current(
         i_idx.second, coord_sharing_ids, coord_dates_per_idx, current_nodes).swap(skels.current);
     Node_Skeleton_Updater::extract_relevant_attic(
@@ -120,26 +160,39 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
     Update_Events_Preparer::extract_relevant_undeleted(
         i_idx.second, coord_sharing_ids, nodes_undeleted_bin.obj_with_idx(working_idx)).swap(skels.undeleted);
 
-    Node_Meta_Updater::adapt_pre_event_list(working_idx, current_meta, pre_events);
-    Node_Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, pre_events);
+    Node_Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
+    Node_Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);
 
     Node_Meta_Updater::collect_current_meta_to_move(
-        pre_events, current_meta, nodes_meta_to_move_to_attic[working_idx]);
+        i_idx.second, pre_events, current_meta, nodes_meta_to_move_to_attic[working_idx]);
   }
+  std::cerr<<"A "<<skels_per_idx.size()<<' '<<coord_dates.size()<<'\n';
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("nodes_meta_to_add ff"));
 
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
       nodes_meta_to_add;
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
       nodes_attic_meta_to_add;
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("Node_Meta_Updater::create_update_for_nodes_meta"));
   Node_Meta_Updater::create_update_for_nodes_meta(
       pre_events, nodes_meta_to_move_to_attic, nodes_meta_to_add, nodes_attic_meta_to_add);
 
-  // compute nodes_map, nodes_attic_map and nodes_idx_lists from id_dates_by_idx, nodes_meta_to_add, and nodes_attic_meta_to_add
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("mapfile_io.compute_and_write_idx_lists"));
+  // compute nodes_map, nodes_attic_map and nodes_idx_lists from pre_event_refs_by_idx, nodes_meta_to_add, and nodes_attic_meta_to_add
   // write meta, nodes_map, nodes_attic_map, nodes_idx_lists
   mapfile_io.compute_and_write_idx_lists(nodes_meta_to_move_to_attic, nodes_meta_to_add, nodes_attic_meta_to_add);
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("update_elements(meta)"));
   update_elements(nodes_meta_to_move_to_attic, nodes_meta_to_add, transaction, *meta_settings().NODES_META);
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("update_elements(attic_meta)"));
   update_elements(
       decltype(nodes_attic_meta_to_add)(), nodes_attic_meta_to_add, transaction, *attic_settings().NODES_META);
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("nodes_to_delete ff"));
 
   std::map< Uint31_Index, std::set< Node_Skeleton > > nodes_to_delete;
   std::map< Uint31_Index, std::set< Node_Skeleton > > nodes_to_add;
@@ -148,13 +201,14 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > > nodes_undelete_to_delete;
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > > nodes_undelete_to_add;
 
-  // second pass by idx
-  for (auto i_idx : id_dates_by_idx)
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("second pass by idx"));
+  for (auto i_idx : pre_event_refs_by_idx)
   {
     Uint31_Index working_idx = i_idx.first;
     Node_Skeletons_Per_Idx& skels = skels_per_idx[working_idx];
 
-    Node_Event_List events(working_idx, skels, pre_events);
+    Node_Event_List events(working_idx, skels, i_idx.second, pre_events);
     Prepare_Node_Update::create_update_for_nodes(
         events, nodes_to_delete[working_idx], nodes_to_add[working_idx]);
     Prepare_Node_Update::create_update_for_nodes_attic(
@@ -162,10 +216,16 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
     Prepare_Node_Update::create_update_for_nodes_undelete(
         events, nodes_undelete_to_delete[working_idx], nodes_undelete_to_add[working_idx]);
   }
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("update_elements(nodes)"));
 
   // write nodes, nodes_attic, nodes_undelete
   update_elements(nodes_to_delete, nodes_to_add, transaction, *osm_base_settings().NODES);
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("update_elements(nodes_attic)"));
   update_elements(nodes_attic_to_delete, nodes_attic_to_add, transaction, *attic_settings().NODES);
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("update_elements(nodes_undeleted)"));
   update_elements(
       nodes_undelete_to_delete, nodes_undelete_to_add, transaction, *attic_settings().NODES_UNDELETED);
 

@@ -19,8 +19,7 @@ public:
   /* Precondition:
    * id_dates are ordered by id, and for no id exists more than one entry
    */
-  std::map< Uint31_Index, Id_Dates_Per_Idx > read_idx_list(
-      const std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >& id_dates);
+  void read_idx_list(const Pre_Event_Refs& pre_event_refs, std::map< Uint31_Index, Pre_Event_Refs >& append_to);
 
   /* Precondition:
    * read_idx_list must have been called before,

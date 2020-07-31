@@ -16,9 +16,9 @@ namespace Node_Meta_Updater
    */
   void adapt_pre_event_list(
       Uint31_Index working_idx, const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
-      Pre_Event_List& pre_events);
+      const Pre_Event_Refs& pre_event_refs, Pre_Event_List& pre_events);
   /* Assertions:
-   * The of elements in pre_events are the same before and after the call except
+   * The elements in pre_events are the same before and after the call except
    * - their value for end
    * - their idx if the node is deleted
    * - updated states in timestamp_last_not_deleted
@@ -37,7 +37,7 @@ namespace Node_Meta_Updater
    * pre_events.data is sorted by id and timestamp
    */
   void collect_current_meta_to_move(
-      const Pre_Event_List& pre_events,
+      const Pre_Event_Refs& pre_event_refs, const Pre_Event_List& pre_events,
       const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& current_meta,
       std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& to_move);
   /* Assertions:

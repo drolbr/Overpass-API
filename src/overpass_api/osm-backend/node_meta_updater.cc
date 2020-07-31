@@ -3,34 +3,42 @@
 
 void Node_Meta_Updater::adapt_pre_event_list(
     Uint31_Index working_idx, const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
-    Pre_Event_List& pre_events)
+    const Pre_Event_Refs& pre_event_refs, Pre_Event_List& pre_events)
 {
-  auto j_data = pre_events.data.begin();
-  auto j_deleted = pre_events.timestamp_last_not_deleted.begin();
-  for (const auto& i : meta)
+  auto i_meta = meta.begin();
+  auto i_deleted = pre_events.timestamp_last_not_deleted.begin();
+  for (const auto& i_pre : pre_event_refs)
   {
-    while (j_data != pre_events.data.end() &&
-        (j_data->entry->meta.ref < i.ref || (!(i.ref < j_data->entry->meta.ref) &&
-        j_data->entry->meta.timestamp < i.timestamp)))
-      ++j_data;
-    while (j_deleted != pre_events.timestamp_last_not_deleted.end() &&
-        (j_deleted->entry->meta.ref < i.ref || (!(i.ref < j_deleted->entry->meta.ref) &&
-        j_deleted->entry->meta.timestamp < i.timestamp)))
-      ++j_deleted;
-    if (j_data != pre_events.data.begin())
+    while (i_meta != meta.end() && i_meta->ref < i_pre.ref)
+      ++i_meta;
+    while (i_deleted != pre_events.timestamp_last_not_deleted.end() && i_deleted->entry->meta.ref < i_pre.ref)
+      ++i_deleted;
+    for (auto j = i_pre.offset;
+        j < pre_events.data.size() && pre_events.data[j].entry->meta.ref == i_pre.ref; ++j)
     {
-      --j_data;
-      if (j_data->entry->meta.ref == i.ref && (j_data->timestamp_end == 0 || i.timestamp < j_data->timestamp_end))
-        j_data->timestamp_end = i.timestamp;
-      ++j_data;
-    }
-    if (j_deleted != pre_events.timestamp_last_not_deleted.end() &&
-        j_data->entry == j_deleted->entry)
-    {
-      if (j_deleted->timestamp_end < i.timestamp)
+      while (i_meta != meta.end() && i_meta->ref == i_pre.ref
+          && i_meta->timestamp <= pre_events.data[j].entry->meta.timestamp)
+        ++i_meta;
+      if (i_meta != meta.end() && i_meta->ref == i_pre.ref
+          && (pre_events.data[j].timestamp_end == 0
+              || i_meta->timestamp < pre_events.data[j].timestamp_end))
+        pre_events.data[j].timestamp_end = i_meta->timestamp;
+
+      while (i_deleted != pre_events.timestamp_last_not_deleted.end() && i_deleted->entry->meta.ref == i_pre.ref
+          && i_deleted->entry->meta.timestamp <= pre_events.data[j].entry->meta.timestamp)
+        ++i_deleted;
+      if (i_deleted != pre_events.timestamp_last_not_deleted.end() && pre_events.data[j].entry == i_deleted->entry)
       {
-        j_deleted->timestamp_end = i.timestamp;
-        j_data->entry->idx = working_idx;
+        if (i_meta != meta.begin())
+        {
+          --i_meta;
+          if (i_deleted->timestamp_end < i_meta->timestamp)
+          {
+            i_deleted->timestamp_end = i_meta->timestamp;
+            pre_events.data[j].entry->idx = working_idx;
+          }
+          ++i_meta;
+        }
       }
     }
   }
@@ -38,20 +46,27 @@ void Node_Meta_Updater::adapt_pre_event_list(
 
 
 void Node_Meta_Updater::collect_current_meta_to_move(
-    const Pre_Event_List& pre_events,
-    const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& current_meta,
+    const Pre_Event_Refs& pre_event_refs, const Pre_Event_List& pre_events,
+    const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
     std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& to_move)
 {
   to_move.clear();
 
-  auto j = pre_events.data.begin();
-  for (const auto& i : current_meta)
+  auto i_meta = meta.begin();
+  for (const auto& i_pre : pre_event_refs)
   {
-    while (j != pre_events.data.end() &&
-        (j->entry->meta.ref < i.ref || (!(i.ref < j->entry->meta.ref) && j->entry->meta.timestamp < i.timestamp)))
-      ++j;
-    if (j != pre_events.data.end() && j->entry->meta.ref == i.ref)
-      to_move.insert(i);
+    while (i_meta != meta.end() && i_meta->ref < i_pre.ref)
+      ++i_meta;
+    for (auto j = i_pre.offset;
+        j < pre_events.data.size() && pre_events.data[j].entry->meta.ref == i_pre.ref; ++j)
+    {
+      while (i_meta != meta.end() && i_meta->ref == i_pre.ref
+          && i_meta->timestamp < pre_events.data[j].entry->meta.timestamp)
+      {
+        to_move.insert(*i_meta);
+        ++i_meta;
+      }
+    }
   }
 }
 

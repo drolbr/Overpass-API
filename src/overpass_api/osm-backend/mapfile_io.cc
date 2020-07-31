@@ -5,17 +5,16 @@
 #include "mapfile_io.h"
 
 
-std::map< Uint31_Index, Id_Dates_Per_Idx > Mapfile_IO::read_idx_list(
-    const std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >& id_dates)
+void Mapfile_IO::read_idx_list(
+    const Pre_Event_Refs& pre_event_refs, std::map< Uint31_Index, Pre_Event_Refs >& result)
 {
   existing_idx_lists.clear();
-  std::map< Uint31_Index, Id_Dates_Per_Idx > result;
 
   Random_File< Node_Skeleton::Id_Type, Uint31_Index > current(transaction.random_index(
       osm_base_settings().NODES));
-  for (const auto& i : id_dates)
+  for (const auto& i : pre_event_refs)
   {
-    Uint31_Index idx = current.get(i.first.val());
+    Uint31_Index idx = current.get(i.ref.val());
     if (idx.val() > 0)
       result[idx].push_back(i);
   }
@@ -23,15 +22,15 @@ std::map< Uint31_Index, Id_Dates_Per_Idx > Mapfile_IO::read_idx_list(
   Random_File< Node_Skeleton::Id_Type, Uint31_Index > attic(transaction.random_index(
       attic_settings().NODES));
   std::set< Node_Skeleton::Id_Type > idx_list_req;
-  for (const auto& i : id_dates)
+  for (const auto& i : pre_event_refs)
   {
-    Uint31_Index idx = attic.get(i.first.val());
+    Uint31_Index idx = attic.get(i.ref.val());
     if (idx.val() == 0xff)
-      idx_list_req.insert(i.first);
+      idx_list_req.insert(i.ref);
     else if (idx.val() > 0)
     {
       result[idx].push_back(i);
-      existing_attic_idxs.push_back(std::make_pair(i.first, idx));
+      existing_attic_idxs.push_back(std::make_pair(i.ref, idx));
     }
   }
 
@@ -40,12 +39,12 @@ std::map< Uint31_Index, Id_Dates_Per_Idx > Mapfile_IO::read_idx_list(
       it = db.discrete_begin(idx_list_req.begin(), idx_list_req.end()); !(it == db.discrete_end()); ++it)
     existing_idx_lists[it.index()].insert(it.object());
 
-  auto it = id_dates.begin();
+  auto it = pre_event_refs.begin();
   for (const auto& i : existing_idx_lists)
   {
-    while (it != id_dates.end() && it->first < i.first)
+    while (it != pre_event_refs.end() && it->ref < i.first)
       ++it;
-    if (it == id_dates.end() || !(it->first == i.first))
+    if (it == pre_event_refs.end() || !(it->ref == i.first))
       continue;
     for (auto j : i.second)
       result[j].push_back(*it);
@@ -54,12 +53,11 @@ std::map< Uint31_Index, Id_Dates_Per_Idx > Mapfile_IO::read_idx_list(
   for (auto& i : result)
   {
     std::sort(i.second.begin(), i.second.end(),
-        [](const decltype(id_dates.front())& lhs, const decltype(id_dates.front())& rhs)
-        { return lhs.first < rhs.first; });
-    i.second.erase(std::unique(i.second.begin(), i.second.end()), i.second.end());
+        [](const decltype(pre_event_refs.front())& lhs, const decltype(pre_event_refs.front())& rhs)
+        { return lhs.ref < rhs.ref; });
+    //TODO
+    //i.second.erase(std::unique(i.second.begin(), i.second.end()), i.second.end());
   }
-
-  return result;
 }
 
 

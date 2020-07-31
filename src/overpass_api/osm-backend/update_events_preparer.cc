@@ -2,25 +2,25 @@
 #include "update_events_preparer.h"
 
 
-Id_Dates_Per_Idx Update_Events_Preparer::extract_first_appearance(
-    const Id_Dates_Per_Idx& id_dates,
-    const Id_Dates_Per_Idx& coord_sharing_ids,
+Id_Dates Update_Events_Preparer::extract_first_appearance(
+    const Pre_Event_Refs& pre_event_refs,
+    const Id_Dates& coord_sharing_ids,
     const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& current,
     const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& attic)
 {
-  Id_Dates_Per_Idx result;
-  result.reserve(id_dates.size() + coord_sharing_ids.size());
+  Id_Dates result;
+  result.reserve(pre_event_refs.size() + coord_sharing_ids.size());
 
-  auto i_id = id_dates.begin();
+  auto i_id = pre_event_refs.begin();
   auto i_csi = coord_sharing_ids.begin();
-  while (i_id != id_dates.end())
+  while (i_id != pre_event_refs.end())
   {
-    while (i_csi != coord_sharing_ids.end() && i_csi->first < i_id->first)
+    while (i_csi != coord_sharing_ids.end() && i_csi->first < i_id->ref)
     {
       result.push_back(std::make_pair(i_csi->first, NOW));
       ++i_csi;
     }
-    result.push_back(std::make_pair(i_id->first, NOW));
+    result.push_back(std::make_pair(i_id->ref, NOW));
     ++i_id;
   }
   while (i_csi != coord_sharing_ids.end())
@@ -57,20 +57,20 @@ Id_Dates_Per_Idx Update_Events_Preparer::extract_first_appearance(
 
 
 std::vector< Attic< Node_Skeleton::Id_Type > > Update_Events_Preparer::extract_relevant_undeleted(
-    const Id_Dates_Per_Idx& id_dates, const Id_Dates_Per_Idx& coord_sharing_ids,
+    const Pre_Event_Refs& pre_event_refs, const Id_Dates& coord_sharing_ids,
     const std::vector< Attic< Node_Skeleton::Id_Type > >& undeletes)
 {
   std::vector< Attic< Node_Skeleton::Id_Type > > result;
 
-  auto i_id = id_dates.begin();
+  auto i_id = pre_event_refs.begin();
   auto i_csi = coord_sharing_ids.begin();
   for (const auto& i : undeletes)
   {
-    while (i_id != id_dates.end() && i_id->first < i)
+    while (i_id != pre_event_refs.end() && i_id->ref < i)
       ++i_id;
     while (i_csi != coord_sharing_ids.end() && i_csi->first < i)
       ++i_csi;
-    if ((i_id != id_dates.end() && i_id->first == i)
+    if ((i_id != pre_event_refs.end() && i_id->ref == i)
         || (i_csi != coord_sharing_ids.end() && i_csi->first == i))
       result.push_back(i);
   }

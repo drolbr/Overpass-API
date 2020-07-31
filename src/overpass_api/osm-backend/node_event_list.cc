@@ -197,12 +197,12 @@ namespace
 
 
 Node_Event_List::Node_Event_List(
-    Uint31_Index working_idx, const Node_Skeletons_Per_Idx& skels, const Pre_Event_List& pre_events)
+    Uint31_Index working_idx, const Node_Skeletons_Per_Idx& skels,
+    const Pre_Event_Refs& pre_event_refs, const Pre_Event_List& pre_events)
 {
   std::vector< Node_Event > existing_data;
   existing_data.reserve(skels.first_appearance.size() + skels.attic.size() + skels.undeleted.size());
 
-  auto i_first = skels.first_appearance.begin();
   auto i_current = skels.current.begin();
   auto i_undel = skels.undeleted.begin();
   uint64_t last_timestamp = 0ull;
@@ -235,33 +235,38 @@ Node_Event_List::Node_Event_List(
   data.reserve(2*existing_data.size());
 
   auto i_ex = existing_data.begin();
-  for (const auto& i_pre : pre_events.data)
+  for (const auto& i_pre : pre_event_refs)
   {
-    while (i_ex != existing_data.end() && (i_ex->id < i_pre.entry->meta.ref ||
-        (i_ex->id == i_pre.entry->meta.ref && i_ex->timestamp < i_pre.entry->meta.timestamp)))
+    for (auto j = i_pre.offset;
+        j < pre_events.data.size() && pre_events.data[j].entry->meta.ref == i_pre.ref; ++j)
     {
-      data.push_back(*i_ex);
-      ++i_ex;
-    }
-    if (!data.empty() && data.back().id == i_pre.entry->meta.ref)
-    {
-      if (i_pre.entry->idx == working_idx)
-        data.push_back(Node_Event{
-            i_pre.entry->meta.ref, i_pre.entry->meta.timestamp,
-            data.back().visible_before, data.back().ll_lower_before,
-            i_pre.entry->elem.id.val(), i_pre.entry->elem.ll_lower, false });
+      while (i_ex != existing_data.end() && (i_ex->id < i_pre.ref ||
+          (i_ex->id == i_pre.ref && i_ex->timestamp < pre_events.data[j].entry->meta.timestamp)))
+      {
+        data.push_back(*i_ex);
+        ++i_ex;
+      }
+      if (!data.empty() && data.back().id == i_pre.ref)
+      {
+        if (pre_events.data[j].entry->idx == working_idx)
+          data.push_back(Node_Event{
+              i_pre.ref, pre_events.data[j].entry->meta.timestamp,
+              data.back().visible_before, data.back().ll_lower_before,
+              pre_events.data[j].entry->elem.id.val(), pre_events.data[j].entry->elem.ll_lower, false });
+        else
+          data.push_back(Node_Event{
+              i_pre.ref, pre_events.data[j].entry->meta.timestamp,
+              data.back().visible_before, data.back().ll_lower_before,
+              false, 0u, false });
+      }
       else
-        data.push_back(Node_Event{
-            i_pre.entry->meta.ref, i_pre.entry->meta.timestamp,
-            data.back().visible_before, data.back().ll_lower_before,
-            false, 0u, false });
-    }
-    else
-    {
-      if (i_pre.entry->idx == working_idx)
-        data.push_back(Node_Event{
-            i_pre.entry->meta.ref, i_pre.entry->meta.timestamp,
-            false, 0u, i_pre.entry->elem.id.val(), i_pre.entry->elem.ll_lower, false });
+      {
+        if (pre_events.data[j].entry->idx == working_idx)
+          data.push_back(Node_Event{
+              i_pre.ref, pre_events.data[j].entry->meta.timestamp,
+              false, 0u,
+              pre_events.data[j].entry->elem.id.val(), pre_events.data[j].entry->elem.ll_lower, false });
+      }
     }
   }
   while (i_ex != existing_data.end())

@@ -16,7 +16,7 @@ struct Node_Skeletons_Per_Idx
   std::vector< Node_Skeleton > current;
   std::vector< Attic< Node_Skeleton > > attic;
   std::vector< Attic< Node_Skeleton::Id_Type > > undeleted;
-  Id_Dates_Per_Idx first_appearance;
+  Id_Dates first_appearance;
 };
 
 
@@ -39,7 +39,8 @@ struct Node_Event
 struct Node_Event_List
 {
   Node_Event_List(
-      Uint31_Index working_idx, const Node_Skeletons_Per_Idx& skels, const Pre_Event_List& pre_events);
+      Uint31_Index working_idx, const Node_Skeletons_Per_Idx& skels,
+      const Pre_Event_Refs& pre_event_refs, const Pre_Event_List& pre_events);
   /* Assertions:
    * - for every last entry e
    *   it is e.visible if and only if there is a current node for this id in this idx
