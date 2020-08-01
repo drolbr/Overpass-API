@@ -205,7 +205,6 @@ namespace
     if (state == IN_NODES)
     {
       callback->nodes_finished();
-      update_nodes(*global_transaction, data_from_osc);
       //way_updater->update_moved_idxs(callback, node_updater->get_moved_nodes(), update_way_logger);
       callback->parser_started();
       osm_element_count = 0;
@@ -299,6 +298,7 @@ namespace
     else if (state == IN_WAYS)
     {
       callback->ways_finished();
+      update_nodes(*global_transaction, data_from_osc);
 //       way_updater->update(callback, cpu_stopwatch, false,
 //                           node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
 //                           node_updater->get_new_attic_skeletons());
@@ -462,6 +462,7 @@ void Osm_Updater::finish_updater()
   }
   if (state == IN_WAYS)
   {
+    update_nodes(*global_transaction, data_from_osc);
 //     way_updater->update(callback, cpu_stopwatch, false,
 //                         node_updater->get_new_skeletons(), node_updater->get_attic_skeletons(),
 //                         node_updater->get_new_attic_skeletons());

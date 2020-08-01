@@ -33,7 +33,7 @@ void Data_From_Osc::set_way(const Way& way, const OSM_Element_Metadata* meta)
 void Data_From_Osc::set_way_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta)
 {
   ways.data.push_back(Data_By_Id< Way_Skeleton >::Entry
-      (Uint31_Index(0u), Way_Skeleton(0ull),
+      (Uint31_Index(0u), Way_Skeleton::Id_Type(0u),
       meta ? OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(id, *meta)
           : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >(id, default_timestamp)));
 }
