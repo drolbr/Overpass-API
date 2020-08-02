@@ -7,7 +7,7 @@ int main(int argc, char* args[])
   {
     std::cerr<<"Test empty input:\n";
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
     bool all_ok = true;
 
     std::set< Node_Skeleton > nodes_to_delete;
@@ -37,7 +37,7 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest with a new node:\n";
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
     events.data = {
         Node_Event{ 496ull, 1000, false, 0u, true, ll_lower(51.25, 7.15), false } };
     bool all_ok = true;
@@ -70,7 +70,7 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest with a changed node:\n";
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
     events.data = {
         Node_Event{ 496ull, 1000, true, ll_lower(51.25, 7.15006), true, ll_lower(51.25, 7.15006), false },
         Node_Event{ 496ull, 2000, true, ll_lower(51.25, 7.15006), true, ll_lower(51.25, 7.15), false } };
@@ -106,7 +106,7 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest with a deleted node:\n";
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
     events.data = {
         Node_Event{ 496ull, 1000, true, ll_lower(51.25, 7.15006), true, ll_lower(51.25, 7.15006), false },
         Node_Event{ 496ull, 2000, true, ll_lower(51.25, 7.15006), false, 0u, false } };
@@ -141,7 +141,7 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest with an undeleted node:\n";
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
     events.data = {
         Node_Event{ 496ull, 1000, false, 0u, false, 0u, false },
         Node_Event{ 496ull, 2000, false, 0u, true, ll_lower(51.25, 7.15), false } };
@@ -176,7 +176,7 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest an attic change:\n";
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
     events.data = {
         Node_Event{ 495ull, 1000, true, ll_lower(51.25, 7.15005), true, ll_lower(51.25, 7.15005), false },
         Node_Event{ 495ull, 2000, true, ll_lower(51.25, 7.15005), true, ll_lower(51.25, 7.150052), false },
@@ -223,7 +223,7 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest deletion of undelete markers:\n";
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
     events.data = {
         Node_Event{ 495ull, 1000, false, 0u, false, 0u, false },
         Node_Event{ 495ull, 2000, true, ll_lower(51.25, 7.15005), false, 0u, false },

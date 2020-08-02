@@ -23,15 +23,15 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, db_dir, "");
     Mapfile_IO mapfile_io(transaction);
 
-    std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > id_dates;
-    id_dates.push_back(std::make_pair(Uint64(494ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(495ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(496ull), 1200));
+    std::vector< Pre_Event_Ref > pre_event_refs;
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(494ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(495ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(496ull), 1200, 0 });
  
-    std::map< Uint31_Index, Id_Dates > id_dates_per_idx;
-    mapfile_io.read_idx_list(id_dates, id_dates_per_idx);
-    Compare_Map< Uint31_Index, Id_Dates >("read_idx_list")
-        (id_dates_per_idx);
+    std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_per_idx;
+    mapfile_io.read_idx_list(pre_event_refs, pre_event_refs_per_idx);
+    Compare_Map< Uint31_Index, Pre_Event_Refs >("read_idx_list")
+        (pre_event_refs_per_idx);
 
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_current;
     new_current[ll_upper_(51.25, 7.45)].insert(
@@ -57,26 +57,26 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, db_dir, "");
     Mapfile_IO mapfile_io(transaction);
 
-    std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > id_dates;
-    id_dates.push_back(std::make_pair(Uint64(493ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(494ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(495ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(496ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(497ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(498ull), 1200));
+    std::vector< Pre_Event_Ref > pre_event_refs;
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(493ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(494ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(495ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(496ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(497ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(498ull), 1200, 0 });
 
-    std::map< Uint31_Index, Id_Dates > id_dates_per_idx;
-    mapfile_io.read_idx_list(id_dates, id_dates_per_idx);
-    Compare_Map< Uint31_Index, Id_Dates >("read_idx_list")
-        (ll_upper_(51.25, 7.45), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(494ull), 1200)))
-        (ll_upper_(51.25, 7.55), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(495ull), 1200)))
-        (ll_upper_(51.25, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(496ull), 1200)))
-        (ll_upper_(51.35, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(496ull), 1200)))
-        (id_dates_per_idx);
+    std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_per_idx;
+    mapfile_io.read_idx_list(pre_event_refs, pre_event_refs_per_idx);
+    Compare_Map< Uint31_Index, Pre_Event_Refs >("read_idx_list")
+        (ll_upper_(51.25, 7.45), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(494ull), 1200, 0 }))
+        (ll_upper_(51.25, 7.55), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(495ull), 1200, 0 }))
+        (ll_upper_(51.25, 7.65), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(496ull), 1200, 0 }))
+        (ll_upper_(51.35, 7.65), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(496ull), 1200, 0 }))
+        (pre_event_refs_per_idx);
 
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > moved;
     moved[ll_upper_(51.25, 7.55)].insert(
@@ -111,29 +111,29 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, db_dir, "");
     Mapfile_IO mapfile_io(transaction);
 
-    std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > id_dates;
-    id_dates.push_back(std::make_pair(Uint64(495ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(496ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(497ull), 1200));
+    std::vector< Pre_Event_Ref > pre_event_refs;
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(495ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(496ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(497ull), 1200, 0 });
 
-    std::map< Uint31_Index, Id_Dates > id_dates_per_idx;
-    mapfile_io.read_idx_list(id_dates, id_dates_per_idx);
-    Compare_Map< Uint31_Index, Id_Dates >("read_idx_list")
-        (ll_upper_(51.25, 7.55), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(495ull), 1200)))
-        (ll_upper_(51.15, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(496ull), 1200)))
-        (ll_upper_(51.25, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(496ull), 1200)))
-        (ll_upper_(51.35, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(496ull), 1200)))
-        (ll_upper_(51.25, 7.75), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(497ull), 1200)))
-        (ll_upper_(51.35, 7.75), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(497ull), 1200)))
-        (ll_upper_(51.45, 7.75), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(497ull), 1200)))
-        (id_dates_per_idx);
+    std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_per_idx;
+    mapfile_io.read_idx_list(pre_event_refs, pre_event_refs_per_idx);
+    Compare_Map< Uint31_Index, Pre_Event_Refs >("read_idx_list")
+        (ll_upper_(51.25, 7.55), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(495ull), 1200, 0 }))
+        (ll_upper_(51.15, 7.65), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(496ull), 1200, 0 }))
+        (ll_upper_(51.25, 7.65), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(496ull), 1200, 0 }))
+        (ll_upper_(51.35, 7.65), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(496ull), 1200, 0 }))
+        (ll_upper_(51.25, 7.75), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(497ull), 1200, 0 }))
+        (ll_upper_(51.35, 7.75), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(497ull), 1200, 0 }))
+        (ll_upper_(51.45, 7.75), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(497ull), 1200, 0 }))
+        (pre_event_refs_per_idx);
 
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > moved;
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_current;
@@ -161,39 +161,39 @@ int main(int argc, char* args[])
     Nonsynced_Transaction transaction(true, false, db_dir, "");
     Mapfile_IO mapfile_io(transaction);
 
-    std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > id_dates;
-    id_dates.push_back(std::make_pair(Uint64(496ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(497ull), 1200));
-    id_dates.push_back(std::make_pair(Uint64(498ull), 1200));
+    std::vector< Pre_Event_Ref > pre_event_refs;
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(496ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(497ull), 1200, 0 });
+    pre_event_refs.push_back(Pre_Event_Ref{ Uint64(498ull), 1200, 0 });
 
-    std::map< Uint31_Index, Id_Dates > id_dates_per_idx;
-    mapfile_io.read_idx_list(id_dates, id_dates_per_idx);
-    Compare_Map< Uint31_Index, Id_Dates >("read_idx_list")
-        (ll_upper_(51.15, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(496ull), 1200)))
-        (ll_upper_(51.25, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(496ull), 1200)))
-        (ll_upper_(51.35, 7.65), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(496ull), 1200)))
-        (ll_upper_(51.25, 7.75), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(497ull), 1200)))
-        (ll_upper_(51.35, 7.75), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(497ull), 1200)))
-        (ll_upper_(51.45, 7.75), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(497ull), 1200)))
-        (ll_upper_(51.55, 7.75), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(497ull), 1200)))
-        (ll_upper_(51.25, 7.85), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(498ull), 1200)))
-        (ll_upper_(51.35, 7.85), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(498ull), 1200)))
-        (ll_upper_(51.45, 7.85), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(498ull), 1200)))
-        (ll_upper_(51.55, 7.85), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(498ull), 1200)))
-        (ll_upper_(51.65, 7.85), std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >(1,
-            std::make_pair(Uint64(498ull), 1200)))
-        (id_dates_per_idx);
+    std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_per_idx;
+    mapfile_io.read_idx_list(pre_event_refs, pre_event_refs_per_idx);
+    Compare_Map< Uint31_Index, Pre_Event_Refs >("read_idx_list")
+        (ll_upper_(51.15, 7.65), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(496ull), 1200, 0 }))
+        (ll_upper_(51.25, 7.65), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(496ull), 1200, 0 }))
+        (ll_upper_(51.35, 7.65), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(496ull), 1200, 0 }))
+        (ll_upper_(51.25, 7.75), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(497ull), 1200, 0 }))
+        (ll_upper_(51.35, 7.75), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(497ull), 1200, 0 }))
+        (ll_upper_(51.45, 7.75), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(497ull), 1200, 0 }))
+        (ll_upper_(51.55, 7.75), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(497ull), 1200, 0 }))
+        (ll_upper_(51.25, 7.85), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(498ull), 1200, 0 }))
+        (ll_upper_(51.35, 7.85), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(498ull), 1200, 0 }))
+        (ll_upper_(51.45, 7.85), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(498ull), 1200, 0 }))
+        (ll_upper_(51.55, 7.85), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(498ull), 1200, 0 }))
+        (ll_upper_(51.65, 7.85), std::vector< Pre_Event_Ref >(1,
+            Pre_Event_Ref{ Uint64(498ull), 1200, 0 }))
+        (pre_event_refs_per_idx);
   }
 
   return 0;

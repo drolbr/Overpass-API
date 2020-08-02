@@ -13,6 +13,9 @@ struct Pre_Event_Ref
   Node_Skeleton::Id_Type ref;
   uint64_t timestamp;
   unsigned int offset;
+
+  bool operator==(const Pre_Event_Ref& rhs) const
+  { return ref == rhs.ref && timestamp == rhs.timestamp && offset == rhs.offset; }
 };
 
 

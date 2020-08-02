@@ -55,8 +55,9 @@ void Mapfile_IO::read_idx_list(
     std::sort(i.second.begin(), i.second.end(),
         [](const decltype(pre_event_refs.front())& lhs, const decltype(pre_event_refs.front())& rhs)
         { return lhs.ref < rhs.ref; });
-    //TODO
-    //i.second.erase(std::unique(i.second.begin(), i.second.end()), i.second.end());
+    i.second.erase(std::unique(i.second.begin(), i.second.end(),
+        [](const decltype(pre_event_refs.front())& lhs, const decltype(pre_event_refs.front())& rhs)
+        { return lhs.ref == rhs.ref; }), i.second.end());
   }
 }
 
