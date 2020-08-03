@@ -5,7 +5,7 @@
 int main(int argc, char* args[])
 {
   {
-    std::cerr<<"Test empty input:\n";
+    std::cerr<<"\nTest empty input:\n";
 
     Node_Event_List events(ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
     bool all_ok = true;

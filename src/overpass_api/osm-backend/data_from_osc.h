@@ -51,7 +51,7 @@ public:
   Pre_Event_List node_pre_events();
 
   Pre_Event_Refs node_pre_event_refs(Pre_Event_List& events) const;
-  std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_by_idx(Pre_Event_List& events) const;
+  static std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_by_idx(Pre_Event_List& events);
   std::map< Uint31_Index, Coord_Dates > node_coord_dates() const;
 
 //private:

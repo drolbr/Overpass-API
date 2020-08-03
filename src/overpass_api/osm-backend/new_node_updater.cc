@@ -92,7 +92,7 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
   // before the first pass by idx
   Mapfile_IO mapfile_io(transaction);
   std::unique_ptr< Perflog_Tree > dyn_perf(new Perflog_Tree("new_data.node_pre_events"));
-  Pre_Event_List pre_events = new_data.node_pre_events(); //TODO: deletion idxs vorbesetzen
+  Pre_Event_List pre_events = new_data.node_pre_events();
   std::cerr<<pre_events.data.size()<<' '<<pre_events.timestamp_last_not_deleted.size()<<'\n';
   dyn_perf.reset(0);
   dyn_perf.reset(new Perflog_Tree("new_data.pre_event_refs_by_idx"));
@@ -127,7 +127,6 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
       nodes_meta_to_move_to_attic;
 
-  //TODO: pre_events_ref by idx: pre_events gemäß id_dates_per_idx
   //NB: indirection necessary to convey timestamp_end between different idxs if any.
 
   dyn_perf.reset(0);

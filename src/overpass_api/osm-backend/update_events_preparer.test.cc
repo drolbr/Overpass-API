@@ -5,7 +5,7 @@
 int main(int argc, char* args[])
 {
   {
-    std::cerr<<"Test empty input:\n";
+    std::cerr<<"\nTest empty input:\n";
     bool all_ok = true;
     all_ok &= Compare_Vector< std::pair< Node_Skeleton::Id_Type, uint64_t > >("extract_first_appearance")
         (Update_Events_Preparer::extract_first_appearance(

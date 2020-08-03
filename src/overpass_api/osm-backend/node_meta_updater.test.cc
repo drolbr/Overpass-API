@@ -5,7 +5,7 @@
 int main(int argc, char* args[])
 {
   {
-    std::cerr<<"Test empty input:\n";
+    std::cerr<<"\nTest empty input:\n";
     bool all_ok = true;
 
     Pre_Event_List pre_events;

@@ -51,20 +51,22 @@ Pre_Event_List Data_From_Osc::node_pre_events()
             && (lhs.entry->meta.timestamp < rhs.entry->meta.timestamp || (!(rhs.entry->meta.timestamp < lhs.entry->meta.timestamp)
             && lhs.entry->meta.version < rhs.entry->meta.version))); } );
 
+  if (!result.data.empty() && !result.data[0].entry->elem.id.val())
+    result.timestamp_last_not_deleted.push_back(Node_Pre_Event(*result.data[0].entry, 0ull));
   for (decltype(result.data.size()) i = 0; i+1 < result.data.size(); ++i)
   {
     if (result.data[i+1].entry->meta.ref == result.data[i].entry->meta.ref)
     {
       result.data[i].timestamp_end = result.data[i+1].entry->meta.timestamp;
       if (!result.data[i+1].entry->elem.id.val())
+      {
         result.data[i+1].entry->idx = result.data[i].entry->idx;
+        result.timestamp_last_not_deleted.push_back(
+            Node_Pre_Event(*result.data[i+1].entry, result.data[i].entry->meta.timestamp));
+      }
     }
-  }
-
-  for (auto& i : result.data)
-  {
-    if (!i.entry->elem.id.val())
-      result.timestamp_last_not_deleted.push_back(Node_Pre_Event(*i.entry, 0ull));
+    else if (!result.data[i+1].entry->elem.id.val())
+      result.timestamp_last_not_deleted.push_back(Node_Pre_Event(*result.data[i+1].entry, 0ull));
   }
 
   return result;
@@ -118,7 +120,7 @@ Pre_Event_Refs Data_From_Osc::node_pre_event_refs(Pre_Event_List& events) const
 }
 
 
-std::map< Uint31_Index, Pre_Event_Refs > Data_From_Osc::pre_event_refs_by_idx(Pre_Event_List& events) const
+std::map< Uint31_Index, Pre_Event_Refs > Data_From_Osc::pre_event_refs_by_idx(Pre_Event_List& events)
 {
   std::map< Uint31_Index, Pre_Event_Refs > result;
 

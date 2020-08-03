@@ -33,6 +33,35 @@ DATA_SIZE="$1"
 BASEDIR="$(cd `dirname $0` && pwd)/.."
 NOTIMES="$2"
 
+unit_test()
+{
+  EXEC="$1"
+  ARGS="$2"
+
+  mkdir -p "run/$(basename $EXEC)/"
+  rm -fR "run/$(basename $EXEC)/*"
+
+  "$EXEC" $ARGS >"run/$(basename $EXEC)/stdout.log" 2>"run/$(basename $EXEC)/stderr.log"
+
+  if [[ -z $(cat "run/$(basename $EXEC)/stdout.log" "run/$(basename $EXEC)/stderr.log" | grep -E 'FAILED') ]]; then
+    echo "$(basename $EXEC) ok."
+  else
+    echo "$(basename $EXEC) FAILED:"
+    cat "run/$(basename $EXEC)/stderr.log"
+    echo
+  fi
+}
+
+# Unit tests
+unit_test "$BASEDIR/test-bin/data_from_osc"
+unit_test "$BASEDIR/test-bin/mapfile_io" "run/mapfile_io/"
+unit_test "$BASEDIR/test-bin/node_event_list"
+unit_test "$BASEDIR/test-bin/node_meta_updater"
+unit_test "$BASEDIR/test-bin/node_skeleton_updater"
+unit_test "$BASEDIR/test-bin/prepare_node_update"
+unit_test "$BASEDIR/test-bin/update_events_preparer"
+
+
 evaluate_test()
 {
   DIRNAME="$1"

@@ -25,7 +25,7 @@ void Node_Meta_Updater::adapt_pre_event_list(
         pre_events.data[j].timestamp_end = i_meta->timestamp;
 
       while (i_deleted != pre_events.timestamp_last_not_deleted.end() && i_deleted->entry->meta.ref == i_pre.ref
-          && i_deleted->entry->meta.timestamp <= pre_events.data[j].entry->meta.timestamp)
+          && i_deleted->entry->meta.timestamp < pre_events.data[j].entry->meta.timestamp)
         ++i_deleted;
       if (i_deleted != pre_events.timestamp_last_not_deleted.end() && pre_events.data[j].entry == i_deleted->entry)
       {

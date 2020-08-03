@@ -5,7 +5,7 @@
 int main(int argc, char* args[])
 {
   {
-    std::cerr<<"Test empty input:\n";
+    std::cerr<<"\nTest empty input:\n";
     Pre_Event_Refs pre_event_refs;
     Coord_Dates coord_result;
     bool all_ok = true;

@@ -5,7 +5,7 @@
 int main(int argc, char* args[])
 {
   {
-    std::cerr<<"Test empty input:\n";
+    std::cerr<<"\nTest empty input:\n";
     Data_From_Osc data_from_osc;
     bool all_ok = true;
     Pre_Event_List events = data_from_osc.node_pre_events();
@@ -206,7 +206,7 @@ int main(int argc, char* args[])
         (Node_Pre_Event(entry5))
         (events.data);
     all_ok &= Compare_Vector< Node_Pre_Event >("node_pre_events.timestamp_last_not_deleted")
-        (Node_Pre_Event(entry3, 0ull))
+        (Node_Pre_Event(entry3, 1200))
         (events.timestamp_last_not_deleted);
     all_ok &= Compare_Vector< Pre_Event_Ref >("node_pre_event_refs")
         (Pre_Event_Ref{ Uint64(496), 1100, 0 })
