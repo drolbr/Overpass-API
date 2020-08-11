@@ -3,7 +3,7 @@
 
 void Node_Meta_Updater::adapt_pre_event_list(
     Uint31_Index working_idx, const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
-    const Pre_Event_Refs& pre_event_refs, Pre_Event_List& pre_events)
+    const Node_Pre_Event_Refs& pre_event_refs, Pre_Event_List< Node_Skeleton >& pre_events)
 {
   auto i_meta = meta.begin();
   auto i_deleted = pre_events.timestamp_last_not_deleted.begin();
@@ -46,7 +46,7 @@ void Node_Meta_Updater::adapt_pre_event_list(
 
 
 void Node_Meta_Updater::collect_current_meta_to_move(
-    const Pre_Event_Refs& pre_event_refs, const Pre_Event_List& pre_events,
+    const Node_Pre_Event_Refs& pre_event_refs, const Pre_Event_List< Node_Skeleton >& pre_events,
     const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
     std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& to_move)
 {
@@ -72,7 +72,7 @@ void Node_Meta_Updater::collect_current_meta_to_move(
 
 
 void Node_Meta_Updater::create_update_for_nodes_meta(
-      const Pre_Event_List& pre_events,
+      const Pre_Event_List< Node_Skeleton >& pre_events,
       const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& to_move,
       std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& current_to_add,
       std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& attic_to_add)

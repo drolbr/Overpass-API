@@ -10,30 +10,32 @@
 #include <vector>
 
 
-struct Node_Pre_Event
+template< typename Skeleton >
+struct Pre_Event
 {
-  Node_Pre_Event(Data_By_Id< Node_Skeleton >::Entry& entry_) : entry(&entry_), timestamp_end(NOW) {}
-  Node_Pre_Event(Data_By_Id< Node_Skeleton >::Entry& entry_, uint64_t timestamp_end_)
+  Pre_Event(typename Data_By_Id< Skeleton >::Entry& entry_) : entry(&entry_), timestamp_end(NOW) {}
+  Pre_Event(typename Data_By_Id< Skeleton >::Entry& entry_, uint64_t timestamp_end_)
     : entry(&entry_), timestamp_end(timestamp_end_) {}
 
-  Data_By_Id< Node_Skeleton >::Entry* entry;
+  typename Data_By_Id< Skeleton >::Entry* entry;
   uint64_t timestamp_end;
 
-  bool operator==(const Node_Pre_Event& rhs) const
+  bool operator==(const Pre_Event& rhs) const
   { return entry->elem == rhs.entry->elem && entry->meta == rhs.entry->meta && entry->idx == rhs.entry->idx
       && timestamp_end == rhs.timestamp_end; }
 
-  bool operator<(const Node_Pre_Event& rhs) const
+  bool operator<(const Pre_Event& rhs) const
   { return entry->elem.id < rhs.entry->elem.id || (!(rhs.entry->elem.id < entry->elem.id)
       && (entry->meta.timestamp < rhs.entry->meta.timestamp || (!(rhs.entry->meta.timestamp < entry->meta.timestamp)
       && entry->meta.version < rhs.entry->meta.version))); }
 };
 
 
+template< typename Skeleton >
 struct Pre_Event_List
 {
-  std::vector< Node_Pre_Event > data;
-  std::vector< Node_Pre_Event > timestamp_last_not_deleted;
+  std::vector< Pre_Event< Skeleton > > data;
+  std::vector< Pre_Event< Skeleton > > timestamp_last_not_deleted;
 };
 
 
@@ -48,10 +50,11 @@ public:
   void set_way_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta = 0);
 
   // not const: Pre_Event_List has pointers to entry and those entries are intended to be mutable
-  Pre_Event_List node_pre_events();
+  Pre_Event_List< Node_Skeleton > node_pre_events();
+  Pre_Event_List< Way_Skeleton > way_pre_events();
 
-  Pre_Event_Refs node_pre_event_refs(Pre_Event_List& events) const;
-  static std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_by_idx(Pre_Event_List& events);
+  Node_Pre_Event_Refs node_pre_event_refs(Pre_Event_List< Node_Skeleton >& events) const;
+  static std::map< Uint31_Index, Node_Pre_Event_Refs > pre_event_refs_by_idx(Pre_Event_List< Node_Skeleton >& events);
   std::map< Uint31_Index, Coord_Dates > node_coord_dates() const;
 
 //private:

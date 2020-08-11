@@ -198,7 +198,7 @@ namespace
 
 Node_Event_List::Node_Event_List(
     Uint31_Index working_idx, const Node_Skeletons_Per_Idx& skels,
-    const Pre_Event_Refs& pre_event_refs, const Pre_Event_List& pre_events)
+    const Node_Pre_Event_Refs& pre_event_refs, const Pre_Event_List< Node_Skeleton >& pre_events)
 {
   std::vector< Node_Event > existing_data;
   existing_data.reserve(skels.first_appearance.size() + skels.attic.size() + skels.undeleted.size());

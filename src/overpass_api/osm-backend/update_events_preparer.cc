@@ -3,7 +3,7 @@
 
 
 Id_Dates Update_Events_Preparer::extract_first_appearance(
-    const Pre_Event_Refs& pre_event_refs,
+    const Node_Pre_Event_Refs& pre_event_refs,
     const Id_Dates& coord_sharing_ids,
     const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& current,
     const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& attic)
@@ -57,7 +57,7 @@ Id_Dates Update_Events_Preparer::extract_first_appearance(
 
 
 std::vector< Attic< Node_Skeleton::Id_Type > > Update_Events_Preparer::extract_relevant_undeleted(
-    const Pre_Event_Refs& pre_event_refs, const Id_Dates& coord_sharing_ids,
+    const Node_Pre_Event_Refs& pre_event_refs, const Id_Dates& coord_sharing_ids,
     const std::vector< Attic< Node_Skeleton::Id_Type > >& undeletes)
 {
   std::vector< Attic< Node_Skeleton::Id_Type > > result;

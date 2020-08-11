@@ -40,7 +40,7 @@ struct Node_Event_List
 {
   Node_Event_List(
       Uint31_Index working_idx, const Node_Skeletons_Per_Idx& skels,
-      const Pre_Event_Refs& pre_event_refs, const Pre_Event_List& pre_events);
+      const Node_Pre_Event_Refs& pre_event_refs, const Pre_Event_List< Node_Skeleton >& pre_events);
   /* Assertions:
    * - for every last entry e
    *   it is e.visible if and only if there is a current node for this id in this idx

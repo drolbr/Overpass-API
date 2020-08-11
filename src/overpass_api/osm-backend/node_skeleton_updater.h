@@ -14,7 +14,7 @@ namespace Node_Skeleton_Updater
    * pre_event_refs contains each id at most once.
    */
   void collect_relevant_coords_current(
-      const Pre_Event_Refs& pre_event_refs,
+      const Node_Pre_Event_Refs& pre_event_refs,
       const std::vector< Node_Skeleton >& current,
       Coord_Dates& result);
   /* Assertions:
@@ -34,7 +34,7 @@ namespace Node_Skeleton_Updater
    * pre_event_refs contains each id at most once.
    */
   void collect_relevant_coords_attic(
-      const Pre_Event_Refs& pre_event_refs,
+      const Node_Pre_Event_Refs& pre_event_refs,
       const std::vector< Attic< Node_Skeleton > >& attic,
       Coord_Dates& result);
   /* Assertions:
@@ -58,7 +58,7 @@ namespace Node_Skeleton_Updater
    * coord_dates_per_idx contains each id at most once.
    */
   std::vector< Node_Skeleton > extract_relevant_current(
-      const Pre_Event_Refs& pre_event_refs,
+      const Node_Pre_Event_Refs& pre_event_refs,
       Id_Dates& coord_sharing_ids,
       const Coord_Dates& coord_dates_per_idx,
       const std::vector< Node_Skeleton >& current);
@@ -83,7 +83,7 @@ namespace Node_Skeleton_Updater
    * coord_dates_per_idx contains each id at most once.
    */
   std::vector< Attic< Node_Skeleton > > extract_relevant_attic(
-      const Pre_Event_Refs& pre_event_refs,
+      const Node_Pre_Event_Refs& pre_event_refs,
       Id_Dates& coord_sharing_ids,
       const Coord_Dates& coord_dates_per_idx,
       const std::vector< Attic< Node_Skeleton > >& attic);

@@ -5,13 +5,15 @@
 #include "mapfile_io.h"
 
 
-void Mapfile_IO::read_idx_list(
-    const Pre_Event_Refs& pre_event_refs, std::map< Uint31_Index, Pre_Event_Refs >& result)
+template< typename Skeleton >
+void Mapfile_IO< Skeleton >::read_idx_list(
+    const std::vector< Pre_Event_Ref< typename Skeleton::Id_Type > >& pre_event_refs,
+    std::map< Uint31_Index, std::vector< Pre_Event_Ref< typename Skeleton::Id_Type > > >& result)
 {
   existing_idx_lists.clear();
 
-  Random_File< Node_Skeleton::Id_Type, Uint31_Index > current(transaction.random_index(
-      osm_base_settings().NODES));
+  Random_File< typename Skeleton::Id_Type, Uint31_Index > current(transaction.random_index(
+      current_skeleton_file_properties< Skeleton >()));
   for (const auto& i : pre_event_refs)
   {
     Uint31_Index idx = current.get(i.ref.val());
@@ -19,9 +21,9 @@ void Mapfile_IO::read_idx_list(
       result[idx].push_back(i);
   }
 
-  Random_File< Node_Skeleton::Id_Type, Uint31_Index > attic(transaction.random_index(
-      attic_settings().NODES));
-  std::set< Node_Skeleton::Id_Type > idx_list_req;
+  Random_File< typename Skeleton::Id_Type, Uint31_Index > attic(transaction.random_index(
+      attic_skeleton_file_properties< Skeleton >()));
+  std::set< typename Skeleton::Id_Type > idx_list_req;
   for (const auto& i : pre_event_refs)
   {
     Uint31_Index idx = attic.get(i.ref.val());
@@ -34,8 +36,9 @@ void Mapfile_IO::read_idx_list(
     }
   }
 
-  Block_Backend< Node_Skeleton::Id_Type, Uint31_Index > db(transaction.data_index(attic_settings().NODE_IDX_LIST));
-  for (typename Block_Backend< Node_Skeleton::Id_Type, Uint31_Index >::Discrete_Iterator
+  Block_Backend< typename Skeleton::Id_Type, Uint31_Index > db(transaction.data_index(
+      attic_idx_list_properties< Skeleton >()));
+  for (typename Block_Backend< typename Skeleton::Id_Type, Uint31_Index >::Discrete_Iterator
       it = db.discrete_begin(idx_list_req.begin(), idx_list_req.end()); !(it == db.discrete_end()); ++it)
     existing_idx_lists[it.index()].insert(it.object());
 
@@ -62,12 +65,13 @@ void Mapfile_IO::read_idx_list(
 }
 
 
-void Mapfile_IO::compute_and_write_idx_lists(
-    const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& nodes_meta_to_move_to_attic,
-    const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& nodes_meta_to_add,
-    const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >& nodes_attic_meta_to_add)
+template< typename Skeleton >
+void Mapfile_IO< Skeleton >::compute_and_write_idx_lists(
+    const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > >& nodes_meta_to_move_to_attic,
+    const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > >& nodes_meta_to_add,
+    const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > >& nodes_attic_meta_to_add)
 {
-  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_current_map_positions;
+  std::vector< std::pair< typename Skeleton::Id_Type, Uint31_Index > > new_current_map_positions;
   for (const auto& per_idx : nodes_meta_to_add)
   {
     for (const auto& entry : per_idx.second)
@@ -80,13 +84,13 @@ void Mapfile_IO::compute_and_write_idx_lists(
   std::sort(
       new_current_map_positions.begin(), new_current_map_positions.end(),
       [](
-          const std::pair< Node_Skeleton::Id_Type, Uint31_Index >& lhs,
-          const std::pair< Node_Skeleton::Id_Type, Uint31_Index >& rhs)
+          const std::pair< typename Skeleton::Id_Type, Uint31_Index >& lhs,
+          const std::pair< typename Skeleton::Id_Type, Uint31_Index >& rhs)
       { return lhs.first < rhs.first || (!(rhs.first < lhs.first) && lhs.second < rhs.second); } );
 
-  update_map_positions(new_current_map_positions, transaction, *osm_base_settings().NODES);
+  update_map_positions(new_current_map_positions, transaction, *current_skeleton_file_properties< Skeleton >());
 
-  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions;
+  std::vector< std::pair< typename Skeleton::Id_Type, Uint31_Index > > new_attic_map_positions;
   for (const auto& per_idx : nodes_meta_to_move_to_attic)
   {
     for (const auto& entry : per_idx.second)
@@ -108,11 +112,11 @@ void Mapfile_IO::compute_and_write_idx_lists(
   std::sort(
       new_attic_map_positions.begin(), new_attic_map_positions.end(),
       [](
-          const std::pair< Node_Skeleton::Id_Type, Uint31_Index >& lhs,
-          const std::pair< Node_Skeleton::Id_Type, Uint31_Index >& rhs)
+          const std::pair< typename Skeleton::Id_Type, Uint31_Index >& lhs,
+          const std::pair< typename Skeleton::Id_Type, Uint31_Index >& rhs)
       { return lhs.first < rhs.first || (!(rhs.first < lhs.first) && lhs.second < rhs.second); } );
 
-  std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists;
+  std::map< typename Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists;
   {
     auto from = new_attic_map_positions.begin();
     auto to = new_attic_map_positions.begin();
@@ -161,7 +165,7 @@ void Mapfile_IO::compute_and_write_idx_lists(
     new_attic_map_positions.erase(to, new_attic_map_positions.end());
   }
 
-  update_map_positions(new_attic_map_positions, transaction, *attic_settings().NODES);
+  update_map_positions(new_attic_map_positions, transaction, *attic_skeleton_file_properties< Skeleton >());
   update_elements(
-      decltype(existing_idx_lists)(), new_attic_idx_lists, transaction, *attic_settings().NODE_IDX_LIST);
+      decltype(existing_idx_lists)(), new_attic_idx_lists, transaction, *attic_idx_list_properties< Skeleton >());
 }

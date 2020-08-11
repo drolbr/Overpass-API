@@ -2,7 +2,7 @@
 
 
 void Node_Skeleton_Updater::collect_relevant_coords_current(
-    const Pre_Event_Refs& pre_event_refs,
+    const Node_Pre_Event_Refs& pre_event_refs,
     const std::vector< Node_Skeleton >& current,
     Coord_Dates& result)
 {
@@ -21,7 +21,7 @@ void Node_Skeleton_Updater::collect_relevant_coords_current(
 
 // Adds to the result all coordinates from nodes whose ids appear in pre_event_refs
 void Node_Skeleton_Updater::collect_relevant_coords_attic(
-    const Pre_Event_Refs& pre_event_refs,
+    const Node_Pre_Event_Refs& pre_event_refs,
     const std::vector< Attic< Node_Skeleton > >& attic,
     Coord_Dates& result)
 {
@@ -40,7 +40,7 @@ void Node_Skeleton_Updater::collect_relevant_coords_attic(
 
 // Keeps from all the objects in the idx only those that are relevant for the event list
 std::vector< Node_Skeleton > Node_Skeleton_Updater::extract_relevant_current(
-    const Pre_Event_Refs& pre_event_refs,
+    const Node_Pre_Event_Refs& pre_event_refs,
     Id_Dates& coord_sharing_ids,
     const Coord_Dates& coord_dates_per_idx,
     const std::vector< Node_Skeleton >& current)
@@ -78,7 +78,7 @@ std::vector< Node_Skeleton > Node_Skeleton_Updater::extract_relevant_current(
 
 // Keeps from all the objects in the idx only those that are relevant for the event list
 std::vector< Attic< Node_Skeleton > > Node_Skeleton_Updater::extract_relevant_attic(
-    const Pre_Event_Refs& pre_event_refs,
+    const Node_Pre_Event_Refs& pre_event_refs,
     Id_Dates& coord_sharing_ids,
     const Coord_Dates& coord_dates_per_idx,
     const std::vector< Attic< Node_Skeleton > >& attic)

@@ -8,9 +8,10 @@
 #include <vector>
 
 
+template< typename Id_Type >
 struct Pre_Event_Ref
 {
-  Node_Skeleton::Id_Type ref;
+  Id_Type ref;
   uint64_t timestamp;
   unsigned int offset;
 
@@ -19,7 +20,7 @@ struct Pre_Event_Ref
 };
 
 
-typedef std::vector< Pre_Event_Ref > Pre_Event_Refs;
+typedef std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > Node_Pre_Event_Refs;
 
 typedef std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Id_Dates;
 

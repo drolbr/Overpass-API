@@ -90,13 +90,13 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
   std::cerr<<new_data.nodes.data.size()<<' '<<new_data.ways.data.size()<<'\n';
 
   // before the first pass by idx
-  Mapfile_IO mapfile_io(transaction);
+  Mapfile_IO< Node_Skeleton > mapfile_io(transaction);
   std::unique_ptr< Perflog_Tree > dyn_perf(new Perflog_Tree("new_data.node_pre_events"));
-  Pre_Event_List pre_events = new_data.node_pre_events();
+  Pre_Event_List< Node_Skeleton > pre_events = new_data.node_pre_events();
   std::cerr<<pre_events.data.size()<<' '<<pre_events.timestamp_last_not_deleted.size()<<'\n';
   dyn_perf.reset(0);
   dyn_perf.reset(new Perflog_Tree("new_data.pre_event_refs_by_idx"));
-  std::map< Uint31_Index, Pre_Event_Refs > pre_event_refs_by_idx = new_data.pre_event_refs_by_idx(pre_events);
+  std::map< Uint31_Index, Node_Pre_Event_Refs > pre_event_refs_by_idx = new_data.pre_event_refs_by_idx(pre_events);
   std::cerr<<pre_event_refs_by_idx.size()<<' ';
   dyn_perf.reset(0);
   dyn_perf.reset(new Perflog_Tree("mapfile_io.read_idx_list"));

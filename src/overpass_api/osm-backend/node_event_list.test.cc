@@ -17,7 +17,7 @@ int main(int argc, char* args[])
     std::cerr<<"\nTest empty input:\n";
 
     Node_Event_List events(
-        ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Pre_Event_Refs(), Pre_Event_List());
+        ll_upper_(51.25, 7.15), Node_Skeletons_Per_Idx(), Node_Pre_Event_Refs(), Pre_Event_List< Node_Skeleton >());
     bool all_ok = true;
     all_ok &= Compare_Vector< Node_Event >("data")
         (events.data);
@@ -28,7 +28,7 @@ int main(int argc, char* args[])
     skels.current = { Node_Skeleton(496ull, ll_lower(51.25, 7.15)) };
     skels.first_appearance = { std::make_pair(Uint64(496ull), 1000) };
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Pre_Event_Refs(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Node_Pre_Event_Refs(), Pre_Event_List< Node_Skeleton >());
     bool all_ok = true;
     all_ok &= Compare_Vector< Node_Event >("data")
         ({ Node_Event{ 496ull, 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
@@ -40,7 +40,7 @@ int main(int argc, char* args[])
     skels.attic = { Attic< Node_Skeleton >(Node_Skeleton(496ull, ll_lower(51.25, 7.15)), 2000) };
     skels.first_appearance = { std::make_pair(Uint64(496ull), 1000) };
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Pre_Event_Refs(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Node_Pre_Event_Refs(), Pre_Event_List< Node_Skeleton >());
     bool all_ok = true;
     all_ok &= Compare_Vector< Node_Event >("data")
         ({ Node_Event{ 496ull, 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15), false } })
@@ -54,7 +54,7 @@ int main(int argc, char* args[])
     skels.undeleted = { Attic< Node_Skeleton::Id_Type >(Uint64(496ull), 2000) };
     skels.first_appearance = { std::make_pair(Uint64(496ull), 1000) };
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Pre_Event_Refs(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Node_Pre_Event_Refs(), Pre_Event_List< Node_Skeleton >());
     bool all_ok = true;
     all_ok &= Compare_Vector< Node_Event >("data")
         ({ Node_Event{ 496ull, 1000, false, 0u, false, 0u, false } })
@@ -68,7 +68,7 @@ int main(int argc, char* args[])
     skels.undeleted = { Attic< Node_Skeleton::Id_Type >(Uint64(496ull), 2000) };
     skels.first_appearance = { std::make_pair(Uint64(496ull), 1000) };
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Pre_Event_Refs(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Node_Pre_Event_Refs(), Pre_Event_List< Node_Skeleton >());
     bool all_ok = true;
     all_ok &= Compare_Vector< Node_Event >("data")
         ({ Node_Event{ 496ull, 1000, false, 0u, false, 0u, false } })
@@ -110,7 +110,7 @@ int main(int argc, char* args[])
         std::make_pair(Uint64(498ull), 1008),
         std::make_pair(Uint64(499ull), 1009) };
 
-    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Pre_Event_Refs(), Pre_Event_List());
+    Node_Event_List events(ll_upper_(51.25, 7.15), skels, Node_Pre_Event_Refs(), Pre_Event_List< Node_Skeleton >());
     bool all_ok = true;
     all_ok &= Compare_Vector< Node_Event >("data")
         ({ Node_Event{ 491ull, 1001, false, 0u, false, 0u, false } })
@@ -145,10 +145,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.15), Node_Skeleton(496ull, ll_lower(51.25, 7.15)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 1000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 1000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -164,10 +164,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.15), Node_Skeleton(496ull, ll_lower(51.25, 7.15)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -184,10 +184,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.55), Node_Skeleton(496ull, ll_lower(51.25, 7.55)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -205,10 +205,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.15006), Node_Skeleton(496ull, ll_lower(51.25, 7.15006)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -226,10 +226,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.55), Node_Skeleton(496ull, ll_lower(51.25, 7.55)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -247,10 +247,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.15006), Node_Skeleton(496ull, ll_lower(51.25, 7.15006)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 3000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 3000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 3000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -275,12 +275,12 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         0u, Node_Skeleton(0ull, 0),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 4000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0]));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[1]));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[2]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0]));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[1]));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[2]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -312,14 +312,14 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150062), Node_Skeleton(496ull, ll_lower(51.25, 7.150062)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2006)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0]));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[1]));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[2]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 494ull, 2004, 0 },
-        Pre_Event_Ref{ 495ull, 2005, 1 },
-        Pre_Event_Ref{ 496ull, 2006, 2 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0]));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[1]));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[2]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 494ull, 2004, 0 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 495ull, 2005, 1 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2006, 2 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -342,10 +342,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150062), Node_Skeleton(496ull, ll_lower(51.25, 7.150062)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 3000));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 3000));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -365,10 +365,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150062), Node_Skeleton(496ull, ll_lower(51.25, 7.150062)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 3000));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 3000));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -389,10 +389,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150062), Node_Skeleton(496ull, ll_lower(51.25, 7.150062)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 3000));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 3000));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -413,10 +413,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150062), Node_Skeleton(496ull, ll_lower(51.25, 7.150062)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 3000));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 3000));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -436,10 +436,10 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150062), Node_Skeleton(496ull, ll_lower(51.25, 7.150061)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 1000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 2000));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 1000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 2000));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -462,11 +462,11 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150062), Node_Skeleton(496ull, ll_lower(51.25, 7.150063)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 3000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 3000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[1], 4000));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 2000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 3000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[1], 4000));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -501,14 +501,14 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150068), Node_Skeleton(496ull, ll_lower(51.25, 7.150068)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 8000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 2000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[1], 3000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[2], 6000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[3], 7000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[4]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 1000, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 2000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[1], 3000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[2], 6000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[3], 7000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[4]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1000, 0 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -552,16 +552,16 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.150062), Node_Skeleton(496ull, ll_lower(51.25, 7.150062)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 2000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 2000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[1], 3000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[2], 3000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[3]));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 493ull, 1000, 0 },
-        Pre_Event_Ref{ 494ull, 2000, 1 },
-        Pre_Event_Ref{ 495ull, 2000, 2 },
-        Pre_Event_Ref{ 496ull, 2000, 3 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 2000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[1], 3000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[2], 3000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[3]));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 493ull, 1000, 0 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 494ull, 2000, 1 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 495ull, 2000, 2 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 2000, 3 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -596,12 +596,12 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.550061), Node_Skeleton(496ull, ll_lower(51.25, 7.550061)),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 1000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 3000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[1], 2000));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 495ull, 2000, 0 },
-        Pre_Event_Ref{ 496ull, 1000, 1 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 3000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[1], 2000));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 495ull, 2000, 0 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1000, 1 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -629,12 +629,12 @@ int main(int argc, char* args[])
     data_by_id.data.push_back(Data_By_Id< Node_Skeleton >::Entry(
         0u, Node_Skeleton(0ull, 0),
         OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type >(496ull, 1000)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[0], 3000));
-    pre_events.data.push_back(Node_Pre_Event(data_by_id.data[1], 2000));
-    Pre_Event_Refs pre_event_refs = {
-        Pre_Event_Ref{ 495ull, 2000, 0 },
-        Pre_Event_Ref{ 496ull, 1000, 1 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[0], 3000));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(data_by_id.data[1], 2000));
+    Node_Pre_Event_Refs pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 495ull, 2000, 0 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1000, 1 } };
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -660,8 +660,8 @@ int main(int argc, char* args[])
         std::make_pair(Uint64(494ull), 1000),
         std::make_pair(Uint64(495ull), 3000),
         std::make_pair(Uint64(496ull), 3000) };
-    Pre_Event_List pre_events;
-    Pre_Event_Refs pre_event_refs;
+    Pre_Event_List< Node_Skeleton > pre_events;
+    Node_Pre_Event_Refs pre_event_refs;
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -690,8 +690,8 @@ int main(int argc, char* args[])
         std::make_pair(Uint64(494ull), 2000),
         std::make_pair(Uint64(495ull), 3000),
         std::make_pair(Uint64(496ull), 5000) };
-    Pre_Event_List pre_events;
-    Pre_Event_Refs pre_event_refs;
+    Pre_Event_List< Node_Skeleton > pre_events;
+    Node_Pre_Event_Refs pre_event_refs;
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -724,8 +724,8 @@ int main(int argc, char* args[])
         std::make_pair(Uint64(494ull), 1000),
         std::make_pair(Uint64(495ull), 2000),
         std::make_pair(Uint64(496ull), 2000) };
-    Pre_Event_List pre_events;
-    Pre_Event_Refs pre_event_refs;
+    Pre_Event_List< Node_Skeleton > pre_events;
+    Node_Pre_Event_Refs pre_event_refs;
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -759,8 +759,8 @@ int main(int argc, char* args[])
         std::make_pair(Uint64(494ull), 1000),
         std::make_pair(Uint64(495ull), 1000),
         std::make_pair(Uint64(496ull), 5000) };
-    Pre_Event_List pre_events;
-    Pre_Event_Refs pre_event_refs;
+    Pre_Event_List< Node_Skeleton > pre_events;
+    Node_Pre_Event_Refs pre_event_refs;
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -796,8 +796,8 @@ int main(int argc, char* args[])
         std::make_pair(Uint64(494ull), 2000),
         std::make_pair(Uint64(495ull), 4000),
         std::make_pair(Uint64(496ull), 1000) };
-    Pre_Event_List pre_events;
-    Pre_Event_Refs pre_event_refs;
+    Pre_Event_List< Node_Skeleton > pre_events;
+    Node_Pre_Event_Refs pre_event_refs;
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;
@@ -834,8 +834,8 @@ int main(int argc, char* args[])
         std::make_pair(Uint64(496ull), 1000),
         std::make_pair(Uint64(497ull), 5000),
         std::make_pair(Uint64(498ull), 1000) };
-    Pre_Event_List pre_events;
-    Pre_Event_Refs pre_event_refs;
+    Pre_Event_List< Node_Skeleton > pre_events;
+    Node_Pre_Event_Refs pre_event_refs;
 
     Node_Event_List events(ll_upper_(51.25, 7.15), skels, pre_event_refs, pre_events);
     bool all_ok = true;

@@ -14,7 +14,7 @@ namespace Update_Events_Preparer
    * All four arguments are sorted by id and timestamp.
    */
   Id_Dates extract_first_appearance(
-      const Pre_Event_Refs& id_dates,
+      const Node_Pre_Event_Refs& id_dates,
       const Id_Dates& coord_sharing_ids,
       const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& current,
       const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& attic);
@@ -33,7 +33,7 @@ namespace Update_Events_Preparer
    * All four arguments are sorted by id and timestamp.
    */
   std::vector< Attic< Node_Skeleton::Id_Type > > extract_relevant_undeleted(
-      const Pre_Event_Refs& id_dates, const Id_Dates& coord_sharing_ids,
+      const Node_Pre_Event_Refs& id_dates, const Id_Dates& coord_sharing_ids,
       const std::vector< Attic< Node_Skeleton::Id_Type > >& undeletes);
   /* Assertions:
    * An object r is in the result if and only if

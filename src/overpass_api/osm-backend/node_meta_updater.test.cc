@@ -8,12 +8,12 @@ int main(int argc, char* args[])
     std::cerr<<"\nTest empty input:\n";
     bool all_ok = true;
 
-    Pre_Event_List pre_events;
-    std::vector< Pre_Event_Ref > pre_event_refs;
+    Pre_Event_List< Node_Skeleton > pre_events;
+    std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > pre_event_refs;
     Node_Meta_Updater::adapt_pre_event_list(
         Uint31_Index(0u), std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >(),
         pre_event_refs, pre_events);
-    all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list")
+    all_ok &= Compare_Vector< Pre_Event< Node_Skeleton > >("adapt_pre_event_list")
         (pre_events.data);
 
     std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > to_move;
@@ -59,27 +59,27 @@ int main(int argc, char* args[])
     entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.15008), Node_Skeleton(498ull),
         OSM_Element_Metadata_Skeleton< Uint64 >(498ull, 1008)));
-    Pre_Event_List pre_events;
+    Pre_Event_List< Node_Skeleton > pre_events;
     for (auto& i : entries)
-      pre_events.data.push_back(Node_Pre_Event(i));
-    std::vector< Pre_Event_Ref > pre_event_refs = {
-        Pre_Event_Ref{ 494ull, 1004, 0 },
-        Pre_Event_Ref{ 495ull, 1005, 1 },
-        Pre_Event_Ref{ 496ull, 1006, 2 },
-        Pre_Event_Ref{ 497ull, 1007, 3 },
-        Pre_Event_Ref{ 498ull, 1008, 4 } };
+      pre_events.data.push_back(Pre_Event< Node_Skeleton >(i));
+    std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 494ull, 1004, 0 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 495ull, 1005, 1 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1006, 2 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 497ull, 1007, 3 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 498ull, 1008, 4 } };
 
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta;
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(494ull, 1104));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1106));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(498ull, 1108));
     Node_Meta_Updater::adapt_pre_event_list(ll_upper_(51.25, 7.15006), current_meta, pre_event_refs, pre_events);
-    all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list")
-        (Node_Pre_Event(entries[0], 1104))
-        (Node_Pre_Event(entries[1]))
-        (Node_Pre_Event(entries[2], 1106))
-        (Node_Pre_Event(entries[3]))
-        (Node_Pre_Event(entries[4], 1108))
+    all_ok &= Compare_Vector< Pre_Event< Node_Skeleton > >("adapt_pre_event_list")
+        (Pre_Event< Node_Skeleton >(entries[0], 1104))
+        (Pre_Event< Node_Skeleton >(entries[1]))
+        (Pre_Event< Node_Skeleton >(entries[2], 1106))
+        (Pre_Event< Node_Skeleton >(entries[3]))
+        (Pre_Event< Node_Skeleton >(entries[4], 1108))
         (pre_events.data);
   }
   {
@@ -96,22 +96,22 @@ int main(int argc, char* args[])
     entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.15), Node_Skeleton(496ull),
         OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1500)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(entries[0], 1300));
-    pre_events.data.push_back(Node_Pre_Event(entries[1], 1500));
-    pre_events.data.push_back(Node_Pre_Event(entries[2]));
-    std::vector< Pre_Event_Ref > pre_event_refs = {
-        Pre_Event_Ref{ 496ull, 1200, 0 } };
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(entries[0], 1300));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(entries[1], 1500));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(entries[2]));
+    std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1200, 0 } };
 
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta;
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1100));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1400));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1600));
     Node_Meta_Updater::adapt_pre_event_list(ll_upper_(51.25, 7.15006), current_meta, pre_event_refs, pre_events);
-    all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list")
-        (Node_Pre_Event(entries[0], 1300))
-        (Node_Pre_Event(entries[1], 1400))
-        (Node_Pre_Event(entries[2], 1600))
+    all_ok &= Compare_Vector< Pre_Event< Node_Skeleton > >("adapt_pre_event_list")
+        (Pre_Event< Node_Skeleton >(entries[0], 1300))
+        (Pre_Event< Node_Skeleton >(entries[1], 1400))
+        (Pre_Event< Node_Skeleton >(entries[2], 1600))
         (pre_events.data);
   }
   {
@@ -131,16 +131,16 @@ int main(int argc, char* args[])
     entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
         Uint31_Index(0u), Node_Skeleton(0ull, 0u),
         OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1206)));
-    Pre_Event_List pre_events;
+    Pre_Event_List< Node_Skeleton > pre_events;
     for (auto& i : entries)
-      pre_events.data.push_back(Node_Pre_Event(i));
+      pre_events.data.push_back(Pre_Event< Node_Skeleton >(i));
     for (auto& i : entries)
-      pre_events.timestamp_last_not_deleted.push_back(Node_Pre_Event(i, 0u));
-    std::vector< Pre_Event_Ref > pre_event_refs = {
-        Pre_Event_Ref{ 493ull, 1203, 0 },
-        Pre_Event_Ref{ 494ull, 1204, 1 },
-        Pre_Event_Ref{ 495ull, 1205, 2 },
-        Pre_Event_Ref{ 496ull, 1206, 3 } };
+      pre_events.timestamp_last_not_deleted.push_back(Pre_Event< Node_Skeleton >(i, 0u));
+    std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 493ull, 1203, 0 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 494ull, 1204, 1 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 495ull, 1205, 2 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1206, 3 } };
 
     std::vector< Data_By_Id< Node_Skeleton >::Entry > expected;
     expected.push_back(Data_By_Id< Node_Skeleton >::Entry(
@@ -161,11 +161,11 @@ int main(int argc, char* args[])
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(494ull, 1004));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(495ull, 1105));
     Node_Meta_Updater::adapt_pre_event_list(ll_upper_(51.25, 7.15), current_meta, pre_event_refs, pre_events);
-    all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list.first")
-        (Node_Pre_Event(expected[0], NOW))
-        (Node_Pre_Event(expected[1], NOW))
-        (Node_Pre_Event(expected[2], NOW))
-        (Node_Pre_Event(entries[3], NOW))
+    all_ok &= Compare_Vector< Pre_Event< Node_Skeleton > >("adapt_pre_event_list.first")
+        (Pre_Event< Node_Skeleton >(expected[0], NOW))
+        (Pre_Event< Node_Skeleton >(expected[1], NOW))
+        (Pre_Event< Node_Skeleton >(expected[2], NOW))
+        (Pre_Event< Node_Skeleton >(entries[3], NOW))
         (pre_events.data);
 
     expected[1].idx = ll_upper_(51.25, 7.25);
@@ -175,11 +175,11 @@ int main(int argc, char* args[])
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1006));
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1106));
     Node_Meta_Updater::adapt_pre_event_list(ll_upper_(51.25, 7.25), current_meta, pre_event_refs, pre_events);
-    all_ok &= Compare_Vector< Node_Pre_Event >("adapt_pre_event_list.second")
-        (Node_Pre_Event(expected[0], NOW))
-        (Node_Pre_Event(expected[1], NOW))
-        (Node_Pre_Event(expected[2], NOW))
-        (Node_Pre_Event(expected[3], NOW))
+    all_ok &= Compare_Vector< Pre_Event< Node_Skeleton > >("adapt_pre_event_list.second")
+        (Pre_Event< Node_Skeleton >(expected[0], NOW))
+        (Pre_Event< Node_Skeleton >(expected[1], NOW))
+        (Pre_Event< Node_Skeleton >(expected[2], NOW))
+        (Pre_Event< Node_Skeleton >(expected[3], NOW))
         (pre_events.data);
   }
   {
@@ -199,13 +199,13 @@ int main(int argc, char* args[])
     entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.15006), Node_Skeleton(496ull),
         OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1206)));
-    Pre_Event_List pre_events;
+    Pre_Event_List< Node_Skeleton > pre_events;
     for (auto& i : entries)
-      pre_events.data.push_back(Node_Pre_Event(i));
-    std::vector< Pre_Event_Ref > pre_event_refs = {
-        Pre_Event_Ref{ 494ull, 1004, 0 },
-        Pre_Event_Ref{ 495ull, 1205, 1 },
-        Pre_Event_Ref{ 496ull, 1006, 2 } };
+      pre_events.data.push_back(Pre_Event< Node_Skeleton >(i));
+    std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > pre_event_refs = {
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 494ull, 1004, 0 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 495ull, 1205, 1 },
+        Pre_Event_Ref< Node_Skeleton::Id_Type >{ 496ull, 1006, 2 } };
 
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta;
     current_meta.push_back(OSM_Element_Metadata_Skeleton< Uint64 >(493ull, 1103));
@@ -232,10 +232,10 @@ int main(int argc, char* args[])
     entries.push_back(Data_By_Id< Node_Skeleton >::Entry(
         ll_upper_(51.25, 7.15), Node_Skeleton(496ull),
         OSM_Element_Metadata_Skeleton< Uint64 >(496ull, 1100)));
-    Pre_Event_List pre_events;
-    pre_events.data.push_back(Node_Pre_Event(entries[0], 1100));
-    pre_events.data.push_back(Node_Pre_Event(entries[1], NOW));
-    std::vector< Pre_Event_Ref > pre_event_refs;
+    Pre_Event_List< Node_Skeleton > pre_events;
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(entries[0], 1100));
+    pre_events.data.push_back(Pre_Event< Node_Skeleton >(entries[1], NOW));
+    std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > pre_event_refs;
 
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >
         global_to_move;

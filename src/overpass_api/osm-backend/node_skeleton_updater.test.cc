@@ -6,7 +6,7 @@ int main(int argc, char* args[])
 {
   {
     std::cerr<<"\nTest empty input:\n";
-    Pre_Event_Refs pre_event_refs;
+    Node_Pre_Event_Refs pre_event_refs;
     Coord_Dates coord_result;
     bool all_ok = true;
 
@@ -39,9 +39,9 @@ int main(int argc, char* args[])
   }
   {
     std::cerr<<"\nTest single results:\n";
-    Pre_Event_Refs pre_event_refs =
-        { Pre_Event_Ref{ Uint64(494ull), 1004ull, 0 },
-          Pre_Event_Ref{ Uint64(496ull), 1006ull, 0 } };
+    Node_Pre_Event_Refs pre_event_refs =
+        { Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(494ull), 1004ull, 0 },
+          Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(496ull), 1006ull, 0 } };
     Coord_Dates coord_result =
         { Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15001)), 1001),
           Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15009)), 1009) };
@@ -97,15 +97,15 @@ int main(int argc, char* args[])
   }
   {
     std::cerr<<"\nTest timestamp ordering:\n";
-    Pre_Event_Refs pre_event_refs =
-        { Pre_Event_Ref{ Uint64(10491ull), 1601ull, 0 },
-          Pre_Event_Ref{ Uint64(20491ull), 1501ull, 0 },
-          Pre_Event_Ref{ Uint64(10492ull), 1402ull, 0 },
-          Pre_Event_Ref{ Uint64(30492ull), 1302ull, 0 },
-          Pre_Event_Ref{ Uint64(10493ull), 1403ull, 0 },
-          Pre_Event_Ref{ Uint64(20493ull), 1603ull, 0 },
-          Pre_Event_Ref{ Uint64(10494ull), 1404ull, 0 },
-          Pre_Event_Ref{ Uint64(20494ull), 1604ull, 0 } };
+    Node_Pre_Event_Refs pre_event_refs =
+        { Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(10491ull), 1601ull, 0 },
+          Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(20491ull), 1501ull, 0 },
+          Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(10492ull), 1402ull, 0 },
+          Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(30492ull), 1302ull, 0 },
+          Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(10493ull), 1403ull, 0 },
+          Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(20493ull), 1603ull, 0 },
+          Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(10494ull), 1404ull, 0 },
+          Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(20494ull), 1604ull, 0 } };
     Coord_Dates coord_result =
         { Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15001)), 1400),
           Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15002)), 1600),
