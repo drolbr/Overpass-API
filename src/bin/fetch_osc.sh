@@ -119,11 +119,11 @@ fetch_minute_diff()
   REMOTE_PATH="$SOURCE_DIR/$TDIGIT1/$TDIGIT2"
   mkdir -p "$LOCAL_DIR/$TDIGIT1/$TDIGIT2"
 
-  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.osc.gz" "$LOCAL_PATH/$TDIGIT3.osc.gz" "gzip"
+  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.state.txt" "$LOCAL_PATH/$TDIGIT3.state.txt" "text"
   if [[ -n $FILE_PANIC ]]; then
     file_panic
   fi
-  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.state.txt" "$LOCAL_PATH/$TDIGIT3.state.txt" "text"
+  retry_fetch_file "$REMOTE_PATH/$TDIGIT3.osc.gz" "$LOCAL_PATH/$TDIGIT3.osc.gz" "gzip"
   if [[ -n $FILE_PANIC ]]; then
     file_panic
   fi

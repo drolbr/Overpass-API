@@ -23,18 +23,18 @@ if [[ -z $3  ]]; then
   exit 0
 }; fi
 
-EXEC_DIR="`dirname $0`/"
+EXEC_DIR="$(dirname $0)/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
-  EXEC_DIR="`pwd`/$EXEC_DIR"
+  EXEC_DIR="$(pwd)/$EXEC_DIR"
 }; fi
 
-DB_DIR=`$EXEC_DIR/dispatcher --show-dir`
+DB_DIR=$($EXEC_DIR/dispatcher --show-dir)
 
 REPLICATE_DIR="$1"
 if [[ ! ${REPLICATE_DIR:0:1} == "/" ]]; then
 {
-  REPLICATE_DIR="`pwd`/$REPLICATE_DIR"
+  REPLICATE_DIR="$(pwd)/$REPLICATE_DIR"
 }; fi
 
 START=$2
@@ -73,7 +73,7 @@ collect_minute_diffs()
 
   get_replicate_filename $TARGET
 
-  while [[ ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 1440)) -ge $(($TARGET)) ) && ( `du -m $TEMP_DIR | awk '{ print $1; }'` -le 512 ) ]];
+  while [[ ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.osc.gz ) && ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 1440)) -ge $(($TARGET)) ) && ( $(du -m $TEMP_DIR | awk '{ print $1; }') -le 512 ) ]];
   do
   {
     printf -v TARGET_FILE %09u $TARGET
@@ -105,11 +105,11 @@ apply_minute_diffs()
 update_state()
 {
   get_replicate_filename $TARGET
-  TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_DIR/$REPLICATE_FILENAME.state.txt`
+  TIMESTAMP_LINE=$(grep "^timestamp" <$REPLICATE_DIR/$REPLICATE_FILENAME.state.txt)
   while [[ -z $TIMESTAMP_LINE ]]; do
   {
     sleep 5
-    TIMESTAMP_LINE=`grep "^timestamp" <$REPLICATE_DIR/$REPLICATE_FILENAME.state.txt`
+    TIMESTAMP_LINE=$(grep "^timestamp" <$REPLICATE_DIR/$REPLICATE_FILENAME.state.txt)
   }; done
   DATA_VERSION=${TIMESTAMP_LINE:10}
 };
@@ -128,23 +128,23 @@ while [[ true ]]; do
 {
   if [[ $START == "auto" ]]; then
   {
-    START=`cat $DB_DIR/replicate_id`
+    START=$(cat $DB_DIR/replicate_id)
   }; fi
 
-  echo "`date -u '+%F %T'`: updating from $START" >>$DB_DIR/apply_osc_to_db.log
+  echo "$(date -u '+%F %T'): updating from $START" >>$DB_DIR/apply_osc_to_db.log
 
-  TEMP_DIR=`mktemp -d /tmp/osm-3s_update_XXXXXX`
+  TEMP_DIR=$(mktemp -d /tmp/osm-3s_update_XXXXXX)
   collect_minute_diffs $TEMP_DIR
 
   if [[ $TARGET -gt $START ]]; then
   {
-    echo "`date -u '+%F %T'`: updating to $TARGET" >>$DB_DIR/apply_osc_to_db.log
+    echo "$(date -u '+%F %T'): updating to $TARGET" >>$DB_DIR/apply_osc_to_db.log
 
     update_state
     apply_minute_diffs $TEMP_DIR
     echo "$TARGET" >$DB_DIR/replicate_id
 
-    echo "`date -u '+%F %T'`: update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
+    echo "$(date -u '+%F %T'): update complete" $TARGET >>$DB_DIR/apply_osc_to_db.log
   };
   else
   {
