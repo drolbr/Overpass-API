@@ -73,7 +73,7 @@ collect_minute_diffs()
 
   get_replicate_filename $TARGET
 
-  while [[ ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.osc.gz ) && ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 1440)) -ge $(($TARGET)) ) && ( $(du -m $TEMP_DIR | awk '{ print $1; }') -le 512 ) ]];
+  while [[ ( -s $REPLICATE_DIR/replicate_id ) && ( $TARGET -le $(cat $REPLICATE_DIR/replicate_id) ) && ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.osc.gz ) && ( -s $REPLICATE_DIR/$REPLICATE_FILENAME.state.txt ) && ( $(($START + 1440)) -ge $(($TARGET)) ) && ( $(du -m $TEMP_DIR | awk '{ print $1; }') -le 512 ) ]];
   do
   {
     printf -v TARGET_FILE %09u $TARGET

@@ -127,6 +127,7 @@ fetch_minute_diff()
   if [[ -n $FILE_PANIC ]]; then
     file_panic
   fi
+  echo $REPLICATE_ID >"$LOCAL_DIR/replicate_id"
 
   TIMESTAMP_LINE=`grep timestamp $LOCAL_DIR/$TDIGIT1/$TDIGIT2/$TDIGIT3.state.txt`
   TIMESTAMP=${TIMESTAMP_LINE:10}
