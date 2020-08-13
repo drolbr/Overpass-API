@@ -132,10 +132,23 @@ fetch_minute_diff()
   TIMESTAMP=${TIMESTAMP_LINE:10}
 };
 
+if [[ "$REPLICATE_ID" == "auto" && -s "$LOCAL_DIR/state.txt" ]]; then
+  REPLICATE_ID=${$(cat "$LOCAL_DIR/state.txt" | grep -E '^sequenceNumber'):15}
+fi
+
 while [[ true ]];
 do
 {
   REPLICATE_ID=$(($REPLICATE_ID + 1))
+
+  rm -f "$LOCAL_DIR/state.txt"
+  retry_fetch_file "$SOURCE_DIR/state.txt" "$LOCAL_DIR/state.txt" "text"
+  if [[ -n $FILE_PANIC ]]; then
+    file_panic
+  fi
+  MAX_AVAILABLE_REPLICATE_ID=${$(cat "$LOCAL_DIR/state.txt" | grep -E '^sequenceNumber'):15}
+  echo "$REPLICATE_ID $MAX_AVAILABLE_REPLICATE_ID"
+
   fetch_minute_diff
   echo "fetch_osc()@"`date -u "+%F %T"`": new_replicate_diff $REPLICATE_ID $TIMESTAMP" >>$LOCAL_DIR/fetch_osc.log
   sleep 1
