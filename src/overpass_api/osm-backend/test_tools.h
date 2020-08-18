@@ -45,6 +45,27 @@ public:
     return all_ok;
   }
 
+  bool operator()(const std::vector< const Obj* >& candidate) const
+  {
+    bool all_ok = true;
+    if (candidate.size() != target.size())
+    {
+      notify_failed(all_ok);
+      std::cerr<<title<<": "<<target.size()<<" elements expected, "<<candidate.size()<<" elements found.\n";
+    }
+    for (decltype(target.size()) i = 0; i < target.size() && i < candidate.size(); ++i)
+    {
+      if (!(target[i] == *candidate[i]))
+      {
+        notify_failed(all_ok);
+        std::cerr<<title<<", element "<<i<<": found element different from expected one.\n";
+      }
+    }
+    if (all_ok)
+      std::cerr<<"ok.\n";
+    return all_ok;
+  }
+
 private:
   static void notify_failed(bool& all_ok)
   {

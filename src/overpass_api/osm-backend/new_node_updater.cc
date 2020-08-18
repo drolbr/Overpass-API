@@ -1,5 +1,6 @@
 #include "data_from_osc.h"
 #include "mapfile_io.h"
+#include "moved_coords.h"
 #include "new_node_updater.h"
 #include "node_event_list.h"
 #include "node_meta_updater.h"
@@ -200,6 +201,8 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > > nodes_undelete_to_delete;
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > > nodes_undelete_to_add;
 
+  Moved_Coords moved_coords;
+
   dyn_perf.reset(0);
   dyn_perf.reset(new Perflog_Tree("second pass by idx"));
   for (auto i_idx : pre_event_refs_by_idx)
@@ -214,6 +217,8 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
         events, nodes_attic_to_delete[working_idx], nodes_attic_to_add[working_idx]);
     Prepare_Node_Update::create_update_for_nodes_undelete(
         events, nodes_undelete_to_delete[working_idx], nodes_undelete_to_add[working_idx]);
+
+    moved_coords.record(working_idx, events);
   }
   dyn_perf.reset(0);
   dyn_perf.reset(new Perflog_Tree("update_elements(nodes)"));
@@ -227,6 +232,10 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
   dyn_perf.reset(new Perflog_Tree("update_elements(nodes_undeleted)"));
   update_elements(
       nodes_undelete_to_delete, nodes_undelete_to_add, transaction, *attic_settings().NODES_UNDELETED);
+
+  dyn_perf.reset(0);
+  dyn_perf.reset(new Perflog_Tree("moved_coords.build_hash"));
+  moved_coords.build_hash();
 
   //TODO: tags, nodes_for_ways
 }

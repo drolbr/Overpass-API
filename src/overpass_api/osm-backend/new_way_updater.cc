@@ -143,6 +143,8 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     std::vector< Way_Skeleton > current_ways = ways_bin.obj_with_idx(working_idx);
     std::vector< Attic< Way_Skeleton > > attic_ways = ways_attic_bin.obj_with_idx(working_idx);
 
+    //TODO: in: per Idx (begin, id, old_ll_lower, visible_after, coord_after)
+    //TODO: out: {(idx, elem, begin, end)}
     //TODO: implizit geänderte Ways, Idx-übergreifend, Meta mitgeben
     //TODO: pre_event-Fiktion? ggf. vorne abschneiden per first_appearance, meta füllen
     //needs: node_pos by old idx: old pos, id, new_pos, multiplicity, begin, end
@@ -162,7 +164,10 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     Update_Events_Preparer::extract_and_apply_relevant_undeleted(
         i_idx.second, coord_sharing_ids, ways_undeleted_bin.obj_with_idx(working_idx), found_implicit_pre_events).swap(skels.undeleted);
 
-       //TODO: redistribute found_implicit_pre_events (and corresponding meta) to proper idxs
+      //TODO: redistribute found_implicit_pre_events (and corresponding meta) to proper idxs
+      //Hinweis: es gibt nur ein Current-Objekt (schon wegen Mapfile)
+      //Querverschub in Current und Attic
+      //da in Attic unklar, ob Meta schon vorhanden, solche Objekte als Vorsichtslöschung
 // 
        //note: not relevant for found_implicit_pre_events
     Way_Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
