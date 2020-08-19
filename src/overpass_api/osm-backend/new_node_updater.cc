@@ -218,7 +218,7 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
     Prepare_Node_Update::create_update_for_nodes_undelete(
         events, nodes_undelete_to_delete[working_idx], nodes_undelete_to_add[working_idx]);
 
-    moved_coords.record(working_idx, events);
+    moved_coords.record(working_idx, events.data);
   }
   dyn_perf.reset(0);
   dyn_perf.reset(new Perflog_Tree("update_elements(nodes)"));

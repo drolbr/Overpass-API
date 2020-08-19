@@ -55,6 +55,7 @@ unit_test()
 # Unit tests
 unit_test "$BASEDIR/test-bin/data_from_osc"
 unit_test "$BASEDIR/test-bin/mapfile_io" "run/mapfile_io/"
+unit_test "$BASEDIR/test-bin/moved_coords"
 unit_test "$BASEDIR/test-bin/node_event_list"
 unit_test "$BASEDIR/test-bin/node_meta_updater"
 unit_test "$BASEDIR/test-bin/node_skeleton_updater"
