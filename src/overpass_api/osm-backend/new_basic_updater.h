@@ -21,6 +21,7 @@ struct Pre_Event_Ref
 
 
 typedef std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > Node_Pre_Event_Refs;
+typedef std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > Way_Pre_Event_Refs;
 
 typedef std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Id_Dates;
 

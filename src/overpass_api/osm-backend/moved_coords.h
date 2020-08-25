@@ -33,8 +33,8 @@ public:
 
   void record(Uint31_Index working_idx, const std::vector< Node_Event >& events);
   void build_hash();
-  std::vector< const Move_Coord_Event* > get_id(Node_Skeleton::Id_Type node_id);
-  std::vector< const Move_Coord_Event* > get_coord(Uint31_Index idx, uint32_t ll_lower);
+  std::vector< const Move_Coord_Event* > get_id(Node_Skeleton::Id_Type node_id) const;
+  std::vector< const Move_Coord_Event* > get_coord(Uint31_Index idx, uint32_t ll_lower) const;
 
 private:
   std::vector< Move_Coord_Event > data;

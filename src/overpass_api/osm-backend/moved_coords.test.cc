@@ -16,6 +16,7 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest empty input:\n";
     Moved_Coords moved_coords;
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (moved_coords.get_id(Uint64(494ull)));
@@ -34,6 +35,7 @@ int main(int argc, char* args[])
         Node_Event{ Uint64(496ull), 1000, false, 0u, true, ll_lower(51.25, 7.15), false } };
     Moved_Coords moved_coords;
     moved_coords.record(ll_upper_(51.25, 7.15), events);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (moved_coords.get_id(Uint64(494ull)));
@@ -57,6 +59,7 @@ int main(int argc, char* args[])
         Node_Event{ Uint64(496ull), 1300, false, 0u, true, ll_lower(51.25, 7.15), false } };
     Moved_Coords moved_coords;
     moved_coords.record(ll_upper_(51.25, 7.15), events);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (moved_coords.get_id(Uint64(494ull)));
@@ -83,6 +86,7 @@ int main(int argc, char* args[])
         Node_Event{ Uint64(496ull), 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15001), false } };
     Moved_Coords moved_coords;
     moved_coords.record(ll_upper_(51.25, 7.15), events);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (moved_coords.get_id(Uint64(494ull)));
@@ -108,6 +112,7 @@ int main(int argc, char* args[])
     Moved_Coords moved_coords;
     moved_coords.record(ll_upper_(51.25, 7.15), events7);
     moved_coords.record(ll_upper_(51.25, 8.15), events8);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (moved_coords.get_id(Uint64(494ull)));
@@ -148,6 +153,7 @@ int main(int argc, char* args[])
     moved_coords.record(ll_upper_(51.25, 7.15), events7);
     moved_coords.record(ll_upper_(51.25, 8.15), events8);
     moved_coords.record(ll_upper_(51.25, 9.15), events9);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (moved_coords.get_id(Uint64(494ull)));
@@ -201,6 +207,45 @@ int main(int argc, char* args[])
         (moved_coords.get_coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15001)));
   }
   {
+    std::cerr<<"\nTest node overwriting:\n";
+    std::vector< Node_Event > events7 = {
+        Node_Event{ Uint64(496ull), 1000, true, ll_lower(51.25, 7.15), true, ll_lower(51.25, 7.15001), false },
+        Node_Event{ Uint64(496ull), 1100, false, 0u, false, 0u, false } };
+    std::vector< Node_Event > events8 = {
+        Node_Event{ Uint64(496ull), 1100, true, ll_lower(51.25, 8.15), true, ll_lower(51.25, 8.15001), false } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), events7);
+    moved_coords.record(ll_upper_(51.25, 8.15), events8);
+    moved_coords.build_hash();
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
+        (moved_coords.get_id(Uint64(494ull)));
+    all_ok &= Compare_Vector< Move_Coord_Event >("get_id(495)")
+        (moved_coords.get_id(Uint64(495ull)));
+    all_ok &= Compare_Vector< Move_Coord_Event >("get_id(496)")
+        (Move_Coord_Event{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15), 1000, Uint64(496ull),
+            ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15001), true, false })
+        (Move_Coord_Event{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.15), 1100, Uint64(496ull),
+            ll_upper_(51.25, 8.15), ll_lower(51.25, 8.15001), true, false })
+        (moved_coords.get_id(Uint64(496ull)));
+    all_ok &= Compare_Vector< Move_Coord_Event >("get_id(497)")
+        (moved_coords.get_id(Uint64(497ull)));
+    all_ok &= Compare_Vector< Move_Coord_Event >("get_coord(51.25, 7.15)")
+        (Move_Coord_Event{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15), 1000, Uint64(496ull),
+            ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15001), true, false })
+        (Move_Coord_Event{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.15), 1100, Uint64(496ull),
+            ll_upper_(51.25, 8.15), ll_lower(51.25, 8.15001), true, false })
+        (moved_coords.get_coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15)));
+    all_ok &= Compare_Vector< Move_Coord_Event >("get_coord(51.25, 7.15001)")
+        (moved_coords.get_coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15001)));
+    all_ok &= Compare_Vector< Move_Coord_Event >("get_coord(51.25, 8.15)")
+        (Move_Coord_Event{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.15), 1100, Uint64(496ull),
+            ll_upper_(51.25, 8.15), ll_lower(51.25, 8.15001), true, false })
+        (moved_coords.get_coord(ll_upper_(51.25, 8.15), ll_lower(51.25, 8.15)));
+    all_ok &= Compare_Vector< Move_Coord_Event >("get_coord(51.25, 8.15001)")
+        (moved_coords.get_coord(ll_upper_(51.25, 8.15), ll_lower(51.25, 8.15001)));
+  }
+  {
     std::cerr<<"\nTest multiple nodes:\n";
     std::vector< Node_Event > events7 = {
         Node_Event{ Uint64(494ull), 2000, true, ll_lower(51.25, 7.15004), false, 0u, false },
@@ -213,6 +258,7 @@ int main(int argc, char* args[])
     Moved_Coords moved_coords;
     moved_coords.record(ll_upper_(51.25, 7.15), events7);
     moved_coords.record(ll_upper_(51.25, 8.15), events8);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (Move_Coord_Event{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15004), 2000, Uint64(494ull),
@@ -245,6 +291,7 @@ int main(int argc, char* args[])
     Moved_Coords moved_coords;
     moved_coords.record(ll_upper_(51.25, 7.15), events7);
     moved_coords.record(ll_upper_(51.25, 8.15), events8);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (Move_Coord_Event{ 0u, 0u, 1000, Uint64(494ull),
@@ -285,6 +332,7 @@ int main(int argc, char* args[])
     Moved_Coords moved_coords;
     moved_coords.record(ll_upper_(51.25, 7.15), events7);
     moved_coords.record(ll_upper_(51.25, 8.15), events8);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (moved_coords.get_id(Uint64(494ull)));
@@ -329,6 +377,7 @@ int main(int argc, char* args[])
     Moved_Coords moved_coords;
     moved_coords.record(ll_upper_(51.25, 7.15), events7);
     moved_coords.record(ll_upper_(51.25, 8.15), events8);
+    moved_coords.build_hash();
     bool all_ok = true;
     all_ok &= Compare_Vector< Move_Coord_Event >("get_id(494)")
         (moved_coords.get_id(Uint64(494ull)));

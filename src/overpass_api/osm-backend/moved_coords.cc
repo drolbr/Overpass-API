@@ -117,10 +117,10 @@ void Moved_Coords::build_hash()
 }
 
 
-std::vector< const Move_Coord_Event* > Moved_Coords::get_id(Node_Skeleton::Id_Type node_id)
+std::vector< const Move_Coord_Event* > Moved_Coords::get_id(Node_Skeleton::Id_Type node_id) const
 {
   if (!hash_built)
-    build_hash();
+    throw std::logic_error("Moved_Coords::get_id(..) called before building the hash");
 
   const auto& bucket = hash_by_id[hash_by_id_(node_id)];
   std::vector< const Move_Coord_Event* > result;
@@ -135,10 +135,10 @@ std::vector< const Move_Coord_Event* > Moved_Coords::get_id(Node_Skeleton::Id_Ty
 }
 
 
-std::vector< const Move_Coord_Event* > Moved_Coords::get_coord(Uint31_Index idx, uint32_t ll_lower)
+std::vector< const Move_Coord_Event* > Moved_Coords::get_coord(Uint31_Index idx, uint32_t ll_lower) const
 {
   if (!hash_built)
-    build_hash();
+    throw std::logic_error("Moved_Coords::get_coord(..) called before building the hash");
 
   const auto& bucket = hash_by_coord[hash_by_coord_(idx, ll_lower)];
   std::vector< const Move_Coord_Event* > result;
