@@ -64,11 +64,13 @@ namespace
       if (i.second->multiple_after || !i.second->visible_after)
       {
         if (cur.nds.empty())
-          cur.nds.resize(cur.geometry.size());
+          cur.nds.resize(cur.geometry.size(), Node_Skeleton::Id_Type(0ull));
         cur.nds[i.first] = i.second->node_id;
       }
       else if (!cur.nds.empty())
         cur.nds[i.first] = 0ull;
+
+      timestamp = i.second->timestamp;
     }
     result.push_back(Way_Implicit_Pre_Event{ way.id, timestamp, cur.geometry, cur.nds });
 
