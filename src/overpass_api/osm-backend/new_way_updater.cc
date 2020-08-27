@@ -143,6 +143,9 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     std::vector< Way_Skeleton > current_ways = ways_bin.obj_with_idx(working_idx);
     std::vector< Attic< Way_Skeleton > > attic_ways = ways_attic_bin.obj_with_idx(working_idx);
 
+    std::sort(current_ways.begin(), current_ways.end());
+    std::sort(attic_ways.begin(), attic_ways.end());
+
     //TODO: in: per Idx (begin, id, old_ll_lower, visible_after, coord_after)
     //TODO: out: {(idx, elem, begin, end)}
     //TODO: implizit geänderte Ways, Idx-übergreifend, Meta mitgeben
@@ -159,10 +162,14 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_meta =
         ways_attic_meta_bin.obj_with_idx(working_idx);
 
+    std::sort(current_meta.begin(), current_meta.end());
+    std::sort(attic_meta.begin(), attic_meta.end());
+
+    // require sorted implicit_pre_events
     Update_Events_Preparer::extract_and_apply_first_appearance(
-        i_idx.second, coord_sharing_ids, current_meta, attic_meta, found_implicit_pre_events).swap(skels.first_appearance);
+        i_idx.second, implicit_pre_events, current_meta, attic_meta).swap(skels.first_appearance);
     Update_Events_Preparer::extract_and_apply_relevant_undeleted(
-        i_idx.second, coord_sharing_ids, ways_undeleted_bin.obj_with_idx(working_idx), found_implicit_pre_events).swap(skels.undeleted);
+        i_idx.second, implicit_pre_events, ways_undeleted_bin.obj_with_idx(working_idx)).swap(skels.undeleted);
 
       //TODO: redistribute found_implicit_pre_events (and corresponding meta) to proper idxs
       //Hinweis: es gibt nur ein Current-Objekt (schon wegen Mapfile)

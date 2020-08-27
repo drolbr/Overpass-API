@@ -155,6 +155,9 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > attic_meta =
         nodes_attic_meta_bin.obj_with_idx(working_idx);
 
+    std::sort(current_meta.begin(), current_meta.end());
+    std::sort(attic_meta.begin(), attic_meta.end());
+
     Update_Events_Preparer::extract_first_appearance(
         i_idx.second, coord_sharing_ids, current_meta, attic_meta).swap(skels.first_appearance);
     Update_Events_Preparer::extract_relevant_undeleted(
