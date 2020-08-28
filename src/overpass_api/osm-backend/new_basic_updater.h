@@ -23,7 +23,8 @@ struct Pre_Event_Ref
 typedef std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > > Node_Pre_Event_Refs;
 typedef std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > Way_Pre_Event_Refs;
 
-typedef std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Id_Dates;
+typedef std::vector< std::pair< Node_Skeleton::Id_Type, uint64_t > > Node_Id_Dates;
+typedef std::vector< std::pair< Way_Skeleton::Id_Type, uint64_t > > Way_Id_Dates;
 
 typedef Uint32_Index Uint32;
 typedef std::vector< Attic< Uint32 > > Coord_Dates;

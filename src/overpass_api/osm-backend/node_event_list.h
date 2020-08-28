@@ -16,7 +16,7 @@ struct Node_Skeletons_Per_Idx
   std::vector< Node_Skeleton > current;
   std::vector< Attic< Node_Skeleton > > attic;
   std::vector< Attic< Node_Skeleton::Id_Type > > undeleted;
-  Id_Dates first_appearance;
+  Node_Id_Dates first_appearance;
 };
 
 

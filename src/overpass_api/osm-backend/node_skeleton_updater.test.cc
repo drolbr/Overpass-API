@@ -20,7 +20,7 @@ int main(int argc, char* args[])
     all_ok &= Compare_Vector< Attic< Uint32 > >("collect_relevant_coords_attic")
         (coord_result);
 
-    Id_Dates coord_sharing_ids;
+    Node_Id_Dates coord_sharing_ids;
     auto skel_result = Node_Skeleton_Updater::extract_relevant_current(
         pre_event_refs, coord_sharing_ids, Coord_Dates(), std::vector< Node_Skeleton >());
     all_ok &= Compare_Vector< Node_Skeleton >("extract_relevant_current")
@@ -71,7 +71,7 @@ int main(int argc, char* args[])
         (Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15009)), 1009))
         (coord_result);
 
-    Id_Dates coord_sharing_ids;
+    Node_Id_Dates coord_sharing_ids;
     auto skel_result = Node_Skeleton_Updater::extract_relevant_current(
         pre_event_refs, coord_sharing_ids, coord_result, current_skels);
     all_ok &= Compare_Vector< Node_Skeleton >("extract_relevant_current")
@@ -142,7 +142,7 @@ int main(int argc, char* args[])
         (Attic< Uint32 >(Uint32(ll_lower(51.25, 7.15004)), 1404))
         (coord_result);
 
-    Id_Dates coord_sharing_ids;
+    Node_Id_Dates coord_sharing_ids;
     auto skel_result = Node_Skeleton_Updater::extract_relevant_current(
         pre_event_refs, coord_sharing_ids, coord_result, current_skels);
     all_ok &= Compare_Vector< Node_Skeleton >("extract_relevant_current")

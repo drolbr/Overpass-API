@@ -144,7 +144,7 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
     Node_Skeleton_Updater::collect_relevant_coords_current(i_idx.second, current_nodes, coord_dates_per_idx);
     Node_Skeleton_Updater::collect_relevant_coords_attic(i_idx.second, attic_nodes, coord_dates_per_idx);
 
-    Id_Dates coord_sharing_ids;
+    Node_Id_Dates coord_sharing_ids;
     Node_Skeleton_Updater::extract_relevant_current(
         i_idx.second, coord_sharing_ids, coord_dates_per_idx, current_nodes).swap(skels.current);
     Node_Skeleton_Updater::extract_relevant_attic(
