@@ -67,6 +67,14 @@ std::vector< Index > idx_list(const std::map< Index, Object >& arg)
 }
 
 
+template< typename Container >
+Container&& sort(Container&& arg)
+{
+  std::sort(arg.begin(), arg.end());
+  return std::move(arg);
+}
+
+
 class Perflog_Tree
 {
 public:
@@ -151,17 +159,15 @@ void update_nodes(Transaction& transaction, Data_From_Osc& new_data)
         i_idx.second, coord_sharing_ids, coord_dates_per_idx, attic_nodes).swap(skels.attic);
 
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > current_meta =
-        nodes_meta_bin.obj_with_idx(working_idx);
+        sort(nodes_meta_bin.obj_with_idx(working_idx));
     std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > attic_meta =
-        nodes_attic_meta_bin.obj_with_idx(working_idx);
-
-    std::sort(current_meta.begin(), current_meta.end());
-    std::sort(attic_meta.begin(), attic_meta.end());
+        sort(nodes_attic_meta_bin.obj_with_idx(working_idx));
 
     Update_Events_Preparer::extract_first_appearance(
         i_idx.second, coord_sharing_ids, current_meta, attic_meta).swap(skels.first_appearance);
     Update_Events_Preparer::extract_relevant_undeleted(
-        i_idx.second, coord_sharing_ids, nodes_undeleted_bin.obj_with_idx(working_idx)).swap(skels.undeleted);
+        i_idx.second, coord_sharing_ids, sort(nodes_undeleted_bin.obj_with_idx(working_idx)))
+        .swap(skels.undeleted);
 
     Node_Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
     Node_Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);

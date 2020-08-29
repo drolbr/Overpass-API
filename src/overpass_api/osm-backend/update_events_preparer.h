@@ -62,4 +62,20 @@ namespace Update_Events_Preparer
 }
 
 
+namespace Update_Events_Preparer
+{
+  // Collects the relevant undelete entries
+  /* Preconditions:
+   * All four arguments are sorted by id and timestamp.
+   */
+  std::vector< Attic< Way_Skeleton::Id_Type > > extract_relevant_undeleted(
+      const Way_Pre_Event_Refs& id_dates, const std::vector< Way_Implicit_Pre_Event >& implicit_pre_events,
+      const std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes);
+  /* Assertions:
+   * An object r is in the result if and only if
+   * there is an entry e in id_dates or coord_sharing_id_dates such that e.id == r.id and e.min_date < r.date
+   */
+}
+
+
 #endif

@@ -123,3 +123,26 @@ std::vector< Attic< Node_Skeleton::Id_Type > > Update_Events_Preparer::extract_r
 
   return result;
 }
+
+
+std::vector< Attic< Way_Skeleton::Id_Type > > Update_Events_Preparer::extract_relevant_undeleted(
+    const Way_Pre_Event_Refs& pre_event_refs, const std::vector< Way_Implicit_Pre_Event >& implicit_pre_events,
+    const std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes)
+{
+  std::vector< Attic< Way_Skeleton::Id_Type > > result;
+
+  auto i_id = pre_event_refs.begin();
+  auto i_ipe = implicit_pre_events.begin();
+  for (const auto& i : undeletes)
+  {
+    while (i_id != pre_event_refs.end() && i_id->ref < i)
+      ++i_id;
+    while (i_ipe != implicit_pre_events.end() && i_ipe->id < i)
+      ++i_ipe;
+    if ((i_id != pre_event_refs.end() && i_id->ref == i)
+        || (i_ipe != implicit_pre_events.end() && i_ipe->id == i))
+      result.push_back(i);
+  }
+
+  return result;
+}

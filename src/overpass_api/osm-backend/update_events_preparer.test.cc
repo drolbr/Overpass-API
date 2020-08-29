@@ -218,7 +218,7 @@ int main(int argc, char* args[])
             std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >()));
   }
   {
-    std::cerr<<"\nTest extract_relevant_undeleted:\n";
+    std::cerr<<"\nTest extract_relevant_undeleted(Node ..):\n";
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Node_Skeleton::Id_Type > >("id_dates")
         (Attic< Node_Skeleton::Id_Type >(Uint64(496ull), 1006))
@@ -251,6 +251,47 @@ int main(int argc, char* args[])
             Node_Pre_Event_Refs({ Pre_Event_Ref< Node_Skeleton::Id_Type >{ Uint64(496ull), 1300, 0 } }), Node_Id_Dates(),
             { Attic< Node_Skeleton::Id_Type >(Uint64(496ull), 1100),
               Attic< Node_Skeleton::Id_Type >(Uint64(496ull), 1200) } ));
+  }
+  {
+    std::cerr<<"\nTest extract_relevant_undeleted(Way ..):\n";
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("id_dates")
+        (Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1006))
+        (Update_Events_Preparer::extract_relevant_undeleted(
+            Way_Pre_Event_Refs({ Pre_Event_Ref< Way_Skeleton::Id_Type >{ Uint32_Index(493u), 1300, 0 }, Pre_Event_Ref< Way_Skeleton::Id_Type >{ Uint32_Index(496u), 1300, 0 } }),
+            std::vector< Way_Implicit_Pre_Event >(),
+            { Attic< Way_Skeleton::Id_Type >(Uint32_Index(494u), 1004),
+              Attic< Way_Skeleton::Id_Type >(Uint32_Index(495u), 1005),
+              Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1006) } ));
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("coord_sharing_node_ids")
+        (Attic< Way_Skeleton::Id_Type >(Uint32_Index(495u), 1005))
+        (Update_Events_Preparer::extract_relevant_undeleted(
+            Way_Pre_Event_Refs(),
+            std::vector< Way_Implicit_Pre_Event >{
+                Way_Implicit_Pre_Event{
+                    495ull, 1300, std::vector< Quad_Coord >(), std::vector< Node::Id_Type >() } },
+            { Attic< Way_Skeleton::Id_Type >(Uint32_Index(494u), 1004),
+              Attic< Way_Skeleton::Id_Type >(Uint32_Index(495u), 1005),
+              Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1006) } ));
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("both")
+        (Attic< Way_Skeleton::Id_Type >(Uint32_Index(494u), 1004))
+        (Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1006))
+        (Update_Events_Preparer::extract_relevant_undeleted(
+            Way_Pre_Event_Refs({ Pre_Event_Ref< Way_Skeleton::Id_Type >{ Uint32_Index(496u), 1300, 0 } }),
+            std::vector< Way_Implicit_Pre_Event >{
+                Way_Implicit_Pre_Event{
+                    494ull, 1300, std::vector< Quad_Coord >(), std::vector< Node::Id_Type >() } },
+            { Attic< Way_Skeleton::Id_Type >(Uint32_Index(494u), 1004),
+              Attic< Way_Skeleton::Id_Type >(Uint32_Index(495u), 1005),
+              Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1006) } ));
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("multiple_undeletes_per_id")
+        (Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1100))
+        (Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1200))
+        (Update_Events_Preparer::extract_relevant_undeleted(
+            Way_Pre_Event_Refs({ Pre_Event_Ref< Way_Skeleton::Id_Type >{ Uint32_Index(496u), 1300, 0 } }),
+            std::vector< Way_Implicit_Pre_Event >(),
+            { Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1100),
+              Attic< Way_Skeleton::Id_Type >(Uint32_Index(496u), 1200) } ));
   }
 
   return 0;
