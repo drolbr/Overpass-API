@@ -146,6 +146,9 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     std::sort(current_ways.begin(), current_ways.end());
     std::sort(attic_ways.begin(), attic_ways.end());
 
+    //TODO: auch unveränderte Version behalten, damit Idx-Erkennung unten funktioniert
+    extract_relevant_current_and_attic(...);
+
     //TODO: in: per Idx (begin, id, old_ll_lower, visible_after, coord_after)
     //TODO: out: {(idx, elem, begin, end)}
     //TODO: implizit geänderte Ways, Idx-übergreifend, Meta mitgeben
@@ -166,23 +169,68 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     std::sort(attic_meta.begin(), attic_meta.end());
 
     // require sorted implicit_pre_events
-    Update_Events_Preparer::extract_and_apply_first_appearance(
+    Update_Events_Preparer::extract_first_appearance(
         i_idx.second, implicit_pre_events, current_meta, attic_meta).swap(skels.first_appearance);
-    Update_Events_Preparer::extract_and_apply_relevant_undeleted(
+    Update_Events_Preparer::extract_relevant_undeleted(
         i_idx.second, implicit_pre_events, ways_undeleted_bin.obj_with_idx(working_idx)).swap(skels.undeleted);
 
-      //TODO: redistribute found_implicit_pre_events (and corresponding meta) to proper idxs
-      //Hinweis: es gibt nur ein Current-Objekt (schon wegen Mapfile)
-      //Querverschub in Current und Attic
-      //da in Attic unklar, ob Meta schon vorhanden, solche Objekte als Vorsichtslöschung
-// 
-       //note: not relevant for found_implicit_pre_events
-    Way_Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
-    Way_Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);
+    std::sort(skels.undeleted.begin(), skels.undeleted.end());
 
+       //note: not relevant for found_implicit_pre_events
+    Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
+    Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);
+
+    Update_Events_Preparer::prune_nonexistant_events(...);
+    Update_Events_Preparer::prune_nonexistant_events(...);
+
+    // collect_meta_to_move(current_to_delete[idx], current_to_add, attic_to_delete[idx], attic_to_add,
+    //     current_meta, attic_meta, current, attic, undeleted, i_idx.second, pre_events)
+    // per id, per timestamp
+    //   meta duplizieren oder verschieben, falls implicit_pre_event das attic teilüberdeckt bzw. überdeckt
+    //   (kann meta am Zielindex unerkannt doppeln)
+    //   (Pre_Events haben keinen Einfluss: falls implicit_pre_event existiert, hat es auch eine Nicht-Null-Lebensdauer, und unveränderte attics ziehen unverändertes Meta nach sich)
+    //   meta nach attic verschieben und current verschieben, falls
+    //   - implicit_pre_event das current teilüberdeckt und kein pre_event mit offenem Ende existiert
+    //   meta nach attic an zwei Idxe verschieben, falls
+    //   - implicit_pre_event das current teilüberdeckt und ein pre_event mit offenem Ende existiert
+    //   meta nach attic verschieben, falls ein pre_event mit offenem Ende existiert
+    //   ggf. Idx-Wechsel bei Vollüberdeckung
     Way_Meta_Updater::collect_current_meta_to_move(
         i_idx.second, pre_events, current_meta, ways_meta_to_move_to_attic[working_idx]);
+
+    //vec< Idx > target_idxs(implicit_pre_events::iter&, id, working_idx, timestamp_begin, timestamp_end);
+    //per current/attic_meta:
+    //  timestamp_begin = meta.time
+    //  while (current != end && current.id == meta.id)
+    //    while (attic != end && attic.id == meta.id && attic.time <= next(meta).time /* current bzw. offen ?!?*/)
+    //      while (undel != end && undel.id == meta.id && undel.time <= next(meta).time)
+    //          timestamp_begin = undel.time
+    //          ++undel
+    //      idxe = target_idxs(.., timestamp_begin, attic.time)
+    //      falls working_idx nicht dabei: to_delete_attic/to_delete_current
+    //      sonst für alle außer working_idx: to_add_attic
+    //      timestamp_begin = attic.time
+    //    wieder undel, target_idxs(.., NOW)
+    //    falls working_idx nicht dabei: to_delete_attic/to_delete_current
+    //    sonst für alle außer working_idx: to_add_attic (to_add_current?)
+    //target ..., current_meta, attic_meta, current, attic, undeleted
+
+    //Mit Einkürzen: (attic_meta, current_meta, X, implicit_pre_events)
+    //Alle implicit_events sind valide und für das Meta bis zum nächsten Meta zuständig
   }
+
+  // Mechanismus für Meta:
+  // - Pre_Events hat Vorrang, kann aber Löcher haben (selten)
+  // - Pre_Events bringen ihr Meta mit
+  // - implicit_events als zweites, aber ggf. von Undelete betroffene Abschnitte (andere Idxe!) ignorieren
+  // - current und attic nachrangig, lösen keine Veränderung aus
+  // - dupliziertes Attic ist kein Problem, da vom Update-Meachnismus bereinigt
+
+  // Idx-Sichten?
+  // - für pre_events nach der Schleife möglich (wegen Zeitbegrenzung)
+  // - für implicit_pre_events ab Einkürzen möglich (bereits am Ende des Schleifenrumpfs)
+  // - beides notwendig für Meta-Zuordnung
+
 //   std::cerr<<"A "<<skels_per_idx.size()<<' '<<coord_dates.size()<<'\n';
 //   dyn_perf.reset(0);
 //   dyn_perf.reset(new Perflog_Tree("nodes_meta_to_add ff"));
@@ -193,7 +241,9 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
       nodes_attic_meta_to_add;
 //   dyn_perf.reset(0);
 //   dyn_perf.reset(new Perflog_Tree("Node_Meta_Updater::create_update_for_nodes_meta"));
-  Node_Meta_Updater::create_update_for_nodes_meta(
+      // templatisieren!
+      // deduplizieren
+  Meta_Updater::create_update_for_nodes_meta(
       pre_events, nodes_meta_to_move_to_attic, nodes_meta_to_add, nodes_attic_meta_to_add);
 // 
 //   dyn_perf.reset(0);

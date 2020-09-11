@@ -24,6 +24,12 @@ public:
     return *this;
   }
 
+  Compare_Vector& operator()(Obj&& obj)
+  {
+    target.push_back(std::move(obj));
+    return *this;
+  }
+
   bool operator()(const std::vector< Obj >& candidate) const
   {
     bool all_ok = true;

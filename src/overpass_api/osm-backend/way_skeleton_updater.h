@@ -14,6 +14,13 @@ struct Way_Implicit_Pre_Event
   uint64_t begin;
   std::vector< Quad_Coord > geometry;
   std::vector< Node::Id_Type > nds;
+
+  Way_Implicit_Pre_Event(const Way_Implicit_Pre_Event&) = default;
+  Way_Implicit_Pre_Event(Way_Implicit_Pre_Event&&) = default;
+
+  bool operator==(const Way_Implicit_Pre_Event& rhs) const
+  { return id == rhs.id && begin == rhs.begin && geometry == rhs.geometry
+      && nds == rhs.nds; }
 };
 
 

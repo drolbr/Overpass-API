@@ -3,12 +3,6 @@
 #include "test_tools.h"
 
 
-bool operator==(const Way_Implicit_Pre_Event& lhs, const Way_Implicit_Pre_Event& rhs)
-{
-  return lhs.id == rhs.id && lhs.begin == rhs.begin && lhs.geometry == rhs.geometry && lhs.nds == rhs.nds;
-}
-
-
 template< typename Object >
 std::vector< const Object* > refs_of(const std::vector< Object >& arg)
 {

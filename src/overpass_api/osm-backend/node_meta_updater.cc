@@ -1,9 +1,12 @@
 #include "node_meta_updater.h"
 
 
+template< typename Skeleton >
 void Node_Meta_Updater::adapt_pre_event_list(
-    Uint31_Index working_idx, const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
-    const Node_Pre_Event_Refs& pre_event_refs, Pre_Event_List< Node_Skeleton >& pre_events)
+    Uint31_Index working_idx,
+    const std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >& meta,
+    const std::vector< Pre_Event_Ref< typename Skeleton::Id_Type > >& pre_event_refs,
+    Pre_Event_List< Skeleton >& pre_events)
 {
   auto i_meta = meta.begin();
   auto i_deleted = pre_events.timestamp_last_not_deleted.begin();
@@ -43,6 +46,14 @@ void Node_Meta_Updater::adapt_pre_event_list(
     }
   }
 }
+
+
+template
+void Node_Meta_Updater::adapt_pre_event_list< Node_Skeleton >(
+    Uint31_Index working_idx,
+    const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
+    const std::vector< Pre_Event_Ref< Node_Skeleton::Id_Type > >& pre_event_refs,
+    Pre_Event_List< Node_Skeleton >& pre_events);
 
 
 void Node_Meta_Updater::collect_current_meta_to_move(

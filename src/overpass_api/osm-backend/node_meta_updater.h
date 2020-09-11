@@ -14,13 +14,16 @@ namespace Node_Meta_Updater
    * meta is sorted by id and timestamp
    * pre_events is sorted by id and timestamp in both data and timestamp_last_not_deleted
    */
+  template< typename Skeleton >
   void adapt_pre_event_list(
-      Uint31_Index working_idx, const std::vector< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > >& meta,
-      const Node_Pre_Event_Refs& pre_event_refs, Pre_Event_List< Node_Skeleton >& pre_events);
+      Uint31_Index working_idx,
+      const std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >& meta,
+      const std::vector< Pre_Event_Ref< typename Skeleton::Id_Type > >& pre_event_refs,
+      Pre_Event_List< Skeleton >& pre_events);
   /* Assertions:
    * The elements in pre_events are the same before and after the call except
    * - their value for end
-   * - their idx if the node is deleted
+   * - their idx if the element is deleted
    * - updated states in timestamp_last_not_deleted
    * For every entry e in pre_events the value of e.end
    * is the minimum of e.end before the call and the begin dates of all entries m in meta

@@ -118,7 +118,7 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
           process_way(**i_cur, moved_coords, last_ref == (*i_cur)->id ? last_timestamp : 0u, NOW);
       if (!found && !this_obj_implicit.empty())
         current_result.push_back(**i_cur);
-      implicit_pre_events.insert(implicit_pre_events.end(), this_obj_implicit.begin(), this_obj_implicit.end());
+      std::move(this_obj_implicit.begin(), this_obj_implicit.end(), std::back_inserter(implicit_pre_events));
 
       ++i_cur;
     }
@@ -145,7 +145,7 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
         process_way(*i, moved_coords, last_ref == i->id ? last_timestamp : 0u, i->timestamp);
     if (!found && !this_obj_implicit.empty())
       attic_result.push_back(*i);
-    implicit_pre_events.insert(implicit_pre_events.end(), this_obj_implicit.begin(), this_obj_implicit.end());
+    std::move(this_obj_implicit.begin(), this_obj_implicit.end(), std::back_inserter(implicit_pre_events));
 
     last_ref = i->id;
     last_timestamp = i->timestamp;
@@ -167,7 +167,7 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
         process_way(**i_cur, moved_coords, last_ref == (*i_cur)->id ? last_timestamp : 0u, NOW);
     if (!found && !this_obj_implicit.empty())
       current_result.push_back(**i_cur);
-    implicit_pre_events.insert(implicit_pre_events.end(), this_obj_implicit.begin(), this_obj_implicit.end());
+    std::move(this_obj_implicit.begin(), this_obj_implicit.end(), std::back_inserter(implicit_pre_events));
 
     ++i_cur;
   }
