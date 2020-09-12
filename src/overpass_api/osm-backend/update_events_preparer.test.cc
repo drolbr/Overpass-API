@@ -464,6 +464,43 @@ int main(int argc, char* args[])
         (test_vector);
   }
   {
+    std::cerr<<"\nTest implicit_pre_events on multiple ids:\n";
+    bool all_ok = true;
+    std::vector< Way_Implicit_Pre_Event > base_vector = {
+        Way_Implicit_Pre_Event{
+            493ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150003)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            494ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150004)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            495ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150005)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006)) }, std::vector< Node::Id_Type >() } };
+    std::vector< Way_Implicit_Pre_Event > test_vector = base_vector;
+    Update_Events_Preparer::prune_nonexistant_events(
+        std::vector< const Attic< Way_Skeleton >* >(),
+        Way_Id_Dates{
+            std::make_pair(Uint32_Index(493u), 1000ull),
+            std::make_pair(Uint32_Index(494u), 3000ull),
+            std::make_pair(Uint32_Index(495u), 1000ull),
+            std::make_pair(Uint32_Index(496u), 1000ull) },
+        std::vector< Attic< Way_Skeleton::Id_Type > >{
+            Attic< Way_Skeleton::Id_Type >(Way_Skeleton::Id_Type(496u), 3000) }, test_vector);
+    Way_Implicit_Pre_Event result_4 = base_vector[1];
+    result_4.begin = 3000;
+    Way_Implicit_Pre_Event result_6 = base_vector[3];
+    result_6.begin = 3000;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("prune_nonexistant_events::undel_meta")
+        (base_vector[0])
+        (result_4)
+        (base_vector[2])
+        (result_6)
+        (test_vector);
+  }
+  {
     std::cerr<<"\nTest implicit_pre_events with relevant open end pre_event:\n";
     bool all_ok = true;
     std::vector< Way_Implicit_Pre_Event > base_vector = {
@@ -508,6 +545,139 @@ int main(int argc, char* args[])
     Way_Implicit_Pre_Event result = base_vector[0];
     result.begin = 4000;
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("prune_nonexistant_events::pre_events")
+        (result)
+        (test_vector);
+  }
+  {
+    std::cerr<<"\nTest implicit_pre_events with event elimination:\n";
+    bool all_ok = true;
+    std::vector< Way_Implicit_Pre_Event > base_vector = {
+        Way_Implicit_Pre_Event{
+            496ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 3000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150007)) }, std::vector< Node::Id_Type >() } };
+    std::vector< Way_Implicit_Pre_Event > test_vector = base_vector;
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries;
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1000)));
+    Pre_Event_List< Way_Skeleton > pre_events;
+    for (auto& i : entries)
+      pre_events.data.push_back(Pre_Event< Way_Skeleton >(i));
+    pre_events.data[0].timestamp_end = 3000;
+    std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > pre_event_refs = {
+        Pre_Event_Ref< Way_Skeleton::Id_Type >{ 496ull, 1000, 0 } };
+    Update_Events_Preparer::prune_nonexistant_events(pre_event_refs, pre_events, test_vector);
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("prune_nonexistant_events::pre_events")
+        (base_vector[1])
+        (test_vector);
+  }
+  {
+    std::cerr<<"\nTest implicit_pre_events with long pre_event sequence:\n";
+    bool all_ok = true;
+    std::vector< Way_Implicit_Pre_Event > base_vector = {
+        Way_Implicit_Pre_Event{
+            496ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 7000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150007)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 9000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150009)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 10000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 12000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 14000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150004)) }, std::vector< Node::Id_Type >() } };
+    std::vector< Way_Implicit_Pre_Event > test_vector = base_vector;
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries;
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1000)));
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3000)));
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 5000)));
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 6000)));
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 11000)));
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 13000)));
+    Pre_Event_List< Way_Skeleton > pre_events;
+    for (auto& i : entries)
+      pre_events.data.push_back(Pre_Event< Way_Skeleton >(i));
+    pre_events.data[0].timestamp_end = 3000;
+    pre_events.data[1].timestamp_end = 4000;
+    pre_events.data[2].timestamp_end = 6000;
+    pre_events.data[3].timestamp_end = 8000;
+    pre_events.data[4].timestamp_end = 13000;
+    std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > pre_event_refs = {
+        Pre_Event_Ref< Way_Skeleton::Id_Type >{ 496ull, 1000, 0 } };
+    Update_Events_Preparer::prune_nonexistant_events(pre_event_refs, pre_events, test_vector);
+    Way_Implicit_Pre_Event result_4 = base_vector[0];
+    result_4.begin = 4000;
+    Way_Implicit_Pre_Event result_8 = base_vector[1];
+    result_8.begin = 8000;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("prune_nonexistant_events::pre_events")
+        (result_4)
+        (result_8)
+        (base_vector[2])
+        (base_vector[3])
+        (test_vector);
+  }
+  {
+    std::cerr<<"\nTest implicit_pre_events for multiple ids:\n";
+    bool all_ok = true;
+    std::vector< Way_Implicit_Pre_Event > base_vector = {
+        Way_Implicit_Pre_Event{
+            493ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150003)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            494ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150004)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            495ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150005)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006)) }, std::vector< Node::Id_Type >() } };
+    std::vector< Way_Implicit_Pre_Event > test_vector = base_vector;
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries;
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(494u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 1000)));
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1000)));
+    Pre_Event_List< Way_Skeleton > pre_events;
+    for (auto& i : entries)
+      pre_events.data.push_back(Pre_Event< Way_Skeleton >(i));
+    pre_events.data[1].timestamp_end = 3000;
+    std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > pre_event_refs = {
+        Pre_Event_Ref< Way_Skeleton::Id_Type >{ 494ull, 1000, 0 },
+        Pre_Event_Ref< Way_Skeleton::Id_Type >{ 496ull, 1000, 1 } };
+    Update_Events_Preparer::prune_nonexistant_events(pre_event_refs, pre_events, test_vector);
+    Way_Implicit_Pre_Event result = base_vector[3];
+    result.begin = 3000;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("prune_nonexistant_events::pre_events")
+        (base_vector[0])
+        (base_vector[2])
         (result)
         (test_vector);
   }

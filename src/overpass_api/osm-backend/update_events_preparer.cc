@@ -148,30 +148,46 @@ std::vector< Attic< Way_Skeleton::Id_Type > > Update_Events_Preparer::extract_re
 }
 
 
-//TODO: implement and test multiple subsequent undeletes 
 void Update_Events_Preparer::prune_nonexistant_events(
     const std::vector< const Attic< Way_Skeleton >* >& attic,
     const Way_Id_Dates& first_appearance,
     const std::vector< Attic< Way_Skeleton::Id_Type > >& undeleted,
     std::vector< Way_Implicit_Pre_Event >& implicit_pre_events)
 {
+  if (implicit_pre_events.empty())
+    return;
+
   std::vector< Way_Implicit_Pre_Event > result;
   result.reserve(implicit_pre_events.size());
 
+  uint64_t not_before = 0;
+  Way_Skeleton::Id_Type cur_id = implicit_pre_events.front().id;
   auto i_attic = attic.begin();
   auto i_undel = undeleted.begin();
   auto i_first = first_appearance.begin();
   for (auto i_event = implicit_pre_events.begin(); i_event != implicit_pre_events.end(); ++i_event)
   {
-    uint64_t not_before = 0;
+    if (cur_id < i_event->id)
+    {
+      cur_id = i_event->id;
+      not_before = 0;
+    }
+
     while (i_attic != attic.end() && ((*i_attic)->id < i_event->id || (*i_attic)->timestamp <= i_event->begin))
       ++i_attic;
+    uint64_t attic_timestamp = NOW;
+    if (i_attic != attic.end() && i_event->id == (*i_attic)->id)
+      attic_timestamp = (*i_attic)->timestamp;
+
     while (i_undel != undeleted.end() && (Way_Skeleton::Id_Type(*i_undel) < i_event->id || i_undel->timestamp <= i_event->begin))
       ++i_undel;
-    if (i_undel != undeleted.end() && Way_Skeleton::Id_Type(*i_undel) == i_event->id &&
-        (i_attic == attic.end() || i_event->id < (*i_attic)->id || i_undel->timestamp < (*i_attic)->timestamp))
+    while (i_undel != undeleted.end() && Way_Skeleton::Id_Type(*i_undel) == i_event->id &&
+        i_undel->timestamp < attic_timestamp)
+    {
       not_before = i_undel->timestamp;
-    else
+      ++i_undel;
+    }
+    if (not_before <= i_event->begin)
     {
       while (i_first != first_appearance.end() && i_first->first < i_event->id)
         ++i_first;
@@ -179,17 +195,17 @@ void Update_Events_Preparer::prune_nonexistant_events(
         not_before = i_first->second;
     }
 
-    if (i_event->begin < not_before)
+    if (not_before <= i_event->begin)
+      result.push_back(std::move(*i_event));
+    else if (not_before < NOW)
     {
       auto i_next = i_event+1;
-      if (i_next != implicit_pre_events.end() && not_before < i_next->begin)
+      if (i_next == implicit_pre_events.end() || !(cur_id == i_next->id) || not_before < i_next->begin)
       {
         result.push_back(std::move(*i_event));
         result.back().begin = not_before;
       }
     }
-    else
-      result.push_back(std::move(*i_event));
   }
 
   result.swap(implicit_pre_events);
@@ -220,7 +236,7 @@ void Update_Events_Preparer::prune_nonexistant_events(
         ++i_pre;
     }
 
-    if (not_before <= i_event->begin && i_pre != pre_event_refs.end())
+    if (not_before <= i_event->begin && i_pre != pre_event_refs.end() && i_pre->ref == cur_id)
     {
       auto j = i_pre->offset;
       while (j < pre_events.data.size() && pre_events.data[j].entry->meta.ref == i_pre->ref
@@ -240,17 +256,17 @@ void Update_Events_Preparer::prune_nonexistant_events(
       }
     }
 
-    if (i_event->begin < not_before)
+    if (not_before <= i_event->begin)
+      result.push_back(std::move(*i_event));
+    else if (not_before < NOW)
     {
       auto i_next = i_event+1;
-      if (i_next != implicit_pre_events.end() && not_before < i_next->begin)
+      if (i_next == implicit_pre_events.end() || !(cur_id == i_next->id) || not_before < i_next->begin)
       {
         result.push_back(std::move(*i_event));
         result.back().begin = not_before;
       }
     }
-    else
-      result.push_back(std::move(*i_event));
   }
 
   result.swap(implicit_pre_events);
