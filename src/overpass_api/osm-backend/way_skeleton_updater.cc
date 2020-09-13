@@ -5,7 +5,8 @@
 namespace
 {
   std::vector< Way_Implicit_Pre_Event > process_way(
-      const Way_Skeleton& way, const Moved_Coords& moved_coords, uint64_t not_before, uint64_t before)
+      const Way_Skeleton& way, const Moved_Coords& moved_coords, uint64_t not_before, uint64_t before,
+      bool add_initial_element)
   {
     std::vector< Way_Implicit_Pre_Event > result;
 
@@ -36,7 +37,11 @@ namespace
     }
 
     if (pos_events.empty())
+    {
+      if (add_initial_element)
+        result.push_back(Way_Implicit_Pre_Event{ way.id, not_before, way.geometry, way.nds });
       return result;
+    }
 
     std::sort(pos_events.begin(), pos_events.end(),
         [](const decltype(pos_events.front())& lhs, const decltype(pos_events.front())& rhs)
@@ -45,6 +50,8 @@ namespace
 
     Way_Skeleton cur = way;
     uint64_t timestamp = pos_events.front().second->timestamp;
+    if (add_initial_element && not_before < timestamp)
+      timestamp = not_before;
     for (auto i : pos_events)
     {
       if (i.second->timestamp != timestamp)
@@ -99,6 +106,7 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
   auto i_cur = current.begin();
   Way_Skeleton::Id_Type last_ref = 0u;
   uint64_t last_timestamp = 0u;
+  bool last_implicitly_moved = false;
   bool last_found = false;
   for (auto i : attic)
   {
@@ -115,7 +123,8 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
       }
 
       std::vector< Way_Implicit_Pre_Event > this_obj_implicit =
-          process_way(**i_cur, moved_coords, last_ref == (*i_cur)->id ? last_timestamp : 0u, NOW);
+          process_way(**i_cur, moved_coords, last_ref == (*i_cur)->id ? last_timestamp : 0u, NOW,
+              last_ref == (*i_cur)->id && last_implicitly_moved);
       if (!found && !this_obj_implicit.empty())
         current_result.push_back(**i_cur);
       std::move(this_obj_implicit.begin(), this_obj_implicit.end(), std::back_inserter(implicit_pre_events));
@@ -142,13 +151,15 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
     }
 
     std::vector< Way_Implicit_Pre_Event > this_obj_implicit =
-        process_way(*i, moved_coords, last_ref == i->id ? last_timestamp : 0u, i->timestamp);
+        process_way(*i, moved_coords, last_ref == i->id ? last_timestamp : 0u, i->timestamp,
+            last_ref == i->id && last_implicitly_moved);
     if (!found && !this_obj_implicit.empty())
       attic_result.push_back(*i);
     std::move(this_obj_implicit.begin(), this_obj_implicit.end(), std::back_inserter(implicit_pre_events));
 
     last_ref = i->id;
     last_timestamp = i->timestamp;
+    last_implicitly_moved = !this_obj_implicit.empty();
     last_found = found || !this_obj_implicit.empty();
   }
   while (i_cur != current.end())
@@ -164,7 +175,8 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
     }
 
     std::vector< Way_Implicit_Pre_Event > this_obj_implicit =
-        process_way(**i_cur, moved_coords, last_ref == (*i_cur)->id ? last_timestamp : 0u, NOW);
+        process_way(**i_cur, moved_coords, last_ref == (*i_cur)->id ? last_timestamp : 0u, NOW,
+            last_ref == (*i_cur)->id && last_implicitly_moved);
     if (!found && !this_obj_implicit.empty())
       current_result.push_back(**i_cur);
     std::move(this_obj_implicit.begin(), this_obj_implicit.end(), std::back_inserter(implicit_pre_events));

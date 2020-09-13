@@ -717,6 +717,10 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150072) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500731) } },
             std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(497u), 2700, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150071) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150072) } },
+            std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(497u), 3700, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150071) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150072) },

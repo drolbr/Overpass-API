@@ -397,6 +397,28 @@ int main(int argc, char* args[])
         (test_vector);
   }
   {
+    std::cerr<<"\nTest implicit_pre_events with event elimination:\n";
+    bool all_ok = true;
+    std::vector< Way_Implicit_Pre_Event > base_vector = {
+        Way_Implicit_Pre_Event{
+            496ull, 2000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002)) }, std::vector< Node::Id_Type >() },
+        Way_Implicit_Pre_Event{
+            496ull, 3000, std::vector< Quad_Coord >{
+            Quad_Coord(ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150003)) }, std::vector< Node::Id_Type >() } };
+    std::vector< Way_Implicit_Pre_Event > test_vector = base_vector;
+    std::vector< Attic< Way_Skeleton > > attic = {
+        Attic< Way_Skeleton >(Way_Skeleton(Uint32_Index(496u)), 2000) };
+    Update_Events_Preparer::prune_nonexistant_events(
+        std::vector< const Attic< Way_Skeleton >* >{ &attic[0] },
+        Way_Id_Dates{ std::make_pair(Uint32_Index(496u), 1000ull) },
+        std::vector< Attic< Way_Skeleton::Id_Type > >{
+            Attic< Way_Skeleton::Id_Type >(Way_Skeleton::Id_Type(496u), 3000) }, test_vector);
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("prune_nonexistant_events::undel_meta")
+        (base_vector[1])
+        (test_vector);
+  }
+  {
     std::cerr<<"\nTest implicit_pre_events with long undel sequence:\n";
     bool all_ok = true;
     std::vector< Way_Implicit_Pre_Event > base_vector = {
