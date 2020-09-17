@@ -149,17 +149,6 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     //TODO: auch unveränderte Version behalten, damit Idx-Erkennung unten funktioniert
     extract_relevant_current_and_attic(...);
 
-    //TODO: in: per Idx (begin, id, old_ll_lower, visible_after, coord_after)
-    //TODO: out: {(idx, elem, begin, end)}
-    //TODO: implizit geänderte Ways, Idx-übergreifend, Meta mitgeben
-    //TODO: pre_event-Fiktion? ggf. vorne abschneiden per first_appearance, meta füllen
-    //needs: node_pos by old idx: old pos, id, new_pos, multiplicity, begin, end
-//     Id_Dates coord_sharing_ids;
-//     Way_Skeleton_Updater::extract_relevant_current(
-//         i_idx.second, coord_sharing_ids, coord_dates_per_idx, current_ways).swap(skels.current);
-//     Way_Skeleton_Updater::extract_relevant_attic(
-//         i_idx.second, coord_sharing_ids, coord_dates_per_idx, attic_ways).swap(skels.attic);
-
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_meta =
         ways_meta_bin.obj_with_idx(working_idx);
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_meta =

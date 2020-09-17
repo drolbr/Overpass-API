@@ -210,6 +210,9 @@ int main(int argc, char* args[])
     all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
         (attic_result);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        (Way_Implicit_Pre_Event{ Uint32_Index(496u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15002) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(496u), 1000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15001) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150021) } }, std::vector< Node::Id_Type >() })
@@ -244,6 +247,9 @@ int main(int argc, char* args[])
         (attic[0])
         (attic_result);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        (Way_Implicit_Pre_Event{ Uint32_Index(496u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15002) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(496u), 1000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15001) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150021) } }, std::vector< Node::Id_Type >() })
@@ -310,18 +316,30 @@ int main(int argc, char* args[])
     all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
         (attic_result);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        (Way_Implicit_Pre_Event{ Uint32_Index(495u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150052) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(495u), 5000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500521) } }, std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(496u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150061) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150062) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(496u), 6000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150061) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500621) } }, std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(497u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150071) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150072) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(497u), 7100, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500711) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150072) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(497u), 7200, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500711) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500721) } }, std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(498u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150081) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150082) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(498u), 8100, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500811) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150082) } }, std::vector< Node::Id_Type >() })
@@ -391,18 +409,30 @@ int main(int argc, char* args[])
         (attic[5])
         (attic_result);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        (Way_Implicit_Pre_Event{ Uint32_Index(495u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150052) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(495u), 5000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500521) } }, std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(496u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150061) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150062) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(496u), 6000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150061) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500621) } }, std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(497u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150071) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150072) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(497u), 7100, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500711) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150072) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(497u), 7200, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500711) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500721) } }, std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(498u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150081) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150082) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(498u), 8100, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500811) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150082) } }, std::vector< Node::Id_Type >() })
@@ -468,10 +498,18 @@ int main(int argc, char* args[])
     all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
         (attic_result);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        (Way_Implicit_Pre_Event{ Uint32_Index(493u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150031) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150032) } },
+            std::vector< Node::Id_Type >{ Uint64(0ull), Uint64(0ull) } })
         (Way_Implicit_Pre_Event{ Uint32_Index(493u), 3000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150031) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500321) } },
             std::vector< Node::Id_Type >{ Uint64(0ull), Uint64(0ull) } })
+        (Way_Implicit_Pre_Event{ Uint32_Index(494u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150042) } },
+            std::vector< Node::Id_Type >{ Uint64(494001ull), Uint64(0ull) } })
         (Way_Implicit_Pre_Event{ Uint32_Index(494u), 4100, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500411) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150042) } },
@@ -480,6 +518,10 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500411) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500421) } },
             std::vector< Node::Id_Type >{ Uint64(0ull), Uint64(0ull) } })
+        (Way_Implicit_Pre_Event{ Uint32_Index(495u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15) } },
+            std::vector< Node::Id_Type >{ Uint64(495001ull), Uint64(495002ull) } })
         (Way_Implicit_Pre_Event{ Uint32_Index(495u), 5100, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500511) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15) } },
@@ -488,6 +530,10 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500511) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500521) } },
             std::vector< Node::Id_Type >{ Uint64(0ull), Uint64(0ull) } })
+        (Way_Implicit_Pre_Event{ Uint32_Index(496u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150062) } },
+            std::vector< Node::Id_Type >{ Uint64(496001ull), Uint64(0ull) } })
         (Way_Implicit_Pre_Event{ Uint32_Index(496u), 6000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500611) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150062) } },
@@ -530,6 +576,9 @@ int main(int argc, char* args[])
         (attic[0])
         (attic_result);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        (Way_Implicit_Pre_Event{ Uint32_Index(495u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150052) } }, std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(495u), 1900, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500511) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150052) } }, std::vector< Node::Id_Type >() })
@@ -572,10 +621,18 @@ int main(int argc, char* args[])
     all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
         (attic_result);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        (Way_Implicit_Pre_Event{ Uint32_Index(495u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150052) } },
+            std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(495u), 5000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
             Quad_Coord{ 0u, 0u } },
             std::vector< Node::Id_Type >{ Uint64(0ull), Uint64(495002ull) } })
+        (Way_Implicit_Pre_Event{ Uint32_Index(496u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150061) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150062) } },
+            std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(496u), 6000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150061) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15) } },
@@ -636,6 +693,9 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150073) } }) };
     std::vector< Attic< Way_Skeleton > > attic = {
         Attic< Way_Skeleton >(Way_Skeleton(495u, std::vector< Node::Id_Type >(), std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150052) } }), 1500),
+        Attic< Way_Skeleton >(Way_Skeleton(495u, std::vector< Node::Id_Type >(), std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150052) } }), 2500),
         Attic< Way_Skeleton >(Way_Skeleton(496u, std::vector< Node::Id_Type >(), std::vector< Quad_Coord >{
@@ -667,16 +727,24 @@ int main(int argc, char* args[])
         (current[3])
         (current_result);
     all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
-        (attic[0])
         (attic[1])
         (attic[2])
         (attic[3])
         (attic[4])
+        (attic[5])
         (attic_result);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        (Way_Implicit_Pre_Event{ Uint32_Index(494u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150041) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150042) } },
+            std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(494u), 2000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500411) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150042) } },
+            std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(495u), 1500, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150052) } },
             std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(495u), 2000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
@@ -691,6 +759,10 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150051) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500522) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500532) } },
+            std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(496u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150061) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150062) } },
             std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(496u), 2000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150061) },
@@ -711,6 +783,11 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500622) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500632) },
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500641) } },
+            std::vector< Node::Id_Type >() })
+        (Way_Implicit_Pre_Event{ Uint32_Index(497u), 0, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150071) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150072) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150073) } },
             std::vector< Node::Id_Type >() })
         (Way_Implicit_Pre_Event{ Uint32_Index(497u), 2000, std::vector< Quad_Coord >{
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150071) },
