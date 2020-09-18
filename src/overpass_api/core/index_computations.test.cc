@@ -108,6 +108,17 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<"\n\n";
 }
 
+
+bool assert_equal(uint32 expected, uint32 computed, const std::string& message)
+{
+  if (expected == computed)
+    return true;
+
+  std::cout<<message<<" FAILED: Expected "<<std::hex<<expected<<", computed "<<std:: hex<<computed<<'\n';
+  return false;
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 2)
@@ -185,91 +196,130 @@ int main(int argc, char* args[])
   {
     std::cout<<"\nTest calc_index with 1 entry:\n";
 
-    for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000))<<' ';
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000))<<' ';
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000))<<' ';
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(lat, 0) ^ 0x40000000))<<' ';
-    std::cout<<'\n';
+    bool all_ok = true;
+    all_ok &= assert_equal(ll_upper_(51.25, 7.15),
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15) }), "ne");
+    all_ok &= assert_equal(ll_upper_(51.25, -7.85),
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, -7.85) }), "nw");
+    all_ok &= assert_equal(ll_upper_(-88.5, 7.15),
+        calc_index(std::vector< uint32 >{ ll_upper_(-88.5, 7.15) }), "se");
+    all_ok &= assert_equal(ll_upper_(-88.5, -7.85),
+        calc_index(std::vector< uint32 >{ ll_upper_(-88.5, -7.85) }), "sw");
+    all_ok &= assert_equal(ll_upper_(51.25, 179.995),
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 179.995) }), "dateline_nw");
+    all_ok &= assert_equal(ll_upper_(51.25, -179.995),
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, -179.995) }), "dateline_ne");
+    all_ok &= assert_equal(ll_upper_(-88.5, 179.995),
+        calc_index(std::vector< uint32 >{ ll_upper_(-88.5, 179.995) }), "dateline_sw");
+    all_ok &= assert_equal(ll_upper_(-88.5, -179.995),
+        calc_index(std::vector< uint32 >{ ll_upper_(-88.5, -179.995) }), "dateline_se");
+    if (all_ok)
+      std::cout<<"Return simple idxs unchanged: ok\n";
 
-    for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
-    std::cout<<'\n';
-    for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
-    std::cout<<'\n';
-    for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
-    std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
-    std::cout<<'\n';
+    all_ok = true;
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ (ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001 }), "n_01");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ (ll_upper_(51.25, 7.15) & 0xffffffc0) | 0x80000002 }), "n_02");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffc00) | 0x80000004,
+        calc_index(std::vector< uint32 >{ (ll_upper_(51.25, 7.15) & 0xfffffc00) | 0x80000004 }), "n_04");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffffc000) | 0x80000008,
+        calc_index(std::vector< uint32 >{ (ll_upper_(51.25, 7.15) & 0xffffc000) | 0x80000008 }), "n_08");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffc0000) | 0x80000010,
+        calc_index(std::vector< uint32 >{ (ll_upper_(51.25, 7.15) & 0xfffc0000) | 0x80000010 }), "n_10");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffc00000) | 0x80000020,
+        calc_index(std::vector< uint32 >{ (ll_upper_(51.25, 7.15) & 0xffc00000) | 0x80000020 }), "n_20");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfc000000) | 0x80000040,
+        calc_index(std::vector< uint32 >{ (ll_upper_(51.25, 7.15) & 0xfc000000) | 0x80000040 }), "n_40");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ (ll_upper_(-33.85, 151.25) & 0xfffffffc) | 0x80000001 }), "s_01");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ (ll_upper_(-33.85, 151.25) & 0xffffffc0) | 0x80000002 }), "s_02");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xfffffc00) | 0x80000004,
+        calc_index(std::vector< uint32 >{ (ll_upper_(-33.85, 151.25) & 0xfffffc00) | 0x80000004 }), "s_04");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xffffc000) | 0x80000008,
+        calc_index(std::vector< uint32 >{ (ll_upper_(-33.85, 151.25) & 0xffffc000) | 0x80000008 }), "s_08");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xfffc0000) | 0x80000010,
+        calc_index(std::vector< uint32 >{ (ll_upper_(-33.85, 151.25) & 0xfffc0000) | 0x80000010 }), "s_10");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xffc00000) | 0x80000020,
+        calc_index(std::vector< uint32 >{ (ll_upper_(-33.85, 151.25) & 0xffc00000) | 0x80000020 }), "s_20");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xfc000000) | 0x80000040,
+        calc_index(std::vector< uint32 >{ (ll_upper_(-33.85, 151.25) & 0xfc000000) | 0x80000040 }), "s_40");
+    all_ok &= assert_equal(0x80000080,
+        calc_index(std::vector< uint32 >{ 0x80000080 }), "ne");
+    if (all_ok)
+      std::cout<<"Return compound idxs unchanged: ok\n";
 
     std::cout<<"\nTest calc_index with 2 entries:\n";
 
-    for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
+    all_ok = true;
+    all_ok &= assert_equal(ll_upper_(51.25, 7.15),
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.25, 7.15) }), "n_00");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.25, 7.157) }), "ne_01");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.257, 7.15) }), "nn_01");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.157), ll_upper_(51.25, 7.15) }), "en_01");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.257, 7.15), ll_upper_(51.25, 7.15) }), "nr_01");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.25, 7.176) }), "ne_02");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.276, 7.15) }), "nn_02");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffc00) | 0x80000004,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.25, 7.255) }), "ne_04");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffc00) | 0x80000004,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.355, 7.15) }), "nn_04");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffffc000) | 0x80000008,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.25, 7.569) }), "ne_08");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffffc000) | 0x80000008,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.669, 7.15) }), "nn_08");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffc0000) | 0x80000010,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.25, 8.828) }), "ne_10");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffc0000) | 0x80000010,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(52.928, 7.15) }), "nn_10");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffc00000) | 0x80000020,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(51.25, 13.861) }), "ne_20");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffc00000) | 0x80000020,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15), ll_upper_(57.961, 7.15) }), "nn_20");
+    all_ok &= assert_equal(ll_upper_(-33.85, 151.25),
+        calc_index(std::vector< uint32 >{ ll_upper_(-33.85, 151.25), ll_upper_(-33.85, 151.25) }), "s_00");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ ll_upper_(-33.85, 151.25), ll_upper_(-33.85, 151.257) }), "se_01");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ ll_upper_(-33.85, 151.25), ll_upper_(-33.843, 151.25) }), "sn_01");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ ll_upper_(-33.85, 151.25), ll_upper_(-33.85, 151.276) }), "se_02");
+    all_ok &= assert_equal((ll_upper_(-33.85, 151.25) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ ll_upper_(-33.85, 151.25), ll_upper_(-33.824, 151.25) }), "sn_02");
+    all_ok &= assert_equal(0x80000080,
+        calc_index(std::vector< uint32 >{ ll_upper_(42.42, 179.995), ll_upper_(42.42, -179.995) }), "date");
+    all_ok &= assert_equal(0x80000080,
+        calc_index(std::vector< uint32 >{ ll_upper_(42.42, 179.95), ll_upper_(42.42, -179.95) }), "date");
+    if (all_ok)
+      std::cout<<"Return for pair of simple idxs: ok\n";
 
-    for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
+    std::cout<<"\nTest calc_index with an already cumulated and another entry:\n";
+
+    all_ok = true;
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.15),
+            (ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001 }), "01_0");
+    all_ok &= assert_equal((ll_upper_(51.224, 7.15) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.224, 7.15),
+            (ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001 }), "01_s");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.276, 7.15),
+            (ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001 }), "01_n");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.124) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.124),
+            (ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001 }), "01_w");
+    all_ok &= assert_equal((ll_upper_(51.25, 7.15) & 0xffffffc0) | 0x80000002,
+        calc_index(std::vector< uint32 >{ ll_upper_(51.25, 7.176),
+            (ll_upper_(51.25, 7.15) & 0xfffffffc) | 0x80000001 }), "01_e");
+    if (all_ok)
+      std::cout<<"Test calc_index with an already cumulated and another entry: ok\n";
 
     std::cout<<"\nTest calc_index with already cumulated entries:\n";
 
@@ -328,74 +378,6 @@ int main(int argc, char* args[])
       std::vector< uint32 > idxs(1, 0x40000000);
       idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
       std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, calc_index(idxs)))<<' ';
-    }
-    std::cout<<'\n';
-
-    std::cout<<"\nTest calc_index with an already cumulated and another entry:\n";
-
-    for (uint32 lat = 0; lat <= 0x100000; lat += 0x10000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
-      idxs[1] = calc_index(idxs);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat <= 0x1000000; lat += 0x100000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
-      idxs[1] = calc_index(idxs);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat <= 0x10000000; lat += 0x1000000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
-      idxs[1] = calc_index(idxs);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (uint32 lat = 0; lat < 0x80000000; lat += 0x10000000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(lat, 0) ^ 0x40000000);
-      idxs[1] = calc_index(idxs);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-
-    for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
-      idxs[1] = calc_index(idxs);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
-      idxs[1] = calc_index(idxs);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
-      idxs[1] = calc_index(idxs);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
-    }
-    std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
-    {
-      std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
-      idxs[1] = calc_index(idxs);
-      std::cout<<std::hex<<calc_index(idxs)<<' ';
     }
     std::cout<<'\n';
   }

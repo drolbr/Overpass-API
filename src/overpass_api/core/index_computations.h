@@ -76,52 +76,70 @@ inline uint32 ll_upper_(uint32 ilat, int32 ilon)
   return (ll_upper(ilat, ilon) ^ 0x40000000);
 }
 
+
 inline uint32 upper_ilat(uint32 quadtile)
 {
-  uint32 result = 0;
-
-  result |= (quadtile & 0x2)>>1;
-  result |= (quadtile & 0x8)>>2;
-  result |= (quadtile & 0x20)>>3;
-  result |= (quadtile & 0x80)>>4;
-  result |= (quadtile & 0x200)>>5;
-  result |= (quadtile & 0x800)>>6;
-  result |= (quadtile & 0x2000)>>7;
-  result |= (quadtile & 0x8000)>>8;
-  result |= (quadtile & 0x20000)>>9;
-  result |= (quadtile & 0x80000)>>10;
-  result |= (quadtile & 0x200000)>>11;
-  result |= (quadtile & 0x800000)>>12;
-  result |= (quadtile & 0x2000000)>>13;
-  result |= (quadtile & 0x8000000)>>14;
-  result |= (quadtile & 0x20000000)>>15;
-
-  return result;
+  uint32 result = (quadtile>>1) & 0x15555555;
+  result = (result | (result>>1)) & 0x33333333;
+  result = (result | (result>>2)) & 0xf0f0f0f;
+  result = (result | (result>>4)) & 0xff00ff;
+  return (result | (result>>8)) & 0xffff;
 }
+
 
 inline uint32 upper_ilon(uint32 quadtile)
 {
-  uint32 result = 0;
-
-  result |= (quadtile & 0x1);
-  result |= (quadtile & 0x4)>>1;
-  result |= (quadtile & 0x10)>>2;
-  result |= (quadtile & 0x40)>>3;
-  result |= (quadtile & 0x100)>>4;
-  result |= (quadtile & 0x400)>>5;
-  result |= (quadtile & 0x1000)>>6;
-  result |= (quadtile & 0x4000)>>7;
-  result |= (quadtile & 0x10000)>>8;
-  result |= (quadtile & 0x40000)>>9;
-  result |= (quadtile & 0x100000)>>10;
-  result |= (quadtile & 0x400000)>>11;
-  result |= (quadtile & 0x1000000)>>12;
-  result |= (quadtile & 0x4000000)>>13;
-  result |= (quadtile & 0x10000000)>>14;
-  result |= (quadtile & 0x40000000)>>15;
-
-  return result;
+  uint32 result = quadtile & 0x55555555;
+  result = (result | (result>>1)) & 0x33333333;
+  result = (result | (result>>2)) & 0xf0f0f0f;
+  result = (result | (result>>4)) & 0xff00ff;
+  return (result | (result>>8)) & 0xffff;
 }
+
+
+namespace
+{
+  struct Bbox_Extent
+  {
+    Bbox_Extent(uint32 lat, uint32 lon) : lat_min(lat), lat_max(lat), lon_min(lon), lon_max(lon) {}
+
+    Bbox_Extent(uint32 idx)
+    {
+      set(idx);
+    }
+
+    void set(uint32 lat_min_, uint32 lon_min_, uint32 size)
+    {
+      lat_min = lat_min_;
+      lon_min = lon_min_;
+      lat_max = ll_upper((upper_ilat(lat_min) + size)<<16, 0);
+      lon_max = ll_upper(0, (upper_ilon(lon_min) + size)<<16);
+    }
+
+    void set(uint32 idx)
+    {
+      if (idx & 0x00000001)
+        set(idx & 0x2aaaaaa8, idx & 0x55555554, 3);
+      else if (idx & 0x00000002)
+        set(idx & 0x2aaaaa80, idx & 0x55555540, 0xf);
+      else if (idx & 0x00000004)
+        set(idx & 0x2aaaa800, idx & 0x55555400, 0x3f);
+      else if (idx & 0x00000008)
+        set(idx & 0x2aaa8000, idx & 0x55554000, 0xff);
+      else if (idx & 0x00000010)
+        set(idx & 0x2aa80000, idx & 0x55540000, 0x3ff);
+      else if (idx & 0x00000020)
+        set(idx & 0x2a800000, idx & 0x55400000, 0xfff);
+      else if (idx & 0x00000040)
+        set(idx & 0x28000000, idx & 0x54000000, 0x3fff);
+      else
+        set(0x80000080, 0u, 0u);
+    }
+
+    uint32 lat_min, lat_max, lon_min, lon_max;
+  };
+}
+
 
 inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
 {
@@ -131,192 +149,90 @@ inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
   // Calculate the bounding box of the appearing indices.
 
   std::vector< uint32 >::const_iterator it = node_idxs.begin();
-  uint32 lat_min = *it & 0x2aaaaaaa;
-  uint32 lat_max = lat_min;
-  uint32 lon_min = *it & 0x55555555;
-  uint32 lon_max = lon_min;
+  if (*it == 0x80000080)
+    return 0x80000080;
+
+  Bbox_Extent extent(*it & 0x2aaaaaaa, *it & 0x55555555);
 
   if (*it & 0x80000000)
-  {
-    if (*it & 0x00000001)
-    {
-      lat_min = *it & 0x2aaaaaa8;
-      lon_min = *it & 0x55555554;
-      lat_max = ll_upper((upper_ilat(lat_min) + 3)<<16, 0);
-      lon_max = ll_upper(0, (upper_ilon(lon_min) + 3)<<16);
-    }
-    else if (*it & 0x00000002)
-    {
-      lat_min = *it & 0x2aaaaa80;
-      lon_min = *it & 0x55555540;
-      lat_max = ll_upper((upper_ilat(lat_min) + 0xf)<<16, 0);
-      lon_max = ll_upper(0, (upper_ilon(lon_min) + 0xf)<<16);
-    }
-    else if (*it & 0x00000004)
-    {
-      lat_min = *it & 0x2aaaa800;
-      lon_min = *it & 0x55555400;
-      lat_max = ll_upper((upper_ilat(lat_min) + 0x3f)<<16, 0);
-      lon_max = ll_upper(0, (upper_ilon(lon_min) + 0x3f)<<16);
-    }
-    else if (*it & 0x00000008)
-    {
-      lat_min = *it & 0x2aaa8000;
-      lon_min = *it & 0x55554000;
-      lat_max = ll_upper((upper_ilat(lat_min) + 0xff)<<16, 0);
-      lon_max = ll_upper(0, (upper_ilon(lon_min) + 0xff)<<16);
-    }
-    else if (*it & 0x00000010)
-    {
-      lat_min = *it & 0x2aa80000;
-      lon_min = *it & 0x55540000;
-      lat_max = ll_upper((upper_ilat(lat_min) + 0x3ff)<<16, 0);
-      lon_max = ll_upper(0, (upper_ilon(lon_min) + 0x3ff)<<16);
-    }
-    else if (*it & 0x00000020)
-    {
-      lat_min = *it & 0x2a800000;
-      lon_min = *it & 0x55400000;
-      lat_max = ll_upper((upper_ilat(lat_min) + 0xfff)<<16, 0);
-      lon_max = ll_upper(0, (upper_ilon(lon_min) + 0xfff)<<16);
-    }
-    else if (*it & 0x00000040)
-    {
-      lat_min = *it & 0x28000000;
-      lon_min = *it & 0x54000000;
-      lat_max = ll_upper((upper_ilat(lat_min) + 0x3fff)<<16, 0);
-      lon_max = ll_upper(0, (upper_ilon(lon_min) + 0x3fff)<<16);
-    }
-    else // *it == 0x80000080
-      return 0x80000080;
-  }
+    extent.set(*it);
 
   for (++it; it != node_idxs.end(); ++it)
   {
     if (*it & 0x80000000)
     {
-      uint32 lat = 0;
-      uint32 lon = 0;
-      uint32 lat_u = 0;
-      uint32 lon_u = 0;
+      if (*it == 0x80000080)
+        return 0x80000080;
 
-      if (*it & 0x00000001)
-      {
-	lat = *it & 0x2aaaaaa8;
-	lon = *it & 0x55555554;
-	lat_u = ll_upper((upper_ilat(lat) + 3)<<16, 0);
-	lon_u = ll_upper(0, (upper_ilon(lon) + 3)<<16);
-      }
-      else if (*it & 0x00000002)
-      {
-	lat = *it & 0x2aaaaa80;
-	lon = *it & 0x55555540;
-	lat_u = ll_upper((upper_ilat(lat) + 0xf)<<16, 0);
-	lon_u = ll_upper(0, (upper_ilon(lon) + 0xf)<<16);
-      }
-      else if (*it & 0x00000004)
-      {
-	lat = *it & 0x2aaaa800;
-	lon = *it & 0x55555400;
-	lat_u = ll_upper((upper_ilat(lat) + 0x3f)<<16, 0);
-	lon_u = ll_upper(0, (upper_ilon(lon) + 0x3f)<<16);
-      }
-      else if (*it & 0x00000008)
-      {
-	lat = *it & 0x2aaa8000;
-	lon = *it & 0x55554000;
-	lat_u = ll_upper((upper_ilat(lat) + 0xff)<<16, 0);
-	lon_u = ll_upper(0, (upper_ilon(lon) + 0xff)<<16);
-      }
-      else if (*it & 0x00000010)
-      {
-	lat = *it & 0x2aa80000;
-	lon = *it & 0x55540000;
-	lat_u = ll_upper((upper_ilat(lat) + 0x3ff)<<16, 0);
-	lon_u = ll_upper(0, (upper_ilon(lon) + 0x3ff)<<16);
-      }
-      else if (*it & 0x00000020)
-      {
-	lat = *it & 0x2a800000;
-	lon = *it & 0x55400000;
-	lat_u = ll_upper((upper_ilat(lat) + 0xfff)<<16, 0);
-	lon_u = ll_upper(0, (upper_ilon(lon) + 0xfff)<<16);
-      }
-      else if (*it & 0x00000040)
-      {
-	lat = *it & 0x28000000;
-	lon = *it & 0x54000000;
-	lat_u = ll_upper((upper_ilat(lat) + 0x3fff)<<16, 0);
-	lon_u = ll_upper(0, (upper_ilon(lon) + 0x3fff)<<16);
-      }
-      else // *it == 0x80000080
-	return 0x80000080;
+      Bbox_Extent current(*it);
 
-      if (lat < lat_min)
-	lat_min = lat;
-      if (lat_u > lat_max)
-	lat_max = lat_u;
-      if (lon < lon_min)
-	lon_min = lon;
-      if (lon_u > lon_max)
-	lon_max = lon_u;
+      extent.lat_min = std::min(extent.lat_min, current.lat_min);
+      extent.lat_max = std::max(extent.lat_max, current.lat_max);
+      extent.lon_min = std::min(extent.lon_min, current.lon_min);
+      extent.lon_max = std::max(extent.lon_max, current.lon_max);
     }
     else
     {
       uint32 lat = *it & 0x2aaaaaaa;
       uint32 lon = *it & 0x55555555;
 
-      if (lat < lat_min)
-        lat_min = lat;
-      else if (lat > lat_max)
-	lat_max = lat;
-      if (lon < lon_min)
-	lon_min = lon;
-      else if (lon > lon_max)
-	lon_max = lon;
+      extent.lat_min = std::min(extent.lat_min, lat);
+      extent.lat_max = std::max(extent.lat_max, lat);
+      extent.lon_min = std::min(extent.lon_min, lon);
+      extent.lon_max = std::max(extent.lon_max, lon);
     }
   }
 
 
   // Evaluate the bounding box.
 
-  if ((lat_max == lat_min) && (lon_max == lon_min))
+  if ((extent.lat_max == extent.lat_min) && (extent.lon_max == extent.lon_min))
     return node_idxs.front();
 
-  uint32 ilat_min = upper_ilat(lat_min);
-  uint32 ilat_max = upper_ilat(lat_max);
-  uint32 ilon_min = upper_ilon(lon_min);
-  uint32 ilon_max = upper_ilon(lon_max);
+  uint32 ilat_min = upper_ilat(extent.lat_min);
+  uint32 ilat_max = upper_ilat(extent.lat_max);
+  uint32 ilon_min = upper_ilon(extent.lon_min);
+  uint32 ilon_max = upper_ilon(extent.lon_max);
 
   if (((ilat_max & 0xfffe) - (ilat_min & 0xfffe) < 4) &&
       ((ilon_max & 0xfffe) - (ilon_min & 0xfffe) < 4))
-    return (((lon_min | lat_min) & 0xfffffffc) | 0x80000001);
+    return (((extent.lon_min | extent.lat_min) & 0xfffffffc) | 0x80000001);
 
   if (((ilat_max & 0xfff8) - (ilat_min & 0xfff8) < 0x10) &&
       ((ilon_max & 0xfff8) - (ilon_min & 0xfff8) < 0x10))
-    return (((lon_min | lat_min) & 0xffffffc0) | 0x80000002);
+    return (((extent.lon_min | extent.lat_min) & 0xffffffc0) | 0x80000002);
 
   if (((ilat_max & 0xffe0) - (ilat_min & 0xffe0) < 0x40) &&
       ((ilon_max & 0xffe0) - (ilon_min & 0xffe0) < 0x40))
-    return (((lon_min | lat_min) & 0xfffffc00) | 0x80000004);
+    return (((extent.lon_min | extent.lat_min) & 0xfffffc00) | 0x80000004);
 
   if (((ilat_max & 0xff80) - (ilat_min & 0xff80) < 0x100) &&
       ((ilon_max & 0xff80) - (ilon_min & 0xff80) < 0x100))
-    return (((lon_min | lat_min) & 0xffffc000) | 0x80000008);
+    return (((extent.lon_min | extent.lat_min) & 0xffffc000) | 0x80000008);
 
   if (((ilat_max & 0xfe00) - (ilat_min & 0xfe00) < 0x400) &&
       ((ilon_max & 0xfe00) - (ilon_min & 0xfe00) < 0x400))
-    return (((lon_min | lat_min) & 0xfffc0000) | 0x80000010);
+    return (((extent.lon_min | extent.lat_min) & 0xfffc0000) | 0x80000010);
 
   if (((ilat_max & 0xf800) - (ilat_min & 0xf800) < 0x1000) &&
       ((ilon_max & 0xf800) - (ilon_min & 0xf800) < 0x1000))
-    return (((lon_min | lat_min) & 0xffc00000) | 0x80000020);
+    return (((extent.lon_min | extent.lat_min) & 0xffc00000) | 0x80000020);
 
   if (((ilat_max & 0xe000) - (ilat_min & 0xe000) < 0x4000) &&
       ((ilon_max & 0xe000) - (ilon_min & 0xe000) < 0x4000))
-    return (((lon_min | lat_min) & 0xfc000000) | 0x80000040);
+    return (((extent.lon_min | extent.lat_min) & 0xfc000000) | 0x80000040);
 
   return 0x80000080;
+}
+
+
+inline uint32 calc_index(const std::vector< Quad_Coord >& arg)
+{
+  std::vector< uint32 > ll_upper;
+  ll_upper.reserve(arg.size());
+  for (const auto& i : arg)
+    ll_upper.push_back(i.ll_upper);
+  return calc_index(ll_upper);
 }
 
 
