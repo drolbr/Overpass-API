@@ -91,7 +91,7 @@ void Way_Meta_Updater::collect_meta_to_move(
         ++i_attic;
       if (i_cur != current_meta.end() && i_cur->ref == id)
       {
-        if (i_pref != pre_event_refs.begin() && i_pref->ref == id)
+        if (i_pref != pre_event_refs.end() && i_pref->ref == id)
         {
           decltype(pre_events.data.size()) j = i_pref->offset;
           while (j < pre_events.data.size() && pre_events.data[j].entry->meta.ref == id)
@@ -128,7 +128,7 @@ void Way_Meta_Updater::collect_meta_to_move(
           //    because otherwise the implicit_pre_event for first_impl_timestamp did not belong to working_idx.
           //Thus, no pre_event can start before first_impl_timestamp: otherwise,
           //  it either had displaced the implicit_pre_event or it ends on a time without a meta or successor.
-          working_idx_found |= undeleted_until_first_impl(
+          working_idx_found |= !undeleted_until_first_impl(
               id, first_impl_timestamp, undeleted, i_undel);
         else
           working_idx_found = true;
@@ -160,40 +160,41 @@ void Way_Meta_Updater::collect_meta_to_move(
         std::vector< Uint31_Index > found_idxs;
 
         if (first_impl_timestamp <= i_cur->timestamp)
-          adjust_i_impl(id, i_attic->timestamp, pre_event_refs, i_pref, pre_events, implicit_pre_events, i_impl);
+          adjust_i_impl(id, i_cur->timestamp, pre_event_refs, i_pref, pre_events, implicit_pre_events, i_impl);
         else
-          working_idx_found |= undeleted_until_first_impl(
+          working_idx_found |= !undeleted_until_first_impl(
               id, first_impl_timestamp, undeleted, i_undel);
 
         Uint31_Index final_idx = working_idx;
         while (i_impl != implicit_pre_events.end() && i_impl->id == id)
         {
           Uint31_Index idx = calc_index(i_impl->geometry);
+          final_idx = idx;
           if (idx == working_idx)
             working_idx_found = true;
           else
-          {
             found_idxs.push_back(idx);
-            final_idx = idx;
-          }
-
+ 
           ++i_impl;
         }
         std::sort(found_idxs.begin(), found_idxs.end());
         found_idxs.erase(std::unique(found_idxs.begin(), found_idxs.end()), found_idxs.end());
 
         bool pre_event_covers_now = false;
-        decltype(pre_events.data.size()) j = i_pref->offset;
-        while (j < pre_events.data.size() && pre_events.data[j].entry->meta.ref == id)
+        if (i_pref != pre_event_refs.end() && i_pref->ref == id)
         {
-          if (pre_events.data[j].timestamp_end == NOW)
-            pre_event_covers_now = true;
-          ++j;
+          decltype(pre_events.data.size()) j = i_pref->offset;
+          while (j < pre_events.data.size() && pre_events.data[j].entry->meta.ref == id)
+          {
+            if (pre_events.data[j].timestamp_end == NOW)
+              pre_event_covers_now = true;
+            ++j;
+          }
         }
 
         if (!working_idx_found && !found_idxs.empty())
           current_to_delete.insert(*i_cur);
-        else if (pre_event_covers_now)
+        else if (pre_event_covers_now || (working_idx_found && !(final_idx == working_idx)))
           to_move.insert(*i_cur);
 
         for (auto j : found_idxs)
