@@ -134,8 +134,8 @@ fetch_minute_diff()
 };
 
 if [[ -s "$LOCAL_DIR/state.txt" ]]; then
-  MAX_SEQ_NR=$(cat "$LOCAL_DIR/state.txt" | grep -E '^sequenceNumber')
-  MAX_AVAILABLE_REPLICATE_ID=${MAX_SEQ_NR:15}
+  MAX_SEQ_NR=$(cat "$LOCAL_DIR/state.txt" | grep -aE '^sequenceNumber')
+  MAX_AVAILABLE_REPLICATE_ID=$((${MAX_SEQ_NR:15} + 0))
   if [[ "$REPLICATE_ID" == "auto" && -s "$LOCAL_DIR/state.txt" ]]; then
     REPLICATE_ID=$MAX_AVAILABLE_REPLICATE_ID
   fi
@@ -151,8 +151,8 @@ do
     if [[ -n $FILE_PANIC ]]; then
       file_panic
     fi
-    MAX_SEQ_NR=$(cat "$LOCAL_DIR/state.txt" | grep -E '^sequenceNumber')
-    MAX_AVAILABLE_REPLICATE_ID=${MAX_SEQ_NR:15}
+    MAX_SEQ_NR=$(cat "$LOCAL_DIR/state.txt" | grep -aE '^sequenceNumber')
+    MAX_AVAILABLE_REPLICATE_ID=$((${MAX_SEQ_NR:15} + 0))
   fi
 
   if [[ $REPLICATE_ID -le $MAX_AVAILABLE_REPLICATE_ID ]]; then
