@@ -611,7 +611,7 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() } };
     std::vector< Attic< Way_Skeleton::Id_Type > > undelete;
 
-    bool all_ok = false;//true;
+    bool all_ok = true;
     Way_Meta_Updater::collect_meta_to_move(
         current, attic,
         ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
@@ -663,7 +663,7 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() } };
     std::vector< Attic< Way_Skeleton::Id_Type > > undelete;
 
-    bool all_ok = false;//true;
+    bool all_ok = true;
     Way_Meta_Updater::collect_meta_to_move(
         current, attic,
         ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
@@ -719,7 +719,7 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150002) } }, std::vector< Node::Id_Type >() } };
     std::vector< Attic< Way_Skeleton::Id_Type > > undelete;
 
-    bool all_ok = false;//true;
+    bool all_ok = true;
     Way_Meta_Updater::collect_meta_to_move(
         current, attic,
         ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
@@ -776,7 +776,7 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() } };
     std::vector< Attic< Way_Skeleton::Id_Type > > undelete;
 
-    bool all_ok = false;//true;
+    bool all_ok = true;
     Way_Meta_Updater::collect_meta_to_move(
         current, attic,
         ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
@@ -832,7 +832,7 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() } };
     std::vector< Attic< Way_Skeleton::Id_Type > > undelete;
 
-    bool all_ok = false;//true;
+    bool all_ok = true;
     Way_Meta_Updater::collect_meta_to_move(
         current, attic,
         ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
@@ -906,7 +906,7 @@ int main(int argc, char* args[])
             Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() } };
     std::vector< Attic< Way_Skeleton::Id_Type > > undelete;
 
-    bool all_ok = false;//true;
+    bool all_ok = true;
     Way_Meta_Updater::collect_meta_to_move(
         current, attic,
         ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
@@ -940,10 +940,238 @@ int main(int argc, char* args[])
             OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006) })
         (attic_to_add);
   }
+  {
+    std::cerr<<"\nAttic index carries over to current by a non-synchronous object:\n";
 
-// weitere Testfälle:
-// - attic neg + pos: attic + current, attic + attic, attic leer, attic aus eher
-// - attic pos + neg: attic + current, attic + attic, attic leer, attic aus eher
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > to_move;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_to_delete;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_to_delete;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > current_to_add;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_to_add;
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current =
+        { OSM_Element_Metadata_Skeleton< Uint32_Index >(492ull, 3002),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(493ull, 3003),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 3004),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 3005),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3006),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(498ull, 3008) };
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic =
+        { OSM_Element_Metadata_Skeleton< Uint32_Index >(492ull, 1002),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(493ull, 1003),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 1004),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 1005),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 1007),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(498ull, 1008) };
+
+    Pre_Event_List< Way_Skeleton > pre_events;
+    std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > pre_event_refs;
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events =
+        { Way_Implicit_Pre_Event{ 492ull, 4002, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 493ull, 2003, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 493ull, 4003, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 494ull, 1004, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150001) },
+            Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 494ull, 2004, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 494ull, 4004, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 495ull, 2005, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 495ull, 4005, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 496ull, 1006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150001) },
+            Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 496ull, 2006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 496ull, 4006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 497ull, 2007, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 497ull, 4007, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 9.15), ll_lower(51.25, 9.150001) },
+            Quad_Coord{ ll_upper_(51.25, 9.15), ll_lower(51.25, 9.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 498ull, 4008, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() } };
+    std::vector< Attic< Way_Skeleton::Id_Type > > undelete =
+        { Attic< Way_Skeleton::Id_Type >(Way_Skeleton::Id_Type(498u), 4008) };
+
+    bool all_ok = true;
+    Way_Meta_Updater::collect_meta_to_move(
+        current, attic,
+        ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
+        to_move, current_to_delete, attic_to_delete, current_to_add, attic_to_add);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::to_move")
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(492ull, 3002))
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(493ull, 3003))
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 3004))
+        (to_move);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::current_to_delete")
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007))
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(498ull, 3008))
+        (current_to_delete);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::attic_to_delete")
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006))
+        (attic_to_delete);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::current_to_add")
+        (ll_upper_(51.25, 8.15), {
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(492ull, 3002),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(493ull, 3003),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 3004),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(498ull, 3008) })
+        (ll_upper_(51.25, 9.15), { OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007) })
+        (current_to_add);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::attic_to_add")
+        (ll_upper_(51.25, 6.15), {
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 1004),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006) })
+        (ll_upper_(51.25, 8.15), {
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 1005),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 3005),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3006),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 1007),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007) })
+        (attic_to_add);
+  }
+  {
+    std::cerr<<"\nAttic index carries over to newer attic by a non-synchronous object:\n";
+
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > to_move;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_to_delete;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_to_delete;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > current_to_add;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_to_add;
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic =
+        { OSM_Element_Metadata_Skeleton< Uint32_Index >(492ull, 1002),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(492ull, 3002),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(493ull, 1003),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(493ull, 3003),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 1004),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 3004),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 1005),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 3005),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3006),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 1007),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(498ull, 1008),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(498ull, 3008) };
+
+    Pre_Event_List< Way_Skeleton > pre_events;
+    std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > pre_event_refs;
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events =
+        { Way_Implicit_Pre_Event{ 492ull, 4002, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 493ull, 2003, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 493ull, 4003, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 494ull, 1004, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150001) },
+            Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 494ull, 2004, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 494ull, 4004, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 495ull, 2005, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 495ull, 4005, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 496ull, 1006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150001) },
+            Quad_Coord{ ll_upper_(51.25, 6.15), ll_lower(51.25, 6.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 496ull, 2006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 496ull, 4006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+            Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 497ull, 2007, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 497ull, 4007, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 9.15), ll_lower(51.25, 9.150001) },
+            Quad_Coord{ ll_upper_(51.25, 9.15), ll_lower(51.25, 9.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 498ull, 4008, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() } };
+    std::vector< Attic< Way_Skeleton::Id_Type > > undelete =
+        { Attic< Way_Skeleton::Id_Type >(Way_Skeleton::Id_Type(498u), 4008) };
+
+    bool all_ok = true;
+    Way_Meta_Updater::collect_meta_to_move(
+        current, attic,
+        ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
+        to_move, current_to_delete, attic_to_delete, current_to_add, attic_to_add);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::to_move")
+        (to_move);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::current_to_delete")
+        (current_to_delete);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::attic_to_delete")
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006))
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007))
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(498ull, 3008))
+        (attic_to_delete);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::current_to_add")
+        (current_to_add);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::attic_to_add")
+        (ll_upper_(51.25, 6.15), {
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 1004),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006) })
+        (ll_upper_(51.25, 8.15), {
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(492ull, 3002),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(493ull, 3003),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(494ull, 3004),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 1005),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 3005),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3006),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 1007),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(498ull, 3008) })
+        (ll_upper_(51.25, 9.15), { OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007) })
+        (attic_to_add);
+  }
 
   return 0;
 }
