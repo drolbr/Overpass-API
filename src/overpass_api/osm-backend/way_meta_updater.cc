@@ -12,9 +12,12 @@ namespace
       const std::vector< Way_Implicit_Pre_Event >& implicit_pre_events,
       std::vector< Way_Implicit_Pre_Event >::const_iterator& i_impl)
   {
+    // NB: The assertion that no implicit event can be before the earliest meta makes this loop inaccesible.
+    // It is only a mitigation measure for a potential bug.
     while (i_impl != implicit_pre_events.end() && i_impl->id == id && i_impl->begin < meta_timestamp)
       ++i_impl;
-    if (meta_timestamp < i_impl->begin)
+
+    if (i_impl == implicit_pre_events.end() || meta_timestamp < i_impl->begin)
     {
       --i_impl;
       if (i_pref != pre_event_refs.end() && i_pref->ref == id)
@@ -80,8 +83,11 @@ void Way_Meta_Updater::collect_meta_to_move(
     else
       id = i_attic->ref;
 
+    // NB: The assertion that for every implicit event there is a meta element makes this loop inaccesible.
+    // It is only a mitigation measure for a potential bug.
     while (i_impl != implicit_pre_events.end() && i_impl->id < id)
       ++i_impl;
+
     while (i_pref != pre_event_refs.end() && i_pref->ref < id)
       ++i_pref;
 

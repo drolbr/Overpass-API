@@ -1172,6 +1172,178 @@ int main(int argc, char* args[])
         (ll_upper_(51.25, 9.15), { OSM_Element_Metadata_Skeleton< Uint32_Index >(497ull, 3007) })
         (attic_to_add);
   }
+  {
+    std::cerr<<"\nAttic index does not carry over to current if a pre events blocks the non-synchronous object:\n";
+
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > to_move;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_to_delete;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_to_delete;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > current_to_add;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_to_add;
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current =
+        { OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 4006) };
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic =
+        { OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006) };
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries;
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3006)));
+    Pre_Event_List< Way_Skeleton > pre_events;
+    for (auto& i : entries)
+      pre_events.data.push_back(Pre_Event< Way_Skeleton >(i));
+    pre_events.data[0].timestamp_end = 4006;
+    std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > pre_event_refs =
+        { Pre_Event_Ref< Way_Skeleton::Id_Type >{ Uint32(496u), 3006ull, 0 } };
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events =
+        { Way_Implicit_Pre_Event{ 496ull, 2006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 496ull, 2106, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.1500011) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.1500021) } }, std::vector< Node::Id_Type >() } };
+    std::vector< Attic< Way_Skeleton::Id_Type > > undelete;
+
+    bool all_ok = true;
+    Way_Meta_Updater::collect_meta_to_move(
+        current, attic,
+        ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
+        to_move, current_to_delete, attic_to_delete, current_to_add, attic_to_add);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::to_move")
+        (to_move);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::current_to_delete")
+        (current_to_delete);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::attic_to_delete")
+        (attic_to_delete);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::current_to_add")
+        (current_to_add);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::attic_to_add")
+        (ll_upper_(51.25, 8.15), {
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006) })
+        (attic_to_add);
+  }
+  {
+    std::cerr<<"\nAttic index does not carry over to younger attic if a pre events blocks the non-synchronous object:\n";
+
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > to_move;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_to_delete;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_to_delete;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > current_to_add;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_to_add;
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic =
+        { OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 2006),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 5006) };
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries;
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006)));
+    entries.push_back(Data_By_Id< Way_Skeleton >::Entry(
+        ll_upper_(51.25, 7.15), Way_Skeleton(Uint32_Index(496u)),
+        OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 4006)));
+    Pre_Event_List< Way_Skeleton > pre_events;
+    for (auto& i : entries)
+      pre_events.data.push_back(Pre_Event< Way_Skeleton >(i));
+    pre_events.data[0].timestamp_end = 4006;
+    std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > pre_event_refs =
+        { Pre_Event_Ref< Way_Skeleton::Id_Type >{ Uint32(496u), 4006ull, 0 } };
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events =
+        { Way_Implicit_Pre_Event{ 496ull, 3006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }, std::vector< Node::Id_Type >() } };
+    std::vector< Attic< Way_Skeleton::Id_Type > > undelete;
+
+    bool all_ok = true;
+    Way_Meta_Updater::collect_meta_to_move(
+        current, attic,
+        ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
+        to_move, current_to_delete, attic_to_delete, current_to_add, attic_to_add);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::to_move")
+        (to_move);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::current_to_delete")
+        (current_to_delete);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::attic_to_delete")
+        (attic_to_delete);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::current_to_add")
+        (current_to_add);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::attic_to_add")
+        (ll_upper_(51.25, 8.15), {
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 2006) })
+        (attic_to_add);
+  }
+  {
+    std::cerr<<"\nEnsure that multiple undeletes are properly handled:\n";
+
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > to_move;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_to_delete;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_to_delete;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > current_to_add;
+    std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_to_add;
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current =
+        { OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 3005),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3006) };
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic =
+        { OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 1005),
+          OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 1006) };
+
+    Pre_Event_List< Way_Skeleton > pre_events;
+    std::vector< Pre_Event_Ref< Way_Skeleton::Id_Type > > pre_event_refs;
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events =
+        { Way_Implicit_Pre_Event{ 495ull, 4005, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.1500051) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.1500052) } }, std::vector< Node::Id_Type >() },
+          Way_Implicit_Pre_Event{ 496ull, 4006, std::vector< Quad_Coord >{
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.1500061) },
+            Quad_Coord{ ll_upper_(51.25, 8.15), ll_lower(51.25, 8.1500062) } }, std::vector< Node::Id_Type >() } };
+    std::vector< Attic< Way_Skeleton::Id_Type > > undelete =
+        { Attic< Way_Skeleton::Id_Type >(Way_Skeleton::Id_Type(495u), 2005),
+          Attic< Way_Skeleton::Id_Type >(Way_Skeleton::Id_Type(495u), 4005),
+          Attic< Way_Skeleton::Id_Type >(Way_Skeleton::Id_Type(496u), 2006),
+          Attic< Way_Skeleton::Id_Type >(Way_Skeleton::Id_Type(496u), 3006) };
+
+    bool all_ok = true;
+    Way_Meta_Updater::collect_meta_to_move(
+        current, attic,
+        ll_upper_(51.25, 7.15), pre_event_refs, pre_events, implicit_pre_events, undelete,
+        to_move, current_to_delete, attic_to_delete, current_to_add, attic_to_add);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::to_move")
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3006))
+        (to_move);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::current_to_delete")
+        (OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 3005))
+        (current_to_delete);
+    all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("collect_current_meta_to_move::attic_to_delete")
+        (attic_to_delete);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::current_to_add")
+        (ll_upper_(51.25, 8.15), {
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(495ull, 3005),
+            OSM_Element_Metadata_Skeleton< Uint32_Index >(496ull, 3006) })
+        (current_to_add);
+    all_ok &= Compare_Map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+        ("collect_current_meta_to_move::attic_to_add")
+        (attic_to_add);
+  }
 
   return 0;
 }
