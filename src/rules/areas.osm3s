@@ -168,6 +168,11 @@
     <has-kv k="area" v="no" modv="not"/>
   </query>
   <query type="way">
+    <has-kv k="power" v="plant"/>
+    <has-kv k="name"/>
+    <has-kv k="area" v="no" modv="not"/>
+  </query>
+  <query type="way">
     <has-kv k="power" v="generator"/>
     <has-kv k="name"/>
     <has-kv k="area" v="no" modv="not"/>
