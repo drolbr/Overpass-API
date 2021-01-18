@@ -195,3 +195,60 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
     ++i_cur;
   }
 }
+
+
+// Alternative Datenstruktur:
+// - vec< Way_SKeleton > aller referenzierten Way_Skeleton
+// - { id, vec({ timestamp_start, meta, Way_Skeleton* }) } als komplette Historie je Index
+// ggf. meta als Zeiger
+
+// Wann interessiere ich mich überhaupt für ein Way_Skeleton?
+// - Wenn es in pre_events vorkommt und timestamp_end später als die erste Version in pre_events liegt
+// - Wenn mindestens ein Node (aufgrund seiner Koordinate) ein Änderungsereignis hat, das früher als timestamp_end liegt
+// Sonderfall: Abgleich aller Ways mit ungeklärten Nodes (normalerweise null Ways), ob diese jetzt bekannt werden. In Index 0 abwickeln.
+
+// Hier bleibt Way_Implicit_Pre_Event als Struktur, um auf Alternative auf Event-Basis wechseln zu können.
+// Auch: komplette Bestandsobjekte speichern (bzw. reicht ohne Geometrie und Refs) für Löschvorgabe.
+
+// Zusammen mit undelete wird aus den gesammelten Attic< Way_Skeleton > und Way_Skeleton die Struktur belegt:
+// - erstes timestamp_start vorläufig auf timestamp_end des nächstälteren Attic< Way_Skeleton >, sonst 0
+// - timestamp_end wird timestamp_start des nächsten Nachfolgers. Abwesenheit des current führt zu einem Löschvermerk.
+// - meta ist vorläufig leer
+// Mit Meta wird:
+// - jedem Event das jüngste nicht echt jüngere Meta zugeordnet
+// - für die erste timestamp_start dann das Meta auf Basis wie oben der nächsten timestamp_start zugeordnet, wenn timestamp_start null ist
+
+// ...
+// Brainstorming: Einfluss der Komponenten:
+// current, attic, undelete: zusammen vec({ timestamp_end, Way_Skeleton* }). Kontrollieren, wann Objekte ausgewertet werden
+// implicit_events: { timestamp, Ref* }
+// pre_events: Zeiträume ausblenden. Zumeist wohl nur irgendwo in current. Als vec({ timestamp_start, _flag_begin }) plus vec({ timestamp_end, _flag_end }) einsortieren.
+// current_meta, attic_meta: nur ein timestamp relevant, und zwar das jüngste das nicht jünger als ältester current/attic ist
+
+// Fließband:
+// current, attic, undelete: zusammen vec({ timestamp_end, Way_Skeleton* }) sortieren
+
+// mit current_meta, attic_meta shiften zu vec({ timestamp_start, Way_Skeleton* })
+// pre_events einflechten: vec({ timestamp_start, Way_Skeleton* }). Fast immer genau 1 Eintrag. Null falls innerhalb von undelete. Zwei (mit separater timestamp_end, Way_Skeleton* wiederholt) falls strikt innerhalb von Objekt.
+// implicit_events einflechten: sortieren, Way_Skeleton* sweepen.
+
+// Kann gut aus pre_events nachbelegt werden: In den betreffenden Indexen ist ja bereits ein entsprechender Löschblock eingetragen.
+// process_way -> { timestamp_start, Way_Skeleton }: danach ggf. auf mehrere Index-Anteile verteilen.
+
+// Entwurf 2:
+
+
+std::set< Uint31_Index, std::vector< Way_Complete_Pre_Event > > compute_geometry(
+    const Moved_Coords& moved_coords,
+    const Pre_Event_List< Way_Skeleton >& pre_events,
+    const Way_Pre_Event_Refs& pre_event_refs)
+{
+  std::set< Uint31_Index, std::vector< Way_Complete_Pre_Event > > result;
+
+  for (const auto& i : pre_events.data)
+  {
+    ...
+  }
+
+  return result;
+}

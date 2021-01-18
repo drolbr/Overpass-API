@@ -56,4 +56,25 @@ namespace Way_Skeleton_Updater
 }
 
 
+struct Way_Complete_Pre_Event
+{
+  Way_Skeleton::Id_Type id;
+  std::vector< Quad_Coord > geometry;
+  std::vector< Node::Id_Type > nds;
+
+  OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
+  uint64_t timestamp_end;
+};
+
+
+namespace Way_Skeleton_Updater
+{
+  // Returns the pre events enhanced with their geometry and sorted by index
+  std::set< Uint31_Index, std::vector< Way_Complete_Pre_Event > > compute_geometry(
+      const Moved_Coords& moved_coords,
+      const Pre_Event_List< Way_Skeleton >& pre_events,
+      const Way_Pre_Event_Refs& pre_event_refs);
+}
+
+
 #endif

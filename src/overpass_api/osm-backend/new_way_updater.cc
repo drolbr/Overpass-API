@@ -86,6 +86,36 @@
 
 //template Pre_Event_Refs
 
+
+struct Way_Event
+{
+  uint64_t timestamp_start;
+  //uint64_t timestamp_end;
+  OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
+  Way_Skeleton* skel;
+};
+
+
+class Way_Event_Container
+{
+public:
+  std::vector< Way_Event > events;
+private:
+  std::list< Way_Skeleton > skel_storage;
+};
+
+
+struct Changed_Objects_In_An_Idx
+{
+  std::vector< Way_Skeleton > current_to_del;
+  std::vector< Attic< Way_Skeleton > > attic_to_del;
+  auto undeletes_to_del;
+  std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_meta_to_del;
+  std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_meta_to_del;
+  Way_Event_Container events;
+};
+
+
 void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 {
   //needs: id |-> (begin, new_pos, new_mult)+
@@ -135,78 +165,86 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 // 
 //   dyn_perf.reset(0);
 //   dyn_perf.reset(new Perflog_Tree("first pass by idx"));
+
+  map< Uint31_Index, Way_Event_Container > arrived_objects;
+
   for (auto i_idx : pre_event_refs_by_idx)
   {
     Uint31_Index working_idx = i_idx.first;
-    Node_Skeletons_Per_Idx& skels = skels_per_idx[working_idx];
+    auto& changes = changes_per_idx[working_idx];
 
+    //TODO: File_Handle needs implicit sort
     std::vector< Way_Skeleton > current_ways = ways_bin.obj_with_idx(working_idx);
     std::vector< Attic< Way_Skeleton > > attic_ways = ways_attic_bin.obj_with_idx(working_idx);
 
-    std::sort(current_ways.begin(), current_ways.end());
-    std::sort(attic_ways.begin(), attic_ways.end());
+// ad _Events_ ohne Meta: [ timestamp_end, Skel* ] eintragen, timestamp_start eintragen, ids_and_timestamps_of(), { timestamp_end, nullptr } spleißen, timestamp_start-Minimum setzen, { Id, timestamp_start, timestamp_end } erzwingen
+// ... Meta einflechten ...
+// move, da Anzahl auf 0 bis unendlich ändern kann
+// Lösch-Abschnitte mit neuen Objekten spleißen
 
-    //TODO: auch unveränderte Version behalten, damit Idx-Erkennung unten funktioniert
-    extract_relevant_current_and_attic(...);
+// extract_relevant(vec< Way_Skeleton > current, vec< Attic< Way_Skeleton > > attic, _Pre_Events_Per_Idx_, _Moved_Coords_) -> { vec< Way_Skeleton > current_to_touch, vec< Attic< Way_Skeleton > > attic_to_touch, _Events_ }
+    Way_Skeleton_Updater::extract_relevant_current_and_attic(
+        i_idx.second, moved_coords,
+        current_ways, attic_ways, changes.current_to_del, changes.attic_to_del, implicit_events);
+
+// extract_undeleted( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_), _Events_ ) -> { vec< Undeleted > undeleted_to_touch, _Events_ }
+    Update_Events_Preparer::extract_relevant_undeleted(
+        ids_and_timestamps_of(i_idx.second, implicit_events), ways_undeleted_bin.obj_with_idx(working_idx),
+        changes.undeletes_to_del, implicit_events);
 
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_meta =
         ways_meta_bin.obj_with_idx(working_idx);
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_meta =
         ways_attic_meta_bin.obj_with_idx(working_idx);
 
-    std::sort(current_meta.begin(), current_meta.end());
-    std::sort(attic_meta.begin(), attic_meta.end());
+// extract_meta( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_) ) -> { vec< Meta > current, vec< Meta > attic }
+    //TODO: changes.current_meta_to_del, changes.attic_meta_to_del
 
-    // require sorted implicit_pre_events
-    Update_Events_Preparer::extract_first_appearance(
-        i_idx.second, implicit_pre_events, current_meta, attic_meta).swap(skels.first_appearance);
-    Update_Events_Preparer::extract_relevant_undeleted(
-        i_idx.second, implicit_pre_events, ways_undeleted_bin.obj_with_idx(working_idx)).swap(skels.undeleted);
+// set_minimum_timestamps(vec< Meta > current, vec< Meta > attic, _Events_&)
+    Update_Events_Preparer::extract_first_appearance(current_meta, attic_meta, implicit_events);
 
-    std::sort(skels.undeleted.begin(), skels.undeleted.end());
-
-       //note: not relevant for found_implicit_pre_events
+// adapt_pre_event_list(vec< Meta > current, vec< Meta > attic, _Pre_Events_Per_Idx_&)
+    //note: not relevant for found_implicit_pre_events
     Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
     Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);
 
-    Update_Events_Preparer::prune_nonexistant_events(...);
-    Update_Events_Preparer::prune_nonexistant_events(...);
+// prune_nonexistant_events(_Pre_Events_Per_Idx_, _Events_&)
+    Update_Events_Preparer::prune_nonexistant_events(i_idx.second, implicit_events);
 
-    // collect_meta_to_move(current_to_delete[idx], current_to_add, attic_to_delete[idx], attic_to_add,
-    //     current_meta, attic_meta, current, attic, undeleted, i_idx.second, pre_events)
-    // per id, per timestamp
-    //   meta duplizieren oder verschieben, falls implicit_pre_event das attic teilüberdeckt bzw. überdeckt
-    //   (kann meta am Zielindex unerkannt doppeln)
-    //   (Pre_Events haben keinen Einfluss: falls implicit_pre_event existiert, hat es auch eine Nicht-Null-Lebensdauer, und unveränderte attics ziehen unverändertes Meta nach sich)
-    //   meta nach attic verschieben und current verschieben, falls
-    //   - implicit_pre_event das current teilüberdeckt und kein pre_event mit offenem Ende existiert
-    //   meta nach attic an zwei Idxe verschieben, falls
-    //   - implicit_pre_event das current teilüberdeckt und ein pre_event mit offenem Ende existiert
-    //   meta nach attic verschieben, falls ein pre_event mit offenem Ende existiert
-    //   ggf. Idx-Wechsel bei Vollüberdeckung
-    Way_Meta_Updater::collect_current_meta_to_move(
-        i_idx.second, pre_events, current_meta, ways_meta_to_move_to_attic[working_idx]);
+// assign_meta(vec< Meta > current, vec< Meta > attic, _Events_& )
+    auto events_with_meta = assign_meta(current_meta, attic_meta, implicit_events);
+// Ab hier mit integriertem Meta. Nicht früher, um die Funktion davor nicht zu verkomplizieren
 
-    //vec< Idx > target_idxs(implicit_pre_events::iter&, id, working_idx, timestamp_begin, timestamp_end);
-    //per current/attic_meta:
-    //  timestamp_begin = meta.time
-    //  while (current != end && current.id == meta.id)
-    //    while (attic != end && attic.id == meta.id && attic.time <= next(meta).time /* current bzw. offen ?!?*/)
-    //      while (undel != end && undel.id == meta.id && undel.time <= next(meta).time)
-    //          timestamp_begin = undel.time
-    //          ++undel
-    //      idxe = target_idxs(.., timestamp_begin, attic.time)
-    //      falls working_idx nicht dabei: to_delete_attic/to_delete_current
-    //      sonst für alle außer working_idx: to_add_attic
-    //      timestamp_begin = attic.time
-    //    wieder undel, target_idxs(.., NOW)
-    //    falls working_idx nicht dabei: to_delete_attic/to_delete_current
-    //    sonst für alle außer working_idx: to_add_attic (to_add_current?)
-    //target ..., current_meta, attic_meta, current, attic, undeleted
-
-    //Mit Einkürzen: (attic_meta, current_meta, X, implicit_pre_events)
-    //Alle implicit_events sind valide und für das Meta bis zum nächsten Meta zuständig
+// resolve_coord_events(_Events_) -> { _Events_, map< Idx, _Events_ > arrived_objects }
+    Way_Skeleton_Updater::resolve_coord_events(implicit_events, changes.events, arrived_objects);
+    //TODO
   }
+// Nach Schleife verfügbar: { _Pre_Events_, map< Idx, { current_to_touch, attic_to_touch, undelete_to_touch, current_meta_to_touch, attic_meta_to_touch, _Events_ } >, arrived_objects }
+
+// join_arrived_objects(map< Idx, _Events_ >, map< Idx, {..., _Events_ } >&)
+  join_arrived_objects(arrived_objects, changes_per_idx);
+// resolve_coord_events(_Pre_Events_, map< Idx, _Events_ >&)
+  Way_Skeleton_Updater::resolve_coord_events(moved_coords, pre_events, changes_per_idx);
+
+// Jetzt: map< Idx, {..., _Events_ } > enthält die vollständige zukünftige Struktur
+
+// vor update_meta: steht als Struktur für alle Idxe fertig bereit
+// - Sonderregel zum Meta für schlussendlich gelöschtes Objekt
+// current_meta gehört hierher genau dann, wenn letztes Way_Skeleton nicht null ist
+// - zusätzlich current_meta_to_delete_benötigt, kann Idx-lokal aus Bestand berechnet werden
+// alle attic_meta werden dedupliziert und nur dann nicht (erneut) angelegt, wenn sie sich gegen attic_meta_to_delete aufheben
+// - zusätzlich attic_meta_to_delete_benötigt, kann Idx-lokal aus Bestand berechnet werden
+// current gehört hierher genau dann, wenn letztes Way_Skeleton nicht null ist
+// - zusätzlich current_to_delete (für Gleichheit wohl nur Id) benötigt, kann Idx-lokal aus Bestand berechnet werden
+// alle attic werden dedupliziert und nur dann nicht (erneut) angelegt, wenn sie sich gegen attic_to_delete aufheben
+// - zusätzlich attic_to_delete benötigt, kann Idx-lokal aus Bestand berechnet werden
+// alle undelete werden dedupliziert und nur dann nicht (erneut) angelegt, wenn sie sich gegen undelete_to_delete aufheben
+// - zusätzlich undelete_to_delete benötigt, kann Idx-lokal aus Bestand berechnet werden
+
+
+  // Ansatz: aus pre_events die pre_events_per_computed_idx berechnen.
+  // Sind per Idx ein sortierter Container von { Elem, Meta, timestamp_end },
+  // wobei nur in wenigen Fällen mehr als ein Objekt entstehen wird.
 
   // Mechanismus für Meta:
   // - Pre_Events hat Vorrang, kann aber Löcher haben (selten)
@@ -234,7 +272,11 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
       // deduplizieren
   Meta_Updater::create_update_for_nodes_meta(
       pre_events, nodes_meta_to_move_to_attic, nodes_meta_to_add, nodes_attic_meta_to_add);
-// 
+  // ways_meta_to_add += meta of pre_events_per_computed_idx with timestamp_end == NOW ...
+  // ways_meta_to_delete += ways_to_move
+  // attic_ways_meta_to_add += ways_to_move + meta of pre_events_per_computed_idx with timestamp_end != NOW
+  // attic_ways_meta_to_delete already complete
+
 //   dyn_perf.reset(0);
 //   dyn_perf.reset(new Perflog_Tree("mapfile_io.compute_and_write_idx_lists"));
   // compute nodes_map, nodes_attic_map and nodes_idx_lists from pre_event_refs_by_idx, nodes_meta_to_add, and nodes_attic_meta_to_add

@@ -33,12 +33,12 @@ namespace Way_Meta_Updater
       std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >&
           attic_to_add);
   /* Assertions:
-   * to_move, to_delete, current_to_add, and attic_to_add get only elements added, and only those from current_meta.
-   * An element m is added to to_move or to_delete
+   * to_move, current_to_delete, current_to_add, and attic_to_add get only elements added, and only those from current_meta.
+   * An element m is added to to_move or current_to_delete
    * if there is an element e in pre_events with e.id == m.id and m.time <= e.begin
    * or if there is an element e in implicit_pre_events with e.id == m.id and m.time <= e.time
    * and for the latest such element the idx is different from working_idx.
-   * It goes to to_delete if there is at least one element e in implicit_pre_events with e.id == m.id
+   * It goes to current_to_delete if there is at least one element e in implicit_pre_events with e.id == m.id
    * but no element in implicit_pre_events with e.id == m.id, m.time <= e.time, and idx(e) == working_idx.
    * An element m is added to current_to_add[idx(e)] or attic_to_add[idx(e)]
    * if there is an element e with idx(e) != working_idx, e.id == m.id, and m.time <= e.time.
