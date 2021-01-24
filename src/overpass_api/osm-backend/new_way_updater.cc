@@ -166,7 +166,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 //   dyn_perf.reset(0);
 //   dyn_perf.reset(new Perflog_Tree("first pass by idx"));
 
-  map< Uint31_Index, Way_Event_Container > arrived_objects;
+  std::map< Uint31_Index, Way_Event_Container > arrived_objects;
 
   for (auto i_idx : pre_event_refs_by_idx)
   {
@@ -216,7 +216,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 // Ab hier mit integriertem Meta. Nicht früher, um die Funktion davor nicht zu verkomplizieren
 
 // resolve_coord_events(_Events_) -> { _Events_, map< Idx, _Events_ > arrived_objects }
-    Way_Skeleton_Updater::resolve_coord_events(implicit_events, changes.events, arrived_objects);
+    Way_Skeleton_Updater::resolve_coord_events(events_with_meta, changes.events, arrived_objects);
     //TODO
   }
 // Nach Schleife verfügbar: { _Pre_Events_, map< Idx, { current_to_touch, attic_to_touch, undelete_to_touch, current_meta_to_touch, attic_meta_to_touch, _Events_ } >, arrived_objects }
@@ -224,7 +224,8 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 // join_arrived_objects(map< Idx, _Events_ >, map< Idx, {..., _Events_ } >&)
   join_arrived_objects(arrived_objects, changes_per_idx);
 // resolve_coord_events(_Pre_Events_, map< Idx, _Events_ >&)
-  Way_Skeleton_Updater::resolve_coord_events(moved_coords, pre_events, changes_per_idx);
+  auto deletions;
+  Way_Skeleton_Updater::resolve_coord_events(moved_coords, pre_events, changes_per_idx, deletions);
 
 // Jetzt: map< Idx, {..., _Events_ } > enthält die vollständige zukünftige Struktur
 

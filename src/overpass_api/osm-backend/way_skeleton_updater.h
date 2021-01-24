@@ -10,18 +10,41 @@
 
 struct Way_Implicit_Pre_Event
 {
-  Way_Skeleton::Id_Type id;
-  uint64_t begin;
-  std::vector< Quad_Coord > geometry;
-  std::vector< Node::Id_Type > nds;
-
-  Way_Implicit_Pre_Event(const Way_Implicit_Pre_Event&) = default;
-  Way_Implicit_Pre_Event(Way_Implicit_Pre_Event&&) = default;
-
-  bool operator==(const Way_Implicit_Pre_Event& rhs) const
-  { return id == rhs.id && begin == rhs.begin && geometry == rhs.geometry
-      && nds == rhs.nds; }
+  Way_Skeleton base;
+  uint64_t not_before;
+  uint64_t before;
+  std::vector< std::pair< decltype(Way_Skeleton::geometry.size()), const Move_Coord_Event* > > pos_events;
 };
+
+
+struct Proto_Way
+{
+  Way_Skeleton base;
+  OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
+  uint64_t not_before;
+  uint64_t before;
+  std::vector< std::pair< decltype(Way_Skeleton::geometry.size()), const Move_Coord_Event* > > pos_events;
+};
+
+
+struct Way_Event
+{
+  Way_Skeleton skel;
+  OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
+  uint64_t not_before;
+  uint64_t before;
+};
+
+
+struct Way_Deletion
+{
+  OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
+  uint64_t not_before;
+  uint64_t before;
+};
+
+
+using Way_Event_Container = std::vector< Way_Event >;
 
 
 namespace Way_Skeleton_Updater
@@ -35,45 +58,42 @@ namespace Way_Skeleton_Updater
   void extract_relevant_current_and_attic(
       const Way_Pre_Event_Refs& pre_event_refs,
       const Moved_Coords& moved_coords,
-      std::vector< Way_Implicit_Pre_Event >& implicit_pre_events,
       const std::vector< const Way_Skeleton* >& current,
       const std::vector< const Attic< Way_Skeleton >* >& attic,
       std::vector< Way_Skeleton >& current_result,
-      std::vector< Attic< Way_Skeleton > >& attic_result);
+      std::vector< Attic< Way_Skeleton > >& attic_result,
+      std::vector< Way_Implicit_Pre_Event >& implicit_events);
   /* Assertions:
-   * - an object w is contained in current_result if and only
-   *   if an e in pre_event_refs exist with w.id == e.id or
-   *   for an object v with v.id == w.id at least one of the coordinates or nds of v appears in moved_coords
-   * - an object w is contained in attic_result if and only
-   *   if an e in pre_event_refs exist with w.id == e.id or
-   *   for an object v with v.id == w.id at least one of the coordinates or nds of v appears in moved_coords
-   * - an object p is contained in implicit_pre_events if and only
-   *   if there exists an object w in current_result or attic_result such that
-   *   p is the result of applying all events from moved_coords up to p.begin
-   *   and for p.begin there exists a relevant object m in moved_coords with m.timestamp == p.begin
-   *   or p.begin == v.end for an object v in attic_result with v.id == p.id
+   * ...
    */
-}
 
 
-struct Way_Complete_Pre_Event
-{
-  Way_Skeleton::Id_Type id;
-  std::vector< Quad_Coord > geometry;
-  std::vector< Node::Id_Type > nds;
+  // Resolves the base way skeletons against their events and distributes them to their proper indexes.
+  // Given that most objects are expected to go to the current index this gets a dedicated argument events_for_this_idx.
+  /* Precondition:
+   * proto_events contains for no id any objects of which the timestamps overlap.
+   * For every w in proto_events it is w.meta.timestamp <= w.not_before <= w.not_after.
+   * For every w in proto_events it is w.pos_events ordered by timestamp.
+   */
+  void resolve_coord_events(
+      Uint31_Index cur_idx,
+      const std::vector< Proto_Way >& proto_events,
+      Way_Event_Container& events_for_this_idx,
+      std::map< Uint31_Index, Way_Event_Container >& arrived_objects);
+  /* Assertions:
+   * ...
+   */
 
-  OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
-  uint64_t timestamp_end;
-};
 
-
-namespace Way_Skeleton_Updater
-{
-  // Returns the pre events enhanced with their geometry and sorted by index
-  std::set< Uint31_Index, std::vector< Way_Complete_Pre_Event > > compute_geometry(
-      const Moved_Coords& moved_coords,
+  // Resolves the way skeletons from pre_events against moved_coords and distributes them to their proper indexes.
+  void resolve_coord_events(
       const Pre_Event_List< Way_Skeleton >& pre_events,
-      const Way_Pre_Event_Refs& pre_event_refs);
+      const Moved_Coords& moved_coords,
+      std::map< Uint31_Index, Way_Event_Container >& changes_per_idx,
+      std::vector< Way_Deletion >& deletions);
+  /* Assertions:
+   * ...
+   */
 }
 
 
