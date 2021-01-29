@@ -44,7 +44,11 @@ struct Way_Deletion
 };
 
 
-using Way_Event_Container = std::vector< Way_Event >;
+struct Way_Event_Container
+{
+  std::vector< std::pair< Way_Skeleton::Id_Type, uint64_t > > unchanged_until_per_id;
+  std::vector< Way_Event > events;
+};
 
 
 namespace Way_Skeleton_Updater

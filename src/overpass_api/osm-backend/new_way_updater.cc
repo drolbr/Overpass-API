@@ -109,11 +109,337 @@ struct Changed_Objects_In_An_Idx
 {
   std::vector< Way_Skeleton > current_to_del;
   std::vector< Attic< Way_Skeleton > > attic_to_del;
-  auto undeletes_to_del;
+  std::vector< Attic< Way_Skeleton::Id_Type > > undeletes_to_del;
   std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_meta_to_del;
   std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_meta_to_del;
+  std::vector< Way_Skeleton::Id_Type > attic_meta_covers_unchanged;
+  std::vector< Way_Skeleton::Id_Type > current_meta_covers_unchanged;
+  std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
   Way_Event_Container events;
 };
+
+
+struct Way_Meta_Delta
+{
+  // Assertions: all sorted
+  // Ein Meta soll nachher exakt dann existieren, wenn
+  // - es bei einem nicht gelöschten Objekt vorkommt  oder
+  // - es echt früher als timestamp_per_id in seinem Index liegt (falsch)
+  // - es in deletions vorkommt und das letzte Meta vorher hier liegt (Problem!)
+  // Ok, wenn
+  // - nicht das erste Objekt dieser Id ~> Lücke zum vorherigen ist echte Lücke
+  // - meta.timestamp == obj.not_before
+  // Problem sonst, weil
+  // - existiert ein unverändertes Objekt mit Überlapp?
+  Way_Meta_Delta(...);
+
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+    current_to_add;
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+    current_to_delete;
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+    attic_to_add;
+  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > >
+    attic_to_delete;
+
+// Strategie 1: nach Id trennen, ggf. per Pointer
+/* Für jede Id:
+    store_first = id gibt es in meta_covers_unchanged
+    while (attic)
+    {
+      while (new < attic)
+      {
+        attic_add.push(new)
+        last_before = advance(new, new.metatime)
+        add_deletion_if_applicable(..)
+      }
+      if (new == attic)
+      {
+        last_before = advance(new, attic.metatime)
+        add_deletion_if_applicable(..)
+      }
+      else if (!store_first)
+        attic_del.push(attic)
+
+      store_first = false;
+      ++attic;
+    }
+    if (current)
+    {
+      while (new < current)
+      {
+        attic_add.push(new)
+        last_before = advance(new, new.metatime)
+        add_deletion_if_applicable(..)
+      }
+      if (new == current)
+      {
+        last_before = advance(new, current.metatime)
+        if (last_before == NOW)
+          ++new;
+        else
+        {
+          move_to_attic.push(current)
+          add_deletion_if_applicable(..)
+        }
+      }
+      else if (store_first)
+        move_to_attic.push(current)
+      else
+        current_del.push(current)
+    }
+    while (new)
+    {
+      last_before = advance(new, new.metatime)
+      if (last_before < NOW)
+      {
+        attic_add.push(new)
+        add_deletion_if_applicable(..)
+      }
+      else
+        current_add.push(new)
+    }
+
+
+  uint64_t advance(new&, ref_time)
+  {
+    while (new.metatime == ref_time)
+    {
+      last_before = new.before
+      ++new;
+    }
+    return last_before
+  }
+
+  add_deletion_if_applicable(deletion&, attic&, id, last_before)
+  {
+    while (deletion < last_before)
+      ++deletion;
+    if (deletion == last_before)
+    {
+      if (attic == deletion)
+        ++attic
+      else
+        attic_add.push(deletion)
+      ++deletion;
+    }
+  }
+    */
+
+// Strategie 2: wie unten
+/*
+  {
+    for (i : changes_per_idx)
+    {
+      if (i.meta == i.next.meta && i.before == i.next.not_before)
+        continue;
+
+      while (attic.(id, timestamp) < i.meta.(id, timestamp))
+      {
+        while (attic_meta_covers_unchanged < attic.id)
+          ++attic_meta_covers_unchanged;
+        if (attic_meta_covers_unchanged == attic.id)
+          ++attic_meta_covers_unchanged;
+        else
+          attic_to_delete.push(attic)
+        ++attic
+      }
+      while (current.(id, timestamp) < i.meta.(id, timestamp))
+      {
+        while (current_meta_covers_unchanged < current.id)
+          ++current_meta_covers_unchanged;
+        if (current_meta_covers_unchanged == current.id)
+        {
+          attic_to_add.push(current);
+          ++current_meta_covers_unchanged;
+        }
+        current_to_delete.push(current)
+        ++current
+      }
+
+      if (i.before < NOW)
+      {
+        if (i.meta == attic.meta)
+          ++attic
+        else
+          attic_to_add.push(i)
+
+        if (attic_meta_covers_unchanged == id)
+          ++attic_meta_covers_unchanged;
+        add_or_keep_deletion_if_applicable(deletion, attic, id, i.before)
+      }
+      else
+      {
+        if (i.meta == current.meta)
+          ++current
+        else
+          current_to_add.push(i)
+
+        if (current_meta_covers_unchanged == id)
+          ++current_meta_covers_unchanged;
+      }
+    }
+  }*/
+};
+
+
+struct Way_Skeleton_Delta
+{
+  /*Way_Skeleton_Updater(...)
+  {
+    for (i : changes_per_idx)
+    {
+      if (i.way == i.next.way && i.before == i.next.not_before)
+        continue;
+
+      while (attic.(id, timestamp) < i.(id, before))
+      {
+        attic_to_delete.push(attic)
+        ++attic
+      }
+      while (current.(id, timestamp) < i.(id, before))
+      {
+        current_to_delete.push(current)
+        ++current
+      }
+
+      if (i.before < NOW)
+      {
+        if (i.(id, before) == attic.(id, timestamp) && i.way == attic.way)
+          ++attic
+        else
+          attic_to_add.push(i)
+      }
+      else
+      {
+        if (i.way == current.way)
+          ++current
+        else
+          current_to_add.push(i)
+      }
+    }
+  }*/
+
+  std::vector< Way_Skeleton > current_to_delete;
+  std::vector< Way_Skeleton > current_to_add;
+  std::vector< Attic< Way_Skeleton > > attic_to_delete;
+  std::vector< Attic< Way_Skeleton > > attic_to_add;
+
+  /*Way_Skeleton_Updater(...)
+  {
+    for (i : changes_per_idx)
+    {
+      while (deleted_after_unchanged < i.id)
+        ++deleted_after_unchanged;
+
+      if ((i.prev.id == i.id && i.prev.before < i.not_before)
+          || deleted_after_unchanged == i.id)
+      {
+        while (undeleted.(id, timestamp) < i.(id, not_before))
+        {
+          undeletes_to_delete.push(undeleted)
+          ++undeleted;
+        }
+        if (undeleted.(id, timestamp) == i.(id, not_before))
+          ++undeleted
+        else
+          undeletes_to_add.push(i)
+
+        ++deleted_after_unchanged;
+      }
+    }
+  }*/
+
+  std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes_to_delete;
+  std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes_to_add;
+};
+
+
+void extract_meta(...)
+{
+  /*
+  {
+    for (i : events)
+    {
+      if (i.prev.id == i.id)
+        continue;
+
+      while (attic_meta.(id, timestamp) < i.(id, not_before))
+        ++attic_meta;
+      while (current_meta.(id, timestamp) < i.(id, not_before))
+        ++current_meta;
+
+      if (attic_meta.(id, timestamp) == i.(id, not_before))
+        ;
+      else if (current_meta.(id, timestamp) == i.(id, not_before))
+        ;
+      else if (current_meta.id == i.id)
+      {
+        --attic_meta;
+        if (attic_meta.id == i.id)
+          attic_meta_covers_unchanged.push(i.id);
+        else
+          ++attic_meta;
+      }
+      else
+      {
+        --current_meta;
+        if (current_meta.id == i.id)
+          current_meta_covers_unchanged.push(i.id);
+        else
+          ++current_meta;
+      }
+
+      if (i.not_before == 0)
+      {
+        if (attic_meta.id == i.id)
+          i.not_before = attic_meta.timestamp;
+        else if (current_meta.id == i.id)
+          i.not_before = current_meta.timestamp;
+      }
+
+      while (attic_meta.id == i.id)
+      {
+        attic_meta_to_del.push(attic_meta)
+        ++attic_meta;
+      }
+      while (current_meta.id == i.id)
+      {
+        current_meta_to_del.push(current_meta)
+        ++current_meta;
+      }
+    }
+  }
+   */
+}
+
+
+void extract_relevant_undeleted(
+    std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes,
+    Way_Event_Container& events,
+    std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes_to_del,
+    std::vector< Way_Skeleton::Id_Type >& deleted_after_unchanged)
+{
+  /*
+  {
+    for (i : events)
+    {
+      while (undeletes.(id, timestamp) <= i.(id, not_before))
+        ++undeletes;
+
+      if (undeletes.(id, timestamp) < i.(id, before))
+      {
+        if (i.prev.id < i.id)
+          deleted_after_unchanged.push(i.id);
+
+        i.not_before = undeletes.timestamp;
+        undeletes_to_del.push(undeletes);
+        ++undeletes;
+      }
+    }
+  }
+   */
+}
 
 
 void update_ways(Transaction& transaction, Data_From_Osc& new_data)
@@ -187,11 +513,6 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
         i_idx.second, moved_coords,
         current_ways, attic_ways, changes.current_to_del, changes.attic_to_del, implicit_events);
 
-// extract_undeleted( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_), _Events_ ) -> { vec< Undeleted > undeleted_to_touch, _Events_ }
-    Update_Events_Preparer::extract_relevant_undeleted(
-        ids_and_timestamps_of(i_idx.second, implicit_events), ways_undeleted_bin.obj_with_idx(working_idx),
-        changes.undeletes_to_del, implicit_events);
-
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_meta =
         ways_meta_bin.obj_with_idx(working_idx);
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_meta =
@@ -199,9 +520,14 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
 // extract_meta( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_) ) -> { vec< Meta > current, vec< Meta > attic }
     //TODO: changes.current_meta_to_del, changes.attic_meta_to_del
+//   std::vector< Way_Skeleton::Id_Type > attic_meta_covers_unchanged;
+//   std::vector< Way_Skeleton::Id_Type > current_meta_covers_unchanged;
 
-// set_minimum_timestamps(vec< Meta > current, vec< Meta > attic, _Events_&)
-    Update_Events_Preparer::extract_first_appearance(current_meta, attic_meta, implicit_events);
+// extract_undeleted( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_), _Events_ ) -> { vec< Undeleted > undeleted_to_touch, _Events_ }
+    /*Update_Events_Preparer*/::extract_relevant_undeleted(
+        ids_and_timestamps_of(i_idx.second, implicit_events), ways_undeleted_bin.obj_with_idx(working_idx),
+        changes.undeletes_to_del, implicit_events);
+//   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
 
 // adapt_pre_event_list(vec< Meta > current, vec< Meta > attic, _Pre_Events_Per_Idx_&)
     //note: not relevant for found_implicit_pre_events
@@ -226,6 +552,9 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 // resolve_coord_events(_Pre_Events_, map< Idx, _Events_ >&)
   auto deletions;
   Way_Skeleton_Updater::resolve_coord_events(moved_coords, pre_events, changes_per_idx, deletions);
+
+  Way_Meta_Delta meta_delta(
+      changes_per_idx, deletions, timestamps_per_id);
 
 // Jetzt: map< Idx, {..., _Events_ } > enthält die vollständige zukünftige Struktur
 

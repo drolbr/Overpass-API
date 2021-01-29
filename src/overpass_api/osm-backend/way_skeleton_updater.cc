@@ -135,9 +135,9 @@ void Way_Skeleton_Updater::resolve_coord_events(
       {
         Uint31_Index skel_idx = calc_index(cur.geometry);
         if (skel_idx == cur_idx)
-          events_for_this_idx.push_back(Way_Event{ cur, i.meta, timestamp, j.second->timestamp });
+          events_for_this_idx.events.push_back(Way_Event{ cur, i.meta, timestamp, j.second->timestamp });
         else
-          arrived_objects[skel_idx].push_back(Way_Event{ cur, i.meta, timestamp, j.second->timestamp });
+          arrived_objects[skel_idx].events.push_back(Way_Event{ cur, i.meta, timestamp, j.second->timestamp });
 
         timestamp = j.second->timestamp;
       }
@@ -165,9 +165,9 @@ void Way_Skeleton_Updater::resolve_coord_events(
 
     Uint31_Index skel_idx = calc_index(cur.geometry);
     if (skel_idx == cur_idx)
-      events_for_this_idx.push_back(Way_Event{ cur, i.meta, timestamp, i.before });
+      events_for_this_idx.events.push_back(Way_Event{ cur, i.meta, timestamp, i.before });
     else
-      arrived_objects[skel_idx].push_back(Way_Event{ cur, i.meta, timestamp, i.before });
+      arrived_objects[skel_idx].events.push_back(Way_Event{ cur, i.meta, timestamp, i.before });
   }
 }
 
@@ -193,7 +193,7 @@ void Way_Skeleton_Updater::resolve_coord_events(
         if (timestamp < j.second->timestamp)
         {
           Uint31_Index skel_idx = calc_index(cur.geometry);
-          changes_per_idx[skel_idx].push_back(Way_Event{ cur, i.entry->meta, timestamp, j.second->timestamp });
+          changes_per_idx[skel_idx].events.push_back(Way_Event{ cur, i.entry->meta, timestamp, j.second->timestamp });
 
           timestamp = j.second->timestamp;
         }
@@ -220,7 +220,7 @@ void Way_Skeleton_Updater::resolve_coord_events(
       }
 
       Uint31_Index skel_idx = calc_index(cur.geometry);
-      changes_per_idx[skel_idx].push_back(Way_Event{ cur, i.entry->meta, timestamp, i.timestamp_end });
+      changes_per_idx[skel_idx].events.push_back(Way_Event{ cur, i.entry->meta, timestamp, i.timestamp_end });
     }
   }
 }
