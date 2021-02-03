@@ -46,7 +46,6 @@ struct Way_Deletion
 
 struct Way_Event_Container
 {
-  std::vector< std::pair< Way_Skeleton::Id_Type, uint64_t > > unchanged_until_per_id;
   std::vector< Way_Event > events;
 };
 
@@ -98,6 +97,24 @@ namespace Way_Skeleton_Updater
   /* Assertions:
    * ...
    */
+
+
+  struct Way_Skeleton_Delta
+  {
+    // Computes from the events and existing objects the objects to write and remove
+    Way_Skeleton_Delta(
+        const std::vector< Way_Event >& events_for_this_idx,
+        const std::vector< const Way_Skeleton* >& current,
+        const std::vector< const Attic< Way_Skeleton >* >& attic);
+    /* Assertions:
+     * ...
+     */
+
+    std::vector< Way_Skeleton > current_to_delete;
+    std::vector< Way_Skeleton > current_to_add;
+    std::vector< Attic< Way_Skeleton > > attic_to_delete;
+    std::vector< Attic< Way_Skeleton > > attic_to_add;
+  };
 }
 
 

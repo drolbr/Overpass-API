@@ -90,7 +90,7 @@
 struct Way_Event
 {
   uint64_t timestamp_start;
-  //uint64_t timestamp_end;
+  uint64_t timestamp_end;
   OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
   Way_Skeleton* skel;
 };
@@ -439,6 +439,112 @@ void extract_relevant_undeleted(
     }
   }
    */
+}
+
+
+::prune_nonexistant_events(...)
+{
+    if (pre_events.empty)
+        return;
+    Way_Skeleton::Id_Type pre_id = pre_events.id;
+    uint64_t pre_from = pre_events.meta;
+    uint64_t pre_until = pre_events.timestamp_end;
+
+    auto result;
+    for (i = events; i < end; )
+    {
+        while (pre_id < i.id)
+        {
+            pre_id = pre_events.id;
+            pre_from = pre_events.meta;
+            pre_until = pre_events.timestamp_end;
+            ++pre_events;
+        }
+        while (pre_id == i.id && pre_until <= i.from)
+        {
+            pre_id = pre_events.id;
+            pre_from = pre_events.meta;
+            pre_until = pre_events.timestamp_end;
+            ++pre_events;
+        }
+        while (pre_events.id == pre_id && pre_events.meta == pre_until)
+        {
+            pre_until = pre_events.timestamp_end;
+            ++pre_events;
+        }
+
+        if (pre_id == i.id && i.from < pre_until && pre_from < i.until)
+        {
+            if (i.from <= pre_from)
+                result.push({ i, i.from, pre_from });
+            if (pre_until < i.until)
+                i.from = pre_until;
+            else
+                ++i;
+        }
+        else
+        {
+            result.push(i);
+            ++i;
+        }
+    }
+    events.swap(result);
+}
+
+
+::assign_meta(...)
+{
+    auto meta_ptr = 0;
+    for (i = events; i < end; )
+    {
+        while (attic.id < i.id)
+            ++attic;
+        if (!meta_ptr && attic.id == i.id)
+        {
+            meta_ptr = attic;
+            ++attic;
+        }
+        while (attic.id == i.id && attic.timestamp <= i.begin)
+        {
+            meta_ptr = attic;
+            ++attic;
+        }
+
+        if (attic.id == i.id)
+            meta_until = attic.timestamp;
+        else
+        {
+            meta_until = NOW;
+            while (current.id < i.id)
+                ++current;
+            if (current.id == i.id && current.timestamp <= i.begin)
+                meta_ptr = current;
+        }
+
+        if (meta_ptr.id == i.id)
+        {
+            if (i.begin < meta_ptr.timestamp && meta_ptr.timestamp < i.end)
+            {
+                result.push({i, i.begin, meta_ptr.timestamp, 0});
+                i.begin = meta_ptr.timestamp;
+            }
+            if (i.end <= meta_until)
+            {
+                result.push({i, meta_ptr});
+                ++i;
+            }
+            else
+            {
+                result.push({i, i.begin, meta_until, meta_ptr});
+                i.begin = meta_until;
+            }
+        }
+        else
+        {
+            result.push({i, 0});
+            ++i;
+        }
+    }
 }
 
 

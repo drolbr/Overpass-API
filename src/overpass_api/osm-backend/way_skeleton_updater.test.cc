@@ -15,27 +15,38 @@ std::vector< const Object* > refs_of(const std::vector< Object >& arg)
 
 int main(int argc, char* args[])
 {
-//   {
-//     std::cerr<<"\nTest empty input:\n";
-// 
-//     Moved_Coords moved_coords;
-//     Way_Pre_Event_Refs pre_event_refs;
-// 
-//     std::vector< Way_Implicit_Pre_Event > implicit_pre_events;
-//     std::vector< Way_Skeleton > current_result;
-//     std::vector< Attic< Way_Skeleton > > attic_result;
-//     Way_Skeleton_Updater::extract_relevant_current_and_attic(
-//         pre_event_refs, moved_coords, implicit_pre_events,
-//         std::vector< const Way_Skeleton* >(), std::vector< const Attic< Way_Skeleton >* >(),
-//         current_result, attic_result);
-//     bool all_ok = true;
-//     all_ok &= Compare_Vector< Way_Skeleton >("current_result")
-//         (current_result);
-//     all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
-//         (attic_result);
-//     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
-//         (implicit_pre_events);
-//   }
+  {
+    std::cerr<<"\nTest empty input:\n";
+
+    // Moved_Coords moved_coords;
+    // Way_Pre_Event_Refs pre_event_refs;
+
+    // std::vector< Way_Implicit_Pre_Event > implicit_pre_events;
+    // std::vector< Way_Skeleton > current_result;
+    // std::vector< Attic< Way_Skeleton > > attic_result;
+    // Way_Skeleton_Updater::extract_relevant_current_and_attic(
+        // pre_event_refs, moved_coords, implicit_pre_events,
+        // std::vector< const Way_Skeleton* >(), std::vector< const Attic< Way_Skeleton >* >(),
+        // current_result, attic_result);
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        std::vector< Way_Event >{},
+        std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    // all_ok &= Compare_Vector< Way_Skeleton >("current_result")
+        // (current_result);
+    // all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
+        // (attic_result);
+    // all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
+        // (implicit_pre_events);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (delta.current_to_add);
+  }
 //   {
 //     std::cerr<<"\nTest irrelevant current way:\n";
 // 
@@ -805,6 +816,341 @@ int main(int argc, char* args[])
 //             std::vector< Node::Id_Type >() })
 //         (implicit_pre_events);
 //   }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test that obsolete current objects are deleted:\n";
+
+    Way_Skeleton way{496u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}};
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        std::vector< Way_Event >{},
+        std::vector< const Way_Skeleton* >{1, &way}, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (way)
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test that obsolete attic objects are deleted:\n";
+
+    Attic< Way_Skeleton > way{Way_Skeleton{496u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}}, 1000};
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        std::vector< Way_Event >{},
+        std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{1, &way});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (way)
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test that a single current event is processed:\n";
+
+    Way_Skeleton way{496u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}};
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        { Way_Event{ way,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, NOW } },
+        std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (way)
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test that multiple current events are processed:\n";
+
+    Way_Skeleton way4{494u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}};
+    Way_Skeleton way5{495u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}};
+    Way_Skeleton way6{496u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}};
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        { Way_Event{ way4,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, NOW },
+          Way_Event{ way5,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, NOW },
+          Way_Event{ way6,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, NOW } },
+        std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (way4)
+        (way5)
+        (way6)
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test that a single attic event is processed:\n";
+
+    Attic< Way_Skeleton > way{ Way_Skeleton{496u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}}, 2000 };
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        { Way_Event{ way,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, 2000 } },
+        std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (way)
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test that multiple attic events are processed:\n";
+
+    Attic< Way_Skeleton > way4{ Way_Skeleton{494u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}}, 2004 };
+    Attic< Way_Skeleton > way5{ Way_Skeleton{495u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}}, 2005 };
+    Attic< Way_Skeleton > way6{ Way_Skeleton{496u, std::vector< Node::Id_Type >{}, std::vector< Quad_Coord >{}}, 2006 };
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        { Way_Event{ way4,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1004, 2004 },
+          Way_Event{ way5,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1005, 2005 },
+          Way_Event{ way6,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1006, 2006 } },
+        std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (way4)
+        (way5)
+        (way6)
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test various object conflation patterns:\n";
+
+    Attic< Way_Skeleton > way41{ Way_Skeleton{494u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500041) } } }, 3004 };
+    Way_Skeleton way42{494u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500042) } } };
+    Attic< Way_Skeleton > way51{ Way_Skeleton{495u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500051) } } }, 2005 };
+    Way_Skeleton way52{495u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500052) } } };
+    Attic< Way_Skeleton > way61{ Way_Skeleton{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500061) } } }, 2006 };
+    Attic< Way_Skeleton > way62{ Way_Skeleton{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500062) } } }, 3006 };
+    Way_Skeleton way63{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500063) } } };
+    Attic< Way_Skeleton > way71{ Way_Skeleton{497u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150007) } } }, 2007 };
+    Attic< Way_Skeleton > way72{ Way_Skeleton{497u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150007) } } }, 4007 };
+    Attic< Way_Skeleton > way81{ Way_Skeleton{498u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150008) } } }, 2008 };
+    Way_Skeleton way82{498u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150008) } } };
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        { Way_Event{ way41,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1004, 2004 },
+          Way_Event{ way41,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 2004, 3004 },
+          Way_Event{ way42,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3004, NOW },
+          Way_Event{ way51,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1005, 2005 },
+          Way_Event{ way52,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 2005, 3005 },
+          Way_Event{ way52,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3005, NOW },
+          Way_Event{ way61,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1006, 2006 },
+          Way_Event{ way62,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 2006, 3006 },
+          Way_Event{ way63,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3006, NOW },
+          Way_Event{ way71,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1007, 2007 },
+          Way_Event{ way72,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3007, 4007 },
+          Way_Event{ way81,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1008, 2008 },
+          Way_Event{ way82,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3008, NOW } },
+        std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (way41)
+        (way51)
+        (way61)
+        (way62)
+        (way71)
+        (way72)
+        (way81)
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (way42)
+        (way52)
+        (way63)
+        (way82)
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test that matching attics cancel out:\n";
+
+    Attic< Way_Skeleton > way41{ Way_Skeleton{494u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500041) } } }, 3004 };
+    Way_Skeleton way42{494u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500042) } } };
+    Attic< Way_Skeleton > way51{ Way_Skeleton{495u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500051) } } }, 2005 };
+    Attic< Way_Skeleton > way53{ Way_Skeleton{495u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500053) } } }, 2505 };
+    Way_Skeleton way52{495u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500052) } } };
+    Attic< Way_Skeleton > way61{ Way_Skeleton{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500061) } } }, 2006 };
+    Attic< Way_Skeleton > way64{ Way_Skeleton{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500062) } } }, 2506 };
+    Attic< Way_Skeleton > way62{ Way_Skeleton{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500062) } } }, 3006 };
+    Way_Skeleton way63{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500063) } } };
+    Attic< Way_Skeleton > way71{ Way_Skeleton{497u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150007) } } }, 2007 };
+    Attic< Way_Skeleton > way72{ Way_Skeleton{497u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150007) } } }, 4007 };
+    Attic< Way_Skeleton > way81{ Way_Skeleton{498u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150008) } } }, 2008 };
+    Way_Skeleton way82{498u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150008) } } };
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        { Way_Event{ way41,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1004, 2004 },
+          Way_Event{ way41,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 2004, 3004 },
+          Way_Event{ way42,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3004, NOW },
+          Way_Event{ way51,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1005, 2005 },
+          Way_Event{ way52,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 2005, 3005 },
+          Way_Event{ way52,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3005, NOW },
+          Way_Event{ way61,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1006, 2006 },
+          Way_Event{ way62,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 2006, 3006 },
+          Way_Event{ way63,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3006, NOW },
+          Way_Event{ way71,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1007, 2007 },
+          Way_Event{ way72,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3007, 4007 },
+          Way_Event{ way81,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1008, 2008 },
+          Way_Event{ way82,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 3008, NOW } },
+        std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{
+            &way51, &way53, &way64, &way71 });
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (way53)
+        (way64)
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (way41)
+        (way61)
+        (way62)
+        (way72)
+        (way81)
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (way42)
+        (way52)
+        (way63)
+        (way82)
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test that matching currents cancel out:\n";
+
+    Way_Skeleton way4{494u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150004) } }};
+    Way_Skeleton way5{495u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150005) } }};
+    Way_Skeleton way6{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006) } }};
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        { Way_Event{ way4,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, NOW },
+          Way_Event{ way5,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, NOW },
+          Way_Event{ way6,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, NOW } },
+        std::vector< const Way_Skeleton* >{ &way4, &way6 }, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (way5)
+        (delta.current_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Skeleton_Delta: Test the usual move from current to attic:\n";
+
+    Attic< Way_Skeleton > way1{ Way_Skeleton{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500061) } }}, 2000 };
+    Way_Skeleton way2{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500062) } }};
+    Way_Skeleton_Updater::Way_Skeleton_Delta delta(
+        { Way_Event{ way1,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 1000, 2000 },
+          Way_Event{ way2,
+            OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{}, 2000, NOW } },
+        std::vector< const Way_Skeleton* >{ &way1 }, std::vector< const Attic< Way_Skeleton >* >{});
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
+        (way1)
+        (delta.attic_to_add);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_delete")
+        (way1)
+        (delta.current_to_delete);
+    all_ok &= Compare_Vector< Way_Skeleton >("Way_Skeleton_Delta::current_to_add")
+        (way2)
+        (delta.current_to_add);
+  }
 
   return 0;
 }
