@@ -101,7 +101,7 @@ namespace Way_Skeleton_Updater
 
   struct Way_Skeleton_Delta
   {
-    // Computes from the events and existing objects the objects to write and remove
+    // Computes from the events and existing objects the skeletons to write and remove
     Way_Skeleton_Delta(
         const std::vector< Way_Event >& events_for_this_idx,
         const std::vector< const Way_Skeleton* >& current,
@@ -114,6 +114,22 @@ namespace Way_Skeleton_Updater
     std::vector< Way_Skeleton > current_to_add;
     std::vector< Attic< Way_Skeleton > > attic_to_delete;
     std::vector< Attic< Way_Skeleton > > attic_to_add;
+  };
+
+
+  struct Way_Undelete_Delta
+  {
+    // Computes from the events and existing objects the undeletes to write and remove
+    Way_Undelete_Delta(
+        const std::vector< Way_Event >& events_for_this_idx,
+        const std::vector< Attic< Way_Skeleton::Id_Type > >& existing,
+        const std::vector< Way_Skeleton::Id_Type >& deleted_after_unchanged);
+    /* Assertions:
+     * ...
+     */
+
+    std::vector< Attic< Way_Skeleton::Id_Type > > undeletes_to_delete;
+    std::vector< Attic< Way_Skeleton::Id_Type > > undeletes_to_add;
   };
 }
 
