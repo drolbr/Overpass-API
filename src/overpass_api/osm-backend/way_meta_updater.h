@@ -44,6 +44,26 @@ namespace Way_Meta_Updater
    * if there is an element e with idx(e) != working_idx, e.id == m.id, and m.time <= e.time.
    * It goes to current_to_add[idx(e)] if this is the latest such element, otherwise to attic_to_add[idx(e)].
    */
+
+
+  struct Way_Meta_Delta
+  {
+    Way_Meta_Delta(
+        const std::vector< Way_Event >& events_for_this_idx,
+        const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
+        const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
+        const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions,
+        const std::vector< Way_Skeleton::Id_Type >& current_meta_covers_unchanged,
+        const std::vector< Way_Skeleton::Id_Type >& attic_meta_covers_unchanged);
+    /* Assertions:
+     * ...
+     */
+
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_to_add;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_to_delete;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_to_add;
+    std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_to_delete;
+  };
 }
 
 

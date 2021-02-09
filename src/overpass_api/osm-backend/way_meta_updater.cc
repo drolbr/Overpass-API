@@ -216,3 +216,103 @@ void Way_Meta_Updater::collect_meta_to_move(
 //     }
 //   }
 }
+
+
+namespace
+{
+  bool way_meta_equal(const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >& lhs, const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >& rhs)
+  {
+    return lhs.ref == rhs.ref && lhs.timestamp == rhs.timestamp && lhs.version == rhs.version;
+  }
+
+
+  void sync_and_compare(
+      std::vector< Way_Skeleton::Id_Type >::const_iterator& covers_it,
+      const std::vector< Way_Skeleton::Id_Type >::const_iterator& covers_end,
+      std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator& it,
+      std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& to_delete)
+  {
+    while (covers_it != covers_end && *covers_it < it->ref)
+      ++covers_it;
+    if (covers_it != covers_end && *covers_it == it->ref)
+      ++covers_it;
+    else
+      to_delete.insert(*it);
+    ++it;
+  }
+}
+
+
+Way_Meta_Updater::Way_Meta_Delta::Way_Meta_Delta(
+    const std::vector< Way_Event >& events_for_this_idx,
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions,
+    const std::vector< Way_Skeleton::Id_Type >& current_meta_covers_unchanged,
+    const std::vector< Way_Skeleton::Id_Type >& attic_meta_covers_unchanged)
+{
+  auto attic_it = existing_attic_meta.begin();
+  auto current_it = existing_current_meta.begin();
+  auto deletion_it = deletions.begin();
+  auto attic_covers_it = attic_meta_covers_unchanged.begin();
+  auto current_covers_it = current_meta_covers_unchanged.begin();
+
+  for (auto it = events_for_this_idx.begin(); it != events_for_this_idx.end(); ++it)
+  {
+    if (it+1 != events_for_this_idx.end() && way_meta_equal(it->meta, (it+1)->meta))
+      continue;
+
+    while (attic_it != existing_attic_meta.end() && (
+        attic_it->ref < it->meta.ref || (
+            attic_it->ref == it->meta.ref && attic_it->timestamp < it->meta.timestamp)))
+      sync_and_compare(attic_covers_it, attic_meta_covers_unchanged.end(), attic_it, attic_to_delete);
+    while (current_it != existing_current_meta.end() && current_it->ref < it->meta.ref)
+      sync_and_compare(current_covers_it, current_meta_covers_unchanged.end(), current_it, current_to_delete);
+
+    if (it->before < NOW)
+    {
+      if (attic_it != existing_attic_meta.end() && way_meta_equal(*attic_it, it->meta))
+        ++attic_it;
+      else
+      {
+        if (current_it != existing_current_meta.end() && way_meta_equal(*current_it, it->meta))
+        {
+          current_to_delete.insert(*current_it);
+          ++current_it;
+        }
+        attic_to_add.insert(it->meta);
+      }
+
+      if (attic_covers_it != attic_meta_covers_unchanged.end()
+          && *attic_covers_it == it->meta.ref)
+        ++attic_covers_it;
+
+      while (deletion_it != deletions.end() && deletion_it->timestamp < it->before)
+        ++deletion_it;
+      if (deletion_it != deletions.end() && deletion_it->timestamp == it->before)
+      {
+        if (attic_it != existing_attic_meta.end() && way_meta_equal(*attic_it, *deletion_it))
+          ++attic_it;
+        else
+          attic_to_add.insert(*deletion_it);
+        ++deletion_it;
+      }
+    }
+    else
+    {
+      if (current_it != existing_current_meta.end() && way_meta_equal(*current_it, it->meta))
+        ++current_it;
+      else
+        current_to_add.insert(it->meta);
+
+      if (current_covers_it != current_meta_covers_unchanged.end()
+          && *current_covers_it == it->meta.ref)
+        ++current_covers_it;
+    }
+  }
+
+  while (attic_it != existing_attic_meta.end())
+    sync_and_compare(attic_covers_it, attic_meta_covers_unchanged.end(), attic_it, attic_to_delete);
+  while (current_it != existing_current_meta.end())
+    sync_and_compare(current_covers_it, current_meta_covers_unchanged.end(), current_it, current_to_delete);
+}
