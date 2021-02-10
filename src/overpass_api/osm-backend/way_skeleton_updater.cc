@@ -175,8 +175,8 @@ void Way_Skeleton_Updater::resolve_coord_events(
 void Way_Skeleton_Updater::resolve_coord_events(
     const Pre_Event_List< Way_Skeleton >& pre_events,
     const Moved_Coords& moved_coords,
-    std::map< Uint31_Index, Way_Event_Container >& changes_per_idx,
-    std::vector< Way_Deletion >& deletions)
+    std::map< Uint31_Index, std::vector< Way_Event > >& changes_per_idx,
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions)
 {
   for (const auto& i : pre_events.data)
   {
@@ -184,7 +184,7 @@ void Way_Skeleton_Updater::resolve_coord_events(
     uint64_t timestamp = i.entry->meta.timestamp;
 
     if (cur.id == Way_Skeleton::Id_Type(0u))
-      deletions.push_back(Way_Deletion{ i.entry->meta, timestamp, i.timestamp_end });
+      deletions.push_back(i.entry->meta);
     else
     {
       auto pos_events = process_way(i.entry->elem, moved_coords, i.timestamp_end);
@@ -193,7 +193,7 @@ void Way_Skeleton_Updater::resolve_coord_events(
         if (timestamp < j.second->timestamp)
         {
           Uint31_Index skel_idx = calc_index(cur.geometry);
-          changes_per_idx[skel_idx].events.push_back(Way_Event{ cur, i.entry->meta, timestamp, j.second->timestamp });
+          changes_per_idx[skel_idx].push_back(Way_Event{ cur, i.entry->meta, timestamp, j.second->timestamp });
 
           timestamp = j.second->timestamp;
         }
@@ -220,7 +220,7 @@ void Way_Skeleton_Updater::resolve_coord_events(
       }
 
       Uint31_Index skel_idx = calc_index(cur.geometry);
-      changes_per_idx[skel_idx].events.push_back(Way_Event{ cur, i.entry->meta, timestamp, i.timestamp_end });
+      changes_per_idx[skel_idx].push_back(Way_Event{ cur, i.entry->meta, timestamp, i.timestamp_end });
     }
   }
 }

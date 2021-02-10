@@ -363,7 +363,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 //   dyn_perf.reset(new Perflog_Tree("first pass by idx"));
 
   std::map< Uint31_Index, Way_Event_Container > arrived_objects;
-  auto deletions;
+  std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
 
   for (auto i_idx : pre_event_refs_by_idx)
   {
@@ -417,9 +417,11 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
   }
 
 // join_arrived_objects(map< Idx, _Events_ >, map< Idx, {..., _Events_ } >&)
-  join_arrived_objects(arrived_objects, changes_per_idx);
+  merge_values(arrived_objects, changes_per_idx);
 
-  Way_Skeleton_Updater::resolve_coord_events(pre_events, moved_coords, changes_per_idx, deletions);
+  std::map< Uint31_Index, Way_Event_Container > pre_event_changes;
+  Way_Skeleton_Updater::resolve_coord_events(pre_events, moved_coords, pre_event_changes, deletions);
+  merge_values(pre_event_changes, changes_per_idx);
   std::sort(deletions.begin(), deletions.end());
 
   //TODO: idx_mapfile

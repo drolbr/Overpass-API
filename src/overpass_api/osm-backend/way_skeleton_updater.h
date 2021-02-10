@@ -92,8 +92,8 @@ namespace Way_Skeleton_Updater
   void resolve_coord_events(
       const Pre_Event_List< Way_Skeleton >& pre_events,
       const Moved_Coords& moved_coords,
-      std::map< Uint31_Index, Way_Event_Container >& changes_per_idx,
-      std::vector< Way_Deletion >& deletions);
+      std::map< Uint31_Index, std::vector< Way_Event > >& changes_per_idx,
+      std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions);
   /* Assertions:
    * ...
    */

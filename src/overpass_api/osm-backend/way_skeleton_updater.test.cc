@@ -13,6 +13,36 @@ std::vector< const Object* > refs_of(const std::vector< Object >& arg)
 }
 
 
+bool operator==(const Way_Event& lhs, const Way_Event& rhs)
+{
+  return lhs.skel == rhs.skel && lhs.meta == rhs.meta
+      && lhs.not_before == rhs.not_before && lhs.before == rhs.before;
+}
+
+
+OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > make_way_meta(
+    Way_Skeleton::Id_Type id, uint32 version, uint64 timestamp, uint32 changeset, uint32 user_id)
+{
+    OSM_Element_Metadata meta;
+    meta.version = version;
+    meta.timestamp = timestamp;
+    meta.changeset = changeset;
+    meta.user_id = user_id;
+    return OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{ id, meta };
+}
+
+
+Way_Event make_way_event(
+    const Way_Skeleton& way, uint64_t not_before, uint64_t before,
+    uint32 version, uint64 timestamp, uint32 changeset, uint32 user_id)
+{
+    return Way_Event{
+        way,
+        make_way_meta(way.id, version, timestamp, changeset, user_id),
+        not_before, before };
+}
+
+
 int main(int argc, char* args[])
 {
   {
@@ -28,6 +58,12 @@ int main(int argc, char* args[])
         // pre_event_refs, moved_coords, implicit_pre_events,
         // std::vector< const Way_Skeleton* >(), std::vector< const Attic< Way_Skeleton >* >(),
         // current_result, attic_result);
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >(), Moved_Coords{},
+        changes_per_idx, deletions);
+
     Way_Skeleton_Updater::Way_Skeleton_Delta skel_delta(
         std::vector< Way_Event >{},
         std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{});
@@ -41,6 +77,11 @@ int main(int argc, char* args[])
         // (attic_result);
     // all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
         // (implicit_pre_events);
+    all_ok &= Compare_Map< Uint31_Index, std::vector< Way_Event > >("resolve_coord_events::changes_per_idx")
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+
     all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_delete")
         (skel_delta.attic_to_delete);
     all_ok &= Compare_Vector< Attic< Way_Skeleton > >("Way_Skeleton_Delta::attic_to_add")
@@ -823,6 +864,36 @@ int main(int argc, char* args[])
 //             std::vector< Node::Id_Type >() })
 //         (implicit_pre_events);
 //   }
+  {
+    std::cerr<<"\nTest with a single pre_event:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, std::vector< Way_Event > >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 1000, NOW, 1, 1000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
   {
     std::cerr<<"\nWay_Skeleton_Delta: Test that obsolete current objects are deleted:\n";
 
