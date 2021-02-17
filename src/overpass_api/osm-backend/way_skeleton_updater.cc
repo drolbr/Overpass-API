@@ -172,6 +172,20 @@ void Way_Skeleton_Updater::resolve_coord_events(
 }
 
 
+namespace
+{
+  void clear_if_all_zero(std::vector< Node_Skeleton::Id_Type >& nds)
+  {
+    for (auto i : nds)
+    {
+      if (i.val())
+        return;
+    }
+    nds.clear();
+  }
+}
+
+
 void Way_Skeleton_Updater::resolve_coord_events(
     const Pre_Event_List< Way_Skeleton >& pre_events,
     const Moved_Coords& moved_coords,
@@ -187,11 +201,12 @@ void Way_Skeleton_Updater::resolve_coord_events(
       deletions.push_back(i.entry->meta);
     else
     {
-      auto pos_events = process_way(i.entry->elem, moved_coords, i.timestamp_end);
+      auto pos_events = process_way(cur, moved_coords, i.timestamp_end);
       for (auto j : pos_events)
       {
         if (timestamp < j.second->timestamp)
         {
+          clear_if_all_zero(cur.nds);
           Uint31_Index skel_idx = calc_index(cur.geometry);
           changes_per_idx[skel_idx].push_back(Way_Event{ cur, i.entry->meta, timestamp, j.second->timestamp });
 
@@ -219,6 +234,7 @@ void Way_Skeleton_Updater::resolve_coord_events(
           cur.nds[j.first] = 0ull;
       }
 
+      clear_if_all_zero(cur.nds);
       Uint31_Index skel_idx = calc_index(cur.geometry);
       changes_per_idx[skel_idx].push_back(Way_Event{ cur, i.entry->meta, timestamp, i.timestamp_end });
     }

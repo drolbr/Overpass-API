@@ -15,8 +15,8 @@ std::vector< const Object* > refs_of(const std::vector< Object >& arg)
 
 bool operator==(const Way_Event& lhs, const Way_Event& rhs)
 {
-  return lhs.skel == rhs.skel && lhs.meta == rhs.meta
-      && lhs.not_before == rhs.not_before && lhs.before == rhs.before;
+  return lhs.skel == rhs.skel && lhs.skel.nds == rhs.skel.nds && lhs.skel.geometry == rhs.skel.geometry
+      && lhs.meta == rhs.meta && lhs.not_before == rhs.not_before && lhs.before == rhs.before;
 }
 
 
@@ -884,7 +884,7 @@ int main(int argc, char* args[])
         moved_coords, changes_per_idx, deletions);
 
     bool all_ok = true;
-    all_ok &= Compare_Map< Uint31_Index, std::vector< Way_Event > >("resolve_coord_events::changes_per_idx")
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
         (ll_upper_(51.25, 7.15), {
             make_way_event(Way_Skeleton{ 496u, {}, {
                 { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
@@ -894,6 +894,540 @@ int main(int argc, char* args[])
     all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
         (deletions);
   }
+  {
+    std::cerr<<"\nTest with a single pre_event and earlier node events:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 3000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496002ull, 2000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 3000, NOW, 1, 3000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest with a single pre_event and later node events:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002, 496003 }, std::vector< Quad_Coord >(3) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496001ull, 2000, false, 0, true, ll_lower(51.25, 7.1500011), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false },
+        Node_Event{ 496002ull, 3000, false, 0, true, ll_lower(51.25, 7.1500021), false },
+        Node_Event{ 496003ull, 1000, false, 0, true, ll_lower(51.25, 7.150003), false },
+        Node_Event{ 496003ull, 2000, false, 0, true, ll_lower(51.25, 7.1500031), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150003) } }
+                }, 1000, 2000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500011) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500031) } }
+                }, 2000, 3000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500011) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500021) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500031) } }
+                }, 3000, NOW, 1, 1000, 8128, 28)  })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest index change with a single pre_event:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 8.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 8.150001), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 8.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 8.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+                { ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }
+                }, 1000, NOW, 1, 1000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest index change with a single pre_event and later node events:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496001ull, 2000, false, 0, false, 0, false },
+        Node_Event{ 496001ull, 3000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false },
+        Node_Event{ 496002ull, 2000, false, 0, false, 0, false },
+        Node_Event{ 496002ull, 3000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.record(ll_upper_(51.25, 8.15), {
+        Node_Event{ 496001ull, 2000, false, 0, true, ll_lower(51.25, 8.150001), false },
+        Node_Event{ 496001ull, 3000, false, 0, false, 0, false },
+        Node_Event{ 496002ull, 2000, false, 0, true, ll_lower(51.25, 8.150002), false },
+        Node_Event{ 496002ull, 3000, false, 0, false, 0, false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 1000, 2000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 3000, NOW, 1, 1000, 8128, 28) })
+        (ll_upper_(51.25, 8.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150001) },
+                { ll_upper_(51.25, 8.15), ll_lower(51.25, 8.150002) } }
+                }, 2000, 3000, 1, 1000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest node duplication with a single pre_event:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), true },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 1000, NOW, 1, 1000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest node duplication with a single pre_event and later node events:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496001ull, 2000, false, 0, true, ll_lower(51.25, 7.150001), true },
+        Node_Event{ 496001ull, 3000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 1000, 2000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 2000, 3000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 3000, NOW, 1, 1000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest node absence with a single pre_event:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (0x80000080, {
+            make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, {
+                { 0u, 0u },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 1000, NOW, 1, 1000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest node deletion with a single pre_event:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, false, 0, false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (0x80000080, {
+            make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, {
+                { 0u, 0u },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 1000, NOW, 1, 1000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest node deletion with a single pre_event and later node events:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496001ull, 2000, false, 0, false, 0, false },
+        Node_Event{ 496001ull, 3000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 1000, 2000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 3000, NOW, 1, 1000, 8128, 28) })
+        (0x80000080, {
+            make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, {
+                { 0u, 0u },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 2000, 3000, 1, 1000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest multiple meta versions for the same id:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} },
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 2, 2000, 8128, 28), {} },
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 3, 4000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.1500011), false },
+        Node_Event{ 496001ull, 2000, false, 0, true, ll_lower(51.25, 7.1500012), false },
+        Node_Event{ 496001ull, 5000, false, 0, true, ll_lower(51.25, 7.1500015), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.1500021), false },
+        Node_Event{ 496002ull, 2000, false, 0, true, ll_lower(51.25, 7.1500022), false },
+        Node_Event{ 496002ull, 3000, false, 0, true, ll_lower(51.25, 7.1500023), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], 2000 }, { entries[1], 4000 }, { entries[2], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500011) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500021) } }
+                }, 1000, 2000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500012) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500022) } }
+                }, 2000, 3000, 2, 2000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500012) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500023) } }
+                }, 3000, 4000, 2, 2000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500012) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500023) } }
+                }, 4000, 5000, 3, 4000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500015) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500023) } }
+                }, 5000, NOW, 3, 4000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest multiple way turns for the same id:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} },
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496002, 496001 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 2, 2000, 8128, 28), {} },
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 3, 4000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.1500011), false },
+        Node_Event{ 496001ull, 3000, false, 0, true, ll_lower(51.25, 7.1500013), false },
+        Node_Event{ 496001ull, 5000, false, 0, true, ll_lower(51.25, 7.1500015), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], 2000 }, { entries[1], 4000 }, { entries[2], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500011) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 1000, 2000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500011) } }
+                }, 2000, 3000, 1, 2000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500013) } }
+                }, 3000, 4000, 1, 2000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500013) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 4000, 5000, 1, 4000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.1500015) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) } }
+                }, 5000, NOW, 1, 4000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest multiple skeleton versions for the same id:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496003 }, std::vector< Quad_Coord >(2) },
+          make_way_meta(496, 1, 1000, 8128, 28), {} },
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496001, 496002, 496003 }, std::vector< Quad_Coord >(3) },
+          make_way_meta(496, 2, 2000, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496002ull, 2000, false, 0, true, ll_lower(51.25, 7.150002), false },
+        Node_Event{ 496003ull, 1000, false, 0, true, ll_lower(51.25, 7.150003), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], 2000 }, { entries[1], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150003) } }
+                }, 1000, 2000, 1, 1000, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150003) } }
+                }, 2000, NOW, 1, 2000, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest multiple ways:\n";
+
+    std::vector< Data_By_Id< Way_Skeleton >::Entry > entries = {
+        { ll_upper_(51.25, 7.15),
+          { 494u, { 496001, 496003, 496004 }, std::vector< Quad_Coord >(3) },
+          make_way_meta(494, 1, 1004, 8128, 28), {} },
+        { ll_upper_(51.25, 7.15),
+          { 494u, { 496001, 496002, 496003, 496004 }, std::vector< Quad_Coord >(4) },
+          make_way_meta(494, 1, 2004, 8128, 28), {} },
+        { ll_upper_(51.25, 7.15),
+          { 495u, { 496004, 496005, 496006 }, std::vector< Quad_Coord >(3) },
+          make_way_meta(495, 1, 1005, 8128, 28), {} },
+        { ll_upper_(51.25, 7.15),
+          { 496u, { 496006, 496007, 496001 }, std::vector< Quad_Coord >(3) },
+          make_way_meta(496, 1, 1006, 8128, 28), {} } };
+    Moved_Coords moved_coords;
+    moved_coords.record(ll_upper_(51.25, 7.15), {
+        Node_Event{ 496001ull, 1000, false, 0, true, ll_lower(51.25, 7.150001), false },
+        Node_Event{ 496002ull, 1000, false, 0, true, ll_lower(51.25, 7.150002), false },
+        Node_Event{ 496003ull, 1000, false, 0, true, ll_lower(51.25, 7.150003), false },
+        Node_Event{ 496004ull, 1000, false, 0, true, ll_lower(51.25, 7.150004), false },
+        Node_Event{ 496005ull, 1000, false, 0, true, ll_lower(51.25, 7.150005), false },
+        Node_Event{ 496006ull, 1000, false, 0, true, ll_lower(51.25, 7.150006), false },
+        Node_Event{ 496007ull, 1000, false, 0, true, ll_lower(51.25, 7.150007), false } });
+    moved_coords.build_hash();
+
+    std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Skeleton_Updater::resolve_coord_events(
+        Pre_Event_List< Way_Skeleton >{ { { entries[0], 2004 }, { entries[1], NOW }, { entries[2], NOW }, { entries[3], NOW } }, {} },
+        moved_coords, changes_per_idx, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
+        (ll_upper_(51.25, 7.15), {
+            make_way_event(Way_Skeleton{ 494u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150003) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150004) } }
+                }, 1004, 2004, 1, 1004, 8128, 28),
+            make_way_event(Way_Skeleton{ 494u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150002) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150003) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150004) } }
+                }, 2004, NOW, 1, 2004, 8128, 28),
+            make_way_event(Way_Skeleton{ 495u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150004) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150005) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006) } }
+                }, 1005, NOW, 1, 1005, 8128, 28),
+            make_way_event(Way_Skeleton{ 496u, {}, {
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150007) },
+                { ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150001) } }
+                }, 1006, NOW, 1, 1006, 8128, 28) })
+        (changes_per_idx);
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
+        (deletions);
+  }
+//TODO: deletions
   {
     std::cerr<<"\nWay_Skeleton_Delta: Test that obsolete current objects are deleted:\n";
 

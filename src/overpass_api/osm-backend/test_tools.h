@@ -162,6 +162,97 @@ private:
 };
 
 
+template< typename Key, typename Value >
+class Compare_Map_Vector
+{
+public:
+  Compare_Map_Vector(const std::string& title_) : title(title_)
+  {
+    std::cerr<<title<<" ... ";
+  }
+
+  Compare_Map_Vector& operator()(const Key& key, const std::vector< Value >& value)
+  {
+    target[key] = value;
+    return *this;
+  }
+
+  bool operator()(const std::map< Key, std::vector< Value > >& candidate) const
+  {
+    bool all_ok = true;
+    if (candidate.size() != target.size())
+    {
+      notify_failed(all_ok);
+      std::cerr<<title<<": "<<target.size()<<" elements expected, "<<candidate.size()<<" elements found.\n";
+    }
+    auto i_target = target.begin();
+    auto i_candidate = candidate.begin();
+    while (i_target != target.end())
+    {
+      while (i_candidate != candidate.end() && i_candidate->first < i_target->first)
+      {
+        notify_failed(all_ok);
+        std::cerr<<title<<": unexpected key skipped.\n";
+        ++i_candidate;
+      }
+      if (i_candidate == candidate.end() || i_target->first < i_candidate->first)
+      {
+        notify_failed(all_ok);
+        std::cerr<<title<<": expected key missing.\n";
+      }
+      if (i_candidate != candidate.end())
+      {
+        if (!(i_candidate->second == i_target->second))
+        {
+          notify_failed(all_ok);
+          std::cerr<<title<<": values differ:\n";
+
+          if (i_candidate->second.size() != i_target->second.size())
+          {
+            notify_failed(all_ok);
+            std::cerr<<title<<": "<<i_target->second.size()<<" elements expected, "
+                <<i_candidate->second.size()<<" elements found.\n";
+          }
+          for (decltype(i_target->second.size()) i = 0; i < i_target->second.size() && i < i_candidate->second.size(); ++i)
+          {
+            if (!(i_target->second[i] == i_candidate->second[i]))
+            {
+              notify_failed(all_ok);
+              std::cerr<<title<<"[...], element "<<i<<": found element different from expected one.\n";
+            }
+          }
+
+        }
+        ++i_candidate;
+      }
+      ++i_target;
+    }
+    while (i_candidate != candidate.end())
+    {
+      notify_failed(all_ok);
+      std::cerr<<title<<": unexpected key skipped.\n";
+      ++i_candidate;
+    }
+    if (all_ok)
+      std::cerr<<"ok.\n";
+    return all_ok;
+  }
+
+private:
+  static void notify_failed(bool& all_ok)
+  {
+    if (all_ok)
+    {
+      std::cerr<<"FAILED!\n";
+      all_ok = false;
+    }
+  }
+
+  std::string title;
+  std::map< Key, std::vector< Value > > target;
+};
+
+
 template< typename Key >
 class Compare_Set
 {

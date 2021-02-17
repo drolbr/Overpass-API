@@ -1,7 +1,7 @@
 AM_CXXFLAGS= -std=c++11
 
 testbindir = ${prefix}/test-bin
-testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query complete difference foreach convert if make make_area polygon_query print query recurse union generate_test_file_areas generate_test_file_meta generate_test_file_interpreter index_computations four_field_index consistency_check data_from_osc mapfile_io node_event_list node_meta_updater node_skeleton_updater prepare_node_update update_events_preparer way_meta_updater way_skeleton_updater
+testbin_PROGRAMS = file_blocks around block_backend random_file node_updater way_updater relation_updater dump_database compare_osm_base_maps generate_test_file diff_updater test_dispatcher area_query bbox_query complete difference foreach convert if make make_area polygon_query print query recurse union generate_test_file_areas generate_test_file_meta generate_test_file_interpreter index_computations four_field_index consistency_check data_from_osc mapfile_io moved_coords node_event_list node_meta_updater node_skeleton_updater prepare_node_update update_events_preparer way_meta_updater way_skeleton_updater
 dist_testbin_SCRIPTS = apply_osc.test.sh run_testsuite.sh run_testsuite_template_db.sh run_testsuite_osm_backend.sh run_unittests_statements.sh run_testsuite_osm3s_query.sh run_testsuite_map_ql.sh run_testsuite_interpreter.sh run_testsuite_translate_xapi.sh run_testsuite_diff_updater.sh run_unittests_areas.sh run_unittests_meta.sh run_unittests_attic.sh run_unittests_output_csv.sh run_unittests_vlt.sh run_and_compare.sh
 
 expat_cc = ../expat/expat_justparse_interface.cc
@@ -117,7 +117,7 @@ data_from_osc_SOURCES = ../overpass_api/osm-backend/data_from_osc.test.cc ../ove
 data_from_osc_LDADD =
 mapfile_io_SOURCES = ../overpass_api/osm-backend/mapfile_io.test.cc ../overpass_api/core/settings.cc ../overpass_api/osm-backend/mapfile_io.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 mapfile_io_LDADD = -lz
-moved_coords_SOURCE = ../overpass_api/osm-backend/moved_coords.cc ../overpass_api/osm-backend/moved_coords.test.cc
+moved_coords_SOURCES = ../overpass_api/osm-backend/moved_coords.cc ../overpass_api/osm-backend/moved_coords.test.cc
 moved_coords_LDADD =
 node_event_list_SOURCES = ../overpass_api/osm-backend/node_event_list.test.cc ../overpass_api/core/settings.cc ../overpass_api/osm-backend/node_event_list.cc
 node_event_list_LDADD =

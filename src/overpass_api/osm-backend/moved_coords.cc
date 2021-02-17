@@ -51,19 +51,15 @@ void Moved_Coords::build_hash()
     auto i_from = i.begin();
     while (i_from != i.end())
     {
-      Uint31_Index idx_after = 0u;
-      Uint31_Index idx_before = 0u;
       *i_to = *i_from;
       if (i_to != i.begin() && (*i_to)->node_id == (*i_last)->node_id)
       {
-        idx_after = (*i_last)->idx_after;
-        idx_before = (*i_last)->idx;
-        if (!((*i_from)->idx.val() || (*i_from)->idx_after == idx_before))
+        if (!(*i_from)->idx.val() && !((*i_from)->idx_after == (*i_last)->idx))
         {
           (*i_to)->idx = (*i_last)->idx;
           (*i_to)->ll_lower = (*i_last)->ll_lower;
         }
-        if (!((*i_from)->visible_after || (*i_from)->idx_after == idx_after))
+        if (!(*i_from)->visible_after && !((*i_from)->idx_after == (*i_last)->idx_after))
         {
           (*i_to)->idx_after = (*i_last)->idx_after;
           (*i_to)->ll_lower_after = (*i_last)->ll_lower_after;
@@ -71,17 +67,16 @@ void Moved_Coords::build_hash()
           (*i_to)->multiple_after = (*i_last)->multiple_after;
         }
       }
-      if (i_from != i.end())
-        ++i_from;
+      ++i_from;
       while (i_from != i.end() &&
           (*i_to)->node_id == (*i_from)->node_id && (*i_to)->timestamp == (*i_from)->timestamp)
       {
-        if ((*i_from)->idx.val() || (*i_from)->idx_after == idx_before)
+        if ((*i_from)->idx.val())
         {
           (*i_to)->idx = (*i_from)->idx;
           (*i_to)->ll_lower = (*i_from)->ll_lower;
         }
-        if ((*i_from)->visible_after || (*i_from)->idx_after == idx_after)
+        if ((*i_from)->visible_after)
         {
           (*i_to)->idx_after = (*i_from)->idx_after;
           (*i_to)->ll_lower_after = (*i_from)->ll_lower_after;
