@@ -81,8 +81,8 @@ namespace Way_Skeleton_Updater
   void resolve_coord_events(
       Uint31_Index cur_idx,
       const std::vector< Proto_Way >& proto_events,
-      Way_Event_Container& events_for_this_idx,
-      std::map< Uint31_Index, Way_Event_Container >& arrived_objects);
+      std::vector< Way_Event >& events_for_this_idx,
+      std::map< Uint31_Index, std::vector< Way_Event > >& arrived_objects);
   /* Assertions:
    * ...
    */

@@ -119,11 +119,25 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
 }
 
 
+namespace
+{
+  void clear_if_all_zero(std::vector< Node_Skeleton::Id_Type >& nds)
+  {
+    for (auto i : nds)
+    {
+      if (i.val())
+        return;
+    }
+    nds.clear();
+  }
+}
+
+
 void Way_Skeleton_Updater::resolve_coord_events(
     Uint31_Index cur_idx,
     const std::vector< Proto_Way >& proto_events,
-    Way_Event_Container& events_for_this_idx,
-    std::map< Uint31_Index, Way_Event_Container >& arrived_objects)
+    std::vector< Way_Event >& events_for_this_idx,
+    std::map< Uint31_Index, std::vector< Way_Event > >& arrived_objects)
 {
   for (const auto& i : proto_events)
   {
@@ -133,11 +147,12 @@ void Way_Skeleton_Updater::resolve_coord_events(
     {
       if (timestamp < j.second->timestamp)
       {
+        clear_if_all_zero(cur.nds);
         Uint31_Index skel_idx = calc_index(cur.geometry);
         if (skel_idx == cur_idx)
-          events_for_this_idx.events.push_back(Way_Event{ cur, i.meta, timestamp, j.second->timestamp });
+          events_for_this_idx.push_back(Way_Event{ cur, i.meta, timestamp, j.second->timestamp });
         else
-          arrived_objects[skel_idx].events.push_back(Way_Event{ cur, i.meta, timestamp, j.second->timestamp });
+          arrived_objects[skel_idx].push_back(Way_Event{ cur, i.meta, timestamp, j.second->timestamp });
 
         timestamp = j.second->timestamp;
       }
@@ -163,25 +178,12 @@ void Way_Skeleton_Updater::resolve_coord_events(
         cur.nds[j.first] = 0ull;
     }
 
+    clear_if_all_zero(cur.nds);
     Uint31_Index skel_idx = calc_index(cur.geometry);
     if (skel_idx == cur_idx)
-      events_for_this_idx.events.push_back(Way_Event{ cur, i.meta, timestamp, i.before });
+      events_for_this_idx.push_back(Way_Event{ cur, i.meta, timestamp, i.before });
     else
-      arrived_objects[skel_idx].events.push_back(Way_Event{ cur, i.meta, timestamp, i.before });
-  }
-}
-
-
-namespace
-{
-  void clear_if_all_zero(std::vector< Node_Skeleton::Id_Type >& nds)
-  {
-    for (auto i : nds)
-    {
-      if (i.val())
-        return;
-    }
-    nds.clear();
+      arrived_objects[skel_idx].push_back(Way_Event{ cur, i.meta, timestamp, i.before });
   }
 }
 

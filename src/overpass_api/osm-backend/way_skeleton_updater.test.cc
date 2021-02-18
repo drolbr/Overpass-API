@@ -43,6 +43,34 @@ Way_Event make_way_event(
 }
 
 
+Quad_Coord make_quad(double lat, double lon)
+{
+  return { ll_upper_(lat, lon), ll_lower(lat, lon) };
+}
+
+
+Move_Coord_Event make_moved_coord_event(Node_Skeleton::Id_Type node_id, uint64_t timestamp,
+    double lat_before, double lon_before, double lat_after, double lon_after, bool multiple_after = false)
+{
+  return {
+      ll_upper_(lat_before, lon_before), ll_lower(lat_before, lon_before),
+      timestamp, node_id,
+      ll_upper_(lat_after, lon_after), ll_lower(lat_after, lon_after),
+      true, multiple_after };
+}
+
+
+Move_Coord_Event make_moved_coord_event(Node_Skeleton::Id_Type node_id, uint64_t timestamp,
+    double lat_before, double lon_before)
+{
+  return {
+      ll_upper_(lat_before, lon_before), ll_lower(lat_before, lon_before),
+      timestamp, node_id,
+      0u, 0u,
+      false, false };
+}
+
+
 int main(int argc, char* args[])
 {
   {
@@ -58,6 +86,13 @@ int main(int argc, char* args[])
         // pre_event_refs, moved_coords, implicit_pre_events,
         // std::vector< const Way_Skeleton* >(), std::vector< const Attic< Way_Skeleton >* >(),
         // current_result, attic_result);
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(52.15, 7.15), std::vector< Proto_Way >{},
+        events_for_this_idx, arrived_objects);
+
     std::map< Uint31_Index, std::vector< Way_Event > > changes_per_idx;
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
     Way_Skeleton_Updater::resolve_coord_events(
@@ -70,6 +105,7 @@ int main(int argc, char* args[])
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         std::vector< Way_Event >{},
         std::vector< Attic< Way_Skeleton::Id_Type > >{}, std::vector< Way_Skeleton::Id_Type >{});
+
     bool all_ok = true;
     // all_ok &= Compare_Vector< Way_Skeleton >("current_result")
         // (current_result);
@@ -77,7 +113,12 @@ int main(int argc, char* args[])
         // (attic_result);
     // all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
         // (implicit_pre_events);
-    all_ok &= Compare_Map< Uint31_Index, std::vector< Way_Event > >("resolve_coord_events::changes_per_idx")
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::changes_per_idx")
         (changes_per_idx);
     all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >("resolve_coord_events::deletions")
         (deletions);
@@ -864,6 +905,386 @@ int main(int argc, char* args[])
 //             std::vector< Node::Id_Type >() })
 //         (implicit_pre_events);
 //   }
+  {
+    std::cerr<<"\nTest with a single unchanged proto_way:\n";
+
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW, {} } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            1000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest with a single proto_way and machting node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.1500011) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500011), make_quad(51.25, 7.150002) } },
+            1000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest with a single proto_way and earlier node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.1500011) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 2000, 8128, 28), 2000, NOW,
+          { {0u, &moved_coords[0]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500011), make_quad(51.25, 7.150002) } },
+            2000, NOW, 1, 2000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest with a single proto_way and later node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 2000, 51.25, 7.150001, 51.25, 7.1500011) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            1000, 2000, 1, 1000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500011), make_quad(51.25, 7.150002) } },
+            2000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest index change with a single proto_way and machting node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 8.150001),
+        make_moved_coord_event(496002u, 1000, 51.25, 7.150002, 51.25, 8.150002) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]}, {1u, &moved_coords[1]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (ll_upper_(51.25, 8.15), {
+            (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 8.150001), make_quad(51.25, 8.150002) } },
+                1000, NOW, 1, 1000, 8128, 28)) })
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest index change with a single proto_way and later node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 2000, 51.25, 7.150001, 51.25, 8.150001),
+        make_moved_coord_event(496002u, 2000, 51.25, 7.150002, 51.25, 8.150002),
+        make_moved_coord_event(496001u, 3000, 51.25, 7.150001, 51.25, 7.150001),
+        make_moved_coord_event(496002u, 3000, 51.25, 7.150002, 51.25, 7.150002) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]}, {1u, &moved_coords[1]}, {0u, &moved_coords[2]}, {1u, &moved_coords[3]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            1000, 2000, 1, 1000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            3000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (ll_upper_(51.25, 8.15), {
+            (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 8.150001), make_quad(51.25, 8.150002) } },
+                2000, 3000, 1, 1000, 8128, 28)) })
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest node duplication with a single proto_way and machting node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.150001, true) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            1000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest node duplication with a single proto_way and later node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 2000, 51.25, 7.150001, 51.25, 7.150001, true),
+        make_moved_coord_event(496001u, 3000, 51.25, 7.150001, 51.25, 7.150001) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]}, {0u, &moved_coords[1]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            1000, 2000, 1, 1000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            2000, 3000, 1, 1000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            3000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest node deduplication with a single proto_way and machting node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.150001) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, { 496001ull, 0ull }, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            1000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest node absence with a single proto_way and machting node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496002u, 1000, 51.25, 7.150002, 51.25, 7.1500021) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, { 496001ull, 0ull }, { { 0u, 0u }, make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {1u, &moved_coords[0]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        0x80000080, protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, { { 0u, 0u }, make_quad(51.25, 7.1500021) } },
+            1000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest node deletion with a single proto_way and machting node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 1000, 51.25, 7.150001) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (0x80000080, {
+            (make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, { { 0u, 0u }, make_quad(51.25, 7.150002) } },
+                1000, NOW, 1, 1000, 8128, 28)) })
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest node deletion with a single proto_way and later node events:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 2000, 51.25, 7.150001),
+        make_moved_coord_event(496001u, 3000, 51.25, 7.150001, 51.25, 7.150001) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, NOW,
+          { {0u, &moved_coords[0]}, {0u, &moved_coords[1]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            1000, 2000, 1, 1000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+            3000, NOW, 1, 1000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (0x80000080, {
+            (make_way_event(Way_Skeleton{ 496u, { 496001ull, 0ull }, { { 0u, 0u }, make_quad(51.25, 7.150002) } },
+                2000, 3000, 1, 1000, 8128, 28)) })
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest multiple meta versions for multiple proto_ways the same id:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.1500011),
+        make_moved_coord_event(496002u, 1000, 51.25, 7.150002, 51.25, 7.1500021),
+        make_moved_coord_event(496001u, 2000, 51.25, 7.150001, 51.25, 7.1500012),
+        make_moved_coord_event(496002u, 2000, 51.25, 7.150002, 51.25, 7.1500022),
+        make_moved_coord_event(496002u, 3000, 51.25, 7.150002, 51.25, 7.1500023),
+        make_moved_coord_event(496001u, 5000, 51.25, 7.150001, 51.25, 7.1500015) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, 2000,
+          { {0u, &moved_coords[0]}, {1u, &moved_coords[1]} } },
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 2000, 8128, 28), 2000, 4000,
+          { {0u, &moved_coords[0]}, {1u, &moved_coords[1]},
+            {0u, &moved_coords[2]}, {1u, &moved_coords[3]}, {1u, &moved_coords[4]} } },
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 4000, 8128, 28), 4000, NOW,
+          { {0u, &moved_coords[0]}, {1u, &moved_coords[1]},
+            {0u, &moved_coords[2]}, {1u, &moved_coords[3]}, {1u, &moved_coords[4]}, {0u, &moved_coords[5]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500011), make_quad(51.25, 7.1500021) } },
+            1000, 2000, 1, 1000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500012), make_quad(51.25, 7.1500022) } },
+            2000, 3000, 1, 2000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500012), make_quad(51.25, 7.1500023) } },
+            3000, 4000, 1, 2000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500012), make_quad(51.25, 7.1500023) } },
+            4000, 5000, 1, 4000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500015), make_quad(51.25, 7.1500023) } },
+            5000, NOW, 1, 4000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
+  {
+    std::cerr<<"\nTest multiple way turns of proto_ways for the same id:\n";
+
+    std::vector< Move_Coord_Event > moved_coords = {
+        make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.1500011),
+        make_moved_coord_event(496001u, 3000, 51.25, 7.150001, 51.25, 7.1500013),
+        make_moved_coord_event(496001u, 5000, 51.25, 7.150001, 51.25, 7.1500015) };
+    std::vector< Proto_Way > protos = {
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 1000, 8128, 28), 1000, 2000,
+          { {0u, &moved_coords[0]} } },
+        { { 496u, {}, { make_quad(51.25, 7.150002), make_quad(51.25, 7.150001) } },
+          make_way_meta(496, 1, 2000, 8128, 28), 2000, 4000,
+          { {1u, &moved_coords[0]}, {1u, &moved_coords[1]} } },
+        { { 496u, {}, { make_quad(51.25, 7.150001), make_quad(51.25, 7.150002) } },
+          make_way_meta(496, 1, 4000, 8128, 28), 4000, NOW,
+          { {0u, &moved_coords[0]}, {0u, &moved_coords[1]}, {0u, &moved_coords[2]} } } };
+
+    std::vector< Way_Event > events_for_this_idx;
+    std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
+    Way_Skeleton_Updater::resolve_coord_events(
+        ll_upper_(51.25, 7.15), protos, events_for_this_idx, arrived_objects);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500011), make_quad(51.25, 7.150002) }
+            }, 1000, 2000, 1, 1000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150002), make_quad(51.25, 7.1500011) }
+            }, 2000, 3000, 1, 2000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.150002), make_quad(51.25, 7.1500013) }
+            }, 3000, 4000, 1, 2000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500013), make_quad(51.25, 7.150002) }
+            }, 4000, 5000, 1, 4000, 8128, 28))
+        (make_way_event(Way_Skeleton{ 496u, {}, { make_quad(51.25, 7.1500015), make_quad(51.25, 7.150002) }
+            }, 5000, NOW, 1, 4000, 8128, 28))
+        (events_for_this_idx);
+    all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
+        (arrived_objects);
+  }
   {
     std::cerr<<"\nTest with a single pre_event:\n";
 
