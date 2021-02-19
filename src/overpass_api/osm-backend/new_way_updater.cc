@@ -256,62 +256,6 @@ void extract_relevant_undeleted(
 }
 
 
-::assign_meta(...)
-{
-    auto meta_ptr = 0;
-    for (i = events; i < end; )
-    {
-        while (attic.id < i.id)
-            ++attic;
-        if (!meta_ptr && attic.id == i.id)
-        {
-            meta_ptr = attic;
-            ++attic;
-        }
-        while (attic.id == i.id && attic.timestamp <= i.begin)
-        {
-            meta_ptr = attic;
-            ++attic;
-        }
-
-        if (attic.id == i.id)
-            meta_until = attic.timestamp;
-        else
-        {
-            meta_until = NOW;
-            while (current.id < i.id)
-                ++current;
-            if (current.id == i.id && current.timestamp <= i.begin)
-                meta_ptr = current;
-        }
-
-        if (meta_ptr.id == i.id)
-        {
-            if (i.begin < meta_ptr.timestamp && meta_ptr.timestamp < i.end)
-            {
-                result.push({i, i.begin, meta_ptr.timestamp, 0});
-                i.begin = meta_ptr.timestamp;
-            }
-            if (i.end <= meta_until)
-            {
-                result.push({i, meta_ptr});
-                ++i;
-            }
-            else
-            {
-                result.push({i, i.begin, meta_until, meta_ptr});
-                i.begin = meta_until;
-            }
-        }
-        else
-        {
-            result.push({i, 0});
-            ++i;
-        }
-    }
-}
-
-
 void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 {
   //needs: id |-> (begin, new_pos, new_mult)+
@@ -408,12 +352,8 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 // prune_nonexistant_events(_Pre_Events_Per_Idx_, _Events_&)
     Update_Events_Preparer::prune_nonexistant_events(i_idx.second, implicit_events);
 
-// assign_meta(vec< Meta > current, vec< Meta > attic, _Events_& )
-    auto events_with_meta = assign_meta(current_meta, attic_meta, implicit_events);
-// Ab hier mit integriertem Meta. Nicht früher, um die Funktion davor nicht zu verkomplizieren
-
-// resolve_coord_events(_Events_) -> { _Events_, map< Idx, _Events_ > arrived_objects }
-    Way_Skeleton_Updater::resolve_coord_events(events_with_meta, changes.events, arrived_objects);
+    Way_Skeleton_Updater::resolve_coord_events(
+        Way_Meta_Updater::assign_meta(current_meta, attic_meta, implicit_events), changes.events, arrived_objects);
   }
 
 // join_arrived_objects(map< Idx, _Events_ >, map< Idx, {..., _Events_ } >&)
@@ -434,7 +374,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
     for (const auto& i : changes_per_idx)
     {
-      Way_Skeleton_Delta skel_delta(
+      Way_Skeleton_Updater::Way_Skeleton_Delta skel_delta(
           i.events, i.existing_current, i.existing_attic);
       current_to_delete[i.idx].swap(skel_delta.current_to_delete);
       attic_to_delete[i.idx].swap(skel_delta.attic_to_delete);
@@ -451,7 +391,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
     for (const auto& i : changes_per_idx)
     {
-      Way_Undelete_Delta undel_delta(
+      Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
           i.events, i.existing_current, i.deleted_after_unchanged);
       undeletes_to_delete[i.idx].swap(undel_delta.undeletes_to_delete);
       undeletes_to_add[i.idx].swap(undel_delta.undeletes_to_add);
@@ -471,7 +411,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
     for (const auto& i : changes_per_idx)
     {
-      Way_Meta_Delta meta_delta(
+      Way_Meta_Updater::Way_Meta_Delta meta_delta(
           i.events, i.existing_current_meta, i.existing_attic_meta,
           deletions,
           i.current_meta_covers_unchanged, i.attic_meta_covers_unchanged);

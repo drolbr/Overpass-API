@@ -218,6 +218,78 @@ void Way_Meta_Updater::collect_meta_to_move(
 }
 
 
+std::vector< Proto_Way > Way_Meta_Updater::assign_meta(
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
+    std::vector< Way_Implicit_Pre_Event >&& implicit_events)
+{
+  std::vector< Proto_Way > result;
+
+  auto it = implicit_events.begin();
+  auto it_attic = existing_attic_meta.begin();
+  auto it_current = existing_current_meta.begin();
+  const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >* meta_ptr = 0;
+  uint64_t meta_until = 0;
+  while (it != implicit_events.end())
+  {
+    while (it_attic != existing_attic_meta.end() && it_attic->ref < it->base.id)
+    {
+      meta_ptr = 0;
+      ++it_attic;
+    }
+    if (!meta_ptr && it_attic != existing_attic_meta.end() && it_attic->ref == it->base.id
+         && it_attic->timestamp <= it->not_before)
+    {
+      meta_ptr = &*it_attic;
+      ++it_attic;
+    }
+    while (it_attic != existing_attic_meta.end() && it_attic->ref == it->base.id && it_attic->timestamp <= it->not_before)
+    {
+      meta_ptr = &*it_attic;
+      ++it_attic;
+    }
+
+    if (it_attic != existing_attic_meta.end() && it_attic->ref == it->base.id)
+      meta_until = it_attic->timestamp;
+    else
+    {
+      meta_until = NOW;
+      while (it_current != existing_current_meta.end() && it_current->ref < it->base.id)
+        ++it_current;
+      if (it_current != existing_current_meta.end() && it_current->ref == it->base.id
+          && it_current->timestamp < it->before)
+        meta_ptr = &*it_current;
+    }
+
+    if (meta_ptr && meta_ptr->ref == it->base.id)
+    {
+      if (it->not_before < meta_ptr->timestamp && meta_ptr->timestamp < it->before)
+      {
+        result.push_back({ it->base, {}, it->not_before, meta_ptr->timestamp, it->pos_events });
+        it->not_before = meta_ptr->timestamp;
+      }
+      if (it->before <= meta_until)
+      {
+        result.push_back({ it->base, *meta_ptr, it->not_before, it->before, it->pos_events });
+        ++it;
+      }
+      else
+      {
+        result.push_back({ it->base, *meta_ptr, it->not_before, meta_until, it->pos_events });
+        it->not_before = meta_until;
+      }
+    }
+    else
+    {
+      result.push_back({ it->base, {}, it->not_before, it->before, it->pos_events });
+      ++it;
+    }
+  }
+
+  return result;
+}
+
+
 namespace
 {
   bool way_meta_equal(const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >& lhs, const OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >& rhs)

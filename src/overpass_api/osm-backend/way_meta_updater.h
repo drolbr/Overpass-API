@@ -46,6 +46,15 @@ namespace Way_Meta_Updater
    */
 
 
+  std::vector< Proto_Way > assign_meta(
+      const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
+      const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
+      std::vector< Way_Implicit_Pre_Event >&& implicit_events);
+  /* Assertions:
+    * ...
+    */
+
+
   struct Way_Meta_Delta
   {
     Way_Meta_Delta(

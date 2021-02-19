@@ -43,7 +43,7 @@ public:
       if (!(target[i] == candidate[i]))
       {
         notify_failed(all_ok);
-        std::cerr<<title<<", element "<<i<<": found element different from expected one.\n";
+        std::cerr<<title<<", element "<<i<<": found element differs from expected one.\n";
       }
     }
     if (all_ok)
@@ -64,7 +64,7 @@ public:
       if (!(target[i] == *candidate[i]))
       {
         notify_failed(all_ok);
-        std::cerr<<title<<", element "<<i<<": found element different from expected one.\n";
+        std::cerr<<title<<", element "<<i<<": found element differs from expected one.\n";
       }
     }
     if (all_ok)
@@ -218,7 +218,7 @@ public:
             if (!(i_target->second[i] == i_candidate->second[i]))
             {
               notify_failed(all_ok);
-              std::cerr<<title<<"[...], element "<<i<<": found element different from expected one.\n";
+              std::cerr<<title<<"[...], element "<<i<<": found element differs from expected one.\n";
             }
           }
 
