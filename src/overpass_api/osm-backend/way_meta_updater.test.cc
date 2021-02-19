@@ -1512,8 +1512,246 @@ int main(int argc, char* args[])
             make_way_meta(496u, 1, 2000, 8128, 28), 2000, 3000, {} })
         (proto_ways);
   }
-//TODO: attic+current 2x je relevant, attic+attic, auch mit attic mittendrin, attic mittendrin, current mittendrin
-//TODO: zwei zu gleichem attic, zwei zu gleichem current, 1:1 attic+attic, 1:1 attic+current, attic übersprungen
+  {
+    std::cerr<<"\nTest whether the attic of attic plus current is matched:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        { make_way_meta(496u, 2, 2000, 8128, 28) },
+        { make_way_meta(496u, 1, 1000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether the current of attic plus current is matched:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        { make_way_meta(496u, 2, 2000, 8128, 28) },
+        { make_way_meta(496u, 1, 1000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 2000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 2, 2000, 8128, 28), 2000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether the former of attic plus attic is matched:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether the latter of attic plus attic is matched:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 2000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 2, 2000, 8128, 28), 2000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether the current of attic plus current splits the timeline:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        { make_way_meta(496u, 2, 2000, 8128, 28) },
+        { make_way_meta(496u, 1, 1000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 2, 2000, 8128, 28), 2000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether the latter of attic plus attic splits the timeline:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 2, 2000, 8128, 28), 2000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether an attic matches two consecutive entries:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 2000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 2000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether an attic matches two entries with a gap:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 3000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 3000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether a current matches two consecutive entries:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        { make_way_meta(496u, 1, 1000, 8128, 28) },
+        {},
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 2000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 2000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether a current matches two entries with a gap:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        { make_way_meta(496u, 1, 1000, 8128, 28) },
+        {},
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 3000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 3000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether two attics match two consecutive entries:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 2000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 2, 2000, 8128, 28), 2000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest whether attics plus current matches two consecutive entries:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        { make_way_meta(496u, 2, 2000, 8128, 28) },
+        { make_way_meta(496u, 1, 1000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 2000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, 2000, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 2, 2000, 8128, 28), 2000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest currents for multiple ids:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        { make_way_meta(493u, 1, 1000, 8128, 28),
+          make_way_meta(494u, 1, 1000, 8128, 28),
+          make_way_meta(495u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 1, 1000, 8128, 28) },
+        {},
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(493u), 1000, NOW, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(495u), 1000, NOW, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(493u),
+            make_way_meta(493u, 1, 1000, 8128, 28), 1000, NOW, {} })
+        ({ Way_Skeleton::Id_Type(495u),
+            make_way_meta(495u, 1, 1000, 8128, 28), 1000, NOW, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, NOW, {} })
+        (proto_ways);
+  }
+  {
+    std::cerr<<"\nTest attics for multiple ids:\n";
+
+    std::vector< Proto_Way > proto_ways = Way_Meta_Updater::assign_meta(
+        {},
+        { make_way_meta(493u, 1, 1000, 8128, 28),
+          make_way_meta(494u, 1, 1000, 8128, 28),
+          make_way_meta(495u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 1, 1000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(493u), 1000, NOW, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(495u), 1000, NOW, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, NOW, {} } });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
+        ({ Way_Skeleton::Id_Type(493u),
+            make_way_meta(493u, 1, 1000, 8128, 28), 1000, NOW, {} })
+        ({ Way_Skeleton::Id_Type(495u),
+            make_way_meta(495u, 1, 1000, 8128, 28), 1000, NOW, {} })
+        ({ Way_Skeleton::Id_Type(496u),
+            make_way_meta(496u, 1, 1000, 8128, 28), 1000, NOW, {} })
+        (proto_ways);
+  }
   {
     std::cerr<<"\nWay_Meta_Delta: Test one event:\n";
 

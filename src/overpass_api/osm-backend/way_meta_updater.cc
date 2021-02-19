@@ -232,17 +232,12 @@ std::vector< Proto_Way > Way_Meta_Updater::assign_meta(
   uint64_t meta_until = 0;
   while (it != implicit_events.end())
   {
-    while (it_attic != existing_attic_meta.end() && it_attic->ref < it->base.id)
-    {
+    if (meta_ptr && meta_ptr->ref < it->base.id)
       meta_ptr = 0;
+
+    // Find youngest attic that is older or equal to it->not_before
+    while (it_attic != existing_attic_meta.end() && it_attic->ref < it->base.id)
       ++it_attic;
-    }
-    if (!meta_ptr && it_attic != existing_attic_meta.end() && it_attic->ref == it->base.id
-         && it_attic->timestamp <= it->not_before)
-    {
-      meta_ptr = &*it_attic;
-      ++it_attic;
-    }
     while (it_attic != existing_attic_meta.end() && it_attic->ref == it->base.id && it_attic->timestamp <= it->not_before)
     {
       meta_ptr = &*it_attic;
@@ -252,37 +247,33 @@ std::vector< Proto_Way > Way_Meta_Updater::assign_meta(
     if (it_attic != existing_attic_meta.end() && it_attic->ref == it->base.id)
       meta_until = it_attic->timestamp;
     else
+      // Sort out between youngest attic and current which is applicable
     {
       meta_until = NOW;
       while (it_current != existing_current_meta.end() && it_current->ref < it->base.id)
         ++it_current;
-      if (it_current != existing_current_meta.end() && it_current->ref == it->base.id
-          && it_current->timestamp < it->before)
-        meta_ptr = &*it_current;
+      if (it_current != existing_current_meta.end() && it_current->ref == it->base.id)
+      {
+        if (it_current->timestamp <= it->not_before)
+          meta_ptr = &*it_current;
+        else
+          meta_until = it_current->timestamp;
+      }
     }
 
-    if (meta_ptr && meta_ptr->ref == it->base.id)
+    if (it->before <= meta_until)
     {
-      if (it->not_before < meta_ptr->timestamp && meta_ptr->timestamp < it->before)
-      {
-        result.push_back({ it->base, {}, it->not_before, meta_ptr->timestamp, it->pos_events });
-        it->not_before = meta_ptr->timestamp;
-      }
-      if (it->before <= meta_until)
-      {
-        result.push_back({ it->base, *meta_ptr, it->not_before, it->before, it->pos_events });
-        ++it;
-      }
-      else
-      {
-        result.push_back({ it->base, *meta_ptr, it->not_before, meta_until, it->pos_events });
-        it->not_before = meta_until;
-      }
+      result.push_back({ it->base,
+          meta_ptr ? *meta_ptr : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{},
+          it->not_before, it->before, it->pos_events });
+      ++it;
     }
     else
     {
-      result.push_back({ it->base, {}, it->not_before, it->before, it->pos_events });
-      ++it;
+      result.push_back({ it->base,
+          meta_ptr ? *meta_ptr : OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{},
+          it->not_before, meta_until, it->pos_events });
+      it->not_before = meta_until;
     }
   }
 
