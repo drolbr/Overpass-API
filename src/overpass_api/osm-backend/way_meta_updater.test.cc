@@ -14,7 +14,8 @@ std::vector< const Object* > refs_of(const std::vector< Object >& arg)
 
 bool operator==(const Proto_Way& lhs, const Proto_Way& rhs)
 {
-  return lhs.base == rhs.base && lhs.meta == rhs.meta
+  return lhs.base.id == rhs.base.id && lhs.base.nds == rhs.base.nds && lhs.base.geometry == rhs.base.geometry
+      && lhs.meta == rhs.meta
       && lhs.not_before == rhs.not_before && lhs.before == rhs.before && lhs.pos_events == rhs.pos_events;
 }
 

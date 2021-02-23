@@ -344,12 +344,9 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
         changes.undeletes_to_del, implicit_events);
 //   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
 
-// adapt_pre_event_list(vec< Meta > current, vec< Meta > attic, _Pre_Events_Per_Idx_&)
-    //note: not relevant for found_implicit_pre_events
     Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
     Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);
 
-// prune_nonexistant_events(_Pre_Events_Per_Idx_, _Events_&)
     Update_Events_Preparer::prune_nonexistant_events(i_idx.second, implicit_events);
 
     Way_Skeleton_Updater::resolve_coord_events(

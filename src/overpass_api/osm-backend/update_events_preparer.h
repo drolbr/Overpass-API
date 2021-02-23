@@ -81,16 +81,6 @@ namespace Update_Events_Preparer
 namespace Update_Events_Preparer
 {
   /* Preconditions:
-   * All four arguments are sorted by id and timestamp.
-   */
-  void prune_nonexistant_events(
-      const std::vector< const Attic< Way_Skeleton >* >& attic,
-      const Way_Id_Dates& first_appearance,
-      const std::vector< Attic< Way_Skeleton::Id_Type > >& undeleted,
-      std::vector< Way_Implicit_Pre_Event >& implicit_pre_events);
-
-
-  /* Preconditions:
    * pre_event_refs and implicit_pre_events are sorted by id and timestamp.
    */
   void prune_nonexistant_events(
