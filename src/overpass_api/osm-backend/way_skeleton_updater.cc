@@ -306,19 +306,14 @@ Way_Skeleton_Updater::Way_Skeleton_Delta::Way_Skeleton_Delta(
 
 Way_Skeleton_Updater::Way_Undelete_Delta::Way_Undelete_Delta(
     const std::vector< Way_Event >& events_for_this_idx,
-    const std::vector< Attic< Way_Skeleton::Id_Type > >& existing,
-    const std::vector< Way_Skeleton::Id_Type >& deleted_after_unchanged)
+    const std::vector< Attic< Way_Skeleton::Id_Type > >& existing)
 {
   auto existing_it = existing.begin();
-  auto unchanged_it = deleted_after_unchanged.begin();
   for (auto it = events_for_this_idx.begin(); it != events_for_this_idx.end(); ++it)
   {
-    while (unchanged_it != deleted_after_unchanged.end() && *unchanged_it < it->skel.id)
-      ++unchanged_it;
-
-    if ((it != events_for_this_idx.begin() &&
-            (it-1)->skel.id == it->skel.id && (it-1)->before < it->not_before)
-        || (unchanged_it != deleted_after_unchanged.end() && *unchanged_it == it->skel.id))
+    if ((it != events_for_this_idx.begin() && (it-1)->skel.id == it->skel.id)
+          ? (it-1)->before < it->not_before
+          : it->meta.timestamp < it->not_before)
     {
       while (existing_it != existing.end() &&
           (Way_Skeleton::Id_Type(*existing_it) < it->skel.id || (Way_Skeleton::Id_Type(*existing_it) == it->skel.id && existing_it->timestamp < it->not_before)))
@@ -331,9 +326,6 @@ Way_Skeleton_Updater::Way_Undelete_Delta::Way_Undelete_Delta(
         ++existing_it;
       else
         undeletes_to_add.push_back(Attic< Way_Skeleton::Id_Type >{it->skel.id, it->not_before});
-
-      if (unchanged_it != deleted_after_unchanged.end() && *unchanged_it == it->skel.id)
-        ++unchanged_it;
     }
   }
 

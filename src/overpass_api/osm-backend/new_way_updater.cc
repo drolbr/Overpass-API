@@ -347,7 +347,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
     Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);
 
-    Update_Events_Preparer::prune_nonexistant_events(i_idx.second, implicit_events);
+    Update_Events_Preparer::prune_nonexistant_events(i_idx.second, pre_events, implicit_events);
 
     Way_Skeleton_Updater::resolve_coord_events(
         Way_Meta_Updater::assign_meta(current_meta, attic_meta, implicit_events), changes.events, arrived_objects);

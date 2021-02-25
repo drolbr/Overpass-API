@@ -122,8 +122,7 @@ namespace Way_Skeleton_Updater
     // Computes from the events and existing objects the undeletes to write and remove
     Way_Undelete_Delta(
         const std::vector< Way_Event >& events_for_this_idx,
-        const std::vector< Attic< Way_Skeleton::Id_Type > >& existing,
-        const std::vector< Way_Skeleton::Id_Type >& deleted_after_unchanged);
+        const std::vector< Attic< Way_Skeleton::Id_Type > >& existing);
     /* Assertions:
      * ...
      */
