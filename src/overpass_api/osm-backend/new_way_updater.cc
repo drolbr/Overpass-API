@@ -114,7 +114,7 @@ struct Changed_Objects_In_An_Idx
   std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > existing_attic_meta;
   std::vector< Way_Skeleton::Id_Type > attic_meta_covers_unchanged;
   std::vector< Way_Skeleton::Id_Type > current_meta_covers_unchanged;
-  std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
+  std::vector< Attic< Way_Skeleton::Id_Type > > unchanged_before;
   Way_Event_Container events;
 };
 

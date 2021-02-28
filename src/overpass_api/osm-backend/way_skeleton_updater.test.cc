@@ -94,7 +94,7 @@ void test_resolve_coord_events_of_implicits()
         (arrived_objects);
   }
   {
-    std::cerr<<"\nTest with a single proto_way and machting node events:\n";
+    std::cerr<<"\nTest with a single proto_way and matching node events:\n";
 
     std::vector< Move_Coord_Event > moved_coords = {
         make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.1500011) };
@@ -165,7 +165,7 @@ void test_resolve_coord_events_of_implicits()
         (arrived_objects);
   }
   {
-    std::cerr<<"\nTest index change with a single proto_way and machting node events:\n";
+    std::cerr<<"\nTest index change with a single proto_way and matching node events:\n";
 
     std::vector< Move_Coord_Event > moved_coords = {
         make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 8.150001),
@@ -221,7 +221,7 @@ void test_resolve_coord_events_of_implicits()
         (arrived_objects);
   }
   {
-    std::cerr<<"\nTest node duplication with a single proto_way and machting node events:\n";
+    std::cerr<<"\nTest node duplication with a single proto_way and matching node events:\n";
 
     std::vector< Move_Coord_Event > moved_coords = {
         make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.150001, true) };
@@ -272,7 +272,7 @@ void test_resolve_coord_events_of_implicits()
         (arrived_objects);
   }
   {
-    std::cerr<<"\nTest node deduplication with a single proto_way and machting node events:\n";
+    std::cerr<<"\nTest node deduplication with a single proto_way and matching node events:\n";
 
     std::vector< Move_Coord_Event > moved_coords = {
         make_moved_coord_event(496001u, 1000, 51.25, 7.150001, 51.25, 7.150001) };
@@ -295,7 +295,7 @@ void test_resolve_coord_events_of_implicits()
         (arrived_objects);
   }
   {
-    std::cerr<<"\nTest node absence with a single proto_way and machting node events:\n";
+    std::cerr<<"\nTest node absence with a single proto_way and matching node events:\n";
 
     std::vector< Move_Coord_Event > moved_coords = {
         make_moved_coord_event(496002u, 1000, 51.25, 7.150002, 51.25, 7.1500021) };
@@ -318,7 +318,7 @@ void test_resolve_coord_events_of_implicits()
         (arrived_objects);
   }
   {
-    std::cerr<<"\nTest node deletion with a single proto_way and machting node events:\n";
+    std::cerr<<"\nTest node deletion with a single proto_way and matching node events:\n";
 
     std::vector< Move_Coord_Event > moved_coords = {
         make_moved_coord_event(496001u, 1000, 51.25, 7.150001) };
@@ -1437,7 +1437,7 @@ void test_way_undelete_delta()
         std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.15) } }};
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way, 1000, NOW, 1, 1000, 8128, 28) },
-        std::vector< Attic< Way_Skeleton::Id_Type > >{});
+        {}, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         (undel_delta.undeletes_to_delete);
@@ -1452,7 +1452,7 @@ void test_way_undelete_delta()
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way, 1000, 2000, 1, 1000, 8128, 28),
           make_way_event(way, 2000, NOW, 1, 1000, 8128, 28) },
-        std::vector< Attic< Way_Skeleton::Id_Type > >{});
+        {}, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         (undel_delta.undeletes_to_delete);
@@ -1467,7 +1467,7 @@ void test_way_undelete_delta()
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way, 1000, 2000, 1, 1000, 8128, 28),
           make_way_event(way, 3000, NOW, 2, 3000, 8128, 28) },
-        std::vector< Attic< Way_Skeleton::Id_Type > >{});
+        {}, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         (undel_delta.undeletes_to_delete);
@@ -1485,7 +1485,7 @@ void test_way_undelete_delta()
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way5, 1000, 2000, 1, 1000, 8128, 28),
           make_way_event(way6, 3000, NOW, 1, 3000, 8128, 28) },
-        std::vector< Attic< Way_Skeleton::Id_Type > >{});
+        {}, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         (undel_delta.undeletes_to_delete);
@@ -1497,7 +1497,7 @@ void test_way_undelete_delta()
 
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         std::vector< Way_Event >{},
-        { Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{496u}, 1000 } });
+        { Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{496u}, 1000 } }, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         ({ Way_Skeleton::Id_Type{496u}, 1000 })
@@ -1513,7 +1513,7 @@ void test_way_undelete_delta()
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way, 1000, 2000, 1, 1000, 8128, 28),
           make_way_event(way, 3000, NOW, 2, 3000, 8128, 28) },
-        { Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{496u}, 3000 } });
+        { Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{496u}, 3000 } }, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         (undel_delta.undeletes_to_delete);
@@ -1528,7 +1528,7 @@ void test_way_undelete_delta()
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way, 1000, 2000, 1, 1000, 8128, 28),
           make_way_event(way, 3000, NOW, 2, 3000, 8128, 28) },
-        { Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{496u}, 2500 } });
+        { Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{496u}, 2500 } }, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         ({ Way_Skeleton::Id_Type{496u}, 2500 })
@@ -1538,18 +1538,65 @@ void test_way_undelete_delta()
         (undel_delta.undeletes_to_add);
   }
   {
-    std::cerr<<"\nWay_Undelete_Delta: Test with deleted after unchanged with a single event:\n";
+    std::cerr<<"\nWay_Undelete_Delta: Test with early meta without unchanged_before with a single event:\n";
 
     Way_Skeleton way{496u, std::vector< Node::Id_Type >{},
         std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006) } }};
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way, 2000, NOW, 1, 1000, 8128, 28) },
-        std::vector< Attic< Way_Skeleton::Id_Type > >{});
+        {}, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         (undel_delta.undeletes_to_delete);
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_add")
         ({ Way_Skeleton::Id_Type{496u}, 2000 })
+        (undel_delta.undeletes_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Undelete_Delta: Test with matching meta with early unchanged_before with a single event:\n";
+
+    Way_Skeleton way{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006) } }};
+    Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
+        { make_way_event(way, 2000, NOW, 1, 2000, 8128, 28) },
+        {}, { Attic< Way_Skeleton::Id_Type >(496u, 1000) });
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
+        (undel_delta.undeletes_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_add")
+        ({ Way_Skeleton::Id_Type{496u}, 2000 })
+        (undel_delta.undeletes_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Undelete_Delta: Test with early meta with matching unchanged_before with a single event:\n";
+
+    Way_Skeleton way{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006) } }};
+    Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
+        { make_way_event(way, 2000, NOW, 1, 1000, 8128, 28) },
+        {}, { Attic< Way_Skeleton::Id_Type >(496u, 2000) });
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
+        (undel_delta.undeletes_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_add")
+        (undel_delta.undeletes_to_add);
+  }
+  {
+    std::cerr<<"\nWay_Undelete_Delta: Test whether unchanged_before is kept in sync:\n";
+
+    Way_Skeleton way5{495u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150005) } }};
+    Way_Skeleton way6{496u, std::vector< Node::Id_Type >{},
+        std::vector< Quad_Coord >{ Quad_Coord{ ll_upper_(51.25, 7.15), ll_lower(51.25, 7.150006) } }};
+    Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
+        { make_way_event(way5, 1000, 2000, 1, 1000, 8128, 28),
+          make_way_event(way6, 3000, NOW, 1, 3000, 8128, 28) },
+        {}, { Attic< Way_Skeleton::Id_Type >(494u, 3000), Attic< Way_Skeleton::Id_Type >(496u, 2000) });
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
+        (undel_delta.undeletes_to_delete);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_add")
+        ({ Way_Skeleton::Id_Type{496u}, 3000 })
         (undel_delta.undeletes_to_add);
   }
   {
@@ -1560,7 +1607,7 @@ void test_way_undelete_delta()
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way, 2000, 3000, 1, 1000, 8128, 28),
           make_way_event(way, 3000, NOW, 1, 1000, 8128, 28) },
-        std::vector< Attic< Way_Skeleton::Id_Type > >{});
+        {}, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         (undel_delta.undeletes_to_delete);
@@ -1576,7 +1623,7 @@ void test_way_undelete_delta()
     Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
         { make_way_event(way, 2000, 3000, 1, 1000, 8128, 28),
           make_way_event(way, 4000, NOW, 2, 4000, 8128, 28) },
-        std::vector< Attic< Way_Skeleton::Id_Type > >{});
+        {}, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         (undel_delta.undeletes_to_delete);
@@ -1601,7 +1648,7 @@ void test_way_undelete_delta()
         { Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{492u}, 1002 },
           Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{493u}, 1004 },
           Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{495u}, 1004 },
-          Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{496u}, 1006 } });
+          Attic< Way_Skeleton::Id_Type >{ Way_Skeleton::Id_Type{496u}, 1006 } }, {});
     bool all_ok = true;
     all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("Way_Undelete_Delta::undeletes_to_delete")
         ({ Way_Skeleton::Id_Type{493u}, 1004 })
@@ -1645,9 +1692,7 @@ int main(int argc, char* args[])
     Way_Skeleton_Updater::Way_Skeleton_Delta skel_delta(
         std::vector< Way_Event >{},
         std::vector< const Way_Skeleton* >{}, std::vector< const Attic< Way_Skeleton >* >{});
-    Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
-        std::vector< Way_Event >{},
-        std::vector< Attic< Way_Skeleton::Id_Type > >{});
+    Way_Skeleton_Updater::Way_Undelete_Delta undel_delta({}, {}, {});
 
     bool all_ok = true;
     // all_ok &= Compare_Vector< Way_Skeleton >("current_result")
