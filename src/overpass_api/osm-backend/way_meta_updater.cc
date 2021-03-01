@@ -290,16 +290,15 @@ namespace
 
 
   void sync_and_compare(
-      std::vector< Way_Skeleton::Id_Type >::const_iterator& covers_it,
-      const std::vector< Way_Skeleton::Id_Type >::const_iterator& covers_end,
+      std::vector< Attic< Way_Skeleton::Id_Type > >::const_iterator& unchanged_before_it,
+      const std::vector< Attic< Way_Skeleton::Id_Type > >::const_iterator& unchanged_before_end,
       std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >::const_iterator& it,
       std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& to_delete)
   {
-    while (covers_it != covers_end && *covers_it < it->ref)
-      ++covers_it;
-    if (covers_it != covers_end && *covers_it == it->ref)
-      ++covers_it;
-    else
+    while (unchanged_before_it != unchanged_before_end && Way_Skeleton::Id_Type(*unchanged_before_it) < it->ref)
+      ++unchanged_before_it;
+    if (unchanged_before_it == unchanged_before_end || it->ref < Way_Skeleton::Id_Type(*unchanged_before_it)
+        || unchanged_before_it->timestamp <= it->timestamp)
       to_delete.insert(*it);
     ++it;
   }
@@ -311,14 +310,12 @@ Way_Meta_Updater::Way_Meta_Delta::Way_Meta_Delta(
     const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
     const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
     const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions,
-    const std::vector< Way_Skeleton::Id_Type >& current_meta_covers_unchanged,
-    const std::vector< Way_Skeleton::Id_Type >& attic_meta_covers_unchanged)
+    const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before)
 {
   auto attic_it = existing_attic_meta.begin();
   auto current_it = existing_current_meta.begin();
   auto deletion_it = deletions.begin();
-  auto attic_covers_it = attic_meta_covers_unchanged.begin();
-  auto current_covers_it = current_meta_covers_unchanged.begin();
+  auto unchanged_before_it = unchanged_before.begin();
 
   for (auto it = events_for_this_idx.begin(); it != events_for_this_idx.end(); ++it)
   {
@@ -328,9 +325,9 @@ Way_Meta_Updater::Way_Meta_Delta::Way_Meta_Delta(
     while (attic_it != existing_attic_meta.end() && (
         attic_it->ref < it->meta.ref || (
             attic_it->ref == it->meta.ref && attic_it->timestamp < it->meta.timestamp)))
-      sync_and_compare(attic_covers_it, attic_meta_covers_unchanged.end(), attic_it, attic_to_delete);
+      sync_and_compare(unchanged_before_it, unchanged_before.end(), attic_it, attic_to_delete);
     while (current_it != existing_current_meta.end() && current_it->ref < it->meta.ref)
-      sync_and_compare(current_covers_it, current_meta_covers_unchanged.end(), current_it, current_to_delete);
+      sync_and_compare(unchanged_before_it, unchanged_before.end(), current_it, current_to_delete);
 
     if (it->before < NOW)
     {
@@ -345,10 +342,6 @@ Way_Meta_Updater::Way_Meta_Delta::Way_Meta_Delta(
         }
         attic_to_add.insert(it->meta);
       }
-
-      if (attic_covers_it != attic_meta_covers_unchanged.end()
-          && *attic_covers_it == it->meta.ref)
-        ++attic_covers_it;
 
       while (deletion_it != deletions.end() && deletion_it->timestamp < it->before)
         ++deletion_it;
@@ -367,15 +360,11 @@ Way_Meta_Updater::Way_Meta_Delta::Way_Meta_Delta(
         ++current_it;
       else
         current_to_add.insert(it->meta);
-
-      if (current_covers_it != current_meta_covers_unchanged.end()
-          && *current_covers_it == it->meta.ref)
-        ++current_covers_it;
     }
   }
 
   while (attic_it != existing_attic_meta.end())
-    sync_and_compare(attic_covers_it, attic_meta_covers_unchanged.end(), attic_it, attic_to_delete);
+    sync_and_compare(unchanged_before_it, unchanged_before.end(), attic_it, attic_to_delete);
   while (current_it != existing_current_meta.end())
-    sync_and_compare(current_covers_it, current_meta_covers_unchanged.end(), current_it, current_to_delete);
+    sync_and_compare(unchanged_before_it, unchanged_before.end(), current_it, current_to_delete);
 }

@@ -326,7 +326,13 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 // extract_relevant(vec< Way_Skeleton > current, vec< Attic< Way_Skeleton > > attic, _Pre_Events_Per_Idx_, _Moved_Coords_) -> { vec< Way_Skeleton > current_to_touch, vec< Attic< Way_Skeleton > > attic_to_touch, _Events_ }
     Way_Skeleton_Updater::extract_relevant_current_and_attic(
         i_idx.second, moved_coords,
-        current_ways, attic_ways, changes.current_to_del, changes.attic_to_del, implicit_events);
+        current_ways, attic_ways, changes.current_to_del, changes.attic_to_del, changes.unchanged_before, implicit_events);
+
+// extract_undeleted( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_), _Events_ ) -> { vec< Undeleted > undeleted_to_touch, _Events_ }
+    /*Update_Events_Preparer*/::extract_relevant_undeleted(
+        ids_and_timestamps_of(i_idx.second, implicit_events), ways_undeleted_bin.obj_with_idx(working_idx),
+        changes.undeletes_to_del, implicit_events);
+//   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
 
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_meta =
         ways_meta_bin.obj_with_idx(working_idx);
@@ -337,12 +343,6 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     //TODO: changes.current_meta_to_del, changes.attic_meta_to_del
 //   std::vector< Way_Skeleton::Id_Type > attic_meta_covers_unchanged;
 //   std::vector< Way_Skeleton::Id_Type > current_meta_covers_unchanged;
-
-// extract_undeleted( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_), _Events_ ) -> { vec< Undeleted > undeleted_to_touch, _Events_ }
-    /*Update_Events_Preparer*/::extract_relevant_undeleted(
-        ids_and_timestamps_of(i_idx.second, implicit_events), ways_undeleted_bin.obj_with_idx(working_idx),
-        changes.undeletes_to_del, implicit_events);
-//   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
 
     Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
     Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);
@@ -409,9 +409,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     for (const auto& i : changes_per_idx)
     {
       Way_Meta_Updater::Way_Meta_Delta meta_delta(
-          i.events, i.existing_current_meta, i.existing_attic_meta,
-          deletions,
-          i.current_meta_covers_unchanged, i.attic_meta_covers_unchanged);
+          i.events, i.existing_current_meta, i.existing_attic_meta, deletions, i.unchanged_before);
       current_meta_to_delete[i.idx].swap(meta_delta.current_to_delete);
       attic_meta_to_delete[i.idx].swap(meta_delta.attic_to_delete);
       current_meta_to_add[i.idx].swap(meta_delta.current_to_add);

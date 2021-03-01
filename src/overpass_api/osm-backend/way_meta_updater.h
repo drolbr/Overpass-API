@@ -62,8 +62,7 @@ namespace Way_Meta_Updater
         const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
         const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
         const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions,
-        const std::vector< Way_Skeleton::Id_Type >& current_meta_covers_unchanged,
-        const std::vector< Way_Skeleton::Id_Type >& attic_meta_covers_unchanged);
+        const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before);
     /* Assertions:
      * ...
      */

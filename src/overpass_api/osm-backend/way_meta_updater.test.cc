@@ -54,12 +54,7 @@ int main(int argc, char* args[])
     std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_to_delete;
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > current_to_add;
     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > > attic_to_add;
-    Way_Meta_Updater::Way_Meta_Delta delta{
-        std::vector< Way_Event >{},
-        std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >{},
-        std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >{},
-        std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >{},
-        std::vector< Way_Skeleton::Id_Type >{}, std::vector< Way_Skeleton::Id_Type >{} };
+    Way_Meta_Updater::Way_Meta_Delta delta{ {}, {}, {}, {}, {} };
 
     bool all_ok = true;
     all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
@@ -1759,7 +1754,7 @@ int main(int argc, char* args[])
     Way_Event event = make_way_event(496, 1000, NOW, 2, 1000, 8128, 28);
     Way_Meta_Updater::Way_Meta_Delta delta{
         { event },
-        {}, {}, {}, {}, {} };
+        {}, {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1783,7 +1778,7 @@ int main(int argc, char* args[])
         make_way_event(496, 2000, NOW, 2, 1000, 8128, 28) };
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
-        {}, {}, {}, {}, {} };
+        {}, {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1807,7 +1802,7 @@ int main(int argc, char* args[])
         make_way_event(496, 4000, NOW, 2, 1000, 8128, 28) };
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
-        {}, {}, {}, {}, {} };
+        {}, {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1831,7 +1826,7 @@ int main(int argc, char* args[])
         make_way_event(496, 3000, NOW, 2, 3000, 8128, 28) };
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
-        {}, {}, {}, {}, {} };
+        {}, {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1856,7 +1851,7 @@ int main(int argc, char* args[])
         make_way_event(496, 4000, NOW, 2, 4000, 8128, 28) };
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
-        {}, {}, {}, {}, {} };
+        {}, {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1882,7 +1877,7 @@ int main(int argc, char* args[])
         make_way_event(496, 1060, NOW, 6, 1006, 8128, 28) };
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
-        {}, {}, {}, {}, {} };
+        {}, {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1907,7 +1902,6 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         {},
         { meta },
-        {},
         {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
@@ -1932,7 +1926,7 @@ int main(int argc, char* args[])
         {},
         {},
         { meta },
-        {}, {}, {} };
+        {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1956,7 +1950,7 @@ int main(int argc, char* args[])
         {},
         { meta },
         {},
-        {}, { Way_Skeleton::Id_Type{ 496u } }, {} };
+        {}, { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1979,7 +1973,7 @@ int main(int argc, char* args[])
         {},
         {},
         { meta },
-        {}, {}, { Way_Skeleton::Id_Type{ 496u } } };
+        {}, { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -1997,13 +1991,13 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nWay_Meta_Delta: Test whether existing metas with non-matching reuse flags are deleted:\n";
 
-    OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > attic_meta = make_way_meta(495, 2, 1005, 8128, 28);
-    OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > current_meta = make_way_meta(496, 2, 1006, 8128, 28);
+    OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > attic_meta = make_way_meta(496, 2, 1006, 8128, 28);
+    OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > current_meta = make_way_meta(495, 2, 1005, 8128, 28);
     Way_Meta_Updater::Way_Meta_Delta delta{
         {},
         { current_meta },
         { attic_meta },
-        {}, { Way_Skeleton::Id_Type{ 495u } }, { Way_Skeleton::Id_Type{ 496u } } };
+        {}, { Attic< Way_Skeleton::Id_Type >{ 495u, 1005 }, Attic< Way_Skeleton::Id_Type >{ 496u, 1006 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2029,7 +2023,6 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         { meta },
-        {},
         {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
@@ -2054,7 +2047,6 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         { meta },
-        {},
         {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
@@ -2081,7 +2073,6 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         { meta },
-        {},
         {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
@@ -2108,7 +2099,6 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         { meta },
-        {},
         {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
@@ -2139,8 +2129,7 @@ int main(int argc, char* args[])
         make_way_event(493, 1997, NOW, 3, 1003, 8128, 28),
         make_way_event(496, 1994, NOW, 6, 1006, 8128, 28) };
     Way_Meta_Updater::Way_Meta_Delta delta{
-        events, metas, {},
-        {}, {}, {} };
+        events, metas, {}, {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2170,7 +2159,7 @@ int main(int argc, char* args[])
         events,
         {},
         { meta },
-        {}, {}, {} };
+        {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2195,7 +2184,7 @@ int main(int argc, char* args[])
         events,
         {},
         { meta },
-        {}, {}, {} };
+        {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2226,7 +2215,7 @@ int main(int argc, char* args[])
         make_way_event(496, 1994, 2994, 6, 1006, 8128, 28) };
     Way_Meta_Updater::Way_Meta_Delta delta{
         events, {}, metas,
-        {}, {}, {} };
+        {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2266,7 +2255,7 @@ int main(int argc, char* args[])
         make_way_event(496, 2006, NOW, 2, 2006, 8128, 28) };
     Way_Meta_Updater::Way_Meta_Delta delta{
         events, current_metas, attic_metas,
-        {}, {}, {} };
+        {}, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2298,8 +2287,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         { meta },
-        {},
-        {}, { Way_Skeleton::Id_Type{ 496u } }, {} };
+        {}, {}, { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2323,8 +2311,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         { meta },
-        {},
-        {}, { Way_Skeleton::Id_Type{ 496u } }, {} };
+        {}, {}, { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2351,7 +2338,7 @@ int main(int argc, char* args[])
         events,
         {},
         { meta },
-        {}, {}, { Way_Skeleton::Id_Type{ 496u } } };
+        {}, { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2377,7 +2364,7 @@ int main(int argc, char* args[])
         events,
         {},
         { meta },
-        {}, {}, { Way_Skeleton::Id_Type{ 496u } } };
+        {}, { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2403,7 +2390,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         {}, {},
-        deletions, {}, {} };
+        deletions, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2432,7 +2419,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         current_metas, {},
-        deletions, {}, {} };
+        deletions, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2461,7 +2448,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         {}, {},
-        deletions, {}, {} };
+        deletions, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2490,7 +2477,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         {}, {},
-        deletions, {}, {} };
+        deletions, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2520,7 +2507,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         current_metas, {},
-        deletions, { Way_Skeleton::Id_Type{ 496u } }, {} };
+        deletions, { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2550,7 +2537,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         {}, attic_metas,
-        deletions, {}, { Way_Skeleton::Id_Type{ 496u } } };
+        deletions, { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } } };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2582,7 +2569,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         {}, {},
-        deletions, {}, {} };
+        deletions, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2616,7 +2603,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         {}, {},
-        deletions, {}, {} };
+        deletions, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2648,7 +2635,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         {}, {},
-        deletions, {}, {} };
+        deletions, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
@@ -2683,7 +2670,7 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{
         events,
         {}, attic_metas,
-        deletions, {}, {} };
+        deletions, {} };
     bool all_ok = true;
     all_ok &= Compare_Set< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("Way_Meta_Delta::current_to_delete")
