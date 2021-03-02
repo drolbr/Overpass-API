@@ -46,6 +46,15 @@ namespace Way_Meta_Updater
    */
 
 
+  void prune_first_skeletons(
+      const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
+      const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
+      std::vector< Way_Implicit_Pre_Event >& implicit_pre_events);
+  /* Assertions:
+    * ...
+    */
+
+
   std::vector< Proto_Way > assign_meta(
       const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
       const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,

@@ -154,14 +154,6 @@ void extract_meta(...)
           ++current_meta;
       }
 
-      if (i.not_before == 0)
-      {
-        if (attic_meta.id == i.id)
-          i.not_before = attic_meta.timestamp;
-        else if (current_meta.id == i.id)
-          i.not_before = current_meta.timestamp;
-      }
-
       while (attic_meta.id == i.id)
       {
         attic_meta_to_del.push(attic_meta)
@@ -334,18 +326,16 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
         changes.undeletes_to_del, implicit_events);
 //   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
 
-    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > current_meta =
-        ways_meta_bin.obj_with_idx(working_idx);
-    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_meta =
-        ways_attic_meta_bin.obj_with_idx(working_idx);
+    ways_meta_bin.obj_with_idx(working_idx).swap(changes.existing_current_meta);
+    ways_attic_meta_bin.obj_with_idx(working_idx).swap(changes.existing_attic_meta);
 
 // extract_meta( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_) ) -> { vec< Meta > current, vec< Meta > attic }
     //TODO: changes.current_meta_to_del, changes.attic_meta_to_del
-//   std::vector< Way_Skeleton::Id_Type > attic_meta_covers_unchanged;
-//   std::vector< Way_Skeleton::Id_Type > current_meta_covers_unchanged;
+    Way_Meta_Updater::prune_first_skeletons(
+        changes.existing_current_meta, changes.existing_attic_meta, implicit_events);
 
-    Meta_Updater::adapt_pre_event_list(working_idx, current_meta, i_idx.second, pre_events);
-    Meta_Updater::adapt_pre_event_list(working_idx, attic_meta, i_idx.second, pre_events);
+    Meta_Updater::adapt_pre_event_list(working_idx, changes.existing_current_meta, i_idx.second, pre_events);
+    Meta_Updater::adapt_pre_event_list(working_idx, changes.existing_attic_meta, i_idx.second, pre_events);
 
     Update_Events_Preparer::prune_nonexistant_events(i_idx.second, pre_events, implicit_events);
 
@@ -353,12 +343,12 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
         Way_Meta_Updater::assign_meta(current_meta, attic_meta, implicit_events), changes.events, arrived_objects);
   }
 
-// join_arrived_objects(map< Idx, _Events_ >, map< Idx, {..., _Events_ } >&)
   merge_values(arrived_objects, changes_per_idx);
-
-  std::map< Uint31_Index, Way_Event_Container > pre_event_changes;
-  Way_Skeleton_Updater::resolve_coord_events(pre_events, moved_coords, pre_event_changes, deletions);
-  merge_values(pre_event_changes, changes_per_idx);
+  {
+    std::map< Uint31_Index, Way_Event_Container > pre_event_changes;
+    Way_Skeleton_Updater::resolve_coord_events(pre_events, moved_coords, pre_event_changes, deletions);
+    merge_values(pre_event_changes, changes_per_idx);
+  }
   std::sort(deletions.begin(), deletions.end());
 
   //TODO: idx_mapfile

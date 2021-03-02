@@ -218,6 +218,34 @@ void Way_Meta_Updater::collect_meta_to_move(
 }
 
 
+void Way_Meta_Updater::prune_first_skeletons(
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
+    std::vector< Way_Implicit_Pre_Event >& events)
+{
+  auto it_attic = existing_attic_meta.begin();
+  auto it_current = existing_current_meta.begin();
+
+  for (auto& i : events)
+  {
+    if (i.not_before > 0)
+      continue;
+
+    while (it_attic != existing_attic_meta.end() && it_attic->ref < i.base.id)
+      ++it_attic;
+    if (it_attic != existing_attic_meta.end() && it_attic->ref == i.base.id)
+      i.not_before = it_attic->timestamp;
+    else
+    {
+      while (it_current != existing_current_meta.end() && it_current->ref < i.base.id)
+        ++it_current;
+      if (it_current != existing_current_meta.end() && it_current->ref == i.base.id)
+        i.not_before = it_current->timestamp;
+    }
+  }
+}
+
+
 std::vector< Proto_Way > Way_Meta_Updater::assign_meta(
     const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
     const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
