@@ -46,6 +46,16 @@ namespace Way_Meta_Updater
    */
 
 
+  void detect_deletions(
+      const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
+      const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
+      const std::vector< Way_Implicit_Pre_Event >& implicit_pre_events,
+      std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions);
+  /* Assertions:
+    * ...
+    */
+
+
   void prune_first_skeletons(
       const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
       const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,

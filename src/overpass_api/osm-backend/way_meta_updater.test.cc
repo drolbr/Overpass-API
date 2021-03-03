@@ -50,6 +50,199 @@ Way_Event make_way_event(
 }
 
 
+void test_detect_deletions()
+{
+  {
+    std::cerr<<"\nTest with two attics but no implicit event:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, NOW, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest with two attics and a neutralizing implicit event:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 3000, NOW, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest with two attics and a matching implicit event:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (make_way_meta(496u, 2, 2000, 8128, 28))
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest with two attics plus current and a matching implicit event:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        { make_way_meta(496u, 3, 3000, 8128, 28) },
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 3000, NOW, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (make_way_meta(496u, 2, 2000, 8128, 28))
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest with three attics and a matching implicit event:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28),
+          make_way_meta(496u, 3, 3000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 3000, NOW, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (make_way_meta(496u, 2, 2000, 8128, 28))
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest with three attics and a finally matching implicit event:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28),
+          make_way_meta(496u, 3, 3000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 3000, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (make_way_meta(496u, 3, 3000, 8128, 28))
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest for a double deletion:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28),
+          make_way_meta(496u, 3, 3000, 8128, 28),
+          make_way_meta(496u, 4, 4000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 3000, 4000, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (make_way_meta(496u, 2, 2000, 8128, 28))
+        (make_way_meta(496u, 4, 4000, 8128, 28))
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest for a double deletion plus current:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        { make_way_meta(496u, 5, 5000, 8128, 28) },
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28),
+          make_way_meta(496u, 3, 3000, 8128, 28),
+          make_way_meta(496u, 4, 4000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 3000, 4000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 5000, NOW, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (make_way_meta(496u, 2, 2000, 8128, 28))
+        (make_way_meta(496u, 4, 4000, 8128, 28))
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest for multiple ids:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions(
+        { make_way_meta(495u, 3, 3000, 8128, 28) },
+        { make_way_meta(495u, 1, 1000, 8128, 28),
+          make_way_meta(495u, 2, 2000, 8128, 28),
+          make_way_meta(496u, 3, 3000, 8128, 28),
+          make_way_meta(496u, 4, 4000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(495u), 1000, 2000, {} },
+          Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 3000, 4000, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (make_way_meta(495u, 2, 2000, 8128, 28))
+        (make_way_meta(496u, 4, 4000, 8128, 28))
+        (deletions);
+  }
+  {
+    std::cerr<<"\nTest that deletions are appended to:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions = {
+        make_way_meta(495u, 1, 1000, 8128, 28) };
+    Way_Meta_Updater::detect_deletions(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28) },
+        { Way_Implicit_Pre_Event{ Way_Skeleton::Id_Type(496u), 1000, 2000, {} }
+        }, deletions);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (make_way_meta(495u, 1, 1000, 8128, 28))
+        (make_way_meta(496u, 2, 2000, 8128, 28))
+        (deletions);
+  }
+}
+
+
 void test_prune_first_skeletons()
 {
   {
@@ -1474,6 +1667,9 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest empty input:\n";
 
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+    Way_Meta_Updater::detect_deletions({}, {}, {}, deletions);
+
     std::vector< Way_Implicit_Pre_Event > implicit_pre_events;
     Way_Meta_Updater::prune_first_skeletons({}, {}, implicit_pre_events);
 
@@ -1486,6 +1682,9 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{ {}, {}, {}, {}, {} };
 
     bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("detect_deletions::deletions")
+        (deletions);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("prune_first_skeletons::implicit_pre_events")
         (implicit_pre_events);
     all_ok &= Compare_Vector< Proto_Way >("assign_meta::proto_ways")
@@ -1504,6 +1703,7 @@ int main(int argc, char* args[])
         (delta.attic_to_add);
   }
 
+  test_detect_deletions();
   test_prune_first_skeletons();
   test_assign_meta();
   test_way_meta_delta();

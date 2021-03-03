@@ -218,6 +218,51 @@ void Way_Meta_Updater::collect_meta_to_move(
 }
 
 
+void Way_Meta_Updater::detect_deletions(
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
+    const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,
+    const std::vector< Way_Implicit_Pre_Event >& implicit_pre_events,
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions)
+{
+  auto it_pre = implicit_pre_events.begin();
+  auto it_current = existing_current_meta.begin();
+
+  for (auto it_attic = existing_attic_meta.begin(); it_attic != existing_attic_meta.end(); ++it_attic)
+  {
+    while (it_pre != implicit_pre_events.end() && it_pre->base.id < it_attic->ref)
+      ++it_pre;
+    while (it_pre != implicit_pre_events.end() && it_pre->base.id == it_attic->ref &&
+        it_pre->before < it_attic->timestamp)
+      ++it_pre;
+
+    while (it_current != existing_current_meta.end() && it_current->ref < it_attic->ref)
+      ++it_current;
+
+    if (it_pre != implicit_pre_events.end() && it_pre->base.id == it_attic->ref &&
+        it_pre->before == it_attic->timestamp)
+    {
+      auto it_attic_next = it_attic+1;
+      if (it_attic_next == existing_attic_meta.end() || !(it_attic->ref == it_attic_next->ref))
+      {
+        auto it_pre_next = it_pre+1;
+        if (it_pre_next == implicit_pre_events.end() || !(it_pre_next->base.id == it_attic->ref))
+          deletions.push_back(*it_attic);
+        else if (it_current != existing_current_meta.end() && it_current->ref == it_attic->ref &&
+            it_current->timestamp <= it_pre_next->not_before)
+          deletions.push_back(*it_attic);
+      }
+      else if (it_attic->timestamp < it_attic_next->timestamp)
+      {
+        auto it_pre_next = it_pre+1;
+        if (it_pre_next == implicit_pre_events.end() || !(it_pre_next->base.id == it_attic->ref) ||
+            it_attic_next->timestamp <= it_pre_next->not_before)
+          deletions.push_back(*it_attic);
+      }
+    }
+  }
+}
+
+
 void Way_Meta_Updater::prune_first_skeletons(
     const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_current_meta,
     const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& existing_attic_meta,

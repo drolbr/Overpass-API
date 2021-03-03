@@ -112,8 +112,6 @@ struct Changed_Objects_In_An_Idx
   std::vector< Attic< Way_Skeleton::Id_Type > > existing_undeletes;
   std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > existing_current_meta;
   std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > existing_attic_meta;
-  std::vector< Way_Skeleton::Id_Type > attic_meta_covers_unchanged;
-  std::vector< Way_Skeleton::Id_Type > current_meta_covers_unchanged;
   std::vector< Attic< Way_Skeleton::Id_Type > > unchanged_before;
   Way_Event_Container events;
 };
@@ -195,56 +193,6 @@ void extract_relevant_undeleted(
     }
   }
    */
-}
-
-
-::prune_nonexistant_events(...)
-{
-    if (pre_events.empty)
-        return;
-    Way_Skeleton::Id_Type pre_id = pre_events.id;
-    uint64_t pre_from = pre_events.meta;
-    uint64_t pre_until = pre_events.timestamp_end;
-
-    auto result;
-    for (i = events; i < end; )
-    {
-        while (pre_id < i.id)
-        {
-            pre_id = pre_events.id;
-            pre_from = pre_events.meta;
-            pre_until = pre_events.timestamp_end;
-            ++pre_events;
-        }
-        while (pre_id == i.id && pre_until <= i.from)
-        {
-            pre_id = pre_events.id;
-            pre_from = pre_events.meta;
-            pre_until = pre_events.timestamp_end;
-            ++pre_events;
-        }
-        while (pre_events.id == pre_id && pre_events.meta == pre_until)
-        {
-            pre_until = pre_events.timestamp_end;
-            ++pre_events;
-        }
-
-        if (pre_id == i.id && i.from < pre_until && pre_from < i.until)
-        {
-            if (i.from <= pre_from)
-                result.push({ i, i.from, pre_from });
-            if (pre_until < i.until)
-                i.from = pre_until;
-            else
-                ++i;
-        }
-        else
-        {
-            result.push(i);
-            ++i;
-        }
-    }
-    events.swap(result);
 }
 
 
@@ -331,6 +279,10 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
 // extract_meta( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_) ) -> { vec< Meta > current, vec< Meta > attic }
     //TODO: changes.current_meta_to_del, changes.attic_meta_to_del
+    Way_Meta_Updater::extract_meta(
+        implicit_events, i_idx.second, pre_events, changes.existing_current_meta, changes.existing_attic_meta);
+    Way_Meta_Updater::detect_deletions(
+        changes.existing_current_meta, changes.existing_attic_meta, implicit_events, deletions);
     Way_Meta_Updater::prune_first_skeletons(
         changes.existing_current_meta, changes.existing_attic_meta, implicit_events);
 
