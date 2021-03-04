@@ -13,7 +13,7 @@ namespace Way_Meta_Updater
   /* NB: If no skel exists then also no meta exists
    * NB: independend for attic and current */
   std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > extract_relevant_meta(
-      const std::vector< Way_Implicit_Pre_Event >& implicit_pre_events,
+      const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
       const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& meta);
   /* Assertions:
     * ...

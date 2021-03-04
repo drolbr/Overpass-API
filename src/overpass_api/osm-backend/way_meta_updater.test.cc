@@ -50,6 +50,124 @@ Way_Event make_way_event(
 }
 
 
+void test_extract_relevant_meta()
+{
+  {
+    std::cerr<<"\nTest with empty undeleted_before:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > relevant_meta
+        = Way_Meta_Updater::extract_relevant_meta(
+        {},
+        { make_way_meta(496u, 1, 1000, 8128, 28) });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("extract_relevant_meta::result")
+        (relevant_meta);
+  }
+  {
+    std::cerr<<"\nTest with zero entry in undeleted_before:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > relevant_meta
+        = Way_Meta_Updater::extract_relevant_meta(
+        { Attic< Way_Skeleton::Id_Type >{ 496u, 0 } },
+        { make_way_meta(496u, 1, 1000, 8128, 28) });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("extract_relevant_meta::result")
+        (make_way_meta(496u, 1, 1000, 8128, 28))
+        (relevant_meta);
+  }
+  {
+    std::cerr<<"\nTest with entry in undeleted_before with equal timestamp to a meta:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > relevant_meta
+        = Way_Meta_Updater::extract_relevant_meta(
+        { Attic< Way_Skeleton::Id_Type >{ 496u, 1000 } },
+        { make_way_meta(496u, 1, 1000, 8128, 28) });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("extract_relevant_meta::result")
+        (make_way_meta(496u, 1, 1000, 8128, 28))
+        (relevant_meta);
+  }
+  {
+    std::cerr<<"\nTest with entry in undeleted_before with later timestamp than a meta:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > relevant_meta
+        = Way_Meta_Updater::extract_relevant_meta(
+        { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } },
+        { make_way_meta(496u, 1, 1000, 8128, 28) });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("extract_relevant_meta::result")
+        (make_way_meta(496u, 1, 1000, 8128, 28))
+        (relevant_meta);
+  }
+  {
+    std::cerr<<"\nTest with one entry in undeleted_before with multiple metas:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > relevant_meta
+        = Way_Meta_Updater::extract_relevant_meta(
+        { Attic< Way_Skeleton::Id_Type >{ 496u, 2000 } },
+        { make_way_meta(496u, 1, 1000, 8128, 28),
+          make_way_meta(496u, 2, 2000, 8128, 28),
+          make_way_meta(496u, 3, 3000, 8128, 28) });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("extract_relevant_meta::result")
+        (make_way_meta(496u, 2, 2000, 8128, 28))
+        (make_way_meta(496u, 3, 3000, 8128, 28))
+        (relevant_meta);
+  }
+  {
+    std::cerr<<"\nTest with two entries in undeleted_before with multiple metas:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > relevant_meta
+        = Way_Meta_Updater::extract_relevant_meta(
+        { Attic< Way_Skeleton::Id_Type >{ 495u, 2000 },
+          Attic< Way_Skeleton::Id_Type >{ 496u, 5000 } },
+        { make_way_meta(495u, 1, 1000, 8128, 28),
+          make_way_meta(495u, 2, 2000, 8128, 28),
+          make_way_meta(495u, 3, 3000, 8128, 28),
+          make_way_meta(496u, 4, 4000, 8128, 28),
+          make_way_meta(496u, 5, 5000, 8128, 28),
+          make_way_meta(496u, 6, 6000, 8128, 28) });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("extract_relevant_meta::result")
+        (make_way_meta(495u, 2, 2000, 8128, 28))
+        (make_way_meta(495u, 3, 3000, 8128, 28))
+        (make_way_meta(496u, 5, 5000, 8128, 28))
+        (make_way_meta(496u, 6, 6000, 8128, 28))
+        (relevant_meta);
+  }
+  {
+    std::cerr<<"\nTest with two entries in undeleted_before with multiple metas:\n";
+
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > relevant_meta
+        = Way_Meta_Updater::extract_relevant_meta(
+        { Attic< Way_Skeleton::Id_Type >{ 495u, 1000 },
+          Attic< Way_Skeleton::Id_Type >{ 496u, 1000 } },
+        { make_way_meta(494u, 1, 1000, 8128, 28),
+          make_way_meta(495u, 1, 2000, 8128, 28),
+          make_way_meta(496u, 1, 1000, 8128, 28) });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("extract_relevant_meta::result")
+        (make_way_meta(495u, 1, 2000, 8128, 28))
+        (make_way_meta(496u, 1, 1000, 8128, 28))
+        (relevant_meta);
+  }
+}
+
+
 void test_detect_deletions()
 {
   {
@@ -1667,6 +1785,9 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest empty input:\n";
 
+    std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > relevant_meta
+        = Way_Meta_Updater::extract_relevant_meta({}, {});
+
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
     Way_Meta_Updater::detect_deletions({}, {}, {}, deletions);
 
@@ -1682,6 +1803,9 @@ int main(int argc, char* args[])
     Way_Meta_Updater::Way_Meta_Delta delta{ {}, {}, {}, {}, {} };
 
     bool all_ok = true;
+    all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
+        ("extract_relevant_meta::result")
+        (relevant_meta);
     all_ok &= Compare_Vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >
         ("detect_deletions::deletions")
         (deletions);
@@ -1703,6 +1827,7 @@ int main(int argc, char* args[])
         (delta.attic_to_add);
   }
 
+  test_extract_relevant_meta();
   test_detect_deletions();
   test_prune_first_skeletons();
   test_assign_meta();

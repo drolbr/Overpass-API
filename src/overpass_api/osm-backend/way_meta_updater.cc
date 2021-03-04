@@ -2,91 +2,33 @@
 #include "way_meta_updater.h"
 
 
-/*extract_meta
- {
-   for (i : events)
-   {
-     while (pre.id < i.id)
-     {
-       extract_meta_for_id(pre.id, pre.timestamp, attic_from, attic_to);
-       extract_meta_for_id(pre.id, pre.timestamp, current_from, current_to);
-       ++pre;
-     }
-     timestamp = i.not_before;
-     if (pre.id != i.id || timestamp < pre.timestamp)
-     {
-       extract_meta_for_id(id, timestamp, attic_from, attic_to);
-       extract_meta_for_id(id, timestamp, current_from, current_to);
-     }
-   }
-
-   while (pre)
-   {
-     extract_meta_for_id(pre.id, pre.timestamp, attic_from, attic_to);
-     extract_meta_for_id(pre.id, pre.timestamp, current_from, current_to);
-     ++pre;
-   }
-
-   attic.erase(attic_to, end);
-   current.erase(current_to, end);
- }
-
-
- extract_meta_for_id(id, timestamp, from, to)
- {
-   while (from.id < id)
-     ++from;
-   while (from.id == id && from.timestamp < timestamp)
-     ++from;
-   if (from.id == id && timestamp < from.timestamp)
-   {
-     --from;
-     if (from.id != id)
-       ++from;
-   }
-   while (from.id == id)
-   {
-     *to = *from;
-     ++from;
-     ++to;
-   }
- }
- */
-
-
 std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > Way_Meta_Updater::extract_relevant_meta(
-    const std::vector< Way_Implicit_Pre_Event >& implicit_pre_events,
+    const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
     const std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& meta)
 {
   std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > result;
 
   auto it_meta = meta.begin();
-  Way_Skeleton::Id_Type last_id = 0u;
-  for (const auto& i : implicit_pre_events)
+  for (const auto& i : unchanged_before)
   {
-    if (i.base.id == last_id)
-      continue;
-
-    while (it_meta != meta.end() && it_meta->ref < i.base.id)
+    while (it_meta != meta.end() && it_meta->ref < Way_Skeleton::Id_Type(i))
       ++it_meta;
-    while (it_meta != meta.end() && it_meta->ref == i.base.id && it_meta->timestamp < i.not_before)
+    while (it_meta != meta.end() && it_meta->ref == Way_Skeleton::Id_Type(i) && it_meta->timestamp < i.timestamp)
       ++it_meta;
 
     if (it_meta != meta.begin() &&
-        (it_meta == meta.end() || i.base.id < it_meta->ref || i.not_before < it_meta->timestamp))
+        (it_meta == meta.end() || Way_Skeleton::Id_Type(i) < it_meta->ref || i.timestamp < it_meta->timestamp))
     {
       --it_meta;
-      if (it_meta->ref < i.base.id)
+      if (it_meta->ref < Way_Skeleton::Id_Type(i))
         ++it_meta;
     }
 
-    while (it_meta != meta.end() && it_meta->ref == i.base.id)
+    while (it_meta != meta.end() && it_meta->ref == Way_Skeleton::Id_Type(i))
     {
       result.push_back(*it_meta);
       ++it_meta;
     }
-
-    last_id = i.base.id;
   }
 
   return result;
