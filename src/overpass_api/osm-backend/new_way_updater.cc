@@ -117,57 +117,6 @@ struct Changed_Objects_In_An_Idx
 };
 
 
-void extract_meta(...)
-{
-  /*
-  {
-    for (i : events)
-    {
-      if (i.prev.id == i.id)
-        continue;
-
-      while (attic_meta.(id, timestamp) < i.(id, not_before))
-        ++attic_meta;
-      while (current_meta.(id, timestamp) < i.(id, not_before))
-        ++current_meta;
-
-      if (attic_meta.(id, timestamp) == i.(id, not_before))
-        ;
-      else if (current_meta.(id, timestamp) == i.(id, not_before))
-        ;
-      else if (current_meta.id == i.id)
-      {
-        --attic_meta;
-        if (attic_meta.id == i.id)
-          attic_meta_covers_unchanged.push(i.id);
-        else
-          ++attic_meta;
-      }
-      else
-      {
-        --current_meta;
-        if (current_meta.id == i.id)
-          current_meta_covers_unchanged.push(i.id);
-        else
-          ++current_meta;
-      }
-
-      while (attic_meta.id == i.id)
-      {
-        attic_meta_to_del.push(attic_meta)
-        ++attic_meta;
-      }
-      while (current_meta.id == i.id)
-      {
-        current_meta_to_del.push(current_meta)
-        ++current_meta;
-      }
-    }
-  }
-   */
-}
-
-
 void extract_relevant_undeleted(
     std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes,
     Way_Event_Container& events,
@@ -274,13 +223,10 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
         changes.undeletes_to_del, implicit_events);
 //   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
 
-    ways_meta_bin.obj_with_idx(working_idx).swap(changes.existing_current_meta);
-    ways_attic_meta_bin.obj_with_idx(working_idx).swap(changes.existing_attic_meta);
-
-// extract_meta( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_) ) -> { vec< Meta > current, vec< Meta > attic }
-    //TODO: changes.current_meta_to_del, changes.attic_meta_to_del
-    Way_Meta_Updater::extract_meta(
-        implicit_events, i_idx.second, pre_events, changes.existing_current_meta, changes.existing_attic_meta);
+    changes.existing_current_meta = Way_Meta_Updater::extract_meta(
+        implicit_events, ways_meta_bin.obj_with_idx(working_idx));
+    changes.existing_attic_meta = Way_Meta_Updater::extract_meta(
+        implicit_events, ways_attic_meta_bin.obj_with_idx(working_idx));
     Way_Meta_Updater::detect_deletions(
         changes.existing_current_meta, changes.existing_attic_meta, implicit_events, deletions);
     Way_Meta_Updater::prune_first_skeletons(
