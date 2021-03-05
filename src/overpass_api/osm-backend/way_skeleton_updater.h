@@ -71,6 +71,14 @@ namespace Way_Skeleton_Updater
    */
 
 
+  std::vector< Attic< Way_Skeleton::Id_Type > > extract_relevant_undeleted(
+      const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
+      const std::vector< Attic< Way_Skeleton::Id_Type > >& undeleted);
+  /* Assertions:
+    * ...
+    */
+
+
   void adjust_implicit_events(
       const std::vector< Attic< Way_Skeleton::Id_Type > >& existing_undeletes,
       std::vector< Way_Implicit_Pre_Event >& implicit_pre_events);

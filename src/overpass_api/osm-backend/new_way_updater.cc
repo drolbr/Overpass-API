@@ -219,10 +219,12 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
 // extract_undeleted( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_), _Events_ ) -> { vec< Undeleted > undeleted_to_touch, _Events_ }
     /*Update_Events_Preparer*/::extract_relevant_undeleted(
-        ids_and_timestamps_of(i_idx.second, implicit_events), ways_undeleted_bin.obj_with_idx(working_idx),
+        ids_and_timestamps_of(i_idx.second, implicit_events), ,
         changes.undeletes_to_del, implicit_events);
 //   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
 
+    changes.existing_undeletes = Way_Skeleton_Updater::extract_undeleted(
+        changes.unchanged_before, ways_undeleted_bin.obj_with_idx(working_idx));
     // NB: unchanged_before remains unaffected from undeletes
     Way_Skeleton_Updater::adjust_implicit_events(changes.existing_undeletes, implicit_events);
 

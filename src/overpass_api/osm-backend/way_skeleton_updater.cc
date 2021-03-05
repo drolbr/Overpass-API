@@ -119,6 +119,32 @@ void Way_Skeleton_Updater::extract_relevant_current_and_attic(
 }
 
 
+std::vector< Attic< Way_Skeleton::Id_Type > > Way_Skeleton_Updater::extract_relevant_undeleted(
+    const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
+    const std::vector< Attic< Way_Skeleton::Id_Type > >& undeleted)
+{
+  std::vector< Attic< Way_Skeleton::Id_Type > > result;
+
+  auto it_undel = undeleted.begin();
+  for (const auto& i : unchanged_before)
+  {
+    while (it_undel != undeleted.end() && Way_Skeleton::Id_Type(*it_undel) < Way_Skeleton::Id_Type(i))
+      ++it_undel;
+    while (it_undel != undeleted.end() && Way_Skeleton::Id_Type(*it_undel) == Way_Skeleton::Id_Type(i)
+        && it_undel->timestamp <= i.timestamp)
+      ++it_undel;
+
+    while (it_undel != undeleted.end() && Way_Skeleton::Id_Type(*it_undel) == Way_Skeleton::Id_Type(i))
+    {
+      result.push_back(*it_undel);
+      ++it_undel;
+    }
+  }
+
+  return result;
+}
+
+
 void Way_Skeleton_Updater::adjust_implicit_events(
     const std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes,
     std::vector< Way_Implicit_Pre_Event >& implicit_pre_events)

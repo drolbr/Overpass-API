@@ -86,6 +86,77 @@ Move_Coord_Event make_moved_coord_event(Node_Skeleton::Id_Type node_id, uint64_t
 }
 
 
+void test_extract_relevant_undeleted()
+{
+  {
+    std::cerr<<"\nTest with an earlier undeleted:\n";
+
+    std::vector< Attic< Way_Skeleton::Id_Type > > undeleted =
+        Way_Skeleton_Updater::extract_relevant_undeleted({
+            Attic< Way_Skeleton::Id_Type >{ 496u, 2000 }
+            }, {
+            Attic< Way_Skeleton::Id_Type >{ 496u, 1000 }
+            });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("extract_relevant_undeleted::result")
+        (undeleted);
+  }
+  {
+    std::cerr<<"\nTest with a later undeleted:\n";
+
+    std::vector< Attic< Way_Skeleton::Id_Type > > undeleted =
+        Way_Skeleton_Updater::extract_relevant_undeleted({
+            Attic< Way_Skeleton::Id_Type >{ 496u, 1000 }
+            }, {
+            Attic< Way_Skeleton::Id_Type >{ 496u, 2000 }
+            });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("extract_relevant_undeleted::result")
+        (Attic< Way_Skeleton::Id_Type >{ 496u, 2000 })
+        (undeleted);
+  }
+  {
+    std::cerr<<"\nTest with multiple undeleted for the same id:\n";
+
+    std::vector< Attic< Way_Skeleton::Id_Type > > undeleted =
+        Way_Skeleton_Updater::extract_relevant_undeleted({
+            Attic< Way_Skeleton::Id_Type >{ 496u, 2000 }
+            }, {
+            Attic< Way_Skeleton::Id_Type >{ 496u, 1000 },
+            Attic< Way_Skeleton::Id_Type >{ 496u, 3000 },
+            Attic< Way_Skeleton::Id_Type >{ 496u, 4000 }
+            });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("extract_relevant_undeleted::result")
+        (Attic< Way_Skeleton::Id_Type >{ 496u, 3000 })
+        (Attic< Way_Skeleton::Id_Type >{ 496u, 4000 })
+        (undeleted);
+  }
+  {
+    std::cerr<<"\nTest with undeleteds of multiple ids:\n";
+
+    std::vector< Attic< Way_Skeleton::Id_Type > > undeleted =
+        Way_Skeleton_Updater::extract_relevant_undeleted({
+            Attic< Way_Skeleton::Id_Type >{ 495u, 1000 },
+            Attic< Way_Skeleton::Id_Type >{ 496u, 1000 },
+            Attic< Way_Skeleton::Id_Type >{ 498u, 4000 }
+            }, {
+            Attic< Way_Skeleton::Id_Type >{ 494u, 2000 },
+            Attic< Way_Skeleton::Id_Type >{ 497u, 3000 },
+            Attic< Way_Skeleton::Id_Type >{ 498u, 5000 }
+            });
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("extract_relevant_undeleted::result")
+        (Attic< Way_Skeleton::Id_Type >{ 498u, 5000 })
+        (undeleted);
+  }
+}
+
+
 void test_adjust_implicit_events()
 {
   {
@@ -1831,6 +1902,9 @@ int main(int argc, char* args[])
         // std::vector< const Way_Skeleton* >(), std::vector< const Attic< Way_Skeleton >* >(),
         // current_result, attic_result);
 
+    std::vector< Attic< Way_Skeleton::Id_Type > > undeleted =
+        Way_Skeleton_Updater::extract_relevant_undeleted({}, {});
+
     std::vector< Way_Implicit_Pre_Event > implicit_pre_events;
     Way_Skeleton_Updater::adjust_implicit_events({}, implicit_pre_events);
 
@@ -1856,6 +1930,8 @@ int main(int argc, char* args[])
         // (current_result);
     // all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
         // (attic_result);
+    all_ok &= Compare_Vector< Attic< Way_Skeleton::Id_Type > >("extract_relevant_undeleted::result")
+        (undeleted);
     all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
         (implicit_pre_events);
     all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
@@ -2650,6 +2726,7 @@ int main(int argc, char* args[])
 //             std::vector< Node::Id_Type >() })
 //         (implicit_pre_events);
 //   }
+  test_extract_relevant_undeleted();
   test_adjust_implicit_events();
   test_resolve_coord_events_of_implicits();
   test_resolve_coord_events_of_pre_events();
