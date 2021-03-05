@@ -223,10 +223,13 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
         changes.undeletes_to_del, implicit_events);
 //   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
 
+    // NB: unchanged_before remains unaffected from undeletes
+    Way_Skeleton_Updater::adjust_implicit_events(changes.existing_undeletes, implicit_events);
+
     changes.existing_current_meta = Way_Meta_Updater::extract_meta(
-        implicit_events, ways_meta_bin.obj_with_idx(working_idx));
+        changes.unchanged_before, ways_meta_bin.obj_with_idx(working_idx));
     changes.existing_attic_meta = Way_Meta_Updater::extract_meta(
-        implicit_events, ways_attic_meta_bin.obj_with_idx(working_idx));
+        changes.unchanged_before, ways_attic_meta_bin.obj_with_idx(working_idx));
     Way_Meta_Updater::detect_deletions(
         changes.existing_current_meta, changes.existing_attic_meta, implicit_events, deletions);
     Way_Meta_Updater::prune_first_skeletons(
@@ -277,7 +280,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     for (const auto& i : changes_per_idx)
     {
       Way_Skeleton_Updater::Way_Undelete_Delta undel_delta(
-          i.events, i.existing_current, i.deleted_after_unchanged);
+          i.events, i.existing_current, i.unchanged_before);
       undeletes_to_delete[i.idx].swap(undel_delta.undeletes_to_delete);
       undeletes_to_add[i.idx].swap(undel_delta.undeletes_to_add);
     }

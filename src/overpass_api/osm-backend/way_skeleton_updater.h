@@ -71,6 +71,14 @@ namespace Way_Skeleton_Updater
    */
 
 
+  void adjust_implicit_events(
+      const std::vector< Attic< Way_Skeleton::Id_Type > >& existing_undeletes,
+      std::vector< Way_Implicit_Pre_Event >& implicit_pre_events);
+  /* Assertions:
+   * ...
+   */
+
+
   // Resolves the base way skeletons against their events and distributes them to their proper indexes.
   // Given that most objects are expected to go to the current index this gets a dedicated argument events_for_this_idx.
   /* Precondition:

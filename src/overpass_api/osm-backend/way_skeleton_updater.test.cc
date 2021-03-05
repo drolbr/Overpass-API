@@ -13,6 +13,13 @@ std::vector< const Object* > refs_of(const std::vector< Object >& arg)
 }
 
 
+bool operator==(const Way_Implicit_Pre_Event& lhs, const Way_Implicit_Pre_Event& rhs)
+{
+  return lhs.base.id == rhs.base.id && lhs.base.nds == rhs.base.nds && lhs.base.geometry == rhs.base.geometry
+      && lhs.not_before == rhs.not_before && lhs.before == rhs.before && lhs.pos_events == rhs.pos_events;
+}
+
+
 bool operator==(const Way_Event& lhs, const Way_Event& rhs)
 {
   return lhs.skel == rhs.skel && lhs.skel.nds == rhs.skel.nds && lhs.skel.geometry == rhs.skel.geometry
@@ -29,6 +36,14 @@ OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > make_way_meta(
     meta.changeset = changeset;
     meta.user_id = user_id;
     return OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type >{ id, meta };
+}
+
+
+Way_Implicit_Pre_Event make_way_pre_event(
+    Way_Skeleton::Id_Type id, uint64_t not_before, uint64_t before)
+{
+    return Way_Implicit_Pre_Event{
+        Way_Skeleton(id), not_before, before, {} };
 }
 
 
@@ -68,6 +83,145 @@ Move_Coord_Event make_moved_coord_event(Node_Skeleton::Id_Type node_id, uint64_t
       timestamp, node_id,
       0u, 0u,
       false, false };
+}
+
+
+void test_adjust_implicit_events()
+{
+  {
+    std::cerr<<"\nTest that implicit_pre_events are preserved:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(496u, 1000, NOW) };
+    Way_Skeleton_Updater::adjust_implicit_events({}, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(496u, 1000, NOW))
+        (implicit_pre_events);
+  }
+  {
+    std::cerr<<"\nTest one implicit_pre_event with an early undelete:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(496u, 2000, NOW) };
+    Way_Skeleton_Updater::adjust_implicit_events({
+        Attic< Way_Skeleton::Id_Type >{ 496u, 1000 }
+        }, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(496u, 2000, NOW))
+        (implicit_pre_events);
+  }
+  {
+    std::cerr<<"\nTest one implicit_pre_event with an undelete on not_before:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(496u, 2000, NOW) };
+    Way_Skeleton_Updater::adjust_implicit_events({
+        Attic< Way_Skeleton::Id_Type >{ 496u, 2000 }
+        }, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(496u, 2000, NOW))
+        (implicit_pre_events);
+  }
+  {
+    std::cerr<<"\nTest one implicit_pre_event with an in-between undelete:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(496u, 2000, NOW) };
+    Way_Skeleton_Updater::adjust_implicit_events({
+        Attic< Way_Skeleton::Id_Type >{ 496u, 3000 }
+        }, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(496u, 3000, NOW))
+        (implicit_pre_events);
+  }
+  {
+    std::cerr<<"\nTest one implicit_pre_event with an undelete on before:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(496u, 2000, 3000) };
+    Way_Skeleton_Updater::adjust_implicit_events({
+        Attic< Way_Skeleton::Id_Type >{ 496u, 3000 }
+        }, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(496u, 2000, 3000))
+        (implicit_pre_events);
+  }
+  {
+    std::cerr<<"\nTest one implicit_pre_event with a late undelete:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(496u, 2000, 3000) };
+    Way_Skeleton_Updater::adjust_implicit_events({
+        Attic< Way_Skeleton::Id_Type >{ 496u, 4000 }
+        }, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(496u, 2000, 3000))
+        (implicit_pre_events);
+  }
+  {
+    std::cerr<<"\nTest two implicit_pre_events with an earlier undelete:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(496u, 1000, 3000),
+        make_way_pre_event(496u, 3000, NOW) };
+    Way_Skeleton_Updater::adjust_implicit_events({
+        Attic< Way_Skeleton::Id_Type >{ 496u, 2000 }
+        }, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(496u, 2000, 3000))
+        (make_way_pre_event(496u, 3000, NOW))
+        (implicit_pre_events);
+  }
+  {
+    std::cerr<<"\nTest two implicit_pre_events with a later undelete:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(496u, 1000, 3000),
+        make_way_pre_event(496u, 3000, NOW) };
+    Way_Skeleton_Updater::adjust_implicit_events({
+        Attic< Way_Skeleton::Id_Type >{ 496u, 4000 }
+        }, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(496u, 1000, 3000))
+        (make_way_pre_event(496u, 4000, NOW))
+        (implicit_pre_events);
+  }
+  {
+    std::cerr<<"\nTest two implicit_pre_events with different ids:\n";
+
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events = {
+        make_way_pre_event(493u, 1000, 3000),
+        make_way_pre_event(496u, 3000, NOW),
+        make_way_pre_event(497u, 1000, NOW) };
+    Way_Skeleton_Updater::adjust_implicit_events({
+        Attic< Way_Skeleton::Id_Type >{ 494u, 2000 },
+        Attic< Way_Skeleton::Id_Type >{ 495u, 4000 },
+        Attic< Way_Skeleton::Id_Type >{ 497u, 5000 }
+        }, implicit_pre_events);
+
+    bool all_ok = true;
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (make_way_pre_event(493u, 1000, 3000))
+        (make_way_pre_event(496u, 3000, NOW))
+        (make_way_pre_event(497u, 5000, NOW))
+        (implicit_pre_events);
+  }
 }
 
 
@@ -1677,6 +1831,9 @@ int main(int argc, char* args[])
         // std::vector< const Way_Skeleton* >(), std::vector< const Attic< Way_Skeleton >* >(),
         // current_result, attic_result);
 
+    std::vector< Way_Implicit_Pre_Event > implicit_pre_events;
+    Way_Skeleton_Updater::adjust_implicit_events({}, implicit_pre_events);
+
     std::vector< Way_Event > events_for_this_idx;
     std::map< Uint31_Index, std::vector< Way_Event > > arrived_objects;
     Way_Skeleton_Updater::resolve_coord_events(
@@ -1699,8 +1856,8 @@ int main(int argc, char* args[])
         // (current_result);
     // all_ok &= Compare_Vector< Attic< Way_Skeleton > >("attic_result")
         // (attic_result);
-    // all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("implicit_pre_events")
-        // (implicit_pre_events);
+    all_ok &= Compare_Vector< Way_Implicit_Pre_Event >("adjust_implicit_events::implicit_pre_events")
+        (implicit_pre_events);
     all_ok &= Compare_Vector< Way_Event >("resolve_coord_events::events_for_this_idx")
         (events_for_this_idx);
     all_ok &= Compare_Map_Vector< Uint31_Index, Way_Event >("resolve_coord_events::arrived_objects")
@@ -2493,6 +2650,7 @@ int main(int argc, char* args[])
 //             std::vector< Node::Id_Type >() })
 //         (implicit_pre_events);
 //   }
+  test_adjust_implicit_events();
   test_resolve_coord_events_of_implicits();
   test_resolve_coord_events_of_pre_events();
   test_way_skeleton_delta();
