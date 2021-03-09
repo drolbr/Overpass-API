@@ -21,5 +21,9 @@
   <marker id="6">
     <tag k="test" v="various queries"/>
   </marker>
+  <two_aggregators id="7">
+    <tag k="first" v=""/>
+    <tag k="second" v=""/>
+  </two_aggregators>
 
 </osm>

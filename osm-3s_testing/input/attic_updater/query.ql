@@ -986,6 +986,10 @@ convert per_member
     angleref=per_vertex(ref()+":"+angle());
 out;
 
+node(id:1302,1402);
+make two_aggregators first=set(changeset() + " "),second=set(changeset() + " ");
+out;
+
 (node[foo];way[foo];rel[foo];)->.orig;
 for.orig(version())
 {

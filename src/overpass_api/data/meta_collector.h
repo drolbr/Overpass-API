@@ -221,7 +221,9 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
   if (!meta_db)
     return 0;
 
-  if ((current_index) && (*current_index < index))
+  if (current_index && index < *current_index)
+      reset();
+  if (current_index && *current_index < index)
     update_current_objects(index);
 
   typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
@@ -240,7 +242,9 @@ const OSM_Element_Metadata_Skeleton< Id_Type >* Meta_Collector< Index, Id_Type >
   if (!meta_db)
     return 0;
 
-  if ((current_index) && (*current_index < index))
+  if (current_index && index < *current_index)
+      reset();
+  if (current_index && *current_index < index)
     update_current_objects(index);
 
   typename std::set< OSM_Element_Metadata_Skeleton< Id_Type > >::iterator it
