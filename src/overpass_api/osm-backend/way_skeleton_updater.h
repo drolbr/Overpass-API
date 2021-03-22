@@ -44,12 +44,6 @@ struct Way_Deletion
 };
 
 
-struct Way_Event_Container
-{
-  std::vector< Way_Event > events;
-};
-
-
 namespace Way_Skeleton_Updater
 {
   // Picks up the current and attic nodes based on pre_event_refs by id and based on moved_coords by coord changes

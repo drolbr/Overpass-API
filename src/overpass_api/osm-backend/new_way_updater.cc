@@ -117,32 +117,152 @@ struct Changed_Objects_In_An_Idx
 };
 
 
-void extract_relevant_undeleted(
-    std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes,
-    Way_Event_Container& events,
-    std::vector< Attic< Way_Skeleton::Id_Type > >& undeletes_to_del,
-    std::vector< Way_Skeleton::Id_Type >& deleted_after_unchanged)
+//TODO: Tags
+
+// hinterer Teil, Problem: unterschiedliche Index-Grobheit
+
+// Ansatz 1: Id-Hashes
+// Problem: Quadratisch beim Auslesen
+
+// Ansatz 2: pre_event_changes um Tags erweitern und sofort projizieren
+// lokal-quadratisches Einfügen oder Einfügen und Sortieren
+// { { Idx, K,V }, [ { Id, not_before, before } ]
+
+// Ansatz 3: Way_Event_With_Tags
+// { [ {Id, [{k,v}]} ] tags_at_last_unchanged, [ {Id, not_before, before, [{k,v}] ] }
+
+// Regeln: !old: nop, v[old_k] == v[new_k]: nop, !v[old_k] && old: marker, v[old_k] != v[new_k]: value
+// letzte nach cur für NOW, sonst nach attic mit before
+
+/*
 {
-  /*
+  skel = begin
+  for (id)
   {
-    for (i : events)
+    for (i : [V..])
     {
-      while (undeletes.(id, timestamp) <= i.(id, not_before))
-        ++undeletes;
-
-      if (undeletes.(id, timestamp) < i.(id, before))
+      for (key)
       {
-        if (i.prev.id < i.id)
-          deleted_after_unchanged.push(i.id);
+        ...
 
-        i.not_before = undeletes.timestamp;
-        undeletes_to_del.push(undeletes);
-        ++undeletes;
+        reset skel to id
+
+        if (i.before == NOW)
+          current.push({idx,k,v}, id)
+        else if (i.v != i.next.v)
+          attic.push({idx,k,v}, {id,i.before})
+
+        while (skel.{id, before} <= i.{id, not_before})
+          ++skel
+        if (i.prev.id == skel.id && i.prev.before < skel.prev.before)
+          attic.push({idx,k,void}, {id,i.not_before})
       }
     }
   }
-   */
+
+  sort(attic)
+  sort(current)
+  ...
+*/
+
+
+// Modifiziert: { Idx, [ { K,V, [ { Id, not_before, before } ] } ], [ { Id, not_before, before } ] }
+
+
+// Existierend: auch Tags am Minimum
+// - Liste der { id, unchanged_before } aufbauen
+// - Nur zutreffende Tags {id, >unchanged_before} behalten, current einsortieren
+// - Nach {id, k, timestamp} sortieren
+
+// Modifiziert: { Idx, [ { Id, not_before, before, [ { K, V } ] } ] }
+
+// [ { Id, K }, [ { V, not_before, before } ] } ]
+/*
+{
+  skel = begin
+  for (id)
+  {
+    for (key)
+    {
+      reset skel to id
+      for (i : [V..])
+      {
+        if (i.before == NOW)
+          current.push({idx,k,v}, id)
+        else if (i.v != i.next.v)
+          attic.push({idx,k,v}, {id,i.before})
+
+        while (skel.{id, before} <= i.{id, not_before})
+          ++skel
+        if (i.prev.id == skel.id && i.prev.before < skel.prev.before)
+          attic.push({idx,k,void}, {id,i.not_before})
+      }
+    }
+  }
+
+  sort(attic)
+  sort(current)
+
+  for (i : attic)
+  {
+    while (exist_attic.{k,v,id,time} < i.{k,v,id,time})
+    {
+      del(exist_attic)
+      ++exist_attic;
+    }
+    if (exist_attic.{k,v,id,time} == i.{k,v,id,time})
+      ++exist_attic
+    else
+      ins(i)
+  }
+  while (exist_attic)
+  {
+    del(exist_attic)
+    ++exist_attic;
+  }
+
+  for (i : current)
+  {
+    while (exist_current.{k,v,id} < i.{k,v,id})
+    {
+      del(exist_current)
+      ++exist_current;
+    }
+    if (exist_current.{k,v,id} == i.{k,v,id})
+      ++exist_current
+    else
+      ins(i)
+  }
+  while (exist_current)
+  {
+    del(exist_current)
+    ++exist_current;
+  }
 }
+*/
+
+/*
+Tag_Delta::Tag_Delta(idx, existing_local, tag_events.begin, tag_events.end)
+{
+  for (i : tag_events)
+  {
+    while (existing_local.{kv, id} < i.{kv, id})
+    {
+      to_del.add(existing_local)
+      ++existing_local;
+    }
+
+    // Kill-Events
+    // Positiv-Events
+    ...
+  }
+  while (existing_local.idx == idx)
+  {
+    to_del.add(existing_local)
+    ++existing_local;
+  }
+}
+*/
 
 
 void update_ways(Transaction& transaction, Data_From_Osc& new_data)
@@ -207,21 +327,9 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     std::vector< Way_Skeleton > current_ways = ways_bin.obj_with_idx(working_idx);
     std::vector< Attic< Way_Skeleton > > attic_ways = ways_attic_bin.obj_with_idx(working_idx);
 
-// ad _Events_ ohne Meta: [ timestamp_end, Skel* ] eintragen, timestamp_start eintragen, ids_and_timestamps_of(), { timestamp_end, nullptr } spleißen, timestamp_start-Minimum setzen, { Id, timestamp_start, timestamp_end } erzwingen
-// ... Meta einflechten ...
-// move, da Anzahl auf 0 bis unendlich ändern kann
-// Lösch-Abschnitte mit neuen Objekten spleißen
-
-// extract_relevant(vec< Way_Skeleton > current, vec< Attic< Way_Skeleton > > attic, _Pre_Events_Per_Idx_, _Moved_Coords_) -> { vec< Way_Skeleton > current_to_touch, vec< Attic< Way_Skeleton > > attic_to_touch, _Events_ }
     Way_Skeleton_Updater::extract_relevant_current_and_attic(
         i_idx.second, moved_coords,
-        current_ways, attic_ways, changes.current_to_del, changes.attic_to_del, changes.unchanged_before, implicit_events);
-
-// extract_undeleted( ids_and_timestamps_of(_Pre_Events_Per_Idx_, _Events_), _Events_ ) -> { vec< Undeleted > undeleted_to_touch, _Events_ }
-    /*Update_Events_Preparer*/::extract_relevant_undeleted(
-        ids_and_timestamps_of(i_idx.second, implicit_events), ,
-        changes.undeletes_to_del, implicit_events);
-//   std::vector< Way_Skeleton::Id_Type > deleted_after_unchanged;
+        changes.existing_current, changes.existing_attic, changes.unchanged_before, implicit_events);
 
     changes.existing_undeletes = Way_Skeleton_Updater::extract_undeleted(
         changes.unchanged_before, ways_undeleted_bin.obj_with_idx(working_idx));
