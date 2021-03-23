@@ -21,6 +21,7 @@ namespace
 
   struct KV_Ordered_Delta
   {
+    void process_unmatched_unchanged(const Way_Tag_Updater::Tags_Per_Id_Onetime& unchanged_tags);
     void compare_first_version(
         const Way_Tag_Updater::Tags_Per_Id_Onetime* unchanged_tags, const Way_Tag_Updater::Tags_Per_Id_Timespan& next);
     void compare_versions(
@@ -38,7 +39,7 @@ namespace
 void KV_Ordered_Delta::compare_first_version(
     const Way_Tag_Updater::Tags_Per_Id_Onetime* unchanged_tags, const Way_Tag_Updater::Tags_Per_Id_Timespan& next)
 {
-  if (!unchanged_tags || !(unchanged_tags->ref == next.ref))
+  if (!unchanged_tags)
     return;
 
   auto i_prev = unchanged_tags->tags.begin();
@@ -63,6 +64,14 @@ void KV_Ordered_Delta::compare_first_version(
     new_attic_entries.push_back({ { i_prev->key, i_prev->value, next.ref }, unchanged_tags->before });
     ++i_prev;
   }
+}
+
+
+void KV_Ordered_Delta::process_unmatched_unchanged(
+    const Way_Tag_Updater::Tags_Per_Id_Onetime& unchanged_tags)
+{
+  for (const auto& i : unchanged_tags.tags)
+    new_attic_entries.push_back({ { i.key, i.value, unchanged_tags.ref }, unchanged_tags.before });
 }
 
 
@@ -135,6 +144,7 @@ Way_Tag_Updater::Way_Tag_Delta::Way_Tag_Delta(
 
     while (it_tags_at_last_unchanged != tags_at_last_unchanged.end() &&
         it_tags_at_last_unchanged->first < idx)
+      // NB: If this happens then an assertion is violated
       ++it_tags_at_last_unchanged;
     const auto* unchanged_per_idx = (it_tags_at_last_unchanged == tags_at_last_unchanged.end()
         ? nullptr
@@ -143,29 +153,43 @@ Way_Tag_Updater::Way_Tag_Delta::Way_Tag_Delta(
 
     for (auto it_new_tags = new_tags_per_idx.begin(); it_new_tags != new_tags_per_idx.end(); ++it_new_tags)
     {
+      const Way_Tag_Updater::Tags_Per_Id_Onetime* unchanged_tags = 0;
       if (unchanged_per_idx)
       {
         while (i_unchanged_per_idx < unchanged_per_idx->size()
             && (*unchanged_per_idx)[i_unchanged_per_idx].ref < it_new_tags->ref)
+        {
+          kv_delta.process_unmatched_unchanged((*unchanged_per_idx)[i_unchanged_per_idx]);
           ++i_unchanged_per_idx;
+        }
+        if (i_unchanged_per_idx < unchanged_per_idx->size()
+            && (*unchanged_per_idx)[i_unchanged_per_idx].ref == it_new_tags->ref)
+          unchanged_tags = &(*unchanged_per_idx)[i_unchanged_per_idx];
       }
 
       if (it_new_tags == new_tags_per_idx.begin())
-        kv_delta.compare_first_version(
-            unchanged_per_idx && i_unchanged_per_idx < unchanged_per_idx->size()
-                ? &(*unchanged_per_idx)[i_unchanged_per_idx] : 0, *it_new_tags);
+        kv_delta.compare_first_version(unchanged_tags, *it_new_tags);
       else if (!((it_new_tags-1)->ref == it_new_tags->ref))
       {
         kv_delta.process_last_version(*(it_new_tags-1));
-        kv_delta.compare_first_version(
-            unchanged_per_idx && i_unchanged_per_idx < unchanged_per_idx->size()
-                ? &(*unchanged_per_idx)[i_unchanged_per_idx] : 0, *it_new_tags);
+        kv_delta.compare_first_version(unchanged_tags, *it_new_tags);
       }
       else
         kv_delta.compare_versions(*(it_new_tags-1), *it_new_tags);
+
+      if (unchanged_tags)
+        ++i_unchanged_per_idx;
     }
     if (!new_tags_per_idx.empty())
       kv_delta.process_last_version(new_tags_per_idx.back());
+    if (unchanged_per_idx)
+    {
+      while (i_unchanged_per_idx < unchanged_per_idx->size())
+      {
+        kv_delta.process_unmatched_unchanged((*unchanged_per_idx)[i_unchanged_per_idx]);
+        ++i_unchanged_per_idx;
+      }
+    }
 
     while (it_existing_current != existing_current.end() && it_existing_current->first.index < idx.val())
     {
