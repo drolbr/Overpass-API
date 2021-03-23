@@ -35,11 +35,17 @@ namespace Way_Tag_Updater
   };
 
 
+  struct Tagdata_By_Idx_Id
+  {
+    std::vector< Tags_Per_Id_Onetime > tags_at_last_unchanged;
+    std::vector< Tags_Per_Id_Timespan > new_tags;
+  };
+
+
   struct Way_Tag_Delta
   {
     Way_Tag_Delta(
-        const std::map< Uint31_Index, std::vector< Tags_Per_Id_Onetime > >& tags_at_last_unchanged,
-        const std::map< Uint31_Index, std::vector< Tags_Per_Id_Timespan > >& new_tags,
+        const std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id,
         const std::map< Tag_Index_Local, std::vector< Way_Skeleton::Id_Type > >& existing_current,
         const std::map< Tag_Index_Local, std::vector< Attic< Way_Skeleton::Id_Type > > >& existing_attic);
     /* Assertions:
