@@ -32,6 +32,11 @@ namespace Way_Tag_Updater
     uint64_t not_before;
     uint64_t before;
     std::vector< KV_Tag > tags;
+
+    bool operator<(const Tags_Per_Id_Timespan& rhs)
+    {
+      return ref < rhs.ref || (ref == rhs.ref && before < rhs.before);
+    }
   };
 
 
@@ -40,6 +45,11 @@ namespace Way_Tag_Updater
     std::vector< Tags_Per_Id_Onetime > tags_at_last_unchanged;
     std::vector< Tags_Per_Id_Timespan > new_tags;
   };
+
+
+  void merge_values(
+      const std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >& changes_per_idx,
+      std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id);
 
 
   struct Way_Tag_Delta

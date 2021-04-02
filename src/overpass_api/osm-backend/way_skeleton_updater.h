@@ -36,6 +36,16 @@ struct Way_Event
 };
 
 
+struct Way_Event_With_Tags
+{
+  Way_Skeleton skel;
+  Data_By_Id< Way_Skeleton >::Entry::Tag_Container tags;
+  OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
+  uint64_t not_before;
+  uint64_t before;
+};
+
+
 struct Way_Deletion
 {
   OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > meta;
@@ -102,7 +112,7 @@ namespace Way_Skeleton_Updater
   void resolve_coord_events(
       const Pre_Event_List< Way_Skeleton >& pre_events,
       const Moved_Coords& moved_coords,
-      std::map< Uint31_Index, std::vector< Way_Event > >& changes_per_idx,
+      std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >& changes_per_idx,
       std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions);
   /* Assertions:
    * ...

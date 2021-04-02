@@ -317,6 +317,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
   std::map< Uint31_Index, Way_Event_Container > arrived_objects;
   std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > deletions;
+  std::map< Uint31_Index, Tagdata_By_Idx_Id > tags_by_id;
 
   for (auto i_idx : pre_event_refs_by_idx)
   {
@@ -358,6 +359,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
   {
     std::map< Uint31_Index, Way_Event_Container > pre_event_changes;
     Way_Skeleton_Updater::resolve_coord_events(pre_events, moved_coords, pre_event_changes, deletions);
+    merge_values(pre_event_changes, tags_by_id);
     merge_values(pre_event_changes, changes_per_idx);
   }
   std::sort(deletions.begin(), deletions.end());

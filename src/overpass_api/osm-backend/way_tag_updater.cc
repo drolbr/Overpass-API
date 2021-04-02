@@ -3,6 +3,40 @@
 
 namespace
 {
+  Uint31_Index idx_for_tags(Uint31_Index arg)
+  {
+    return { arg.val() && 0x7fffff00 };
+  }
+
+
+  std::vector< Way_Tag_Updater::KV_Tag > make_tags(const Data_By_Id< Way_Skeleton >::Entry::Tag_Container& tags)
+  {
+    std::vector< Way_Tag_Updater::KV_Tag > result;
+    for (const auto& i : tags)
+      result.push_back({ i.first, i.second });
+    return result;
+  }
+}
+
+
+void Way_Tag_Updater::merge_values(
+    const std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >& changes_per_idx,
+    std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id)
+{
+  for (const auto& i : changes_per_idx)
+  {
+    auto& sink = tags_by_id[idx_for_tags(i.first)].new_tags;
+    for (const auto& j : i.second)
+      sink.push_back(Tags_Per_Id_Timespan{ j.skel.id, j.not_before, j.before, make_tags(j.tags) });
+  }
+
+  for (auto& i : tags_by_id)
+    std::sort(i.second.new_tags.begin(), i.second.new_tags.end());
+}
+
+
+namespace
+{
   struct Single_Tag
   {
     std::string key;
@@ -31,8 +65,6 @@ namespace
     std::vector< Attic< Single_Tag > > new_attic_entries;
     std::vector< Single_Tag > new_current_entries;
   };
-
-
 }
 
 

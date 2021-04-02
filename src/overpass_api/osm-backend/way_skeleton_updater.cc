@@ -240,7 +240,7 @@ void Way_Skeleton_Updater::resolve_coord_events(
 void Way_Skeleton_Updater::resolve_coord_events(
     const Pre_Event_List< Way_Skeleton >& pre_events,
     const Moved_Coords& moved_coords,
-    std::map< Uint31_Index, std::vector< Way_Event > >& changes_per_idx,
+    std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >& changes_per_idx,
     std::vector< OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > >& deletions)
 {
   for (const auto& i : pre_events.data)
@@ -259,7 +259,8 @@ void Way_Skeleton_Updater::resolve_coord_events(
         {
           clear_if_all_zero(cur.nds);
           Uint31_Index skel_idx = calc_index(cur.geometry);
-          changes_per_idx[skel_idx].push_back(Way_Event{ cur, i.entry->meta, timestamp, j.second->timestamp });
+          changes_per_idx[skel_idx].push_back(
+              Way_Event_With_Tags{ cur, i.entry->tags, i.entry->meta, timestamp, j.second->timestamp });
 
           timestamp = j.second->timestamp;
         }
@@ -287,7 +288,8 @@ void Way_Skeleton_Updater::resolve_coord_events(
 
       clear_if_all_zero(cur.nds);
       Uint31_Index skel_idx = calc_index(cur.geometry);
-      changes_per_idx[skel_idx].push_back(Way_Event{ cur, i.entry->meta, timestamp, i.timestamp_end });
+      changes_per_idx[skel_idx].push_back(
+          Way_Event_With_Tags{ cur, i.entry->tags, i.entry->meta, timestamp, i.timestamp_end });
     }
   }
 }
