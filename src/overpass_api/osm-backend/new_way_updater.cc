@@ -353,16 +353,29 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
     Way_Skeleton_Updater::resolve_coord_events(
         Way_Meta_Updater::assign_meta(current_meta, attic_meta, implicit_events), changes.events, arrived_objects);
+
+    Way_Tag_Updater::tags_of_unchanged_before(
+        changes.unchanged_before, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), working_idx, tags_by_id);
+
+    Way_Tag_Updater::eval_tags(
+        changes.events, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), working_idx, tags_by_id);
+    for (auto i : arrived_objects)
+      Way_Tag_Updater::eval_tags(i.second, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), i.first, tags_by_id);
   }
+
+  //TODO: Konflikte, wenn in Indexe mit alten Versionen hineingeschrieben wird. Reicht Anpassung von Undelete?
+  /* skel nur für Anschlüsse betroffen, meta kann Duplikate haben, undel voll betroffen: existierende fallen für die Neueinträge weg und zusätzliche können erforderlich werden zur Abgrenzung von Neueinträgen werden, Tags wie undel und zusätzlich Anschlüsse. */
+  // Näherungsweise ist es möglich, die umgezogenen Einträge als Neueinträge zu behandeln, außer für Meta
 
   merge_values(arrived_objects, changes_per_idx);
   {
     std::map< Uint31_Index, Way_Event_Container > pre_event_changes;
     Way_Skeleton_Updater::resolve_coord_events(pre_events, moved_coords, pre_event_changes, deletions);
-    merge_values(pre_event_changes, tags_by_id);
+    Way_Tag_Updater::merge_values(pre_event_changes, tags_by_id);
     merge_values(pre_event_changes, changes_per_idx);
   }
   std::sort(deletions.begin(), deletions.end());
+  sort(tags_by_id);
 
   //TODO: idx_mapfile
   //mapfile_io.compute_and_write_idx_lists(nodes_meta_to_move_to_attic, nodes_meta_to_add, nodes_attic_meta_to_add);
@@ -421,5 +434,16 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 
     update_elements(current_meta_to_delete, current_meta_to_add, transaction, *meta_settings().WAYS_META);
     update_elements(attic_meta_to_delete, attic_meta_to_add, transaction, *attic_settings().WAYS_META);
+  }
+  {
+    Way_Tag_Delta tag_delta(
+        tags_by_id, tag_changes.existing_current, tag_changes.existing_attic);
+
+    update_elements(
+        tag_delta.current_to_delete, tag_delta.current_to_add, transaction, *osm_base_settings().WAY_TAGS_LOCAL);
+    update_elements(
+        tag_delta.attic_to_delete, tag_delta.attic_to_add, transaction, *attic_settings().WAY_TAGS_LOCAL);
+
+    //TODO: Global
   }
 }

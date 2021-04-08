@@ -1,5 +1,237 @@
+#include "way_skeleton_updater.h"
 #include "way_tag_updater.h"
 #include "test_tools.h"
+
+
+namespace Way_Tag_Updater
+{
+  bool operator==(const Tags_Per_Id_Onetime& lhs, const Tags_Per_Id_Onetime& rhs)
+  {
+    return lhs.ref == rhs.ref && lhs.before == rhs.before && lhs.tags == rhs.tags;
+  }
+
+
+  bool operator==(const Tags_Per_Id_Timespan& lhs, const Tags_Per_Id_Timespan& rhs)
+  {
+    return lhs.ref == rhs.ref && lhs.not_before == rhs.not_before && lhs.before == rhs.before && lhs.tags == rhs.tags;
+  }
+}
+
+
+bool operator==(const Way_Tag_Updater::Tagdata_By_Idx_Id& lhs, const Way_Tag_Updater::Tagdata_By_Idx_Id& rhs)
+{
+  return lhs.tags_at_last_unchanged == rhs.tags_at_last_unchanged && lhs.new_tags == rhs.new_tags;
+}
+
+
+void test_merge_values()
+{
+  {
+    std::cerr<<"\nTest empty index:\n";
+
+    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
+    Way_Tag_Updater::merge_values(
+        std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >{}, tags_by_id);
+
+    Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
+
+    bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+        ("merge_values::tags_by_id")
+        (tags_by_id);
+  }
+  {
+    std::cerr<<"\nTest one object with no tags:\n";
+
+    std::map< Uint31_Index, std::vector< Way_Event_With_Tags > > way_events = {
+        { ll_upper_(51.25, 7.15), {
+          { Way{ 496u }, Data_By_Id< Way_Skeleton >::Entry::Tag_Container{}, {}, 1000, NOW }
+        } }
+      };
+    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
+    Way_Tag_Updater::merge_values(
+        way_events, tags_by_id);
+
+    Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
+
+    bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+        ("merge_values::tags_by_id")
+        (ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, {
+            { 496u, 1000, NOW, {} }
+          } })
+        (tags_by_id);
+  }
+  {
+    std::cerr<<"\nTest one object with one tag:\n";
+
+    std::map< Uint31_Index, std::vector< Way_Event_With_Tags > > way_events = {
+        { ll_upper_(51.25, 7.15), {
+          { Way{ 496u }, {
+              { "foo", "bar" }
+            }, {}, 1000, NOW }
+        } }
+      };
+    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
+    Way_Tag_Updater::merge_values(
+        way_events, tags_by_id);
+
+    Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
+
+    bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+        ("merge_values::tags_by_id")
+        (ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, {
+            { 496u, 1000, NOW, {
+                { "foo", "bar" }
+              } }
+          } })
+        (tags_by_id);
+  }
+  {
+    std::cerr<<"\nTest one object with multiple tags:\n";
+
+    std::map< Uint31_Index, std::vector< Way_Event_With_Tags > > way_events = {
+        { ll_upper_(51.25, 7.15), {
+          { Way{ 496u }, {
+              { "foo", "bar" },
+              { "goo", "baz" }
+            }, {}, 1000, NOW }
+        } }
+      };
+    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
+    Way_Tag_Updater::merge_values(
+        way_events, tags_by_id);
+
+    Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
+
+    bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+        ("merge_values::tags_by_id")
+        (ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, {
+            { 496u, 1000, NOW, {
+                { "foo", "bar" },
+                { "goo", "baz" }
+              } }
+          } })
+        (tags_by_id);
+  }
+  {
+    std::cerr<<"\nTest multiple objects each of with one tag:\n";
+
+    std::map< Uint31_Index, std::vector< Way_Event_With_Tags > > way_events = {
+        { ll_upper_(51.25, 7.15), {
+          { Way{ 494u }, {
+              { "foo", "bar" }
+            }, {}, 2000, NOW },
+          { Way{ 495u }, {
+              { "goo", "baz" }
+            }, {}, 1000, NOW },
+          { Way{ 496u }, {
+              { "foo", "bar" }
+            }, {}, 1000, NOW }
+        } }
+      };
+    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
+    Way_Tag_Updater::merge_values(
+        way_events, tags_by_id);
+
+    Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
+
+    bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+        ("merge_values::tags_by_id")
+        (ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, {
+            { 494u, 2000, NOW, {
+                { "foo", "bar" }
+              } },
+            { 495u, 1000, NOW, {
+                { "goo", "baz" }
+              } },
+            { 496u, 1000, NOW, {
+                { "foo", "bar" }
+              } }
+          } })
+        (tags_by_id);
+  }
+  {
+    std::cerr<<"\nTest multiple indices each of with one object:\n";
+
+    std::map< Uint31_Index, std::vector< Way_Event_With_Tags > > way_events = {
+        { ll_upper_(51.25, 7.15), {
+          { Way{ 496u }, {
+              { "foo", "bar496" }
+            }, {}, 1000, NOW }
+        } },
+        { ll_upper_(51.25, 7.16), {
+          { Way{ 495u }, {
+              { "foo", "bar495" }
+            }, {}, 1000, NOW }
+        } },
+        { ll_upper_(51.25, 12.15), {
+          { Way{ 494u }, {
+              { "foo", "bar494" }
+            }, {}, 1000, NOW }
+        } }
+      };
+    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
+    Way_Tag_Updater::merge_values(
+        way_events, tags_by_id);
+
+    Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
+
+    bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+        ("merge_values::tags_by_id")
+        (ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, {
+            { 496u, 1000, NOW, {
+                { "foo", "bar496" }
+              } },
+            { 495u, 1000, NOW, {
+                { "foo", "bar495" }
+              } }
+          } })
+        (ll_upper_(51.25, 12.15) & 0x7fffff00, { {}, {
+            { 494u, 1000, NOW, {
+                { "foo", "bar494" }
+              } }
+          } })
+        (tags_by_id);
+  }
+  {
+    std::cerr<<"\nTest that preexisting objects in tags_by_id are preserved:\n";
+
+    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id = {
+        { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
+            { 496u, 2000, {
+                { "foo", "until2000" }
+              } }
+          }, {
+            { 496u, 2000, NOW, {
+                { "foo", "since2000" }
+              } }
+          } } }
+      };
+    Way_Tag_Updater::merge_values(
+        std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >{}, tags_by_id);
+
+    Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
+
+    bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+        ("merge_values::tags_by_id")
+        ( ll_upper_(51.25, 7.15) & 0x7fffff00, { {
+            { 496u, 2000, {
+                { "foo", "until2000" }
+              } }
+          }, {
+            { 496u, 2000, NOW, {
+                { "foo", "since2000" }
+              } }
+          } })
+        (tags_by_id);
+  }
+}
 
 
 void test_way_delta()
@@ -609,9 +841,16 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest empty input:\n";
 
+    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
+    Way_Tag_Updater::merge_values(
+        std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >{}, tags_by_id);
+
     Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
 
     bool all_ok = true;
+    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+        ("merge_values::tags_by_id")
+        (tags_by_id);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
         (delta.current_to_add);
@@ -626,6 +865,7 @@ int main(int argc, char* args[])
         (delta.attic_to_delete);
   }
 
+  test_merge_values();
   test_way_delta();
 
   return 0;

@@ -5,7 +5,7 @@ namespace
 {
   Uint31_Index idx_for_tags(Uint31_Index arg)
   {
-    return { arg.val() && 0x7fffff00 };
+    return { arg.val() & 0x7fffff00 };
   }
 
 
@@ -30,8 +30,9 @@ void Way_Tag_Updater::merge_values(
       sink.push_back(Tags_Per_Id_Timespan{ j.skel.id, j.not_before, j.before, make_tags(j.tags) });
   }
 
-  for (auto& i : tags_by_id)
-    std::sort(i.second.new_tags.begin(), i.second.new_tags.end());
+  // NB: Do not sort on write because we have multiple writes but only one read
+//   for (auto& i : tags_by_id)
+//     std::sort(i.second.new_tags.begin(), i.second.new_tags.end());
 }
 
 

@@ -15,6 +15,9 @@ namespace Way_Tag_Updater
   {
     std::string key;
     std::string value;
+
+    bool operator==(const KV_Tag& rhs) const
+    { return key == rhs.key && value == rhs.value; }
   };
 
 
