@@ -52,42 +52,16 @@ namespace Way_Tag_Updater
 
   struct Value_Timestamp_Tag
   {
+    Way_Skeleton::Id_Type ref;
     uint64_t before;
     const Tag_Index_Local* tag;
-  };
-
-
-  struct All_Tags_Per_Id
-  {
-    std::string key;
-    std::vector< Value_Timestamp_Tag > values;
-  };
-
-
-  class Full_Tag_Store
-  {
-  public:
-    Full_Tag_Store(const std::map< Way_Skeleton::Id_Type, std::vector< All_Tags_Per_Id > >& data_)
-        : data(data_) {}
-
-    const std::vector< All_Tags_Per_Id >& get(Way_Skeleton::Id_Type ref) const
-    {
-      auto i = data.find(ref);
-      if (i != data.end())
-        return i->second;
-      return empty;
-    }
-
-  private:
-    std::map< Way_Skeleton::Id_Type, std::vector< All_Tags_Per_Id > > data;
-    std::vector< All_Tags_Per_Id > empty;
   };
 
 
   void eval_tags(
       const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
       const std::vector< Way_Event >& proto_events,
-      Full_Tag_Store& full_tag_store,
+      const std::vector< Id_Timestamp_Tag >& tags_by_id,
       Uint31_Index target_idx,
       std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id,
       std::map< Tag_Index_Local, std::vector< Way_Skeleton::Id_Type > >& existing_current,
