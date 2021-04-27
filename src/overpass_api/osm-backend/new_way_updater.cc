@@ -357,6 +357,7 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     Way_Tag_Updater::tags_of_unchanged_before(
         changes.unchanged_before, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), working_idx, tags_by_id);
 
+    // Full_Tag_Store: id -> [ { key, [ { id, timestamp, Tag_Idx_Local* } ] ]
     Way_Tag_Updater::eval_tags(
         changes.events, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), working_idx, tags_by_id);
     for (auto i : arrived_objects)

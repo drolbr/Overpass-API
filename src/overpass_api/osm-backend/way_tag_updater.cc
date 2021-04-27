@@ -19,6 +19,19 @@ namespace
 }
 
 
+void Way_Tag_Updater::eval_tags(
+    const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
+    const std::vector< Way_Event >& proto_events,
+    Full_Tag_Store& full_tag_store,
+    Uint31_Index target_idx,
+    std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id,
+    std::map< Tag_Index_Local, std::vector< Way_Skeleton::Id_Type > >& existing_current,
+    std::map< Tag_Index_Local, std::vector< Attic< Way_Skeleton::Id_Type > > >& existing_attic)
+{
+}
+
+
+
 void Way_Tag_Updater::merge_values(
     const std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >& changes_per_idx,
     std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id)
