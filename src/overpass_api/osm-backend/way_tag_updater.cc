@@ -19,15 +19,114 @@ namespace
 }
 
 
+const std::string& Way_Tag_Updater::invalid_value()
+{
+  static std::string val = "\xff";
+  return val;
+}
+
+
 void Way_Tag_Updater::eval_tags(
     const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
     const std::vector< Way_Event >& proto_events,
-    const std::vector< Id_Timestamp_Tag >& tags_by_id,
+    const std::vector< Id_Timestamp_Tag >& tags_by_id_timestamp,
     Uint31_Index target_idx,
     std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id,
     std::map< Tag_Index_Local, std::vector< Way_Skeleton::Id_Type > >& existing_current,
     std::map< Tag_Index_Local, std::vector< Attic< Way_Skeleton::Id_Type > > >& existing_attic)
 {
+  auto i_unchanged_before = unchanged_before.begin();
+  auto i_events = proto_events.begin();
+
+  Tagdata_By_Idx_Id& tags_by_id_target = tags_by_id[idx_for_tags(target_idx)];
+  Tags_Per_Id_Onetime onetime{ 0u, NOW, {} };
+  std::vector< Tags_Per_Id_Onetime > timeline;
+  std::vector< Tags_Per_Id_Onetime > last_timeline;
+  auto i_last_timeline = last_timeline.begin();
+
+  for (const auto& i : tags_by_id_timestamp)
+  {
+    if (onetime.ref.val() && onetime.ref < i.ref)
+    {
+      if (!onetime.tags.empty() && onetime.tags.back().value == invalid_value())
+        onetime.tags.pop_back();
+      tags_by_id_target.tags_at_last_unchanged.push_back(onetime);
+      onetime.ref = 0u;
+    }
+
+    if (!timeline.empty() && timeline.front().ref < i.ref)
+    {
+      while (i_last_timeline != last_timeline.end())
+      {
+        timeline.push_back({ i.ref, i_last_timeline->before, std::move(i_last_timeline->tags) });
+        ++i_last_timeline;
+      }
+      last_timeline.clear();
+
+      //TODO
+
+      timeline.clear();
+    }
+
+    while (i_unchanged_before != unchanged_before.end() && Way_Skeleton::Id_Type(*i_unchanged_before) < i.ref)
+      ++i_unchanged_before;
+    while (i_events != proto_events.end() && i_events->meta.ref < i.ref)
+      ++i_events;
+
+    bool relevant = false;
+
+    if (i_unchanged_before != unchanged_before.end() && Way_Skeleton::Id_Type(*i_unchanged_before) == i.ref
+        && i_unchanged_before->timestamp <= i.before)
+    {
+      relevant = true;
+      onetime.ref = i.ref;
+      onetime.before = i.before;
+      if (onetime.tags.empty())
+        onetime.tags.push_back({ i.tag->key, i.tag->value });
+      else if (onetime.tags.back().key != i.tag->key)
+      {
+        if (onetime.tags.back().value == invalid_value())
+          onetime.tags.pop_back();
+        onetime.tags.push_back({ i.tag->key, i.tag->value });
+      }
+    }
+
+    if (i_events != proto_events.end() && i_events->meta.ref == i.ref && i_events->not_before < i.before)
+    {
+      if (!timeline.empty() && timeline.back().tags.back().key != i.tag->key)
+      {
+        while (i_last_timeline != last_timeline.end())
+        {
+          timeline.push_back({ i.ref, i_last_timeline->before, std::move(i_last_timeline->tags) });
+          ++i_last_timeline;
+        }
+
+        last_timeline.swap(timeline);
+        i_last_timeline = last_timeline.begin();
+        timeline.clear();
+      }
+
+      while (i_last_timeline != last_timeline.end() && i_last_timeline->before <= i.before)
+      {
+        timeline.push_back({ i.ref, i_last_timeline->before, std::move(i_last_timeline->tags) });
+        ++i_last_timeline;
+      }
+      if (timeline.back().before < i.before)
+        timeline.push_back({ i.ref, i.before,
+            i_last_timeline == last_timeline.end() ? std::vector< KV_Tag >() : i_last_timeline->tags });
+      timeline.back().tags.push_back({ i.tag->key, i.tag->value });
+
+      relevant = true;
+    }
+
+    if (relevant)
+    {
+      if (i.before == NOW)
+        existing_current[*i.tag].push_back(i.ref);
+      else
+        existing_attic[*i.tag].push_back({ i.ref, i.before });
+    }
+  }
 }
 
 
@@ -161,13 +260,6 @@ void KV_Ordered_Delta::process_last_version(const Way_Tag_Updater::Tags_Per_Id_T
     for (const auto& i : arg.tags)
       new_attic_entries.push_back({ { i.key, i.value, arg.ref }, arg.before });
   }
-}
-
-
-const std::string& Way_Tag_Updater::invalid_value()
-{
-  static std::string val = "\xff";
-  return val;
 }
 
 

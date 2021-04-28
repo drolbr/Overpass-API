@@ -50,7 +50,7 @@ namespace Way_Tag_Updater
   };
 
 
-  struct Value_Timestamp_Tag
+  struct Id_Timestamp_Tag
   {
     Way_Skeleton::Id_Type ref;
     uint64_t before;
@@ -61,7 +61,7 @@ namespace Way_Tag_Updater
   void eval_tags(
       const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
       const std::vector< Way_Event >& proto_events,
-      const std::vector< Id_Timestamp_Tag >& tags_by_id,
+      const std::vector< Id_Timestamp_Tag >& tags_by_id_timestamp,
       Uint31_Index target_idx,
       std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id,
       std::map< Tag_Index_Local, std::vector< Way_Skeleton::Id_Type > >& existing_current,
