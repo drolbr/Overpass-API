@@ -264,6 +264,210 @@ Tag_Delta::Tag_Delta(idx, existing_local, tag_events.begin, tag_events.end)
 }
 */
 
+/* Problem: Wir wissen nicht, ob das Objekt bereits gelöscht war, in einem anderen Feinindex lebt
+ * oder ob es frisch überschrieben, verschoben oder gelöscht ist.
+ * 
+ * Komplikation: implizit verschobene Objekte, bei denen nicht die komplette Folgegeschichte bekannt ist.
+
+Für Tags: andere Datenstruktur [ { id, key, [ { not_before, before, value } ] } ]
+
+
+Schritt 1: bestehende Tags extrahieren
+{
+  for (i : events)
+  {
+    while (unchanged.id < i.id)
+    {
+      extract_key_timeline(unchanged.id, unchanged.not_before, true, it_tags, result);
+      ++unchanged;
+    }
+    if (unchanged.id == i.id)
+    {
+      extract_key_timeline(unchanged.id, unchanged.not_before, true, it_tags, result);
+      ++unchanged;
+    }
+    else if (it_tags->id <= i.id)
+      extract_key_timeline(i.id, i.not_before, false, it_tags, result);
+  }
+}
+
+
+extract_key_timeline(id, not_before, including_not_before, source, result)
+{
+  while (source.id < id)
+    ++source;
+  while (source.id == id)
+  {
+    if (last_key != source.key)
+      last_time = 0;
+
+    if (including_not_before && not_before == source.before)
+    {
+      result.unchanged.push({ id, source.before, source.key, source.value });
+      last_time = not_before;
+    }
+    else if (not_before < source.before)
+    {
+      if (source.value != invalid)
+        result.tags.push({ id, last_time, source.before, source.key, source.value });
+      last_time = source.before;
+    }
+
+    last_key = source.key;
+    ++source;
+  }
+}
+
+
+Schritt 2: deduplicate, da Index gröber
+*/
+
+
+
+/* Überblick:
+- Bestands-Meta (und kein Skel, Undel, Tags) entscheidet über Scope von Neu-Objekten
+- Für implizite Änderungen anytime-recurse(bn) mit voller Objektrekonstruktion, dann ggf. Neuverteilung auf Indexe
+- Zusätzlich Einkürzen bestehender Objekte aufgrund von Neu-Objekten
+
+- Bem: Nachermitteln von Objekten an Zielindizes der Verschiebung, ohne Einkürzen, aber für Kontext
+
+- Berechnung der Indexe für Neu-Objekte
+
+Vier Fälle für Tags:
+- keine Änderung des Grobindexes, keine Neu-Objekte: nicht relevant fürs Tagging
+- Änderung des Grobindexes, keine Neu-Objekte: Tags am Quell- und Zielort ?!?, Quelldaten als [ { id, key, [ { not_before, before, value } ] } ], Attic setzen
+- keine Änderung des Grobindexes, Neu-Objekte: Tags am Zielort ?!?, Quelldaten als [ { id, key, [ { not_before, before, value } ] } ]
+- Änderung des Grobindexes und Neu-Objekte: Tags am Quell- und Zielort ?!?, Attic setzen,  Quelldaten als [ { id, key, [ { not_before, before, value } ] } ] und zusammenführen
+
+Wir kennen die per Index betroffenen Objekte erst nach dem ersten Durchlauf. Es sind wenig genug zur Enumeration.
+
+Undelete-Grenzen: [ { id, not_before } ]
+Move-Meldungen: [ { id, [{ idx, not_before, before }] } ]
+Löschmeldungen: [ { id, before } ]
+
+Undelete-Grenzen: [ { id, not_before } ]
+Datenbestand
+~> Bestand: [ { id, key, [ { before ab inkl unchanged, value inkl. invalid } ] } ]
+
+Bestand: [ { id, key, [ { before ab inkl unchanged, value inkl. invalid } ] } ]
+Move-Meldungen: [ { id, [{ idx, not_before, before }] } ]
+~> Neu anzulegen: [ { id, [{ not_before, before }], [{ key, [ { not_before, before, value } ] }] ]
+
+Löschmeldungen: [ { Id, before } ]
+Bestand: [ { id, key, [ { before ab inkl unchanged, value inkl. invalid } ] } ]
+Neu anzulegen: [ { id, [{ not_before, before }], [{ key, [ { not_before, before, value } ] }] ]
+
+
+Move-Meldungen: [ { id, [{ idx, not_before, before }] } ]
+Neue Objekte
+
+<~> vervollständige Move-Meldungen
+  expires aus Neue Objekte plus Move-Meldungen
+  not_before aus Neue Objekte und Move-Targets
+
+Move-Meldungen: [ { id, not_before, expires, [{ idx, not_before, before }] } ]
+
+<~ read()
+  per idx,k,v
+    falls id in Liste und not_before <= before
+      nach Bestand
+
+Bestand: [ { id, key, [ { before ab inkl unchanged, value inkl. invalid } ] } ]
+Move-Meldungen: [ { id, expires, [{ idx, not_before, before }] } ]
+
+<~> record_tags_of_moved_objects
+  per id
+    am alten Idx ggf.
+      nach Neu anzulegen { not_before oder expires, NOW } ohne Keys
+    sort per idx
+    per idx
+      min(not_before), max(before)
+      nach Neu anzulegen alle [{ not_before, before }]
+      und alle [{ key, [ { not_before, before, value } ] }] aus dem Bestand mit not_before = 0 oder before vom Vorgänger
+
+Bestand: [ { id, key, [ { before ab inkl unchanged, value inkl. invalid } ] } ]
+Neu anzulegen: [ { id, [{ not_before, before }], [{ key, [ { not_before, before, value } ] }] ]
+
+<~> merge_values ergänzt (nur) neu anzulegen
+  und nur
+    per {id, not_before, before}
+      push {not_before, before}
+      per key
+        push {not_before, before, value}
+
+danach sortieren
+
+Bestand: [ { id, key, [ { before ab inkl unchanged, value inkl. invalid } ] } ]
+Neu anzulegen: [ { id, [{ not_before, before }], [{ key, [ { not_before, before, value } ] }] ]
+
+~> Way_Delta
+Bem: Idee, Löschmeldungen in neu_anzulegen zu integrieren
+
+for neu_anzulegen:
+  falls bestand kleiner:
+    ++bestand
+  falls bestand gleiche id:
+    for bestand.keys
+      if (neu.key < key)
+        process_key(i_neu_id, i_neu_key, null, to_del, to_ins)
+      process_key(i_neu_id, i_neu_key, bestand, to_del, to_ins)
+    while neu.key
+      process_key(i_neu_id, i_neu_key, null, to_del, to_ins)
+  sonst:
+    for keys:
+      vorher.before = i_neu_key.not_before
+      for timeline:
+        falls vorher.before echt kleiner not_before dann { idx, key, invalid }.insert { id, before }
+        falls NOW dann { idx, key, value }.insert id
+        sonst { idx, key, value }.insert { id, before }
+
+
+process_key(i_neu_id, i_neu_key, bestand, to_del&, to_ins&)
+  Per_Key_Collector coll
+  for i_neu_id
+    while i_neu_key.before <= i_neu_id.not_before
+      ++i_neu_key
+    vorher.before = i_neu_id.not_before
+    while i_neu_key.before <= i_neu_id.before
+      if vorher.before < max(not_before, not_before)
+        coll.set(vorher.before, max(not_before, not_before), inval)
+      coll.set(max(not_before, not_before), i_neu_key.before, value)
+      vorher.before = i_neu_key.before
+      ++i_neu_key
+    if i_neu_key.not_before < i_neu_id.before
+      if vorher.before < max(not_before, not_before)
+        coll.set(vorher.before, max(not_before, not_before), inval)
+      coll.set(max(not_before, not_before), i_neu_id.before)
+  ~coll
+
+
+Per_Key_Collector
+{ bestand, i_bestand, to_del_intern, to_ins_intern, to_del&, to_ins& }
+
+  ~():
+    copy to_del_intern, to_ins_intern
+
+  set(not_before, before, value):
+    if to_ins_intern.back.{before, value} == {not_before, value}
+      to_ins_intern.pop
+    else
+      while i_bestand.before < not_before
+        ++i_bestand
+      if i_bestand.before == not_before
+        if i_bestand.value == value
+          to_del_intern i_bestand
+        ++i_bestand
+    while i_bestand.before < before
+      to_del_intern i_bestand
+    if i_bestand.before == before
+      if i_bestand.value != value
+        to_del_intern i_bestand
+        to_ins_intern { before, value }
+    else
+      to_ins_intern { before, value }
+*/
+
+
 
 void update_ways(Transaction& transaction, Data_From_Osc& new_data)
 {
@@ -354,14 +558,19 @@ void update_ways(Transaction& transaction, Data_From_Osc& new_data)
     Way_Skeleton_Updater::resolve_coord_events(
         Way_Meta_Updater::assign_meta(current_meta, attic_meta, implicit_events), changes.events, arrived_objects);
 
-    Way_Tag_Updater::tags_of_unchanged_before(
-        changes.unchanged_before, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), working_idx, tags_by_id);
+    // eval_tag_idx_movements(working_idx, arrived_objects) ~> [ { id, old_idx, new_idx, not_before, before } ]
+    // (merge adjacent)
 
-    // Full_Tag_Store: id -> [ { key, [ { id, timestamp, Tag_Idx_Local* } ] ]
-    Way_Tag_Updater::eval_tags(
-        changes.events, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), working_idx, tags_by_id);
-    for (auto i : arrived_objects)
-      Way_Tag_Updater::eval_tags(i.second, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), i.first, tags_by_id);
+    // merge_values(arrived_objects, arrived_objects)
+
+//     Way_Tag_Updater::tags_of_unchanged_before(
+//         changes.unchanged_before, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), working_idx, tags_by_id);
+// 
+//     // Full_Tag_Store: id -> [ { key, [ { id, timestamp, Tag_Idx_Local* } ] ]
+//     Way_Tag_Updater::eval_tags(
+//         changes.events, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), working_idx, tags_by_id);
+//     for (auto i : arrived_objects)
+//       Way_Tag_Updater::eval_tags(i.second, Way_Tag_Updater::Full_Tag_Store::get_by_idx(working_idx), i.first, tags_by_id);
   }
 
   //TODO: Konflikte, wenn in Indexe mit alten Versionen hineingeschrieben wird. Reicht Anpassung von Undelete?
