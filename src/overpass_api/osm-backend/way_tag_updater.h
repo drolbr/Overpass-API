@@ -11,7 +11,7 @@
 
 namespace Way_Tag_Updater
 {
-  struct KV_Tag
+/*  struct KV_Tag
   {
     std::string key;
     std::string value;
@@ -70,15 +70,59 @@ namespace Way_Tag_Updater
 
   void merge_values(
       const std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >& changes_per_idx,
-      std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id);
+      std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id);*/
+
+
+  struct Timespan
+  {
+    uint64_t not_before;
+    uint64_t before;
+  };
+
+
+  struct Value_Onetime
+  {
+    uint64_t before;
+    std::string value;
+  };
+
+
+  struct Value_Timespan
+  {
+    uint64_t not_before;
+    uint64_t before;
+    std::string value;
+  };
+
+
+  struct Value_Timeline_Per_Id_Key
+  {
+    Way_Skeleton::Id_Type id;
+    std::string key;
+    std::vector< Value_Onetime > timeline;
+  };
+
+
+  struct Value_Timeline_Per_Key
+  {
+    std::string key;
+    std::vector< Value_Timespan > timeline;
+  };
+
+
+  struct Skel_KV_Timeline_Per_Id
+  {
+    Way_Skeleton::Id_Type id;
+    std::vector< Timespan > active;
+    std::vector< Value_Timeline_Per_Key > keys;
+  };
 
 
   struct Way_Tag_Delta
   {
     Way_Tag_Delta(
-        const std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id,
-        const std::map< Tag_Index_Local, std::vector< Way_Skeleton::Id_Type > >& existing_current,
-        const std::map< Tag_Index_Local, std::vector< Attic< Way_Skeleton::Id_Type > > >& existing_attic);
+        const std::map< Uint31_Index, std::vector< Value_Timeline_Per_Id_Key > >& existing,
+        const std::map< Uint31_Index, std::vector< Skel_KV_Timeline_Per_Id > >& to_apply);
     /* Assertions:
      * ...
      */
@@ -87,6 +131,32 @@ namespace Way_Tag_Updater
     std::map< Tag_Index_Local, std::set< Way_Skeleton::Id_Type > > current_to_delete;
     std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > > attic_to_add;
     std::map< Tag_Index_Local, std::set< Attic< Way_Skeleton::Id_Type > > > attic_to_delete;
+
+  private:
+    struct Per_Key_Collector
+    {
+      Per_Key_Collector(Way_Tag_Delta& parent, Uint31_Index idx, const Value_Timeline_Per_Id_Key& existing);
+      void set(uint64_t not_before, uint64_t before, const std::string& value);
+      ~Per_Key_Collector();
+
+    private:
+      Way_Tag_Delta& parent;
+      Uint31_Index idx;
+      const Value_Timeline_Per_Id_Key& existing;
+      std::vector< Value_Onetime >::const_iterator i_existing;
+      std::vector< Value_Onetime > to_delete;
+      std::vector< Value_Onetime > to_add;
+    };
+
+    void process_idx(
+        Uint31_Index idx,
+        const std::vector< Value_Timeline_Per_Id_Key >& existing,
+        const std::vector< Skel_KV_Timeline_Per_Id >& to_apply);
+    void process_key(
+        Uint31_Index idx,
+        const Value_Timeline_Per_Id_Key& existing,
+        const std::vector< Timespan >& active,
+        const Value_Timeline_Per_Key& to_apply);
   };
 
 

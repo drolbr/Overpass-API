@@ -3,7 +3,7 @@
 #include "test_tools.h"
 
 
-namespace Way_Tag_Updater
+/*namespace Way_Tag_Updater
 {
   bool operator==(const Tags_Per_Id_Onetime& lhs, const Tags_Per_Id_Onetime& rhs)
   {
@@ -231,138 +231,19 @@ void test_merge_values()
           } })
         (tags_by_id);
   }
-}
+}*/
 
 
 void test_way_delta()
 {
   {
-    std::cerr<<"\nTest single new current:\n";
+    std::cerr<<"\nTest whether an existing unmatched id is ignored:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15), { {}, { { 496u, 1000, NOW, { {"foo", "bar"} } } } } }
-        }, {}, {});
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { 496u })
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest single new attic:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15), { {}, { { 496u, 1000, 2000, { {"foo", "bar"} } } } } }
-        }, {}, {});
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { { 496u, 2000 } })
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest single existing current:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {}, {
-          { { ll_upper_(51.25, 7.15), "foo", "bar" }, { 496u } }
-        }, {});
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { 496u })
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest single existing attic:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {}, {}, {
-          { { ll_upper_(51.25, 7.15), "foo", "bar" }, { { 496u, 1000 } } }
-        });
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { { 496u, 1000 } })
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest existing current-attic pair:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {}, {
-          { { ll_upper_(51.25, 7.15), "foo", "new" }, { 496u } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "old" }, { { 496u, 1000 } } }
-        });
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "new" }, { 496u })
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "old" }, { { 496u, 1000 } })
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest adding a new current to a single existing current, values are equal:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, { { 496u, 2000, NOW, { {"foo", "bar"} } } } } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "bar" }, { 496u } }
-        }, {});
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, { { 496u, "foo", {
+        { NOW, "bar" }
+      } } } }
+    }, {});
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
@@ -379,175 +260,113 @@ void test_way_delta()
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest adding a new current to a single existing current, values differ:\n";
+    std::cerr<<"\nTest whether an existing id with one tag is deleted:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, {
-            { 496u, 1000, 2000, { {"foo", "old"} } },
-            { 496u, 2000, NOW, { {"foo", "new"} } }
-          } } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "old" }, { 496u } }
-        }, {});
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, "foo", { { NOW, "bar" } } }
+      } }
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 1000, NOW } }, {} }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "new" }, { 496u })
         (delta.current_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "old" }, { 496u })
+        ( { ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { 496u })
         (delta.current_to_delete);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "old" }, { { 496u, 2000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { { 496u, 1000 } })
         (delta.attic_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_delete")
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest adding a new current to a single existing current, keys differ:\n";
+    std::cerr<<"\nTest whether an existing id with multiple tags is deleted:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, {
-            { 496u, 1000, 2000, { {"old", "bar"} } },
-            { 496u, 2000, NOW, { {"new", "bar"} } }
-          } } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "old", "bar" }, { 496u } }
-        }, {});
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, "foo", { { NOW, "bar" } } },
+        { 496u, "goo", { { NOW, "baz" } } }
+      } }
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 1000, NOW } }, {} }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "new", "bar" }, { 496u })
         (delta.current_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 7.15), "old", "bar" }, { 496u })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { 496u })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "goo", "baz" }, { 496u })
         (delta.current_to_delete);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "new", Way_Tag_Updater::invalid_value() }, { { 496u, 2000 } })
-        ({ ll_upper_(51.25, 7.15), "old", "bar" }, { { 496u, 2000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { { 496u, 1000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "goo", "baz" }, { { 496u, 1000 } })
         (delta.attic_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_delete")
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest adding a new current to a single existing attic, values are equal:\n";
+    std::cerr<<"\nTest whether an existing id with multiple events is deleted:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { {"foo", "bar"} } }
-          }, {
-            { 496u, 3000, NOW, { {"foo", "bar"} } }
-          } } }
-        }, {}, {
-          { { ll_upper_(51.25, 7.15), "foo", "bar" }, { { 496u, 2000 } } }
-        });
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, "foo", { { 2000, "bar" }, { NOW, "baz" } } },
+      } }
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 1000, NOW } }, {} }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { 496u })
         (delta.current_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_delete")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "baz" }, { 496u })
         (delta.current_to_delete);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_add")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { { 496u, 1000 } })
         (delta.attic_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { { 496u, 2000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { { 496u, 2000 } })
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest adding a new current to a single existing attic, values differ:\n";
+    std::cerr<<"\nTest whether a new object is added:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { {"foo", "old"} } }
-          }, {
-            { 496u, 3000, NOW, { {"foo", "new"} } }
-          } } }
-        }, {}, {
-          { { ll_upper_(51.25, 7.15), "foo", "old" }, { { 496u, 2000 } } }
-        });
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      {}
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 1000, NOW } }, {
+          { "foo", { { 1000, NOW, "bar" } } }
+        } }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "new" }, { 496u })
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest adding a new current to a single existing attic, keys differ:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { {"old", "bar"} } }
-          }, {
-            { 496u, 3000, NOW, { {"new", "bar"} } }
-          } } }
-        }, {}, {
-          { { ll_upper_(51.25, 7.15), "old", "bar" }, { { 496u, 2000 } } }
-        });
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "new", "bar" }, { 496u })
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "new", Way_Tag_Updater::invalid_value() }, { { 496u, 2000 } })
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest adding a new current to an existing current-attic pair, values are equal:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { {"foo", "attic"} } }
-          }, {
-            { 496u, 2000, 3000, { {"foo", "existing"} } },
-            { 496u, 3000, NOW, { {"foo", "existing"} } }
-          } } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "existing" }, { 496u } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "attic" }, { { 496u, 2000 } } }
-        });
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { 496u })
         (delta.current_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_delete")
@@ -560,120 +379,105 @@ void test_way_delta()
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest adding a new current to an existing current-attic pair, values differ:\n";
+    std::cerr<<"\nTest whether the value of a key is updated:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { {"foo", "attic"} } }
-          }, {
-            { 496u, 2000, 3000, { {"foo", "existing"} } },
-            { 496u, 3000, NOW, { {"foo", "new"} } }
-          } } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "existing" }, { 496u } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "attic" }, { { 496u, 2000 } } }
-        });
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, "foo", { { NOW, "old" } } }
+      } }
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 1000, NOW } }, {
+          { "foo", { { 1000, NOW, "new" } } }
+        } }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "new" }, { 496u })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "new" }, { 496u })
         (delta.current_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "existing" }, { 496u })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "old" }, { 496u })
         (delta.current_to_delete);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "existing" }, { { 496u, 3000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "old" }, { { 496u, 1000 } })
         (delta.attic_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_delete")
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest adding a new current to an existing current-attic pair, keys differ:\n";
+    std::cerr<<"\nTest whether a single tag for multiple detached versions is added:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { { "attic", "bar" } } }
-          }, {
-            { 496u, 2000, 3000, { { "existing", "bar" } } },
-            { 496u, 3000, NOW, { { "new", "bar" } } }
-          } } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "existing", "bar" }, { 496u } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "attic", "bar" }, { { 496u, 2000 } } },
-          { { ll_upper_(51.25, 7.15), "existing", Way_Tag_Updater::invalid_value() }, { { 496u, 2000 } } }
-        });
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      {}
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 2000, 3000 }, { 4000, 5000 } }, {
+          { "foo", { { 1000, NOW, "bar" } } }
+        } }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "new", "bar" }, { 496u })
         (delta.current_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 7.15), "existing", "bar" }, { 496u })
         (delta.current_to_delete);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "existing", "bar" }, { { 496u, 3000 } })
-        ({ ll_upper_(51.25, 7.15), "new", Way_Tag_Updater::invalid_value() }, { { 496u, 3000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { { 496u, 3000 }, { 496u, 5000 } })
         (delta.attic_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_delete")
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest adding a new current to an existing current-attic pair, a key comes back:\n";
+    std::cerr<<"\nTest whether a single tag for multiple touching versions is added:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { { "attic", "bar" } } }
-          }, {
-            { 496u, 2000, 3000, { { "existing", "bar" } } },
-            { 496u, 3000, NOW, { { "attic", "bar" } } }
-          } } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "existing", "bar" }, { 496u } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "attic", "bar" }, { { 496u, 2000 } } },
-          { { ll_upper_(51.25, 7.15), "existing", Way_Tag_Updater::invalid_value() }, { { 496u, 2000 } } }
-        });
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      {}
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 2000, 3000 }, { 3000, 4000 } }, {
+          { "foo", { { 1000, NOW, "bar" } } }
+        } }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "attic", "bar" }, { 496u })
         (delta.current_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 7.15), "existing", "bar" }, { 496u })
         (delta.current_to_delete);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "existing", "bar" }, { { 496u, 3000 } })
-        ({ ll_upper_(51.25, 7.15), "attic", Way_Tag_Updater::invalid_value() }, { { 496u, 3000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { { 496u, 4000 } })
         (delta.attic_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_delete")
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest with only unchanged:\n";
+    std::cerr<<"\nTest whether a tag and the invalid marker are added for a single longtime version:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { { "foo", "old" } } }
-          }, {} } }
-        }, {}, {});
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      {}
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 1000, NOW } }, {
+          { "foo", { { 2000, 3000, "bar" }, { 4000, 5000, "bar" } } }
+        } }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
@@ -684,153 +488,40 @@ void test_way_delta()
         (delta.current_to_delete);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "old" }, { { 496u, 2000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { { 496u, 3000 }, { 496u, 5000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", Way_Tag_Updater::invalid_value() }, { { 496u, 2000 }, { 496u, 4000 } })
         (delta.attic_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_delete")
         (delta.attic_to_delete);
   }
   {
-    std::cerr<<"\nTest with unmatched unchanged:\n";
+    std::cerr<<"\nTest whether a tag and the invalid marker are added for multiple shorttime versions:\n";
 
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 495u, 2000, { { "foo", "bar" } } }
-          }, {
-            { 496u, 2000, NOW, { { "foo", "bar" } } },
-          } } }
-        }, {}, {});
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      {}
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 1000, 2000 }, { 2000, 3000 }, { 3000, 4000 }, { 4000, 5000 }, { 5000, NOW } }, {
+          { "foo", { { 2000, 3000, "bar" }, { 4000, 5000, "bar" } } }
+        } }
+      } }
+    });
 
     bool all_ok = true;
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { { 496u } })
         (delta.current_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_delete")
         (delta.current_to_delete);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { { 495u, 2000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar" }, { { 496u, 3000 }, { 496u, 5000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", Way_Tag_Updater::invalid_value() }, { { 496u, 2000 }, { 496u, 4000 } })
         (delta.attic_to_add);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
         ("Way_Tag_Delta::attic_to_delete")
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest that tags for different ids do not cancel out each other:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {}, {
-            { 494u, 1000, 2000, { { "foo", "old" } } },
-            { 494u, 2000, NOW, { { "foo", "new" } } },
-            { 496u, 1000, 2000, { { "foo", "old" } } },
-            { 496u, 2000, NOW, { { "foo", "new" } } },
-            { 497u, 1000, 2000, { { "foo", "old" } } },
-            { 497u, 2000, NOW, { { "foo", "new" } } }
-          } } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "new" }, { 495u, 497u } }
-        }, {
-          { { ll_upper_(51.25, 7.15), "foo", "old" }, { { 495u, 2000 }, { 497u, 3000 } } }
-        });
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "new" }, { 494u, 496u })
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "new" }, { 495u })
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "foo", "old" }, { { 494u, 2000 }, { 496u, 2000 }, { 497u, 2000 } })
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        ({ ll_upper_(51.25, 7.15), "foo", "old" }, { { 495u, 2000 }, { 497u, 3000 } })
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest that new tags and entries in unchanged align well:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 495u, 2000, { { "goo", "bar" } } },
-            { 496u, 2000, { { "foo", "bar" } } }
-          }, {
-            { 495u, 2000, NOW, { { "extra", "cat" }, { "goo", "bar" } } },
-            { 496u, 2000, NOW, { { "extra", "baz" }, { "foo", "bar" } } }
-          } } }
-        }, {}, {});
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 7.15), "extra", "baz" }, { 496u })
-        ({ ll_upper_(51.25, 7.15), "extra", "cat" }, { 495u })
-        ({ ll_upper_(51.25, 7.15), "foo", "bar" }, { 496u })
-        ({ ll_upper_(51.25, 7.15), "goo", "bar" }, { 495u })
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 7.15), "extra", Way_Tag_Updater::invalid_value() }, { { 495u, 2000 }, { 496u, 2000 } })
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        (delta.attic_to_delete);
-  }
-  {
-    std::cerr<<"\nTest with multiple indexes:\n";
-
-    Way_Tag_Updater::Way_Tag_Delta delta(
-        {
-          { ll_upper_(51.25, 7.15) & 0x7fffff00, { {
-            { 496u, 2000, { { "foo", "old" } } }
-          }, {} } },
-          { ll_upper_(51.25, 12.15) & 0x7fffff00, { {
-            { 496u, 1000, { { "foo", "old" } } }
-          }, {
-            { 496u, 2000, 3000, { { "foo", "new" } } },
-            { 496u, 3000, NOW, { { "foo", "changed" } } }
-          } } }
-        }, {
-          { { ll_upper_(51.25, 2.15) & 0x7fffff00, "foo", "new" }, { 495u } },
-          { { ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "new" }, { 497u } },
-          { { ll_upper_(51.25, 12.15) & 0x7fffff00, "foo", "new" }, { 496u } }
-        }, {
-          { { ll_upper_(51.25, 2.15) & 0x7fffff00, "foo", "old" }, { { 495u, 2000 } } },
-          { { ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "old" }, { { 496u, 2000 }, { 497u, 1000 } } },
-          { { ll_upper_(51.25, 12.15) & 0x7fffff00, "foo", "old" }, { { 496u, 1000 } } }
-        });
-
-    bool all_ok = true;
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_add")
-        ({ ll_upper_(51.25, 12.15) & 0x7fffff00, "foo", "changed" }, { { 496u } })
-        (delta.current_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
-        ("Way_Tag_Delta::current_to_delete")
-        ({ ll_upper_(51.25, 2.15) & 0x7fffff00, "foo", "new" }, { { 495u } })
-        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "new" }, { { 497u } })
-        ({ ll_upper_(51.25, 12.15) & 0x7fffff00, "foo", "new" }, { { 496u } })
-        (delta.current_to_delete);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_add")
-        ({ ll_upper_(51.25, 12.15) & 0x7fffff00, "foo", "new" }, { { 496u, 3000 } })
-        (delta.attic_to_add);
-    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
-        ("Way_Tag_Delta::attic_to_delete")
-        ({ ll_upper_(51.25, 2.15) & 0x7fffff00, "foo", "old" }, { { 495u, 2000 } })
-        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "old" }, { { 497u, 1000 } })
         (delta.attic_to_delete);
   }
 }
@@ -841,16 +532,16 @@ int main(int argc, char* args[])
   {
     std::cerr<<"\nTest empty input:\n";
 
-    std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
-    Way_Tag_Updater::merge_values(
-        std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >{}, tags_by_id);
+//     std::map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id > tags_by_id;
+//     Way_Tag_Updater::merge_values(
+//         std::map< Uint31_Index, std::vector< Way_Event_With_Tags > >{}, tags_by_id);
 
-    Way_Tag_Updater::Way_Tag_Delta delta({}, {}, {});
+    Way_Tag_Updater::Way_Tag_Delta delta({}, {});
 
     bool all_ok = true;
-    all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
-        ("merge_values::tags_by_id")
-        (tags_by_id);
+//     all_ok &= Compare_Map< Uint31_Index, Way_Tag_Updater::Tagdata_By_Idx_Id >
+//         ("merge_values::tags_by_id")
+//         (tags_by_id);
     all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
         ("Way_Tag_Delta::current_to_add")
         (delta.current_to_add);
@@ -865,7 +556,7 @@ int main(int argc, char* args[])
         (delta.attic_to_delete);
   }
 
-  test_merge_values();
+  //test_merge_values();
   test_way_delta();
 
   return 0;

@@ -1,7 +1,7 @@
 #include "way_tag_updater.h"
 
 
-namespace
+/*namespace
 {
   Uint31_Index idx_for_tags(Uint31_Index arg)
   {
@@ -16,7 +16,7 @@ namespace
       result.push_back({ i.first, i.second });
     return result;
   }
-}
+}*/
 
 
 const std::string& Way_Tag_Updater::invalid_value()
@@ -26,7 +26,7 @@ const std::string& Way_Tag_Updater::invalid_value()
 }
 
 
-void Way_Tag_Updater::eval_tags(
+/*void Way_Tag_Updater::eval_tags(
     const std::vector< Attic< Way_Skeleton::Id_Type > >& unchanged_before,
     const std::vector< Way_Event >& proto_events,
     const std::vector< Id_Timestamp_Tag >& tags_by_id_timestamp,
@@ -260,191 +260,180 @@ void KV_Ordered_Delta::process_last_version(const Way_Tag_Updater::Tags_Per_Id_T
     for (const auto& i : arg.tags)
       new_attic_entries.push_back({ { i.key, i.value, arg.ref }, arg.before });
   }
+}*/
+
+
+Way_Tag_Updater::Way_Tag_Delta::Per_Key_Collector::Per_Key_Collector(
+    Way_Tag_Delta& parent_, Uint31_Index idx_, const Value_Timeline_Per_Id_Key& existing_)
+    : parent(parent_), idx(idx_), existing(existing_), i_existing(existing.timeline.begin()) {}
+
+
+void Way_Tag_Updater::Way_Tag_Delta::Per_Key_Collector::set(
+    uint64_t not_before, uint64_t before, const std::string& value)
+{
+  if (!to_add.empty() && to_add.back().before == not_before && to_add.back().value == value)
+    to_add.pop_back();
+  else
+  {
+    while (i_existing != existing.timeline.end() && i_existing->before < not_before)
+      ++i_existing;
+    if (i_existing != existing.timeline.end())
+    {
+      if (i_existing->before == not_before)
+      {
+        if (i_existing->value == value)
+          to_delete.push_back(*i_existing);
+        ++i_existing;
+      }
+      else if (i_existing->value != value)
+        to_add.push_back({ not_before, i_existing->value });
+    }
+  }
+
+  while (i_existing != existing.timeline.end() && i_existing->before < before)
+  {
+    to_delete.push_back(*i_existing);
+    ++i_existing;
+  }
+
+  if (i_existing != existing.timeline.end() && i_existing->before == before)
+  {
+    if (i_existing->value != value)
+    {
+      to_delete.push_back(*i_existing);
+      to_add.push_back({ before, value });
+      ++i_existing;
+    }
+  }
+  else
+    to_add.push_back({ before, value });
+}
+
+
+Way_Tag_Updater::Way_Tag_Delta::Per_Key_Collector::~Per_Key_Collector()
+{
+  if (i_existing == existing.timeline.end() && !to_add.empty() && to_add.back().value == invalid_value())
+    // Save space in the database - the key is not yet set later on
+    to_add.pop_back();
+
+  for (const auto& i : to_delete)
+  {
+    if (i.before == NOW)
+      parent.current_to_delete[Tag_Index_Local(idx, existing.key, i.value)].insert(existing.id);
+    else
+      parent.attic_to_delete[Tag_Index_Local(idx, existing.key, i.value)].insert({ existing.id, i.before });
+  }
+  for (const auto& i : to_add)
+  {
+    if (i.before == NOW)
+      parent.current_to_add[Tag_Index_Local(idx, existing.key, i.value)].insert(existing.id);
+    else
+      parent.attic_to_add[Tag_Index_Local(idx, existing.key, i.value)].insert({ existing.id, i.before });
+  }
+}
+
+
+void Way_Tag_Updater::Way_Tag_Delta::process_key(
+    Uint31_Index idx,
+    const Value_Timeline_Per_Id_Key& existing,
+    const std::vector< Timespan >& active,
+    const Value_Timeline_Per_Key& to_apply)
+{
+  Per_Key_Collector collector(*this, idx, existing);
+  auto i_to_apply = to_apply.timeline.begin();
+  for (const auto& i : active)
+  {
+    while (i_to_apply != to_apply.timeline.end() && i_to_apply->before < i.not_before)
+      ++i_to_apply;
+
+    uint64_t last_before = i.not_before;
+    while (i_to_apply != to_apply.timeline.end() && i_to_apply->before <= i.before)
+    {
+      uint64_t not_before = std::max(i_to_apply->not_before, i.not_before);
+      if (last_before < not_before)
+        collector.set(last_before, not_before, invalid_value());
+      collector.set(not_before, i_to_apply->before, i_to_apply->value);
+      last_before = i_to_apply->before;
+      ++i_to_apply;
+    }
+
+    if (i_to_apply != to_apply.timeline.end() && i_to_apply->not_before < i.before)
+    {
+      uint64_t not_before = std::max(i_to_apply->not_before, i.not_before);
+      if (last_before < not_before)
+        collector.set(last_before, not_before, invalid_value());
+      collector.set(not_before, i.before, i_to_apply->value);
+    }
+    else
+      collector.set(last_before, i.before, invalid_value());
+  }
+}
+
+
+void Way_Tag_Updater::Way_Tag_Delta::process_idx(
+    Uint31_Index idx,
+    const std::vector< Value_Timeline_Per_Id_Key >& existing,
+    const std::vector< Skel_KV_Timeline_Per_Id >& to_apply)
+{
+  auto i_existing = existing.begin();
+  for (const auto& i : to_apply)
+  {
+    while (i_existing != existing.end() && i_existing->id < i.id)
+      ++i_existing;
+
+    auto i_key = i.keys.begin();
+
+    while (i_existing != existing.end() && i_existing->id == i.id)
+    {
+      while (i_key != i.keys.end() && i_key->key < i_existing->key)
+      {
+        process_key(idx, { i.id, i_key->key, {} }, i.active, *i_key);
+        ++i_key;
+      }
+
+      if (i_key != i.keys.end() && i_key->key == i_existing->key)
+      {
+        process_key(idx, *i_existing, i.active, *i_key);
+        ++i_key;
+      }
+      else
+        process_key(idx, *i_existing, i.active, {});
+
+      ++i_existing;
+    }
+
+    while (i_key != i.keys.end())
+    {
+      process_key(idx, { i.id, i_key->key, {} }, i.active, *i_key);
+      ++i_key;
+    }
+  }
 }
 
 
 Way_Tag_Updater::Way_Tag_Delta::Way_Tag_Delta(
-    const std::map< Uint31_Index, Tagdata_By_Idx_Id >& tags_by_id,
-    const std::map< Tag_Index_Local, std::vector< Way_Skeleton::Id_Type > >& existing_current,
-    const std::map< Tag_Index_Local, std::vector< Attic< Way_Skeleton::Id_Type > > >& existing_attic)
+    const std::map< Uint31_Index, std::vector< Value_Timeline_Per_Id_Key > >& existing,
+    const std::map< Uint31_Index, std::vector< Skel_KV_Timeline_Per_Id > >& to_apply)
 {
-  auto it_existing_current = existing_current.begin();
-  auto it_existing_attic = existing_attic.begin();
-
-  for (const auto& i_tags_by_id : tags_by_id)
+  auto i_existing = existing.begin();
+  for (const auto& i : to_apply)
   {
-    KV_Ordered_Delta kv_delta;
-
-    Uint31_Index idx = i_tags_by_id.first;
-    const auto& new_tags_per_idx = i_tags_by_id.second.new_tags;
-
-    const auto* unchanged_per_idx = &i_tags_by_id.second.tags_at_last_unchanged;
-    auto i_unchanged_per_idx = unchanged_per_idx->begin();
-
-    for (auto it_new_tags = new_tags_per_idx.begin(); it_new_tags != new_tags_per_idx.end(); ++it_new_tags)
+    while (i_existing != existing.end() && i_existing->first < i.first)
     {
-      const Way_Tag_Updater::Tags_Per_Id_Onetime* unchanged_tags = 0;
-      while (i_unchanged_per_idx != unchanged_per_idx->end() && i_unchanged_per_idx->ref < it_new_tags->ref)
-      {
-        kv_delta.process_unmatched_unchanged(*i_unchanged_per_idx);
-        ++i_unchanged_per_idx;
-      }
-      if (i_unchanged_per_idx != unchanged_per_idx->end() && i_unchanged_per_idx->ref == it_new_tags->ref)
-        unchanged_tags = &*i_unchanged_per_idx;
-
-      if (it_new_tags == new_tags_per_idx.begin())
-        kv_delta.compare_first_version(unchanged_tags, *it_new_tags);
-      else if (!((it_new_tags-1)->ref == it_new_tags->ref))
-      {
-        kv_delta.process_last_version(*(it_new_tags-1));
-        kv_delta.compare_first_version(unchanged_tags, *it_new_tags);
-      }
-      else
-        kv_delta.compare_versions(*(it_new_tags-1), *it_new_tags);
-
-      if (unchanged_tags)
-        ++i_unchanged_per_idx;
+      process_idx(i_existing->first, i_existing->second, {});
+      ++i_existing;
     }
-    if (!new_tags_per_idx.empty())
-      kv_delta.process_last_version(new_tags_per_idx.back());
-    while (i_unchanged_per_idx != unchanged_per_idx->end())
+    if (i_existing == existing.end() || i.first < i_existing->first)
+      process_idx(i.first, {}, i.second);
+    else
     {
-      kv_delta.process_unmatched_unchanged(*i_unchanged_per_idx);
-      ++i_unchanged_per_idx;
-    }
-
-    while (it_existing_current != existing_current.end() && it_existing_current->first.index < idx.val())
-    {
-      current_to_delete[it_existing_current->first].insert(
-          it_existing_current->second.begin(), it_existing_current->second.end());
-      ++it_existing_current;
-    }
-    while (it_existing_attic != existing_attic.end() && it_existing_attic->first.index < idx.val())
-    {
-      attic_to_delete[it_existing_attic->first].insert(
-          it_existing_attic->second.begin(), it_existing_attic->second.end());
-      ++it_existing_attic;
-    }
-
-    std::sort(kv_delta.new_attic_entries.begin(), kv_delta.new_attic_entries.end());
-    std::sort(kv_delta.new_current_entries.begin(), kv_delta.new_current_entries.end());
-
-    auto i_new_current = kv_delta.new_current_entries.begin();
-    while (it_existing_current != existing_current.end() && it_existing_current->first.index == idx.val())
-    {
-      while (i_new_current != kv_delta.new_current_entries.end() && i_new_current->key < it_existing_current->first.key)
-      {
-        current_to_add[Tag_Index_Local{ idx, i_new_current->key, i_new_current->value }].insert(i_new_current->ref);
-        ++i_new_current;
-      }
-      while (i_new_current != kv_delta.new_current_entries.end() && i_new_current->key == it_existing_current->first.key
-          && i_new_current->value < it_existing_current->first.value)
-      {
-        current_to_add[Tag_Index_Local{ idx, i_new_current->key, i_new_current->value }].insert(i_new_current->ref);
-        ++i_new_current;
-      }
-
-      if (i_new_current != kv_delta.new_current_entries.end() && i_new_current->key == it_existing_current->first.key
-          && i_new_current->value == it_existing_current->first.value)
-      {
-        for (auto i : it_existing_current->second)
-        {
-          while (i_new_current != kv_delta.new_current_entries.end()
-              && i_new_current->key == it_existing_current->first.key
-              && i_new_current->value == it_existing_current->first.value && i_new_current->ref < i)
-          {
-            current_to_add[Tag_Index_Local{ idx, i_new_current->key, i_new_current->value }]
-                .insert(i_new_current->ref);
-            ++i_new_current;
-          }
-
-          if (i_new_current != kv_delta.new_current_entries.end() && i_new_current->key == it_existing_current->first.key
-              && i_new_current->value == it_existing_current->first.value && i_new_current->ref == i)
-            ++i_new_current;
-          else
-            current_to_delete[it_existing_current->first].insert(i);
-        }
-      }
-      else
-        current_to_delete[it_existing_current->first].insert(
-            it_existing_current->second.begin(), it_existing_current->second.end());
-      ++it_existing_current;
-    }
-    while (i_new_current != kv_delta.new_current_entries.end())
-    {
-      current_to_add[Tag_Index_Local{ idx, i_new_current->key, i_new_current->value }].insert(i_new_current->ref);
-      ++i_new_current;
-    }
-
-    auto i_new_attic = kv_delta.new_attic_entries.begin();
-    while (it_existing_attic != existing_attic.end() && it_existing_attic->first.index == idx.val())
-    {
-      while (i_new_attic != kv_delta.new_attic_entries.end() && i_new_attic->key < it_existing_attic->first.key)
-      {
-        attic_to_add[Tag_Index_Local{ idx, i_new_attic->key, i_new_attic->value }]
-            .insert({ i_new_attic->ref, i_new_attic->timestamp });
-        ++i_new_attic;
-      }
-      while (i_new_attic != kv_delta.new_attic_entries.end() && i_new_attic->key == it_existing_attic->first.key
-          && i_new_attic->value < it_existing_attic->first.value)
-      {
-        attic_to_add[Tag_Index_Local{ idx, i_new_attic->key, i_new_attic->value }]
-            .insert({ i_new_attic->ref, i_new_attic->timestamp });
-        ++i_new_attic;
-      }
-
-      if (i_new_attic != kv_delta.new_attic_entries.end() && i_new_attic->key == it_existing_attic->first.key
-          && i_new_attic->value == it_existing_attic->first.value)
-      {
-        for (auto i : it_existing_attic->second)
-        {
-          while (i_new_attic != kv_delta.new_attic_entries.end() && i_new_attic->key == it_existing_attic->first.key
-              && i_new_attic->value == it_existing_attic->first.value && i_new_attic->ref < i)
-          {
-            attic_to_add[Tag_Index_Local{ idx, i_new_attic->key, i_new_attic->value }]
-                .insert({ i_new_attic->ref, i_new_attic->timestamp });
-            ++i_new_attic;
-          }
-          while (i_new_attic != kv_delta.new_attic_entries.end() && i_new_attic->key == it_existing_attic->first.key
-              && i_new_attic->value == it_existing_attic->first.value && i_new_attic->ref == i
-              && i_new_attic->timestamp < i.timestamp)
-          {
-            attic_to_add[Tag_Index_Local{ idx, i_new_attic->key, i_new_attic->value }]
-                .insert({ i_new_attic->ref, i_new_attic->timestamp });
-            ++i_new_attic;
-          }
-
-          if (i_new_attic != kv_delta.new_attic_entries.end() && i_new_attic->key == it_existing_attic->first.key
-              && i_new_attic->value == it_existing_attic->first.value && i_new_attic->ref == i
-              && i_new_attic->timestamp == i.timestamp)
-            ++i_new_attic;
-          else
-            attic_to_delete[it_existing_attic->first].insert(i);
-        }
-      }
-      else
-        attic_to_delete[it_existing_attic->first].insert(
-            it_existing_attic->second.begin(), it_existing_attic->second.end());
-      ++it_existing_attic;
-    }
-    while (i_new_attic != kv_delta.new_attic_entries.end())
-    {
-      attic_to_add[Tag_Index_Local{ idx, i_new_attic->key, i_new_attic->value }]
-          .insert({ i_new_attic->ref, i_new_attic->timestamp });
-      ++i_new_attic;
+      process_idx(i.first, i_existing->second, i.second);
+      ++i_existing;
     }
   }
-
-  while (it_existing_current != existing_current.end())
+  while (i_existing != existing.end())
   {
-    current_to_delete[it_existing_current->first].insert(
-        it_existing_current->second.begin(), it_existing_current->second.end());
-    ++it_existing_current;
-  }
-  while (it_existing_attic != existing_attic.end())
-  {
-    attic_to_delete[it_existing_attic->first].insert(
-        it_existing_attic->second.begin(), it_existing_attic->second.end());
-    ++it_existing_attic;
+    process_idx(i_existing->first, i_existing->second, {});
+    ++i_existing;
   }
 }
