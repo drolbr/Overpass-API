@@ -524,6 +524,67 @@ void test_way_delta()
         ("Way_Tag_Delta::attic_to_delete")
         (delta.attic_to_delete);
   }
+  {
+    std::cerr<<"\nTest with a complex existing value timeline:\n";
+
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, "foo", { { 2000, "bar_2000" }, { 4000, "bar_4000" }, { 6000, "bar_6000" } } }
+      } }
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 4000, 5000 }, { 6000, NOW } }, {
+          { "foo", { { 4000, 5000, "bar_4000" }, { 6000, NOW, "final" } } }
+        } }
+      } }
+    });
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
+        ("Way_Tag_Delta::current_to_add")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "final" }, { 496u })
+        (delta.current_to_add);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
+        ("Way_Tag_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
+        ("Way_Tag_Delta::attic_to_add")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar_4000" }, { { 496u, 5000 } })
+        (delta.attic_to_add);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
+        ("Way_Tag_Delta::attic_to_delete")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar_4000" }, { { 496u, 4000 } })
+        (delta.attic_to_delete);
+  }
+  {
+    std::cerr<<"\nTest with a complex new value timeline:\n";
+
+    Way_Tag_Updater::Way_Tag_Delta delta({
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 3000, 5000 }, { 6000, NOW } }, {
+          { "foo", { { 1000, 2000, "bar_2000" }, { 4000, 6000, "bar_4000" }, { 6000, NOW, "final" } } }
+        } }
+      } }
+    });
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
+        ("Way_Tag_Delta::current_to_add")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "final" }, { 496u })
+        (delta.current_to_add);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
+        ("Way_Tag_Delta::current_to_delete")
+        (delta.current_to_delete);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
+        ("Way_Tag_Delta::attic_to_add")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "bar_4000" }, { { 496u, 5000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", Way_Tag_Updater::invalid_value() }, { { 496u, 4000 } })
+        (delta.attic_to_add);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
+        ("Way_Tag_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+  }
 }
 
 

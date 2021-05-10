@@ -369,7 +369,7 @@ public:
           if (i_candidate->second.size() != i_target->second.size())
           {
             notify_failed(all_ok);
-            std::cerr<<title<<": "<<i_target->second.size()<<" elements expected, "
+            std::cerr<<title<<", in value: "<<i_target->second.size()<<" elements expected, "
                 <<i_candidate->second.size()<<" elements found.\n";
           }
           auto j_target = i_target->second.begin();

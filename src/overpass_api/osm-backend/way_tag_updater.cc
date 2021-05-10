@@ -343,7 +343,7 @@ void Way_Tag_Updater::Way_Tag_Delta::process_key(
   auto i_to_apply = to_apply.timeline.begin();
   for (const auto& i : active)
   {
-    while (i_to_apply != to_apply.timeline.end() && i_to_apply->before < i.not_before)
+    while (i_to_apply != to_apply.timeline.end() && i_to_apply->before <= i.not_before)
       ++i_to_apply;
 
     uint64_t last_before = i.not_before;
@@ -364,7 +364,7 @@ void Way_Tag_Updater::Way_Tag_Delta::process_key(
         collector.set(last_before, not_before, invalid_value());
       collector.set(not_before, i.before, i_to_apply->value);
     }
-    else
+    else if (last_before < i.before)
       collector.set(last_before, i.before, invalid_value());
   }
 }
