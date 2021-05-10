@@ -585,6 +585,50 @@ void test_way_delta()
         ("Way_Tag_Delta::attic_to_delete")
         (delta.attic_to_delete);
   }
+  {
+    std::cerr<<"\nTest with multiple keys and ids:\n";
+
+    Way_Tag_Updater::Way_Tag_Delta delta({
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 495u, "foo", { { 2000, "bar_2000" }, { NOW, "final_495" } } },
+        { 496u, "bar", { { NOW, "final_bar_496" } } },
+        { 496u, "baz", { { NOW, "final_baz_496" } } },
+        { 496u, "foo", { { NOW, "final_foo_496" } } },
+        { 497u, "foo", { { NOW, "final_497" } } }
+      } }
+    }, {
+      { ll_upper_(51.25, 7.15) & 0x7fffff00, {
+        { 496u, { { 2000, NOW } }, {
+          { "baz", { { 2000, NOW, "final_baz" } } },
+          { "doo", { { 2000, NOW, "final_doo" } } },
+          { "goo", { { 2000, NOW, "final_goo" } } }
+        } }
+      } }
+    });
+
+    bool all_ok = true;
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
+        ("Way_Tag_Delta::current_to_add")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "baz", "final_baz" }, { 496u })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "doo", "final_doo" }, { 496u })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "goo", "final_goo" }, { 496u })
+        (delta.current_to_add);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Way_Skeleton::Id_Type >
+        ("Way_Tag_Delta::current_to_delete")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "bar", "final_bar_496" }, { 496u })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "baz", "final_baz_496" }, { 496u })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "final_foo_496" }, { 496u })
+        (delta.current_to_delete);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
+        ("Way_Tag_Delta::attic_to_add")
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "bar", "final_bar_496" }, { { 496u, 2000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "baz", "final_baz_496" }, { { 496u, 2000 } })
+        ({ ll_upper_(51.25, 7.15) & 0x7fffff00, "foo", "final_foo_496" }, { { 496u, 2000 } })
+        (delta.attic_to_add);
+    all_ok &= Compare_Map_Set< Tag_Index_Local, Attic< Way_Skeleton::Id_Type > >
+        ("Way_Tag_Delta::attic_to_delete")
+        (delta.attic_to_delete);
+  }
 }
 
 
