@@ -447,7 +447,7 @@ struct User_Data
 
 struct OSM_Element_Metadata
 {
-  OSM_Element_Metadata() : user_id(0) {}
+  OSM_Element_Metadata() : version(0), timestamp(0), changeset(0), user_id(0) {}
 
   uint32 version;
   uint64 timestamp;
