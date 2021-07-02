@@ -162,9 +162,125 @@ void comp_sets(Resource_Manager& rman, const std::string& set_1, const std::stri
   rman.swap_set(set_2, s2);
 }
 
+
+std::set< std::pair< Uint32_Index, Uint32_Index > > range_union(
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >& lhs,
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >& rhs);
+
+
 int main(int argc, char* args[])
 {
-  std::vector< Aligned_Segment > segs;
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
+    std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
+    std::set< std::pair< Uint32_Index, Uint32_Index > > result = range_union(lhs, rhs);
+    std::cout<<"Test empty lhs and rhs:\n";
+    for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = result.begin();
+        it != result.end(); ++it)
+      std::cout<<'\t'<<std::hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
+    lhs.insert(std::make_pair(1, 2));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
+    std::set< std::pair< Uint32_Index, Uint32_Index > > result = range_union(lhs, rhs);
+    std::cout<<"Test single entry in lhs:\n";
+    for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = result.begin();
+        it != result.end(); ++it)
+      std::cout<<'\t'<<std::hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
+    std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
+    rhs.insert(std::make_pair(3, 5));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > result = range_union(lhs, rhs);
+    std::cout<<"Test single entry in rhs:\n";
+    for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = result.begin();
+        it != result.end(); ++it)
+      std::cout<<'\t'<<std::hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
+    lhs.insert(std::make_pair(6, 8));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
+    rhs.insert(std::make_pair(9, 10));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > result = range_union(lhs, rhs);
+    std::cout<<"Test lhs before rhs:\n";
+    for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = result.begin();
+        it != result.end(); ++it)
+      std::cout<<'\t'<<std::hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
+    lhs.insert(std::make_pair(15, 17));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
+    rhs.insert(std::make_pair(11, 14));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > result = range_union(lhs, rhs);
+    std::cout<<"Test rhs before lhs:\n";
+    for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = result.begin();
+        it != result.end(); ++it)
+      std::cout<<'\t'<<std::hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
+    lhs.insert(std::make_pair(16, 18));
+    lhs.insert(std::make_pair(18, 20));
+    lhs.insert(std::make_pair(26, 28));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
+    rhs.insert(std::make_pair(20, 22));
+    rhs.insert(std::make_pair(22, 24));
+    rhs.insert(std::make_pair(24, 26));
+    rhs.insert(std::make_pair(28, 30));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > result = range_union(lhs, rhs);
+    std::cout<<"Test tail matching next head:\n";
+    for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = result.begin();
+        it != result.end(); ++it)
+      std::cout<<'\t'<<std::hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
+    lhs.insert(std::make_pair(16, 24));
+    lhs.insert(std::make_pair(32, 40));
+    lhs.insert(std::make_pair(52, 68));
+    lhs.insert(std::make_pair(80, 88));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
+    rhs.insert(std::make_pair(20, 36));
+    rhs.insert(std::make_pair(48, 56));
+    rhs.insert(std::make_pair(64, 72));
+    rhs.insert(std::make_pair(84, 92));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > result = range_union(lhs, rhs);
+    std::cout<<"Test overlap between lhs and rhs:\n";
+    for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = result.begin();
+        it != result.end(); ++it)
+      std::cout<<'\t'<<std::hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
+    std::cout<<'\n';
+  }
+  {
+    std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
+    lhs.insert(std::make_pair(64, 96));
+    lhs.insert(std::make_pair(128, 132));
+    lhs.insert(std::make_pair(136, 152));
+    lhs.insert(std::make_pair(156, 160));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
+    rhs.insert(std::make_pair(64, 68));
+    rhs.insert(std::make_pair(72, 88));
+    rhs.insert(std::make_pair(92, 96));
+    rhs.insert(std::make_pair(128, 160));
+    std::set< std::pair< Uint32_Index, Uint32_Index > > result = range_union(lhs, rhs);
+    std::cout<<"Test segment contained in other segments:\n";
+    for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it = result.begin();
+        it != result.end(); ++it)
+      std::cout<<'\t'<<std::hex<<it->first.val()<<'\t'<<it->second.val()<<'\n';
+    std::cout<<'\n';
+  }
+  
+/*  std::vector< Aligned_Segment > segs;
 
   Error_Output* error_output(new Console_Output(false));
   Statement::set_error_output(error_output);
@@ -404,12 +520,12 @@ int main(int argc, char* args[])
     Area_Query_Statement* stmt1 = new Area_Query_Statement(0, convert_c_pairs(attributes), global_settings);
     stmt1->execute(rman);
   }
-  /*{
+  {
     Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
     const char* attributes[] = { "mode", "ids_only", "from", "_", 0 };
     stmt1->set_attributes(attributes);
     stmt1->execute(rman);
-  }*/
+  }
   comp_sets(rman, "comp", "_");
 
   {
@@ -445,6 +561,7 @@ int main(int argc, char* args[])
     stmt1->execute(rman);
   }
   comp_sets(rman, "comp", "_");
+*/
 
   return 0;
 }

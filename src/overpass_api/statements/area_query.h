@@ -46,7 +46,7 @@ class Area_Query_Statement : public Output_Statement
 
     struct Criterion_Maker : public Statement::Criterion_Maker
     {
-      virtual bool can_standalone(const std::string& type) { return type == "node"; }
+      virtual bool can_standalone(const std::string& type) { return false; }
       virtual Statement* create_criterion(const Token_Node_Ptr& tree_it,
           const std::string& type, const std::string& into,
           Statement::Factory& stmt_factory, Parsed_Query& global_settings, Error_Output* error_output);
@@ -62,7 +62,8 @@ class Area_Query_Statement : public Output_Statement
     unsigned int count_ranges(Resource_Manager& rman);
 
     void get_ranges
-      (const std::map< Uint31_Index, std::vector< Area_Skeleton > >& input_areas,
+      (const std::map< Uint31_Index, std::vector< Way_Skeleton > >& input_ways,
+       const std::map< Uint31_Index, std::vector< Area_Skeleton > >& input_areas,
        std::set< Uint31_Index >& area_blocks_req,
        Resource_Manager& rman);
 
@@ -115,6 +116,7 @@ class Area_Query_Statement : public Output_Statement
   private:
     std::string input;
     long long submitted_id;
+    std::vector< Way_Skeleton::Id_Type > way_areas_id;
     std::vector< Area_Skeleton::Id_Type > area_id;
     std::set< Uint31_Index > area_blocks_req;
     bool area_blocks_req_filled;

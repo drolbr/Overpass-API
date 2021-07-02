@@ -52,7 +52,6 @@ class Area_Constraint : public Query_Constraint
 
   private:
     Area_Query_Statement* area;
-    std::set< Uint31_Index > area_blocks_req;
 };
 
 
@@ -66,21 +65,66 @@ void copy_discrete_to_area_ranges(
 }
 
 
+std::set< std::pair< Uint32_Index, Uint32_Index > > range_union(
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >& lhs,
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >& rhs)
+{
+  std::vector< std::pair< Uint32_Index, Uint32_Index > > result;
+  std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it_l = lhs.begin();
+  std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it_r = rhs.begin();
+  
+  while (true)
+  {
+    if (it_l != lhs.end() && (it_r == rhs.end() || it_l->first < it_r->first))
+    {
+      if (result.empty() || result.back().second < it_l->first)
+        result.push_back(*it_l);
+      else if (result.back().second < it_l->second)
+        result.back().second = it_l->second;
+      ++it_l;
+    }
+    else if (it_r != rhs.end())
+    {
+      if (result.empty() || result.back().second < it_r->first)
+        result.push_back(*it_r);
+      else if (result.back().second < it_r->second)
+        result.back().second = it_r->second;
+      ++it_r;
+    }
+    else
+      break;
+  }
+  return std::set< std::pair< Uint32_Index, Uint32_Index > >(result.begin(), result.end());
+}
+
+
 bool Area_Constraint::get_ranges
     (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
 {
+  std::set< Uint31_Index > area_blocks_req;
   if (area->areas_from_input())
   {
     const Set* input = rman.get_set(area->get_input());
     if (!input)
       return true;
 
-    area->get_ranges(input->areas, area_blocks_req, rman);
+    area->get_ranges(input->ways, input->areas, area_blocks_req, rman);
+
+    if (rman.get_desired_timestamp() == NOW)
+      way_nd_indices(area, rman, input->ways.begin(), input->ways.end()).swap(ranges);
+    else
+      way_nd_indices(area, rman, input->ways.begin(), input->ways.end(),
+          input->attic_ways.begin(), input->attic_ways.end()).swap(ranges);
   }
   else
+  {
     area->get_ranges(area_blocks_req, rman);
+    ranges.clear();
+  }
 
-  copy_discrete_to_area_ranges(area_blocks_req, ranges);
+  std::set< std::pair< Uint32_Index, Uint32_Index > > area_ranges;
+  copy_discrete_to_area_ranges(area_blocks_req, area_ranges);
+  range_union(ranges, area_ranges).swap(ranges);
 
   return true;
 }
@@ -122,7 +166,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   {
     const Set* input = rman.get_set(area->get_input());
     if (input)
-      area->get_ranges(input->areas, area_blocks_req, rman);
+      area->get_ranges(input->ways, input->areas, area_blocks_req, rman);
   }
   else
     area->get_ranges(area_blocks_req, rman);
@@ -308,10 +352,23 @@ void Area_Query_Statement::fill_ranges(Resource_Manager& rman)
 
 
 void Area_Query_Statement::get_ranges
-    (const std::map< Uint31_Index, std::vector< Area_Skeleton > >& input_areas,
+    (const std::map< Uint31_Index, std::vector< Way_Skeleton > >& input_ways,
+     const std::map< Uint31_Index, std::vector< Area_Skeleton > >& input_areas,
      std::set< Uint31_Index >& area_blocks_req,
      Resource_Manager& rman)
 {
+  way_areas_id.clear();
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator it = input_ways.begin();
+       it != input_ways.end(); ++it)
+  {
+    for (std::vector< Way_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      if (!it2->nds.empty() && it2->nds.front() == it2->nds.back())
+        way_areas_id.push_back(it2->id);
+    }
+  }
+  std::sort(way_areas_id.begin(), way_areas_id.end());
+  
   area_id.clear();
   for (std::map< Uint31_Index, std::vector< Area_Skeleton > >::const_iterator it = input_areas.begin();
        it != input_areas.end(); ++it)
@@ -325,8 +382,7 @@ void Area_Query_Statement::get_ranges
         area_blocks_req.insert(Uint31_Index(*it3));
     }
   }
-
-  sort(area_id.begin(), area_id.end());
+  std::sort(area_id.begin(), area_id.end());
 }
 
 
