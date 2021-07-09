@@ -29,6 +29,7 @@
 
 #include "../../template_db/block_backend.h"
 #include "../data/collect_members.h"
+#include "../data/tilewise_geometry.h"
 #include "area_query.h"
 #include "coord_query.h"
 #include "make_area.h"
@@ -161,8 +162,14 @@ void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 
 template< typename Node_Skeleton >
 std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
-    const Set* potential_areas, const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes)
+    const Set* potential_areas, const Statement& stmt, Resource_Manager& rman,
+    const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes)
 {
+  if (!potential_areas)
+    return std::map< Uint32_Index, std::vector< Node_Skeleton > >();
+  
+  Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  
   return std::map< Uint32_Index, std::vector< Node_Skeleton > >();
 }
 
@@ -182,7 +189,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   //Process nodes
   {
     std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_in_wr_areas
-        = nodes_contained_in(input, into.nodes);
+        = nodes_contained_in(input, query, rman, into.nodes);
     indexed_set_difference(into.nodes, nodes_in_wr_areas);
     area->collect_nodes(into.nodes, area_blocks_req, true, rman);
     indexed_set_union(into.nodes, nodes_in_wr_areas);
@@ -221,7 +228,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   if (!into.attic_nodes.empty())
   {
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > nodes_in_wr_areas
-        = nodes_contained_in(input, into.attic_nodes);
+        = nodes_contained_in(input, query, rman, into.attic_nodes);
     indexed_set_difference(into.attic_nodes, nodes_in_wr_areas);
     area->collect_nodes(into.attic_nodes, area_blocks_req, true, rman);
     indexed_set_union(into.attic_nodes, nodes_in_wr_areas);
