@@ -169,6 +169,17 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
     return std::map< Uint32_Index, std::vector< Node_Skeleton > >();
   
   Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  while (!tai.is_end())
+  {
+    const Tilewise_Area_Iterator::Index_Block& block = tai.get_obj();
+    std::cout<<"Index "<<std::hex<<tai.get_idx().val()
+        <<" ("<<std::dec<<lat(tai.get_idx().val(), 0u)<<' '<<lon(tai.get_idx().val(), 0u)<<"): "<<block.sw_is_inside;
+    for (std::vector< Tilewise_Area_Iterator::Entry >::const_iterator it = block.segments.begin();
+        it != block.segments.end(); ++it)
+      std::cout<<" ("<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<')';
+    std::cout<<'\n';
+    tai.next();
+  }
   
   return std::map< Uint32_Index, std::vector< Node_Skeleton > >();
 }
