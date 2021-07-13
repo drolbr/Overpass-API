@@ -235,14 +235,20 @@ private:
       if (cur_it != ways->end() && cur_it->first == idx)
       {
         for (std::vector< Way_Skeleton >::const_iterator it = cur_it->second.begin(); it != cur_it->second.end(); ++it)
-          make_entries(*it, cur_geom_store.get_geometry(*it));
+        {
+          if (!it->nds.empty() && it->nds.front() == it->nds.back())
+            make_entries(*it, cur_geom_store.get_geometry(*it));
+        }
         ++cur_it;
       }
       if (attic_it != attic_ways->end() && attic_it->first == idx)
       {
         for (std::vector< Attic< Way_Skeleton > >::const_iterator it = attic_it->second.begin();
             it != attic_it->second.end(); ++it)
-          make_entries(*it, attic_geom_store.get_geometry(*it));
+        {
+          if (!it->nds.empty() && it->nds.front() == it->nds.back())
+            make_entries(*it, attic_geom_store.get_geometry(*it));
+        }
         ++attic_it;
       }
 
@@ -373,10 +379,14 @@ private:
 //           <<((double)south - it->ilat_west)<<' '
 //           <<((double)south - it->ilat_west)*(it->ilon_east - it->ilon_west)<<' '
 //           <<((double)south - it->ilat_west)*(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west)<<'\n';
-      if (((it->ilat_west <= south) ^ (it->ilat_east <= south))
-          && west <= it->ilon_west +
-              ((double)south - it->ilat_west)*(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west))
-        is_inside = !is_inside;
+      if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
+      {
+        double isect_lon = it->ilon_west +
+            ((double)south - it->ilat_west)
+            *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
+        if (west <= isect_lon && isect_lon < west + 0x10000)
+          is_inside = !is_inside;
+      }
     }
     
     if (is_inside)
