@@ -138,6 +138,8 @@ Uint31_Index touched_index(Quad_Coord lhs, Quad_Coord rhs)
 class Tilewise_Area_Iterator
 {
 public:
+  enum Relative_Position { outside, inside, border };
+  
   struct Entry
   {
     Entry(uint32 lat_lhs, int32 lon_lhs, uint32 lat_rhs, int32 lon_rhs)
@@ -216,6 +218,151 @@ public:
   
   const Index_Block& get_obj() const { return queue.begin()->second; }
   Uint31_Index get_idx() const { return queue.begin()->first; }
+  
+  Relative_Position rel_position(uint32 ll_upper, uint32 ll_lower)
+  {
+    Uint31_Index idx = get_idx();
+    uint32 south = ilat(idx.val(), 0u);
+    int32 west = ilon(idx.val(), 0u);
+    const Index_Block& block = get_obj();
+
+    uint32 lat_p = ilat(ll_upper, ll_lower);
+    int32 lon_p = ilon(ll_upper, ll_lower);
+    bool is_inside = block.sw_is_inside;
+
+    for (std::vector< Entry >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+    {
+      if (it->ilat_west > south && it->ilat_east > south)
+      {
+        // northern segment not touching the southern boundary
+        if (it->ilon_west == lon_p)
+        {
+          if (it->ilat_west == lat_p)
+            return border;
+          is_inside ^= (it->ilat_west < lat_p);
+        }
+        else if (it->ilon_east == lon_p)
+        {
+          if (it->ilat_east == lat_p)
+            return border;
+        }
+        else if (it->ilon_west < lon_p && lon_p < it->ilon_east)
+        {
+          double isect_lat = it->ilat_west +
+            ((double)lon_p - it->ilon_west)
+            *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
+          if (isect_lat - 1e-7 < lat_p)
+          {
+            if (lat_p < isect_lat + 1e-7)
+              return border;
+            is_inside = !is_inside;
+          }
+        }
+      }
+      else if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
+      {
+        double isect_lon = it->ilon_west +
+            ((double)south - it->ilat_west)
+            *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
+        if (west <= isect_lon && isect_lon < west + 0x10000)
+        {
+          if (it->ilat_west <= south)
+          {
+            if (it->ilon_east <= lon_p)
+            {
+              if (it->ilon_east == lon_p)
+              {
+                if (it->ilat_east == lat_p)
+                  return border;
+                if (it->ilon_west == it->ilon_east && lat_p <= it->ilat_east)
+                  return border;
+              }
+              is_inside = !is_inside;
+            }
+            else if (isect_lon < lon_p)
+            {
+              double isect_lat = it->ilat_west +
+                  ((double)lon_p - it->ilon_west)
+                  *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
+              if (lat_p < isect_lat + 1e-7)
+              {
+                if (isect_lat - 1e-7 < lat_p)
+                  return border;
+                is_inside = !is_inside;
+              }
+            }
+          }
+          else
+          {
+            if (isect_lon <= lon_p)
+            {
+              if (isect_lon == lon_p)
+              {
+                if (lat_p == south)
+                  return border;
+                if (isect_lon == it->ilon_west && lat_p <= it->ilat_west)
+                  return border;
+              }
+              is_inside = !is_inside;
+            }
+            else if (it->ilon_west <= lon_p)
+            {
+              double isect_lat = it->ilat_west +
+                  ((double)lon_p - it->ilon_west)
+                  *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
+              if (isect_lat - 1e-7 < lat_p)
+              {
+                if (lat_p < isect_lat + 1e-7)
+                  return border;
+                is_inside = !is_inside;
+              }
+            }
+          }
+        }
+        else
+        {
+          // northern segment similar to above
+          if (it->ilon_west == lon_p)
+          {
+            if (it->ilat_west == lat_p)
+              return border;
+            // Here it->ilon_west == lon_p implies south < it->ilat_west
+            is_inside ^= (it->ilat_west < lat_p);
+          }
+          else if (it->ilon_east == lon_p)
+          {
+            if (it->ilat_east == lat_p)
+              return border;
+          }
+          else if (it->ilon_west < lon_p && lon_p < it->ilon_east)
+          {
+            double isect_lat = it->ilat_west +
+              ((double)lon_p - it->ilon_west)
+              *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
+            if (isect_lat - 1e-7 < lat_p)
+            {
+              if (lat_p < isect_lat + 1e-7)
+                return border;
+              is_inside = !is_inside;
+            }
+          }
+        }
+      }
+      else if (it->ilat_west == south && it->ilat_east == south)
+      {
+        // segment on the southern boundary
+        if (lat_p == south)
+        {
+          if (it->ilon_west <= lon_p && lon_p <= it->ilon_east)
+            return border;
+        }
+        else
+          is_inside ^= (it->ilon_west <= lon_p && lon_p < it->ilon_east);
+      }
+    }
+    
+    return is_inside ? inside : outside;
+  }
   
 private:
   const std::map< Uint31_Index, std::vector< Way_Skeleton > >* ways;

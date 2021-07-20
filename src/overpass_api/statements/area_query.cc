@@ -178,6 +178,13 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
         it != block.segments.end(); ++it)
       std::cout<<" ("<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<')';
     std::cout<<'\n';
+    for (uint i = 0; i < 16; ++i)
+    {
+      std::cout<<"    ";
+      for (uint j = 0; j < 16; ++j)
+        std::cout<<tai.rel_position(tai.get_idx().val(), ll_lower(0xf000 - i*0x1000, j*0x1000));
+      std::cout<<'\n';
+    }
     tai.next();
   }
   
