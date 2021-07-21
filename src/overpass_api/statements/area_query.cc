@@ -171,13 +171,18 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
   Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
   while (!tai.is_end())
   {
-    const Tilewise_Area_Iterator::Index_Block& block = tai.get_obj();
-    std::cout<<"Index "<<std::hex<<tai.get_idx().val()
-        <<" ("<<std::dec<<lat(tai.get_idx().val(), 0u)<<' '<<lon(tai.get_idx().val(), 0u)<<"): "<<block.sw_is_inside;
-    for (std::vector< Tilewise_Area_Iterator::Entry >::const_iterator it = block.segments.begin();
-        it != block.segments.end(); ++it)
-      std::cout<<" ("<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<')';
-    std::cout<<'\n';
+    const std::map< const Way_Skeleton*, Tilewise_Area_Iterator::Index_Block >& way_blocks = tai.get_obj();
+    for (std::map< const Way_Skeleton*, Tilewise_Area_Iterator::Index_Block >::const_iterator bit = way_blocks.begin();
+        bit != way_blocks.end(); ++bit)
+    {
+      std::cout<<"Index "<<std::hex<<tai.get_idx().val()
+          <<" ("<<std::dec<<lat(tai.get_idx().val(), 0u)<<' '<<lon(tai.get_idx().val(), 0u)<<") "
+          <<std::dec<<bit->first->id.val()<<": "<<bit->second.sw_is_inside;
+      for (std::vector< Tilewise_Area_Iterator::Entry >::const_iterator it = bit->second.segments.begin();
+          it != bit->second.segments.end(); ++it)
+        std::cout<<" ("<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<')';
+      std::cout<<'\n';
+    }
     for (uint i = 0; i < 16; ++i)
     {
       std::cout<<"    ";
