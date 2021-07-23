@@ -245,7 +245,13 @@ public:
           {
             if (it->ilat_west == lat_p)
               return border;
-            is_inside ^= (it->ilat_west < lat_p);
+            if (it->ilon_west == it->ilon_east)
+            {
+              if (std::min(it->ilat_west, it->ilat_east) <= lat_p && lat_p <= std::max(it->ilat_west, it->ilat_east))
+                return border;
+            }
+            else
+              is_inside ^= (it->ilat_west < lat_p);
           }
           else if (it->ilon_east == lon_p)
           {
@@ -257,9 +263,9 @@ public:
             double isect_lat = it->ilat_west +
               ((double)lon_p - it->ilon_west)
               *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
-            if (isect_lat - 1e-7 < lat_p)
+            if (isect_lat - .5 < lat_p)
             {
-              if (lat_p < isect_lat + 1e-7)
+              if (lat_p < isect_lat + .5)
                 return border;
               is_inside = !is_inside;
             }
@@ -290,9 +296,9 @@ public:
                 double isect_lat = it->ilat_west +
                     ((double)lon_p - it->ilon_west)
                     *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
-                if (lat_p < isect_lat + 1e-7)
+                if (lat_p < isect_lat + .5)
                 {
-                  if (isect_lat - 1e-7 < lat_p)
+                  if (isect_lat - .5 < lat_p)
                     return border;
                   is_inside = !is_inside;
                 }
@@ -316,9 +322,9 @@ public:
                 double isect_lat = it->ilat_west +
                     ((double)lon_p - it->ilon_west)
                     *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
-                if (isect_lat - 1e-7 < lat_p)
+                if (isect_lat - .5 < lat_p)
                 {
-                  if (lat_p < isect_lat + 1e-7)
+                  if (lat_p < isect_lat + .5)
                     return border;
                   is_inside = !is_inside;
                 }
@@ -345,9 +351,9 @@ public:
               double isect_lat = it->ilat_west +
                 ((double)lon_p - it->ilon_west)
                 *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
-              if (isect_lat - 1e-7 < lat_p)
+              if (isect_lat - .5 < lat_p)
               {
-                if (lat_p < isect_lat + 1e-7)
+                if (lat_p < isect_lat + .5)
                   return border;
                 is_inside = !is_inside;
               }

@@ -169,31 +169,50 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
     return std::map< Uint32_Index, std::vector< Node_Skeleton > >();
   
   Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
-  while (!tai.is_end())
+  std::map< Uint32_Index, std::vector< Node_Skeleton > > result;
+  
+  for (typename std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator iit = nodes.begin();
+      iit != nodes.end(); ++iit)
   {
-    const std::map< const Way_Skeleton*, Tilewise_Area_Iterator::Index_Block >& way_blocks = tai.get_obj();
-    for (std::map< const Way_Skeleton*, Tilewise_Area_Iterator::Index_Block >::const_iterator bit = way_blocks.begin();
-        bit != way_blocks.end(); ++bit)
+    while (!tai.is_end() && tai.get_idx().val() < iit->first.val())
+      tai.next();
+    if (tai.is_end() || iit->first.val() < tai.get_idx().val())
+      continue;
+    
+    std::vector< Node_Skeleton >& result_block = result[iit->first];
+
+    for (typename std::vector< Node_Skeleton >::const_iterator it = iit->second.begin(); it != iit->second.end(); ++it)
     {
-      std::cout<<"Index "<<std::hex<<tai.get_idx().val()
-          <<" ("<<std::dec<<lat(tai.get_idx().val(), 0u)<<' '<<lon(tai.get_idx().val(), 0u)<<") "
-          <<std::dec<<bit->first->id.val()<<": "<<bit->second.sw_is_inside;
-      for (std::vector< Tilewise_Area_Iterator::Entry >::const_iterator it = bit->second.segments.begin();
-          it != bit->second.segments.end(); ++it)
-        std::cout<<" ("<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<')';
-      std::cout<<'\n';
+      if (tai.rel_position(iit->first.val(), it->ll_lower) != Tilewise_Area_Iterator::outside)
+        result_block.push_back(*it);
     }
-    for (uint i = 0; i < 16; ++i)
-    {
-      std::cout<<"    ";
-      for (uint j = 0; j < 16; ++j)
-        std::cout<<tai.rel_position(tai.get_idx().val(), ll_lower(0xf000 - i*0x1000, j*0x1000));
-      std::cout<<'\n';
-    }
-    tai.next();
   }
   
-  return std::map< Uint32_Index, std::vector< Node_Skeleton > >();
+//   while (!tai.is_end())
+//   {
+//     const std::map< const Way_Skeleton*, Tilewise_Area_Iterator::Index_Block >& way_blocks = tai.get_obj();
+//     for (std::map< const Way_Skeleton*, Tilewise_Area_Iterator::Index_Block >::const_iterator bit = way_blocks.begin();
+//         bit != way_blocks.end(); ++bit)
+//     {
+//       std::cout<<"Index "<<std::hex<<tai.get_idx().val()
+//           <<" ("<<std::dec<<lat(tai.get_idx().val(), 0u)<<' '<<lon(tai.get_idx().val(), 0u)<<") "
+//           <<std::dec<<bit->first->id.val()<<": "<<bit->second.sw_is_inside;
+//       for (std::vector< Tilewise_Area_Iterator::Entry >::const_iterator it = bit->second.segments.begin();
+//           it != bit->second.segments.end(); ++it)
+//         std::cout<<" ("<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<')';
+//       std::cout<<'\n';
+//     }
+//     for (uint i = 0; i < 16; ++i)
+//     {
+//       std::cout<<"    ";
+//       for (uint j = 0; j < 16; ++j)
+//         std::cout<<tai.rel_position(tai.get_idx().val(), ll_lower(0xf000 - i*0x1000, j*0x1000));
+//       std::cout<<'\n';
+//     }
+//     tai.next();
+//   }
+  
+  return result;
 }
 
 
