@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base=""/>
+
+  <node id="20201" lat="51.2500001" lon="7.1500001"/>
+  <node id="20202" lat="51.2500001" lon="7.1510001"/>
+  <node id="20203" lat="51.2600001" lon="7.1510001"/>
+  <node id="20204" lat="51.2600001" lon="7.1500001"/>
+  <node id="20213" lat="51.2500001" lon="7.1500002"/>
+  <node id="20214" lat="51.2500002" lon="7.1500002"/>
+  <node id="20215" lat="51.2500002" lon="7.1500001"/>
+  <node id="20225" lat="51.2500002" lon="7.1510001"/>
+  <node id="20226" lat="51.2500002" lon="7.1510000"/>
+  <node id="20227" lat="51.2500001" lon="7.1510000"/>
+  <node id="20231" lat="51.2600000" lon="7.1510001"/>
+  <node id="20237" lat="51.2600001" lon="7.1510000"/>
+  <node id="20238" lat="51.2600000" lon="7.1510000"/>
+  <node id="20241" lat="51.2600000" lon="7.1500001"/>
+  <node id="20242" lat="51.2600000" lon="7.1500002"/>
+  <node id="20243" lat="51.2600001" lon="7.1500002"/>
+
+</osm>

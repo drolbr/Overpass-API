@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base=""/>
+
+  <node id="30610" lat="51.2458880" lon="7.1499744"/>
+  <node id="30611" lat="51.2458879" lon="7.1499744"/>
+  <node id="30612" lat="51.2458879" lon="7.1499745"/>
+  <node id="30613" lat="51.2458880" lon="7.1499745"/>
+  <node id="30614" lat="51.2458881" lon="7.1499745"/>
+  <node id="30615" lat="51.2458881" lon="7.1499744"/>
+  <node id="30616" lat="51.2458881" lon="7.1499743"/>
+  <node id="30617" lat="51.2458880" lon="7.1499743"/>
+  <node id="30618" lat="51.2458879" lon="7.1499743"/>
+  <node id="30630" lat="51.2458848" lon="7.1499776"/>
+  <node id="30631" lat="51.2458847" lon="7.1499776"/>
+  <node id="30632" lat="51.2458847" lon="7.1499777"/>
+  <node id="30633" lat="51.2458848" lon="7.1499777"/>
+  <node id="30634" lat="51.2458849" lon="7.1499777"/>
+  <node id="30635" lat="51.2458849" lon="7.1499776"/>
+  <node id="30636" lat="51.2458849" lon="7.1499775"/>
+  <node id="30637" lat="51.2458848" lon="7.1499775"/>
+  <node id="30638" lat="51.2458847" lon="7.1499775"/>
+
+</osm>
