@@ -368,8 +368,6 @@ public:
             if (it->ilon_west <= lon_p && lon_p <= it->ilon_east)
               return border;
           }
-          else
-            is_inside ^= (it->ilon_west <= lon_p && lon_p < it->ilon_east);
         }
       }
       total_is_inside |= is_inside;

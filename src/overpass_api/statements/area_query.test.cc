@@ -170,6 +170,10 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > range_union(
 
 int main(int argc, char* args[])
 {
+  Uint32_Index idx = ll_upper_(51.25, 7.15);
+  std::cout<<std::fixed<<std::setprecision(7)<<lat(idx.val(), 0u)<<' '<<lon(idx.val(), 0u)<<'\n';
+  return 0;
+  
   {
     std::set< std::pair< Uint32_Index, Uint32_Index > > lhs;
     std::set< std::pair< Uint32_Index, Uint32_Index > > rhs;
