@@ -390,6 +390,9 @@ public:
             if (it->ilon_west <= lon_p && lon_p <= it->ilon_east)
               return border;
           }
+
+          if (it->ilon_west == -1800000000)
+            is_inside = !is_inside;
         }
 //         std::cout<<"DEBUG "<<lat_p<<' '<<lon_p<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<' '<<is_inside<<'\n';
       }
@@ -645,6 +648,20 @@ private:
       
       if (is_inside)
         queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u), ilon(idx.val(), 0u)+0x10000))][bit->first].sw_is_inside = is_inside;
+      
+      if (west < -1800000000)
+      {
+        is_inside = block.sw_is_inside;
+        
+        for (std::vector< Entry >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+        {
+          if (it->ilon_west == -1800000000 && it->ilon_east != -1800000000)
+            is_inside = !is_inside;
+        }
+        
+        if (is_inside)
+          queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u)+0x10000, ilon(idx.val(), 0u)))][bit->first].sw_is_inside = is_inside;
+      }
     }
   }
 };

@@ -291,6 +291,89 @@
   <node id="20348" lat="51.2491647" lon="7.1483391" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
 
 
+  <node id="20401" lat="51.2500001" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20402" lat="51.2500001" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20403" lat="51.2510001" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20404" lat="51.2510001" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="20411" lat="51.2500000" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20412" lat="51.2500000" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20413" lat="51.2500001" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20414" lat="51.2500002" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20415" lat="51.2500002" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20416" lat="51.2500002" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20417" lat="51.2500001" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20418" lat="51.2500000" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="20421" lat="51.2500000" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20422" lat="51.2500000" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20423" lat="51.2500001" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20424" lat="51.2500002" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20425" lat="51.2500002" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20426" lat="51.2500002" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20427" lat="51.2500001" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20428" lat="51.2500000" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="20431" lat="51.2510000" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20432" lat="51.2510000" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20433" lat="51.2510001" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20434" lat="51.2510002" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20435" lat="51.2510002" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20436" lat="51.2510002" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20437" lat="51.2510001" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20438" lat="51.2510000" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="20441" lat="51.2510000" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20442" lat="51.2510000" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20443" lat="51.2510001" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20444" lat="51.2510002" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20445" lat="51.2510002" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20446" lat="51.2510002" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20447" lat="51.2510001" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20448" lat="51.2510000" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+
+  <node id="20501" lat="51.2500001" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20502" lat="51.2500001" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20503" lat="51.2700001" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20504" lat="51.2700001" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="20511" lat="51.2500000" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20512" lat="51.2500000" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20513" lat="51.2500001" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20514" lat="51.2500002" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20515" lat="51.2500002" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20516" lat="51.2500002" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20517" lat="51.2500001" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20518" lat="51.2500000" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="20521" lat="51.2500000" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20522" lat="51.2500000" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20523" lat="51.2500001" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20524" lat="51.2500002" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20525" lat="51.2500002" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20526" lat="51.2500002" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20527" lat="51.2500001" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20528" lat="51.2500000" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="20531" lat="51.2700000" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20532" lat="51.2700000" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20533" lat="51.2700001" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20534" lat="51.2700002" lon="-179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20535" lat="51.2700002" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20536" lat="51.2700002" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20537" lat="51.2700001" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20538" lat="51.2700000" lon="-179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="20541" lat="51.2700000" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20542" lat="51.2700000" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20543" lat="51.2700001" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20544" lat="51.2700002" lon="179.9990002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20545" lat="51.2700002" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20546" lat="51.2700002" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20547" lat="51.2700001" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="20548" lat="51.2700000" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
   <node id="30101" lat="51.2458368" lon="7.1499264" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="30102" lat="51.2458360" lon="7.1499256" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="30103" lat="51.2458360" lon="7.1499272" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
@@ -418,6 +501,24 @@
     <nd ref="20303"/>
     <nd ref="20304"/>
     <nd ref="20301"/>
+  </way>
+
+  <!-- Rectangle crossing the antimeridian and with a south-north extent of one block -->
+  <way id="204" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="20401"/>
+    <nd ref="20402"/>
+    <nd ref="20403"/>
+    <nd ref="20404"/>
+    <nd ref="20401"/>
+  </way>
+
+  <!-- Rectangle crossing the antimeridian and with a south-north extent of three blocks -->
+  <way id="205" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="20501"/>
+    <nd ref="20502"/>
+    <nd ref="20503"/>
+    <nd ref="20504"/>
+    <nd ref="20501"/>
   </way>
 
   <!-- Triangle with southwest to northeast edge slightly south of block boundary point and southeast vertex -->
