@@ -97,15 +97,37 @@ std::vector< Uint31_Index > touched_indexes(Quad_Coord lhs, Quad_Coord rhs)
     Quad_Coord max = lon_lhs < lon_rhs ? rhs : lhs;
     int32 i_ilon = ilon(min.ll_upper, min.ll_lower);
     int32 ilon_max = ilon(max.ll_upper, max.ll_lower);
-    uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
-    add_idx_sequence(ilat(min.ll_upper, min.ll_lower), i_ilat, i_ilon, result);
-    for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max; i_ilon += 0x10000)
+    if (ilon_max - i_ilon < 1800000000)
     {
-      uint32 last_ilat = i_ilat;
-      uint32 i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
-      add_idx_sequence(last_ilat, i_ilat, i_ilon, result);
+      uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
+      add_idx_sequence(ilat(min.ll_upper, min.ll_lower), i_ilat, i_ilon, result);
+      for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max; i_ilon += 0x10000)
+      {
+        uint32 last_ilat = i_ilat;
+        uint32 i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
+        add_idx_sequence(last_ilat, i_ilat, i_ilon, result);
+      }
+      add_idx_sequence(i_ilat, ilat(max.ll_upper, max.ll_lower), ilon_max, result);
     }
-    add_idx_sequence(i_ilat, ilat(max.ll_upper, max.ll_lower), ilon_max, result);
+    else if (ilon_max - i_ilon == 1800000000)
+    {
+      uint64 ilat_min = ilat(min.ll_upper, min.ll_lower);
+      uint64 ilat_max = ilat(max.ll_upper, max.ll_lower);
+      if (ilat_min + ilat_max > 2*910000000)
+      {
+        add_idx_sequence(ilat_min, 1810000000, i_ilon, result);
+        add_idx_sequence(ilat_max, 1810000000, ilon_max, result);
+      }
+      else
+      {
+        add_idx_sequence(10000000, ilat_min, i_ilon, result);
+        add_idx_sequence(10000000, ilat_max, ilon_max, result);
+      }
+    }
+    else
+    {
+      //TODO: antimeridian
+    }
   }
   
   return result;
@@ -369,6 +391,7 @@ public:
               return border;
           }
         }
+//         std::cout<<"DEBUG "<<lat_p<<' '<<lon_p<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<' '<<is_inside<<'\n';
       }
       total_is_inside |= is_inside;
     }
@@ -455,32 +478,99 @@ private:
       Great_Circle gc(make_point_double(lhs), make_point_double(rhs));
       Quad_Coord min = lon_lhs < lon_rhs ? lhs : rhs;
       Quad_Coord max = lon_lhs < lon_rhs ? rhs : lhs;
-      //TODO: antimeridian
       int32 i_ilon = ilon(min.ll_upper, min.ll_lower);
       int32 ilon_max = ilon(max.ll_upper, max.ll_lower);
-      uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
-      calculate_south_north_sequence(
-          skel, ilat(min.ll_upper, min.ll_lower), i_ilon,
-          i_ilat, (i_ilon & 0xffff0000) + 0x10000);
-      for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max;
-          i_ilon += 0x10000)
+      if ((int64)ilon_max - i_ilon < 1800000000)
       {
-        uint32 last_ilat = i_ilat;
-        i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
+        uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
         calculate_south_north_sequence(
-            skel, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
+            skel, ilat(min.ll_upper, min.ll_lower), i_ilon,
+            i_ilat, (i_ilon & 0xffff0000) + 0x10000);
+        for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max;
+            i_ilon += 0x10000)
+        {
+          uint32 last_ilat = i_ilat;
+          i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
+          calculate_south_north_sequence(
+              skel, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
+        }
+        
+        calculate_south_north_sequence(
+            skel, i_ilat, i_ilon, ilat(max.ll_upper, max.ll_lower), ilon_max);
       }
-      
-      calculate_south_north_sequence(
-          skel, i_ilat, i_ilon, ilat(max.ll_upper, max.ll_lower), ilon_max);
+      else if (ilon_max - i_ilon == 1800000000)
+      {
+        uint64 ilat_min = ilat(min.ll_upper, min.ll_lower);
+        uint64 ilat_max = ilat(max.ll_upper, max.ll_lower);
+        if (ilat_min + ilat_max > 2*910000000)
+        {
+          calculate_south_north_sequence(skel, ilat_min, i_ilon, 1810000000, i_ilon);
+          calculate_south_north_sequence(skel, ilat_max, ilon_max, 1810000000, ilon_max);
+        }
+        else
+        {
+          calculate_south_north_sequence(skel, 10000000, i_ilon, ilat_min, i_ilon);
+          calculate_south_north_sequence(skel, 10000000, ilon_max, ilat_max, ilon_max);
+        }
+      }
+      else
+      {
+//         std::cout<<"aux "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
+//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
+        if ((i_ilon & 0xffff0000) == (-1800000000 & 0xffff0000))
+          calculate_south_north_sequence(
+              skel, ilat(gc.lat_of(-180.)), -1800000000, ilat(min.ll_upper, min.ll_lower), i_ilon);
+        else
+        {
+          uint32 i_ilat = ilat(gc.lat_of(-180.));
+          int32 ilon_max = i_ilon;
+          i_ilon = -1800000000;
+          calculate_south_north_sequence(
+              skel, ilat(min.ll_upper, min.ll_lower), i_ilon,
+              i_ilat, (i_ilon & 0xffff0000) + 0x10000);
+          for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max;
+              i_ilon += 0x10000)
+          {
+            uint32 last_ilat = i_ilat;
+            i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
+            calculate_south_north_sequence(
+                skel, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
+          }
+          
+          calculate_south_north_sequence(
+              skel, i_ilat, i_ilon, ilat(min.ll_upper, min.ll_lower), ilon_max);
+        }
+        
+        if ((ilon_max & 0xffff0000) == (1800000000 & 0xffff0000))
+          calculate_south_north_sequence(
+              skel, ilat(max.ll_upper, max.ll_lower), ilon_max, ilat(gc.lat_of(180.)), 1800000000);
+        else
+        {
+          i_ilon = ilon_max;
+          uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
+          calculate_south_north_sequence(
+              skel, ilat(max.ll_upper, max.ll_lower), i_ilon,
+              i_ilat, (i_ilon & 0xffff0000) + 0x10000);
+          for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < 1800000000;
+              i_ilon += 0x10000)
+          {
+            uint32 last_ilat = i_ilat;
+            i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
+            calculate_south_north_sequence(
+                skel, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
+          }
+          
+          calculate_south_north_sequence(
+              skel, i_ilat, i_ilon, ilat(gc.lat_of(180.)), 1800000000);
+        }
+      }
     }
   }
 
   void calculate_south_north_sequence(
       const Way_Skeleton& skel, uint32 lat_lhs, int32 lon_lhs, uint32 lat_rhs, int32 lon_rhs)
   {
-//     std::cout<<"DEBUG_A "<<std::hex<<ll_upper_(lat_lhs, lon_lhs)<<' '
-//         <<std::dec<<lat_lhs<<' '<<lon_lhs<<' '<<lat_rhs<<' '<<lon_rhs<<'\n';
+//     std::cout<<"sn "<<lat_lhs<<' '<<lon_lhs<<' '<<lat_rhs<<' '<<lon_rhs<<'\n';
     if ((lat_lhs & 0xffff0000) == (lat_rhs & 0xffff0000))
     {
       queue[Uint31_Index(ll_upper_(lat_lhs, lon_lhs))][&skel].segments.push_back(
