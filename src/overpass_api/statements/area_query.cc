@@ -183,8 +183,8 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
 
     for (typename std::vector< Node_Skeleton >::const_iterator it = iit->second.begin(); it != iit->second.end(); ++it)
     {
-      //Tilewise_Area_Iterator::Relative_Position relpos = tai.rel_position(iit->first.val(), it->ll_lower);
-      //std::cout<<"Id "<<it->id.val()<<' '<<relpos<<'\n';
+//       Tilewise_Area_Iterator::Relative_Position relpos = tai.rel_position(iit->first.val(), it->ll_lower);
+//       std::cout<<"Id "<<it->id.val()<<' '<<relpos<<'\n';
       if (tai.rel_position(iit->first.val(), it->ll_lower) != Tilewise_Area_Iterator::outside)
         result_block.push_back(*it);
     }

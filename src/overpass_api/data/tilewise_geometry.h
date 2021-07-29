@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__DATA__TILEWISE_GEOMETRY_H
 
 #include <cctype>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -43,14 +44,57 @@ class Great_Circle
 {
 public:
   Great_Circle(const Point_Double& lhs, const Point_Double& rhs)
-      : fake_lat((lhs.lat + rhs.lat)/2.) {}
+  {
+//     std::cout<<"gc "<<lhs.lat<<' '<<lhs.lon<<' '<<rhs.lat<<' '<<rhs.lon
+//         <<' '<<(lhs.lon < rhs.lon)<<(rhs.lon - lhs.lon > 180.)<<
+//         (rhs.lon < lhs.lon)<<(lhs.lon - rhs.lon < 180.)<<'\n';
+    
+    double lhs_s = sin(lhs.lat/180.*M_PI);
+    double lhs_cos = cos(lhs.lat/180.*M_PI);
+    double lhs_cs = lhs_cos * sin(lhs.lon/180.*M_PI);
+    double lhs_cc = lhs_cos * cos(lhs.lon/180.*M_PI);
+    
+    double rhs_s = sin(rhs.lat/180.*M_PI);
+    double rhs_cos = cos(rhs.lat/180.*M_PI);
+    double rhs_cs = rhs_cos * sin(rhs.lon/180.*M_PI);
+    double rhs_cc = rhs_cos * cos(rhs.lon/180.*M_PI);
+    
+    ortho_s = lhs_cs * rhs_cc - lhs_cc * rhs_cs;
+    ortho_cs = lhs_cc * rhs_s - lhs_s * rhs_cc;
+    ortho_cc = lhs_s * rhs_cs - lhs_cs * rhs_s;
+    if ((lhs.lon < rhs.lon && rhs.lon - lhs.lon > 180.)
+        || (rhs.lon < lhs.lon && lhs.lon - rhs.lon < 180.))
+    {
+      ortho_s = -ortho_s;
+      ortho_cs = -ortho_cs;
+      ortho_cc = -ortho_cc;
+    }
+    double norm = sqrt(ortho_s*ortho_s + ortho_cs*ortho_cs + ortho_cc*ortho_cc);
+    if (norm > 0)
+    {
+      ortho_s /= norm;
+      ortho_cs /= norm;
+      ortho_cc /= norm;
+    }
+//     std::cout<<ortho_s<<' '<<ortho_cs<<' '<<ortho_cc<<'\n'
+//         <<(ortho_s*ortho_s + ortho_cs*ortho_cs + ortho_cc*ortho_cc)<<'\n'
+//         <<asin(ortho_s)/M_PI*180.<<' '<<asin(ortho_cs/sqrt(1 - ortho_s*ortho_s))/M_PI*180.<<'\n';
+  }
+
   double lat_of(double lon)
   {
-    return fake_lat;
+    //rotate ortho such that the longitude to use for cartesian computation is always zero
+    double g_cc = ortho_cc*cos(lon/180.*M_PI) + ortho_cs*sin(lon/180.*M_PI);
+    double norm_prod = sqrt(g_cc*g_cc + ortho_s*ortho_s);
+    if (g_cc > norm_prod)
+      return 90.;
+    return asin(g_cc/norm_prod)/M_PI*180.;
   }
 
 private:
-  double fake_lat;
+  double ortho_s;
+  double ortho_cs;
+  double ortho_cc;
 };
 
 
@@ -136,10 +180,10 @@ std::vector< Uint31_Index > touched_indexes(Quad_Coord lhs, Quad_Coord rhs)
 
 Uint31_Index touched_index(Quad_Coord lhs, Quad_Coord rhs)
 {
-  uint32 lat_lhs = ilat(lhs.ll_upper, lhs.ll_lower);
-  int32 lon_lhs = ilon(lhs.ll_upper, lhs.ll_lower);
-  uint32 lat_rhs = ilat(rhs.ll_upper, rhs.ll_lower);
-  int32 lon_rhs = ilon(rhs.ll_upper, rhs.ll_lower);
+  uint32 lat_lhs = ilat(lhs.ll_upper, lhs.ll_lower)>>16;
+  int32 lon_lhs = ilon(lhs.ll_upper, lhs.ll_lower)>>16;
+  uint32 lat_rhs = ilat(rhs.ll_upper, rhs.ll_lower)>>16;
+  int32 lon_rhs = ilon(rhs.ll_upper, rhs.ll_lower)>>16;
 
   if (lat_lhs == lat_rhs && std::abs(lon_rhs - lon_lhs) <= 1)
     return Uint31_Index(0u);
@@ -148,9 +192,19 @@ Uint31_Index touched_index(Quad_Coord lhs, Quad_Coord rhs)
 
   if ((lat_rhs - lat_lhs <= 1 || lat_lhs - lat_rhs <= 1) && std::abs(lon_rhs - lon_lhs) <= 1)
   {
-    int32 lon_boundary = ((lon_lhs < lon_rhs ? lon_rhs : lon_lhs) & 0xffff0000);
+    lat_lhs = ilat(lhs.ll_upper, lhs.ll_lower);
+    lon_lhs = ilon(lhs.ll_upper, lhs.ll_lower);
+    lat_rhs = ilat(rhs.ll_upper, rhs.ll_lower);
+    lon_rhs = ilon(rhs.ll_upper, rhs.ll_lower);
+    int32 lon_boundary = (std::max(lon_lhs, lon_rhs) & 0xffff0000);
     uint32 lat_boundary = ((double)lat_rhs - lat_lhs)*(lon_boundary - lon_lhs)/(lon_rhs - lon_lhs) + lat_lhs;
-    return Uint31_Index(ll_upper_(lat_boundary, lon_boundary));
+    
+    int32 missing_lon = lon_lhs;
+    if (lat_lhs < lat_rhs)
+      missing_lon = (lat_boundary < (lat_rhs & 0xffff0000) ? lon_rhs : lon_lhs);
+    else
+      missing_lon = (lat_boundary < (lat_lhs & 0xffff0000) ? lon_lhs : lon_rhs);
+    return Uint31_Index(ll_upper_(lat_boundary, missing_lon));
   }
   return Uint31_Index(0xffu);
 }
@@ -454,6 +508,9 @@ private:
       else
       {
         Uint31_Index extra_idx = touched_index(geom[i-1], geom[i]);
+//         std::cout<<std::dec<<ilat(geom[i-1].ll_upper, geom[i-1].ll_lower)<<' '<<ilon(geom[i-1].ll_upper, geom[i-1].ll_lower)<<' '
+//             <<ilat(geom[i].ll_upper, geom[i].ll_lower)<<' '<<ilon(geom[i].ll_upper, geom[i].ll_lower)<<' '
+//             <<std::hex<<extra_idx.val()<<'\n';
         if (extra_idx.val() == 0xff)
           calculate_auxiliary_points(skel, geom[i-1], geom[i]);
         else
@@ -485,6 +542,8 @@ private:
       int32 ilon_max = ilon(max.ll_upper, max.ll_lower);
       if ((int64)ilon_max - i_ilon < 1800000000)
       {
+//         std::cout<<"aux_gc "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
+//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
         uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
         calculate_south_north_sequence(
             skel, ilat(min.ll_upper, min.ll_lower), i_ilon,
@@ -503,6 +562,8 @@ private:
       }
       else if (ilon_max - i_ilon == 1800000000)
       {
+//         std::cout<<"aux_180 "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
+//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
         uint64 ilat_min = ilat(min.ll_upper, min.ll_lower);
         uint64 ilat_max = ilat(max.ll_upper, max.ll_lower);
         if (ilat_min + ilat_max > 2*910000000)
@@ -518,7 +579,7 @@ private:
       }
       else
       {
-//         std::cout<<"aux "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
+//         std::cout<<"aux_anti "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
 //             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
         if ((i_ilon & 0xffff0000) == (-1800000000 & 0xffff0000))
           calculate_south_north_sequence(
@@ -618,6 +679,7 @@ private:
     Uint31_Index idx = get_idx();
     uint32 south = ilat(idx.val(), 0u);
     int32 west = ilon(idx.val(), 0u);
+//     std::cout<<"propagate_inside_flag "<<south<<' '<<west<<'\n';
     const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
     
     for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
@@ -628,24 +690,21 @@ private:
       
       for (std::vector< Entry >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
       {
-  //       std::cout<<"DEBUG "<<std::hex<<idx.val()<<' '
-  //           <<((it->ilat_west <= south) ^ (it->ilat_east <= south))
-  //           <<(west <= it->ilon_west +
-  //               ((double)south - it->ilat_west)*(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west))
-  //           <<' '<<std::dec<<west<<' '<<it->ilon_west<<' '
-  //           <<((double)south - it->ilat_west)<<' '
-  //           <<((double)south - it->ilat_west)*(it->ilon_east - it->ilon_west)<<' '
-  //           <<((double)south - it->ilat_west)*(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west)<<'\n';
+//         std::cout<<"DEBUG "<<std::hex<<idx.val()<<' '
+//             <<std::dec<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<'\n';
         if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
         {
           double isect_lon = it->ilon_west +
               ((double)south - it->ilat_west)
               *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
+//           std::cout<<"isect_lon "<<isect_lon<<'\n';
           if (west <= isect_lon && isect_lon < west + 0x10000)
             is_inside = !is_inside;
         }
       }
       
+//       std::cout<<"propagate_inside_flag "<<south<<' '<<west<<' '
+//           <<ilat(idx.val(), 0u)<<' '<<ilon(idx.val(), 0u)+0x10000<<' '<<is_inside<<'\n';
       if (is_inside)
         queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u), ilon(idx.val(), 0u)+0x10000))][bit->first].sw_is_inside = is_inside;
       
@@ -660,7 +719,10 @@ private:
         }
         
         if (is_inside)
+        {
+          //std::cout<<"is_inside "<<(ilat(idx.val(), 0u)+0x10000)<<' '<<ilon(idx.val(), 0u)<<'\n';
           queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u)+0x10000, ilon(idx.val(), 0u)))][bit->first].sw_is_inside = is_inside;
+        }
       }
     }
   }
