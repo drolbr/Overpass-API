@@ -210,64 +210,236 @@ Uint31_Index touched_index(Quad_Coord lhs, Quad_Coord rhs)
 }
 
 
+struct Segment
+{
+  Segment(uint32 lat_lhs, int32 lon_lhs, uint32 lat_rhs, int32 lon_rhs)
+  {
+    populate(lat_lhs, lon_lhs, lat_rhs, lon_rhs);
+  }
+  
+  Segment(const Quad_Coord& lhs, const Quad_Coord& rhs)
+  {
+    populate(
+        ilat(lhs.ll_upper, lhs.ll_lower), ilon(lhs.ll_upper, lhs.ll_lower),
+        ilat(rhs.ll_upper, rhs.ll_lower), ilon(rhs.ll_upper, rhs.ll_lower));
+  }
+  
+  void populate(uint32 ilat_lhs, int32 ilon_lhs, uint32 ilat_rhs, int32 ilon_rhs)
+  {
+    if (ilon_lhs < ilon_rhs)
+    {
+      ilat_west = ilat_lhs;
+      ilon_west = ilon_lhs;
+      ilat_east = ilat_rhs;
+      ilon_east = ilon_rhs;
+    }
+    else
+    {
+      ilat_west = ilat_rhs;
+      ilon_west = ilon_rhs;
+      ilat_east = ilat_lhs;
+      ilon_east = ilon_lhs;
+    }
+  }
+  
+  uint32 ilat_west;
+  int32 ilon_west;
+  uint32 ilat_east;
+  int32 ilon_east;
+};
+
+
+template< typename Segment_Collector >
+void make_entries(const Segment_Collector& collector, const std::vector< Quad_Coord >& geom)
+{
+  if (geom.empty())
+    return;
+
+  for (uint i = 1; i < geom.size(); ++i)
+  {
+    if (geom[i].ll_upper == geom[i-1].ll_upper)
+      collector.push(geom[i].ll_upper, Segment(geom[i-1], geom[i]));
+    else
+    {
+      Uint31_Index extra_idx = touched_index(geom[i-1], geom[i]);
+//         std::cout<<std::dec<<ilat(geom[i-1].ll_upper, geom[i-1].ll_lower)<<' '<<ilon(geom[i-1].ll_upper, geom[i-1].ll_lower)<<' '
+//             <<ilat(geom[i].ll_upper, geom[i].ll_lower)<<' '<<ilon(geom[i].ll_upper, geom[i].ll_lower)<<' '
+//             <<std::hex<<extra_idx.val()<<'\n';
+      if (extra_idx.val() == 0xff)
+        calculate_auxiliary_points(collector, geom[i-1], geom[i]);
+      else
+      {
+        collector.push(geom[i-1].ll_upper, Segment(geom[i-1], geom[i]));
+        collector.push(geom[i].ll_upper, Segment(geom[i-1], geom[i]));
+        if (!(extra_idx.val() == 0))
+          collector.push(extra_idx, Segment(geom[i-1], geom[i]));
+      }
+    }
+  }
+}
+
+
+template< typename Segment_Collector >
+void calculate_auxiliary_points(const Segment_Collector& collector, Quad_Coord lhs, Quad_Coord rhs)
+{
+  uint32 lat_lhs = ilat(lhs.ll_upper, lhs.ll_lower);
+  int32 lon_lhs = ilon(lhs.ll_upper, lhs.ll_lower);
+  uint32 lat_rhs = ilat(rhs.ll_upper, rhs.ll_lower);
+  int32 lon_rhs = ilon(rhs.ll_upper, rhs.ll_lower);
+
+  if ((lon_lhs & 0xffff0000) == (lon_rhs & 0xffff0000))
+    calculate_south_north_sequence(collector, lat_lhs, lon_lhs, lat_rhs, lon_rhs);
+  else
+  {
+    Great_Circle gc(make_point_double(lhs), make_point_double(rhs));
+    Quad_Coord min = lon_lhs < lon_rhs ? lhs : rhs;
+    Quad_Coord max = lon_lhs < lon_rhs ? rhs : lhs;
+    int32 i_ilon = ilon(min.ll_upper, min.ll_lower);
+    int32 ilon_max = ilon(max.ll_upper, max.ll_lower);
+    if ((int64)ilon_max - i_ilon < 1800000000)
+    {
+//         std::cout<<"aux_gc "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
+//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
+      uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
+      calculate_south_north_sequence(
+          collector, ilat(min.ll_upper, min.ll_lower), i_ilon,
+          i_ilat, (i_ilon & 0xffff0000) + 0x10000);
+      for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max;
+          i_ilon += 0x10000)
+      {
+        uint32 last_ilat = i_ilat;
+        i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
+        calculate_south_north_sequence(
+            collector, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
+      }
+      
+      calculate_south_north_sequence(
+          collector, i_ilat, i_ilon, ilat(max.ll_upper, max.ll_lower), ilon_max);
+    }
+    else if (ilon_max - i_ilon == 1800000000)
+    {
+//         std::cout<<"aux_180 "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
+//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
+      uint64 ilat_min = ilat(min.ll_upper, min.ll_lower);
+      uint64 ilat_max = ilat(max.ll_upper, max.ll_lower);
+      if (ilat_min + ilat_max > 2*910000000)
+      {
+        calculate_south_north_sequence(collector, ilat_min, i_ilon, 1810000000, i_ilon);
+        calculate_south_north_sequence(collector, ilat_max, ilon_max, 1810000000, ilon_max);
+      }
+      else
+      {
+        calculate_south_north_sequence(collector, 10000000, i_ilon, ilat_min, i_ilon);
+        calculate_south_north_sequence(collector, 10000000, ilon_max, ilat_max, ilon_max);
+      }
+    }
+    else
+    {
+//         std::cout<<"aux_anti "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
+//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
+      if ((i_ilon & 0xffff0000) == (-1800000000 & 0xffff0000))
+        calculate_south_north_sequence(
+            collector, ilat(gc.lat_of(-180.)), -1800000000, ilat(min.ll_upper, min.ll_lower), i_ilon);
+      else
+      {
+        uint32 i_ilat = ilat(gc.lat_of(-180.));
+        int32 ilon_max = i_ilon;
+        i_ilon = -1800000000;
+        calculate_south_north_sequence(
+            collector, ilat(min.ll_upper, min.ll_lower), i_ilon,
+            i_ilat, (i_ilon & 0xffff0000) + 0x10000);
+        for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max;
+            i_ilon += 0x10000)
+        {
+          uint32 last_ilat = i_ilat;
+          i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
+          calculate_south_north_sequence(
+              collector, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
+        }
+        
+        calculate_south_north_sequence(
+            collector, i_ilat, i_ilon, ilat(min.ll_upper, min.ll_lower), ilon_max);
+      }
+      
+      if ((ilon_max & 0xffff0000) == (1800000000 & 0xffff0000))
+        calculate_south_north_sequence(
+            collector, ilat(max.ll_upper, max.ll_lower), ilon_max, ilat(gc.lat_of(180.)), 1800000000);
+      else
+      {
+        i_ilon = ilon_max;
+        uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
+        calculate_south_north_sequence(
+            collector, ilat(max.ll_upper, max.ll_lower), i_ilon,
+            i_ilat, (i_ilon & 0xffff0000) + 0x10000);
+        for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < 1800000000;
+            i_ilon += 0x10000)
+        {
+          uint32 last_ilat = i_ilat;
+          i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
+          calculate_south_north_sequence(
+              collector, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
+        }
+        
+        calculate_south_north_sequence(
+            collector, i_ilat, i_ilon, ilat(gc.lat_of(180.)), 1800000000);
+      }
+    }
+  }
+}
+
+
+template< typename Segment_Collector >
+void calculate_south_north_sequence(
+    const Segment_Collector& collector, uint32 lat_lhs, int32 lon_lhs, uint32 lat_rhs, int32 lon_rhs)
+{
+//     std::cout<<"sn "<<lat_lhs<<' '<<lon_lhs<<' '<<lat_rhs<<' '<<lon_rhs<<'\n';
+  if ((lat_lhs & 0xffff0000) == (lat_rhs & 0xffff0000))
+  {
+    collector.push(Uint31_Index(ll_upper_(lat_lhs, lon_lhs)), Segment(lat_lhs, lon_lhs, lat_rhs, lon_rhs));
+    return;
+  }
+
+  if (lat_rhs < lat_lhs)
+  {
+    std::swap(lat_lhs, lat_rhs);
+    std::swap(lon_lhs, lon_rhs);
+  }
+  int32 min_lon = std::min(lon_lhs, lon_rhs);
+
+  uint32 i_lat = (lat_lhs & 0xffff0000) + 0x10000;
+  int32 i_lon = lon_lhs + ((double)i_lat - lat_lhs)/((int32)lat_rhs - (int32)lat_lhs)*(lon_rhs - lon_lhs);
+//     std::cout<<"DEBUG_B "<<std::hex<<ll_upper_(lat_lhs, min_lon)<<' '
+//         <<std::dec<<lat_lhs<<' '<<lon_lhs<<' '<<i_lat<<' '<<i_lon<<'\n';
+  collector.push(Uint31_Index(ll_upper_(lat_lhs, min_lon)), Segment(lat_lhs, lon_lhs, i_lat, i_lon));
+
+  while (i_lat + 0x10000 < lat_rhs)
+  {
+    uint32 last_ilat = i_lat;
+    int32 last_ilon = i_lon;
+    i_lat += 0x10000;
+    i_lon = lon_lhs + ((double)i_lat - lat_lhs)/((int32)lat_rhs - (int32)lat_lhs)*(lon_rhs - lon_lhs);
+//       std::cout<<"DEBUG_D "<<std::hex<<ll_upper_(last_ilat, min_lon)<<' '
+//           <<std::dec<<last_ilat<<' '<<last_ilon<<' '<<i_lat<<' '<<i_lon<<'\n';
+    collector.push(Uint31_Index(ll_upper_(last_ilat, min_lon)), Segment(last_ilat, last_ilon, i_lat, i_lon));
+  }
+  
+//     std::cout<<"DEBUG_C "<<std::hex<<ll_upper_(i_lat, min_lon)<<' '
+//         <<std::dec<<i_lat<<' '<<i_lon<<' '<<lat_rhs<<' '<<lon_rhs<<'\n';
+  collector.push(Uint31_Index(ll_upper_(i_lat, min_lon)), Segment(i_lat, i_lon, lat_rhs, lon_rhs));
+}
+
+
 // fwd iterator only
 class Tilewise_Area_Iterator
 {
 public:
   enum Relative_Position { outside, inside, border };
   
-  struct Entry
-  {
-    Entry(uint32 lat_lhs, int32 lon_lhs, uint32 lat_rhs, int32 lon_rhs)
-    {
-      populate(lat_lhs, lon_lhs, lat_rhs, lon_rhs);
-    }
-    
-    Entry(const Quad_Coord& lhs, const Quad_Coord& rhs)
-    {
-      populate(
-          ilat(lhs.ll_upper, lhs.ll_lower), ilon(lhs.ll_upper, lhs.ll_lower),
-          ilat(rhs.ll_upper, rhs.ll_lower), ilon(rhs.ll_upper, rhs.ll_lower));
-    }
-    
-    void populate(uint32 ilat_lhs, int32 ilon_lhs, uint32 ilat_rhs, int32 ilon_rhs)
-    {
-      if (ilon_lhs < ilon_rhs)
-      {
-        ilat_west = ilat_lhs;
-        ilon_west = ilon_lhs;
-        ilat_east = ilat_rhs;
-        ilon_east = ilon_rhs;
-      }
-      else
-      {
-        ilat_west = ilat_rhs;
-        ilon_west = ilon_rhs;
-        ilat_east = ilat_lhs;
-        ilon_east = ilon_lhs;
-      }
-    }
-    
-    uint32 ilat_west;
-    int32 ilon_west;
-    uint32 ilat_east;
-    int32 ilon_east;
-  };
-//   struct Entry
-//   {
-//     Entry(const Way_Skeleton* ref_, uint i_begin_, uint i_end_)
-//         : ref(ref_), i_begin(i_begin_), i_end(i_end_) {}
-//     
-//     const Way_Skeleton* ref;
-//     uint i_begin;
-//     uint i_end;
-//   };
-  
   struct Index_Block
   {
     Index_Block() : sw_is_inside(false) {}
     
-    std::vector< Entry > segments;
+    std::vector< Segment > segments;
     bool sw_is_inside;
   };
 
@@ -312,7 +484,7 @@ public:
       const Index_Block& block = bit->second;
       bool is_inside = block.sw_is_inside;
 
-      for (std::vector< Entry >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+      for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
       {
         if (it->ilat_west > south && it->ilat_east > south)
         {
@@ -455,7 +627,13 @@ public:
     
     return total_is_inside ? inside : outside;
   }
-  
+
+  Relative_Position rel_position(const std::vector< Segment >& segments)
+  {
+    //TODO
+    return outside;
+  }
+
 private:
   const std::map< Uint31_Index, std::vector< Way_Skeleton > >* ways;
   const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >* attic_ways;
@@ -464,7 +642,20 @@ private:
   Way_Geometry_Store cur_geom_store;
   Way_Geometry_Store attic_geom_store;
   std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > > queue;
-  
+
+  struct Segment_Collector
+  {
+    Segment_Collector(
+        std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > >& queue_, const Way_Skeleton& skel_)
+        : queue(&queue_), skel(&skel_) {}
+    void push(Uint31_Index idx, const Segment& segment) const
+    { (*queue)[idx][skel].segments.push_back(segment); }
+    
+  private:
+    std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > >* queue;
+    const Way_Skeleton* skel;
+  };
+
   void refill()
   {
     while (cur_it != ways->end() || attic_it != attic_ways->end())
@@ -476,7 +667,7 @@ private:
         for (std::vector< Way_Skeleton >::const_iterator it = cur_it->second.begin(); it != cur_it->second.end(); ++it)
         {
           if (!it->nds.empty() && it->nds.front() == it->nds.back())
-            make_entries(*it, cur_geom_store.get_geometry(*it));
+            make_entries(Segment_Collector(queue, *it), cur_geom_store.get_geometry(*it));
         }
         ++cur_it;
       }
@@ -486,7 +677,7 @@ private:
             it != attic_it->second.end(); ++it)
         {
           if (!it->nds.empty() && it->nds.front() == it->nds.back())
-            make_entries(*it, attic_geom_store.get_geometry(*it));
+            make_entries(Segment_Collector(queue, *it), attic_geom_store.get_geometry(*it));
         }
         ++attic_it;
       }
@@ -494,184 +685,6 @@ private:
       if (!is_compound_idx(idx) && !queue.empty())
         break;
     }
-  }
-  
-  void make_entries(const Way_Skeleton& skel, const std::vector< Quad_Coord >& geom)
-  {
-    if (geom.empty())
-      return;
-
-    for (uint i = 1; i < geom.size(); ++i)
-    {
-      if (geom[i].ll_upper == geom[i-1].ll_upper)
-        queue[geom[i].ll_upper][&skel].segments.push_back(Entry(geom[i-1], geom[i]));
-      else
-      {
-        Uint31_Index extra_idx = touched_index(geom[i-1], geom[i]);
-//         std::cout<<std::dec<<ilat(geom[i-1].ll_upper, geom[i-1].ll_lower)<<' '<<ilon(geom[i-1].ll_upper, geom[i-1].ll_lower)<<' '
-//             <<ilat(geom[i].ll_upper, geom[i].ll_lower)<<' '<<ilon(geom[i].ll_upper, geom[i].ll_lower)<<' '
-//             <<std::hex<<extra_idx.val()<<'\n';
-        if (extra_idx.val() == 0xff)
-          calculate_auxiliary_points(skel, geom[i-1], geom[i]);
-        else
-        {
-          queue[geom[i-1].ll_upper][&skel].segments.push_back(Entry(geom[i-1], geom[i]));
-          queue[geom[i].ll_upper][&skel].segments.push_back(Entry(geom[i-1], geom[i]));
-          if (!(extra_idx.val() == 0))
-            queue[extra_idx][&skel].segments.push_back(Entry(geom[i-1], geom[i]));
-        }
-      }
-    }
-  }
-
-  void calculate_auxiliary_points(const Way_Skeleton& skel, Quad_Coord lhs, Quad_Coord rhs)
-  {
-    uint32 lat_lhs = ilat(lhs.ll_upper, lhs.ll_lower);
-    int32 lon_lhs = ilon(lhs.ll_upper, lhs.ll_lower);
-    uint32 lat_rhs = ilat(rhs.ll_upper, rhs.ll_lower);
-    int32 lon_rhs = ilon(rhs.ll_upper, rhs.ll_lower);
-
-    if ((lon_lhs & 0xffff0000) == (lon_rhs & 0xffff0000))
-      calculate_south_north_sequence(skel, lat_lhs, lon_lhs, lat_rhs, lon_rhs);
-    else
-    {
-      Great_Circle gc(make_point_double(lhs), make_point_double(rhs));
-      Quad_Coord min = lon_lhs < lon_rhs ? lhs : rhs;
-      Quad_Coord max = lon_lhs < lon_rhs ? rhs : lhs;
-      int32 i_ilon = ilon(min.ll_upper, min.ll_lower);
-      int32 ilon_max = ilon(max.ll_upper, max.ll_lower);
-      if ((int64)ilon_max - i_ilon < 1800000000)
-      {
-//         std::cout<<"aux_gc "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
-//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
-        uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
-        calculate_south_north_sequence(
-            skel, ilat(min.ll_upper, min.ll_lower), i_ilon,
-            i_ilat, (i_ilon & 0xffff0000) + 0x10000);
-        for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max;
-            i_ilon += 0x10000)
-        {
-          uint32 last_ilat = i_ilat;
-          i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
-          calculate_south_north_sequence(
-              skel, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
-        }
-        
-        calculate_south_north_sequence(
-            skel, i_ilat, i_ilon, ilat(max.ll_upper, max.ll_lower), ilon_max);
-      }
-      else if (ilon_max - i_ilon == 1800000000)
-      {
-//         std::cout<<"aux_180 "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
-//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
-        uint64 ilat_min = ilat(min.ll_upper, min.ll_lower);
-        uint64 ilat_max = ilat(max.ll_upper, max.ll_lower);
-        if (ilat_min + ilat_max > 2*910000000)
-        {
-          calculate_south_north_sequence(skel, ilat_min, i_ilon, 1810000000, i_ilon);
-          calculate_south_north_sequence(skel, ilat_max, ilon_max, 1810000000, ilon_max);
-        }
-        else
-        {
-          calculate_south_north_sequence(skel, 10000000, i_ilon, ilat_min, i_ilon);
-          calculate_south_north_sequence(skel, 10000000, ilon_max, ilat_max, ilon_max);
-        }
-      }
-      else
-      {
-//         std::cout<<"aux_anti "<<ilat(min.ll_upper, min.ll_lower)<<' '<<ilon(min.ll_upper, min.ll_lower)
-//             <<' '<<ilat(max.ll_upper, max.ll_lower)<<' '<<ilon(max.ll_upper, max.ll_lower)<<'\n';
-        if ((i_ilon & 0xffff0000) == (-1800000000 & 0xffff0000))
-          calculate_south_north_sequence(
-              skel, ilat(gc.lat_of(-180.)), -1800000000, ilat(min.ll_upper, min.ll_lower), i_ilon);
-        else
-        {
-          uint32 i_ilat = ilat(gc.lat_of(-180.));
-          int32 ilon_max = i_ilon;
-          i_ilon = -1800000000;
-          calculate_south_north_sequence(
-              skel, ilat(min.ll_upper, min.ll_lower), i_ilon,
-              i_ilat, (i_ilon & 0xffff0000) + 0x10000);
-          for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < ilon_max;
-              i_ilon += 0x10000)
-          {
-            uint32 last_ilat = i_ilat;
-            i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
-            calculate_south_north_sequence(
-                skel, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
-          }
-          
-          calculate_south_north_sequence(
-              skel, i_ilat, i_ilon, ilat(min.ll_upper, min.ll_lower), ilon_max);
-        }
-        
-        if ((ilon_max & 0xffff0000) == (1800000000 & 0xffff0000))
-          calculate_south_north_sequence(
-              skel, ilat(max.ll_upper, max.ll_lower), ilon_max, ilat(gc.lat_of(180.)), 1800000000);
-        else
-        {
-          i_ilon = ilon_max;
-          uint32 i_ilat = ilat(gc.lat_of(lon((i_ilon & 0xffff0000) + 0x10000)));
-          calculate_south_north_sequence(
-              skel, ilat(max.ll_upper, max.ll_lower), i_ilon,
-              i_ilat, (i_ilon & 0xffff0000) + 0x10000);
-          for (i_ilon = (i_ilon & 0xffff0000) + 0x10000; i_ilon + 0x10000 < 1800000000;
-              i_ilon += 0x10000)
-          {
-            uint32 last_ilat = i_ilat;
-            i_ilat = ilat(gc.lat_of(lon(i_ilon + 0x10000)));
-            calculate_south_north_sequence(
-                skel, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
-          }
-          
-          calculate_south_north_sequence(
-              skel, i_ilat, i_ilon, ilat(gc.lat_of(180.)), 1800000000);
-        }
-      }
-    }
-  }
-
-  void calculate_south_north_sequence(
-      const Way_Skeleton& skel, uint32 lat_lhs, int32 lon_lhs, uint32 lat_rhs, int32 lon_rhs)
-  {
-//     std::cout<<"sn "<<lat_lhs<<' '<<lon_lhs<<' '<<lat_rhs<<' '<<lon_rhs<<'\n';
-    if ((lat_lhs & 0xffff0000) == (lat_rhs & 0xffff0000))
-    {
-      queue[Uint31_Index(ll_upper_(lat_lhs, lon_lhs))][&skel].segments.push_back(
-          Entry(lat_lhs, lon_lhs, lat_rhs, lon_rhs));
-      return;
-    }
-
-    if (lat_rhs < lat_lhs)
-    {
-      std::swap(lat_lhs, lat_rhs);
-      std::swap(lon_lhs, lon_rhs);
-    }
-    int32 min_lon = std::min(lon_lhs, lon_rhs);
-
-    uint32 i_lat = (lat_lhs & 0xffff0000) + 0x10000;
-    int32 i_lon = lon_lhs + ((double)i_lat - lat_lhs)/((int32)lat_rhs - (int32)lat_lhs)*(lon_rhs - lon_lhs);
-//     std::cout<<"DEBUG_B "<<std::hex<<ll_upper_(lat_lhs, min_lon)<<' '
-//         <<std::dec<<lat_lhs<<' '<<lon_lhs<<' '<<i_lat<<' '<<i_lon<<'\n';
-    queue[Uint31_Index(ll_upper_(lat_lhs, min_lon))][&skel].segments.push_back(
-        Entry(lat_lhs, lon_lhs, i_lat, i_lon));
-
-    while (i_lat + 0x10000 < lat_rhs)
-    {
-      uint32 last_ilat = i_lat;
-      int32 last_ilon = i_lon;
-      i_lat += 0x10000;
-      i_lon = lon_lhs + ((double)i_lat - lat_lhs)/((int32)lat_rhs - (int32)lat_lhs)*(lon_rhs - lon_lhs);
-//       std::cout<<"DEBUG_D "<<std::hex<<ll_upper_(last_ilat, min_lon)<<' '
-//           <<std::dec<<last_ilat<<' '<<last_ilon<<' '<<i_lat<<' '<<i_lon<<'\n';
-      queue[Uint31_Index(ll_upper_(last_ilat, min_lon))][&skel].segments.push_back(
-          Entry(last_ilat, last_ilon, i_lat, i_lon));
-    }
-    
-//     std::cout<<"DEBUG_C "<<std::hex<<ll_upper_(i_lat, min_lon)<<' '
-//         <<std::dec<<i_lat<<' '<<i_lon<<' '<<lat_rhs<<' '<<lon_rhs<<'\n';
-    queue[Uint31_Index(ll_upper_(i_lat, min_lon))][&skel].segments.push_back(
-        Entry(i_lat, i_lon, lat_rhs, lon_rhs));
   }
   
   void propagate_inside_flag()
@@ -688,7 +701,7 @@ private:
       const Index_Block& block = bit->second;
       bool is_inside = block.sw_is_inside;
       
-      for (std::vector< Entry >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+      for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
       {
 //         std::cout<<"DEBUG "<<std::hex<<idx.val()<<' '
 //             <<std::dec<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<'\n';
@@ -712,7 +725,7 @@ private:
       {
         is_inside = block.sw_is_inside;
         
-        for (std::vector< Entry >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+        for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
         {
           if (it->ilon_west == -1800000000 && it->ilon_east != -1800000000)
             is_inside = !is_inside;
@@ -724,6 +737,128 @@ private:
           queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u)+0x10000, ilon(idx.val(), 0u)))][bit->first].sw_is_inside = is_inside;
         }
       }
+    }
+  }
+};
+
+
+// fwd iterator only
+class Tilewise_Way_Iterator
+{
+public:
+  struct Index_Block
+  {
+    std::vector< Segment > segments;
+  };
+  
+  template< typename Way_Skeleton >
+  struct Status_Ref
+  {
+    Status_Ref(Uint31_Index idx_, const Way_Skeleton& skel_) : idx(idx_), skel(&skel_) {}
+
+    Uint31_Index idx;
+    const Way_Skeleton* skel;
+    Tilewise_Area_Iterator::Relative_Position status;
+  };
+
+  // non-const, but relies to pointers into each vec.
+  // That way, objects can be moved from or marked as done.
+  Tilewise_Way_Iterator(
+      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways_,
+      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways_,
+      const Statement& stmt, Resource_Manager& rman)
+  : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
+   cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman)
+  {
+    refill();
+  }
+  
+  void next()
+  {
+    queue.erase(queue.begin());
+    if (queue.empty())
+      refill();
+  }
+  bool is_end() const { return queue.empty(); }
+  
+  const std::map< Status_Ref< Way_Skeleton >*, Index_Block >& get_current_obj() const
+  { return queue.begin()->second.first; }
+  const std::map< Status_Ref< Attic< Way_Skeleton > >*, Index_Block >& get_attic_obj() const
+  { return queue.begin()->second.second; }
+  Uint31_Index get_idx() const { return queue.begin()->first; }
+
+private:
+  const std::map< Uint31_Index, std::vector< Way_Skeleton > >* ways;
+  const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >* attic_ways;
+  std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator cur_it;
+  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_it;
+  std::map< Uint31_Index, std::vector< Status_Ref< Way_Skeleton > > > current_refs;
+  std::map< Uint31_Index, std::vector< Status_Ref< Attic< Way_Skeleton > > > > attic_refs;
+  Way_Geometry_Store cur_geom_store;
+  Way_Geometry_Store attic_geom_store;
+  std::map< Uint31_Index, std::pair< std::map< Status_Ref< Way_Skeleton >*, Index_Block >,
+      std::map< Status_Ref< Attic< Way_Skeleton > >*, Index_Block > > > queue;
+
+  struct Current_Segment_Collector
+  {
+    Current_Segment_Collector(
+        std::map< Uint31_Index, std::pair< std::map< Status_Ref< Way_Skeleton >*, Index_Block >,
+            std::map< Status_Ref< Attic< Way_Skeleton > >*, Index_Block > > >& queue_,
+        Status_Ref< Way_Skeleton >& skel_)
+        : queue(&queue_), skel(&skel_) {}
+    void push(Uint31_Index idx, const Segment& segment) const
+    { (*queue)[idx].first[skel].segments.push_back(segment); }
+    
+  private:
+    std::map< Uint31_Index, std::pair< std::map< Status_Ref< Way_Skeleton >*, Index_Block >,
+        std::map< Status_Ref< Attic< Way_Skeleton > >*, Index_Block > > >* queue;
+    Status_Ref< Way_Skeleton >* skel;
+  };
+
+  struct Attic_Segment_Collector
+  {
+    Attic_Segment_Collector(
+        std::map< Uint31_Index, std::pair< std::map< Status_Ref< Way_Skeleton >*, Index_Block >,
+            std::map< Status_Ref< Attic< Way_Skeleton > >*, Index_Block > > >& queue_,
+        Status_Ref< Attic< Way_Skeleton > >& skel_)
+        : queue(&queue_), skel(&skel_) {}
+    void push(Uint31_Index idx, const Segment& segment) const
+    { (*queue)[idx].second[skel].segments.push_back(segment); }
+    
+  private:
+    std::map< Uint31_Index, std::pair< std::map< Status_Ref< Way_Skeleton >*, Index_Block >,
+      std::map< Status_Ref< Attic< Way_Skeleton > >*, Index_Block > > >* queue;
+    Status_Ref< Attic< Way_Skeleton > >* skel;
+  };
+
+  void refill()
+  {
+    while (cur_it != ways->end() || attic_it != attic_ways->end())
+    {
+      Uint31_Index idx = (cur_it != ways->end() && (attic_it == attic_ways->end() || cur_it->first < attic_it->first)
+          ? cur_it->first : attic_it->first);
+      if (cur_it != ways->end() && cur_it->first == idx)
+      {
+        std::vector< Status_Ref< Way_Skeleton > >& refs = current_refs[idx];
+        for (std::vector< Way_Skeleton >::const_iterator it = cur_it->second.begin(); it != cur_it->second.end(); ++it)
+          refs.push_back(Status_Ref< Way_Skeleton >(idx, *it));
+        for (std::vector< Status_Ref< Way_Skeleton > >::iterator it = refs.begin(); it != refs.end(); ++it)
+          make_entries(Current_Segment_Collector(queue, *it), cur_geom_store.get_geometry(*it->skel));
+        ++cur_it;
+      }
+      if (attic_it != attic_ways->end() && attic_it->first == idx)
+      {
+        std::vector< Status_Ref< Attic< Way_Skeleton > > >& refs = attic_refs[idx];
+        for (std::vector< Attic< Way_Skeleton > >::const_iterator it = attic_it->second.begin();
+            it != attic_it->second.end(); ++it)
+          refs.push_back(Status_Ref< Attic< Way_Skeleton > >(idx, *it));
+        for (std::vector< Status_Ref< Attic< Way_Skeleton > > >::iterator it = refs.begin(); it != refs.end(); ++it)
+          make_entries(Attic_Segment_Collector(queue, *it), attic_geom_store.get_geometry(*it->skel));
+        ++attic_it;
+      }
+
+      if (!is_compound_idx(idx) && !queue.empty())
+        break;
     }
   }
 };

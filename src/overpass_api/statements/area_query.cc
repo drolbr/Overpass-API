@@ -218,6 +218,86 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
 }
 
 
+std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_contained_in(
+    const Set* potential_areas, const Statement& stmt, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
+{
+  if (!potential_areas)
+    return std::map< Uint31_Index, std::vector< Way_Skeleton > >();
+  
+  Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  std::map< Uint31_Index, std::vector< Way_Skeleton > > result;
+
+  Tilewise_Way_Iterator twi(ways, std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >(), stmt, rman);
+  while (!twi.is_end())
+  {
+    while (!tai.is_end() && tai.get_idx() < twi.get_idx())
+      tai.next();
+    if (tai.is_end() || twi.get_idx() < tai.get_idx())
+    {
+      twi.next();
+      continue;
+    }
+    
+    const std::map< Tilewise_Way_Iterator::Status_Ref< Way_Skeleton >*, Tilewise_Way_Iterator::Index_Block >& obj = twi.get_current_obj();
+    for (std::map< Tilewise_Way_Iterator::Status_Ref< Way_Skeleton >*, Tilewise_Way_Iterator::Index_Block >::const_iterator it = obj.begin();
+        it != obj.end(); ++it)
+    {
+      if (it->first->status == Tilewise_Area_Iterator::outside)
+      {
+        it->first->status = tai.rel_position(it->second.segments);
+        if (it->first->status != Tilewise_Area_Iterator::outside)
+          result[it->first->idx].push_back(*it->first->skel);
+      }
+    }
+    
+    twi.next();
+  }
+  
+  return result;
+}
+
+
+std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_contained_in(
+    const Set* potential_areas, const Statement& stmt, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways)
+{
+  if (!potential_areas)
+    return std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >();
+  
+  Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > result;
+
+  Tilewise_Way_Iterator twi(std::map< Uint31_Index, std::vector< Way_Skeleton > >(), ways, stmt, rman);
+  while (!twi.is_end())
+  {
+    while (!tai.is_end() && tai.get_idx() < twi.get_idx())
+      tai.next();
+    if (tai.is_end() || twi.get_idx() < tai.get_idx())
+    {
+      twi.next();
+      continue;
+    }
+    
+    const std::map< Tilewise_Way_Iterator::Status_Ref< Attic< Way_Skeleton > >*, Tilewise_Way_Iterator::Index_Block >& obj = twi.get_attic_obj();
+    for (std::map< Tilewise_Way_Iterator::Status_Ref< Attic< Way_Skeleton > >*, Tilewise_Way_Iterator::Index_Block >::const_iterator
+        it = obj.begin(); it != obj.end(); ++it)
+    {
+      if (it->first->status == Tilewise_Area_Iterator::outside)
+      {
+        it->first->status = tai.rel_position(it->second.segments);
+        if (it->first->status != Tilewise_Area_Iterator::outside)
+          result[it->first->idx].push_back(*it->first->skel);
+      }
+    }
+    
+    twi.next();
+  }
+  
+  return result;
+}
+
+
 void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   std::set< Uint31_Index > area_blocks_req;
@@ -240,8 +320,14 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   } 
 
   //Process ways
-  area->collect_ways(Way_Geometry_Store(into.ways, query, rman),
-		     into.ways, area_blocks_req, false, query, rman);
+  {
+    std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_in_wr_areas
+        = ways_contained_in(input, query, rman, into.ways);
+    indexed_set_difference(into.ways, ways_in_wr_areas);
+    area->collect_ways(Way_Geometry_Store(into.ways, query, rman),
+        into.ways, area_blocks_req, false, query, rman);
+    indexed_set_union(into.ways, ways_in_wr_areas);
+  }
 
   //Process relations
 
@@ -280,8 +366,14 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
 
   //Process ways
   if (!into.attic_ways.empty())
+  {
+    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_in_wr_areas
+        = ways_contained_in(input, query, rman, into.attic_ways);
+    indexed_set_difference(into.attic_ways, ways_in_wr_areas);
     area->collect_ways(Way_Geometry_Store(into.attic_ways, query, rman),
-		       into.attic_ways, area_blocks_req, false, query, rman);
+        into.attic_ways, area_blocks_req, false, query, rman);
+    indexed_set_union(into.attic_ways, ways_in_wr_areas);
+  }
 
   //Process relations
   if (!into.attic_relations.empty())
