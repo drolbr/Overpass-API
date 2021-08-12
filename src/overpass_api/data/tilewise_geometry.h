@@ -469,13 +469,136 @@ public:
   
   Relative_Position rel_position(uint32 ll_upper, uint32 ll_lower)
   {
+    return rel_pos_ilat_ilon(ilat(ll_upper, ll_lower), ilon(ll_upper, ll_lower));
+  }
+
+  Relative_Position rel_position(const std::vector< Segment >& segments)
+  {
+    for (std::vector< Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
+    {
+      Relative_Position status = rel_pos_ilat_ilon(it->ilat_west, it->ilon_west);
+      if (status != outside)
+        return status;
+      status = rel_pos_ilat_ilon(it->ilat_east, it->ilon_east);
+      if (status != outside)
+        return status;
+      //TODO
+    }
+    return outside;
+  }
+
+private:
+  const std::map< Uint31_Index, std::vector< Way_Skeleton > >* ways;
+  const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >* attic_ways;
+  std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator cur_it;
+  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_it;
+  Way_Geometry_Store cur_geom_store;
+  Way_Geometry_Store attic_geom_store;
+  std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > > queue;
+
+  struct Segment_Collector
+  {
+    Segment_Collector(
+        std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > >& queue_, const Way_Skeleton& skel_)
+        : queue(&queue_), skel(&skel_) {}
+    void push(Uint31_Index idx, const Segment& segment) const
+    { (*queue)[idx][skel].segments.push_back(segment); }
+    
+  private:
+    std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > >* queue;
+    const Way_Skeleton* skel;
+  };
+
+  void refill()
+  {
+    while (cur_it != ways->end() || attic_it != attic_ways->end())
+    {
+      Uint31_Index idx = (cur_it != ways->end() && (attic_it == attic_ways->end() || cur_it->first < attic_it->first)
+          ? cur_it->first : attic_it->first);
+      if (cur_it != ways->end() && cur_it->first == idx)
+      {
+        for (std::vector< Way_Skeleton >::const_iterator it = cur_it->second.begin(); it != cur_it->second.end(); ++it)
+        {
+          if (!it->nds.empty() && it->nds.front() == it->nds.back())
+            make_entries(Segment_Collector(queue, *it), cur_geom_store.get_geometry(*it));
+        }
+        ++cur_it;
+      }
+      if (attic_it != attic_ways->end() && attic_it->first == idx)
+      {
+        for (std::vector< Attic< Way_Skeleton > >::const_iterator it = attic_it->second.begin();
+            it != attic_it->second.end(); ++it)
+        {
+          if (!it->nds.empty() && it->nds.front() == it->nds.back())
+            make_entries(Segment_Collector(queue, *it), attic_geom_store.get_geometry(*it));
+        }
+        ++attic_it;
+      }
+
+      if (!is_compound_idx(idx) && !queue.empty())
+        break;
+    }
+  }
+  
+  void propagate_inside_flag()
+  {
+    Uint31_Index idx = get_idx();
+    uint32 south = ilat(idx.val(), 0u);
+    int32 west = ilon(idx.val(), 0u);
+//     std::cout<<"propagate_inside_flag "<<south<<' '<<west<<'\n';
+    const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
+    
+    for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
+        bit != way_blocks.end(); ++bit)
+    {
+      const Index_Block& block = bit->second;
+      bool is_inside = block.sw_is_inside;
+      
+      for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+      {
+//         std::cout<<"DEBUG "<<std::hex<<idx.val()<<' '
+//             <<std::dec<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<'\n';
+        if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
+        {
+          double isect_lon = it->ilon_west +
+              ((double)south - it->ilat_west)
+              *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
+//           std::cout<<"isect_lon "<<isect_lon<<'\n';
+          if (west <= isect_lon && isect_lon < west + 0x10000)
+            is_inside = !is_inside;
+        }
+      }
+      
+//       std::cout<<"propagate_inside_flag "<<south<<' '<<west<<' '
+//           <<ilat(idx.val(), 0u)<<' '<<ilon(idx.val(), 0u)+0x10000<<' '<<is_inside<<'\n';
+      if (is_inside)
+        queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u), ilon(idx.val(), 0u)+0x10000))][bit->first].sw_is_inside = is_inside;
+      
+      if (west < -1800000000)
+      {
+        is_inside = block.sw_is_inside;
+        
+        for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+        {
+          if (it->ilon_west == -1800000000 && it->ilon_east != -1800000000)
+            is_inside = !is_inside;
+        }
+        
+        if (is_inside)
+        {
+          //std::cout<<"is_inside "<<(ilat(idx.val(), 0u)+0x10000)<<' '<<ilon(idx.val(), 0u)<<'\n';
+          queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u)+0x10000, ilon(idx.val(), 0u)))][bit->first].sw_is_inside = is_inside;
+        }
+      }
+    }
+  }
+
+  Relative_Position rel_pos_ilat_ilon(uint32 lat_p, int32 lon_p)
+  {
     Uint31_Index idx = get_idx();
     uint32 south = ilat(idx.val(), 0u);
     int32 west = ilon(idx.val(), 0u);
     const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
-
-    uint32 lat_p = ilat(ll_upper, ll_lower);
-    int32 lon_p = ilon(ll_upper, ll_lower);
     bool total_is_inside = false;
     
     for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
@@ -626,118 +749,6 @@ public:
     }
     
     return total_is_inside ? inside : outside;
-  }
-
-  Relative_Position rel_position(const std::vector< Segment >& segments)
-  {
-    //TODO
-    return outside;
-  }
-
-private:
-  const std::map< Uint31_Index, std::vector< Way_Skeleton > >* ways;
-  const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >* attic_ways;
-  std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator cur_it;
-  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_it;
-  Way_Geometry_Store cur_geom_store;
-  Way_Geometry_Store attic_geom_store;
-  std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > > queue;
-
-  struct Segment_Collector
-  {
-    Segment_Collector(
-        std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > >& queue_, const Way_Skeleton& skel_)
-        : queue(&queue_), skel(&skel_) {}
-    void push(Uint31_Index idx, const Segment& segment) const
-    { (*queue)[idx][skel].segments.push_back(segment); }
-    
-  private:
-    std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > >* queue;
-    const Way_Skeleton* skel;
-  };
-
-  void refill()
-  {
-    while (cur_it != ways->end() || attic_it != attic_ways->end())
-    {
-      Uint31_Index idx = (cur_it != ways->end() && (attic_it == attic_ways->end() || cur_it->first < attic_it->first)
-          ? cur_it->first : attic_it->first);
-      if (cur_it != ways->end() && cur_it->first == idx)
-      {
-        for (std::vector< Way_Skeleton >::const_iterator it = cur_it->second.begin(); it != cur_it->second.end(); ++it)
-        {
-          if (!it->nds.empty() && it->nds.front() == it->nds.back())
-            make_entries(Segment_Collector(queue, *it), cur_geom_store.get_geometry(*it));
-        }
-        ++cur_it;
-      }
-      if (attic_it != attic_ways->end() && attic_it->first == idx)
-      {
-        for (std::vector< Attic< Way_Skeleton > >::const_iterator it = attic_it->second.begin();
-            it != attic_it->second.end(); ++it)
-        {
-          if (!it->nds.empty() && it->nds.front() == it->nds.back())
-            make_entries(Segment_Collector(queue, *it), attic_geom_store.get_geometry(*it));
-        }
-        ++attic_it;
-      }
-
-      if (!is_compound_idx(idx) && !queue.empty())
-        break;
-    }
-  }
-  
-  void propagate_inside_flag()
-  {
-    Uint31_Index idx = get_idx();
-    uint32 south = ilat(idx.val(), 0u);
-    int32 west = ilon(idx.val(), 0u);
-//     std::cout<<"propagate_inside_flag "<<south<<' '<<west<<'\n';
-    const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
-    
-    for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
-        bit != way_blocks.end(); ++bit)
-    {
-      const Index_Block& block = bit->second;
-      bool is_inside = block.sw_is_inside;
-      
-      for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
-      {
-//         std::cout<<"DEBUG "<<std::hex<<idx.val()<<' '
-//             <<std::dec<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<'\n';
-        if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
-        {
-          double isect_lon = it->ilon_west +
-              ((double)south - it->ilat_west)
-              *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
-//           std::cout<<"isect_lon "<<isect_lon<<'\n';
-          if (west <= isect_lon && isect_lon < west + 0x10000)
-            is_inside = !is_inside;
-        }
-      }
-      
-//       std::cout<<"propagate_inside_flag "<<south<<' '<<west<<' '
-//           <<ilat(idx.val(), 0u)<<' '<<ilon(idx.val(), 0u)+0x10000<<' '<<is_inside<<'\n';
-      if (is_inside)
-        queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u), ilon(idx.val(), 0u)+0x10000))][bit->first].sw_is_inside = is_inside;
-      
-      if (west < -1800000000)
-      {
-        is_inside = block.sw_is_inside;
-        
-        for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
-        {
-          if (it->ilon_west == -1800000000 && it->ilon_east != -1800000000)
-            is_inside = !is_inside;
-        }
-        
-        if (is_inside)
-        {
-          //std::cout<<"is_inside "<<(ilat(idx.val(), 0u)+0x10000)<<' '<<ilon(idx.val(), 0u)<<'\n';
-          queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u)+0x10000, ilon(idx.val(), 0u)))][bit->first].sw_is_inside = is_inside;
-        }
-      }
-    }
   }
 };
 
