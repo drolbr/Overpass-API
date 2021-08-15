@@ -449,6 +449,21 @@
   <node id="30647" lat="51.2458912" lon="7.1499775" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="30648" lat="51.2458911" lon="7.1499775" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
 
+  <node id="101011" lat="51.2505000" lon="7.1500000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101021" lat="51.2505000" lon="7.1500002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101031" lat="51.2505000" lon="7.1510002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101041" lat="51.2505000" lon="7.1510000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101051" lat="51.2505000" lon="7.1510004" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="101511" lat="51.2505000" lon="7.1500000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101512" lat="51.2505000" lon="7.1510002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101521" lat="51.2500000" lon="7.1505000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101522" lat="51.2510002" lon="7.1505000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101531" lat="51.2500000" lon="7.1510002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101532" lat="51.2510002" lon="7.1500000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101611" lat="51.2509901" lon="7.1510101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101612" lat="51.2510101" lon="7.1509901" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
   <!-- Square within a block and probing around the vertices -->
   <way id="101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
     <nd ref="10101"/>
@@ -586,8 +601,46 @@
   </way>
 
 
-  <!--
-- SW- und SO-Segmente, S-Segment
-  -->
+  <!-- Ways that have one point inside, first or last, westmost or eastmost -->
+  <way id="10101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101011"/>
+    <nd ref="101021"/>
+  </way>
+  <way id="10102" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101021"/>
+    <nd ref="101011"/>
+  </way>
+  <way id="10103" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101031"/>
+    <nd ref="101041"/>
+  </way>
+  <way id="10104" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101041"/>
+    <nd ref="101031"/>
+  </way>
+  <way id="10105" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101051"/>
+    <nd ref="101031"/>
+  </way>
+  
+  <!-- Ways that intersect the boundary, but have no point inside -->
+  <way id="10151" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101511"/>
+    <nd ref="101512"/>
+  </way>
+  <way id="10152" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101521"/>
+    <nd ref="101522"/>
+  </way>
+  <way id="10153" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101531"/>
+    <nd ref="101532"/>
+  </way>
+  
+  <!-- Way that only touches the boundary in one non-explicit point -->
+  <way id="10161" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101611"/>
+    <nd ref="101612"/>
+  </way>
 
 </osm>

@@ -482,7 +482,57 @@ public:
       status = rel_pos_ilat_ilon(it->ilat_east, it->ilon_east);
       if (status != outside)
         return status;
-      //TODO
+
+      const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
+      for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
+          bit != way_blocks.end(); ++bit)
+      {
+        const Index_Block& block = bit->second;
+
+        for (std::vector< Segment >::const_iterator ait = block.segments.begin(); ait != block.segments.end(); ++ait)
+        {
+          if (ait->ilon_west <= it->ilon_east && it->ilon_west <= ait->ilon_east)
+          {
+            // Compute the scalar products of both endpoints of one segment with the other segment's direction
+            // If they have different signs then we know that the intersection of both lines is within the segment
+            double scal_ait_west = ((double)ait->ilat_west - it->ilat_west)*(it->ilon_east - it->ilon_west)
+                - (ait->ilon_west - it->ilon_west)*((double)it->ilat_east - it->ilat_west);
+            double scal_ait_east = ((double)ait->ilat_east - it->ilat_west)*(it->ilon_east - it->ilon_west)
+                - (ait->ilon_east - it->ilon_west)*((double)it->ilat_east - it->ilat_west);
+            if (scal_ait_east * scal_ait_west > 0)
+              continue;
+
+            double scal_it_west = ((double)it->ilat_west - ait->ilat_west)*(ait->ilon_east - ait->ilon_west)
+                - (it->ilon_west - ait->ilon_west)*((double)ait->ilat_east - ait->ilat_west);
+            double scal_it_east = ((double)it->ilat_east - ait->ilat_west)*(ait->ilon_east - ait->ilon_west)
+                - (it->ilon_east - ait->ilon_west)*((double)ait->ilat_east - ait->ilat_west);
+            if (scal_it_east * scal_it_west > 0)
+              continue;
+            
+            std::cout<<"DEBUG "<<bit->first->id.val()
+                <<"  "<<it->ilat_west<<' '<<it->ilon_west<<"  "<<it->ilat_east<<' '<<it->ilon_east
+                <<"  "<<ait->ilat_west<<' '<<ait->ilon_west<<"  "<<ait->ilat_east<<' '<<ait->ilon_east
+                <<"  "<<scal_ait_west<<' '<<scal_ait_east<<' '<<scal_it_west<<' '<<scal_it_east<<'\n';
+            std::cout<<"DEBUG "<<((double)ait->ilat_east - it->ilat_west)<<' '<<(it->ilon_west - it->ilon_east)
+                <<' '<<(ait->ilon_east - it->ilon_west)<<' '<<((double)it->ilat_east - it->ilat_west)<<'\n';
+
+//             if (scal_ait_west == 0)
+//             {
+//               if (scal_ait_east == 0)
+//               {
+//               }
+//               else
+//               {
+//               }
+//             }
+//             else if (scal_ait_east == 0)
+//             {
+//             }
+            
+            return inside;
+          }
+        }
+      }
     }
     return outside;
   }
@@ -765,7 +815,8 @@ public:
   template< typename Way_Skeleton >
   struct Status_Ref
   {
-    Status_Ref(Uint31_Index idx_, const Way_Skeleton& skel_) : idx(idx_), skel(&skel_) {}
+    Status_Ref(Uint31_Index idx_, const Way_Skeleton& skel_) : idx(idx_), skel(&skel_),
+        status(Tilewise_Area_Iterator::outside) {}
 
     Uint31_Index idx;
     const Way_Skeleton* skel;
