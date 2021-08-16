@@ -488,6 +488,7 @@ public:
           bit != way_blocks.end(); ++bit)
       {
         const Index_Block& block = bit->second;
+        std::vector< std::pair< uint32, int32 > > touching_coords;
 
         for (std::vector< Segment >::const_iterator ait = block.segments.begin(); ait != block.segments.end(); ++ait)
         {
@@ -509,27 +510,42 @@ public:
             if (scal_it_east * scal_it_west > 0)
               continue;
             
-            std::cout<<"DEBUG "<<bit->first->id.val()
-                <<"  "<<it->ilat_west<<' '<<it->ilon_west<<"  "<<it->ilat_east<<' '<<it->ilon_east
-                <<"  "<<ait->ilat_west<<' '<<ait->ilon_west<<"  "<<ait->ilat_east<<' '<<ait->ilon_east
-                <<"  "<<scal_ait_west<<' '<<scal_ait_east<<' '<<scal_it_west<<' '<<scal_it_east<<'\n';
-            std::cout<<"DEBUG "<<((double)ait->ilat_east - it->ilat_west)<<' '<<(it->ilon_west - it->ilon_east)
-                <<' '<<(ait->ilon_east - it->ilon_west)<<' '<<((double)it->ilat_east - it->ilat_west)<<'\n';
+//             std::cout<<"DEBUG "<<bit->first->id.val()
+//                 <<"  "<<it->ilat_west<<' '<<it->ilon_west<<"  "<<it->ilat_east<<' '<<it->ilon_east
+//                 <<"  "<<ait->ilat_west<<' '<<ait->ilon_west<<"  "<<ait->ilat_east<<' '<<ait->ilon_east
+//                 <<"  "<<scal_ait_west<<' '<<scal_ait_east<<' '<<scal_it_west<<' '<<scal_it_east<<'\n';
+//             std::cout<<"DEBUG "<<((double)ait->ilat_east - it->ilat_west)<<' '<<(it->ilon_west - it->ilon_east)
+//                 <<' '<<(ait->ilon_east - it->ilon_west)<<' '<<((double)it->ilat_east - it->ilat_west)<<'\n';
 
-//             if (scal_ait_west == 0)
-//             {
-//               if (scal_ait_east == 0)
-//               {
-//               }
-//               else
-//               {
-//               }
-//             }
-//             else if (scal_ait_east == 0)
-//             {
-//             }
+            if (scal_ait_west == 0)
+            {
+              touching_coords.push_back(std::make_pair(ait->ilat_west, ait->ilon_west));
+              if (scal_ait_east == 0)
+                touching_coords.push_back(std::make_pair(ait->ilat_east, ait->ilon_east));
+            }
+            else if (scal_ait_east == 0)
+              touching_coords.push_back(std::make_pair(ait->ilat_east, ait->ilon_east));
+            else if (scal_it_west == 0)
+              touching_coords.push_back(std::make_pair(it->ilat_west, it->ilon_west));
+            else if (scal_it_east != 0)
+              return inside;
+          }
+          
+          if (!touching_coords.empty())
+          {
+            touching_coords.push_back(std::make_pair(it->ilat_west, it->ilon_west));
+            touching_coords.push_back(std::make_pair(it->ilat_east, it->ilon_east));
+            std::sort(touching_coords.begin(), touching_coords.end());
+            touching_coords.erase(std::unique(touching_coords.begin(), touching_coords.end()), touching_coords.end());
             
-            return inside;
+            for (std::vector< std::pair< uint32, int32 > >::size_type i = 1; i < touching_coords.size(); ++i)
+            {
+              Relative_Position status = rel_pos_ilat_ilon(
+                  ((uint64)touching_coords[i-1].first + touching_coords[i].first)/2,
+                  ((int64)touching_coords[i-1].second + touching_coords[i].second)/2);
+              if (status == inside)
+                return inside;
+            }
           }
         }
       }
