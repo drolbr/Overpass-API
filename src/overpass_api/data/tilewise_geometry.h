@@ -467,20 +467,20 @@ public:
   const std::map< const Way_Skeleton*, Index_Block >& get_obj() const { return queue.begin()->second; }
   Uint31_Index get_idx() const { return queue.begin()->first; }
   
-  Relative_Position rel_position(uint32 ll_upper, uint32 ll_lower)
+  Relative_Position rel_position(uint32 ll_upper, uint32 ll_lower, bool accept_border)
   {
-    return rel_pos_ilat_ilon(ilat(ll_upper, ll_lower), ilon(ll_upper, ll_lower));
+    return rel_pos_ilat_ilon(ilat(ll_upper, ll_lower), ilon(ll_upper, ll_lower), accept_border);
   }
 
-  Relative_Position rel_position(const std::vector< Segment >& segments)
+  Relative_Position rel_position(const std::vector< Segment >& segments, bool accept_border)
   {
     for (std::vector< Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
     {
-      Relative_Position status = rel_pos_ilat_ilon(it->ilat_west, it->ilon_west);
-      if (status != outside)
+      Relative_Position status = rel_pos_ilat_ilon(it->ilat_west, it->ilon_west, false);
+      if (status == inside)
         return status;
-      status = rel_pos_ilat_ilon(it->ilat_east, it->ilon_east);
-      if (status != outside)
+      status = rel_pos_ilat_ilon(it->ilat_east, it->ilon_east, false);
+      if (status == inside)
         return status;
 
       const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
@@ -530,22 +530,22 @@ public:
             else if (scal_it_east != 0)
               return inside;
           }
+        }
+        
+        if (!touching_coords.empty())
+        {
+          touching_coords.push_back(std::make_pair(it->ilat_west, it->ilon_west));
+          touching_coords.push_back(std::make_pair(it->ilat_east, it->ilon_east));
+          std::sort(touching_coords.begin(), touching_coords.end());
+          touching_coords.erase(std::unique(touching_coords.begin(), touching_coords.end()), touching_coords.end());
           
-          if (!touching_coords.empty())
+          for (std::vector< std::pair< uint32, int32 > >::size_type i = 1; i < touching_coords.size(); ++i)
           {
-            touching_coords.push_back(std::make_pair(it->ilat_west, it->ilon_west));
-            touching_coords.push_back(std::make_pair(it->ilat_east, it->ilon_east));
-            std::sort(touching_coords.begin(), touching_coords.end());
-            touching_coords.erase(std::unique(touching_coords.begin(), touching_coords.end()), touching_coords.end());
-            
-            for (std::vector< std::pair< uint32, int32 > >::size_type i = 1; i < touching_coords.size(); ++i)
-            {
-              Relative_Position status = rel_pos_ilat_ilon(
-                  ((uint64)touching_coords[i-1].first + touching_coords[i].first)/2,
-                  ((int64)touching_coords[i-1].second + touching_coords[i].second)/2);
-              if (status == inside)
-                return inside;
-            }
+            Relative_Position status = rel_pos_ilat_ilon(
+                ((uint64)touching_coords[i-1].first + touching_coords[i].first)/2,
+                ((int64)touching_coords[i-1].second + touching_coords[i].second)/2, false);
+            if (status == inside)
+              return inside;
           }
         }
       }
@@ -659,7 +659,7 @@ private:
     }
   }
 
-  Relative_Position rel_pos_ilat_ilon(uint32 lat_p, int32 lon_p)
+  Relative_Position rel_pos_ilat_ilon(uint32 lat_p, int32 lon_p, bool accept_border)
   {
     Uint31_Index idx = get_idx();
     uint32 south = ilat(idx.val(), 0u);
