@@ -463,6 +463,10 @@
   <node id="101532" lat="51.2510002" lon="7.1500000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101611" lat="51.2509901" lon="7.1510101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101612" lat="51.2510101" lon="7.1509901" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101621" lat="51.2510001" lon="7.1510001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101622" lat="51.2510101" lon="7.1510101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101631" lat="51.2505001" lon="7.1510001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101632" lat="51.2505001" lon="7.1510101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
 
   <!-- Square within a block and probing around the vertices -->
   <way id="101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
@@ -642,5 +646,42 @@
     <nd ref="101611"/>
     <nd ref="101612"/>
   </way>
+
+  <!-- Ways that only touch the boundary in one explicit point -->
+  <way id="10162" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101621"/>
+    <nd ref="101622"/>
+  </way>
+  <way id="10163" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101631"/>
+    <nd ref="101632"/>
+  </way>
+
+  <!-- Relation that has one node member inside -->
+  <relation id="10101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="10114" role=""/>
+  </relation>
+
+  <!-- Relation that has one node member outside -->
+  <relation id="10102" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="10118" role=""/>
+  </relation>
+
+  <!-- Relation that has one node member each inside and outside -->
+  <relation id="10103" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="10118" role=""/>
+    <member type="node" ref="10114" role=""/>
+  </relation>
+
+  <!-- Relation that has one node member on the border -->
+  <relation id="10104" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="10115" role=""/>
+  </relation>
+
+  <!-- Relation that has one node member each inside and the border -->
+  <relation id="10105" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="node" ref="10115" role=""/>
+    <member type="node" ref="10114" role=""/>
+  </relation>
 
 </osm>
