@@ -354,8 +354,14 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
       = relation_way_members(&query, rman, into.relations, &way_ranges);
 
   // Filter for those ways that are in one of the areas
-  area->collect_ways(Way_Geometry_Store(way_members_, query, rman),
-		     way_members_, area_blocks_req, false, query, rman);
+  {
+    std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_in_wr_areas
+        = ways_contained_in(input, query, rman, way_members_);
+    indexed_set_difference(way_members_, ways_in_wr_areas);
+    area->collect_ways(Way_Geometry_Store(way_members_, query, rman),
+        way_members_, area_blocks_req, false, query, rman);
+    indexed_set_union(way_members_, ways_in_wr_areas);
+  }
 
   filter_relations_expensive(order_by_id(node_members, Order_By_Node_Id()),
 			     order_by_id(way_members_, Order_By_Way_Id()),
@@ -392,7 +398,13 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
         = relation_node_members(&query, rman, into.attic_relations, &node_ranges);
 
     // filter for those nodes that are in one of the areas
-    area->collect_nodes(node_members, area_blocks_req, false, rman);
+    {
+      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > nodes_in_wr_areas
+          = nodes_contained_in(input, false, query, rman, node_members);
+      indexed_set_difference(node_members, nodes_in_wr_areas);
+      area->collect_nodes(node_members, area_blocks_req, false, rman);
+      indexed_set_union(node_members, nodes_in_wr_areas);
+    } 
 
     // Retrieve all ways referred by the relations.
     std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
@@ -401,8 +413,14 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
         = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
 
     // Filter for those ways that are in one of the areas
-    area->collect_ways(Way_Geometry_Store(way_members_, query, rman),
-		       way_members_, area_blocks_req, false, query, rman);
+    {
+      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_in_wr_areas
+          = ways_contained_in(input, query, rman, way_members_);
+      indexed_set_difference(way_members_, ways_in_wr_areas);
+      area->collect_ways(Way_Geometry_Store(way_members_, query, rman),
+          way_members_, area_blocks_req, false, query, rman);
+      indexed_set_union(way_members_, ways_in_wr_areas);
+    }
 
     filter_relations_expensive(order_attic_by_id(node_members, Order_By_Node_Id()),
 			       order_attic_by_id(way_members_, Order_By_Way_Id()),

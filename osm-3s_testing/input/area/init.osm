@@ -455,6 +455,9 @@
   <node id="101041" lat="51.2505000" lon="7.1510000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101051" lat="51.2505000" lon="7.1510004" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
 
+  <node id="101411" lat="51.2501001" lon="7.1510002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101412" lat="51.2500001" lon="7.1510002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
   <node id="101511" lat="51.2505000" lon="7.1500000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101512" lat="51.2505000" lon="7.1510002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101521" lat="51.2500000" lon="7.1505000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
@@ -467,6 +470,10 @@
   <node id="101622" lat="51.2510101" lon="7.1510101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101631" lat="51.2505001" lon="7.1510001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101632" lat="51.2505001" lon="7.1510101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
+  <node id="101711" lat="51.2501000" lon="7.1510001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="101712" lat="51.2500002" lon="7.1510001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
 
   <!-- Square within a block and probing around the vertices -->
   <way id="101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
@@ -626,6 +633,12 @@
     <nd ref="101051"/>
     <nd ref="101031"/>
   </way>
+
+  <!-- Way that is outside the area -->
+  <way id="10141" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101411"/>
+    <nd ref="101412"/>
+  </way>
   
   <!-- Ways that intersect the boundary, but have no point inside -->
   <way id="10151" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
@@ -656,6 +669,13 @@
     <nd ref="101631"/>
     <nd ref="101632"/>
   </way>
+  
+  <!-- Way that is entirely on the boundary -->
+  <way id="10171" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="101711"/>
+    <nd ref="101712"/>
+  </way>
+
 
   <!-- Relation that has one node member inside -->
   <relation id="10101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
@@ -678,10 +698,35 @@
     <member type="node" ref="10115" role=""/>
   </relation>
 
-  <!-- Relation that has one node member each inside and the border -->
+  <!-- Relation that has one node member each inside and on the border -->
   <relation id="10105" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="10115" role=""/>
     <member type="node" ref="10114" role=""/>
+  </relation>
+
+
+  <!-- Relation that has one way member inside -->
+  <relation id="10151" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="10101" role=""/>
+  </relation>
+
+  <!-- Relation that has one way member outside -->
+  <relation id="10152" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="10141" role=""/>
+  </relation>
+
+  <!-- Relation that has one node member each inside and outside -->
+  <relation id="10153" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="10141" role=""/>
+    <member type="way" ref="10101" role=""/>
+  </relation>
+
+  <!-- Relations that have one only touching way member -->
+  <relation id="10161" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="10161" role=""/>
+  </relation>
+  <relation id="10162" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <member type="way" ref="10171" role=""/>
   </relation>
 
 </osm>
