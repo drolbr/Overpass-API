@@ -471,87 +471,8 @@ public:
   {
     return rel_pos_ilat_ilon(ilat(ll_upper, ll_lower), ilon(ll_upper, ll_lower), accept_border);
   }
-
-  Relative_Position rel_position(const std::vector< Segment >& segments, bool accept_border)
-  {
-    for (std::vector< Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
-    {
-      Relative_Position status = rel_pos_ilat_ilon(it->ilat_west, it->ilon_west, false);
-      if (status == inside)
-        return status;
-      status = rel_pos_ilat_ilon(it->ilat_east, it->ilon_east, false);
-      if (status == inside)
-        return status;
-
-      const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
-      for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
-          bit != way_blocks.end(); ++bit)
-      {
-        const Index_Block& block = bit->second;
-        std::vector< std::pair< uint32, int32 > > touching_coords;
-
-        for (std::vector< Segment >::const_iterator ait = block.segments.begin(); ait != block.segments.end(); ++ait)
-        {
-          if (ait->ilon_west <= it->ilon_east && it->ilon_west <= ait->ilon_east)
-          {
-            // Compute the scalar products of both endpoints of one segment with the other segment's direction
-            // If they have different signs then we know that the intersection of both lines is within the segment
-            double scal_ait_west = ((double)ait->ilat_west - it->ilat_west)*(it->ilon_east - it->ilon_west)
-                - (ait->ilon_west - it->ilon_west)*((double)it->ilat_east - it->ilat_west);
-            double scal_ait_east = ((double)ait->ilat_east - it->ilat_west)*(it->ilon_east - it->ilon_west)
-                - (ait->ilon_east - it->ilon_west)*((double)it->ilat_east - it->ilat_west);
-            if (scal_ait_east * scal_ait_west > 0)
-              continue;
-
-            double scal_it_west = ((double)it->ilat_west - ait->ilat_west)*(ait->ilon_east - ait->ilon_west)
-                - (it->ilon_west - ait->ilon_west)*((double)ait->ilat_east - ait->ilat_west);
-            double scal_it_east = ((double)it->ilat_east - ait->ilat_west)*(ait->ilon_east - ait->ilon_west)
-                - (it->ilon_east - ait->ilon_west)*((double)ait->ilat_east - ait->ilat_west);
-            if (scal_it_east * scal_it_west > 0)
-              continue;
-            
-//             std::cout<<"DEBUG "<<bit->first->id.val()
-//                 <<"  "<<it->ilat_west<<' '<<it->ilon_west<<"  "<<it->ilat_east<<' '<<it->ilon_east
-//                 <<"  "<<ait->ilat_west<<' '<<ait->ilon_west<<"  "<<ait->ilat_east<<' '<<ait->ilon_east
-//                 <<"  "<<scal_ait_west<<' '<<scal_ait_east<<' '<<scal_it_west<<' '<<scal_it_east<<'\n';
-//             std::cout<<"DEBUG "<<((double)ait->ilat_east - it->ilat_west)<<' '<<(it->ilon_west - it->ilon_east)
-//                 <<' '<<(ait->ilon_east - it->ilon_west)<<' '<<((double)it->ilat_east - it->ilat_west)<<'\n';
-
-            if (scal_ait_west == 0)
-            {
-              touching_coords.push_back(std::make_pair(ait->ilat_west, ait->ilon_west));
-              if (scal_ait_east == 0)
-                touching_coords.push_back(std::make_pair(ait->ilat_east, ait->ilon_east));
-            }
-            else if (scal_ait_east == 0)
-              touching_coords.push_back(std::make_pair(ait->ilat_east, ait->ilon_east));
-            else if (scal_it_west == 0)
-              touching_coords.push_back(std::make_pair(it->ilat_west, it->ilon_west));
-            else if (scal_it_east != 0)
-              return inside;
-          }
-        }
-        
-        if (!touching_coords.empty())
-        {
-          touching_coords.push_back(std::make_pair(it->ilat_west, it->ilon_west));
-          touching_coords.push_back(std::make_pair(it->ilat_east, it->ilon_east));
-          std::sort(touching_coords.begin(), touching_coords.end());
-          touching_coords.erase(std::unique(touching_coords.begin(), touching_coords.end()), touching_coords.end());
-          
-          for (std::vector< std::pair< uint32, int32 > >::size_type i = 1; i < touching_coords.size(); ++i)
-          {
-            Relative_Position status = rel_pos_ilat_ilon(
-                ((uint64)touching_coords[i-1].first + touching_coords[i].first)/2,
-                ((int64)touching_coords[i-1].second + touching_coords[i].second)/2, false);
-            if (status == inside)
-              return inside;
-          }
-        }
-      }
-    }
-    return outside;
-  }
+  
+  Relative_Position rel_position(const std::vector< Segment >& segments, bool accept_border);
 
 private:
   const std::map< Uint31_Index, std::vector< Way_Skeleton > >* ways;
@@ -606,85 +527,159 @@ private:
     }
   }
   
-  void propagate_inside_flag()
+  void propagate_inside_flag();
+  Relative_Position rel_pos_ilat_ilon(uint32 lat_p, int32 lon_p, bool accept_border);
+};
+
+
+bool eastern_sw_is_inside(const Tilewise_Area_Iterator::Index_Block& block, uint32 south, int32 west)
+{
+  bool is_inside = block.sw_is_inside;
+  
+  for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
   {
-    Uint31_Index idx = get_idx();
-    uint32 south = ilat(idx.val(), 0u);
-    int32 west = ilon(idx.val(), 0u);
-//     std::cout<<"propagate_inside_flag "<<south<<' '<<west<<'\n';
-    const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
-    
-    for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
-        bit != way_blocks.end(); ++bit)
+    if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
     {
-      const Index_Block& block = bit->second;
-      bool is_inside = block.sw_is_inside;
-      
-      for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+      double isect_lon = it->ilon_west +
+          ((double)south - it->ilat_west)
+          *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
+      if (west <= isect_lon && isect_lon < west + 0x10000)
+        is_inside = !is_inside;
+    }
+  }
+  
+  return is_inside;
+}
+
+
+bool northern_sw_is_inside(const Tilewise_Area_Iterator::Index_Block& block)
+{
+  bool is_inside = block.sw_is_inside;
+  
+  for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+  {
+    if (it->ilon_west == -1800000000 && it->ilon_east != -1800000000)
+      is_inside = !is_inside;
+  }
+  
+  return is_inside;
+}
+
+
+Tilewise_Area_Iterator::Relative_Position rel_pos_ilat_ilon(
+    uint32 lat_p, int32 lon_p, const Tilewise_Area_Iterator::Index_Block& block, uint32 south, int32 west)
+{
+  bool is_inside = block.sw_is_inside;
+
+  for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+  {
+    if (it->ilat_west > south && it->ilat_east > south)
+    {
+      // northern segment not touching the southern boundary
+      if (it->ilon_west == lon_p)
       {
-//         std::cout<<"DEBUG "<<std::hex<<idx.val()<<' '
-//             <<std::dec<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<'\n';
-        if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
+        if (it->ilat_west == lat_p)
+          return Tilewise_Area_Iterator::border;
+        if (it->ilon_west == it->ilon_east)
         {
-          double isect_lon = it->ilon_west +
-              ((double)south - it->ilat_west)
-              *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
-//           std::cout<<"isect_lon "<<isect_lon<<'\n';
-          if (west <= isect_lon && isect_lon < west + 0x10000)
-            is_inside = !is_inside;
+          if (std::min(it->ilat_west, it->ilat_east) <= lat_p && lat_p <= std::max(it->ilat_west, it->ilat_east))
+            return Tilewise_Area_Iterator::border;
         }
+        else
+          is_inside ^= (it->ilat_west < lat_p);
       }
-      
-//       std::cout<<"propagate_inside_flag "<<south<<' '<<west<<' '
-//           <<ilat(idx.val(), 0u)<<' '<<ilon(idx.val(), 0u)+0x10000<<' '<<is_inside<<'\n';
-      if (is_inside)
-        queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u), ilon(idx.val(), 0u)+0x10000))][bit->first].sw_is_inside = is_inside;
-      
-      if (west < -1800000000)
+      else if (it->ilon_east == lon_p)
       {
-        is_inside = block.sw_is_inside;
-        
-        for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+        if (it->ilat_east == lat_p)
+          return Tilewise_Area_Iterator::border;
+      }
+      else if (it->ilon_west < lon_p && lon_p < it->ilon_east)
+      {
+        double isect_lat = it->ilat_west +
+          ((double)lon_p - it->ilon_west)
+          *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
+        if (isect_lat - .5 < lat_p)
         {
-          if (it->ilon_west == -1800000000 && it->ilon_east != -1800000000)
-            is_inside = !is_inside;
-        }
-        
-        if (is_inside)
-        {
-          //std::cout<<"is_inside "<<(ilat(idx.val(), 0u)+0x10000)<<' '<<ilon(idx.val(), 0u)<<'\n';
-          queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u)+0x10000, ilon(idx.val(), 0u)))][bit->first].sw_is_inside = is_inside;
+          if (lat_p < isect_lat + .5)
+            return Tilewise_Area_Iterator::border;
+          is_inside = !is_inside;
         }
       }
     }
-  }
-
-
-  Relative_Position rel_pos_ilat_ilon(uint32 lat_p, int32 lon_p, const Index_Block& block, uint32 south, int32 west)
-  {
-    bool is_inside = block.sw_is_inside;
-
-    for (std::vector< Segment >::const_iterator it = block.segments.begin(); it != block.segments.end(); ++it)
+    else if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
     {
-      if (it->ilat_west > south && it->ilat_east > south)
+      double isect_lon = it->ilon_west +
+          ((double)south - it->ilat_west)
+          *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
+      if (west <= isect_lon && isect_lon < west + 0x10000)
       {
-        // northern segment not touching the southern boundary
+        if (it->ilat_west <= south)
+        {
+          if (it->ilon_east <= lon_p)
+          {
+            if (it->ilon_east == lon_p)
+            {
+              if (it->ilat_east == lat_p)
+                return Tilewise_Area_Iterator::border;
+              if (it->ilon_west == it->ilon_east && lat_p <= it->ilat_east)
+                return Tilewise_Area_Iterator::border;
+            }
+            is_inside = !is_inside;
+          }
+          else if (isect_lon < lon_p)
+          {
+            double isect_lat = it->ilat_west +
+                ((double)lon_p - it->ilon_west)
+                *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
+            if (lat_p < isect_lat + .5)
+            {
+              if (isect_lat - .5 < lat_p)
+                return Tilewise_Area_Iterator::border;
+              is_inside = !is_inside;
+            }
+          }
+        }
+        else
+        {
+          if (isect_lon <= lon_p)
+          {
+            if (isect_lon == lon_p)
+            {
+              if (lat_p == south)
+                return Tilewise_Area_Iterator::border;
+              if (isect_lon == it->ilon_west && lat_p <= it->ilat_west)
+                return Tilewise_Area_Iterator::border;
+            }
+            is_inside = !is_inside;
+          }
+          else if (it->ilon_west <= lon_p)
+          {
+            double isect_lat = it->ilat_west +
+                ((double)lon_p - it->ilon_west)
+                *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
+            if (isect_lat - .5 < lat_p)
+            {
+              if (lat_p < isect_lat + .5)
+                return Tilewise_Area_Iterator::border;
+              is_inside = !is_inside;
+            }
+          }
+        }
+      }
+      else
+      {
+        // northern segment similar to above
         if (it->ilon_west == lon_p)
         {
           if (it->ilat_west == lat_p)
-            return border;
-          if (it->ilon_west == it->ilon_east)
-          {
-            if (std::min(it->ilat_west, it->ilat_east) <= lat_p && lat_p <= std::max(it->ilat_west, it->ilat_east))
-              return border;
-          }
-          else
-            is_inside ^= (it->ilat_west < lat_p);
+            return Tilewise_Area_Iterator::border;
+          // Here it->ilon_west == lon_p implies south < it->ilat_west
+          is_inside ^= (it->ilat_west < lat_p);
         }
         else if (it->ilon_east == lon_p)
         {
           if (it->ilat_east == lat_p)
-            return border;
+            return Tilewise_Area_Iterator::border;
         }
         else if (it->ilon_west < lon_p && lon_p < it->ilon_east)
         {
@@ -694,139 +689,166 @@ private:
           if (isect_lat - .5 < lat_p)
           {
             if (lat_p < isect_lat + .5)
-              return border;
+              return Tilewise_Area_Iterator::border;
             is_inside = !is_inside;
           }
         }
       }
-      else if ((it->ilat_west <= south) ^ (it->ilat_east <= south))
-      {
-        double isect_lon = it->ilon_west +
-            ((double)south - it->ilat_west)
-            *(it->ilon_east - it->ilon_west)/((int32)it->ilat_east - (int32)it->ilat_west);
-        if (west <= isect_lon && isect_lon < west + 0x10000)
-        {
-          if (it->ilat_west <= south)
-          {
-            if (it->ilon_east <= lon_p)
-            {
-              if (it->ilon_east == lon_p)
-              {
-                if (it->ilat_east == lat_p)
-                  return border;
-                if (it->ilon_west == it->ilon_east && lat_p <= it->ilat_east)
-                  return border;
-              }
-              is_inside = !is_inside;
-            }
-            else if (isect_lon < lon_p)
-            {
-              double isect_lat = it->ilat_west +
-                  ((double)lon_p - it->ilon_west)
-                  *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
-              if (lat_p < isect_lat + .5)
-              {
-                if (isect_lat - .5 < lat_p)
-                  return border;
-                is_inside = !is_inside;
-              }
-            }
-          }
-          else
-          {
-            if (isect_lon <= lon_p)
-            {
-              if (isect_lon == lon_p)
-              {
-                if (lat_p == south)
-                  return border;
-                if (isect_lon == it->ilon_west && lat_p <= it->ilat_west)
-                  return border;
-              }
-              is_inside = !is_inside;
-            }
-            else if (it->ilon_west <= lon_p)
-            {
-              double isect_lat = it->ilat_west +
-                  ((double)lon_p - it->ilon_west)
-                  *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
-              if (isect_lat - .5 < lat_p)
-              {
-                if (lat_p < isect_lat + .5)
-                  return border;
-                is_inside = !is_inside;
-              }
-            }
-          }
-        }
-        else
-        {
-          // northern segment similar to above
-          if (it->ilon_west == lon_p)
-          {
-            if (it->ilat_west == lat_p)
-              return border;
-            // Here it->ilon_west == lon_p implies south < it->ilat_west
-            is_inside ^= (it->ilat_west < lat_p);
-          }
-          else if (it->ilon_east == lon_p)
-          {
-            if (it->ilat_east == lat_p)
-              return border;
-          }
-          else if (it->ilon_west < lon_p && lon_p < it->ilon_east)
-          {
-            double isect_lat = it->ilat_west +
-              ((double)lon_p - it->ilon_west)
-              *((int32)it->ilat_east - (int32)it->ilat_west)/(it->ilon_east - it->ilon_west);
-            if (isect_lat - .5 < lat_p)
-            {
-              if (lat_p < isect_lat + .5)
-                return border;
-              is_inside = !is_inside;
-            }
-          }
-        }
-      }
-      else if (it->ilat_west == south && it->ilat_east == south)
-      {
-        // segment on the southern boundary
-        if (lat_p == south)
-        {
-          if (it->ilon_west <= lon_p && lon_p <= it->ilon_east)
-            return border;
-        }
-
-        if (it->ilon_west == -1800000000)
-          is_inside = !is_inside;
-      }
-  //         std::cout<<"DEBUG "<<lat_p<<' '<<lon_p<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<' '<<is_inside<<'\n';
     }
+    else if (it->ilat_west == south && it->ilat_east == south)
+    {
+      // segment on the southern boundary
+      if (lat_p == south)
+      {
+        if (it->ilon_west <= lon_p && lon_p <= it->ilon_east)
+          return Tilewise_Area_Iterator::border;
+      }
 
-    return is_inside ? inside : outside;
+      if (it->ilon_west == -1800000000)
+        is_inside = !is_inside;
+    }
+//         std::cout<<"DEBUG "<<lat_p<<' '<<lon_p<<' '<<it->ilat_west<<' '<<it->ilon_west<<' '<<it->ilat_east<<' '<<it->ilon_east<<' '<<is_inside<<'\n';
   }
 
+  return is_inside ? Tilewise_Area_Iterator::inside : Tilewise_Area_Iterator::outside;
+}
 
-  Relative_Position rel_pos_ilat_ilon(uint32 lat_p, int32 lon_p, bool accept_border)
+
+Tilewise_Area_Iterator::Relative_Position rel_position(
+    Uint31_Index idx, const Segment& segment, const Tilewise_Area_Iterator::Index_Block& block)
+{
+  std::vector< std::pair< uint32, int32 > > touching_coords;
+
+  for (std::vector< Segment >::const_iterator ait = block.segments.begin(); ait != block.segments.end(); ++ait)
   {
-    Uint31_Index idx = get_idx();
+    if (ait->ilon_west <= segment.ilon_east && segment.ilon_west <= ait->ilon_east)
+    {
+      // Compute the scalar products of both endpoints of one segment with the other segment's direction
+      // If they have different signs then we know that the intersection of both lines is within the segment
+      double scal_ait_west = ((double)ait->ilat_west - segment.ilat_west)*(segment.ilon_east - segment.ilon_west)
+          - (ait->ilon_west - segment.ilon_west)*((double)segment.ilat_east - segment.ilat_west);
+      double scal_ait_east = ((double)ait->ilat_east - segment.ilat_west)*(segment.ilon_east - segment.ilon_west)
+          - (ait->ilon_east - segment.ilon_west)*((double)segment.ilat_east - segment.ilat_west);
+      if (scal_ait_east * scal_ait_west > 0)
+        continue;
+
+      double scal_it_west = ((double)segment.ilat_west - ait->ilat_west)*(ait->ilon_east - ait->ilon_west)
+          - (segment.ilon_west - ait->ilon_west)*((double)ait->ilat_east - ait->ilat_west);
+      double scal_it_east = ((double)segment.ilat_east - ait->ilat_west)*(ait->ilon_east - ait->ilon_west)
+          - (segment.ilon_east - ait->ilon_west)*((double)ait->ilat_east - ait->ilat_west);
+      if (scal_it_east * scal_it_west > 0)
+        continue;
+      
+//             std::cout<<"DEBUG "<<bit->first->id.val()
+//                 <<"  "<<segment.ilat_west<<' '<<segment.ilon_west<<"  "<<segment.ilat_east<<' '<<segment.ilon_east
+//                 <<"  "<<ait->ilat_west<<' '<<ait->ilon_west<<"  "<<ait->ilat_east<<' '<<ait->ilon_east
+//                 <<"  "<<scal_ait_west<<' '<<scal_ait_east<<' '<<scal_it_west<<' '<<scal_it_east<<'\n';
+//             std::cout<<"DEBUG "<<((double)ait->ilat_east - segment.ilat_west)<<' '<<(segment.ilon_west - segment.ilon_east)
+//                 <<' '<<(ait->ilon_east - segment.ilon_west)<<' '<<((double)segment.ilat_east - segment.ilat_west)<<'\n';
+
+      if (scal_ait_west == 0)
+      {
+        touching_coords.push_back(std::make_pair(ait->ilat_west, ait->ilon_west));
+        if (scal_ait_east == 0)
+          touching_coords.push_back(std::make_pair(ait->ilat_east, ait->ilon_east));
+      }
+      else if (scal_ait_east == 0)
+        touching_coords.push_back(std::make_pair(ait->ilat_east, ait->ilon_east));
+      else if (scal_it_west == 0)
+        touching_coords.push_back(std::make_pair(segment.ilat_west, segment.ilon_west));
+      else if (scal_it_east != 0)
+        return Tilewise_Area_Iterator::inside;
+    }
+  }
+  
+  if (!touching_coords.empty())
+  {
+    touching_coords.push_back(std::make_pair(segment.ilat_west, segment.ilon_west));
+    touching_coords.push_back(std::make_pair(segment.ilat_east, segment.ilon_east));
+    std::sort(touching_coords.begin(), touching_coords.end());
+    touching_coords.erase(std::unique(touching_coords.begin(), touching_coords.end()), touching_coords.end());
     uint32 south = ilat(idx.val(), 0u);
     int32 west = ilon(idx.val(), 0u);
-    const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
     
+    for (std::vector< std::pair< uint32, int32 > >::size_type i = 1; i < touching_coords.size(); ++i)
+    {
+      Tilewise_Area_Iterator::Relative_Position status = ::rel_pos_ilat_ilon(
+          ((uint64)touching_coords[i-1].first + touching_coords[i].first)/2,
+          ((int64)touching_coords[i-1].second + touching_coords[i].second)/2, block, south, west);
+      if (status == Tilewise_Area_Iterator::inside)
+        return Tilewise_Area_Iterator::inside;
+    }
+  }
+  
+  return Tilewise_Area_Iterator::outside;
+}
+
+
+Tilewise_Area_Iterator::Relative_Position Tilewise_Area_Iterator::rel_position(
+    const std::vector< Segment >& segments, bool accept_border)
+{
+  for (std::vector< Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
+  {
+    Relative_Position status = rel_pos_ilat_ilon(it->ilat_west, it->ilon_west, false);
+    if (status == inside)
+      return status;
+    status = rel_pos_ilat_ilon(it->ilat_east, it->ilon_east, false);
+    if (status == inside)
+      return status;
+
+    const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
     for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
         bit != way_blocks.end(); ++bit)
     {
-      Relative_Position status = rel_pos_ilat_ilon(lat_p, lon_p, bit->second, south, west);
-      if (status == inside)
-        return inside;
-      else if (status == border && accept_border)
-        return border;
+      const Index_Block& block = bit->second;
+      Relative_Position result = ::rel_position(get_idx(), *it, block);
+      if (result != outside)
+        return result;
     }
-
-    return outside;
   }
-};
+  return outside;
+}
+  
+
+void Tilewise_Area_Iterator::propagate_inside_flag()
+{
+  Uint31_Index idx = get_idx();
+  uint32 south = ilat(idx.val(), 0u);
+  int32 west = ilon(idx.val(), 0u);
+  const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
+  
+  for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
+      bit != way_blocks.end(); ++bit)
+  {
+    const Index_Block& block = bit->second;
+    if (eastern_sw_is_inside(block, south, west))
+      queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u), ilon(idx.val(), 0u)+0x10000))][bit->first].sw_is_inside = true;
+    if (west < -1800000000 && northern_sw_is_inside(block))
+      queue[Uint31_Index(ll_upper_(ilat(idx.val(), 0u)+0x10000, ilon(idx.val(), 0u)))][bit->first].sw_is_inside = true;
+  }
+}
+
+
+Tilewise_Area_Iterator::Relative_Position Tilewise_Area_Iterator::rel_pos_ilat_ilon(
+    uint32 lat_p, int32 lon_p, bool accept_border)
+{
+  Uint31_Index idx = get_idx();
+  uint32 south = ilat(idx.val(), 0u);
+  int32 west = ilon(idx.val(), 0u);
+  const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
+  
+  for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
+      bit != way_blocks.end(); ++bit)
+  {
+    Relative_Position status = ::rel_pos_ilat_ilon(lat_p, lon_p, bit->second, south, west);
+    if (status == inside)
+      return inside;
+    else if (status == border && accept_border)
+      return border;
+  }
+
+  return outside;
+}
 
 
 // fwd iterator only
