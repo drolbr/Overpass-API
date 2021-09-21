@@ -442,6 +442,22 @@ public:
     std::vector< Segment > segments;
     bool sw_is_inside;
   };
+  
+  struct Full_Way_Ref
+  {
+    Full_Way_Ref(Uint31_Index idx_, const Way_Skeleton* way_, bool is_attic_)
+        : idx(idx_), way(way_), is_attic(is_attic_) {}
+    
+    Uint31_Index idx;
+    const Way_Skeleton* way;
+    bool is_attic;
+    
+    bool operator<(const Full_Way_Ref& rhs) const
+    {
+      return !(idx == rhs.idx) ? idx < rhs.idx
+          : way < rhs.way;
+    }
+  };
 
   // non-const, but relies to pointers into each vec.
   // That way, objects can be moved from or marked as done.
@@ -464,13 +480,18 @@ public:
   }
   bool is_end() const { return queue.empty(); }
   
-  const std::map< const Way_Skeleton*, Index_Block >& get_obj() const { return queue.begin()->second; }
+  const std::map< Full_Way_Ref, Index_Block >& get_obj() const { return queue.begin()->second; }
   Uint31_Index get_idx() const { return queue.begin()->first; }
   
   Relative_Position rel_position(uint32 ll_upper, uint32 ll_lower, bool accept_border)
   {
     return rel_pos_ilat_ilon(ilat(ll_upper, ll_lower), ilon(ll_upper, ll_lower), accept_border);
   }
+  
+  void move_covering_ways(
+      uint32 ll_upper, uint32 ll_lower, bool accept_border,
+      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& target_ways,
+      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& target_attic_ways);
   
   Relative_Position rel_position(const std::vector< Segment >& segments, bool accept_border);
 
@@ -481,19 +502,19 @@ private:
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_it;
   Way_Geometry_Store cur_geom_store;
   Way_Geometry_Store attic_geom_store;
-  std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > > queue;
+  std::map< Uint31_Index, std::map< Full_Way_Ref, Index_Block > > queue;
 
   struct Segment_Collector
   {
     Segment_Collector(
-        std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > >& queue_, const Way_Skeleton& skel_)
-        : queue(&queue_), skel(&skel_) {}
+        std::map< Uint31_Index, std::map< Full_Way_Ref, Index_Block > >& queue_, Full_Way_Ref skel_)
+        : queue(&queue_), skel(skel_) {}
     void push(Uint31_Index idx, const Segment& segment) const
     { (*queue)[idx][skel].segments.push_back(segment); }
     
   private:
-    std::map< Uint31_Index, std::map< const Way_Skeleton*, Index_Block > >* queue;
-    const Way_Skeleton* skel;
+    std::map< Uint31_Index, std::map< Full_Way_Ref, Index_Block > >* queue;
+    Full_Way_Ref skel;
   };
 
   void refill()
@@ -507,7 +528,7 @@ private:
         for (std::vector< Way_Skeleton >::const_iterator it = cur_it->second.begin(); it != cur_it->second.end(); ++it)
         {
           if (!it->nds.empty() && it->nds.front() == it->nds.back())
-            make_entries(Segment_Collector(queue, *it), cur_geom_store.get_geometry(*it));
+            make_entries(Segment_Collector(queue, Full_Way_Ref(idx, &*it, false)), cur_geom_store.get_geometry(*it));
         }
         ++cur_it;
       }
@@ -517,7 +538,7 @@ private:
             it != attic_it->second.end(); ++it)
         {
           if (!it->nds.empty() && it->nds.front() == it->nds.back())
-            make_entries(Segment_Collector(queue, *it), attic_geom_store.get_geometry(*it));
+            make_entries(Segment_Collector(queue, Full_Way_Ref(idx, &*it, true)), attic_geom_store.get_geometry(*it));
         }
         ++attic_it;
       }
@@ -796,8 +817,8 @@ Tilewise_Area_Iterator::Relative_Position Tilewise_Area_Iterator::rel_position(
     if (status == inside)
       return status;
 
-    const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
-    for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
+    const std::map< Full_Way_Ref, Index_Block >& way_blocks = get_obj();
+    for (std::map< Full_Way_Ref, Index_Block >::const_iterator bit = way_blocks.begin();
         bit != way_blocks.end(); ++bit)
     {
       const Index_Block& block = bit->second;
@@ -815,9 +836,9 @@ void Tilewise_Area_Iterator::propagate_inside_flag()
   Uint31_Index idx = get_idx();
   uint32 south = ilat(idx.val(), 0u);
   int32 west = ilon(idx.val(), 0u);
-  const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
+  const std::map< Full_Way_Ref, Index_Block >& way_blocks = get_obj();
   
-  for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
+  for (std::map< Full_Way_Ref, Index_Block >::const_iterator bit = way_blocks.begin();
       bit != way_blocks.end(); ++bit)
   {
     const Index_Block& block = bit->second;
@@ -835,9 +856,9 @@ Tilewise_Area_Iterator::Relative_Position Tilewise_Area_Iterator::rel_pos_ilat_i
   Uint31_Index idx = get_idx();
   uint32 south = ilat(idx.val(), 0u);
   int32 west = ilon(idx.val(), 0u);
-  const std::map< const Way_Skeleton*, Index_Block >& way_blocks = get_obj();
+  const std::map< Full_Way_Ref, Index_Block >& way_blocks = get_obj();
   
-  for (std::map< const Way_Skeleton*, Index_Block >::const_iterator bit = way_blocks.begin();
+  for (std::map< Full_Way_Ref, Index_Block >::const_iterator bit = way_blocks.begin();
       bit != way_blocks.end(); ++bit)
   {
     Relative_Position status = ::rel_pos_ilat_ilon(lat_p, lon_p, bit->second, south, west);
