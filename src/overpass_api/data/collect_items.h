@@ -19,6 +19,7 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
 #define DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
 
+#include "../dispatch/resource_manager.h"
 #include "filenames.h"
 
 #include <exception>
@@ -53,6 +54,9 @@ void reconstruct_items(
     ++it;
   }
 }
+
+
+struct Statement;
 
 
 template < class Index, class Object, class Attic_Iterator, class Current_Iterator, class Predicate >

@@ -168,7 +168,7 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_contained_in(
   if (!potential_areas)
     return std::map< Uint32_Index, std::vector< Node_Skeleton > >();
   
-  Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
   std::map< Uint32_Index, std::vector< Node_Skeleton > > result;
   
   for (typename std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator iit = nodes.begin();
@@ -226,7 +226,7 @@ std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_contained_in(
   if (!potential_areas)
     return std::map< Uint31_Index, std::vector< Way_Skeleton > >();
   
-  Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
   std::map< Uint31_Index, std::vector< Way_Skeleton > > result;
 
   Tilewise_Way_Iterator twi(ways, std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >(), stmt, rman);
@@ -266,7 +266,7 @@ std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_contained_in
   if (!potential_areas)
     return std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >();
   
-  Tilewise_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
+  Tilewise_Const_Area_Iterator tai(potential_areas->ways, potential_areas->attic_ways, stmt, rman);
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > result;
 
   Tilewise_Way_Iterator twi(std::map< Uint31_Index, std::vector< Way_Skeleton > >(), ways, stmt, rman);
