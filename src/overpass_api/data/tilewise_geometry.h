@@ -362,8 +362,12 @@ void calculate_auxiliary_points(const Segment_Collector& collector, Quad_Coord l
       }
       
       if ((ilon_max & 0xffff0000) == (1800000000 & 0xffff0000))
+      {
+        uint32 anti_lat = ilat(gc.lat_of(180.));
         calculate_south_north_sequence(
-            collector, ilat(max.ll_upper, max.ll_lower), ilon_max, ilat(gc.lat_of(180.)), 1800000000);
+            collector, ilat(max.ll_upper, max.ll_lower), ilon_max, anti_lat, 1800000000);
+        collector.push(Uint31_Index(ll_upper_(anti_lat, 1800000000)), Segment(anti_lat, 1800000000, anti_lat, 1800000001));
+      }
       else
       {
         i_ilon = ilon_max;
@@ -380,8 +384,10 @@ void calculate_auxiliary_points(const Segment_Collector& collector, Quad_Coord l
               collector, last_ilat, i_ilon, i_ilat, i_ilon + 0x10000);
         }
         
+        uint32 anti_lat = ilat(gc.lat_of(180.));
         calculate_south_north_sequence(
-            collector, i_ilat, i_ilon, ilat(gc.lat_of(180.)), 1800000000);
+            collector, i_ilat, i_ilon, anti_lat, 1800000000);
+        collector.push(Uint31_Index(ll_upper_(anti_lat, 1800000000)), Segment(anti_lat, 1800000000, anti_lat, 1800000001));
       }
     }
   }
@@ -1080,7 +1086,7 @@ inline void Tilewise_Area_Iterator::move_covering_ways(
       continue;
     
     Relative_Position status = ::rel_pos_ilat_ilon(lat_p, lon_p, bit->second, south, west);
-    if (status == inside)
+    if (status != outside)
     {
       if (bit->first.timestamp != NOW)
       {

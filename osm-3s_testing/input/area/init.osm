@@ -332,6 +332,8 @@
   <node id="20447" lat="51.2510001" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="20448" lat="51.2510000" lon="179.9990000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
 
+  <node id="20495" lat="51.2500002" lon="180.0000000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
 
   <node id="20501" lat="51.2500001" lon="179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="20502" lat="51.2500001" lon="-179.9990001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>

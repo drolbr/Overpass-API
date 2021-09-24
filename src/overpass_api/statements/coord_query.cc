@@ -359,29 +359,34 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   {
     Tilewise_Area_Iterator tai(current_candidates, attic_candidates, *this, rman);
 
-    const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes = input_set->nodes;
-    for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = nodes.begin();
-        it != nodes.end(); ++it)
+    std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator cur_it = input_set->nodes.begin();
+    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator attic_it =
+        input_set->attic_nodes.begin();
+    
+    while (cur_it != input_set->nodes.end() || attic_it != input_set->attic_nodes.end())
     {
-      while (!tai.is_end() && tai.get_idx().val() < it->first.val())
+      Uint32_Index idx =
+          (attic_it == input_set->attic_nodes.end() ||
+              (cur_it != input_set->nodes.end() && !(attic_it->first < cur_it->first))) ? cur_it->first : attic_it->first;
+      while (!tai.is_end() && tai.get_idx().val() < idx.val())
         tai.next();
-      if (tai.is_end() || it->first.val() < tai.get_idx().val())
+      if (tai.is_end())
         continue;
-      for (std::vector< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-        tai.move_covering_ways(it->first.val(), it2->ll_lower, into.ways, into.attic_ways);
-    }
-
-    const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes = input_set->attic_nodes;
-    for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = attic_nodes.begin();
-        it != attic_nodes.end(); ++it)
-    {
-      while (!tai.is_end() && tai.get_idx().val() < it->first.val())
-        tai.next();
-      if (tai.is_end() || it->first.val() < tai.get_idx().val())
-        continue;
-      for (std::vector< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
-        tai.move_covering_ways(it->first.val(), it2->ll_lower, into.ways, into.attic_ways);
+      
+      if (cur_it->first == tai.get_idx())
+      {
+        for (std::vector< Node_Skeleton >::const_iterator it2 = cur_it->second.begin(); it2 != cur_it->second.end();
+            ++it2)
+          tai.move_covering_ways(cur_it->first.val(), it2->ll_lower, into.ways, into.attic_ways);
+        ++cur_it;
+      }
+      if (attic_it->first == tai.get_idx())
+      {
+        for (std::vector< Attic< Node_Skeleton > >::const_iterator it2 = attic_it->second.begin();
+            it2 != attic_it->second.end(); ++it2)
+          tai.move_covering_ways(attic_it->first.val(), it2->ll_lower, into.ways, into.attic_ways);
+        ++attic_it;
+      }
     }
   }
 

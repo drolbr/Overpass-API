@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base=""/>
+
+  <way id="102">
+    <bounds minlat="51.2500001" minlon="7.1500001" maxlat="51.2520001" maxlon="7.1520001"/>
+    <nd ref="10201" lat="51.2500001" lon="7.1510001"/>
+    <nd ref="10202" lat="51.2510001" lon="7.1520001"/>
+    <nd ref="10203" lat="51.2520001" lon="7.1510001"/>
+    <nd ref="10204" lat="51.2510001" lon="7.1500001"/>
+    <nd ref="10201" lat="51.2500001" lon="7.1510001"/>
+  </way>
+  <way id="201">
+    <bounds minlat="51.2500001" minlon="7.1500001" maxlat="51.2510001" maxlon="7.1600001"/>
+    <nd ref="20101" lat="51.2500001" lon="7.1500001"/>
+    <nd ref="20102" lat="51.2500001" lon="7.1600001"/>
+    <nd ref="20103" lat="51.2510001" lon="7.1600001"/>
+    <nd ref="20104" lat="51.2510001" lon="7.1500001"/>
+    <nd ref="20101" lat="51.2500001" lon="7.1500001"/>
+  </way>
+  <way id="202">
+    <bounds minlat="51.2500001" minlon="7.1500001" maxlat="51.2600001" maxlon="7.1510001"/>
+    <nd ref="20201" lat="51.2500001" lon="7.1500001"/>
+    <nd ref="20202" lat="51.2500001" lon="7.1510001"/>
+    <nd ref="20203" lat="51.2600001" lon="7.1510001"/>
+    <nd ref="20204" lat="51.2600001" lon="7.1500001"/>
+    <nd ref="20201" lat="51.2500001" lon="7.1500001"/>
+  </way>
+
+</osm>
