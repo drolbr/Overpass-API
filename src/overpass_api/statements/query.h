@@ -29,9 +29,10 @@
 
 const int QUERY_NODE = 1;
 const int QUERY_WAY = 2;
-const int QUERY_RELATION = 4;
-const int QUERY_DERIVED = 8;
-const int QUERY_AREA = 16;
+const int QUERY_CLOSED_WAY = 4;
+const int QUERY_RELATION = 8;
+const int QUERY_DERIVED = 16;
+const int QUERY_AREA = 32;
 
 
 typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } Answer_State;
