@@ -1,3 +1,11 @@
+  <way id="1">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <nd ref="1"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="1"/>
+  </way>
   <area id="2400000001">
     <tag k="scale" v="1.0000000"/>
     <tag k="triangle" v="1"/>
@@ -13,6 +21,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="2">
+    <nd ref="4"/>
+    <nd ref="5"/>
+    <nd ref="6"/>
+    <nd ref="4"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="2"/>
+  </way>
   <area id="2400000002">
     <tag k="scale" v="1.0000000"/>
     <tag k="triangle" v="2"/>
@@ -28,6 +44,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="3">
+    <nd ref="7"/>
+    <nd ref="8"/>
+    <nd ref="9"/>
+    <nd ref="7"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="3"/>
+  </way>
   <area id="2400000003">
     <tag k="scale" v="1.0000000"/>
     <tag k="triangle" v="3"/>
@@ -43,6 +67,14 @@
  0 1 1 0 0 0 0
  0 1 1 1 0 0 0
  0 0 0 0 0 0 0
+  <way id="4">
+    <nd ref="10"/>
+    <nd ref="11"/>
+    <nd ref="12"/>
+    <nd ref="10"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="4"/>
+  </way>
   <area id="2400000004">
     <tag k="scale" v="1.0000000"/>
     <tag k="triangle" v="4"/>
@@ -58,6 +90,14 @@
  0 1 1 1 0 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="5">
+    <nd ref="13"/>
+    <nd ref="14"/>
+    <nd ref="15"/>
+    <nd ref="13"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="5"/>
+  </way>
   <area id="2400000005">
     <tag k="scale" v="1.0000000"/>
     <tag k="triangle" v="5"/>
@@ -73,6 +113,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="6">
+    <nd ref="16"/>
+    <nd ref="17"/>
+    <nd ref="18"/>
+    <nd ref="16"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="6"/>
+  </way>
   <area id="2400000006">
     <tag k="scale" v="1.0000000"/>
     <tag k="triangle" v="6"/>
@@ -88,6 +136,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="7">
+    <nd ref="19"/>
+    <nd ref="20"/>
+    <nd ref="21"/>
+    <nd ref="19"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="7"/>
+  </way>
   <area id="2400000007">
     <tag k="scale" v="1.0000000"/>
     <tag k="triangle" v="7"/>
@@ -103,6 +159,14 @@
  0 0 0 0 1 1 0
  0 0 0 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="8">
+    <nd ref="22"/>
+    <nd ref="23"/>
+    <nd ref="24"/>
+    <nd ref="22"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="triangle" v="8"/>
+  </way>
   <area id="2400000008">
     <tag k="scale" v="1.0000000"/>
     <tag k="triangle" v="8"/>
@@ -118,6 +182,14 @@
  0 0 0 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="11">
+    <nd ref="101"/>
+    <nd ref="102"/>
+    <nd ref="103"/>
+    <nd ref="101"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="1"/>
+  </way>
   <area id="2400000011">
     <tag k="scale" v="0.1000000"/>
     <tag k="triangle" v="1"/>
@@ -133,6 +205,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="12">
+    <nd ref="104"/>
+    <nd ref="105"/>
+    <nd ref="106"/>
+    <nd ref="104"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="2"/>
+  </way>
   <area id="2400000012">
     <tag k="scale" v="0.1000000"/>
     <tag k="triangle" v="2"/>
@@ -148,6 +228,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="13">
+    <nd ref="107"/>
+    <nd ref="108"/>
+    <nd ref="109"/>
+    <nd ref="107"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="3"/>
+  </way>
   <area id="2400000013">
     <tag k="scale" v="0.1000000"/>
     <tag k="triangle" v="3"/>
@@ -163,6 +251,14 @@
  0 1 1 0 0 0 0
  0 1 1 1 0 0 0
  0 0 0 0 0 0 0
+  <way id="14">
+    <nd ref="110"/>
+    <nd ref="111"/>
+    <nd ref="112"/>
+    <nd ref="110"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="4"/>
+  </way>
   <area id="2400000014">
     <tag k="scale" v="0.1000000"/>
     <tag k="triangle" v="4"/>
@@ -178,6 +274,14 @@
  0 1 1 1 0 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="15">
+    <nd ref="113"/>
+    <nd ref="114"/>
+    <nd ref="115"/>
+    <nd ref="113"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="5"/>
+  </way>
   <area id="2400000015">
     <tag k="scale" v="0.1000000"/>
     <tag k="triangle" v="5"/>
@@ -193,6 +297,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="16">
+    <nd ref="116"/>
+    <nd ref="117"/>
+    <nd ref="118"/>
+    <nd ref="116"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="6"/>
+  </way>
   <area id="2400000016">
     <tag k="scale" v="0.1000000"/>
     <tag k="triangle" v="6"/>
@@ -208,6 +320,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="17">
+    <nd ref="119"/>
+    <nd ref="120"/>
+    <nd ref="121"/>
+    <nd ref="119"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="7"/>
+  </way>
   <area id="2400000017">
     <tag k="scale" v="0.1000000"/>
     <tag k="triangle" v="7"/>
@@ -223,6 +343,14 @@
  0 0 0 0 1 1 0
  0 0 0 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="18">
+    <nd ref="122"/>
+    <nd ref="123"/>
+    <nd ref="124"/>
+    <nd ref="122"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="triangle" v="8"/>
+  </way>
   <area id="2400000018">
     <tag k="scale" v="0.1000000"/>
     <tag k="triangle" v="8"/>
@@ -238,6 +366,14 @@
  0 0 0 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="21">
+    <nd ref="201"/>
+    <nd ref="202"/>
+    <nd ref="203"/>
+    <nd ref="201"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="1"/>
+  </way>
   <area id="2400000021">
     <tag k="scale" v="0.0100000"/>
     <tag k="triangle" v="1"/>
@@ -253,6 +389,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="22">
+    <nd ref="204"/>
+    <nd ref="205"/>
+    <nd ref="206"/>
+    <nd ref="204"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="2"/>
+  </way>
   <area id="2400000022">
     <tag k="scale" v="0.0100000"/>
     <tag k="triangle" v="2"/>
@@ -268,6 +412,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="23">
+    <nd ref="207"/>
+    <nd ref="208"/>
+    <nd ref="209"/>
+    <nd ref="207"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="3"/>
+  </way>
   <area id="2400000023">
     <tag k="scale" v="0.0100000"/>
     <tag k="triangle" v="3"/>
@@ -283,6 +435,14 @@
  0 1 1 0 0 0 0
  0 1 1 1 0 0 0
  0 0 0 0 0 0 0
+  <way id="24">
+    <nd ref="210"/>
+    <nd ref="211"/>
+    <nd ref="212"/>
+    <nd ref="210"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="4"/>
+  </way>
   <area id="2400000024">
     <tag k="scale" v="0.0100000"/>
     <tag k="triangle" v="4"/>
@@ -298,6 +458,14 @@
  0 1 1 1 0 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="25">
+    <nd ref="213"/>
+    <nd ref="214"/>
+    <nd ref="215"/>
+    <nd ref="213"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="5"/>
+  </way>
   <area id="2400000025">
     <tag k="scale" v="0.0100000"/>
     <tag k="triangle" v="5"/>
@@ -313,6 +481,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="26">
+    <nd ref="216"/>
+    <nd ref="217"/>
+    <nd ref="218"/>
+    <nd ref="216"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="6"/>
+  </way>
   <area id="2400000026">
     <tag k="scale" v="0.0100000"/>
     <tag k="triangle" v="6"/>
@@ -328,6 +504,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="27">
+    <nd ref="219"/>
+    <nd ref="220"/>
+    <nd ref="221"/>
+    <nd ref="219"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="7"/>
+  </way>
   <area id="2400000027">
     <tag k="scale" v="0.0100000"/>
     <tag k="triangle" v="7"/>
@@ -343,6 +527,14 @@
  0 0 0 0 1 1 0
  0 0 0 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="28">
+    <nd ref="222"/>
+    <nd ref="223"/>
+    <nd ref="224"/>
+    <nd ref="222"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="triangle" v="8"/>
+  </way>
   <area id="2400000028">
     <tag k="scale" v="0.0100000"/>
     <tag k="triangle" v="8"/>
@@ -358,6 +550,14 @@
  0 0 0 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="31">
+    <nd ref="301"/>
+    <nd ref="302"/>
+    <nd ref="303"/>
+    <nd ref="301"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="1"/>
+  </way>
   <area id="2400000031">
     <tag k="scale" v="0.0010000"/>
     <tag k="triangle" v="1"/>
@@ -373,6 +573,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="32">
+    <nd ref="304"/>
+    <nd ref="305"/>
+    <nd ref="306"/>
+    <nd ref="304"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="2"/>
+  </way>
   <area id="2400000032">
     <tag k="scale" v="0.0010000"/>
     <tag k="triangle" v="2"/>
@@ -388,6 +596,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="33">
+    <nd ref="307"/>
+    <nd ref="308"/>
+    <nd ref="309"/>
+    <nd ref="307"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="3"/>
+  </way>
   <area id="2400000033">
     <tag k="scale" v="0.0010000"/>
     <tag k="triangle" v="3"/>
@@ -403,6 +619,14 @@
  0 1 1 0 0 0 0
  0 1 1 1 0 0 0
  0 0 0 0 0 0 0
+  <way id="34">
+    <nd ref="310"/>
+    <nd ref="311"/>
+    <nd ref="312"/>
+    <nd ref="310"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="4"/>
+  </way>
   <area id="2400000034">
     <tag k="scale" v="0.0010000"/>
     <tag k="triangle" v="4"/>
@@ -418,6 +642,14 @@
  0 1 1 1 0 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="35">
+    <nd ref="313"/>
+    <nd ref="314"/>
+    <nd ref="315"/>
+    <nd ref="313"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="5"/>
+  </way>
   <area id="2400000035">
     <tag k="scale" v="0.0010000"/>
     <tag k="triangle" v="5"/>
@@ -433,6 +665,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="36">
+    <nd ref="316"/>
+    <nd ref="317"/>
+    <nd ref="318"/>
+    <nd ref="316"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="6"/>
+  </way>
   <area id="2400000036">
     <tag k="scale" v="0.0010000"/>
     <tag k="triangle" v="6"/>
@@ -448,6 +688,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="37">
+    <nd ref="319"/>
+    <nd ref="320"/>
+    <nd ref="321"/>
+    <nd ref="319"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="7"/>
+  </way>
   <area id="2400000037">
     <tag k="scale" v="0.0010000"/>
     <tag k="triangle" v="7"/>
@@ -463,6 +711,14 @@
  0 0 0 0 1 1 0
  0 0 0 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="38">
+    <nd ref="322"/>
+    <nd ref="323"/>
+    <nd ref="324"/>
+    <nd ref="322"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="triangle" v="8"/>
+  </way>
   <area id="2400000038">
     <tag k="scale" v="0.0010000"/>
     <tag k="triangle" v="8"/>
@@ -478,6 +734,14 @@
  0 0 0 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="41">
+    <nd ref="401"/>
+    <nd ref="402"/>
+    <nd ref="403"/>
+    <nd ref="401"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="1"/>
+  </way>
   <area id="2400000041">
     <tag k="scale" v="0.0001000"/>
     <tag k="triangle" v="1"/>
@@ -493,6 +757,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="42">
+    <nd ref="404"/>
+    <nd ref="405"/>
+    <nd ref="406"/>
+    <nd ref="404"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="2"/>
+  </way>
   <area id="2400000042">
     <tag k="scale" v="0.0001000"/>
     <tag k="triangle" v="2"/>
@@ -508,6 +780,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="43">
+    <nd ref="407"/>
+    <nd ref="408"/>
+    <nd ref="409"/>
+    <nd ref="407"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="3"/>
+  </way>
   <area id="2400000043">
     <tag k="scale" v="0.0001000"/>
     <tag k="triangle" v="3"/>
@@ -523,6 +803,14 @@
  0 1 1 0 0 0 0
  0 1 1 1 0 0 0
  0 0 0 0 0 0 0
+  <way id="44">
+    <nd ref="410"/>
+    <nd ref="411"/>
+    <nd ref="412"/>
+    <nd ref="410"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="4"/>
+  </way>
   <area id="2400000044">
     <tag k="scale" v="0.0001000"/>
     <tag k="triangle" v="4"/>
@@ -538,6 +826,14 @@
  0 1 1 1 0 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="45">
+    <nd ref="413"/>
+    <nd ref="414"/>
+    <nd ref="415"/>
+    <nd ref="413"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="5"/>
+  </way>
   <area id="2400000045">
     <tag k="scale" v="0.0001000"/>
     <tag k="triangle" v="5"/>
@@ -553,6 +849,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="46">
+    <nd ref="416"/>
+    <nd ref="417"/>
+    <nd ref="418"/>
+    <nd ref="416"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="6"/>
+  </way>
   <area id="2400000046">
     <tag k="scale" v="0.0001000"/>
     <tag k="triangle" v="6"/>
@@ -568,6 +872,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="47">
+    <nd ref="419"/>
+    <nd ref="420"/>
+    <nd ref="421"/>
+    <nd ref="419"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="7"/>
+  </way>
   <area id="2400000047">
     <tag k="scale" v="0.0001000"/>
     <tag k="triangle" v="7"/>
@@ -583,6 +895,14 @@
  0 0 0 0 1 1 0
  0 0 0 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="48">
+    <nd ref="422"/>
+    <nd ref="423"/>
+    <nd ref="424"/>
+    <nd ref="422"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="triangle" v="8"/>
+  </way>
   <area id="2400000048">
     <tag k="scale" v="0.0001000"/>
     <tag k="triangle" v="8"/>
@@ -598,6 +918,14 @@
  0 0 0 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="51">
+    <nd ref="501"/>
+    <nd ref="502"/>
+    <nd ref="503"/>
+    <nd ref="501"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="1"/>
+  </way>
   <area id="2400000051">
     <tag k="scale" v="0.0000100"/>
     <tag k="triangle" v="1"/>
@@ -613,6 +941,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="52">
+    <nd ref="504"/>
+    <nd ref="505"/>
+    <nd ref="506"/>
+    <nd ref="504"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="2"/>
+  </way>
   <area id="2400000052">
     <tag k="scale" v="0.0000100"/>
     <tag k="triangle" v="2"/>
@@ -628,6 +964,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="53">
+    <nd ref="507"/>
+    <nd ref="508"/>
+    <nd ref="509"/>
+    <nd ref="507"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="3"/>
+  </way>
   <area id="2400000053">
     <tag k="scale" v="0.0000100"/>
     <tag k="triangle" v="3"/>
@@ -643,6 +987,14 @@
  0 1 1 0 0 0 0
  0 1 1 1 0 0 0
  0 0 0 0 0 0 0
+  <way id="54">
+    <nd ref="510"/>
+    <nd ref="511"/>
+    <nd ref="512"/>
+    <nd ref="510"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="4"/>
+  </way>
   <area id="2400000054">
     <tag k="scale" v="0.0000100"/>
     <tag k="triangle" v="4"/>
@@ -658,6 +1010,14 @@
  0 1 1 1 0 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="55">
+    <nd ref="513"/>
+    <nd ref="514"/>
+    <nd ref="515"/>
+    <nd ref="513"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="5"/>
+  </way>
   <area id="2400000055">
     <tag k="scale" v="0.0000100"/>
     <tag k="triangle" v="5"/>
@@ -673,6 +1033,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="56">
+    <nd ref="516"/>
+    <nd ref="517"/>
+    <nd ref="518"/>
+    <nd ref="516"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="6"/>
+  </way>
   <area id="2400000056">
     <tag k="scale" v="0.0000100"/>
     <tag k="triangle" v="6"/>
@@ -688,6 +1056,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="57">
+    <nd ref="519"/>
+    <nd ref="520"/>
+    <nd ref="521"/>
+    <nd ref="519"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="7"/>
+  </way>
   <area id="2400000057">
     <tag k="scale" v="0.0000100"/>
     <tag k="triangle" v="7"/>
@@ -703,6 +1079,14 @@
  0 0 0 0 1 1 0
  0 0 0 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="58">
+    <nd ref="522"/>
+    <nd ref="523"/>
+    <nd ref="524"/>
+    <nd ref="522"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="triangle" v="8"/>
+  </way>
   <area id="2400000058">
     <tag k="scale" v="0.0000100"/>
     <tag k="triangle" v="8"/>
@@ -718,6 +1102,14 @@
  0 0 0 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="61">
+    <nd ref="601"/>
+    <nd ref="602"/>
+    <nd ref="603"/>
+    <nd ref="601"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="1"/>
+  </way>
   <area id="2400000061">
     <tag k="scale" v="0.0000010"/>
     <tag k="triangle" v="1"/>
@@ -733,6 +1125,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="62">
+    <nd ref="604"/>
+    <nd ref="605"/>
+    <nd ref="606"/>
+    <nd ref="604"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="2"/>
+  </way>
   <area id="2400000062">
     <tag k="scale" v="0.0000010"/>
     <tag k="triangle" v="2"/>
@@ -748,6 +1148,14 @@
  0 1 1 1 1 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="63">
+    <nd ref="607"/>
+    <nd ref="608"/>
+    <nd ref="609"/>
+    <nd ref="607"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="3"/>
+  </way>
   <area id="2400000063">
     <tag k="scale" v="0.0000010"/>
     <tag k="triangle" v="3"/>
@@ -763,6 +1171,14 @@
  0 1 1 0 0 0 0
  0 1 1 1 0 0 0
  0 0 0 0 0 0 0
+  <way id="64">
+    <nd ref="610"/>
+    <nd ref="611"/>
+    <nd ref="612"/>
+    <nd ref="610"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="4"/>
+  </way>
   <area id="2400000064">
     <tag k="scale" v="0.0000010"/>
     <tag k="triangle" v="4"/>
@@ -778,6 +1194,14 @@
  0 1 1 1 0 0 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="65">
+    <nd ref="613"/>
+    <nd ref="614"/>
+    <nd ref="615"/>
+    <nd ref="613"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="5"/>
+  </way>
   <area id="2400000065">
     <tag k="scale" v="0.0000010"/>
     <tag k="triangle" v="5"/>
@@ -793,6 +1217,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="66">
+    <nd ref="616"/>
+    <nd ref="617"/>
+    <nd ref="618"/>
+    <nd ref="616"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="6"/>
+  </way>
   <area id="2400000066">
     <tag k="scale" v="0.0000010"/>
     <tag k="triangle" v="6"/>
@@ -808,6 +1240,14 @@
  0 0 1 1 1 1 0
  0 1 1 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="67">
+    <nd ref="619"/>
+    <nd ref="620"/>
+    <nd ref="621"/>
+    <nd ref="619"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="7"/>
+  </way>
   <area id="2400000067">
     <tag k="scale" v="0.0000010"/>
     <tag k="triangle" v="7"/>
@@ -823,6 +1263,14 @@
  0 0 0 0 1 1 0
  0 0 0 1 1 1 0
  0 0 0 0 0 0 0
+  <way id="68">
+    <nd ref="622"/>
+    <nd ref="623"/>
+    <nd ref="624"/>
+    <nd ref="622"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="triangle" v="8"/>
+  </way>
   <area id="2400000068">
     <tag k="scale" v="0.0000010"/>
     <tag k="triangle" v="8"/>

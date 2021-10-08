@@ -1,3 +1,20 @@
+  <way id="101">
+    <nd ref="1001"/>
+    <nd ref="1002"/>
+    <nd ref="1003"/>
+    <nd ref="1004"/>
+    <nd ref="1005"/>
+    <nd ref="1006"/>
+    <nd ref="1007"/>
+    <nd ref="1008"/>
+    <nd ref="1009"/>
+    <nd ref="1010"/>
+    <nd ref="1011"/>
+    <nd ref="1012"/>
+    <nd ref="1001"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="1"/>
+  </way>
   <area id="2400000101">
     <tag k="scale" v="1.0000000"/>
     <tag k="shapes" v="1"/>
@@ -8,6 +25,19 @@
  0 1 1 1 1 0
  0 0 1 1 0 0
  0 0 0 0 0 0
+  <way id="102">
+    <nd ref="1013"/>
+    <nd ref="1015"/>
+    <nd ref="1017"/>
+    <nd ref="1019"/>
+    <nd ref="1020"/>
+    <nd ref="1018"/>
+    <nd ref="1016"/>
+    <nd ref="1014"/>
+    <nd ref="1013"/>
+    <tag k="scale" v="1.0000000"/>
+    <tag k="shapes" v="2"/>
+  </way>
   <area id="2400000102">
     <tag k="scale" v="1.0000000"/>
     <tag k="shapes" v="2"/>
@@ -16,6 +46,23 @@
  0 1 1 1 1 0
  0 1 1 1 1 0
  0 0 0 0 0 0
+  <way id="111">
+    <nd ref="1101"/>
+    <nd ref="1102"/>
+    <nd ref="1103"/>
+    <nd ref="1104"/>
+    <nd ref="1105"/>
+    <nd ref="1106"/>
+    <nd ref="1107"/>
+    <nd ref="1108"/>
+    <nd ref="1109"/>
+    <nd ref="1110"/>
+    <nd ref="1111"/>
+    <nd ref="1112"/>
+    <nd ref="1101"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="shapes" v="1"/>
+  </way>
   <area id="2400000111">
     <tag k="scale" v="0.1000000"/>
     <tag k="shapes" v="1"/>
@@ -26,6 +73,19 @@
  0 1 1 1 1 0
  0 0 1 1 0 0
  0 0 0 0 0 0
+  <way id="112">
+    <nd ref="1113"/>
+    <nd ref="1115"/>
+    <nd ref="1117"/>
+    <nd ref="1119"/>
+    <nd ref="1120"/>
+    <nd ref="1118"/>
+    <nd ref="1116"/>
+    <nd ref="1114"/>
+    <nd ref="1113"/>
+    <tag k="scale" v="0.1000000"/>
+    <tag k="shapes" v="2"/>
+  </way>
   <area id="2400000112">
     <tag k="scale" v="0.1000000"/>
     <tag k="shapes" v="2"/>
@@ -34,6 +94,23 @@
  0 1 1 1 1 0
  0 1 1 1 1 0
  0 0 0 0 0 0
+  <way id="121">
+    <nd ref="1201"/>
+    <nd ref="1202"/>
+    <nd ref="1203"/>
+    <nd ref="1204"/>
+    <nd ref="1205"/>
+    <nd ref="1206"/>
+    <nd ref="1207"/>
+    <nd ref="1208"/>
+    <nd ref="1209"/>
+    <nd ref="1210"/>
+    <nd ref="1211"/>
+    <nd ref="1212"/>
+    <nd ref="1201"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="shapes" v="1"/>
+  </way>
   <area id="2400000121">
     <tag k="scale" v="0.0100000"/>
     <tag k="shapes" v="1"/>
@@ -44,6 +121,19 @@
  0 1 1 1 1 0
  0 0 1 1 0 0
  0 0 0 0 0 0
+  <way id="122">
+    <nd ref="1213"/>
+    <nd ref="1215"/>
+    <nd ref="1217"/>
+    <nd ref="1219"/>
+    <nd ref="1220"/>
+    <nd ref="1218"/>
+    <nd ref="1216"/>
+    <nd ref="1214"/>
+    <nd ref="1213"/>
+    <tag k="scale" v="0.0100000"/>
+    <tag k="shapes" v="2"/>
+  </way>
   <area id="2400000122">
     <tag k="scale" v="0.0100000"/>
     <tag k="shapes" v="2"/>
@@ -52,6 +142,23 @@
  0 1 1 1 1 0
  0 1 1 1 1 0
  0 0 0 0 0 0
+  <way id="131">
+    <nd ref="1301"/>
+    <nd ref="1302"/>
+    <nd ref="1303"/>
+    <nd ref="1304"/>
+    <nd ref="1305"/>
+    <nd ref="1306"/>
+    <nd ref="1307"/>
+    <nd ref="1308"/>
+    <nd ref="1309"/>
+    <nd ref="1310"/>
+    <nd ref="1311"/>
+    <nd ref="1312"/>
+    <nd ref="1301"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="shapes" v="1"/>
+  </way>
   <area id="2400000131">
     <tag k="scale" v="0.0010000"/>
     <tag k="shapes" v="1"/>
@@ -62,6 +169,19 @@
  0 1 1 1 1 0
  0 0 1 1 0 0
  0 0 0 0 0 0
+  <way id="132">
+    <nd ref="1313"/>
+    <nd ref="1315"/>
+    <nd ref="1317"/>
+    <nd ref="1319"/>
+    <nd ref="1320"/>
+    <nd ref="1318"/>
+    <nd ref="1316"/>
+    <nd ref="1314"/>
+    <nd ref="1313"/>
+    <tag k="scale" v="0.0010000"/>
+    <tag k="shapes" v="2"/>
+  </way>
   <area id="2400000132">
     <tag k="scale" v="0.0010000"/>
     <tag k="shapes" v="2"/>
@@ -70,6 +190,23 @@
  0 1 1 1 1 0
  0 1 1 1 1 0
  0 0 0 0 0 0
+  <way id="141">
+    <nd ref="1401"/>
+    <nd ref="1402"/>
+    <nd ref="1403"/>
+    <nd ref="1404"/>
+    <nd ref="1405"/>
+    <nd ref="1406"/>
+    <nd ref="1407"/>
+    <nd ref="1408"/>
+    <nd ref="1409"/>
+    <nd ref="1410"/>
+    <nd ref="1411"/>
+    <nd ref="1412"/>
+    <nd ref="1401"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="shapes" v="1"/>
+  </way>
   <area id="2400000141">
     <tag k="scale" v="0.0001000"/>
     <tag k="shapes" v="1"/>
@@ -88,6 +225,23 @@
  0 1 1 1 1 0
  0 1 1 1 1 0
  0 0 0 0 0 0
+  <way id="151">
+    <nd ref="1501"/>
+    <nd ref="1502"/>
+    <nd ref="1503"/>
+    <nd ref="1504"/>
+    <nd ref="1505"/>
+    <nd ref="1506"/>
+    <nd ref="1507"/>
+    <nd ref="1508"/>
+    <nd ref="1509"/>
+    <nd ref="1510"/>
+    <nd ref="1511"/>
+    <nd ref="1512"/>
+    <nd ref="1501"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="shapes" v="1"/>
+  </way>
   <area id="2400000151">
     <tag k="scale" v="0.0000100"/>
     <tag k="shapes" v="1"/>
@@ -98,6 +252,19 @@
  0 1 1 1 1 0
  0 0 1 1 0 0
  0 0 0 0 0 0
+  <way id="152">
+    <nd ref="1513"/>
+    <nd ref="1515"/>
+    <nd ref="1517"/>
+    <nd ref="1519"/>
+    <nd ref="1520"/>
+    <nd ref="1518"/>
+    <nd ref="1516"/>
+    <nd ref="1514"/>
+    <nd ref="1513"/>
+    <tag k="scale" v="0.0000100"/>
+    <tag k="shapes" v="2"/>
+  </way>
   <area id="2400000152">
     <tag k="scale" v="0.0000100"/>
     <tag k="shapes" v="2"/>
@@ -106,6 +273,23 @@
  0 1 1 1 1 0
  0 1 1 1 1 0
  0 0 0 0 0 0
+  <way id="161">
+    <nd ref="1601"/>
+    <nd ref="1602"/>
+    <nd ref="1603"/>
+    <nd ref="1604"/>
+    <nd ref="1605"/>
+    <nd ref="1606"/>
+    <nd ref="1607"/>
+    <nd ref="1608"/>
+    <nd ref="1609"/>
+    <nd ref="1610"/>
+    <nd ref="1611"/>
+    <nd ref="1612"/>
+    <nd ref="1601"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="shapes" v="1"/>
+  </way>
   <area id="2400000161">
     <tag k="scale" v="0.0000010"/>
     <tag k="shapes" v="1"/>
@@ -116,6 +300,19 @@
  0 1 1 1 1 0
  0 0 1 1 0 0
  0 0 0 0 0 0
+  <way id="162">
+    <nd ref="1613"/>
+    <nd ref="1615"/>
+    <nd ref="1617"/>
+    <nd ref="1619"/>
+    <nd ref="1620"/>
+    <nd ref="1618"/>
+    <nd ref="1616"/>
+    <nd ref="1614"/>
+    <nd ref="1613"/>
+    <tag k="scale" v="0.0000010"/>
+    <tag k="shapes" v="2"/>
+  </way>
   <area id="2400000162">
     <tag k="scale" v="0.0000010"/>
     <tag k="shapes" v="2"/>
