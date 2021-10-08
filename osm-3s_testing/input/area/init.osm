@@ -451,6 +451,10 @@
   <node id="30647" lat="51.2458912" lon="7.1499775" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="30648" lat="51.2458911" lon="7.1499775" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
 
+  <node id="60101" lat="51.25001" lon="8.15001" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="60102" lat="51.25" lon="8.15" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+  <node id="60103" lat="51.25" lon="8.15002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
+
   <node id="101011" lat="51.2505000" lon="7.1500000" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101021" lat="51.2505000" lon="7.1500002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
   <node id="101031" lat="51.2505000" lon="7.1510002" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo"/>
@@ -613,6 +617,21 @@
     <nd ref="30205"/>
   </way>
 
+  <!-- An open and a closed way each with a tag -->
+  <way id="601" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="60101"/>
+    <nd ref="60102"/>
+    <nd ref="60103"/>
+    <tag k="foo" v="bar"/>
+  </way>
+  <way id="602" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">
+    <nd ref="60101"/>
+    <nd ref="60102"/>
+    <nd ref="60103"/>
+    <nd ref="60101"/>
+    <tag k="foo" v="bar"/>
+  </way>
+  
 
   <!-- Ways that have one point inside, first or last, westmost or eastmost -->
   <way id="10101" version="1" timestamp="2021-07-01T10:00:00Z" changeset="496" uid="42" user="foo">

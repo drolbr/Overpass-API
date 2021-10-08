@@ -1,0 +1,2 @@
+encoding remark: Please enter your query and terminate it with CTRL+D.
+runtime error: Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.

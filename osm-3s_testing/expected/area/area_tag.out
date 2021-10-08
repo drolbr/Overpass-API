@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base=""/>
+
+  <way id="602">
+    <bounds minlat="51.2500000" minlon="8.1500000" maxlat="51.2500100" maxlon="8.1500200"/>
+    <nd ref="60101" lat="51.2500100" lon="8.1500100"/>
+    <nd ref="60102" lat="51.2500000" lon="8.1500000"/>
+    <nd ref="60103" lat="51.2500000" lon="8.1500200"/>
+    <nd ref="60101" lat="51.2500100" lon="8.1500100"/>
+    <tag k="foo" v="bar"/>
+  </way>
+
+</osm>
