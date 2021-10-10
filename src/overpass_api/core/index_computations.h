@@ -1172,4 +1172,10 @@ std::set< std::pair< Index, Index > > intersect_ranges
 }
 
 
+inline bool is_compound_idx(Uint31_Index idx)
+{
+  return idx.val() & 0x80000000u;
+}
+
+
 #endif

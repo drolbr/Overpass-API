@@ -600,4 +600,62 @@ Opaque_Geometry* make_hull(const Opaque_Geometry& geometry);
 double great_circle_dist(double lat1, double lon1, double lat2, double lon2);
 
 
+class Great_Circle
+{
+public:
+  Great_Circle(const Point_Double& lhs, const Point_Double& rhs)
+  {
+//     std::cout<<"gc "<<lhs.lat<<' '<<lhs.lon<<' '<<rhs.lat<<' '<<rhs.lon
+//         <<' '<<(lhs.lon < rhs.lon)<<(rhs.lon - lhs.lon > 180.)<<
+//         (rhs.lon < lhs.lon)<<(lhs.lon - rhs.lon < 180.)<<'\n';
+    
+    double lhs_s = sin(lhs.lat/180.*M_PI);
+    double lhs_cos = cos(lhs.lat/180.*M_PI);
+    double lhs_cs = lhs_cos * sin(lhs.lon/180.*M_PI);
+    double lhs_cc = lhs_cos * cos(lhs.lon/180.*M_PI);
+    
+    double rhs_s = sin(rhs.lat/180.*M_PI);
+    double rhs_cos = cos(rhs.lat/180.*M_PI);
+    double rhs_cs = rhs_cos * sin(rhs.lon/180.*M_PI);
+    double rhs_cc = rhs_cos * cos(rhs.lon/180.*M_PI);
+    
+    ortho_s = lhs_cs * rhs_cc - lhs_cc * rhs_cs;
+    ortho_cs = lhs_cc * rhs_s - lhs_s * rhs_cc;
+    ortho_cc = lhs_s * rhs_cs - lhs_cs * rhs_s;
+    if ((lhs.lon < rhs.lon && rhs.lon - lhs.lon > 180.)
+        || (rhs.lon < lhs.lon && lhs.lon - rhs.lon < 180.))
+    {
+      ortho_s = -ortho_s;
+      ortho_cs = -ortho_cs;
+      ortho_cc = -ortho_cc;
+    }
+    double norm = sqrt(ortho_s*ortho_s + ortho_cs*ortho_cs + ortho_cc*ortho_cc);
+    if (norm > 0)
+    {
+      ortho_s /= norm;
+      ortho_cs /= norm;
+      ortho_cc /= norm;
+    }
+//     std::cout<<ortho_s<<' '<<ortho_cs<<' '<<ortho_cc<<'\n'
+//         <<(ortho_s*ortho_s + ortho_cs*ortho_cs + ortho_cc*ortho_cc)<<'\n'
+//         <<asin(ortho_s)/M_PI*180.<<' '<<asin(ortho_cs/sqrt(1 - ortho_s*ortho_s))/M_PI*180.<<'\n';
+  }
+
+  double lat_of(double lon)
+  {
+    //rotate ortho such that the longitude to use for cartesian computation is always zero
+    double g_cc = ortho_cc*cos(lon/180.*M_PI) + ortho_cs*sin(lon/180.*M_PI);
+    double norm_prod = sqrt(g_cc*g_cc + ortho_s*ortho_s);
+    if (g_cc > norm_prod)
+      return 90.;
+    return asin(g_cc/norm_prod)/M_PI*180.;
+  }
+
+private:
+  double ortho_s;
+  double ortho_cs;
+  double ortho_cc;
+};
+
+
 #endif
