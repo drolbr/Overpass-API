@@ -1150,4 +1150,19 @@ void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const 
     const std::set< std::pair< Uint31_Index, Uint31_Index > >* ranges_31 = 0);
 
 
+template< typename Index, typename Object >
+void filter_elems_for_closed_ways(std::map< Index, std::vector< Object > >& arg)
+{
+  for (typename std::map< Index, std::vector< Object > >::iterator it1 = arg.begin(); it1 != arg.end(); ++it1)
+  {
+    std::vector< Object > into;
+    for (typename std::vector< Object >::iterator it2 = it1->second.begin(); it2 != it1->second.end(); ++it2)
+    {
+      if (!it2->nds.empty() && it2->nds.front() == it2->nds.back())
+        into.push_back(*it2);
+    }
+    into.swap(it1->second);
+  }
+}
+
 #endif

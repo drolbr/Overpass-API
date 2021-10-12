@@ -21,6 +21,8 @@
 #include "../../template_db/block_backend.h"
 #include "../../template_db/random_file.h"
 #include "../core/settings.h"
+#include "../data/abstract_processing.h"
+#include "../data/collect_members.h"
 #include "pivot.h"
 #include "query.h"
 
@@ -222,6 +224,11 @@ bool Pivot_Constraint::get_data
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
     collect_elems(rman, *osm_base_settings().WAYS, intersect_ids, into.ways);
+    if (input_set)
+    {
+      indexed_set_union(into.ways, input_set->ways);
+      into.attic_ways = input_set->attic_ways;
+    }
   }
   if (type & QUERY_RELATION)
   {
@@ -254,7 +261,17 @@ void Pivot_Constraint::filter(Resource_Manager& rman, Set& into)
   if (input_set)
   {
     filter_elems(get_node_pivot_ids(input_set->areas), into.nodes);
-    filter_elems(get_way_pivot_ids(input_set->areas), into.ways);
+    std::vector< Way::Id_Type > pivot_ways = get_way_pivot_ids(input_set->areas);
+    if (pivot_ways.empty())
+      item_filter_map(into.ways, input_set->ways);
+    else
+    {
+      std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_from_areas = into.ways;
+      filter_elems(get_way_pivot_ids(input_set->areas), ways_from_areas);
+      item_filter_map(into.ways, input_set->ways);
+      indexed_set_union(into.ways, ways_from_areas);
+    }
+    item_filter_map(into.attic_ways, input_set->attic_ways);
     filter_elems(get_relation_pivot_ids(input_set->areas), into.relations);
   }
   else
@@ -297,6 +314,8 @@ void Pivot_Statement::execute(Resource_Manager& rman)
   {
     collect_elems(rman, *osm_base_settings().NODES, get_node_pivot_ids(input_set->areas), into.nodes);
     collect_elems(rman, *osm_base_settings().WAYS, get_way_pivot_ids(input_set->areas), into.ways);
+    indexed_set_union(into.ways, input_set->ways);
+    into.attic_ways = input_set->attic_ways;
     collect_elems(rman, *osm_base_settings().RELATIONS, get_relation_pivot_ids(input_set->areas), into.relations);
   }
 

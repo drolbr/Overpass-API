@@ -142,8 +142,7 @@ class Id_Query_Constraint : public Query_Constraint
 bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
 {
   ids.clear();
-  if (stmt->get_type() == Statement::NODE || stmt->get_type() == 0)
-    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
 
   return true;
 }
@@ -152,8 +151,7 @@ bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node
 bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids)
 {
   ids.clear();
-  if (stmt->get_type() == Statement::WAY || stmt->get_type() == 0)
-    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
 
   return true;
 }
@@ -162,8 +160,7 @@ bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_S
 bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
 {
   ids.clear();
-  if (stmt->get_type() == Statement::RELATION || stmt->get_type() == 0)
-    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
 
   return true;
 }
@@ -172,8 +169,7 @@ bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< 
 bool Id_Query_Constraint::get_area_ids(Resource_Manager& rman, std::vector< Area_Skeleton::Id_Type >& ids)
 {
   ids.clear();
-  if (stmt->get_type() == Statement::AREA || stmt->get_type() == 0)
-    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
 
   return true;
 }
@@ -199,7 +195,6 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair
   std::vector< Uint31_Index > req;
   ranges.clear();
 
-  if (stmt->get_type() == Statement::WAY || stmt->get_type() == 0)
   {
     std::vector< Way_Skeleton::Id_Type > ids;
     ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
@@ -208,7 +203,6 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair
       ranges.insert(std::make_pair(*it, inc(*it)));
   }
 
-  if (stmt->get_type() == Statement::RELATION || stmt->get_type() == 0)
   {
     std::vector< Relation_Skeleton::Id_Type > ids;
     ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
@@ -223,34 +217,16 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair
 
 void Id_Query_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  if (stmt->get_type() == Statement::NODE || stmt->get_type() == 0)
-  {
-    filter_elems(stmt->get_refs(), into.nodes);
-    filter_elems(stmt->get_refs(), into.attic_nodes);
-  }
-  else
-    into.nodes.clear();
+  filter_elems(stmt->get_refs(), into.nodes);
+  filter_elems(stmt->get_refs(), into.attic_nodes);
 
-  if (stmt->get_type() == Statement::WAY || stmt->get_type() == 0)
-  {
-    filter_elems(stmt->get_refs(), into.ways);
-    filter_elems(stmt->get_refs(), into.attic_ways);
-  }
-  else
-    into.ways.clear();
+  filter_elems(stmt->get_refs(), into.ways);
+  filter_elems(stmt->get_refs(), into.attic_ways);
 
-  if (stmt->get_type() == Statement::RELATION || stmt->get_type() == 0)
-  {
-    filter_elems(stmt->get_refs(), into.relations);
-    filter_elems(stmt->get_refs(), into.attic_relations);
-  }
-  else
-    into.relations.clear();
+  filter_elems(stmt->get_refs(), into.relations);
+  filter_elems(stmt->get_refs(), into.attic_relations);
 
-  if (stmt->get_type() == Statement::AREA || stmt->get_type() == 0)
-    filter_elems(stmt->get_refs(), into.areas);
-  else
-    into.areas.clear();
+  filter_elems(stmt->get_refs(), into.areas);
 }
 
 //-----------------------------------------------------------------------------
