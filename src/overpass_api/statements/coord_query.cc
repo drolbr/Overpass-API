@@ -378,15 +378,17 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
         for (std::vector< Node_Skeleton >::const_iterator it2 = cur_it->second.begin(); it2 != cur_it->second.end();
             ++it2)
           tai.move_covering_ways(cur_it->first.val(), it2->ll_lower, into.ways, into.attic_ways);
-        ++cur_it;
       }
       if (attic_it->first == tai.get_idx())
       {
         for (std::vector< Attic< Node_Skeleton > >::const_iterator it2 = attic_it->second.begin();
             it2 != attic_it->second.end(); ++it2)
           tai.move_covering_ways(attic_it->first.val(), it2->ll_lower, into.ways, into.attic_ways);
-        ++attic_it;
       }
+      while (cur_it != input_set->nodes.end() && !(tai.get_idx().val() < cur_it->first.val()))
+        ++cur_it;
+      while (attic_it != input_set->attic_nodes.end() && !(tai.get_idx().val() < attic_it->first.val()))
+        ++attic_it;
     }
   }
 
