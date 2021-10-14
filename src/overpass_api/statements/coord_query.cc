@@ -350,6 +350,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   {
     Tilewise_Area_Iterator tai(current_candidates, attic_candidates, *this, rman);
     uint32 idx = ::ll_upper_(lat, lon);
+    tai.set_limits(ilat(idx, 0u), ilat(idx, 0u));
     while (!tai.is_end() && tai.get_idx().val() < idx)
       tai.next();
     if (!tai.is_end())
@@ -358,6 +359,21 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   else if (input_set)
   {
     Tilewise_Area_Iterator tai(current_candidates, attic_candidates, *this, rman);
+    uint32 minlat = 0x7fff0000u;
+    uint32 maxlat = 0u;
+    for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it = input_set->nodes.begin();
+        it != input_set->nodes.end(); ++it)
+    {
+      minlat = std::min(minlat, ilat(it->first.val(), 0u));
+      maxlat = std::max(maxlat, ilat(it->first.val(), 0u));
+    }
+    for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator it = input_set->attic_nodes.begin();
+        it != input_set->attic_nodes.end(); ++it)
+    {
+      minlat = std::min(minlat, ilat(it->first.val(), 0u));
+      maxlat = std::max(maxlat, ilat(it->first.val(), 0u));
+    }
+    tai.set_limits(minlat, maxlat);
 
     std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator cur_it = input_set->nodes.begin();
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator attic_it =

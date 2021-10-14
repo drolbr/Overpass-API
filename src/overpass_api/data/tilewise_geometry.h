@@ -408,7 +408,8 @@ public:
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways_,
       const Statement& stmt, Resource_Manager& rman)
   : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
-    cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman)
+    cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman),
+    minlat(0u), maxlat(0x7fff0000)
   {
     refill();
   }
@@ -434,6 +435,11 @@ public:
       uint32 ll_upper, uint32 ll_lower,
       std::map< Uint31_Index, std::vector< Way_Skeleton > >& target_ways,
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& target_attic_ways);
+  void set_limits(uint32 minlat_, uint32 maxlat_)
+  {
+    minlat = minlat_;
+    maxlat = maxlat_;
+  }
   
   Relative_Position rel_position(const std::vector< Segment >& segments, bool accept_border);
 
@@ -445,6 +451,8 @@ private:
   Way_Geometry_Store cur_geom_store;
   Way_Geometry_Store attic_geom_store;
   std::map< Uint31_Index, std::map< Full_Way_Ref, Index_Block > > queue;
+  uint32 minlat;
+  uint32 maxlat;
 
   struct Segment_Collector
   {
@@ -924,6 +932,11 @@ inline void Tilewise_Area_Iterator::propagate_inside_flag()
   Uint31_Index idx = get_idx();
   uint32 south = ilat(idx.val(), 0u);
   int32 west = ilon(idx.val(), 0u);
+  if (maxlat < south)
+    return;
+  if (south < minlat && west >= -1800000000)
+    return;
+  
   const std::map< Full_Way_Ref, Index_Block >& way_blocks = get_obj();
   
   for (std::map< Full_Way_Ref, Index_Block >::const_iterator bit = way_blocks.begin();
