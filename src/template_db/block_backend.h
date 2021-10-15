@@ -20,119 +20,481 @@
 #define DE__OSM3S___TEMPLATE_DB__BLOCK_BACKEND_H
 
 #include "file_blocks.h"
+#include "types.h"
 
 #include <cstring>
 #include <map>
 #include <set>
 
 
-struct Block_Backend_Basic_Ref
+template< typename Object >
+struct Idx_Handle
 {
-  Block_Backend_Basic_Ref(uint32 block_size, uint32 pos_) : buffer(block_size), count(0), pos(pos_) {}
-
-  uint32 get_pos() const { return pos; }
-  void set_pos(uint32 pos_) { pos = pos_; }
-  void inc_pos(uint32 offset) { pos += offset;  }
-
-  void* get_load_target()
+  Idx_Handle()
+      : obj(0), ptr_to_raw(0) {}
+  ~Idx_Handle()
   {
-    ++count;
-    return buffer.ptr;
+    delete obj;
   }
-  Void_Pointer< uint8 >& get_buffer() { return buffer; }
-  const Void_Pointer< uint8 >& get_buffer() const { return buffer; }
-  uint32 get_used_block_size() const { return *(uint32*)buffer.ptr; }
-
-  void* get_ptr() const { return buffer.ptr + pos; }
-  uint32 get_count() const { return count; }
-
-private:
-  Block_Backend_Basic_Ref(const Block_Backend_Basic_Ref&);
-
-  Void_Pointer< uint8 > buffer;
-  uint32 count;
-  uint32 pos;
-};
-
-
-template< typename Object >
-class Handle
-{
-public:
-  Handle(Block_Backend_Basic_Ref& source_) : source(&source_), count(0), ptr(0), obj(0) {}
-  Handle(const Handle& rhs) : source(rhs.source), count(rhs.count), ptr(0), obj(0) {}
-  ~Handle() { delete obj; }
-  Handle& operator=(const Handle& rhs);
-  const Object& object() const;
-  typename Object::Id_Type id() const;
-
-private:
-  void update_ptr() const;
-
-  Block_Backend_Basic_Ref* source;
-  mutable uint32 count;
-  mutable void* ptr;
-  mutable Object* obj;
-};
-
-
-template< typename Object >
-Handle< Object >& Handle< Object >::operator=(const Handle& rhs)
-{
-  if (&rhs == this) return this;
-  delete obj;
-  obj = 0;
-  ptr = 0;
-  source = rhs.source;
-  count = rhs.count;
-}
-
-
-template< typename Object >
-const Object& Handle< Object >::object() const
-{
-  update_ptr();
-  if (obj == 0)
-    obj = new Object(ptr);
-  return *obj;
-}
-
-
-template< typename Object >
-typename Object::Id_Type Handle< Object >::id() const
-{
-  update_ptr();
-  return Object::get_id(ptr);
-}
-
-
-template< typename Object >
-void Handle< Object >::update_ptr() const
-{
-  void* new_ptr = source->get_ptr();
-  uint32 new_count = source->get_count();
-  if (new_ptr != ptr || new_count != count)
+  void set_ptr(uint8* ptr)
   {
     delete obj;
     obj = 0;
-    ptr = new_ptr;
-    count = new_count;
+    ptr_to_raw = ptr;
+  }
+  const Object& object() const
+  {
+    if (!obj)
+      obj = new Object(ptr_to_raw);
+    return *obj;
+  }
+  uint8* get_ptr_to_raw() const
+  {
+    return ptr_to_raw;
+  }
+
+  Idx_Handle(const Idx_Handle& rhs)
+      : obj(0), ptr_to_raw(rhs.ptr_to_raw) {}
+  Idx_Handle& operator=(const Idx_Handle& rhs)
+  {
+    set_ptr(rhs.ptr_to_raw);
+  }
+
+private:
+  mutable Object* obj;
+  uint8* ptr_to_raw;
+};
+
+
+template< typename Object >
+struct Handle : Idx_Handle< Object >
+{
+  typename Object::Id_Type id() const
+  {
+    return Object::get_id(this->get_ptr_to_raw());
+  }
+};
+
+
+//-----------------------------------------------------------------------------
+
+
+template< typename Index, typename Object, typename Idx_Assessor, typename File_Handle >
+struct Block_Backend_Basic_Iterator
+{
+  Block_Backend_Basic_Iterator(
+      uint32 block_size, const File_Handle& file_handle, const Idx_Assessor& idx_assessor);
+  Block_Backend_Basic_Iterator(const Block_Backend_Basic_Iterator& rhs);
+  const Block_Backend_Basic_Iterator& operator=(const Block_Backend_Basic_Iterator& rhs);
+
+  Block_Backend_Basic_Iterator& operator++();
+
+  const Index& index()
+  {
+    return idx_cache.object();
+  }
+  const Object& object()
+  {
+    return obj_cache.object();
+  }
+  const Handle< Object >& handle()
+  { 
+    return obj_cache;
+  }
+
+  bool is_end() const
+  {
+    return obj_offset == 0 || idx_block_offset == 0;
+  }
+
+  bool operator==(const Block_Backend_Basic_Iterator& rhs) const
+  {
+    return obj_offset == rhs.obj_offset && file_handle == rhs.file_handle;
+  }
+
+private:
+  uint32 block_size;
+  Void64_Pointer< uint64 > buffer;
+  uint32 buffer_size;
+  uint32 idx_block_offset; // Points to the entry that contains the jump offset
+  uint32 obj_offset;
+  Idx_Handle< Index > idx_cache;
+  Handle< Object > obj_cache;
+  File_Handle file_handle;
+  Idx_Assessor idx_assessor;
+
+  uint32 next_idx_block_offset() const
+  {
+    return *(uint32*)(((uint8*)buffer.ptr) + idx_block_offset);
+  }
+  uint8* idx_ptr() const
+  {
+    return ((uint8*)buffer.ptr) + idx_block_offset + 4;
+  }
+  uint32 total_payload_size() const
+  {
+    return *(uint32*)buffer.ptr;
+  }
+
+  void increment_idx();
+  void increment_block();
+};
+
+
+template< typename Index, typename Object, typename Idx_Assessor, typename File_Handle >
+Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >::
+    Block_Backend_Basic_Iterator(
+        uint32 block_size_, const File_Handle& file_handle_, const Idx_Assessor& idx_assessor_)
+    : block_size(block_size_), buffer(block_size_), buffer_size(block_size_),
+    idx_block_offset(0), obj_offset(0), file_handle(file_handle_), idx_assessor(idx_assessor_)
+{
+  increment_block();
+
+  if (idx_block_offset == 0)
+    obj_offset = 0;
+  else if (idx_assessor.is_relevant(idx_ptr()))
+    obj_offset = idx_block_offset + 4 + Index::size_of(idx_ptr());
+  else
+    obj_offset = next_idx_block_offset();
+
+  while (obj_offset > 0 && obj_offset >= next_idx_block_offset())
+    increment_idx();
+
+  idx_cache.set_ptr(idx_ptr());
+  obj_cache.set_ptr(((uint8*)buffer.ptr) + obj_offset);
+}
+
+
+template< typename Index, typename Object, typename Idx_Assessor, typename File_Handle >
+Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >::
+    Block_Backend_Basic_Iterator(const Block_Backend_Basic_Iterator& rhs)
+    : block_size(rhs.block_size), buffer(rhs.buffer_size), buffer_size(rhs.buffer_size),
+    idx_block_offset(rhs.idx_block_offset), obj_offset(rhs.obj_offset),
+    file_handle(rhs.file_handle), idx_assessor(rhs.idx_assessor)
+{
+  memcpy(buffer.ptr, rhs.buffer.ptr, buffer_size);
+  idx_cache.set_ptr(((uint8*)buffer.ptr) + idx_block_offset + 4);
+  obj_cache.set_ptr(((uint8*)buffer.ptr) + obj_offset);
+}
+
+
+template< typename Index, typename Object, typename Idx_Assessor, typename File_Handle >
+const Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >&
+    Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >::
+    operator=(const Block_Backend_Basic_Iterator& rhs)
+{
+  if (buffer_size != rhs.buffer_size)
+  {
+    Void64_Pointer< uint64 > new_buffer(rhs.buffer_size);
+    buffer.swap(new_buffer);
+  }
+
+  block_size = rhs.block_size;
+  buffer_size = rhs.buffer_size;
+  idx_block_offset = rhs.idx_block_offset;
+  obj_offset = rhs.obj_offset;
+  file_handle = rhs.file_handle;
+  idx_assessor = rhs.idx_assessor;
+
+  memcpy(buffer.ptr, rhs.buffer.ptr, buffer_size);
+  idx_cache.set_ptr(((uint8*)buffer.ptr) + idx_block_offset + 4);
+  obj_cache.set_ptr(((uint8*)buffer.ptr) + obj_offset);
+
+  return *this;
+}
+
+
+template< typename Index, typename Object, typename Idx_Assessor, typename File_Handle >
+Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >&
+    Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >::operator++()
+{
+  obj_offset += Object::size_of(((uint8*)buffer.ptr) + obj_offset);
+  while (obj_offset > 0 && obj_offset >= next_idx_block_offset())
+    increment_idx();
+  obj_cache.set_ptr(((uint8*)buffer.ptr) + obj_offset);
+  return *this;
+}
+
+
+template< typename Index, typename Object, typename Idx_Assessor, typename File_Handle >
+void Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >::increment_idx()
+{
+  do
+  {
+    idx_block_offset = next_idx_block_offset();
+    if (idx_block_offset >= total_payload_size())
+      increment_block();
+  }
+  while (idx_block_offset > 0 && !idx_assessor.is_relevant(idx_ptr()));
+
+  if (idx_block_offset == 0)
+    obj_offset = 0;
+  else
+    obj_offset = idx_block_offset + 4 + Index::size_of(idx_ptr());
+
+  idx_cache.set_ptr(idx_ptr());
+}
+
+
+template< typename Index, typename Object, typename Idx_Assessor, typename File_Handle >
+void Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >::increment_block()
+{
+  if (!file_handle.next(buffer.ptr))
+  {
+    idx_block_offset = 0;
+    return;
+  }
+  idx_block_offset = 4;
+
+  if (next_idx_block_offset() > block_size)
+  {
+    uint32 new_buffer_size = (next_idx_block_offset()/block_size + 1) * block_size;
+    if (buffer_size < new_buffer_size)
+    {
+      Void64_Pointer< uint64 > new_buffer(new_buffer_size);
+      memcpy(new_buffer.ptr, buffer.ptr, block_size);
+      buffer.swap(new_buffer);
+      buffer_size = new_buffer_size;
+    }
+    for (uint i_offset = block_size; i_offset < new_buffer_size; i_offset += block_size)
+      file_handle.next(buffer.ptr + i_offset/8, false);
   }
 }
 
 
-template< class TIndex >
-struct Default_Range_Iterator : std::set< std::pair< TIndex, TIndex > >::const_iterator
+//-----------------------------------------------------------------------------
+
+
+template< class Index >
+struct Default_Range_Iterator : std::set< std::pair< Index, Index > >::const_iterator
 {
   Default_Range_Iterator
-      (const typename std::set< std::pair< TIndex, TIndex > >::const_iterator it)
-  : std::set< std::pair< TIndex, TIndex > >::const_iterator(it) {}
+      (const typename std::set< std::pair< Index, Index > >::const_iterator it)
+  : std::set< std::pair< Index, Index > >::const_iterator(it) {}
 
   Default_Range_Iterator() {}
 
-  const TIndex& lower_bound() const { return (*this)->first; }
-  const TIndex& upper_bound() const { return (*this)->second; }
+  const Index& lower_bound() const { return (*this)->first; }
+  const Index& upper_bound() const { return (*this)->second; }
 };
+
+
+//-----------------------------------------------------------------------------
+
+
+struct Flat_Idx_Assessor
+{
+  bool is_relevant(uint8*)
+  {
+    return true;
+  }
+};
+
+
+template< typename File_Blocks, typename File_Iterator >
+struct Flat_File_Handle
+{
+  Flat_File_Handle(File_Blocks& file_blocks_, bool is_end)
+      : file_blocks(&file_blocks_), file_it(is_end ? file_blocks_.flat_end() : file_blocks_.flat_begin()),
+      file_end(file_blocks_.flat_end()) {}
+
+  bool next(uint64* ptr, bool check_idx = true)
+  {
+    if (file_it == file_end)
+      return false;
+    file_blocks->read_block(file_it, ptr, check_idx);
+    ++file_it;
+    return true;
+  }
+
+  bool operator==(const Flat_File_Handle& rhs) const
+  {
+    return file_it == rhs.file_it;
+  }
+
+private:
+  const File_Blocks* file_blocks;
+  File_Iterator file_it;
+  File_Iterator file_end;
+};
+
+
+template< typename Index, typename Object, typename Iterator >
+struct Block_Backend_Flat_Iterator
+    : Block_Backend_Basic_Iterator< Index, Object, Flat_Idx_Assessor,
+        Flat_File_Handle< File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >,
+            typename File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >::Flat_Iterator > >
+{
+  typedef File_Blocks< Index, Iterator, Default_Range_Iterator< Index > > File_Blocks_;
+  typedef Flat_File_Handle< File_Blocks_, typename File_Blocks_::Flat_Iterator > File_Handle_;
+
+  Block_Backend_Flat_Iterator(File_Blocks_& file_blocks, uint32 block_size, bool is_end = false)
+      : Block_Backend_Basic_Iterator< Index, Object, Flat_Idx_Assessor, File_Handle_ >(
+          block_size, File_Handle_(file_blocks, is_end), Flat_Idx_Assessor()) {}
+
+  Block_Backend_Flat_Iterator(const Block_Backend_Flat_Iterator& rhs)
+      : Block_Backend_Basic_Iterator< Index, Object, Flat_Idx_Assessor, File_Handle_ >(rhs) {}
+};
+
+
+//-----------------------------------------------------------------------------
+
+
+template< typename Index, typename Iterator >
+struct Discrete_Idx_Assessor
+{
+  Discrete_Idx_Assessor(const Iterator& index_it_, const Iterator& index_end_)
+      : index_it(index_it_), index_end(index_end_) {}
+
+  bool is_relevant(uint8* ptr)
+  {
+    Index idx((void*)ptr);
+    while (index_it != index_end && *index_it < idx)
+      ++index_it;
+    return index_it != index_end && *index_it == idx;
+  }
+
+private:
+  Iterator index_it;
+  Iterator index_end;
+};
+
+
+template< typename File_Blocks, typename File_Iterator >
+struct Discrete_File_Handle
+{
+  Discrete_File_Handle(File_Blocks& file_blocks_, const File_Iterator& file_it_)
+      : file_blocks(&file_blocks_), file_it(file_it_), file_end(file_blocks_.discrete_end()) {}
+
+  bool next(uint64* ptr, bool check_idx = true)
+  {
+    if (file_it == file_end)
+      return false;
+    file_blocks->read_block(file_it, ptr, check_idx);
+    ++file_it;
+    return true;
+  }
+
+  bool operator==(const Discrete_File_Handle& rhs) const
+  {
+    return file_it == rhs.file_it;
+  }
+
+private:
+  const File_Blocks* file_blocks;
+  File_Iterator file_it;
+  File_Iterator file_end;
+};
+
+
+template< typename Index, typename Object, typename Iterator >
+struct Block_Backend_Discrete_Iterator
+    : Block_Backend_Basic_Iterator< Index, Object, Discrete_Idx_Assessor< Index, Iterator >,
+          Discrete_File_Handle< File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >,
+              typename File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >::Discrete_Iterator > >
+{
+  typedef File_Blocks< Index, Iterator, Default_Range_Iterator< Index > > File_Blocks_;
+  typedef Discrete_File_Handle< File_Blocks_, typename File_Blocks_::Discrete_Iterator > File_Handle_;
+
+  Block_Backend_Discrete_Iterator
+      (File_Blocks_& file_blocks, const Iterator& index_it, const Iterator& index_end, uint32 block_size)
+      : Block_Backend_Basic_Iterator< Index, Object, Discrete_Idx_Assessor< Index, Iterator >, File_Handle_ >(
+          block_size, File_Handle_(file_blocks, file_blocks.discrete_begin(index_it, index_end)),
+          Discrete_Idx_Assessor< Index, Iterator >(index_it, index_end)) {}
+
+  Block_Backend_Discrete_Iterator(File_Blocks_& file_blocks, uint32 block_size)
+      : Block_Backend_Basic_Iterator< Index, Object, Discrete_Idx_Assessor< Index, Iterator >, File_Handle_ >(
+          block_size, File_Handle_(file_blocks, file_blocks.discrete_end()),
+          Discrete_Idx_Assessor< Index, Iterator >(Iterator(), Iterator())) {}
+
+  Block_Backend_Discrete_Iterator(const Block_Backend_Discrete_Iterator& it)
+    : Block_Backend_Basic_Iterator< Index, Object, Discrete_Idx_Assessor< Index, Iterator >, File_Handle_ >(it) {}
+};
+
+
+//-----------------------------------------------------------------------------
+
+
+template< typename Index, typename Iterator >
+struct Range_Idx_Assessor
+{
+  Range_Idx_Assessor(const Iterator& index_it_, const Iterator& index_end_)
+      : index_it(index_it_), index_end(index_end_) {}
+
+  bool is_relevant(uint8* ptr)
+  {
+    Index idx((void*)ptr);
+    while (index_it != index_end && !(idx < index_it.upper_bound()))
+      ++index_it;
+    return index_it != index_end && !(idx < index_it.lower_bound()) && idx < index_it.upper_bound();
+  }
+
+private:
+  Iterator index_it;
+  Iterator index_end;
+};
+
+
+template< typename File_Blocks, typename File_Iterator >
+struct Range_File_Handle
+{
+  Range_File_Handle(File_Blocks& file_blocks_, const File_Iterator& file_it_)
+      : file_blocks(&file_blocks_), file_it(file_it_), file_end(file_blocks_.range_end()) {}
+
+  bool next(uint64* ptr, bool check_idx = true)
+  {
+    if (file_it == file_end)
+      return false;
+    file_blocks->read_block(file_it, ptr, check_idx);
+    ++file_it;
+    return true;
+  }
+
+  bool operator==(const Range_File_Handle& rhs) const
+  {
+    return file_it == rhs.file_it;
+  }
+
+private:
+  const File_Blocks* file_blocks;
+  File_Iterator file_it;
+  File_Iterator file_end;
+};
+
+
+template< typename Index, typename Object, typename Iterator >
+struct Block_Backend_Range_Iterator
+    : Block_Backend_Basic_Iterator< Index, Object, Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >,
+        Range_File_Handle< File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >,
+            typename File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >::Range_Iterator > >
+{
+  typedef File_Blocks< Index, Iterator, Default_Range_Iterator< Index > > File_Blocks_;
+  typedef Range_File_Handle< File_Blocks_, typename File_Blocks_::Range_Iterator > File_Handle_;
+
+  Block_Backend_Range_Iterator(
+      File_Blocks_& file_blocks,
+      const Default_Range_Iterator< Index >& index_it, const Default_Range_Iterator< Index >& index_end,
+      uint32 block_size)
+      : Block_Backend_Basic_Iterator< Index, Object,
+          Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >, File_Handle_ >(
+          block_size, File_Handle_(file_blocks, file_blocks.range_begin(index_it, index_end)),
+          Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >(index_it, index_end)) {}
+
+  Block_Backend_Range_Iterator(File_Blocks_& file_blocks, uint32 block_size)
+      : Block_Backend_Basic_Iterator< Index, Object,
+          Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >, File_Handle_ >(
+          block_size, File_Handle_(file_blocks, file_blocks.range_end()),
+          Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >(
+              Default_Range_Iterator< Index >(), Default_Range_Iterator< Index >())) {}
+
+  Block_Backend_Range_Iterator(const Block_Backend_Range_Iterator& it)
+    : Block_Backend_Basic_Iterator< Index, Object,
+        Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >, File_Handle_ >(it) {}
+};
+
+
+//-----------------------------------------------------------------------------
+
 
 template< class TIndex, class TObject >
 struct Index_Collection
@@ -149,138 +511,6 @@ struct Index_Collection
   typename std::map< TIndex, std::set< TObject > >::const_iterator insert_it;
 };
 
-template< class TIndex, class TObject >
-struct Block_Backend_Basic_Iterator : public Block_Backend_Basic_Ref
-{
-  Block_Backend_Basic_Iterator(uint32 block_size_, bool is_end);
-  Block_Backend_Basic_Iterator(const Block_Backend_Basic_Iterator& it);
-  ~Block_Backend_Basic_Iterator();
-
-  bool advance();
-  const TIndex& index();
-  const TObject& object();
-  const Handle< TObject >& handle() { return object_handle; }
-
-  uint32 block_size;
-  uint32* current_idx_pos;
-  TIndex* current_index;
-  Handle< TObject > object_handle;
-};
-
-template< class TIndex, class TObject, class TIterator >
-struct Block_Backend_Flat_Iterator : Block_Backend_Basic_Iterator< TIndex, TObject >
-{
-  typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
-
-  Block_Backend_Flat_Iterator
-      (File_Blocks_& file_blocks_, uint32 block_size_, bool is_end = false);
-
-  Block_Backend_Flat_Iterator(const Block_Backend_Flat_Iterator& it)
-    : Block_Backend_Basic_Iterator< TIndex, TObject >(it),
-      file_blocks(it.file_blocks), file_it(it.file_it), file_end(it.file_end) {}
-
-  ~Block_Backend_Flat_Iterator() {}
-
-  const Block_Backend_Flat_Iterator& operator=(const Block_Backend_Flat_Iterator& it);
-  bool operator==(const Block_Backend_Flat_Iterator& it) const;
-  const Block_Backend_Flat_Iterator& operator++();
-
-  const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
-  typename File_Blocks_::Flat_Iterator file_it;
-  typename File_Blocks_::Flat_Iterator file_end;
-
-private:
-  // returns true if we have found something
-  bool search_next_index();
-
-  // returns true if we are done
-  // if we have loaded a new block, returns false to trigger search_next_index()
-  bool read_block();
-};
-
-template< class TIndex, class TObject, class TIterator >
-struct Block_Backend_Discrete_Iterator : Block_Backend_Basic_Iterator< TIndex, TObject >
-{
-  typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
-
-  Block_Backend_Discrete_Iterator
-      (File_Blocks_& file_blocks_,
-       const TIterator& index_it_,
-       const TIterator& index_end_, uint32 block_size_);
-
-  Block_Backend_Discrete_Iterator
-      (const File_Blocks_& file_blocks_, uint32 block_size_)
-    : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, true),
-      file_blocks(file_blocks_), file_it(file_blocks_.discrete_end()),
-      file_end(file_blocks_.discrete_end()), index_it(), index_end() {}
-
-  Block_Backend_Discrete_Iterator(const Block_Backend_Discrete_Iterator& it)
-    : Block_Backend_Basic_Iterator< TIndex, TObject >(it),
-      file_blocks(it.file_blocks), file_it(it.file_it), file_end(it.file_end),
-      index_it(it.index_it), index_end(it.index_end) {}
-
-  ~Block_Backend_Discrete_Iterator() {}
-
-  const Block_Backend_Discrete_Iterator& operator=
-      (const Block_Backend_Discrete_Iterator& it);
-  bool operator==(const Block_Backend_Discrete_Iterator& it) const;
-  const Block_Backend_Discrete_Iterator& operator++();
-
-  const File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > >& file_blocks;
-  typename File_Blocks_::Discrete_Iterator file_it;
-  typename File_Blocks_::Discrete_Iterator file_end;
-  TIterator index_it;
-  TIterator index_end;
-
-private:
-  bool search_next_index();
-  bool read_block();
-};
-
-template< class TIndex, class TObject, class TIterator >
-struct Block_Backend_Range_Iterator : Block_Backend_Basic_Iterator< TIndex, TObject >
-{
-  typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
-
-  Block_Backend_Range_Iterator
-      (File_Blocks_& file_blocks_,
-       const Default_Range_Iterator< TIndex >& index_it_,
-       const Default_Range_Iterator< TIndex >& index_end_, uint32 block_size_);
-
-  Block_Backend_Range_Iterator
-      (File_Blocks_& file_blocks_,
-       const Default_Range_Iterator< TIndex >& index_it_,
-       const Default_Range_Iterator< TIndex >& index_end_, uint32 block_size_, const TIndex& min_idx);
-
-  Block_Backend_Range_Iterator(const File_Blocks_& file_blocks_, uint32 block_size_)
-    : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, true),
-      file_blocks(file_blocks_), file_it(file_blocks_.range_end()),
-      file_end(file_blocks_.range_end()), index_it(), index_end() {}
-
-  Block_Backend_Range_Iterator(const Block_Backend_Range_Iterator& it)
-    : Block_Backend_Basic_Iterator< TIndex, TObject >(it),
-      file_blocks(it.file_blocks), file_it(it.file_it), file_end(it.file_end),
-      index_it(it.index_it), index_end(it.index_end) {}
-
-  const Block_Backend_Range_Iterator& operator=
-      (const Block_Backend_Range_Iterator& it);
-  bool operator==(const Block_Backend_Range_Iterator& it) const;
-  const Block_Backend_Range_Iterator& operator++();
-
-  const File_Blocks_& file_blocks;
-  typename File_Blocks_::Range_Iterator file_it;
-  typename File_Blocks_::Range_Iterator file_end;
-  Default_Range_Iterator< TIndex > index_it;
-  Default_Range_Iterator< TIndex > index_end;
-
-private:
-  // returns true if we have found something
-  bool search_next_index();
-  bool search_next_index(const TIndex& min_idx);
-
-  // returns true if we have found something
-  bool read_block();
-};
 
 template< class TIndex, class TObject >
 struct Empty_Update_Logger
@@ -288,6 +518,7 @@ struct Empty_Update_Logger
 public:
   void deletion(const TIndex&, const TObject&) {}
 };
+
 
 template< class TIndex, class TObject, class TIterator = typename std::set< TIndex >::const_iterator >
 struct Block_Backend
@@ -312,10 +543,7 @@ struct Block_Backend
         (Default_Range_Iterator< TIndex > begin,
          Default_Range_Iterator< TIndex > end)
         { return Range_Iterator(file_blocks, begin, end, block_size); }
-    Range_Iterator range_begin
-        (Default_Range_Iterator< TIndex > begin,
-         Default_Range_Iterator< TIndex > end, const TIndex& min_idx)
-        { return Range_Iterator(file_blocks, begin, end, block_size, min_idx); }
+
     const Range_Iterator& range_end() const { return *range_end_it; }
 
     template< class Update_Logger >
@@ -350,511 +578,51 @@ struct Block_Backend
          typename std::set< TIndex >::const_iterator it,
          const typename std::set< TIndex >::const_iterator& end);
 
+    void flush_if_necessary_and_write_obj(
+        uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Write_Iterator& file_it,
+        const TIndex& idx, const TObject& obj);
+
     void create_from_scratch
-        (typename File_Blocks_::Discrete_Iterator& file_it,
+        (typename File_Blocks_::Write_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_insert);
 
     template< class Update_Logger >
     void update_group
-        (typename File_Blocks_::Discrete_Iterator& file_it,
+        (typename File_Blocks_::Write_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_delete,
          const std::map< TIndex, std::set< TObject > >& to_insert,
 	 Update_Logger& update_logger);
 
     template< class Update_Logger >
+    void copy_and_delete_on_the_fly(
+        uint64* source_start_ptr, uint64* dest_start_ptr,
+        typename File_Blocks_::Write_Iterator& file_it, uint32 idx_size,
+        const std::map< TIndex, std::set< TObject > >& to_delete,
+        typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it,
+        bool& block_modified, uint8*& insert_ptr,
+        Update_Logger& update_logger);
+
+    template< class Update_Logger >
+    uint32 skip_deleted_objects(
+        uint64* source_start_ptr, uint64* dest_start_ptr,
+        const std::set< TObject >& objs_to_delete, uint32 idx_size,
+        Update_Logger& update_logger, const TIndex& idx);
+
+    bool read_block_or_blocks(
+        typename File_Blocks_::Write_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size);
+
+    void flush_or_delete_block(
+        uint64* start_ptr, uint bytes_written, typename File_Blocks_::Write_Iterator& file_it,
+        uint32 idx_size);
+
+    template< class Update_Logger >
     void update_segments
-        (typename File_Blocks_::Discrete_Iterator& file_it,
+        (typename File_Blocks_::Write_Iterator& file_it,
          const std::map< TIndex, std::set< TObject > >& to_delete,
          const std::map< TIndex, std::set< TObject > >& to_insert,
 	 Update_Logger& update_logger);
 };
 
-/** Implementation Block_Backend_Basic_Iterator: ----------------------------*/
-
-template< class TIndex, class TObject >
-Block_Backend_Basic_Iterator< TIndex, TObject >::
-    Block_Backend_Basic_Iterator(uint32 block_size_, bool is_end)
-    : Block_Backend_Basic_Ref(block_size_, 0), block_size(block_size_),
-      current_idx_pos(0), current_index(0), object_handle(*this) {}
-
-
-template< class TIndex, class TObject >
-Block_Backend_Basic_Iterator< TIndex, TObject >::
-    Block_Backend_Basic_Iterator(const Block_Backend_Basic_Iterator& it)
-    : Block_Backend_Basic_Ref(it.block_size, it.get_pos()), block_size(it.block_size),
-      current_idx_pos(0), current_index(0), object_handle(*this)
-{
-  memcpy(get_buffer().ptr, it.get_buffer().ptr, block_size);
-  current_idx_pos = (uint32*)(get_buffer().ptr + ((uint8*)it.current_idx_pos - it.get_buffer().ptr));
-}
-
-
-template< class TIndex, class TObject >
-Block_Backend_Basic_Iterator< TIndex, TObject >::~Block_Backend_Basic_Iterator()
-{
-  delete current_index;
-  current_index = 0;
-}
-
-
-template< class TIndex, class TObject >
-bool Block_Backend_Basic_Iterator< TIndex, TObject >::advance()
-{
-  inc_pos(TObject::size_of(get_ptr()));
-
-  // if we have still the same index, we're done
-  if (get_pos() < *current_idx_pos)
-    return true;
-
-  // invalidate cached index
-  if (current_index != 0)
-  {
-    delete current_index;
-    current_index = 0;
-  }
-
-  return false;
-}
-
-template< class TIndex, class TObject >
-const TIndex& Block_Backend_Basic_Iterator< TIndex, TObject >::index()
-{
-  if (current_index == 0)
-    current_index = new TIndex((void*)(current_idx_pos + 1));
-  return *current_index;
-}
-
-template< class TIndex, class TObject >
-const TObject& Block_Backend_Basic_Iterator< TIndex, TObject >::object()
-{
-  return object_handle.object();
-}
-
-/** Implementation Block_Backend_Flat_Iterator: ----------------------------*/
-
-template< class TIndex, class TObject, class TIterator >
-Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::
-    Block_Backend_Flat_Iterator
-    (File_Blocks_& file_blocks_, uint32 block_size_, bool is_end)
-  : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, is_end),
-    file_blocks(file_blocks_), file_it(file_blocks_.flat_begin()),
-    file_end(file_blocks_.flat_end())
-{
-  if (is_end)
-  {
-    file_it = file_end;
-    return;
-  }
-
-  if (read_block())
-    return;
-  while (true)
-  {
-    if (search_next_index())
-      return;
-
-    ++file_it;
-    if (read_block())
-      return;
-  }
-}
-
-template< class TIndex, class TObject, class TIterator >
-const Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >& Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::operator=
-    (const Block_Backend_Flat_Iterator& it)
-{
-  if (this == &it)
-    return *this;
-  this->~Block_Backend_Flat_Iterator();
-  new (this) Block_Backend_Flat_Iterator(it);
-  return *this;
-}
-
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::operator==
-    (const Block_Backend_Flat_Iterator& it) const
-{
-  bool res((this->get_pos() == it.get_pos()) && (file_it == it.file_it));
-  return (res);
-}
-
-template< class TIndex, class TObject, class TIterator >
-const Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >&
-    Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::operator++()
-{
-  if (this->advance())
-    return *this;
-
-  while (true)
-  {
-    if (search_next_index())
-      return *this;
-
-    ++file_it;
-    if (read_block())
-      return *this;
-  }
-}
-
-// returns true if we have found something
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::search_next_index()
-{
-  // search for the next suitable index
-  this->current_idx_pos = (uint32*)(this->get_ptr());
-  if (this->get_pos() < this->get_used_block_size())
-  {
-    if (this->current_index)
-      delete this->current_index;
-    this->current_index = new TIndex((void*)(this->current_idx_pos + 1));
-    typename File_Blocks_::Flat_Iterator next_it(file_it);
-    if (file_it.is_out_of_range(*this->current_index))
-      throw File_Error(file_it.block_it->pos,
-		file_blocks.get_index().get_data_file_name(),
-	        "Block_Backend: index out of range.");
-    this->inc_pos(4);
-    this->inc_pos(TIndex::size_of(this->get_ptr()));
-    return true;
-  }
-
-  return false;
-}
-
-// returns true if we are done
-// if we have loaded a new block, returns false to trigger search_next_index()
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Flat_Iterator< TIndex, TObject, TIterator >::read_block()
-{
-  if (file_it == file_end)
-  {
-    // there is no block left
-    this->set_pos(0);
-    return true;
-  }
-  this->set_pos(4);
-  file_blocks.read_block(file_it, this->get_load_target());
-
-  return false;
-}
-
-/** Implementation Block_Backend_Discrete_Iterator: -------------------------*/
-
-template< class TIndex, class TObject, class TIterator >
-Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::
-    Block_Backend_Discrete_Iterator
-    (File_Blocks_& file_blocks_,
-     const TIterator& index_it_, const TIterator& index_end_,
-     uint32 block_size_)
-    : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, false),
-      file_blocks(file_blocks_),
-      file_it(file_blocks_.discrete_begin(index_it_, index_end_)),
-      file_end(file_blocks_.discrete_end()),
-      index_it(index_it_), index_end(index_end_)
-{
-  if (read_block())
-    return;
-  while (true)
-  {
-    if (search_next_index())
-      return;
-
-    ++file_it;
-    if (read_block())
-      return;
-  }
-}
-
-template< class TIndex, class TObject, class TIterator >
-const Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >&
-    Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::
-    operator=(const Block_Backend_Discrete_Iterator& it)
-{
-  if (this == &it)
-    return *this;
-  this->~Block_Backend_Discrete_Iterator();
-  new (this) Block_Backend_Discrete_Iterator(it);
-  return *this;
-}
-
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::operator==
-    (const Block_Backend_Discrete_Iterator& it) const
-{
-  bool res((this->get_pos() == it.get_pos()) && (file_it == it.file_it));
-  return (res);
-}
-
-template< class TIndex, class TObject, class TIterator >
-const Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >&
-    Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::operator++()
-{
-  if (this->advance())
-    return *this;
-
-  while (true)
-  {
-    if (search_next_index())
-      return *this;
-
-    ++file_it;
-    if (read_block())
-      return *this;
-  }
-}
-
-// returns true if we have found something
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::search_next_index()
-{
-  // search for the next suitable index
-  this->current_idx_pos = (uint32*)(this->get_ptr());
-  while (this->get_pos() < this->get_used_block_size())
-  {
-    this->inc_pos(4);
-
-    if (this->current_index)
-      delete this->current_index;
-    this->current_index = new TIndex(this->get_ptr());
-    while ((index_it != index_end) && (*index_it < *(this->current_index)))
-      ++index_it;
-    if (index_it == index_end)
-    {
-      // there cannot be data anymore, because there is no valid index left
-      file_it = file_end;
-      this->set_pos(0);
-      return true;
-    }
-    if (*index_it == *(this->current_index))
-    {
-      // we have reached the next valid index
-      this->inc_pos(TIndex::size_of(this->get_ptr()));
-      return true;
-    }
-    delete this->current_index;
-    this->current_index = 0;
-
-    this->set_pos(*(this->current_idx_pos));
-    this->current_idx_pos = (uint32*)(this->get_ptr());
-  }
-
-  return false;
-}
-
-// returns true if we have found something
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator >::read_block()
-{
-  // we need to load a new block
-  // skip empty blocks
-  while ((!(file_it == file_end)) &&
-    (file_it.block_type() == File_Block_Index_Entry< TIndex >::EMPTY))
-    ++file_it;
-  if (file_it == file_end)
-  {
-    // there is no block left
-    this->set_pos(0);
-    return true;
-  }
-  this->set_pos(4);
-  file_blocks.read_block(file_it, this->get_load_target());
-
-  return false;
-}
-
-/** Implementation Block_Backend_Range_Iterator: -------------------------*/
-
-template< class TIndex, class TObject, class TIterator >
-Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::Block_Backend_Range_Iterator
-    (File_Blocks_& file_blocks_,
-     const Default_Range_Iterator< TIndex >& index_it_,
-     const Default_Range_Iterator< TIndex >& index_end_, uint32 block_size_)
-  : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, false),
-    file_blocks(file_blocks_),
-    file_it(file_blocks_.range_begin(index_it_, index_end_)),
-    file_end(file_blocks_.range_end()),
-    index_it(index_it_), index_end(index_end_)
-{
-  if (read_block())
-    return;
-  while (true)
-  {
-    if (search_next_index())
-      return;
-
-    ++file_it;
-    if (read_block())
-      return;
-  }
-}
-
-
-template< class TIndex, class TObject, class TIterator >
-Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::Block_Backend_Range_Iterator
-    (File_Blocks_& file_blocks_,
-     const Default_Range_Iterator< TIndex >& index_it_,
-     const Default_Range_Iterator< TIndex >& index_end_, uint32 block_size_,
-     const TIndex& min_idx)
-  : Block_Backend_Basic_Iterator< TIndex, TObject >(block_size_, false),
-    file_blocks(file_blocks_),
-    file_it(file_blocks_.range_begin(index_it_, index_end_)),
-    file_end(file_blocks_.range_end()),
-    index_it(index_it_), index_end(index_end_)
-{
-  while (!(index_it == index_end) && !(min_idx < index_it.upper_bound()))
-    ++index_it;
-
-  if (read_block())
-    return;
-  while (true)
-  {
-    if (search_next_index(min_idx))
-      return;
-
-    ++file_it;
-    if (read_block())
-      return;
-  }
-}
-
-
-template< class TIndex, class TObject, class TIterator >
-const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
-    Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::operator=
-    (const Block_Backend_Range_Iterator& it)
-{
-  if (this == &it)
-    return *this;
-  this->~Block_Backend_Range_Iterator();
-  new (this) Block_Backend_Range_Iterator(it);
-  return *this;
-}
-
-
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::operator==
-    (const Block_Backend_Range_Iterator& it) const
-{
-  return ((this->get_pos() == it.get_pos()) && (file_it == it.file_it));
-}
-
-
-template< class TIndex, class TObject, class TIterator >
-const Block_Backend_Range_Iterator< TIndex, TObject, TIterator >&
-    Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::operator++()
-{
-  if (this->advance())
-    return *this;
-
-  while (true)
-  {
-    if (search_next_index())
-      return *this;
-
-    ++file_it;
-    if (read_block())
-      return *this;
-  }
-}
-
-
-// returns true if we have found something
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_index()
-{
-  // search for the next suitable index
-  this->current_idx_pos = (uint32*)(this->get_ptr());
-  while (this->get_pos() < this->get_used_block_size())
-  {
-    this->inc_pos(4);
-
-    if (this->current_index)
-      delete this->current_index;
-    this->current_index = new TIndex(this->get_ptr());
-    while ((index_it != index_end) &&
-      (!(*(this->current_index) < index_it.upper_bound())))
-      ++(index_it);
-    if (index_it == index_end)
-    {
-      // there cannot be data anymore, because there is no valid index left
-      file_it = file_end;
-      this->set_pos(0);
-      return true;
-    }
-    if (!(*(this->current_index) < index_it.lower_bound()))
-    {
-      // we have reached the next valid index
-      this->inc_pos(TIndex::size_of(this->get_ptr()));
-      return true;
-    }
-    delete this->current_index;
-    this->current_index = 0;
-
-    this->set_pos(*(this->current_idx_pos));
-    this->current_idx_pos = (uint32*)(this->get_ptr());
-  }
-
-  return false;
-}
-
-
-// returns true if we have found something
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::search_next_index(const TIndex& min_idx)
-{
-  // search for the next suitable index
-  this->current_idx_pos = (uint32*)(this->get_ptr());
-  while (this->get_pos() < this->get_used_block_size())
-  {
-    this->inc_pos(4);
-
-    if (this->current_index)
-      delete this->current_index;
-    this->current_index = new TIndex(this->get_ptr());
-    while ((index_it != index_end) &&
-      (!(*(this->current_index) < index_it.upper_bound())))
-      ++(index_it);
-    if (index_it == index_end)
-    {
-      // there cannot be data anymore, because there is no valid index left
-      file_it = file_end;
-      this->set_pos(0);
-      return true;
-    }
-    if (!(*(this->current_index) < index_it.lower_bound()) && !(*(this->current_index) < min_idx))
-    {
-      // we have reached the next valid index
-      this->inc_pos(TIndex::size_of(this->get_ptr()));
-      return true;
-    }
-    delete this->current_index;
-    this->current_index = 0;
-
-    this->set_pos(*(this->current_idx_pos));
-    this->current_idx_pos = (uint32*)(this->get_ptr());
-  }
-
-  return false;
-}
-
-
-// returns true if we have found something
-template< class TIndex, class TObject, class TIterator >
-bool Block_Backend_Range_Iterator< TIndex, TObject, TIterator >::read_block()
-{
-  // we need to load a new block
-  if (file_it == file_end)
-  {
-    // there is no block left
-    this->set_pos(0);
-    return true;
-  }
-  this->set_pos(4);
-  file_blocks.read_block(file_it, this->get_load_target());
-
-  return false;
-}
-
-/** Implementation Block_Backend: -------------------------------------------*/
 
 template< class TIndex, class TObject, class TIterator >
 Block_Backend< TIndex, TObject, TIterator >::Block_Backend(File_Blocks_Index_Base* index_)
@@ -892,11 +660,10 @@ void Block_Backend< TIndex, TObject, TIterator >::update
       it(to_insert.begin()); it != to_insert.end(); ++it)
     relevant_idxs.insert(it->first);
 
-  typename File_Blocks_::Discrete_Iterator
-      file_it(file_blocks.discrete_begin
-      (relevant_idxs.begin(), relevant_idxs.end()));
+  typename File_Blocks_::Write_Iterator file_it
+      = file_blocks.write_begin(relevant_idxs.begin(), relevant_idxs.end(), true);
 
-  while (!(file_it == file_blocks.discrete_end()))
+  while (file_it.lower_bound() != relevant_idxs.end())
   {
     if (file_it.block_type() == File_Block_Index_Entry< TIndex >::EMPTY)
       create_from_scratch(file_it, to_insert);
@@ -1038,9 +805,61 @@ void Block_Backend< TIndex, TObject, TIterator >::calc_split_idxs
   }
 }
 
+
+template< class Index, class Object, class Iterator >
+void Block_Backend< Index, Object, Iterator >::flush_if_necessary_and_write_obj(
+    uint64* start_ptr, uint8*& insert_ptr, typename File_Blocks_::Write_Iterator& file_it,
+    const Index& idx, const Object& obj)
+{
+  uint32 idx_size = idx.size_of();
+  uint32 obj_size = obj.size_of();
+
+  if (insert_ptr - (uint8*)start_ptr + obj_size > block_size)
+  {
+    uint bytes_written = insert_ptr - (uint8*)start_ptr;
+    if (bytes_written > 8 + idx_size)
+    {
+      *(uint32*)start_ptr = bytes_written;
+      *(((uint32*)start_ptr)+1) = bytes_written;
+      file_it = file_blocks.insert_block(file_it, start_ptr, bytes_written - 4);
+    }
+    if (idx_size + obj_size + 8 > block_size)
+    {
+      if (obj_size > 64*1024*1024)
+          throw File_Error(0, data_filename, "Block_Backend: an item's size exceeds limit of 64 MiB.");
+
+      uint buf_scale = (idx_size + obj_size + 7)/block_size + 1;
+      Void64_Pointer< uint64 > large_buf(buf_scale * block_size);
+      *(uint32*)large_buf.ptr = block_size;
+      *(((uint32*)large_buf.ptr)+1) = idx_size + obj_size + 8;
+      memcpy(large_buf.ptr+1, start_ptr+1, idx_size);
+      obj.to_data(((uint8*)large_buf.ptr) + 8 + idx_size);
+
+      for (uint i = 0; i+1 < buf_scale; ++i)
+      {
+        file_it = file_blocks.insert_block(
+            file_it, large_buf.ptr + i*block_size/8, block_size,
+            i == 0 ? idx_size + obj_size + 4 : 0, idx);
+      }
+      file_it = file_blocks.insert_block(
+          file_it, large_buf.ptr + (buf_scale-1)*block_size/8, idx_size + obj_size + 8 - block_size*(buf_scale-1),
+          0, idx);
+
+      insert_ptr = ((uint8*)start_ptr) + 8 + idx_size;
+      return;
+    }
+    else
+      insert_ptr = ((uint8*)start_ptr) + 8 + idx_size;
+  }
+
+  obj.to_data(insert_ptr);
+  insert_ptr = insert_ptr + obj_size;
+}
+
+
 template< class TIndex, class TObject, class TIterator >
 void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
-    (typename File_Blocks_::Discrete_Iterator& file_it,
+    (typename File_Blocks_::Write_Iterator& file_it,
      const std::map< TIndex, std::set< TObject > >& to_insert)
 {
   std::map< TIndex, uint32 > sizes;
@@ -1061,13 +880,13 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     else
     {
       // only add nonempty indices
-      current_size += it->first.size_of();
+      current_size += fit->size_of();
       for (typename std::set< TObject >::const_iterator it2(it->second.begin());
           it2 != it->second.end(); ++it2)
         current_size += it2->size_of();
     }
 
-    sizes[it->first] += current_size;
+    sizes[*fit] += current_size;
     vsizes.push_back(current_size);
   }
   calc_split_idxs(split, vsizes, file_it.lower_bound(), file_it.upper_bound());
@@ -1083,79 +902,74 @@ void Block_Backend< TIndex, TObject, TIterator >::create_from_scratch
     typename std::map< TIndex, std::set< TObject > >::const_iterator
         it(to_insert.find(*fit));
 
-    if ((split_it != split.end()) && (it->first == *split_it))
+    if ((split_it != split.end()) && (*fit == *split_it))
     {
-      *(uint32*)buffer.ptr = pos - buffer.ptr;
-      file_it = file_blocks.insert_block(file_it, buffer.ptr, max_size);
-      ++file_it;
+      if (pos > buffer.ptr + 4)
+      {
+        *(uint32*)buffer.ptr = pos - buffer.ptr;
+        file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size);
+        pos = buffer.ptr + 4;
+      }
       ++split_it;
-      pos = buffer.ptr + 4;
       max_size = 0;
     }
 
-    if (sizes[it->first] > max_size)
-      max_size = sizes[it->first];
+    if (sizes[*fit] > max_size)
+      max_size = sizes[*fit];
 
-    if (sizes[it->first] == 0)
+    if (sizes[*fit] == 0)
       continue;
-    else if (sizes[it->first] < block_size - 4)
+    else if (sizes[*fit] < block_size - 4)
     {
       uint8* current_pos(pos);
-      it->first.to_data(pos + 4);
-      pos = pos + it->first.size_of() + 4;
-      for (typename std::set< TObject >::const_iterator
-	it2(it->second.begin()); it2 != it->second.end(); ++it2)
+      fit->to_data(pos + 4);
+      pos = pos + fit->size_of() + 4;
+      if (it != to_insert.end())
       {
-	it2->to_data(pos);
-	pos = pos + it2->size_of();
+        for (typename std::set< TObject >::const_iterator
+          it2(it->second.begin()); it2 != it->second.end(); ++it2)
+        {
+          it2->to_data(pos);
+          pos = pos + it2->size_of();
+        }
       }
       *(uint32*)current_pos = pos - buffer.ptr;
     }
     else
     {
-      it->first.to_data(pos + 4);
-      pos = pos + it->first.size_of() + 4;
+      fit->to_data(pos + 4);
+      pos = pos + fit->size_of() + 4;
 
-      if (!(it->second.empty()))
+      if (it != to_insert.end())
       {
-	for (typename std::set< TObject >::const_iterator
-	  it2(it->second.begin()); it2 != it->second.end(); ++it2)
-	{
-	  if (pos - buffer.ptr + it2->size_of() > block_size)
-	  {
-	    *(uint32*)buffer.ptr = pos - buffer.ptr;
-	    *(uint32*)(buffer.ptr+4) = *(uint32*)buffer.ptr;
-	    file_it = file_blocks.insert_block(file_it, buffer.ptr, (*(uint32*)(buffer.ptr+4)) - 4);
-	    ++file_it;
-	    pos = buffer.ptr + 8 + it->first.size_of();
-	    if (it->first.size_of() + it2->size_of() + 8 > block_size)
-	      throw File_Error
-	       (0, data_filename,
-		"Block_Backend: an item's size exceeds block size.");
-	  }
-
-	  it2->to_data(pos);
-	  pos = pos + it2->size_of();
-	}
+        for (typename std::set< TObject >::const_iterator
+            it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+          flush_if_necessary_and_write_obj(
+              (uint64*)buffer.ptr, pos, file_it, *fit, *it2);
       }
 
-      *(uint32*)(buffer.ptr+4) = pos - buffer.ptr;
-      max_size = (*(uint32*)(buffer.ptr + 4)) - 4;
+      if (pos - buffer.ptr > fit->size_of() + 8)
+      {
+        *(uint32*)(buffer.ptr+4) = pos - buffer.ptr;
+        max_size = (*(uint32*)(buffer.ptr + 4)) - 4;
+      }
+      else
+        pos = buffer.ptr + 4;
     }
   }
   if (pos > buffer.ptr + 4)
   {
     *(uint32*)buffer.ptr = pos - buffer.ptr;
-    file_it = file_blocks.insert_block(file_it, buffer.ptr, max_size);
-    ++file_it;
+    file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size);
   }
   ++file_it;
 }
 
+
 template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
 void Block_Backend< TIndex, TObject, TIterator >::update_group
-    (typename File_Blocks_::Discrete_Iterator& file_it,
+    (typename File_Blocks_::Write_Iterator& file_it,
      const std::map< TIndex, std::set< TObject > >& to_delete,
      const std::map< TIndex, std::set< TObject > >& to_insert,
      Update_Logger& update_logger)
@@ -1167,7 +981,7 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   Void_Pointer< uint8 > source(block_size);
   Void_Pointer< uint8 > dest(block_size);
 
-  file_blocks.read_block(file_it, source.ptr);
+  file_blocks.read_block(file_it, (uint64*)source.ptr);
 
   // prepare a unified iterator over all indices, from file, to_delete
   // and to_insert
@@ -1269,15 +1083,15 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
   // really write data
   typename std::vector< TIndex >::const_iterator split_it(split.begin());
   pos = (dest.ptr + 4);
-  uint32 max_size(0);
+  uint32 max_size = 0;
   for (typename std::map< TIndex, Index_Collection< TIndex, TObject > >::const_iterator
     it(index_values.begin()); it != index_values.end(); ++it)
   {
     if ((split_it != split.end()) && (it->first == *split_it))
     {
       *(uint32*)dest.ptr = pos - dest.ptr;
-      file_it = file_blocks.insert_block(file_it, dest.ptr, max_size);
-      ++file_it;
+      if (pos - dest.ptr > 8)
+        file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, max_size);
       ++split_it;
       pos = dest.ptr + 4;
       max_size = 0;
@@ -1351,26 +1165,11 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
       if ((it->second.insert_it != to_insert.end()) &&
 	(!(it->second.insert_it->second.empty())))
       {
-	for (typename std::set< TObject >::const_iterator
-	  it2(it->second.insert_it->second.begin());
-	it2 != it->second.insert_it->second.end(); ++it2)
-	{
-	  if (pos - dest.ptr + it2->size_of() > block_size)
-	  {
-	    *(uint32*)dest.ptr = pos - dest.ptr;
-	    *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-	    file_it = file_blocks.insert_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
-	    ++file_it;
-	    pos = dest.ptr + 8 + it->first.size_of();
-	    if (it->first.size_of() + it2->size_of() + 8 > block_size)
-	      throw File_Error
-		    (0, data_filename,
-		     "Block_Backend: an item's size exceeds block size.");
-	  }
-
-	    it2->to_data(pos);
-	    pos = pos + it2->size_of();
-	}
+        for (typename std::set< TObject >::const_iterator
+            it2(it->second.insert_it->second.begin());
+            it2 != it->second.insert_it->second.end(); ++it2)
+          flush_if_necessary_and_write_obj(
+              (uint64*)dest.ptr, pos, file_it, it->first, *it2);
       }
 
       if ((uint32)(pos - dest.ptr) == it->first.size_of() + 8)
@@ -1378,160 +1177,254 @@ void Block_Backend< TIndex, TObject, TIterator >::update_group
 	pos = dest.ptr + 4;
 
       *(uint32*)(dest.ptr+4) = pos - dest.ptr;
-      max_size = (*(uint32*)(dest.ptr + 4)) - 4;
+      max_size = pos - dest.ptr - 4;
     }
   }
 
   if (pos > dest.ptr + 4)
   {
     *(uint32*)dest.ptr = pos - dest.ptr;
-    file_it = file_blocks.replace_block(file_it, dest.ptr, max_size);
+    file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, max_size);
     ++file_it;
-
   }
   else
-    file_it = file_blocks.replace_block(file_it, 0, 0);
+    file_it = file_blocks.erase_block(file_it);
 }
+
+
+template< class TIndex, class TObject, class TIterator >
+void Block_Backend< TIndex, TObject, TIterator >::flush_or_delete_block(
+    uint64* start_ptr, uint bytes_written, typename File_Blocks_::Write_Iterator& file_it, uint32 idx_size)
+{
+  if (bytes_written > 8 + idx_size)
+  {
+    *(uint32*)start_ptr = bytes_written;
+    *(((uint32*)start_ptr)+1) = bytes_written;
+    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written - 4);
+    ++file_it;
+  }
+  else
+    file_it = file_blocks.erase_block(file_it);
+}
+
+
+template< class TIndex, class TObject, class TIterator >
+template< class Update_Logger >
+void Block_Backend< TIndex, TObject, TIterator >::copy_and_delete_on_the_fly(
+    uint64* source_start_ptr, uint64* dest_start_ptr,
+    typename File_Blocks_::Write_Iterator& file_it, uint32 idx_size,
+    const std::map< TIndex, std::set< TObject > >& to_delete,
+    typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it,
+    bool& block_modified, uint8*& insert_ptr,
+    Update_Logger& update_logger)
+{
+  file_blocks.read_block(file_it, source_start_ptr);
+
+  block_modified = false;
+  if (delete_it == to_delete.end())
+  {
+    memcpy(dest_start_ptr, source_start_ptr, *(uint32*)source_start_ptr);
+    insert_ptr = ((uint8*)dest_start_ptr) + *(uint32*)source_start_ptr;
+    return;
+  }
+
+  if (idx_size == 0)
+    idx_size = TIndex::size_of(source_start_ptr+1);
+  uint8* spos = ((uint8*)source_start_ptr) + 8 + idx_size;
+  insert_ptr = ((uint8*)dest_start_ptr) + 8 + idx_size;
+  memcpy(dest_start_ptr, source_start_ptr, spos - (uint8*)source_start_ptr);
+
+  //copy everything that is not deleted yet
+  if (*(uint32*)source_start_ptr != *(((uint32*)source_start_ptr)+1))
+    throw File_Error(0, data_filename, "Block_Backend: one index expected - several found.");
+
+  while ((uint32)(spos - (uint8*)source_start_ptr) < *(uint32*)source_start_ptr)
+  {
+    TObject obj(spos);
+    if (delete_it->second.find(obj) == delete_it->second.end())
+    {
+      memcpy(insert_ptr, spos, obj.size_of());
+      insert_ptr = insert_ptr + obj.size_of();
+    }
+    else
+    {
+      block_modified = true;
+      update_logger.deletion(delete_it->first, obj);
+    }
+    spos = spos + obj.size_of();
+  }
+}
+
+
+template< class TIndex, class TObject, class TIterator >
+bool Block_Backend< TIndex, TObject, TIterator >::read_block_or_blocks(
+    typename File_Blocks_::Write_Iterator& file_it, Void64_Pointer< uint64 >& source, uint32& buffer_size)
+{
+  file_blocks.read_block(file_it, source.ptr);
+
+  if (*(((uint32*)source.ptr) + 1) > block_size)
+  {
+    uint32 new_buffer_size = (*(((uint32*)source.ptr) + 1)/block_size + 1) * block_size;
+    if (buffer_size < new_buffer_size)
+    {
+      Void64_Pointer< uint64 > new_source_buffer(new_buffer_size);
+      memcpy(new_source_buffer.ptr, source.ptr, block_size);
+      source.swap(new_source_buffer);
+
+      buffer_size = new_buffer_size;
+    }
+    for (uint i_offset = block_size; i_offset < new_buffer_size; i_offset += block_size)
+    {
+      ++file_it;
+      file_blocks.read_block(file_it, source.ptr + i_offset/8, false);
+    }
+
+    return true;
+  }
+  return false;
+}
+
+
+template< class TIndex, class TObject, class TIterator >
+template< class Update_Logger >
+uint32 Block_Backend< TIndex, TObject, TIterator >::skip_deleted_objects(
+    uint64* source_start_ptr, uint64* dest_start_ptr,
+    const std::set< TObject >& objs_to_delete, uint32 idx_size,
+    Update_Logger& update_logger, const TIndex& idx)
+{
+  uint32 src_obj_offset = 8 + idx_size;
+  uint32 dest_obj_offset = src_obj_offset;
+  uint32 src_size = *(uint32*)source_start_ptr;
+  memcpy(((uint8*)dest_start_ptr) + 8, ((uint8*)source_start_ptr) + 8, idx_size);
+
+  while (src_obj_offset < src_size)
+  {
+    TObject obj(((uint8*)source_start_ptr) + src_obj_offset);
+    if (objs_to_delete.find(obj) == objs_to_delete.end())
+    {
+      memcpy(
+          ((uint8*)dest_start_ptr) + dest_obj_offset, ((uint8*)source_start_ptr) + src_obj_offset,
+          obj.size_of());
+      dest_obj_offset += obj.size_of();
+    }
+    else
+      update_logger.deletion(idx, obj);
+
+    src_obj_offset += obj.size_of();
+  }
+
+  *(uint32*)dest_start_ptr = dest_obj_offset;
+  *(((uint32*)dest_start_ptr)+1) = dest_obj_offset;
+  memcpy(dest_start_ptr + 1, source_start_ptr + 1, idx_size);
+
+  return src_obj_offset == dest_obj_offset ? 0 : dest_obj_offset;
+}
+
+
+template< typename Object >
+void append_insertables(
+    uint64* dest_start_ptr, uint32 block_size,
+    typename std::set< Object >::const_iterator& cur_insert,
+    const typename std::set< Object >::const_iterator& cur_end)
+{
+  uint32 obj_append_offset = *(uint32*)dest_start_ptr;
+
+  while ((cur_insert != cur_end) && (obj_append_offset + cur_insert->size_of() < block_size))
+  {
+    cur_insert->to_data(((uint8*)dest_start_ptr) + obj_append_offset);
+    obj_append_offset += cur_insert->size_of();
+    ++cur_insert;
+  }
+
+  *(uint32*)dest_start_ptr = obj_append_offset;
+  *(((uint32*)dest_start_ptr)+1) = obj_append_offset;
+}
+
 
 template< class TIndex, class TObject, class TIterator >
 template< class Update_Logger >
 void Block_Backend< TIndex, TObject, TIterator >::update_segments
-      (typename File_Blocks_::Discrete_Iterator& file_it,
+      (typename File_Blocks_::Write_Iterator& file_it,
        const std::map< TIndex, std::set< TObject > >& to_delete,
        const std::map< TIndex, std::set< TObject > >& to_insert,
        Update_Logger& update_logger)
 {
-  Void_Pointer< uint8 > source(block_size);
-  Void_Pointer< uint8 > dest(block_size);
+  file_it.start_segments_mode();
+  uint32 buffer_size = block_size;
+  Void64_Pointer< uint64 > source(buffer_size);
+  Void64_Pointer< uint64 > dest(buffer_size);
+  TIndex idx = file_it.block().index;
   typename std::map< TIndex, std::set< TObject > >::const_iterator
-      delete_it(to_delete.find(*(file_it.lower_bound())));
+      delete_it(to_delete.find(idx));
   typename std::map< TIndex, std::set< TObject > >::const_iterator
-      insert_it(to_insert.find(*(file_it.lower_bound())));
+      insert_it(to_insert.find(idx));
+  uint32 idx_size = idx.size_of();
 
   typename std::set< TObject >::const_iterator cur_insert;
   if (insert_it != to_insert.end())
     cur_insert = insert_it->second.begin();
 
-  while (file_it.block_type() == File_Block_Index_Entry< TIndex >::SEGMENT)
+  while (!file_it.is_end() && file_it.block().index == idx)
   {
-    bool block_modified(false);
-
-    file_blocks.read_block(file_it, source.ptr);
-
-    uint8* spos(source.ptr + 8 + TIndex::size_of(source.ptr + 8));
-    uint8* pos(dest.ptr + 8 + TIndex::size_of(source.ptr + 8));
-    memcpy(dest.ptr, source.ptr, spos - source.ptr);
-
-    //copy everything that is not deleted yet
-    if (*(uint32*)source.ptr != *((uint32*)(source.ptr + 4)))
-      throw File_Error(0, data_filename,
-	    "Block_Backend::1: one index expected - several found.");
-    while ((uint32)(spos - source.ptr) < *(uint32*)source.ptr)
+    typename File_Blocks_::Write_Iterator delta_it = file_it;
+    bool oversized = read_block_or_blocks(file_it, source, buffer_size);
+    if (oversized)
     {
-      TObject obj(spos);
-      if ((delete_it == to_delete.end()) ||
-	(delete_it->second.find(obj) == delete_it->second.end()))
+      ++file_it;
+      TObject obj(((uint8*)source.ptr) + 8 + idx_size);
+      if (delete_it != to_delete.end() && delete_it->second.find(obj) != delete_it->second.end())
+        file_blocks.erase_blocks(delta_it, file_it);
+    }
+    else
+    {
+      if (*(uint32*)source.ptr < 8 + idx_size)
+      { // something has seriously gone wrong - such a block shuld not exist
+        ++file_it;
+        continue;
+      }
+
+      uint32 obj_append_offset = 0;
+      if (delete_it != to_delete.end())
+        obj_append_offset = skip_deleted_objects(
+            source.ptr, dest.ptr, delete_it->second, idx_size, update_logger, idx);
+      else
+        memcpy(dest.ptr, source.ptr, *(uint32*)source.ptr);
+
+      if (obj_append_offset)
       {
-	memcpy(pos, spos, obj.size_of());
-	pos = pos + obj.size_of();
+        if (insert_it != to_insert.end())
+          append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
+        flush_or_delete_block(dest.ptr, *(uint32*)dest.ptr, file_it, idx_size);
+      }
+      else if (insert_it != to_insert.end() && *(uint32*)source.ptr < block_size/2)
+      {
+        append_insertables< TObject >(dest.ptr, block_size, cur_insert, insert_it->second.end());
+        flush_or_delete_block(dest.ptr, *(uint32*)dest.ptr, file_it, idx_size);
       }
       else
-      {
-	block_modified = true;
-	update_logger.deletion(delete_it->first, obj);
-      }
-      spos = spos + obj.size_of();
+        ++file_it;
     }
-
-    // if nothing is modified, we keep the block untouched
-    if (!block_modified)
-    {
-      ++file_it;
-      continue;
-    }
-
-    // fill block with new data if any
-    if (insert_it != to_insert.end())
-    {
-      while ((cur_insert != insert_it->second.end())
-	&& (pos + cur_insert->size_of() < dest.ptr + block_size))
-      {
-	cur_insert->to_data(pos);
-	pos = pos + cur_insert->size_of();
-	++cur_insert;
-      }
-    }
-
-    if (pos > dest.ptr + 8 + TIndex::size_of(source.ptr + 8))
-    {
-      *(uint32*)dest.ptr = pos - dest.ptr;
-      *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-      file_it = file_blocks.replace_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
-      ++file_it;
-    }
-    else
-      file_it = file_blocks.replace_block(file_it, 0, 0);
   }
 
-  file_blocks.read_block(file_it, source.ptr);
-
-  uint8* spos(source.ptr + 8 + TIndex::size_of(source.ptr + 8));
-  uint8* pos(dest.ptr + 8 + TIndex::size_of(source.ptr + 8));
-  memcpy(dest.ptr, source.ptr, spos - source.ptr);
-
-  //copy everything that is not deleted yet
-  if (*(uint32*)source.ptr != *((uint32*)(source.ptr + 4)))
-      throw File_Error(0, data_filename,
-	  "Block_Backend::2: one index expected - several found.");
-  while ((uint32)(spos - source.ptr) < *(uint32*)source.ptr)
-  {
-    TObject obj(spos);
-    if ((delete_it == to_delete.end()) ||
-      (delete_it->second.find(obj) == delete_it->second.end()))
-    {
-      memcpy(pos, spos, obj.size_of());
-      pos = pos + obj.size_of();
-    }
-    else
-      update_logger.deletion(delete_it->first, obj);
-    spos = spos + obj.size_of();
-  }
-
-  // fill block with new data if any
+  uint8* pos = ((uint8*)dest.ptr) + idx_size + 8;
+  memcpy(dest.ptr+1, source.ptr+1, idx_size);
   if (insert_it != to_insert.end())
   {
     while (cur_insert != insert_it->second.end())
     {
-      if (pos - dest.ptr + cur_insert->size_of() + TIndex::size_of(source.ptr + 8)
-	>= block_size)
-      {
-	*(uint32*)dest.ptr = pos - dest.ptr;
-	*(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-	file_it = file_blocks.insert_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
-	++file_it;
-	pos = dest.ptr + 8 + TIndex::size_of(source.ptr + 8);
-	if (TIndex::size_of(source.ptr + 8) + cur_insert->size_of() + 8 > block_size)
-	  throw File_Error
-	  (0, data_filename,
-	   "Block_Backend: an item's size exceeds block size.");
-      }
-
-      cur_insert->to_data(pos);
-      pos = pos + cur_insert->size_of();
+      flush_if_necessary_and_write_obj(dest.ptr, pos, file_it, idx, *cur_insert);
       ++cur_insert;
     }
   }
-
-  if (pos > dest.ptr + 8 + TIndex::size_of(source.ptr + 8))
+  if (pos > ((uint8*)dest.ptr) + idx_size + 8)
   {
-    *(uint32*)dest.ptr = pos - dest.ptr;
-    *(uint32*)(dest.ptr+4) = *(uint32*)dest.ptr;
-    file_it = file_blocks.replace_block(file_it, dest.ptr, (*(uint32*)dest.ptr) - 4);
-    ++file_it;
-
+    *(uint32*)dest.ptr = pos - (uint8*)dest.ptr;
+    *(((uint32*)dest.ptr)+1) = pos - (uint8*)dest.ptr;
+    file_it = file_blocks.insert_block(file_it, dest.ptr, pos - (uint8*)dest.ptr - 4);
   }
-  else
-    file_it = file_blocks.replace_block(file_it, 0, 0);
+
+  file_it.end_segments_mode();
 }
+
 
 #endif

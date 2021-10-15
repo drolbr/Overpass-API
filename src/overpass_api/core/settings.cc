@@ -116,29 +116,29 @@ Basic_Settings& basic_settings()
 
 Osm_Base_Settings::Osm_Base_Settings()
 :
-  NODES(new OSM_File_Properties< Uint32_Index >("nodes", 512*1024, 256*1024)),
+  NODES(new OSM_File_Properties< Uint32_Index >("nodes", 128*1024, 256*1024)),
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
-      ("node_tags_local", 512*1024, 0)),
+      ("node_tags_local", 128*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("node_tags_global", 512*1024, 0)),
+      ("node_tags_global", 128*1024, 0)),
   NODE_KEYS(new OSM_File_Properties< Uint32_Index >
       ("node_keys", 512*1024, 0)),
 
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways", 512*1024, 256*1024)),
+  WAYS(new OSM_File_Properties< Uint31_Index >("ways", 128*1024, 256*1024)),
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
-      ("way_tags_local", 512*1024, 0)),
+      ("way_tags_local", 128*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("way_tags_global", 512*1024, 0)),
+      ("way_tags_global", 128*1024, 0)),
   WAY_KEYS(new OSM_File_Properties< Uint32_Index >
       ("way_keys", 512*1024, 0)),
 
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations", 1024*1024, 256*1024)),
+  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations", 512*1024, 256*1024)),
   RELATION_ROLES(new OSM_File_Properties< Uint32_Index >
       ("relation_roles", 512*1024, 0)),
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
-      ("relation_tags_local", 512*1024, 0)),
+      ("relation_tags_local", 128*1024, 0)),
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("relation_tags_global", 512*1024, 0)),
+      ("relation_tags_global", 128*1024, 0)),
   RELATION_KEYS(new OSM_File_Properties< Uint32_Index >
       ("relation_keys", 512*1024, 0)),
 
@@ -187,13 +187,13 @@ Meta_Settings::Meta_Settings()
   USER_DATA(new OSM_File_Properties< Uint32_Index >
       ("user_data", 512*1024, 0)),
   USER_INDICES(new OSM_File_Properties< Uint32_Index >
-      ("user_indices", 512*1024, 0)),
+      ("user_indices", 128*1024, 0)),
   NODES_META(new OSM_File_Properties< Uint31_Index >
-      ("nodes_meta", 512*1024, 0)),
+      ("nodes_meta", 128*1024, 0)),
   WAYS_META(new OSM_File_Properties< Uint31_Index >
-      ("ways_meta", 512*1024, 0)),
+      ("ways_meta", 128*1024, 0)),
   RELATIONS_META(new OSM_File_Properties< Uint31_Index >
-      ("relations_meta", 512*1024, 0))
+      ("relations_meta", 128*1024, 0))
 {
   idxs_.reserve(5);
   idxs_.push_back(USER_DATA);
@@ -220,44 +220,44 @@ const Meta_Settings& meta_settings()
 
 Attic_Settings::Attic_Settings()
 :
-  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 512*1024, 256*1024)),
-  NODES_UNDELETED(new OSM_File_Properties< Uint31_Index >("nodes_attic_undeleted", 512*1024, 64*1024)),
+  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 128*1024, 256*1024)),
+  NODES_UNDELETED(new OSM_File_Properties< Uint31_Index >("nodes_attic_undeleted", 128*1024, 64*1024)),
   NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type >
-      ("node_attic_indexes", 512*1024, 0)),
+      ("node_attic_indexes", 128*1024, 0)),
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
-      ("node_tags_local_attic", 512*1024, 0)),
+      ("node_tags_local_attic", 128*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("node_tags_global_attic", 2*1024*1024, 0)),
+      ("node_tags_global_attic", 512*1024, 0)),
   NODES_META(new OSM_File_Properties< Uint31_Index >
-      ("nodes_meta_attic", 512*1024, 0)),
+      ("nodes_meta_attic", 128*1024, 0)),
   NODE_CHANGELOG(new OSM_File_Properties< Timestamp >
-      ("node_changelog", 512*1024, 0)),
+      ("node_changelog", 128*1024, 0)),
 
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 512*1024, 256*1024)),
-  WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index >("ways_attic_undeleted", 512*1024, 64*1024)),
+  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 128*1024, 256*1024)),
+  WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index >("ways_attic_undeleted", 128*1024, 64*1024)),
   WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >
-      ("way_attic_indexes", 512*1024, 0)),
+      ("way_attic_indexes", 128*1024, 0)),
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
-      ("way_tags_local_attic", 512*1024, 0)),
+      ("way_tags_local_attic", 128*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("way_tags_global_attic", 2*1024*1024, 0)),
+      ("way_tags_global_attic", 512*1024, 0)),
   WAYS_META(new OSM_File_Properties< Uint31_Index >
-      ("ways_meta_attic", 512*1024, 0)),
+      ("ways_meta_attic", 128*1024, 0)),
   WAY_CHANGELOG(new OSM_File_Properties< Timestamp >
-      ("way_changelog", 512*1024, 0)),
+      ("way_changelog", 128*1024, 0)),
 
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 1024*1024, 256*1024)),
-  RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index >("relations_attic_undeleted", 512*1024, 64*1024)),
+  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 512*1024, 256*1024)),
+  RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index >("relations_attic_undeleted", 128*1024, 64*1024)),
   RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type >
-      ("relation_attic_indexes", 512*1024, 0)),
+      ("relation_attic_indexes", 128*1024, 0)),
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
-      ("relation_tags_local_attic", 512*1024, 0)),
+      ("relation_tags_local_attic", 128*1024, 0)),
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("relation_tags_global_attic", 2*1024*1024, 0)),
+      ("relation_tags_global_attic", 512*1024, 0)),
   RELATIONS_META(new OSM_File_Properties< Uint31_Index >
-      ("relations_meta_attic", 512*1024, 0)),
+      ("relations_meta_attic", 128*1024, 0)),
   RELATION_CHANGELOG(new OSM_File_Properties< Timestamp >
-      ("relation_changelog", 512*1024, 0))
+      ("relation_changelog", 128*1024, 0))
 {
   idxs_.reserve(21);
   idxs_.push_back(NODES);

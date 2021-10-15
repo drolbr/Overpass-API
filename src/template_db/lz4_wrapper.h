@@ -25,7 +25,7 @@
 #undef VERSION
 #endif
 
-#include <exception>
+#include <stdexcept>
 
 #ifdef HAVE_LZ4
 #include <lz4.h>
@@ -34,10 +34,9 @@
 class LZ4_Deflate
 {
 public:
-  struct Error : public std::exception
+  struct Error : public std::runtime_error
   {
-    Error(int error_code_) : error_code(error_code_) {}
-    virtual const char* what() const throw();
+    Error(int error_code_);
     int error_code;
   };
 
@@ -51,10 +50,9 @@ public:
 class LZ4_Inflate
 {
 public:
-  struct Error : public std::exception
+  struct Error : public std::runtime_error
   {
-    Error(int error_code_) : error_code(error_code_) {}
-    virtual const char* what() const throw();
+    Error(int error_code_);
     int error_code;
   };
 

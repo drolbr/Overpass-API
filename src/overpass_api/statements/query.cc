@@ -874,6 +874,10 @@ void Query_Statement::filter_by_tags
      uint64 timestamp, const File_Properties& file_prop, const File_Properties* attic_file_prop,
      Resource_Manager& rman, Transaction& transaction)
 {
+  if (keys.empty() && key_values.empty() && key_regexes.empty() && regkey_regexes.empty()
+      && key_nregexes.empty() && key_nvalues.empty())
+    return;
+
   // generate set of relevant coarse indices
   std::map< uint32, std::vector< typename TObject::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(ids_by_coarse, items);
@@ -1012,6 +1016,10 @@ void Query_Statement::filter_by_tags
      const File_Properties& file_prop,
      Resource_Manager& rman, Transaction& transaction)
 {
+  if (keys.empty() && key_values.empty() && key_regexes.empty() && regkey_regexes.empty()
+      && key_nregexes.empty() && key_nvalues.empty())
+    return;
+
   // generate set of relevant coarse indices
   std::map< uint32, std::vector< typename TObject::Id_Type > > ids_by_coarse;
   generate_ids_by_coarse(ids_by_coarse, items);
