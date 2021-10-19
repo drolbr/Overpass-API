@@ -408,7 +408,10 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   else if (type == RELATION)
     get_elements(refs, this, rman, into.relations, into.attic_relations);
   else if (type == AREA)
+  {
+    get_elements(refs, this, rman, into.ways, into.attic_ways);
     collect_elems_flat(rman, refs, into.areas);
+  }
 
   transfer_output(rman, into);
   rman.health_check(*this);

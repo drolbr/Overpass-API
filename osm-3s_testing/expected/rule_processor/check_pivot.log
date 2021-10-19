@@ -3,6 +3,7 @@
 <note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
 <meta osm_base="mock-up-diff" areas="mock-up-init"/>
 
+  <way id="300"/>
   <area id="2400000300"/>
   <way id="300">
     <nd ref="3000000043"/>
@@ -16,6 +17,7 @@
     <nd ref="3000000043"/>
     <tag k="shapes" v="3"/>
   </way>
+  <way id="300"/>
   <area id="2400000300"/>
   <way id="300">
     <nd ref="3000000043"/>
@@ -29,8 +31,11 @@
     <nd ref="3000000043"/>
     <tag k="shapes" v="3"/>
   </way>
+  <way id="300"/>
   <area id="2400000300"/>
+  <way id="300"/>
   <area id="2400000300"/>
+  <way id="300"/>
   <area id="2400000300"/>
   <way id="300">
     <nd ref="3000000043"/>

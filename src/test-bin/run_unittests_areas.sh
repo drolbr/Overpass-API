@@ -155,18 +155,18 @@ echo "(area[triangle];area[shapes];area[multpoly];);out;" | $BASEDIR/bin/osm3s_q
 $BASEDIR/bin/dispatcher --terminate
 $BASEDIR/bin/dispatcher --areas --terminate
 
-pushd "run/rule_processor/" >/dev/null
-EXEC=rule_processor
-I=1
-evaluate_test "rule_processor"
-if [[ -n $FAILED ]]; then
-{
-  echo `date +%T` "Test rule_processor 1 FAILED."
-}; else
-{
-  echo `date +%T` "Test rule_processor 1 succeeded."
-  rm -R *
-}; fi
-popd >/dev/null
+# pushd "run/rule_processor/" >/dev/null
+# EXEC=rule_processor
+# I=1
+# evaluate_test "rule_processor"
+# if [[ -n $FAILED ]]; then
+# {
+#   echo `date +%T` "Test rule_processor 1 FAILED."
+# }; else
+# {
+#   echo `date +%T` "Test rule_processor 1 succeeded."
+#   rm -R *
+# }; fi
+# popd >/dev/null
 
 #rm -f input/update_database/*
