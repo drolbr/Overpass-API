@@ -435,6 +435,47 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
 }
 
 
+std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end)
+{
+  std::vector< uint32 > parents;
+
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator it(ways_begin); it != ways_end; ++it)
+    parents.push_back(it->first.val());
+  std::sort(parents.begin(), parents.end());
+  parents.erase(unique(parents.begin(), parents.end()), parents.end());
+  if (stmt)
+    rman.health_check(*stmt);
+
+  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+}
+
+
+std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
+     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_begin,
+     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end)
+{
+  std::vector< uint32 > parents;
+
+  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator it(ways_begin); it != ways_end; ++it)
+    parents.push_back(it->first.val());
+  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator it(attic_ways_begin);
+      it != attic_ways_end; ++it)
+    parents.push_back(it->first.val());
+  std::sort(parents.begin(), parents.end());
+  parents.erase(unique(parents.begin(), parents.end()), parents.end());
+  if (stmt)
+    rman.health_check(*stmt);
+
+  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+}
+
+
 std::vector< Relation::Id_Type > relation_relation_member_ids
     (Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels, const uint32* role_id)

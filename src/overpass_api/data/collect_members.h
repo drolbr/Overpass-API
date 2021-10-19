@@ -1016,6 +1016,20 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end);
 
 
+std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end);
+
+
+std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+    (const Statement* stmt, Resource_Manager& rman,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
+     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
+     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_begin,
+     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end);
+
+
 struct Order_By_Node_Id
 {
   bool operator() (const std::pair< Uint32_Index, const Node_Skeleton* >& a,
