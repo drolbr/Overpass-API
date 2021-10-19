@@ -409,7 +409,7 @@ public:
       const Statement& stmt, Resource_Manager& rman)
   : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
     cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman),
-    minlat(0u), maxlat(0x7fff0000)
+    complete_idx(0u), minlat(0u), maxlat(0x7fff0000)
   {
     refill();
   }
@@ -418,7 +418,7 @@ public:
   {
     propagate_inside_flag();
     queue.erase(queue.begin());
-    if (queue.empty())
+    if (queue.empty() || !(queue.begin()->first.val() < complete_idx.val()))
       refill();
   }
   bool is_end() const { return queue.empty(); }
@@ -451,6 +451,7 @@ private:
   Way_Geometry_Store cur_geom_store;
   Way_Geometry_Store attic_geom_store;
   std::map< Uint31_Index, std::map< Full_Way_Ref, Index_Block > > queue;
+  Uint31_Index complete_idx;
   uint32 minlat;
   uint32 maxlat;
 
@@ -493,7 +494,8 @@ private:
         ++attic_it;
       }
 
-      if (!is_compound_idx(idx) && !queue.empty())
+      complete_idx = Uint31_Index(idx.val() & 0x7fffffff);
+      if (!queue.empty() && is_compound_idx(idx) && (queue.begin()->first.val() & 0x7fffffff) < complete_idx.val())
         break;
     }
     
@@ -535,7 +537,8 @@ public:
       const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways_,
       const Statement& stmt, Resource_Manager& rman)
   : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
-    cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman)
+    cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman),
+    complete_idx(0u)
   {
     refill();
   }
@@ -544,7 +547,7 @@ public:
   {
     propagate_inside_flag();
     queue.erase(queue.begin());
-    if (queue.empty())
+    if (queue.empty() || !(queue.begin()->first.val() < complete_idx.val()))
       refill();
   }
   bool is_end() const { return queue.empty(); }
@@ -572,6 +575,7 @@ private:
   Way_Geometry_Store cur_geom_store;
   Way_Geometry_Store attic_geom_store;
   std::map< Uint31_Index, std::map< Full_Way_Ref, Tilewise_Area_Iterator::Index_Block > > queue;
+  Uint31_Index complete_idx;
 
   struct Segment_Collector
   {
@@ -613,7 +617,8 @@ private:
         ++attic_it;
       }
 
-      if (!is_compound_idx(idx) && !queue.empty())
+      complete_idx = Uint31_Index(idx.val() & 0x7fffffff);
+      if (!queue.empty() && is_compound_idx(idx) && (queue.begin()->first.val() & 0x7fffffff) < complete_idx.val())
         break;
     }
   }
