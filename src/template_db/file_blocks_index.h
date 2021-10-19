@@ -200,7 +200,7 @@ void File_Blocks_Index< TIndex >::init_structure_params()
   {
     if (file_name_extension_ != ".legacy")
     {
-      if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION)
+      if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION && *(int32*)index_buf.ptr != 7512)
 	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
       block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
       if (!block_size_)
