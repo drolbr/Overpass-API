@@ -981,6 +981,8 @@ inline Tilewise_Area_Iterator::Relative_Position Tilewise_Area_Iterator::rel_pos
   Uint31_Index idx = get_idx();
   uint32 south = ilat(idx.val(), 0u);
   int32 west = ilon(idx.val(), 0u);
+  if (lat_p < south || lat_p - south > 65535 || lon_p < west || lon_p - west > 65535)
+    return outside;
   const std::map< Full_Way_Ref, Index_Block >& way_blocks = get_obj();
   
   for (std::map< Full_Way_Ref, Index_Block >::const_iterator bit = way_blocks.begin();
@@ -1003,6 +1005,8 @@ inline Tilewise_Area_Iterator::Relative_Position Tilewise_Const_Area_Iterator::r
   Uint31_Index idx = get_idx();
   uint32 south = ilat(idx.val(), 0u);
   int32 west = ilon(idx.val(), 0u);
+  if (lat_p < south || lat_p - south > 65535 || lon_p < west || lon_p - west > 65535)
+    return Tilewise_Area_Iterator::outside;
   const std::map< Full_Way_Ref, Tilewise_Area_Iterator::Index_Block >& way_blocks = get_obj();
   
   for (std::map< Full_Way_Ref, Tilewise_Area_Iterator::Index_Block >::const_iterator bit = way_blocks.begin();
@@ -1085,8 +1089,9 @@ public:
       const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways_,
       const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways_,
       const Statement& stmt, Resource_Manager& rman)
-  : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
-   cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman)
+    : ways(&ways_), attic_ways(&attic_ways_), cur_it(ways->begin()), attic_it(attic_ways->begin()),
+    cur_geom_store(*ways, stmt, rman), attic_geom_store(*attic_ways, stmt, rman),
+    complete_idx(0u)
   {
     refill();
   }
@@ -1094,7 +1099,7 @@ public:
   void next()
   {
     queue.erase(queue.begin());
-    if (queue.empty())
+    if (queue.empty() || !(queue.begin()->first.val() < complete_idx.val()))
       refill();
   }
   bool is_end() const { return queue.empty(); }
@@ -1116,6 +1121,7 @@ private:
   Way_Geometry_Store attic_geom_store;
   std::map< Uint31_Index, std::pair< std::map< Status_Ref< Way_Skeleton >*, Index_Block >,
       std::map< Status_Ref< Attic< Way_Skeleton > >*, Index_Block > > > queue;
+  Uint31_Index complete_idx;
 
   struct Current_Segment_Collector
   {
@@ -1175,7 +1181,8 @@ private:
         ++attic_it;
       }
 
-      if (!is_compound_idx(idx) && !queue.empty())
+      complete_idx = Uint31_Index(idx.val() & 0x7fffffff);
+      if (!queue.empty() && is_compound_idx(idx) && (queue.begin()->first.val() & 0x7fffffff) < complete_idx.val())
         break;
     }
   }
