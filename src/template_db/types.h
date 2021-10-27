@@ -238,8 +238,10 @@ inline Raw_File::Raw_File(const std::string& name_, int oflag, mode_t mode, cons
 
 inline uint64 Raw_File::size(const std::string& caller_id) const
 {
-  uint64 size = lseek64(fd_, 0, SEEK_END);
-  uint64 foo = lseek64(fd_, 0, SEEK_SET);
+  off64_t size = lseek64(fd_, 0, SEEK_END);
+  if (size < 0)
+    throw File_Error(errno, name, caller_id);
+  off64_t foo = lseek64(fd_, 0, SEEK_SET);
   if (foo != 0)
     throw File_Error(errno, name, caller_id);
   return size;

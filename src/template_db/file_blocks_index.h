@@ -165,7 +165,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
   }
   catch (File_Error e)
   {
-    if (e.error_number != 2)
+    if (e.error_number != ENOENT)
       throw e;
   }
 
@@ -181,7 +181,7 @@ File_Blocks_Index< TIndex >::File_Blocks_Index
   }
   catch (File_Error e)
   {
-    if (e.error_number != 2)
+    if (e.error_number != ENOENT)
       throw e;
     index_buf.resize(0);
   }
