@@ -74,10 +74,14 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
       Nonsynced_Transaction into_transaction(true, false, dest_db_dir, "");
       std::map< TIndex, std::set< TObject > > db_to_insert;
 
-      Block_Backend< TIndex, TObject > from_db
-          (transaction.data_index(&src_file_prop));      
+      Block_Backend< TIndex, TObject > from_db(transaction.data_index(&src_file_prop));      
       typename Block_Backend< TIndex, TObject >::Flat_Iterator it = from_db.flat_begin();
       typename std::map< TIndex, std::set< TObject > >::iterator dit = db_to_insert.begin();
+
+      File_Blocks_Index< TIndex > dest_idx(dest_file_prop, true, false, dest_db_dir, "",
+          clone_settings.compression_method);
+      Block_Backend< TIndex, TObject > into_db(&dest_idx);
+
       uint64 count = 0;
       while (!(it == from_db.flat_end()))
       {
@@ -89,20 +93,16 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
         dit->second.insert(it.object());
         count += it.object().size_of();
         
-        if (count >= 512*1024*1024)
+        if (count >= 64*1024*1024)
         {
-          Block_Backend< TIndex, TObject > into_db
-              (into_transaction.data_index(&dest_file_prop));
           into_db.update(std::map< TIndex, std::set< TObject > >(), db_to_insert);
           db_to_insert.clear();
+          dit = db_to_insert.begin();
           count = 0;
         }
         
         ++it;
       }
-      
-      Block_Backend< TIndex, TObject > into_db
-          (into_transaction.data_index(&dest_file_prop));
       into_db.update(std::map< TIndex, std::set< TObject > >(), db_to_insert);
     }    
   }
@@ -210,7 +210,7 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
     clone_bin_file< Timestamp, Change_Entry< Node_Skeleton::Id_Type > >(*attic_settings().NODE_CHANGELOG, *attic_settings().NODE_CHANGELOG,
                                 transaction, dest_db_dir, clone_settings);
 
-    clone_bin_file< Uint31_Index, Attic< Way_Skeleton > >(*attic_settings().WAYS, *attic_settings().WAYS,
+    clone_bin_file< Uint31_Index, Attic< Way_Delta > >(*attic_settings().WAYS, *attic_settings().WAYS,
                                    transaction, dest_db_dir, clone_settings);
     clone_map_file< Way_Skeleton::Id_Type, Uint31_Index >(*attic_settings().WAYS, transaction, dest_db_dir, clone_settings);
     clone_bin_file< Uint31_Index, Attic< Way_Skeleton::Id_Type > >(*attic_settings().WAYS_UNDELETED, *attic_settings().WAYS_UNDELETED,
@@ -226,7 +226,7 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
     clone_bin_file< Timestamp, Change_Entry< Way_Skeleton::Id_Type > >(*attic_settings().WAY_CHANGELOG, *attic_settings().WAY_CHANGELOG,
                                 transaction, dest_db_dir, clone_settings);
 
-    clone_bin_file< Uint31_Index, Attic< Relation_Skeleton > >(*attic_settings().RELATIONS, *attic_settings().RELATIONS,
+    clone_bin_file< Uint31_Index, Attic< Relation_Delta > >(*attic_settings().RELATIONS, *attic_settings().RELATIONS,
                                    transaction, dest_db_dir, clone_settings);
     clone_map_file< Relation_Skeleton::Id_Type, Uint31_Index >(*attic_settings().RELATIONS, transaction, dest_db_dir, clone_settings);
     clone_bin_file< Uint31_Index, Attic< Relation_Skeleton::Id_Type > >(*attic_settings().RELATIONS_UNDELETED, *attic_settings().RELATIONS_UNDELETED,
