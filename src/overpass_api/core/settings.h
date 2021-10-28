@@ -143,6 +143,7 @@ struct Clone_Settings
 {
   uint32 compression_method;
   uint32 map_compression_method;
+  std::string single_file_name;
 
   Clone_Settings()
       : compression_method(File_Blocks_Index_Base::USE_DEFAULT),

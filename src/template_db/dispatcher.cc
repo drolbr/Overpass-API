@@ -270,11 +270,12 @@ void Global_Resource_Planner::remove_entry(std::vector< Reader_Entry >::iterator
   {
     // Calculate afterwards blocking time
     uint32 penalty_time =
-      std::max(global_available_space * (end_time - it->start_time + 1)
-          / (global_available_space - average_used_space),
-	  uint64(global_available_time) * (end_time - it->start_time + 1)
-	  / (global_available_time - average_used_time))
-      - (end_time - it->start_time + 1);
+        std::min(60ull,
+            std::max(global_available_space * (end_time - it->start_time + 1)
+                / (global_available_space - average_used_space),
+                uint64(global_available_time) * (end_time - it->start_time + 1)
+                / (global_available_time - average_used_time))
+            - (end_time - it->start_time + 1));
     afterwards.push_back(Quota_Entry(it->client_token, penalty_time + end_time));
   }
 
