@@ -212,10 +212,10 @@ void clone_global_tags_file(Transaction& transaction, std::string dest_db_dir, c
   clone_matching_bin_file< Tag_Index_Global, Tag_Object_Global< typename Skeleton::Id_Type > >(
       *current_global_tags_file_properties< Skeleton >(), transaction, dest_db_dir, clone_settings);
 }
-template< typename Skeleton >
+template< typename Index, typename Skeleton >
 void clone_keys_file(Transaction& transaction, std::string dest_db_dir, const Clone_Settings& clone_settings)
 {
-  clone_matching_bin_file< Uint31_Index, String_Object >(
+  clone_matching_bin_file< Index, String_Object >(
       *key_file_properties< Skeleton >(), transaction, dest_db_dir, clone_settings);
 }
 template< typename Skeleton >
@@ -262,19 +262,19 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
   clone_current_map_file< Uint32_Index, Node_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_local_tags_file< Node_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_global_tags_file< Node_Skeleton >(transaction, dest_db_dir, clone_settings);
-  clone_keys_file< Node_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_keys_file< Uint32_Index, Node_Skeleton >(transaction, dest_db_dir, clone_settings);
 
   clone_skeleton_file< Uint31_Index, Way_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_current_map_file< Uint31_Index, Way_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_local_tags_file< Way_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_global_tags_file< Way_Skeleton >(transaction, dest_db_dir, clone_settings);
-  clone_keys_file< Way_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_keys_file< Uint32_Index, Way_Skeleton >(transaction, dest_db_dir, clone_settings);
 
   clone_skeleton_file< Uint31_Index, Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_current_map_file< Uint31_Index, Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_local_tags_file< Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_global_tags_file< Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
-  clone_keys_file< Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_keys_file< Uint32_Index, Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_matching_bin_file< Uint32_Index, String_Object >(
       *osm_base_settings().RELATION_ROLES, transaction, dest_db_dir, clone_settings);
 
