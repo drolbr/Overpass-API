@@ -217,6 +217,19 @@
  0 1 1 1 1 0
  0 0 1 1 0 0
  0 0 0 0 0 0
+  <way id="142">
+    <nd ref="1413"/>
+    <nd ref="1415"/>
+    <nd ref="1417"/>
+    <nd ref="1419"/>
+    <nd ref="1420"/>
+    <nd ref="1418"/>
+    <nd ref="1416"/>
+    <nd ref="1414"/>
+    <nd ref="1413"/>
+    <tag k="scale" v="0.0001000"/>
+    <tag k="shapes" v="2"/>
+  </way>
   <area id="2400000142">
     <tag k="scale" v="0.0001000"/>
     <tag k="shapes" v="2"/>
