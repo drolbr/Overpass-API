@@ -112,11 +112,11 @@ int main(int argc, char* argv[])
   if (abort)
   {
 #ifdef HAVE_LZ4
-    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
-        " [--compression-method=(no|gz|lz4)] [--map-compression-method=(no|gz|lz4)]\n";
+    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic]"
+        " [--compression-method=(no|gz|lz4)] [--map-compression-method=(no|gz|lz4)] [--flush-size=FLUSH_SIZE]\n";
 #else
-    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
-        " [--compression-method=(no|gz)] [--map-compression-method=(no|gz)]\n";
+    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic]"
+        " [--compression-method=(no|gz)] [--map-compression-method=(no|gz)] [--flush-size=FLUSH_SIZE]\n";
 #endif
     return 1;
   }
