@@ -322,10 +322,9 @@ private:
 template< typename Index, typename Object, typename Iterator >
 struct Block_Backend_Flat_Iterator
     : Block_Backend_Basic_Iterator< Index, Object, Flat_Idx_Assessor,
-        Flat_File_Handle< File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >,
-            typename File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >::Flat_Iterator > >
+        Flat_File_Handle< File_Blocks< Index, Iterator >, typename File_Blocks< Index, Iterator >::Flat_Iterator > >
 {
-  typedef File_Blocks< Index, Iterator, Default_Range_Iterator< Index > > File_Blocks_;
+  typedef File_Blocks< Index, Iterator > File_Blocks_;
   typedef Flat_File_Handle< File_Blocks_, typename File_Blocks_::Flat_Iterator > File_Handle_;
 
   Block_Backend_Flat_Iterator(File_Blocks_& file_blocks, uint32 block_size, bool is_end = false)
@@ -390,10 +389,10 @@ private:
 template< typename Index, typename Object, typename Iterator >
 struct Block_Backend_Discrete_Iterator
     : Block_Backend_Basic_Iterator< Index, Object, Discrete_Idx_Assessor< Index, Iterator >,
-          Discrete_File_Handle< File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >,
-              typename File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >::Discrete_Iterator > >
+          Discrete_File_Handle< File_Blocks< Index, Iterator >,
+              typename File_Blocks< Index, Iterator >::Discrete_Iterator > >
 {
-  typedef File_Blocks< Index, Iterator, Default_Range_Iterator< Index > > File_Blocks_;
+  typedef File_Blocks< Index, Iterator > File_Blocks_;
   typedef Discrete_File_Handle< File_Blocks_, typename File_Blocks_::Discrete_Iterator > File_Handle_;
 
   Block_Backend_Discrete_Iterator
@@ -435,11 +434,13 @@ private:
 };
 
 
-template< typename File_Blocks, typename File_Iterator >
+template< typename File_Blocks, typename Index >
 struct Range_File_Handle
 {
-  Range_File_Handle(File_Blocks& file_blocks_, const File_Iterator& file_it_)
-      : file_blocks(&file_blocks_), file_it(file_it_), file_end(file_blocks_.range_end()) {}
+  Range_File_Handle(File_Blocks& file_blocks_,
+      const File_Blocks_Range_Iterator< Index, Default_Range_Iterator< Index > >& file_it_)
+      : file_blocks(&file_blocks_), file_it(file_it_),
+      file_end(file_blocks_.template range_end< Default_Range_Iterator< Index > >()) {}
 
   bool next(uint64* ptr, bool check_idx = true)
   {
@@ -457,19 +458,18 @@ struct Range_File_Handle
 
 private:
   const File_Blocks* file_blocks;
-  File_Iterator file_it;
-  File_Iterator file_end;
+  File_Blocks_Range_Iterator< Index, Default_Range_Iterator< Index > > file_it;
+  File_Blocks_Range_Iterator< Index, Default_Range_Iterator< Index > > file_end;
 };
 
 
 template< typename Index, typename Object, typename Iterator >
 struct Block_Backend_Range_Iterator
     : Block_Backend_Basic_Iterator< Index, Object, Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >,
-        Range_File_Handle< File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >,
-            typename File_Blocks< Index, Iterator, Default_Range_Iterator< Index > >::Range_Iterator > >
+        Range_File_Handle< File_Blocks< Index, Iterator >, Index > >
 {
-  typedef File_Blocks< Index, Iterator, Default_Range_Iterator< Index > > File_Blocks_;
-  typedef Range_File_Handle< File_Blocks_, typename File_Blocks_::Range_Iterator > File_Handle_;
+  typedef File_Blocks< Index, Iterator > File_Blocks_;
+  typedef Range_File_Handle< File_Blocks_, Index > File_Handle_;
 
   Block_Backend_Range_Iterator(
       File_Blocks_& file_blocks,
@@ -483,7 +483,7 @@ struct Block_Backend_Range_Iterator
   Block_Backend_Range_Iterator(File_Blocks_& file_blocks, uint32 block_size)
       : Block_Backend_Basic_Iterator< Index, Object,
           Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >, File_Handle_ >(
-          block_size, File_Handle_(file_blocks, file_blocks.range_end()),
+              block_size, File_Handle_(file_blocks, file_blocks.template range_end< Default_Range_Iterator< Index > >()),
           Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >(
               Default_Range_Iterator< Index >(), Default_Range_Iterator< Index >())) {}
 
@@ -527,7 +527,7 @@ struct Block_Backend
     typedef Block_Backend_Discrete_Iterator< TIndex, TObject, TIterator > Discrete_Iterator;
     typedef Block_Backend_Range_Iterator< TIndex, TObject, TIterator > Range_Iterator;
 
-    typedef File_Blocks< TIndex, TIterator, Default_Range_Iterator< TIndex > > File_Blocks_;
+    typedef File_Blocks< TIndex, TIterator > File_Blocks_;
 
     Block_Backend(File_Blocks_Index_Base* index_);
     ~Block_Backend();

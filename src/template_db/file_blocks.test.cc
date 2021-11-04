@@ -372,8 +372,8 @@ struct Compressed_Test_File : File_Properties
 //-----------------------------------------------------------------------------
 
 void read_loop(
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator& it,
+    File_Blocks< IntIndex, IntIterator >& blocks,
+    File_Blocks< IntIndex, IntIterator >::Flat_Iterator& it,
     uint32 block_size)
 {
   while (!it.is_end())
@@ -446,8 +446,8 @@ void read_loop(
 }
 
 void read_loop(
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator& it,
+    File_Blocks< IntIndex, IntIterator >& blocks,
+    File_Blocks< IntIndex, IntIterator >::Discrete_Iterator& it,
     uint32 block_size)
 {
   while (!it.is_end())
@@ -489,8 +489,8 @@ void read_loop(
 }
 
 void read_loop(
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >& blocks,
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator& it,
+    File_Blocks< IntIndex, IntIterator >& blocks,
+    File_Blocks_Range_Iterator< IntIndex, IntRangeIterator >& it,
     uint32 block_size)
 {
   while (!it.is_end())
@@ -535,7 +535,7 @@ void read_test()
     std::cout<<"Read test\n";
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     uint32 block_size = tf.get_block_size();
 
@@ -548,7 +548,7 @@ void read_test()
     std::cout<<'\n';
 
     std::cout<<"Reading all blocks ...\n";
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
+    File_Blocks< IntIndex, IntIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
     read_loop(blocks, fit, block_size);
     std::cout<<"... all blocks read.\n";
@@ -557,7 +557,7 @@ void read_test()
     for (unsigned int i(0); i < 100; i += 9)
       index_list.push_back(&i);
     std::cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Discrete_Iterator
+    File_Blocks< IntIndex, IntIterator >::Discrete_Iterator
 	it(blocks.discrete_begin(index_list.begin(), index_list.end()));
     read_loop(blocks, it, block_size);
     std::cout<<"... all blocks read.\n";
@@ -574,7 +574,7 @@ void read_test()
     uint32 fool(0), foou(10);
     range_list.push_back(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
     std::cout<<"Reading blocks with indices [0, 10[ ...\n";
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Range_Iterator
+    File_Blocks_Range_Iterator< IntIndex, IntRangeIterator >
 	rit(blocks.range_begin
 	(IntRangeIterator(range_list.begin()), IntRangeIterator(range_list.end())));
     read_loop(blocks, rit, block_size);
@@ -656,7 +656,7 @@ void variable_block_read_test()
     std::cout<<"Compressed Read test\n";
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     uint32 block_size = tf.get_block_size();
 
@@ -669,7 +669,7 @@ void variable_block_read_test()
     std::cout<<'\n';
 
     std::cout<<"Reading all blocks ...\n";
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
+    File_Blocks< IntIndex, IntIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
     read_loop(blocks, fit, block_size);
     std::cout<<"... all blocks read.\n";
@@ -692,7 +692,7 @@ void compressed_read_test()
     std::cout<<"Compressed Read test\n";
     Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
     Compressed_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     uint32 block_size = tf.get_block_size();
 
@@ -705,7 +705,7 @@ void compressed_read_test()
     std::cout<<'\n';
 
     std::cout<<"Reading all blocks ...\n";
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Flat_Iterator
+    File_Blocks< IntIndex, IntIterator >::Flat_Iterator
 	fit(blocks.flat_begin());
     read_loop(blocks, fit, block_size);
     std::cout<<"... all blocks read.\n";
@@ -814,7 +814,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -841,7 +841,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -868,7 +868,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -900,7 +900,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -912,7 +912,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(65));
     indices.push_back(IntIndex(89));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
 	it = blocks.write_begin(indices.begin(), indices.end());
 
     ++it;
@@ -954,7 +954,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices, work;
 
@@ -965,7 +965,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(89));
     indices.push_back(IntIndex(90));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it(blocks.write_begin(indices.begin(), indices.end()));
 
     work.clear();
@@ -1004,7 +1004,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -1013,7 +1013,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(64));
     indices.push_back(IntIndex(65));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it(blocks.write_begin(indices.begin(), indices.end()));
 
     it = blocks.erase_block(it);
@@ -1035,7 +1035,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -1043,7 +1043,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(7));
     indices.push_back(IntIndex(90));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it(blocks.write_begin(indices.begin(), indices.end()));
 
     it = blocks.erase_block(it);
@@ -1064,7 +1064,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices, work;
 
@@ -1073,7 +1073,7 @@ int main(int argc, char* args[])
       indices.push_back(IntIndex(i));
     indices.push_back(IntIndex(63));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it(blocks.write_begin(indices.begin(), indices.end()));
 
     ++it;
@@ -1102,7 +1102,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -1110,7 +1110,7 @@ int main(int argc, char* args[])
     for (unsigned int i(0); i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it(blocks.write_begin(indices.begin(), indices.end()));
 
     while (!it.is_end())
@@ -1133,7 +1133,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -1170,7 +1170,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices, work;
 
@@ -1182,7 +1182,7 @@ int main(int argc, char* args[])
     indices.push_back(IntIndex(90));
     indices.push_back(IntIndex(99));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it(blocks.write_begin(indices.begin(), indices.end()));
 
     work.clear();
@@ -1238,7 +1238,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     while (!blocks.flat_begin().is_end())
     {
@@ -1265,7 +1265,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     uint32 block_size = tf.get_block_size();
 
@@ -1299,7 +1299,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     uint32 block_size = tf.get_block_size();
 
@@ -1331,7 +1331,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     uint32 block_size = tf.get_block_size();
 
@@ -1364,7 +1364,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     uint32 block_size = tf.get_block_size();
 
@@ -1446,7 +1446,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -1475,7 +1475,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 
@@ -1562,14 +1562,14 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
 
     std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it = blocks.write_begin(indices.begin(), indices.end());
 
     ++it;
@@ -1598,14 +1598,14 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
 
     std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
@@ -1634,14 +1634,14 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
 
     std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
@@ -1670,14 +1670,14 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
 
     std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
@@ -1707,14 +1707,14 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
 
     std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
@@ -1745,14 +1745,14 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
 
     std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
@@ -1782,14 +1782,14 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
 
     std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
@@ -1820,14 +1820,14 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
 
     std::list< IntIndex > indices;
     for (int i = 0; i < 100; ++i)
       indices.push_back(IntIndex(i));
 
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator >::Write_Iterator
+    File_Blocks< IntIndex, IntIterator >::Write_Iterator
         it = blocks.write_begin(indices.begin(), indices.end());
 
     uint64* buf = (uint64*)aligned_alloc(8, Variable_Block_Test_File().get_block_size() * Variable_Block_Test_File().get_compression_factor());
@@ -1886,7 +1886,7 @@ int main(int argc, char* args[])
   {
     Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
     Compressed_Test_File tf;
-    File_Blocks< IntIndex, IntIterator, IntRangeIterator > blocks
+    File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
     std::list< IntIndex > indices;
 

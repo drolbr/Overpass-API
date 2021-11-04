@@ -359,3 +359,6 @@ EXTRA_DIST = \
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
 SUBDIRS = test-bin
 #SUBDIRS =
+
+AM_CXXFLAGS = -std=c++11
+
