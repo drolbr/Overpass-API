@@ -1101,8 +1101,8 @@ void collect_nodes_from_req
       (rman.get_transaction()->data_index(osm_base_settings().NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
       it(nodes_db.range_begin
-      (Default_Range_Iterator< Uint32_Index >(req.begin()),
-       Default_Range_Iterator< Uint32_Index >(req.end())));
+      (Ranges< Uint32_Index >::Iterator(req.begin()),
+       Ranges< Uint32_Index >::Iterator(req.end())));
       !(it == nodes_db.range_end()); ++it)
     nodes[it.index()].push_back(it.object());
 }

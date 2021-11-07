@@ -339,8 +339,8 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
       (rman.get_transaction()->data_index(file_prop));
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
       tag_it(items_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+        (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
+         Ranges< Tag_Index_Local >::Iterator(range_set.end())));
   for (; !(tag_it == items_db.range_end()); ++tag_it)
   {
     if (tag_it.object().val() == pivot_id)

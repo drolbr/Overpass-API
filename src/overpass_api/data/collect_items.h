@@ -454,13 +454,13 @@ struct Shortened_Idx
     }
   }
 
-  typename std::set< std::pair< Index, Index > >::const_iterator begin() { return skipped; }
-  typename std::set< std::pair< Index, Index > >::const_iterator end() { return end_; }
+  typename Ranges< Index >::Iterator begin() { return skipped; }
+  typename Ranges< Index >::Iterator end() { return end_; }
 
 private:
   std::set< std::pair< Index, Index > > shortened;
-  Default_Range_Iterator< Index > skipped;
-  Default_Range_Iterator< Index > end_;
+  typename Ranges< Index >::Iterator skipped;
+  typename Ranges< Index >::Iterator end_;
 };
 
 

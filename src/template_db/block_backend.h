@@ -265,17 +265,34 @@ void Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >::i
 //-----------------------------------------------------------------------------
 
 
-template< class Index >
-struct Default_Range_Iterator : std::set< std::pair< Index, Index > >::const_iterator
+template< typename Index >
+class Ranges
 {
-  Default_Range_Iterator
-      (const typename std::set< std::pair< Index, Index > >::const_iterator it)
-  : std::set< std::pair< Index, Index > >::const_iterator(it) {}
+public:
+  class Iterator
+  {
+  public:
+    Iterator(typename std::set< std::pair< Index, Index > >::const_iterator it_) : it(it_) {}
+    Iterator() {}
+    const Index& lower_bound() const { return it->first; }
+    const Index& upper_bound() const { return it->second; }
+    const std::pair< Index, Index >& operator*() const { return *it; }
+    const Iterator& operator++()
+    {
+      ++it;
+      return *this;
+    }
+    bool operator==(const Iterator& rhs) const { return it == rhs.it; }
+    bool operator!=(const Iterator& rhs) const { return it != rhs.it; }
+  private:
+    typename std::set< std::pair< Index, Index > >::const_iterator it; 
+  };
+  
+  Iterator begin() const { return Iterator(data.begin()); }
+  Iterator end() const { return Iterator(data.end()); }
 
-  Default_Range_Iterator() {}
-
-  const Index& lower_bound() const { return (*this)->first; }
-  const Index& upper_bound() const { return (*this)->second; }
+private:
+  std::set< std::pair< Index, Index > > data;
 };
 
 
@@ -438,9 +455,9 @@ template< typename File_Blocks, typename Index >
 struct Range_File_Handle
 {
   Range_File_Handle(File_Blocks& file_blocks_,
-      const File_Blocks_Range_Iterator< Index, Default_Range_Iterator< Index > >& file_it_)
+      const File_Blocks_Range_Iterator< Index, typename Ranges< Index >::Iterator >& file_it_)
       : file_blocks(&file_blocks_), file_it(file_it_),
-      file_end(file_blocks_.template range_end< Default_Range_Iterator< Index > >()) {}
+      file_end(file_blocks_.template range_end< typename Ranges< Index >::Iterator >()) {}
 
   bool next(uint64* ptr, bool check_idx = true)
   {
@@ -458,14 +475,14 @@ struct Range_File_Handle
 
 private:
   const File_Blocks* file_blocks;
-  File_Blocks_Range_Iterator< Index, Default_Range_Iterator< Index > > file_it;
-  File_Blocks_Range_Iterator< Index, Default_Range_Iterator< Index > > file_end;
+  File_Blocks_Range_Iterator< Index, typename Ranges< Index >::Iterator > file_it;
+  File_Blocks_Range_Iterator< Index, typename Ranges< Index >::Iterator > file_end;
 };
 
 
 template< typename Index, typename Object, typename Iterator >
 struct Block_Backend_Range_Iterator
-    : Block_Backend_Basic_Iterator< Index, Object, Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >,
+    : Block_Backend_Basic_Iterator< Index, Object, Range_Idx_Assessor< Index, typename Ranges< Index >::Iterator >,
         Range_File_Handle< File_Blocks< Index, Iterator >, Index > >
 {
   typedef File_Blocks< Index, Iterator > File_Blocks_;
@@ -473,23 +490,23 @@ struct Block_Backend_Range_Iterator
 
   Block_Backend_Range_Iterator(
       File_Blocks_& file_blocks,
-      const Default_Range_Iterator< Index >& index_it, const Default_Range_Iterator< Index >& index_end,
+      const typename Ranges< Index >::Iterator& index_it, const typename Ranges< Index >::Iterator& index_end,
       uint32 block_size)
       : Block_Backend_Basic_Iterator< Index, Object,
-          Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >, File_Handle_ >(
+          Range_Idx_Assessor< Index, typename Ranges< Index >::Iterator >, File_Handle_ >(
           block_size, File_Handle_(file_blocks, file_blocks.range_begin(index_it, index_end)),
-          Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >(index_it, index_end)) {}
+          Range_Idx_Assessor< Index, typename Ranges< Index >::Iterator >(index_it, index_end)) {}
 
   Block_Backend_Range_Iterator(File_Blocks_& file_blocks, uint32 block_size)
       : Block_Backend_Basic_Iterator< Index, Object,
-          Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >, File_Handle_ >(
-              block_size, File_Handle_(file_blocks, file_blocks.template range_end< Default_Range_Iterator< Index > >()),
-          Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >(
-              Default_Range_Iterator< Index >(), Default_Range_Iterator< Index >())) {}
+          Range_Idx_Assessor< Index, typename Ranges< Index >::Iterator >, File_Handle_ >(
+              block_size, File_Handle_(file_blocks, file_blocks.template range_end< typename Ranges< Index >::Iterator >()),
+          Range_Idx_Assessor< Index, typename Ranges< Index >::Iterator >(
+              typename Ranges< Index >::Iterator(), typename Ranges< Index >::Iterator())) {}
 
   Block_Backend_Range_Iterator(const Block_Backend_Range_Iterator& it)
     : Block_Backend_Basic_Iterator< Index, Object,
-        Range_Idx_Assessor< Index, Default_Range_Iterator< Index > >, File_Handle_ >(it) {}
+        Range_Idx_Assessor< Index, typename Ranges< Index >::Iterator >, File_Handle_ >(it) {}
 };
 
 
@@ -540,8 +557,8 @@ struct Block_Backend
     const Discrete_Iterator& discrete_end() const { return *discrete_end_it; }
 
     Range_Iterator range_begin
-        (Default_Range_Iterator< TIndex > begin,
-         Default_Range_Iterator< TIndex > end)
+        (typename Ranges< TIndex >::Iterator begin,
+         typename Ranges< TIndex >::Iterator end)
         { return Range_Iterator(file_blocks, begin, end, block_size); }
 
     const Range_Iterator& range_end() const { return *range_end_it; }

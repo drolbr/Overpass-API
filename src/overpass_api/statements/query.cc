@@ -485,8 +485,8 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_non_i
       std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
       for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
           it2(tags_db.range_begin
-          (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-           Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+          (Ranges< Tag_Index_Global >::Iterator(range_req.begin()),
+           Ranges< Tag_Index_Global >::Iterator(range_req.end())));
           !(it2 == tags_db.range_end()); ++it2)
       {
         if (knrit->second->matches(it2.index().value))
@@ -531,8 +531,8 @@ std::vector< Id_Type > Query_Statement::collect_non_ids
     std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knvit->first);
     for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
         it2(tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-         Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+        (Ranges< Tag_Index_Global >::Iterator(range_req.begin()),
+         Ranges< Tag_Index_Global >::Iterator(range_req.end())));
         !(it2 == tags_db.range_end()); ++it2)
     {
       if (it2.index().value == knvit->second)
@@ -549,8 +549,8 @@ std::vector< Id_Type > Query_Statement::collect_non_ids
     std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
     for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
         it2(tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-         Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
+        (Ranges< Tag_Index_Global >::Iterator(range_req.begin()),
+         Ranges< Tag_Index_Global >::Iterator(range_req.end())));
         !(it2 == tags_db.range_end()); ++it2)
     {
       if (it2.index().value != void_tag_value() && knrit->second->matches(it2.index().value))
@@ -909,8 +909,8 @@ void Query_Statement::filter_by_tags
       (transaction.data_index(&file_prop));
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
     tag_it(items_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
+     Ranges< Tag_Index_Local >::Iterator(range_set.end())));
 
   if (timestamp == NOW)
   {
@@ -931,8 +931,8 @@ void Query_Statement::filter_by_tags
         (transaction.data_index(attic_file_prop));
     typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
       attic_tag_it(attic_items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+      (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
+       Ranges< Tag_Index_Local >::Iterator(range_set.end())));
 
     for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
         it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
@@ -968,8 +968,8 @@ void Query_Statement::filter_by_tags
   coarse_count = 0;
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
       ntag_it(items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+      (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
+       Ranges< Tag_Index_Local >::Iterator(range_set.end())));
 
   if (timestamp == NOW)
   {
@@ -990,8 +990,8 @@ void Query_Statement::filter_by_tags
         (transaction.data_index(attic_file_prop));
     typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
       attic_ntag_it(attic_items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+      (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
+       Ranges< Tag_Index_Local >::Iterator(range_set.end())));
 
     for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
         it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
@@ -1049,8 +1049,8 @@ void Query_Statement::filter_by_tags
       (transaction.data_index(&file_prop));
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
     tag_it(items_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
+     Ranges< Tag_Index_Local >::Iterator(range_set.end())));
 
   typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it
       = items.begin();
@@ -1102,8 +1102,8 @@ void Query_Statement::filter_by_tags
   coarse_count = 0;
   typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
       ntag_it(items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+      (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
+       Ranges< Tag_Index_Local >::Iterator(range_set.end())));
   item_it = items.begin();
 
   {
