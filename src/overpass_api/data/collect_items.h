@@ -443,7 +443,8 @@ bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
   Block_Backend< Index, Object > db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
 
-  Ranges< Index > shortened = skip_start(req, cur_idx);
+  Ranges< Index > ranges(req);
+  Ranges< Index > shortened = ranges.skip_start(cur_idx);
   for (typename Block_Backend< Index, Object >::Range_Iterator
       it(db.range_begin(shortened)); !(it == db.range_end()); ++it)
   {
@@ -472,7 +473,8 @@ bool collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& r
     std::map< Index, std::vector< Object > >& result,
     std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
-  Ranges< Index > shortened = skip_start(req, cur_idx);
+  Ranges< Index > ranges(req);
+  Ranges< Index > shortened = ranges.skip_start(cur_idx);
   Block_Backend< Index, Object > current_db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
   Block_Backend< Index, Attic< typename Object::Delta > > attic_db

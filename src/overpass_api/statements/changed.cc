@@ -103,16 +103,12 @@ std::vector< typename Skeleton::Id_Type > collect_changed_elements
     (uint64 since, uint64 until,
      const Id_Predicate& relevant, Resource_Manager& rman)
 {
-  std::set< std::pair< Timestamp, Timestamp > > range;
-  range.insert(std::make_pair(Timestamp(since), Timestamp(until)));
-  Ranges< Timestamp > ranges(range);
-
   std::vector< typename Skeleton::Id_Type > ids;
 
+  Ranges< Timestamp > ranges{ Timestamp(since), Timestamp(until) };
   Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > > changelog_db
       (rman.get_transaction()->data_index(changelog_file_properties< Skeleton >()));
-  for (typename Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > >::Range_Iterator
-      it = changelog_db.range_begin(ranges); !(it == changelog_db.range_end()); ++it)
+  for (auto it = changelog_db.range_begin(ranges); !it.is_end(); ++it)
   {
     if (relevant(it.object().elem_id))
       ids.push_back(it.object().elem_id);

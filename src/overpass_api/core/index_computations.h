@@ -1206,20 +1206,6 @@ std::set< std::pair< Index, Index > > intersect_ranges
 }
 
 
-template< typename Index >
-std::set< std::pair< Index, Index > > skip_start(
-    const std::set< std::pair< Index, Index > >& ranges, Index lower_bound)
-{
-  std::set< std::pair< Index, Index > > result;
-  for (const auto& i : ranges)
-  {
-    if (lower_bound < i.second)
-      result.insert({ std::max(i.first, lower_bound), i.second });
-  }
-  return result;
-}
-
-
 inline bool is_compound_idx(Uint31_Index idx)
 {
   return idx.val() & 0x80000000u;

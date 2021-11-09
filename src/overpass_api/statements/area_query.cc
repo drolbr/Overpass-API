@@ -1060,19 +1060,6 @@ void Area_Query_Statement::collect_ways
 }
 
 
-void collect_nodes_from_req
-    (const std::set< std::pair< Uint32_Index, Uint32_Index > >& req,
-     std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
-     Resource_Manager& rman)
-{
-  Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
-      (rman.get_transaction()->data_index(osm_base_settings().NODES));
-  Ranges< Uint32_Index > ranges(req);
-  for (auto it = nodes_db.range_begin(ranges); !(it == nodes_db.range_end()); ++it)
-    nodes[it.index()].push_back(it.object());
-}
-
-
 void Area_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;

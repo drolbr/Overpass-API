@@ -20,6 +20,7 @@
 #define DE__OSM3S___TEMPLATE_DB__BLOCK_BACKEND_H
 
 #include "file_blocks.h"
+#include "ranges.h"
 #include "types.h"
 
 #include <cstring>
@@ -260,42 +261,6 @@ void Block_Backend_Basic_Iterator< Index, Object, Idx_Assessor, File_Handle >::i
       file_handle.next(buffer.ptr + i_offset/8, false);
   }
 }
-
-
-//-----------------------------------------------------------------------------
-
-
-template< typename Index >
-class Ranges
-{
-public:
-  Ranges(const std::set< std::pair< Index, Index > >& data_) : data(data_) {}
-  
-  class Iterator
-  {
-  public:
-    Iterator(typename std::set< std::pair< Index, Index > >::const_iterator it_) : it(it_) {}
-    Iterator() {}
-    const Index& lower_bound() const { return it->first; }
-    const Index& upper_bound() const { return it->second; }
-    const std::pair< Index, Index >& operator*() const { return *it; }
-    const Iterator& operator++()
-    {
-      ++it;
-      return *this;
-    }
-    bool operator==(const Iterator& rhs) const { return it == rhs.it; }
-    bool operator!=(const Iterator& rhs) const { return it != rhs.it; }
-  private:
-    typename std::set< std::pair< Index, Index > >::const_iterator it; 
-  };
-  
-  Iterator begin() const { return Iterator(data.begin()); }
-  Iterator end() const { return Iterator(data.end()); }
-
-private:
-  std::set< std::pair< Index, Index > > data;
-};
 
 
 //-----------------------------------------------------------------------------
