@@ -28,6 +28,7 @@
 #include <vector>
 
 #include "../../template_db/block_backend.h"
+#include "../core/index_computations.h"
 #include "../data/collect_members.h"
 #include "../data/tilewise_geometry.h"
 #include "area_query.h"
@@ -63,39 +64,6 @@ void copy_discrete_to_area_ranges(
   nodes_req.clear();
   for (std::set< Uint31_Index >::const_iterator it = area_blocks_req.begin(); it != area_blocks_req.end(); ++it)
     nodes_req.insert(std::make_pair(Uint32_Index(it->val()), Uint32_Index((it->val()) + 0x100)));
-}
-
-
-std::set< std::pair< Uint32_Index, Uint32_Index > > range_union(
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >& lhs,
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >& rhs)
-{
-  std::vector< std::pair< Uint32_Index, Uint32_Index > > result;
-  std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it_l = lhs.begin();
-  std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator it_r = rhs.begin();
-  
-  while (true)
-  {
-    if (it_l != lhs.end() && (it_r == rhs.end() || it_l->first < it_r->first))
-    {
-      if (result.empty() || result.back().second < it_l->first)
-        result.push_back(*it_l);
-      else if (result.back().second < it_l->second)
-        result.back().second = it_l->second;
-      ++it_l;
-    }
-    else if (it_r != rhs.end())
-    {
-      if (result.empty() || result.back().second < it_r->first)
-        result.push_back(*it_r);
-      else if (result.back().second < it_r->second)
-        result.back().second = it_r->second;
-      ++it_r;
-    }
-    else
-      break;
-  }
-  return std::set< std::pair< Uint32_Index, Uint32_Index > >(result.begin(), result.end());
 }
 
 
@@ -613,7 +581,7 @@ void Area_Query_Statement::collect_nodes
   Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
   Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
-      nodes_it(nodes_db.range_begin(nodes_req.begin(), nodes_req.end()));
+      nodes_it(nodes_db.range_begin({ nodes_req }));
   uint32 current_idx(0);
   if (!(area_it == area_blocks_db.discrete_end()))
     current_idx = area_it.index().val();
@@ -1099,11 +1067,8 @@ void collect_nodes_from_req
 {
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
       (rman.get_transaction()->data_index(osm_base_settings().NODES));
-  for (Block_Backend< Uint32_Index, Node_Skeleton >::Range_Iterator
-      it(nodes_db.range_begin
-      (Ranges< Uint32_Index >::Iterator(req.begin()),
-       Ranges< Uint32_Index >::Iterator(req.end())));
-      !(it == nodes_db.range_end()); ++it)
+  Ranges< Uint32_Index > ranges(req);
+  for (auto it = nodes_db.range_begin(ranges); !(it == nodes_db.range_end()); ++it)
     nodes[it.index()].push_back(it.object());
 }
 

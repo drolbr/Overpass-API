@@ -269,6 +269,8 @@ template< typename Index >
 class Ranges
 {
 public:
+  Ranges(const std::set< std::pair< Index, Index > >& data_) : data(data_) {}
+  
   class Iterator
   {
   public:
@@ -556,10 +558,8 @@ struct Block_Backend
         { return Discrete_Iterator(file_blocks, begin, end, block_size); }
     const Discrete_Iterator& discrete_end() const { return *discrete_end_it; }
 
-    Range_Iterator range_begin
-        (typename Ranges< TIndex >::Iterator begin,
-         typename Ranges< TIndex >::Iterator end)
-        { return Range_Iterator(file_blocks, begin, end, block_size); }
+    Range_Iterator range_begin(const Ranges< TIndex >& arg)
+    { return Range_Iterator(file_blocks, arg.begin(), arg.end(), block_size); }
 
     const Range_Iterator& range_end() const { return *range_end_it; }
 

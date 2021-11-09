@@ -137,11 +137,8 @@ void prepare_delete_tags
   Tag_Index_Local current_index;
   Tag_Entry< Id_Type > tag_entry;
   current_index.index = 0xffffffff;
-  for (typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator
-    it(rels_db.range_begin
-    (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
-     Ranges< Tag_Index_Local >::Iterator(range_set.end())));
-     !(it == rels_db.range_end()); ++it)
+  Ranges< Tag_Index_Local > ranges(range_set);
+  for (auto it = rels_db.range_begin(ranges); !(it == rels_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
     {
@@ -194,11 +191,8 @@ void get_existing_tags
   Tag_Index_Local current_index;
   Tag_Entry< Id_Type > tag_entry;
   current_index.index = 0xffffffff;
-  for (typename Block_Backend< Tag_Index_Local, Id_Type >::Range_Iterator
-    it(rels_db.range_begin
-    (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
-     Ranges< Tag_Index_Local >::Iterator(range_set.end())));
-     !(it == rels_db.range_end()); ++it)
+  Ranges< Tag_Index_Local > ranges(range_set);
+  for (auto it = rels_db.range_begin(ranges); !(it == rels_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
     {
@@ -257,10 +251,8 @@ void prepare_tags
   Tag_Index_Local current_index;
   Tag_Entry< typename TObject::Id_Type > tag_entry;
   current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-    it(elems_db.range_begin
-    (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
-     Ranges< Tag_Index_Local >::Iterator(range_set.end())));
+  Ranges< Tag_Index_Local > ranges(range_set);
+  for (auto it = elems_db.range_begin(ranges);
      !(it == elems_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))

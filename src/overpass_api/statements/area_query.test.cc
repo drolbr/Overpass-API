@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 #include "../../template_db/block_backend.h"
+#include "../core/index_computations.h"
 #include "../core/settings.h"
 #include "../frontend/console_output.h"
 #include "area_query.h"
@@ -161,11 +162,6 @@ void comp_sets(Resource_Manager& rman, const std::string& set_1, const std::stri
   rman.swap_set(set_1, s1);
   rman.swap_set(set_2, s2);
 }
-
-
-std::set< std::pair< Uint32_Index, Uint32_Index > > range_union(
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >& lhs,
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >& rhs);
 
 
 int main(int argc, char* args[])

@@ -175,10 +175,8 @@ void Area_Updater::prepare_delete_tags
   Tag_Index_Local current_index;
   Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-      it(areas_db.range_begin
-          (Ranges< Tag_Index_Local >::Iterator(range_set.begin()), Ranges< Tag_Index_Local >::Iterator(range_set.end())));
-      !(it == areas_db.range_end()); ++it)
+  Ranges< Tag_Index_Local > ranges(range_set);
+  for (auto it = areas_db.range_begin(ranges); !(it == areas_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
     {
@@ -254,11 +252,8 @@ void Area_Updater::prepare_tags
   Tag_Index_Local current_index;
   Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-      it(areas_db.range_begin
-          (Ranges< Tag_Index_Local >::Iterator(range_set.begin()),
-          Ranges< Tag_Index_Local >::Iterator(range_set.end())));
-      !(it == areas_db.range_end()); ++it)
+  Ranges< Tag_Index_Local > ranges(range_set);
+  for (auto it = areas_db.range_begin(ranges); !(it == areas_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
     {
