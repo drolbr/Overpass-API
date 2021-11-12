@@ -1180,7 +1180,7 @@ void Around_Statement::execute(Resource_Manager& rman)
   constraint.get_ranges(rman, ranges);
   get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
       (into.nodes, into.attic_nodes,
-       std::vector< Node::Id_Type >(), false, ranges, 0, *this, rman);
+       std::vector< Node::Id_Type >(), false, ranges, *this, rman);
   constraint.filter(*this, rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 

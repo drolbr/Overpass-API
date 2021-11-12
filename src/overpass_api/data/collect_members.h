@@ -184,27 +184,37 @@ bool get_elements_by_id_from_db_generic(
     std::map< Index, std::vector< Object > >& elements,
     std::map< Index, std::vector< Attic< Object > > >& attic_elements,
     const Predicate& pred,
-    const std::set< std::pair< Index, Index > >& range_req, Index* min_idx,
+    const std::set< std::pair< Index, Index > >& range_req,
     const Statement& query, Resource_Manager& rman)
 {
   uint64 timestamp = rman.get_desired_timestamp();
 
   if (range_req.empty())
     return false;
-  Index cur_idx = min_idx ? *min_idx : range_req.begin()->first;
+  Index cur_idx = range_req.begin()->first;
   while (timestamp == NOW
       ? collect_items_range(&query, rman, range_req, pred, cur_idx, elements)
-      : collect_items_range_by_timestamp(&query, rman, range_req, pred, cur_idx, elements, attic_elements))
-  {
-    if (min_idx)
-    {
-      *min_idx = cur_idx;
-      return true;
-    }
-  }
+      : collect_items_range_by_timestamp(&query, rman, range_req, pred, cur_idx, elements, attic_elements));
   return false;
 }
 
+
+template < typename Index, typename Object, typename Predicate >
+bool get_elements_by_id_from_db_generic(
+    std::map< Index, std::vector< Object > >& elements,
+    std::map< Index, std::vector< Attic< Object > > >& attic_elements,
+    const Predicate& pred,
+    const std::set< std::pair< Index, Index > >& range_req, Index& cur_idx,
+    const Statement& query, Resource_Manager& rman)
+{
+  uint64 timestamp = rman.get_desired_timestamp();
+
+  if (range_req.empty())
+    return false;
+  return timestamp == NOW
+      ? collect_items_range(&query, rman, range_req, pred, cur_idx, elements)
+      : collect_items_range_by_timestamp(&query, rman, range_req, pred, cur_idx, elements, attic_elements);
+}
 
 
 template < typename TIndex, typename TObject >
@@ -212,7 +222,43 @@ bool get_elements_by_id_from_db
     (std::map< TIndex, std::vector< TObject > >& elements,
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
      const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
-     const std::set< std::pair< TIndex, TIndex > >& range_req, TIndex* min_idx,
+     const std::set< std::pair< TIndex, TIndex > >& range_req,
+     const Statement& query, Resource_Manager& rman)
+{
+  elements.clear();
+  attic_elements.clear();
+  if (ids.empty())
+    return get_elements_by_id_from_db_generic(
+        elements, attic_elements, Trivial_Predicate< TObject >(), range_req, query, rman);
+  else if (!invert_ids)
+    return get_elements_by_id_from_db_generic(
+        elements, attic_elements, Id_Predicate< TObject >(ids), range_req, query, rman);
+  else if (!range_req.empty())
+    return get_elements_by_id_from_db_generic(
+        elements, attic_elements, Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+        range_req, query, rman);
+  else
+  {
+    if (rman.get_desired_timestamp() == NOW)
+      collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+          elements);
+    else
+      collect_items_flat_by_timestamp(query, rman,
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+          elements, attic_elements);
+  }
+
+  return false;
+}
+
+
+template < typename TIndex, typename TObject >
+bool get_elements_by_id_from_db
+    (std::map< TIndex, std::vector< TObject > >& elements,
+     std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
+     const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
+     const std::set< std::pair< TIndex, TIndex > >& range_req, TIndex& min_idx,
      const Statement& query, Resource_Manager& rman)
 {
   elements.clear();

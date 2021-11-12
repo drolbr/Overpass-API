@@ -1770,13 +1770,13 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (range_req_32.empty())
           ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
               (into.nodes, into.attic_nodes,
-              node_ids, invert_ids, range_req_32, 0, *this, rman);
+              node_ids, invert_ids, range_req_32, *this, rman);
         else
         {
           Uint32_Index min_idx = range_req_32.begin()->first;
           while (::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
               (into.nodes, into.attic_nodes,
-              node_ids, invert_ids, range_req_32, &min_idx, *this, rman))
+              node_ids, invert_ids, range_req_32, min_idx, *this, rman))
           {
             Set to_filter;
             to_filter.nodes.swap(into.nodes);
@@ -1802,7 +1802,7 @@ void Query_Statement::execute(Resource_Manager& rman)
         {
           ::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
               (into.ways, into.attic_ways,
-              way_ids, invert_ids, way_range_req_31, 0, *this, rman);
+              way_ids, invert_ids, way_range_req_31, *this, rman);
           if (type & QUERY_CLOSED_WAY)
             filter_elems_for_closed_ways(into);
         }
@@ -1811,7 +1811,7 @@ void Query_Statement::execute(Resource_Manager& rman)
           Uint31_Index min_idx = way_range_req_31.begin()->first;
           while (::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
               (into.ways, into.attic_ways,
-              way_ids, invert_ids, way_range_req_31, &min_idx, *this, rman))
+              way_ids, invert_ids, way_range_req_31, min_idx, *this, rman))
           {
             Set to_filter;
             to_filter.ways.swap(into.ways);
@@ -1841,13 +1841,13 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (relation_range_req_31.empty())
           ::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
               (into.relations, into.attic_relations,
-              relation_ids, invert_ids, relation_range_req_31, 0, *this, rman);
+              relation_ids, invert_ids, relation_range_req_31, *this, rman);
         else
         {
           Uint31_Index min_idx = relation_range_req_31.begin()->first;
           while (::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
               (into.relations, into.attic_relations,
-              relation_ids, invert_ids, relation_range_req_31, &min_idx, *this, rman))
+              relation_ids, invert_ids, relation_range_req_31, min_idx, *this, rman))
           {
             Set to_filter;
             to_filter.relations.swap(into.relations);
