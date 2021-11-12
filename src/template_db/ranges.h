@@ -50,8 +50,9 @@ public:
   
   Iterator begin() const { return Iterator(data.begin()); }
   Iterator end() const { return Iterator(data.end()); }
+  bool empty() const { return data.empty(); }
   
-  Ranges skip_start(Index lower_bound);
+  Ranges skip_start(Index lower_bound) const;
 
 private:
   std::set< std::pair< Index, Index > > data;
@@ -59,7 +60,7 @@ private:
 
 
 template< typename Index >
-Ranges< Index > Ranges< Index >::skip_start(Index lower_bound)
+Ranges< Index > Ranges< Index >::skip_start(Index lower_bound) const
 {
   Ranges< Index > result({});
   for (const auto& i : data)

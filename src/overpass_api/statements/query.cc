@@ -1773,10 +1773,9 @@ void Query_Statement::execute(Resource_Manager& rman)
               node_ids, invert_ids, range_req_32, *this, rman);
         else
         {
-          Uint32_Index min_idx = range_req_32.begin()->first;
-          while (::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-              (into.nodes, into.attic_nodes,
-              node_ids, invert_ids, range_req_32, min_idx, *this, rman))
+          Collect_Items< Uint32_Index, Node_Skeleton > db_reader(
+              node_ids, invert_ids, range_req_32, *this, rman);
+          while (db_reader.get_chunk(into.nodes, into.attic_nodes))
           {
             Set to_filter;
             to_filter.nodes.swap(into.nodes);
@@ -1808,10 +1807,9 @@ void Query_Statement::execute(Resource_Manager& rman)
         }
         else
         {
-          Uint31_Index min_idx = way_range_req_31.begin()->first;
-          while (::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
-              (into.ways, into.attic_ways,
-              way_ids, invert_ids, way_range_req_31, min_idx, *this, rman))
+          Collect_Items< Uint31_Index, Way_Skeleton > db_reader(
+              way_ids, invert_ids, way_range_req_31, *this, rman);
+          while (db_reader.get_chunk(into.ways, into.attic_ways))
           {
             Set to_filter;
             to_filter.ways.swap(into.ways);
@@ -1844,10 +1842,9 @@ void Query_Statement::execute(Resource_Manager& rman)
               relation_ids, invert_ids, relation_range_req_31, *this, rman);
         else
         {
-          Uint31_Index min_idx = relation_range_req_31.begin()->first;
-          while (::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
-              (into.relations, into.attic_relations,
-              relation_ids, invert_ids, relation_range_req_31, min_idx, *this, rman))
+          Collect_Items< Uint31_Index, Relation_Skeleton > db_reader(
+              relation_ids, invert_ids, relation_range_req_31, *this, rman);
+          while (db_reader.get_chunk(into.relations, into.attic_relations))
           {
             Set to_filter;
             to_filter.relations.swap(into.relations);
