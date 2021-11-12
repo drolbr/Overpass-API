@@ -180,25 +180,21 @@ void filter_relations_by_ranges(std::map< Uint31_Index, std::vector< Relation_Sk
 
 
 template < typename Index, typename Object, typename Predicate >
-bool get_elements_by_id_from_db_generic(
+void get_elements_by_id_from_db_generic(
     std::map< Index, std::vector< Object > >& elements,
     std::map< Index, std::vector< Attic< Object > > >& attic_elements,
-    const Predicate& pred,
-    const std::set< std::pair< Index, Index > >& range_req,
+    const Predicate& pred, const Ranges< Index >& ranges,
     const Statement& query, Resource_Manager& rman)
 {
-  if (range_req.empty())
-    return false;
-  Index cur_idx = range_req.begin()->first;
-  while (rman.get_desired_timestamp() == NOW
-      ? collect_items_range(&query, rman, range_req, pred, cur_idx, elements)
-      : collect_items_range_by_timestamp(&query, rman, range_req, pred, cur_idx, elements, attic_elements));
-  return false;
+  if (rman.get_desired_timestamp() == NOW)
+    collect_items_range(&query, rman, ranges, pred, elements);
+  else
+    collect_items_range_by_timestamp(&query, rman, ranges, pred, elements, attic_elements);
 }
 
 
 template < typename TIndex, typename TObject >
-bool get_elements_by_id_from_db
+void get_elements_by_id_from_db
     (std::map< TIndex, std::vector< TObject > >& elements,
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
      const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
@@ -207,16 +203,17 @@ bool get_elements_by_id_from_db
 {
   elements.clear();
   attic_elements.clear();
+  Ranges< TIndex > ranges(range_req);
   if (ids.empty())
-    return get_elements_by_id_from_db_generic(
-        elements, attic_elements, Trivial_Predicate< TObject >(), range_req, query, rman);
+    get_elements_by_id_from_db_generic(
+        elements, attic_elements, Trivial_Predicate< TObject >(), ranges, query, rman);
   else if (!invert_ids)
-    return get_elements_by_id_from_db_generic(
-        elements, attic_elements, Id_Predicate< TObject >(ids), range_req, query, rman);
-  else if (!range_req.empty())
-    return get_elements_by_id_from_db_generic(
+    get_elements_by_id_from_db_generic(
+        elements, attic_elements, Id_Predicate< TObject >(ids), ranges, query, rman);
+  else if (!ranges.empty())
+    get_elements_by_id_from_db_generic(
         elements, attic_elements, Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-        range_req, query, rman);
+        ranges, query, rman);
   else
   {
     if (rman.get_desired_timestamp() == NOW)
@@ -228,8 +225,6 @@ bool get_elements_by_id_from_db
           Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
           elements, attic_elements);
   }
-
-  return false;
 }
 
 

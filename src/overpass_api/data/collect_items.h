@@ -444,8 +444,7 @@ bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
 
   Ranges< Index > shortened = ranges.skip_start(cur_idx);
-  for (typename Block_Backend< Index, Object >::Range_Iterator
-      it(db.range_begin(shortened)); !(it == db.range_end()); ++it)
+  for (auto it = db.range_begin(shortened); !(it == db.range_end()); ++it)
   {
     if (too_much_data && !(cur_idx == it.index()))
     {
@@ -476,6 +475,22 @@ bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
 
 
 template < class Index, class Object, class Predicate >
+void collect_items_range(const Statement* stmt, Resource_Manager& rman,
+    const Ranges< Index >& ranges, const Predicate& predicate,
+    std::map< Index, std::vector< Object > >& result)
+{
+  Block_Backend< Index, Object > db
+      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
+
+  for (auto it = db.range_begin(ranges); !(it == db.range_end()); ++it)
+  {
+    if (predicate.match(it.handle()))
+      result[it.index()].push_back(it.object());
+  }
+}
+
+
+template < class Index, class Object, class Predicate >
 bool collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     const Ranges< Index >& ranges, const Predicate& predicate, Index& cur_idx,
     std::map< Index, std::vector< Object > >& result,
@@ -500,6 +515,23 @@ bool collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& r
     std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   return collect_items_range_by_timestamp(stmt, rman, Ranges< Index >(req), predicate, cur_idx, result, attic_result);
+}
+
+
+template < class Index, class Object, class Predicate >
+void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+    const Ranges< Index >& ranges, const Predicate& predicate,
+    std::map< Index, std::vector< Object > >& result,
+    std::map< Index, std::vector< Attic< Object > > >& attic_result)
+{
+  Block_Backend< Index, Object > current_db
+      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
+  Block_Backend< Index, Attic< typename Object::Delta > > attic_db
+      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
+  collect_items_by_timestamp(stmt, rman,
+      current_db.range_begin(ranges), current_db.range_end(),
+      attic_db.range_begin(ranges), attic_db.range_end(),
+      predicate, (Index*)0, rman.get_desired_timestamp(), result, attic_result);
 }
 
 
