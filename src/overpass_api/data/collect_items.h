@@ -465,23 +465,16 @@ bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
 }
 
 
-template < class Index, class Object, class Container, class Predicate >
-bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
-    const Container& req, const Predicate& predicate, Index& cur_idx,
-    std::map< Index, std::vector< Object > >& result)
-{
-  return collect_items_range(stmt, rman, Ranges< Index >(req), predicate, cur_idx, result);
-}
-
-
 template < class Index, class Object, class Predicate >
 void collect_items_range(const Statement* stmt, Resource_Manager& rman,
     const Ranges< Index >& ranges, const Predicate& predicate,
     std::map< Index, std::vector< Object > >& result)
 {
+  if (ranges.empty())
+    return;
+
   Block_Backend< Index, Object > db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-
   for (auto it = db.range_begin(ranges); !(it == db.range_end()); ++it)
   {
     if (predicate.match(it.handle()))
@@ -508,22 +501,14 @@ bool collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& r
 }
 
 
-template < class Index, class Object, class Container, class Predicate >
-bool collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
-    const Container& req, const Predicate& predicate, Index& cur_idx,
-    std::map< Index, std::vector< Object > >& result,
-    std::map< Index, std::vector< Attic< Object > > >& attic_result)
-{
-  return collect_items_range_by_timestamp(stmt, rman, Ranges< Index >(req), predicate, cur_idx, result, attic_result);
-}
-
-
 template < class Index, class Object, class Predicate >
 void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     const Ranges< Index >& ranges, const Predicate& predicate,
     std::map< Index, std::vector< Object > >& result,
     std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
+  if (ranges.empty())
+    return;
   Block_Backend< Index, Object > current_db
       (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
   Block_Backend< Index, Attic< typename Object::Delta > > attic_db

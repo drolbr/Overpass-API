@@ -81,9 +81,8 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members
   if (req.empty())
     return result;
 
-  Uint32_Index cur_idx = req.begin()->first;
-  while (collect_items_range(stmt, rman,
-      req, Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), cur_idx, result));
+  collect_items_range(stmt, rman, Ranges< Uint32_Index >(req),
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), result);
 
   return result;
 }
@@ -119,9 +118,8 @@ Way_Geometry_Store::Way_Geometry_Store
   if (req.empty())
     return;
 
-  Uint32_Index cur_idx = req.begin()->first;
-  while (collect_items_range_by_timestamp(&query, rman, req,
-      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), cur_idx, current, attic));
+  collect_items_range_by_timestamp(&query, rman, Ranges< Uint32_Index >(req),
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current, attic);
 
   keep_matching_skeletons(nodes, current, attic, rman.get_desired_timestamp());
 }
