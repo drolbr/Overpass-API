@@ -148,22 +148,22 @@ std::vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const std::vect
 
 
 void filter_ways_by_ranges(std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                           const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+                           const Ranges< Uint31_Index >& ranges);
 void filter_ways_by_ranges(std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
-                           const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+                           const Ranges< Uint31_Index >& ranges);
 
 
 template< typename Relation_Skeleton >
-void filter_relations_by_ranges(std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-                                const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+void filter_relations_by_ranges(
+    std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations, const Ranges< Uint31_Index >& ranges)
 {
-  std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+  auto ranges_it = ranges.begin();
   typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::iterator it = relations.begin();
   for (; it != relations.end() && ranges_it != ranges.end(); )
   {
-    if (!(it->first < ranges_it->second))
+    if (!(it->first < ranges_it.upper_bound()))
       ++ranges_it;
-    else if (!(it->first < ranges_it->first))
+    else if (!(it->first < ranges_it.lower_bound()))
       ++it;
     else
     {

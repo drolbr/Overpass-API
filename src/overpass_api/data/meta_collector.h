@@ -59,7 +59,7 @@ public:
 
 private:
   std::set< Index > used_indices;
-  std::set< std::pair< Index, Index > > used_ranges;
+  Ranges< Index > used_ranges;
   Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >* meta_db;
   typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
       ::Discrete_Iterator* db_it;
@@ -107,7 +107,7 @@ template< typename Object >
 Meta_Collector< Index, Id_Type >::Meta_Collector
     (const std::map< Index, std::vector< Object > >& items,
      Transaction& transaction, const File_Properties* meta_file_prop)
-  : meta_db(0), db_it(0), range_it(0), current_index(0), last_index(0)
+  : used_ranges({}), meta_db(0), db_it(0), range_it(0), current_index(0), last_index(0)
 {
   if (!meta_file_prop)
     return;
@@ -169,9 +169,8 @@ void Meta_Collector< Index, Id_Type >::reset()
   }
   else
   {
-    last_index = new Index(used_ranges.begin()->first);
-    Ranges< Index > ranges(used_ranges);
-    range_it = new auto(meta_db->range_begin(ranges));
+    last_index = new Index(used_ranges.begin().lower_bound());
+    range_it = new auto(meta_db->range_begin(used_ranges));
 
     if (!(*range_it == meta_db->range_end()))
       current_index = new Index(range_it->index());

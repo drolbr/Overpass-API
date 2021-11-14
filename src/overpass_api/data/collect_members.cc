@@ -938,35 +938,35 @@ std::vector< Uint31_Index > segment_idxs(const std::vector< Quad_Coord >& geomet
 template< typename Object >
 void filter_ways_by_ranges_generic
     (std::map< Uint31_Index, std::vector< Object > >& ways,
-    const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+    const Ranges< Uint31_Index >& ranges)
 {
-  std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+  auto ranges_it = ranges.begin();
   typename std::map< Uint31_Index, std::vector< Object > >::iterator it = ways.begin();
-  std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_begin = ranges.begin();
+  auto ranges_begin = ranges.begin();
   for (; it != ways.end() && ranges_it != ranges.end(); )
   {
-    if (!(it->first < ranges_it->second))
+    if (!(it->first < ranges_it.upper_bound()))
       ++ranges_it;
-    else if (!(it->first < ranges_it->first))
+    else if (!(it->first < ranges_it.lower_bound()))
     {
       if ((it->first.val() & 0x80000000) == 0 || (it->first.val() & 0x1) != 0) // Adapt 0x3
         ++it;
       else
       {
         std::vector< Object > filtered_ways;
-        while (!(Uint31_Index(it->first.val() & 0x7fffff00) < ranges_begin->second))
+        while (!(Uint31_Index(it->first.val() & 0x7fffff00) < ranges_begin.upper_bound()))
           ++ranges_begin;
         for (typename std::vector< Object >::const_iterator it2 = it->second.begin();
              it2 != it->second.end(); ++it2)
         {
-          std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it2 = ranges_begin;
+          auto ranges_it2 = ranges_begin;
           std::vector< Uint31_Index > segment_idxs_ = segment_idxs(it2->geometry);
           for (std::vector< Uint31_Index >::const_iterator it3 = segment_idxs_.begin();
                it3 != segment_idxs_.end() && ranges_it2 != ranges.end(); )
           {
-            if (!(*it3 < ranges_it2->second))
+            if (!(*it3 < ranges_it2.upper_bound()))
               ++ranges_it2;
-            else if (!(*it3 < ranges_it2->first))
+            else if (!(*it3 < ranges_it2.lower_bound()))
             {
               // A relevant index is found; thus the way is relevant.
               filtered_ways.push_back(*it2);
@@ -983,8 +983,8 @@ void filter_ways_by_ranges_generic
     }
     else
     {
-      // The index of the way is not in the current std::set of ranges.
-      // Thus it cannot be in the result std::set.
+      // The index of the way is not in the current set of ranges.
+      // Thus it cannot be in the result set.
       it->second.clear();
       ++it;
     }
@@ -995,14 +995,14 @@ void filter_ways_by_ranges_generic
 
 
 void filter_ways_by_ranges(std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                           const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+                           const Ranges< Uint31_Index >& ranges)
 {
   filter_ways_by_ranges_generic(ways, ranges);
 }
 
 
 void filter_ways_by_ranges(std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
-                           const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+                           const Ranges< Uint31_Index >& ranges)
 {
   filter_ways_by_ranges_generic(ways, ranges);
 }

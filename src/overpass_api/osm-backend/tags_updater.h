@@ -131,13 +131,13 @@ void prepare_delete_tags
     upper.value = "";
     range_set.insert(std::make_pair(lower, upper));
   }
+  Ranges< Tag_Index_Local > ranges(range_set);
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Id_Type > rels_db(&tags_local);
   Tag_Index_Local current_index;
   Tag_Entry< Id_Type > tag_entry;
   current_index.index = 0xffffffff;
-  Ranges< Tag_Index_Local > ranges(range_set);
   for (auto it = rels_db.range_begin(ranges); !(it == rels_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
@@ -185,13 +185,13 @@ void get_existing_tags
     upper.value = "";
     range_set.insert(std::make_pair(lower, upper));
   }
+  Ranges< Tag_Index_Local > ranges(range_set);
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Id_Type > rels_db(&tags_local);
   Tag_Index_Local current_index;
   Tag_Entry< Id_Type > tag_entry;
   current_index.index = 0xffffffff;
-  Ranges< Tag_Index_Local > ranges(range_set);
   for (auto it = rels_db.range_begin(ranges); !(it == rels_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
@@ -245,13 +245,13 @@ void prepare_tags
     upper.value = "";
     range_set.insert(std::make_pair(lower, upper));
   }
+  Ranges< Tag_Index_Local > ranges(range_set);
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > elems_db(&tags_local);
   Tag_Index_Local current_index;
   Tag_Entry< typename TObject::Id_Type > tag_entry;
   current_index.index = 0xffffffff;
-  Ranges< Tag_Index_Local > ranges(range_set);
   for (auto it = elems_db.range_begin(ranges);
      !(it == elems_db.range_end()); ++it)
   {
