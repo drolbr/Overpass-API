@@ -26,6 +26,7 @@ template< typename Index >
 class Ranges
 {
 public:
+  Ranges() {}
   Ranges(const std::set< std::pair< Index, Index > >& data_) : data(data_) {}
   Ranges(Index begin, Index end) : data({{ begin, end }}) {}
   
@@ -53,6 +54,8 @@ public:
   bool empty() const { return data.empty(); }
   
   Ranges skip_start(Index lower_bound) const;
+  void push_back(Index begin, Index end)
+  { data.insert({ begin, end }); }
 
 private:
   std::set< std::pair< Index, Index > > data;
@@ -62,7 +65,7 @@ private:
 template< typename Index >
 Ranges< Index > Ranges< Index >::skip_start(Index lower_bound) const
 {
-  Ranges< Index > result({});
+  Ranges< Index > result;
   for (const auto& i : data)
   {
     if (lower_bound < i.second)

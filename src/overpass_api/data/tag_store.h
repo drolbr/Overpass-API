@@ -268,7 +268,7 @@ void collect_tags_framed
 
 template< typename Index, typename Object >
 Tag_Store< Index, Object >::Tag_Store(Transaction& transaction_)
-    : transaction(&transaction_), use_index(false), ranges({}), items_db(0), tag_it(0),
+    : transaction(&transaction_), use_index(false), items_db(0), tag_it(0),
     attic_items_db(0), attic_tag_it(0) {}
 
 

@@ -128,38 +128,20 @@ inline const std::string& void_tag_value()
 template< class Index >
 Ranges< Tag_Index_Local > formulate_range_query(const std::set< Index >& coarse_indices)
 {
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  Ranges< Tag_Index_Local > ranges;
   for (auto it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->val();
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->val() + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(std::make_pair(lower, upper));
-  }
-  return Ranges< Tag_Index_Local >(range_set);
+    ranges.push_back({ it->val(), "", "" }, { it->val() + 0x100, "", "" });
+  return ranges;
 }
 
 
 template< class Value >
 Ranges< Tag_Index_Local > formulate_range_query(const std::map< uint32, Value >& coarse_indices)
 {
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
+  Ranges< Tag_Index_Local > ranges;
   for (typename std::map< uint32, Value >::const_iterator it = coarse_indices.begin(); it != coarse_indices.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(std::make_pair(lower, upper));
-  }
-  return Ranges< Tag_Index_Local >(range_set);
+    ranges.push_back({ it->first, "", "" }, { it->first + 0x100, "", "" });
+  return ranges;
 }
 
 

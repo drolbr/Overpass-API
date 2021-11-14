@@ -107,7 +107,7 @@ template< typename Object >
 Meta_Collector< Index, Id_Type >::Meta_Collector
     (const std::map< Index, std::vector< Object > >& items,
      Transaction& transaction, const File_Properties* meta_file_prop)
-  : used_ranges({}), meta_db(0), db_it(0), range_it(0), current_index(0), last_index(0)
+  : meta_db(0), db_it(0), range_it(0), current_index(0), last_index(0)
 {
   if (!meta_file_prop)
     return;
