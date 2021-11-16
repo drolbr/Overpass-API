@@ -304,7 +304,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   get_ranges(rman, node_ranges);
   std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-      = relation_node_members(&query, rman, into.relations, &node_ranges);
+      = relation_node_members(&query, rman, into.relations, node_ranges, {}, true);
 
   // filter for those nodes that are in one of the areas
   {

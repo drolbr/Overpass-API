@@ -474,7 +474,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     get_ranges(rman, node_ranges);
 
     std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-        = relation_node_members(&query, rman, into.relations, &node_ranges);
+        = relation_node_members(&query, rman, into.relations, node_ranges, {}, true);
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
         = order_by_id(node_members, Order_By_Node_Id());
 
@@ -949,7 +949,8 @@ struct Relation_Member_Collection
 			     std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges)
       : query_(query),
 	way_members(relation_way_members(&query, rman, relations, way_ranges)),
-        node_members(relation_node_members(&query, rman, relations, node_ranges))
+        node_members(relation_node_members(&query, rman, relations,
+            node_ranges ? *node_ranges : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }}, {}, true))
   {
     // Retrieve all nodes referred by the ways.
 
@@ -1052,7 +1053,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   add_ways(input.ways, Way_Geometry_Store(input.ways, query, rman));
 
   // Retrieve all node and way members referred by the relations.
-  add_nodes(relation_node_members(&query, rman, input.relations));
+  add_nodes(relation_node_members(&query, rman, input.relations, std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }}, {}, true));
 
   // Retrieve all ways referred by the relations.
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members
@@ -1065,7 +1066,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
     add_ways(input.attic_ways, Way_Geometry_Store(input.attic_ways, query, rman));
 
     // Retrieve all node and way members referred by the relations.
-    add_nodes(relation_node_members(&query, rman, input.attic_relations));
+    add_nodes(relation_node_members(&query, rman, input.attic_relations, 0));
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members

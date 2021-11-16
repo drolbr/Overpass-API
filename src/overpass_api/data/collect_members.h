@@ -69,21 +69,21 @@ std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_memb
 std::map< Uint32_Index, std::vector< Node_Skeleton > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint32_Index >& node_ranges,
+     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false, const uint32* role_id = 0);
 
 std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint32_Index >& node_ranges,
+     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false, const uint32* role_id = 0);
 
 std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0);
+     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges);
 
 std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > way_members

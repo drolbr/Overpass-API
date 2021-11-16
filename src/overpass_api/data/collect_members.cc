@@ -709,25 +709,22 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > paired_items_range(
     const Statement* stmt, Resource_Manager& rman,
     const std::vector< Node::Id_Type >& target_ids,
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
+    const Ranges< Uint32_Index >& ranges)
 {
   std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
       std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > result;
   if (target_ids.empty())
     return result;
 
-  if (!ranges.empty())
+  if (rman.get_desired_timestamp() == NOW)
+    collect_items_range(stmt, rman, ranges,
+        Id_Predicate< Node_Skeleton >(target_ids), result.first);
+  else
   {
-    if (rman.get_desired_timestamp() == NOW)
-      collect_items_range(stmt, rman, Ranges< Uint32_Index >(ranges),
-          Id_Predicate< Node_Skeleton >(target_ids), result.first);
-    else
-    {
-      collect_items_range_by_timestamp(
-          stmt, rman, Ranges< Uint32_Index >(ranges), Id_Predicate< Node_Skeleton >(target_ids),
-          result.first, result.second);
-      keep_matching_skeletons(result.first, result.second, rman.get_desired_timestamp());
-    }
+    collect_items_range_by_timestamp(
+        stmt, rman, ranges, Id_Predicate< Node_Skeleton >(target_ids),
+        result.first, result.second);
+    keep_matching_skeletons(result.first, result.second, rman.get_desired_timestamp());
   }
 
   return result;
@@ -737,18 +734,18 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
 std::map< Uint32_Index, std::vector< Node_Skeleton > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges,
-     const std::vector< Node::Id_Type >* node_ids, bool invert_ids, const uint32* role_id)
+     const Ranges< Uint32_Index >& node_ranges,
+     const std::vector< Node::Id_Type >& node_ids, bool invert_ids, const uint32* role_id)
 {
   std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(rman, relations, role_id);
   if (stmt)
     rman.health_check(*stmt);
-  if (node_ids)
-    sieve_first_arg(intersect_ids, *node_ids, invert_ids);
+  sieve_first_arg(intersect_ids, node_ids, invert_ids);
 
-  return paired_items_range(stmt, rman, intersect_ids,
-      node_ranges ? *node_ranges : relation_node_member_indices< Relation_Skeleton >(stmt, rman,
-          relations.begin(), relations.end())).first;
+  return paired_items_range(
+      stmt, rman, intersect_ids,
+      node_ranges.intersect(relation_node_member_indices< Relation_Skeleton >(
+              stmt, rman, relations.begin(), relations.end()))).first;
 }
 
 
@@ -757,18 +754,18 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges,
-     const std::vector< Node::Id_Type >* node_ids, bool invert_ids, const uint32* role_id)
+     const Ranges< Uint32_Index >& node_ranges,
+     const std::vector< Node::Id_Type >& node_ids, bool invert_ids, const uint32* role_id)
 {
   std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(rman, relations, attic_relations, role_id);
   if (stmt)
     rman.health_check(*stmt);
-  if (node_ids)
-    sieve_first_arg(intersect_ids, *node_ids, invert_ids);
+  sieve_first_arg(intersect_ids, node_ids, invert_ids);
 
-  return paired_items_range(stmt, rman, intersect_ids,
-      node_ranges ? *node_ranges : relation_node_member_indices< Relation_Skeleton >(stmt, rman,
-          relations.begin(), relations.end(), attic_relations.begin(), attic_relations.end()));
+  return paired_items_range(
+      stmt, rman, intersect_ids,
+      node_ranges.intersect(relation_node_member_indices< Relation_Skeleton >(
+              stmt, rman, relations.begin(), relations.end(), attic_relations.begin(), attic_relations.end())));
 }
 
 
@@ -1287,13 +1284,15 @@ void collect_ways
 
 
 void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into,
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >* ranges_32,
+    const std::set< std::pair< Uint32_Index, Uint32_Index > >* ranges_32_,
     const std::set< std::pair< Uint31_Index, Uint31_Index > >* ranges_31)
 {
+  Ranges< Uint32_Index > ranges_32(ranges_32_ ? *ranges_32_
+      : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }});
   if (rman.get_desired_timestamp() == NOW)
   {
     std::map< Uint32_Index, std::vector< Node_Skeleton > > rel_nodes
-          = relation_node_members(stmt, rman, input_set.relations, ranges_32);
+          = relation_node_members(stmt, rman, input_set.relations, ranges_32, {}, true);
     into.ways = relation_way_members(stmt, rman, input_set.relations, ranges_31);
     std::map< Uint31_Index, std::vector< Way_Skeleton > > source_ways = input_set.ways;
     sort_second(source_ways);
@@ -1310,7 +1309,7 @@ void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const 
   {
     std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
         std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > all_nodes
-        = relation_node_members(stmt, rman, input_set.relations, input_set.attic_relations, ranges_32);
+        = relation_node_members(stmt, rman, input_set.relations, input_set.attic_relations, ranges_32, {}, true);
     into.nodes.swap(all_nodes.first);
     into.attic_nodes.swap(all_nodes.second);
 

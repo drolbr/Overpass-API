@@ -39,13 +39,13 @@ Relation_Geometry_Store::Relation_Geometry_Store
     south = 1;
   }
 
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
-  if (south <= north)
-    get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
+  Ranges< Uint32_Index > node_ranges(south <= north
+      ? get_ranges_32(south_, north_, west_, east_)
+      : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }});
 
   // Retrieve all nodes referred by the relations.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-      = relation_node_members(&query, rman, relations, north < south ? 0 : &node_ranges);
+      = relation_node_members(&query, rman, relations, node_ranges, {}, true);
 
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.begin();
@@ -92,16 +92,16 @@ Relation_Geometry_Store::Relation_Geometry_Store
     south = 1;
   }
 
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
-  if (south <= north)
-    get_ranges_32(south_, north_, west_, east_).swap(node_ranges);
+  Ranges< Uint32_Index > node_ranges(south <= north
+      ? get_ranges_32(south_, north_, west_, east_)
+      : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }});
 
   // Retrieve all nodes referred by the relations.
   std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
       std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
       = relation_node_members(&query, rman,
           std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
-          north < south ? 0 : &node_ranges);
+          node_ranges, {}, true);
 
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.first.begin();

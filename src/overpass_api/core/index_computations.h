@@ -19,6 +19,7 @@
 #ifndef DE__OSM3S___OVERPASS_API__CORE__INDEX_COMPUTATIONS_H
 #define DE__OSM3S___OVERPASS_API__CORE__INDEX_COMPUTATIONS_H
 
+#include "../../template_db/ranges.h"
 #include "basic_types.h"
 
 #include <algorithm>
@@ -801,12 +802,20 @@ inline void add_decomp_range(const std::pair< Uint32_Index, Uint32_Index >& rang
   }
 }
 
-inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
-    (const std::set< std::pair< Uint32_Index, Uint32_Index > >& node_idxs)
+
+inline void add_decomp_range(const Ranges< Uint32_Index >::Iterator& range,
+			     std::vector< std::pair< Uint32_Index, Uint32_Index > >& node_decomp)
+{
+  add_decomp_range(std::pair< Uint32_Index, Uint32_Index >{ range.lower_bound(), range.upper_bound() }, node_decomp);
+}
+
+
+template< typename Container >
+std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
+    (const Container& node_idxs)
 {
   std::vector< std::pair< Uint32_Index, Uint32_Index > > node_decomp;
-  for (std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator
-      it = node_idxs.begin(); it != node_idxs.end(); ++it)
+  for (auto it = node_idxs.begin(); it != node_idxs.end(); ++it)
     add_decomp_range(*it, node_decomp);
 
   std::vector< std::pair< Uint31_Index, Uint31_Index > > result;

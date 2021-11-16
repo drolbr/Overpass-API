@@ -53,6 +53,7 @@ public:
   Iterator end() const { return Iterator(data.end()); }
   bool empty() const { return data.empty(); }
   
+  Ranges intersect(const Ranges& rhs) const;
   Ranges skip_start(Index lower_bound) const;
   void push_back(Index begin, Index end)
   { data.insert({ begin, end }); }
@@ -60,6 +61,35 @@ public:
 private:
   std::set< std::pair< Index, Index > > data;
 };
+
+
+template< typename Index >
+Ranges< Index > Ranges< Index >::intersect(const Ranges< Index >& rhs) const
+{
+  Ranges< Index > result;
+  auto it_a = data.begin();
+  auto it_b = rhs.data.begin();
+
+  while (it_a != data.end() && it_b != rhs.data.end())
+  {
+    if (!(it_a->first < it_b->second))
+      ++it_b;
+    else if (!(it_b->first < it_a->second))
+      ++it_a;
+    else if (it_b->second < it_a->second)
+    {
+      result.push_back(std::max(it_a->first, it_b->first), it_b->second);
+      ++it_b;
+    }
+    else
+    {
+      result.push_back(std::max(it_a->first, it_b->first), it_a->second);
+      ++it_a;
+    }
+  }
+
+  return result;
+}
 
 
 template< typename Index >
