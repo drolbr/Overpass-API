@@ -83,7 +83,7 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
 std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges);
+     const Ranges< Uint32_Index >& node_ranges);
 
 std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > way_members

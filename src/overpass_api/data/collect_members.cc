@@ -772,7 +772,7 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
 std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges)
+     const Ranges< Uint32_Index >& node_ranges)
 {
   std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(rman, relations);
   if (stmt)
@@ -785,18 +785,8 @@ std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_me
   // Retrieve all nodes referred by the ways.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > current;
   std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic;
-
-  if (node_ranges)
-    collect_items_range_by_timestamp(stmt, rman, Ranges< Uint32_Index >(*node_ranges),
-        Id_Predicate< Node_Skeleton >(intersect_ids), current, attic);
-  else
-  {
-    std::set< std::pair< Uint32_Index, Uint32_Index > > req =
-        relation_node_member_indices< Attic< Relation_Skeleton > >
-            (stmt, rman, relations.begin(), relations.end());
-    collect_items_range_by_timestamp(stmt, rman, Ranges< Uint32_Index >(req),
-        Id_Predicate< Node_Skeleton >(intersect_ids), current, attic);
-  }
+  collect_items_range_by_timestamp(stmt, rman, node_ranges,
+      Id_Predicate< Node_Skeleton >(intersect_ids), current, attic);
   keep_matching_skeletons(result, current, attic, rman.get_desired_timestamp());
 
   return result;

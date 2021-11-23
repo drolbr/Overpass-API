@@ -234,7 +234,7 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
 
     // Retrieve all nodes referred by the relations.
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(&query, rman, into.attic_relations, &get_ranges_32());
+        = relation_node_members(&query, rman, into.attic_relations, get_ranges_32());
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
         = order_attic_by_id(node_members, Order_By_Node_Id());
 

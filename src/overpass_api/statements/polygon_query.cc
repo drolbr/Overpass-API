@@ -137,7 +137,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   {
     // Retrieve all nodes referred by the relations.
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(&query, rman, into.attic_relations, &node_ranges);
+        = relation_node_members(&query, rman, into.attic_relations, node_ranges);
 
     // filter for those nodes that are in one of the areas
     polygon->collect_nodes(node_members, false);
