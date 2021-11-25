@@ -708,7 +708,7 @@ void collect_nodes(const Statement& query, Resource_Manager& rman,
                    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
                    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
                    const std::vector< int >* pos,
-                   const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+                   const Ranges< Uint32_Index >& ranges,
                    const std::vector< Node::Id_Type >& ids, bool invert_ids,
                    std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
                    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes)
@@ -716,20 +716,17 @@ void collect_nodes(const Statement& query, Resource_Manager& rman,
   if (ranges.empty())
   {
     if (ids.empty())
-      swap_components(way_members(&query, rman, ways, attic_ways, pos), nodes, attic_nodes);
-    else if (!invert_ids)
-      swap_components(way_members(&query, rman, ways, attic_ways, pos, 0, &ids), nodes, attic_nodes);
+      swap_components(way_members(&query, rman, ways, attic_ways, pos, 0, ids, true), nodes, attic_nodes);
     else
-      swap_components(way_members(&query, rman, ways, attic_ways, pos, 0, &ids, invert_ids), nodes, attic_nodes);
+      swap_components(way_members(&query, rman, ways, attic_ways, pos, 0, ids, invert_ids), nodes, attic_nodes);
   }
   else
   {
     if (ids.empty())
-      swap_components(way_members(&query, rman, ways, attic_ways, pos, &ranges), nodes, attic_nodes);
-    else if (!invert_ids)
-      swap_components(way_members(&query, rman, ways, attic_ways, pos, &ranges, &ids), nodes, attic_nodes);
+      swap_components(way_members(&query, rman, ways, attic_ways, pos, &ranges, ids, true), nodes, attic_nodes);
     else
-      swap_components(way_members(&query, rman, ways, attic_ways, pos, 0, &ids, invert_ids), nodes, attic_nodes);
+      swap_components(way_members(
+          &query, rman, ways, attic_ways, pos, invert_ids ? 0 : &ranges, ids, invert_ids), nodes, attic_nodes);
   }
 }
 
@@ -2656,7 +2653,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     }
   }
   else if (type == RECURSE_WAY_NODE)
-    swap_components(way_members(this, rman, input_set->ways, input_set->attic_ways, get_pos()),
+    swap_components(way_members(this, rman, input_set->ways, input_set->attic_ways, get_pos(), 0, {}, true),
         into.nodes, into.attic_nodes);
   else if (type == RECURSE_DOWN)
     add_nw_member_objects(rman, this, *input_set, into);
@@ -2673,7 +2670,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
       sort_second(into.ways);
       indexed_set_union(source_ways, into.ways);
       swap_components(way_members(this, rman, source_ways,
-          std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >(), 0), into.nodes, into.attic_nodes);
+          std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >(), 0, 0, {}, true),
+          into.nodes, into.attic_nodes);
       sort_second(into.nodes);
       sort_second(rel_nodes);
       indexed_set_union(into.nodes, rel_nodes);
@@ -2698,7 +2696,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 
       std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
           std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > more_nodes
-          = way_members(this, rman, source_ways, source_attic_ways, 0);
+          = way_members(this, rman, source_ways, source_attic_ways, 0, 0, {}, true);
       sort_second(into.nodes);
       sort_second(more_nodes.first);
       indexed_set_union(into.nodes, more_nodes.first);

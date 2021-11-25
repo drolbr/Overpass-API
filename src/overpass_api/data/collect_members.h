@@ -91,8 +91,8 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
      const std::vector< int >* pos,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
+     const Ranges< Uint32_Index >* node_ranges,
+     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false);
 
 template< typename Relation_Skeleton >
 std::vector< Node::Id_Type > relation_node_member_ids
