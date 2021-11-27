@@ -1368,7 +1368,7 @@ void RHR_Polygon_Area_Oracle::build_area(
         double rhs_lon = (*all_segments)[*seg_it+1].lon;
         rhs_lon -= rhs_lon > 0 ? 360. : 0.;
 
-        if (::lon(uint32(value)<<16 > -180.))
+        if (::lon(uint32(value)<<16) > -180.)
         {
           int32 lhs_ilon = ::ilon(lhs_lon) & 0xffff0000;
           int32 rhs_ilon = ::ilon(rhs_lon) & 0xffff0000;
