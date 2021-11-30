@@ -63,7 +63,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
 
   // Retrieve all ways referred by the relations.
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members
-      = relation_way_members(&query, rman, relations, north < south ? 0 : &way_ranges);
+      = relation_way_members(&query, rman, relations, north < south ? 0 : &way_ranges, {}, true);
 
   way_geometry_store = new Way_Geometry_Store(way_members, query, rman);
 
@@ -129,7 +129,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > ways_by_idx_pair
       = relation_way_members(&query, rman,
           std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
-          north < south ? 0 : &way_ranges);
+          north < south ? 0 : &way_ranges, {}, true);
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_by_idx;
   keep_matching_skeletons(ways_by_idx, ways_by_idx_pair.first, ways_by_idx_pair.second,
       rman.get_desired_timestamp());

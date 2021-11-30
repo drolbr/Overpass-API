@@ -319,7 +319,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
   get_ranges(rman, way_ranges);
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
-      = relation_way_members(&query, rman, into.relations, &way_ranges);
+      = relation_way_members(&query, rman, into.relations, &way_ranges, {}, true);
 
   // Filter for those ways that are in one of the areas
   {

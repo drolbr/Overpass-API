@@ -614,13 +614,12 @@ std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges,
-     const std::vector< Way::Id_Type >* way_ids, bool invert_ids, const uint32* role_id)
+     const std::vector< Way::Id_Type >& way_ids, bool invert_ids, const uint32* role_id)
 {
   std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids(rman, relations, role_id);
   if (stmt)
     rman.health_check(*stmt);
-  if (way_ids)
-    sieve_first_arg(intersect_ids, *way_ids, invert_ids);
+  sieve_first_arg(intersect_ids, way_ids, invert_ids);
 
   std::map< Uint31_Index, std::vector< Way_Skeleton > > result;
   if (intersect_ids.empty())
@@ -647,13 +646,12 @@ std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
      const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges,
-     const std::vector< Way::Id_Type >* way_ids, bool invert_ids, const uint32* role_id)
+     const std::vector< Way::Id_Type >& way_ids, bool invert_ids, const uint32* role_id)
 {
   std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids(rman, relations, attic_relations, role_id);
   if (stmt)
     rman.health_check(*stmt);
-  if (way_ids)
-    sieve_first_arg(intersect_ids, *way_ids, invert_ids);
+  sieve_first_arg(intersect_ids, way_ids, invert_ids);
 
   std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > result;
@@ -1055,19 +1053,9 @@ void collect_ways(const Statement& query, Resource_Manager& rman,
 		  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
 {
   if (ranges.empty())
-  {
-    if (ids.empty())
-      ways = relation_way_members(&query, rman, rels);
-    else
-      ways = relation_way_members(&query, rman, rels, 0, &ids, invert_ids);
-  }
+    ways = relation_way_members(&query, rman, rels, 0, ids, ids.empty() || invert_ids);
   else
-  {
-    if (ids.empty())
-      ways = relation_way_members(&query, rman, rels, &ranges);
-    else
-      ways = relation_way_members(&query, rman, rels, &ranges, &ids, invert_ids);
-  }
+    ways = relation_way_members(&query, rman, rels, &ranges, ids, ids.empty() || invert_ids);
 }
 
 
@@ -1080,23 +1068,11 @@ void collect_ways(const Statement& query, Resource_Manager& rman,
                   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways)
 {
   if (ranges.empty())
-  {
-    if (ids.empty())
-      swap_components(relation_way_members
-          (&query, rman, rels, attic_rels), ways, attic_ways);
-    else
-      swap_components(relation_way_members
-          (&query, rman, rels, attic_rels, 0, &ids, invert_ids), ways, attic_ways);
-  }
+    swap_components(relation_way_members
+        (&query, rman, rels, attic_rels, 0, ids, ids.empty() || invert_ids), ways, attic_ways);
   else
-  {
-    if (ids.empty())
-      swap_components(relation_way_members
-          (&query, rman, rels, attic_rels, &ranges), ways, attic_ways);
-    else
-      swap_components(relation_way_members
-          (&query, rman, rels, attic_rels, &ranges, &ids, invert_ids), ways, attic_ways);
-  }
+    swap_components(relation_way_members
+        (&query, rman, rels, attic_rels, &ranges, ids, ids.empty() || invert_ids), ways, attic_ways);
 }
 
 
@@ -1108,19 +1084,9 @@ void collect_ways(const Statement& query, Resource_Manager& rman,
                   uint32 role_id)
 {
   if (ranges.empty())
-  {
-    if (ids.empty())
-      ways = relation_way_members(&query, rman, rels, 0, 0, false, &role_id);
-    else
-      ways = relation_way_members(&query, rman, rels, 0, &ids, invert_ids, &role_id);
-  }
+    ways = relation_way_members(&query, rman, rels, 0, ids, ids.empty() || invert_ids, &role_id);
   else
-  {
-    if (ids.empty())
-      ways = relation_way_members(&query, rman, rels, &ranges, 0, false, &role_id);
-    else
-      ways = relation_way_members(&query, rman, rels, &ranges, &ids, invert_ids, &role_id);
-  }
+    ways = relation_way_members(&query, rman, rels, &ranges, ids, ids.empty() || invert_ids, &role_id);
 }
 
 
@@ -1134,23 +1100,11 @@ void collect_ways(const Statement& query, Resource_Manager& rman,
                   uint32 role_id)
 {
   if (ranges.empty())
-  {
-    if (ids.empty())
-      swap_components(relation_way_members
-          (&query, rman, rels, attic_rels, 0, 0, false, &role_id), ways, attic_ways);
-    else
-      swap_components(relation_way_members
-          (&query, rman, rels, attic_rels, 0, &ids, invert_ids, &role_id), ways, attic_ways);
-  }
+    swap_components(relation_way_members
+        (&query, rman, rels, attic_rels, 0, ids, ids.empty() || invert_ids, &role_id), ways, attic_ways);
   else
-  {
-    if (ids.empty())
-      swap_components(relation_way_members
-          (&query, rman, rels, attic_rels, &ranges, 0, false, &role_id), ways, attic_ways);
-    else
-      swap_components(relation_way_members
-          (&query, rman, rels, attic_rels, &ranges, &ids, invert_ids, &role_id), ways, attic_ways);
-  }
+    swap_components(relation_way_members
+        (&query, rman, rels, attic_rels, &ranges, ids, ids.empty() || invert_ids, &role_id), ways, attic_ways);
 }
 
 
@@ -1282,7 +1236,7 @@ void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const 
   {
     std::map< Uint32_Index, std::vector< Node_Skeleton > > rel_nodes
           = relation_node_members(stmt, rman, input_set.relations, ranges_32, {}, true);
-    into.ways = relation_way_members(stmt, rman, input_set.relations, ranges_31);
+    into.ways = relation_way_members(stmt, rman, input_set.relations, ranges_31, {}, true);
     std::map< Uint31_Index, std::vector< Way_Skeleton > > source_ways = input_set.ways;
     sort_second(source_ways);
     sort_second(into.ways);
@@ -1304,7 +1258,7 @@ void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const 
 
     std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
         std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > all_ways
-        = relation_way_members(stmt, rman, input_set.relations, input_set.attic_relations, ranges_31);
+        = relation_way_members(stmt, rman, input_set.relations, input_set.attic_relations, ranges_31, {}, true);
     into.ways = all_ways.first;
     into.attic_ways = all_ways.second;
 
