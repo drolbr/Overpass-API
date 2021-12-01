@@ -50,7 +50,7 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
 std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges,
+     const Ranges< Uint31_Index >& way_ranges,
      const std::vector< Way::Id_Type >& way_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
@@ -58,7 +58,7 @@ std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges,
+     const Ranges< Uint31_Index >& way_ranges,
      const std::vector< Way::Id_Type >& way_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_members

@@ -483,7 +483,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     get_ranges(rman, way_ranges);
 
     std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
-        = relation_way_members(&query, rman, into.relations, &way_ranges, {}, true);
+        = relation_way_members(&query, rman, into.relations, way_ranges, {}, true);
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
         = order_by_id(way_members_, Order_By_Way_Id());
 
@@ -948,9 +948,10 @@ struct Relation_Member_Collection
 			     std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges,
 			     std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges)
       : query_(query),
-	way_members(relation_way_members(&query, rman, relations, way_ranges, {}, true)),
+	way_members(relation_way_members(&query, rman, relations,
+            way_ranges ? *way_ranges : std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }}, {}, true)),
         node_members(relation_node_members(&query, rman, relations,
-            node_ranges ? *node_ranges : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }}, {}, true))
+            node_ranges ? *node_ranges : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffffu) }}, {}, true))
   {
     // Retrieve all nodes referred by the ways.
 
@@ -1057,7 +1058,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
 
   // Retrieve all ways referred by the relations.
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members
-      = relation_way_members(&query, rman, input.relations, 0, {}, true);
+      = relation_way_members(&query, rman, input.relations, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }}, {}, true);
   add_ways(way_members, Way_Geometry_Store(way_members, query, rman));
 
   if (rman.get_desired_timestamp() != NOW)

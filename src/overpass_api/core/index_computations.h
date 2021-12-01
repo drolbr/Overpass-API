@@ -609,10 +609,8 @@ inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& wa
 }
 
 
-inline Ranges< Uint31_Index > calc_children(std::vector< Uint31_Index > parents)
+inline Ranges< Uint31_Index > calc_children(const std::vector< Uint31_Index >& parents)
 {
-  std::sort(parents.begin(), parents.end());
-  
   Ranges< Uint31_Index > result;
 
   for (auto i : parents)
