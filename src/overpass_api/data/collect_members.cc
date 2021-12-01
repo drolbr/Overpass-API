@@ -273,6 +273,20 @@ std::vector< Uint31_Index > collect_way_req
 }
 
 
+Ranges< Uint31_Index > collect_way_req
+    (const std::vector< Uint31_Index >& parents, const std::vector< Uint31_Index >& children_idxs)
+{
+  Ranges< Uint31_Index > req = calc_children(parents);
+
+  for (std::vector< Uint31_Index >::const_iterator it = children_idxs.begin();
+      it != children_idxs.end(); ++it)
+    req.push_back(*it, inc(*it));
+
+  req.sort();
+  return req;
+}
+
+
 std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
     (const Statement* stmt, Resource_Manager& rman,
      const std::vector< Node::Id_Type >& map_ids, const std::vector< uint32 >& parents)
@@ -630,9 +644,9 @@ std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
         Id_Predicate< Way_Skeleton >(intersect_ids), result);
   else
   {
-    std::vector< Uint31_Index > req =
+    Ranges< Uint31_Index > req =
         relation_way_member_indices< Relation_Skeleton >(stmt, rman, relations.begin(), relations.end());
-    collect_items_discrete(stmt, rman, *osm_base_settings().WAYS, req,
+    collect_items_range(stmt, rman, req,
 			Id_Predicate< Way_Skeleton >(intersect_ids), result);
   }
 
@@ -662,7 +676,7 @@ std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
     collect_items_range_by_timestamp(stmt, rman, Ranges< Uint31_Index >(*way_ranges),
         Id_Predicate< Way_Skeleton >(intersect_ids), result.first, result.second);
   else
-    collect_items_discrete_by_timestamp(stmt, rman,
+    collect_items_range_by_timestamp(stmt, rman,
         relation_way_member_indices< Relation_Skeleton >
             (stmt, rman, relations.begin(), relations.end(), attic_relations.begin(), attic_relations.end()),
         Id_Predicate< Way_Skeleton >(intersect_ids), result.first, result.second);
@@ -692,7 +706,7 @@ std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_memb
     collect_items_range_by_timestamp(stmt, rman, Ranges< Uint31_Index >(*way_ranges),
         Id_Predicate< Way_Skeleton >(intersect_ids), current, attic);
   else
-    collect_items_discrete_by_timestamp(stmt, rman,
+    collect_items_range_by_timestamp(stmt, rman,
         relation_way_member_indices< Attic< Relation_Skeleton > >
             (stmt, rman, relations.begin(), relations.end()),
         Id_Predicate< Way_Skeleton >(intersect_ids), current, attic);

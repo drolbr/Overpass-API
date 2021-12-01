@@ -485,6 +485,7 @@ inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 
   return result;
 }
 
+
 inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& way_rel_idxs)
 {
   std::vector< Uint31_Index > result;
@@ -604,6 +605,153 @@ inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& wa
 
   sort(result.begin(), result.end());
   result.erase(unique(result.begin(), result.end()), result.end());
+  return result;
+}
+
+
+inline Ranges< Uint31_Index > calc_children(std::vector< Uint31_Index > parents)
+{
+  std::sort(parents.begin(), parents.end());
+  
+  Ranges< Uint31_Index > result;
+
+  for (auto i : parents)
+  {
+    if (i.val() & 0x80000000)
+    {
+      int32 lat = 0;
+      int32 lon = 0;
+      int32 lat_u = 0;
+      int32 lon_u = 0;
+
+      if (i.val() & 0x00000001)
+      {
+	lat = upper_ilat(i.val() & 0x2aaaaaa8);
+	lon = upper_ilon(i.val() & 0x55555554);
+	lat_u = lat + 3;
+	lon_u = lon + 3;
+      }
+      else if (i.val() & 0x00000002)
+      {
+	lat = upper_ilat(i.val() & 0x2aaaaa80);
+	lon = upper_ilon(i.val() & 0x55555540);
+	lat_u = lat + 0xf;
+	lon_u = lon + 0xf;
+      }
+      else if (i.val() & 0x00000004)
+      {
+	lat = upper_ilat(i.val() & 0x2aaaa800);
+	lon = upper_ilon(i.val() & 0x55555400);
+	lat_u = lat + 0x3f;
+	lon_u = lon + 0x3f;
+      }
+      else if (i.val() & 0x00000008)
+      {
+	lat = upper_ilat(i.val() & 0x2aaa8000);
+	lon = upper_ilon(i.val() & 0x55554000);
+	lat_u = lat + 0xff;
+	lon_u = lon + 0xff;
+      }
+      else if (i.val() & 0x00000010)
+      {
+	lat = upper_ilat(i.val() & 0x2aa80000);
+	lon = upper_ilon(i.val() & 0x55540000);
+	lat_u = lat + 0x3ff;
+	lon_u = lon + 0x3ff;
+      }
+      else if (i.val() & 0x00000020)
+      {
+	lat = upper_ilat(i.val() & 0x2a800000);
+	lon = upper_ilon(i.val() & 0x55400000);
+	lat_u = lat + 0xfff;
+	lon_u = lon + 0xfff;
+      }
+      else if (i.val() & 0x00000040)
+      {
+	lat = upper_ilat(i.val() & 0x28000000);
+	lon = upper_ilon(i.val() & 0x54000000);
+	lat_u = lat + 0x3fff;
+	lon_u = lon + 0x3fff;
+      }
+      else // i.val() == 0x80000080
+      {
+	lat = 0;
+	lon = 0;
+	lat_u = 0x7fff;
+	lon_u = 0xffff;
+	result.push_back(0x80000080, 0x81);
+      }
+
+      for (int32 i = lat; i <= (lat_u - 0x3fff); i += 0x2000)
+      {
+	for (int32 j = lon; j <= (lon_u - 0x3fff); j += 0x2000)
+        {
+          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xfc000000) | 0x80000040);
+          result.push_back(idx, inc(idx));
+        }
+      }
+      for (int32 i = lat; i <= (lat_u - 0xfff); i += 0x800)
+      {
+	for (int32 j = lon; j <= (lon_u - 0xfff); j += 0x800)
+        {
+          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xffc00000) | 0x80000020);
+          result.push_back(idx, inc(idx));
+        }
+      }
+      for (int32 i = lat; i <= (lat_u - 0x3ff); i += 0x200)
+      {
+	for (int32 j = lon; j <= (lon_u - 0x3ff); j += 0x200)
+        {
+          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xfffc0000) | 0x80000010);
+          result.push_back(idx, inc(idx));
+        }
+      }
+      for (int32 i = lat; i <= (lat_u - 0xff); i += 0x80)
+      {
+	for (int32 j = lon; j <= (lon_u - 0xff); j += 0x80)
+        {
+          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xffffc000) | 0x80000008);
+          result.push_back(idx, inc(idx));
+        }
+      }
+      for (int32 i = lat; i <= (lat_u - 0x3f); i += 0x20)
+      {
+	for (int32 j = lon; j <= (lon_u - 0x3f); j += 0x20)
+        {
+          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xfffffc00) | 0x80000004);
+          result.push_back(idx, inc(idx));
+        }
+      }
+      for (int32 i = lat; i <= (lat_u - 0xf); i += 8)
+      {
+	for (int32 j = lon; j <= (lon_u - 0xf); j += 8)
+        {
+          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xffffffc0) | 0x80000002);
+          result.push_back(idx, inc(idx));
+        }
+      }
+      for (int32 i = lat; i <= (lat_u - 3); i += 2)
+      {
+	for (int32 j = lon; j <= (lon_u - 3); j += 2)
+        {
+          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xfffffffc) | 0x80000001);
+          result.push_back(idx, inc(idx));
+        }
+      }
+      for (int32 i = lat; i <= lat_u; ++i)
+      {
+	for (int32 j = lon; j <= lon_u; ++j)
+        {
+          Uint31_Index idx(ll_upper(i<<16, j<<16));
+          result.push_back(idx, inc(idx));
+        }
+      }
+    }
+    else
+      result.push_back(i, inc(i));
+  }
+
+  result.sort();
   return result;
 }
 

@@ -57,6 +57,7 @@ public:
   Ranges skip_start(Index lower_bound) const;
   void push_back(Index begin, Index end)
   { data.insert({ begin, end }); }
+  void sort();
 
 private:
   std::set< std::pair< Index, Index > > data;
@@ -102,6 +103,32 @@ Ranges< Index > Ranges< Index >::skip_start(Index lower_bound) const
       result.data.insert({ std::max(i.first, lower_bound), i.second });
   }
   return result;
+}
+
+
+template< typename Index >
+void Ranges< Index >::sort()
+{
+  //TODO  sort bei Umstellung auf vector
+  
+  if (!data.empty())
+  {
+    decltype(data) result;
+    auto it = data.begin();
+    std::pair< Index, Index > buf = *it;
+    for (++it; it != data.end(); ++it)
+    {
+      if (buf.second < it->first)
+      {
+        result.insert(buf);
+        buf = *it;
+      }
+      else
+        buf.second = it->second;
+    }
+    result.insert(buf);
+    result.swap(data);
+  }
 }
 
 

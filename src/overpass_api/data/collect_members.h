@@ -864,15 +864,18 @@ std::vector< Uint31_Index > collect_way_req
      const std::vector< uint32 >& parents,
      const std::vector< uint32 >& map_ids,
      const std::vector< Uint31_Index >& children_idxs);
+Ranges< Uint31_Index > collect_way_req(
+    const std::vector< Uint31_Index >& parents,
+    const std::vector< Uint31_Index >& children_idxs);
 
 
 template< typename Relation_Skeleton >
-std::vector< Uint31_Index > relation_way_member_indices
+Ranges< Uint31_Index > relation_way_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
 {
-  std::vector< uint32 > parents;
+  std::vector< Uint31_Index > parents;
   std::vector< Uint31_Index > children_idxs;
 
   for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
@@ -890,19 +893,19 @@ std::vector< Uint31_Index > relation_way_member_indices
       }
     }
     else
-      parents.push_back(it->first.val());
+      parents.push_back(it->first);
   }
   if (stmt)
     rman.health_check(*stmt);
   std::sort(children_idxs.begin(), children_idxs.end());
   children_idxs.erase(std::unique(children_idxs.begin(), children_idxs.end()), children_idxs.end());
 
-  return collect_way_req(stmt, rman, parents, std::vector< uint32 >(), children_idxs);
+  return collect_way_req(parents, children_idxs);
 }
 
 
 template< typename Relation_Skeleton >
-std::vector< Uint31_Index > relation_way_member_indices
+Ranges< Uint31_Index > relation_way_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
@@ -911,7 +914,7 @@ std::vector< Uint31_Index > relation_way_member_indices
      typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
          attic_rels_end)
 {
-  std::vector< uint32 > parents;
+  std::vector< Uint31_Index > parents;
   std::vector< Uint31_Index > children_idxs;
 
   for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
@@ -929,7 +932,7 @@ std::vector< Uint31_Index > relation_way_member_indices
       }
     }
     else
-      parents.push_back(it->first.val());
+      parents.push_back(it->first);
   }
   for (typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
       it = attic_rels_begin; it != attic_rels_end; ++it)
@@ -946,14 +949,14 @@ std::vector< Uint31_Index > relation_way_member_indices
       }
     }
     else
-      parents.push_back(it->first.val());
+      parents.push_back(it->first);
   }
   if (stmt)
     rman.health_check(*stmt);
   std::sort(children_idxs.begin(), children_idxs.end());
   children_idxs.erase(std::unique(children_idxs.begin(), children_idxs.end()), children_idxs.end());
 
-  return collect_way_req(stmt, rman, parents, std::vector< uint32 >(), children_idxs);
+  return collect_way_req(parents, children_idxs);
 }
 
 

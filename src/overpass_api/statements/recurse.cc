@@ -1044,10 +1044,10 @@ bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, std::set< std::p
     if (stmt->get_type() == RECURSE_RELATION_WAY || stmt->get_type() == RECURSE_RELATION_NWR
         || stmt->get_type() == RECURSE_RELATION_NW || stmt->get_type() == RECURSE_RELATION_WR)
     {
-      std::vector< Uint31_Index > req = relation_way_member_indices< Relation_Skeleton >(
+      Ranges< Uint31_Index > req = relation_way_member_indices< Relation_Skeleton >(
           stmt, rman, input->relations.begin(), input->relations.end());
-      for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+      for (auto it = req.begin(); it != req.end(); ++it)
+        ranges.insert({it.lower_bound(), it.upper_bound()});
 
       return true;
     }
@@ -1075,11 +1075,11 @@ bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, std::set< std::p
     if (stmt->get_type() == RECURSE_RELATION_WAY || stmt->get_type() == RECURSE_RELATION_NWR
         || stmt->get_type() == RECURSE_RELATION_NW || stmt->get_type() == RECURSE_RELATION_WR)
     {
-      std::vector< Uint31_Index > req = relation_way_member_indices< Relation_Skeleton >(
+      Ranges< Uint31_Index > req = relation_way_member_indices< Relation_Skeleton >(
           stmt, rman, input->relations.begin(), input->relations.end(),
           input->attic_relations.begin(), input->attic_relations.end());
-      for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+      for (auto it = req.begin(); it != req.end(); ++it)
+        ranges.insert({it.lower_bound(), it.upper_bound()});
 
       return true;
     }
