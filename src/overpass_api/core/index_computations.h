@@ -27,7 +27,7 @@
 #include <vector>
 
 
-inline uint32 ll_upper(uint32 ilat, int32 ilon);
+inline uint32 ll_upper(uint32 ilat, uint32 ilon);
 inline uint32 ll_upper_(uint32 ilat, int32 ilon);
 inline uint32 upper_ilat(uint32 quadtile);
 inline uint32 upper_ilon(uint32 quadtile);
@@ -59,17 +59,29 @@ struct Uint31_Compare
   }
 };
 
-inline uint32 ll_upper(uint32 ilat, int32 ilon)
+inline uint32 ll_upper(uint32 ilat, uint32 ilon)
 {
-  uint32 result = 0;
+  ilat &= 0xffff0000;
+  ilat |= (ilat>>8);
+  ilat &= 0xff00ff00;
+  ilat |= (ilat>>4);
+  ilat &= 0xf0f0f0f0;
+  ilat |= (ilat>>2);
+  ilat &= 0xcccccccc;
+  ilat |= (ilat>>1);
+  ilat &= 0xaaaaaaaa;
 
-  for (uint32 i(0); i < 16; ++i)
-  {
-    result |= ((0x1<<(i+16))&ilat)>>(15-i);
-    result |= ((0x1<<(i+16))&(uint32)ilon)>>(16-i);
-  }
+  ilon &= 0xffff0000;
+  ilon |= (ilon>>8);
+  ilon &= 0xff00ff00;
+  ilon |= (ilon>>4);
+  ilon &= 0xf0f0f0f0;
+  ilon |= (ilon>>2);
+  ilon &= 0xcccccccc;
+  ilon |= (ilon>>1);
+  ilon &= 0xaaaaaaaa;
 
-  return result;
+  return ilat | (ilon>>1);
 }
 
 inline uint32 ll_upper_(uint32 ilat, int32 ilon)
@@ -79,49 +91,30 @@ inline uint32 ll_upper_(uint32 ilat, int32 ilon)
 
 inline uint32 upper_ilat(uint32 quadtile)
 {
-  uint32 result = 0;
+  uint32 result = (quadtile & 0xaaaaaaaa)>>1;
+  result |= (result>>1);
+  result &= 0x33333333;
+  result |= (result>>2);
+  result &= 0x0f0f0f0f;
+  result |= (result>>4);
+  result &= 0x00ff00ff;
+  result |= (result>>8);
 
-  result |= (quadtile & 0x2)>>1;
-  result |= (quadtile & 0x8)>>2;
-  result |= (quadtile & 0x20)>>3;
-  result |= (quadtile & 0x80)>>4;
-  result |= (quadtile & 0x200)>>5;
-  result |= (quadtile & 0x800)>>6;
-  result |= (quadtile & 0x2000)>>7;
-  result |= (quadtile & 0x8000)>>8;
-  result |= (quadtile & 0x20000)>>9;
-  result |= (quadtile & 0x80000)>>10;
-  result |= (quadtile & 0x200000)>>11;
-  result |= (quadtile & 0x800000)>>12;
-  result |= (quadtile & 0x2000000)>>13;
-  result |= (quadtile & 0x8000000)>>14;
-  result |= (quadtile & 0x20000000)>>15;
-
-  return result;
+  return result & 0xffff;
 }
 
 inline uint32 upper_ilon(uint32 quadtile)
 {
-  uint32 result = 0;
+  uint32 result = (quadtile & 0x55555555);
+  result |= (result>>1);
+  result &= 0x33333333;
+  result |= (result>>2);
+  result &= 0x0f0f0f0f;
+  result |= (result>>4);
+  result &= 0x00ff00ff;
+  result |= (result>>8);
 
-  result |= (quadtile & 0x1);
-  result |= (quadtile & 0x4)>>1;
-  result |= (quadtile & 0x10)>>2;
-  result |= (quadtile & 0x40)>>3;
-  result |= (quadtile & 0x100)>>4;
-  result |= (quadtile & 0x400)>>5;
-  result |= (quadtile & 0x1000)>>6;
-  result |= (quadtile & 0x4000)>>7;
-  result |= (quadtile & 0x10000)>>8;
-  result |= (quadtile & 0x40000)>>9;
-  result |= (quadtile & 0x100000)>>10;
-  result |= (quadtile & 0x400000)>>11;
-  result |= (quadtile & 0x1000000)>>12;
-  result |= (quadtile & 0x4000000)>>13;
-  result |= (quadtile & 0x10000000)>>14;
-  result |= (quadtile & 0x40000000)>>15;
-
-  return result;
+  return result & 0xffff;
 }
 
 inline uint32 calc_index(const std::vector< uint32 >& node_idxs)
@@ -486,6 +479,85 @@ inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 
 }
 
 
+struct Idx_Bbox
+{
+  Idx_Bbox(uint32 ll_upper)
+  {
+    if (ll_upper & 0x80000000)
+    {
+      if (ll_upper & 0x00000001)
+      {
+        lat = upper_ilat(ll_upper & 0x2aaaaaa8);
+        lon = upper_ilon(ll_upper & 0x55555554);
+        lat_u = lat + 3;
+        lon_u = lon + 3;
+      }
+      else if (ll_upper & 0x00000002)
+      {
+        lat = upper_ilat(ll_upper & 0x2aaaaa80);
+        lon = upper_ilon(ll_upper & 0x55555540);
+        lat_u = lat + 0xf;
+        lon_u = lon + 0xf;
+      }
+      else if (ll_upper & 0x00000004)
+      {
+        lat = upper_ilat(ll_upper & 0x2aaaa800);
+        lon = upper_ilon(ll_upper & 0x55555400);
+        lat_u = lat + 0x3f;
+        lon_u = lon + 0x3f;
+      }
+      else if (ll_upper & 0x00000008)
+      {
+        lat = upper_ilat(ll_upper & 0x2aaa8000);
+        lon = upper_ilon(ll_upper & 0x55554000);
+        lat_u = lat + 0xff;
+        lon_u = lon + 0xff;
+      }
+      else if (ll_upper & 0x00000010)
+      {
+        lat = upper_ilat(ll_upper & 0x2aa80000);
+        lon = upper_ilon(ll_upper & 0x55540000);
+        lat_u = lat + 0x3ff;
+        lon_u = lon + 0x3ff;
+      }
+      else if (ll_upper & 0x00000020)
+      {
+        lat = upper_ilat(ll_upper & 0x2a800000);
+        lon = upper_ilon(ll_upper & 0x55400000);
+        lat_u = lat + 0xfff;
+        lon_u = lon + 0xfff;
+      }
+      else if (ll_upper & 0x00000040)
+      {
+        lat = upper_ilat(ll_upper & 0x28000000);
+        lon = upper_ilon(ll_upper & 0x54000000);
+        lat_u = lat + 0x3fff;
+        lon_u = lon + 0x3fff;
+      }
+      else // ll_upper == 0x80000080
+      {
+        lat = 0;
+        lon = 0;
+        lat_u = 0x7fff;
+        lon_u = 0xffff;
+      }
+    }
+    else
+    {
+      lat = upper_ilat(ll_upper);
+      lon = upper_ilon(ll_upper);
+      lat_u = lat;
+      lon_u = lon;
+    }
+  }
+  
+  int32 lat;
+  int32 lon;
+  int32 lat_u;
+  int32 lon_u;
+};
+
+
 inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& way_rel_idxs)
 {
   std::vector< Uint31_Index > result;
@@ -495,107 +567,48 @@ inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& wa
   {
     if (*it & 0x80000000)
     {
-      int32 lat = 0;
-      int32 lon = 0;
-      int32 lat_u = 0;
-      int32 lon_u = 0;
+      Idx_Bbox bbox(*it);
 
-      if (*it & 0x00000001)
+      if (!(*it & 0x0000007f))
+        result.push_back(0x80000080);
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0x3fff); i += 0x2000)
       {
-	lat = upper_ilat(*it & 0x2aaaaaa8);
-	lon = upper_ilon(*it & 0x55555554);
-	lat_u = lat + 3;
-	lon_u = lon + 3;
-      }
-      else if (*it & 0x00000002)
-      {
-	lat = upper_ilat(*it & 0x2aaaaa80);
-	lon = upper_ilon(*it & 0x55555540);
-	lat_u = lat + 0xf;
-	lon_u = lon + 0xf;
-      }
-      else if (*it & 0x00000004)
-      {
-	lat = upper_ilat(*it & 0x2aaaa800);
-	lon = upper_ilon(*it & 0x55555400);
-	lat_u = lat + 0x3f;
-	lon_u = lon + 0x3f;
-      }
-      else if (*it & 0x00000008)
-      {
-	lat = upper_ilat(*it & 0x2aaa8000);
-	lon = upper_ilon(*it & 0x55554000);
-	lat_u = lat + 0xff;
-	lon_u = lon + 0xff;
-      }
-      else if (*it & 0x00000010)
-      {
-	lat = upper_ilat(*it & 0x2aa80000);
-	lon = upper_ilon(*it & 0x55540000);
-	lat_u = lat + 0x3ff;
-	lon_u = lon + 0x3ff;
-      }
-      else if (*it & 0x00000020)
-      {
-	lat = upper_ilat(*it & 0x2a800000);
-	lon = upper_ilon(*it & 0x55400000);
-	lat_u = lat + 0xfff;
-	lon_u = lon + 0xfff;
-      }
-      else if (*it & 0x00000040)
-      {
-	lat = upper_ilat(*it & 0x28000000);
-	lon = upper_ilon(*it & 0x54000000);
-	lat_u = lat + 0x3fff;
-	lon_u = lon + 0x3fff;
-      }
-      else // *it == 0x80000080
-      {
-	lat = 0;
-	lon = 0;
-	lat_u = 0x7fff;
-	lon_u = 0xffff;
-	result.push_back(0x80000080);
-      }
-
-      for (int32 i = lat; i <= (lat_u - 0x3fff); i += 0x2000)
-      {
-	for (int32 j = lon; j <= (lon_u - 0x3fff); j += 0x2000)
+	for (int32 j = bbox.lon; j <= (bbox.lon_u - 0x3fff); j += 0x2000)
 	  result.push_back((ll_upper(i<<16, j<<16) & 0xfc000000) | 0x80000040);
       }
-      for (int32 i = lat; i <= (lat_u - 0xfff); i += 0x800)
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0xfff); i += 0x800)
       {
-	for (int32 j = lon; j <= (lon_u - 0xfff); j += 0x800)
+	for (int32 j = bbox.lon; j <= (bbox.lon_u - 0xfff); j += 0x800)
 	  result.push_back((ll_upper(i<<16, j<<16) & 0xffc00000) | 0x80000020);
       }
-      for (int32 i = lat; i <= (lat_u - 0x3ff); i += 0x200)
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0x3ff); i += 0x200)
       {
-	for (int32 j = lon; j <= (lon_u - 0x3ff); j += 0x200)
+	for (int32 j = bbox.lon; j <= (bbox.lon_u - 0x3ff); j += 0x200)
 	  result.push_back((ll_upper(i<<16, j<<16) & 0xfffc0000) | 0x80000010);
       }
-      for (int32 i = lat; i <= (lat_u - 0xff); i += 0x80)
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0xff); i += 0x80)
       {
-	for (int32 j = lon; j <= (lon_u - 0xff); j += 0x80)
+	for (int32 j = bbox.lon; j <= (bbox.lon_u - 0xff); j += 0x80)
 	  result.push_back((ll_upper(i<<16, j<<16) & 0xffffc000) | 0x80000008);
       }
-      for (int32 i = lat; i <= (lat_u - 0x3f); i += 0x20)
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0x3f); i += 0x20)
       {
-	for (int32 j = lon; j <= (lon_u - 0x3f); j += 0x20)
+	for (int32 j = bbox.lon; j <= (bbox.lon_u - 0x3f); j += 0x20)
 	  result.push_back((ll_upper(i<<16, j<<16) & 0xfffffc00) | 0x80000004);
       }
-      for (int32 i = lat; i <= (lat_u - 0xf); i += 8)
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0xf); i += 8)
       {
-	for (int32 j = lon; j <= (lon_u - 0xf); j += 8)
+	for (int32 j = bbox.lon; j <= (bbox.lon_u - 0xf); j += 8)
 	  result.push_back((ll_upper(i<<16, j<<16) & 0xffffffc0) | 0x80000002);
       }
-      for (int32 i = lat; i <= (lat_u - 3); i += 2)
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 3); i += 2)
       {
-	for (int32 j = lon; j <= (lon_u - 3); j += 2)
+	for (int32 j = bbox.lon; j <= (bbox.lon_u - 3); j += 2)
 	  result.push_back((ll_upper(i<<16, j<<16) & 0xfffffffc) | 0x80000001);
       }
-      for (int32 i = lat; i <= lat_u; ++i)
+      for (int32 i = bbox.lat; i <= bbox.lat_u; ++i)
       {
-	for (int32 j = lon; j <= lon_u; ++j)
+	for (int32 j = bbox.lon; j <= bbox.lon_u; ++j)
 	  result.push_back(ll_upper(i<<16, j<<16));
       }
     }
@@ -617,131 +630,59 @@ inline Ranges< Uint31_Index > calc_children(const std::vector< Uint31_Index >& p
   {
     if (i.val() & 0x80000000)
     {
-      int32 lat = 0;
-      int32 lon = 0;
-      int32 lat_u = 0;
-      int32 lon_u = 0;
+      Idx_Bbox bbox(i.val());
 
-      if (i.val() & 0x00000001)
+      if (!(i.val() & 0x0000007f))
+        result.push_back(0x80000080, 0x81);
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0x3fff); i += 0x2000)
       {
-	lat = upper_ilat(i.val() & 0x2aaaaaa8);
-	lon = upper_ilon(i.val() & 0x55555554);
-	lat_u = lat + 3;
-	lon_u = lon + 3;
-      }
-      else if (i.val() & 0x00000002)
-      {
-	lat = upper_ilat(i.val() & 0x2aaaaa80);
-	lon = upper_ilon(i.val() & 0x55555540);
-	lat_u = lat + 0xf;
-	lon_u = lon + 0xf;
-      }
-      else if (i.val() & 0x00000004)
-      {
-	lat = upper_ilat(i.val() & 0x2aaaa800);
-	lon = upper_ilon(i.val() & 0x55555400);
-	lat_u = lat + 0x3f;
-	lon_u = lon + 0x3f;
-      }
-      else if (i.val() & 0x00000008)
-      {
-	lat = upper_ilat(i.val() & 0x2aaa8000);
-	lon = upper_ilon(i.val() & 0x55554000);
-	lat_u = lat + 0xff;
-	lon_u = lon + 0xff;
-      }
-      else if (i.val() & 0x00000010)
-      {
-	lat = upper_ilat(i.val() & 0x2aa80000);
-	lon = upper_ilon(i.val() & 0x55540000);
-	lat_u = lat + 0x3ff;
-	lon_u = lon + 0x3ff;
-      }
-      else if (i.val() & 0x00000020)
-      {
-	lat = upper_ilat(i.val() & 0x2a800000);
-	lon = upper_ilon(i.val() & 0x55400000);
-	lat_u = lat + 0xfff;
-	lon_u = lon + 0xfff;
-      }
-      else if (i.val() & 0x00000040)
-      {
-	lat = upper_ilat(i.val() & 0x28000000);
-	lon = upper_ilon(i.val() & 0x54000000);
-	lat_u = lat + 0x3fff;
-	lon_u = lon + 0x3fff;
-      }
-      else // i.val() == 0x80000080
-      {
-	lat = 0;
-	lon = 0;
-	lat_u = 0x7fff;
-	lon_u = 0xffff;
-	result.push_back(0x80000080, 0x81);
-      }
-
-      for (int32 i = lat; i <= (lat_u - 0x3fff); i += 0x2000)
-      {
-	for (int32 j = lon; j <= (lon_u - 0x3fff); j += 0x2000)
+        for (int32 j = bbox.lon; j <= (bbox.lon_u - 0x3fff); j += 0x2000)
         {
           Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xfc000000) | 0x80000040);
           result.push_back(idx, inc(idx));
         }
       }
-      for (int32 i = lat; i <= (lat_u - 0xfff); i += 0x800)
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0xfff); i += 0x800)
       {
-	for (int32 j = lon; j <= (lon_u - 0xfff); j += 0x800)
+        for (int32 j = bbox.lon; j <= (bbox.lon_u - 0xfff); j += 0x800)
         {
           Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xffc00000) | 0x80000020);
           result.push_back(idx, inc(idx));
         }
       }
-      for (int32 i = lat; i <= (lat_u - 0x3ff); i += 0x200)
+      for (int32 i = bbox.lat; i <= (bbox.lat_u - 0x3ff); i += 0x200)
       {
-	for (int32 j = lon; j <= (lon_u - 0x3ff); j += 0x200)
+        for (int32 j = bbox.lon; j <= (bbox.lon_u - 0x3ff); j += 0x200)
         {
           Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xfffc0000) | 0x80000010);
           result.push_back(idx, inc(idx));
         }
       }
-      for (int32 i = lat; i <= (lat_u - 0xff); i += 0x80)
+      for (int32 i = bbox.lat; i <= bbox.lat_u; i += 2)
       {
-	for (int32 j = lon; j <= (lon_u - 0xff); j += 0x80)
+        for (int32 j = bbox.lon; j <= bbox.lon_u; j += 2)
         {
-          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xffffc000) | 0x80000008);
-          result.push_back(idx, inc(idx));
-        }
-      }
-      for (int32 i = lat; i <= (lat_u - 0x3f); i += 0x20)
-      {
-	for (int32 j = lon; j <= (lon_u - 0x3f); j += 0x20)
-        {
-          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xfffffc00) | 0x80000004);
-          result.push_back(idx, inc(idx));
-        }
-      }
-      for (int32 i = lat; i <= (lat_u - 0xf); i += 8)
-      {
-	for (int32 j = lon; j <= (lon_u - 0xf); j += 8)
-        {
-          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xffffffc0) | 0x80000002);
-          result.push_back(idx, inc(idx));
-        }
-      }
-      for (int32 i = lat; i <= (lat_u - 3); i += 2)
-      {
-	for (int32 j = lon; j <= (lon_u - 3); j += 2)
-        {
-          Uint31_Index idx((ll_upper(i<<16, j<<16) & 0xfffffffc) | 0x80000001);
-          result.push_back(idx, inc(idx));
-        }
-      }
-      for (int32 i = lat; i <= lat_u; ++i)
-      {
-	for (int32 j = lon; j <= lon_u; ++j)
-        {
-          Uint31_Index idx(ll_upper(i<<16, j<<16));
-          result.push_back(idx, inc(idx));
+          uint32 idx = ll_upper(i<<16, j<<16);
+          uint32 lower = idx;
+          if (((idx & 0xf) == 0x0 && ((idx & 0x3ffff) == 0x10 || (idx & 0x3fffff) == 0x20
+                  || (idx & 0x3ffffff) == 0x40 || (idx & 0x3fffffff) == 0x80))
+              || ((idx & 0x3ff) == 0x4 && (i > (bbox.lat_u - 0x3f) || j > (bbox.lon_u - 0x3d)))
+              || ((idx & 0x3fff) == 0x8 && (i > (bbox.lat_u - 0xfd) || j > (bbox.lon_u - 0xff))))
+          {
+            result.push_back(Uint31_Index(idx), Uint31_Index(idx | 0x80000000));
+            lower = idx+1;
+          }
+          if (i > (bbox.lat_u - 3) || j > (bbox.lon_u - 3))
+          {
+            result.push_back(Uint31_Index(lower), Uint31_Index((idx+1) | 0x80000000));
+            lower = idx+2;
+          }
+          if ((idx & 0x3f) == 0x2 && (i > (bbox.lat_u - 0xf) || j > (bbox.lon_u - 0xf)))
+          {
+            result.push_back(Uint31_Index(lower), Uint31_Index((idx+2) | 0x80000000));
+            lower = idx+3;
+          }
+          result.push_back(Uint31_Index(lower), Uint31_Index(idx+4));
         }
       }
     }

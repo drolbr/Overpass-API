@@ -124,7 +124,7 @@ void Ranges< Index >::sort()
         buf = *it;
       }
       else
-        buf.second = it->second;
+        buf.second = std::max(buf.second, it->second);
     }
     result.insert(buf);
     result.swap(data);
