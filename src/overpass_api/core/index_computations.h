@@ -551,6 +551,13 @@ struct Idx_Bbox
     }
   }
   
+  int compare(const Idx_Bbox& rhs)
+  {
+    bool lhs_bigger = (lat < rhs.lat || lon < rhs.lon || lat_u > rhs.lat_u || lon_u > rhs.lon_u);
+    bool rhs_bigger = (lat > rhs.lat || lon > rhs.lon || lat_u < rhs.lat_u || lon_u < rhs.lon_u);
+    return (lhs_bigger<<1) | rhs_bigger;
+  }
+  
   int32 lat;
   int32 lon;
   int32 lat_u;
@@ -622,9 +629,30 @@ inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& wa
 }
 
 
-inline Ranges< Uint31_Index > calc_children(const std::vector< Uint31_Index >& parents)
+inline Ranges< Uint31_Index > calc_children(std::vector< Uint31_Index >&& parents)
 {
   Ranges< Uint31_Index > result;
+  
+  if (parents.empty())
+    return result;
+  std::sort(parents.begin(), parents.end());
+  auto i_src = parents.begin()+1;
+  auto i_target = parents.begin();
+  Idx_Bbox bbox_target(i_target->val());
+  while (i_src != parents.end())
+  {
+    Idx_Bbox bbox_src(i_src->val());
+    uint comp = bbox_target.compare(bbox_src);
+    if (comp == 3)
+      ++i_target;
+    if (comp == 1 || comp == 3)
+    {
+      *i_target = *i_src;
+      bbox_target = bbox_src;
+    }
+    ++i_src;
+  }
+  parents.erase(i_target+1, parents.end());
 
   for (auto i : parents)
   {
@@ -692,6 +720,13 @@ inline Ranges< Uint31_Index > calc_children(const std::vector< Uint31_Index >& p
 
   result.sort();
   return result;
+}
+
+
+inline Ranges< Uint31_Index > calc_children_(const std::vector< Uint31_Index >& parents)
+{
+  auto copy = parents;
+  return calc_children(std::move(copy));
 }
 
 

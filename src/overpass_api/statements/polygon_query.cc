@@ -144,7 +144,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
+        = relation_way_members(&query, rman, into.attic_relations, way_ranges);
 
     polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, query, rman),
 			  false, query, rman);

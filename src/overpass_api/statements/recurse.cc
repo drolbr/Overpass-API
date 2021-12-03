@@ -738,18 +738,11 @@ void collect_relations(const Statement& query, Resource_Manager& rman,
 		  std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations)
 {
   if (ranges.empty())
-  {
-    if (ids.empty())
-      relations = relation_relation_members(query, rman, rels);
-    else
-      relations = relation_relation_members(query, rman, rels, 0, &ids, invert_ids);
-  }
+    relations = relation_relation_members(query, rman, rels, 0, ids, ids.empty() || invert_ids);
   else
   {
-    if (ids.empty())
-      relations = relation_relation_members(query, rman, rels, &ranges);
-    else
-      relations = relation_relation_members(query, rman, rels, &ranges, &ids, invert_ids);
+    Ranges< Uint31_Index > ranges_(ranges);
+    relations = relation_relation_members(query, rman, rels, &ranges_, ids, ids.empty() || invert_ids);
   }
 }
 
@@ -763,22 +756,13 @@ void collect_relations(const Statement& query, Resource_Manager& rman,
                   std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations)
 {
   if (ranges.empty())
-  {
-    if (ids.empty())
-      swap_components(relation_relation_members
-          (query, rman, rels, attic_rels), relations, attic_relations);
-    else
-      swap_components(relation_relation_members
-          (query, rman, rels, attic_rels, 0, &ids, invert_ids), relations, attic_relations);
-  }
+    swap_components(relation_relation_members
+        (query, rman, rels, attic_rels, 0, ids, ids.empty() || invert_ids), relations, attic_relations);
   else
   {
-    if (ids.empty())
-      swap_components(relation_relation_members
-          (query, rman, rels, attic_rels, &ranges), relations, attic_relations);
-    else
-      swap_components(relation_relation_members
-          (query, rman, rels, attic_rels, &ranges, &ids, invert_ids), relations, attic_relations);
+    Ranges< Uint31_Index > ranges_(ranges);
+    swap_components(relation_relation_members
+        (query, rman, rels, attic_rels, &ranges_, ids, ids.empty() || invert_ids), relations, attic_relations);
   }
 }
 
@@ -791,18 +775,11 @@ void collect_relations(const Statement& query, Resource_Manager& rman,
                   uint32 role_id)
 {
   if (ranges.empty())
-  {
-    if (ids.empty())
-      relations = relation_relation_members(query, rman, rels, 0, 0, false, &role_id);
-    else
-      relations = relation_relation_members(query, rman, rels, 0, &ids, invert_ids, &role_id);
-  }
+    relations = relation_relation_members(query, rman, rels, 0, ids, ids.empty() || invert_ids, &role_id);
   else
   {
-    if (ids.empty())
-      relations = relation_relation_members(query, rman, rels, &ranges, 0, false, &role_id);
-    else
-      relations = relation_relation_members(query, rman, rels, &ranges, &ids, invert_ids, &role_id);
+    Ranges< Uint31_Index > ranges_(ranges);
+    relations = relation_relation_members(query, rman, rels, &ranges_, ids, ids.empty() || invert_ids, &role_id);
   }
 }
 
@@ -817,24 +794,15 @@ void collect_relations(const Statement& query, Resource_Manager& rman,
                   uint32 role_id)
 {
   if (ranges.empty())
-  {
-    if (ids.empty())
-      swap_components(relation_relation_members
-          (query, rman, rels, attic_rels, 0, 0, false, &role_id), relations, attic_relations);
-    else
-      swap_components(relation_relation_members
-          (query, rman, rels, attic_rels, 0, &ids, invert_ids, &role_id),
-                      relations, attic_relations);
-  }
+    swap_components(
+        relation_relation_members(query, rman, rels, attic_rels, 0, ids, ids.empty() || invert_ids, &role_id),
+        relations, attic_relations);
   else
   {
-    if (ids.empty())
-      swap_components(relation_relation_members
-          (query, rman, rels, attic_rels, &ranges, 0, false, &role_id), relations, attic_relations);
-    else
-      swap_components(relation_relation_members
-          (query, rman, rels, attic_rels, &ranges, &ids, invert_ids, &role_id),
-                      relations, attic_relations);
+    Ranges< Uint31_Index > ranges_(ranges);
+    swap_components(
+        relation_relation_members(query, rman, rels, attic_rels, &ranges_, ids, ids.empty() || invert_ids, &role_id),
+        relations, attic_relations);
   }
 }
 
@@ -846,7 +814,7 @@ void relations_loop(const Statement& query, Resource_Manager& rman,
   uint old_rel_count = count(source);
   while (true)
   {
-    result = relation_relation_members(query, rman, source);
+    result = relation_relation_members(query, rman, source, 0, {}, true);
     sort_second(source);
     sort_second(result);
     indexed_set_union(result, source);
@@ -870,7 +838,7 @@ void relations_loop(const Statement& query, Resource_Manager& rman,
   {
     std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
         std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > > result_pair
-        = relation_relation_members(query, rman, source, attic_source);
+        = relation_relation_members(query, rman, source, attic_source, 0, {}, true);
     sort_second(source);
     sort_second(attic_source);
     sort_second(result_pair.first);
@@ -2538,10 +2506,10 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     {
       if (rman.get_desired_timestamp() == NOW)
         into.relations = relation_relation_members(*this, rman, input_set->relations,
-                                                 0, 0, false, &role_id);
+                                                 0, {}, true, &role_id);
       else
         swap_components(relation_relation_members(
-                *this, rman, input_set->relations, input_set->attic_relations, 0, 0, false, &role_id),
+                *this, rman, input_set->relations, input_set->attic_relations, 0, {}, true, &role_id),
             into.relations, into.attic_relations);
     }
     if (type == RECURSE_RELATION_WAY || type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NW
@@ -2596,9 +2564,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   else if (type == RECURSE_RELATION_RELATION)
   {
     if (rman.get_desired_timestamp() == NOW)
-      into.relations = relation_relation_members(*this, rman, input_set->relations);
+      into.relations = relation_relation_members(*this, rman, input_set->relations, 0, {}, true);
     else
-      swap_components(relation_relation_members(*this, rman, input_set->relations, input_set->attic_relations),
+      swap_components(relation_relation_members(*this, rman, input_set->relations, input_set->attic_relations, 0, {}, true),
           into.relations, into.attic_relations);
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
@@ -2631,7 +2599,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     if (rman.get_desired_timestamp() == NOW)
     {
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NR || type == RECURSE_RELATION_WR)
-        into.relations = relation_relation_members(*this, rman, input_set->relations);
+        into.relations = relation_relation_members(*this, rman, input_set->relations, 0, {}, true);
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NW || type == RECURSE_RELATION_WR)
         into.ways = relation_way_members(this, rman, input_set->relations, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }}, {}, true);
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NW || type == RECURSE_RELATION_NR)
@@ -2640,7 +2608,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     else
     {
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NR || type == RECURSE_RELATION_WR)
-        swap_components(relation_relation_members(*this, rman, input_set->relations, input_set->attic_relations),
+        swap_components(relation_relation_members(*this, rman, input_set->relations, input_set->attic_relations, 0, {}, true),
             into.relations, into.attic_relations);
 
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NW || type == RECURSE_RELATION_WR)

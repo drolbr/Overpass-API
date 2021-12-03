@@ -208,7 +208,16 @@ inline std::set< std::pair< Uint32_Index, Uint32_Index > > calc_node_children_ra
 }
 
 
-std::vector< Uint31_Index > collect_relation_req
+Ranges< Uint31_Index > uint31_to_ranges(const std::vector< Uint31_Index >& arg)
+{
+  Ranges< Uint31_Index > result;
+  for (auto i : arg)
+    result.push_back(i, inc(i));
+  return result;
+}
+
+
+Ranges< Uint31_Index > collect_relation_req
     (const Statement& stmt, Resource_Manager& rman,
      const std::vector< Relation::Id_Type >& map_ids)
 {
@@ -225,11 +234,11 @@ std::vector< Uint31_Index > collect_relation_req
   req.erase(unique(req.begin(), req.end()), req.end());
   rman.health_check(stmt);
 
-  return req;
+  return uint31_to_ranges(req);
 }
 
 
-std::vector< Uint31_Index > collect_attic_relation_req
+Ranges< Uint31_Index > collect_attic_relation_req
     (const Statement& stmt, Resource_Manager& rman,
      const std::vector< Relation::Id_Type >& map_ids)
 {
@@ -240,7 +249,7 @@ std::vector< Uint31_Index > collect_attic_relation_req
   std::set_union(idxs.first.begin(), idxs.first.end(), idxs.second.begin(), idxs.second.end(),
                  std::back_inserter(req));
 
-  return req;
+  return uint31_to_ranges(req);
 }
 
 
@@ -276,7 +285,7 @@ std::vector< Uint31_Index > collect_way_req
 Ranges< Uint31_Index > collect_way_req
     (const std::vector< Uint31_Index >& parents, const std::vector< Uint31_Index >& children_idxs)
 {
-  Ranges< Uint31_Index > req = calc_children(parents);
+  Ranges< Uint31_Index > req = calc_children_(parents);
 
   for (std::vector< Uint31_Index >::const_iterator it = children_idxs.begin();
       it != children_idxs.end(); ++it)
@@ -309,7 +318,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
 }
 
 
-std::vector< Uint31_Index > relation_relation_member_indices
+Ranges< Uint31_Index > relation_relation_member_indices
     (const Statement& stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
@@ -328,7 +337,7 @@ std::vector< Uint31_Index > relation_relation_member_indices
 }
 
 
-std::vector< Uint31_Index > relation_relation_member_indices
+Ranges< Uint31_Index > relation_relation_member_indices
     (const Statement& stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
@@ -345,7 +354,7 @@ std::vector< Uint31_Index > relation_relation_member_indices
   std::sort(map_ids.begin(), map_ids.end());
   map_ids.erase(std::unique(map_ids.begin(), map_ids.end()), map_ids.end());
   rman.health_check(stmt);
-  std::vector< Uint31_Index > current = collect_relation_req(stmt, rman, map_ids);
+  Ranges< Uint31_Index > current = collect_relation_req(stmt, rman, map_ids);
 
   map_ids.clear();
   for (std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
@@ -356,11 +365,9 @@ std::vector< Uint31_Index > relation_relation_member_indices
   std::sort(map_ids.begin(), map_ids.end());
   map_ids.erase(std::unique(map_ids.begin(), map_ids.end()), map_ids.end());
   rman.health_check(stmt);
-  std::vector< Uint31_Index > attic = collect_attic_relation_req(stmt, rman, map_ids);
+  Ranges< Uint31_Index > attic = collect_attic_relation_req(stmt, rman, map_ids);
 
-  std::vector< Uint31_Index > result;
-  std::set_union(current.begin(), current.end(), attic.begin(), attic.end(), back_inserter(result));
-  return result;
+  return current.union_(attic);
 }
 
 
@@ -564,27 +571,26 @@ void sieve_first_arg(
 std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges,
-     const std::vector< Relation::Id_Type >* children_ids, bool invert_ids, const uint32* role_id)
+     const Ranges< Uint31_Index >* children_ranges,
+     const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id)
 {
   std::vector< Relation::Id_Type > intersect_ids = relation_relation_member_ids(rman, parents, role_id);
   rman.health_check(stmt);
-  if (children_ids)
-    sieve_first_arg(intersect_ids, *children_ids, invert_ids);
+  sieve_first_arg(intersect_ids, children_ids, invert_ids);
 
   std::map< Uint31_Index, std::vector< Relation_Skeleton > > result;
   if (intersect_ids.empty())
     return result;
 
   if (children_ranges)
-    collect_items_range(&stmt, rman, Ranges< Uint31_Index >(*children_ranges),
+    collect_items_range(&stmt, rman, *children_ranges,
         Id_Predicate< Relation_Skeleton >(intersect_ids), result);
   else
   {
-    std::vector< Uint31_Index > req =
+    Ranges< Uint31_Index > req =
         relation_relation_member_indices(stmt, rman, parents.begin(), parents.end());
-    collect_items_discrete(&stmt, rman, *osm_base_settings().RELATIONS, req,
-			Id_Predicate< Relation_Skeleton >(intersect_ids), result);
+    collect_items_range(&stmt, rman, req,
+        Id_Predicate< Relation_Skeleton >(intersect_ids), result);
   }
   return result;
 }
@@ -595,14 +601,13 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_parents,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges,
-     const std::vector< Relation::Id_Type >* children_ids, bool invert_ids, const uint32* role_id)
+     const Ranges< Uint31_Index >* children_ranges,
+     const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id)
 {
   std::vector< Relation::Id_Type > intersect_ids =
        relation_relation_member_ids(rman, parents, attic_parents, role_id);
   rman.health_check(stmt);
-  if (children_ids)
-    sieve_first_arg(intersect_ids, *children_ids, invert_ids);
+  sieve_first_arg(intersect_ids, children_ids, invert_ids);
 
   std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
       std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > > result;
@@ -610,14 +615,14 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
     return result;
 
   if (children_ranges)
-    collect_items_range_by_timestamp(&stmt, rman, Ranges< Uint31_Index >(*children_ranges),
+    collect_items_range_by_timestamp(&stmt, rman, *children_ranges,
         Id_Predicate< Relation_Skeleton >(intersect_ids), result.first, result.second);
   else
   {
-    std::vector< Uint31_Index > req =
+    Ranges< Uint31_Index > req =
         relation_relation_member_indices(stmt, rman,
             parents.begin(), parents.end(), attic_parents.begin(), attic_parents.end());
-    collect_items_discrete_by_timestamp(&stmt, rman, req,
+    collect_items_range_by_timestamp(&stmt, rman, req,
         Id_Predicate< Relation_Skeleton >(intersect_ids), result.first, result.second);
   }
   return result;
@@ -677,7 +682,7 @@ std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
 std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges)
+     const Ranges< Uint31_Index >& way_ranges)
 {
   std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids(rman, relations);
   if (stmt)
@@ -691,14 +696,10 @@ std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_memb
   std::map< Uint31_Index, std::vector< Way_Skeleton > > current;
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic;
 
-  if (way_ranges)
-    collect_items_range_by_timestamp(stmt, rman, Ranges< Uint31_Index >(*way_ranges),
-        Id_Predicate< Way_Skeleton >(intersect_ids), current, attic);
-  else
-    collect_items_range_by_timestamp(stmt, rman,
-        relation_way_member_indices< Attic< Relation_Skeleton > >
-            (stmt, rman, relations.begin(), relations.end()),
-        Id_Predicate< Way_Skeleton >(intersect_ids), current, attic);
+  collect_items_range_by_timestamp(stmt, rman, way_ranges.intersect(
+      relation_way_member_indices< Attic< Relation_Skeleton > >
+            (stmt, rman, relations.begin(), relations.end())),
+      Id_Predicate< Way_Skeleton >(intersect_ids), current, attic);
 
   keep_matching_skeletons(result, current, attic, rman.get_desired_timestamp());
 

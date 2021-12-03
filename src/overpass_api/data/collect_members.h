@@ -36,16 +36,16 @@ class Statement;
 std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
-     const std::vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint31_Index >* children_ranges,
+     const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
     std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_parents,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
-     const std::vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint31_Index >* children_ranges,
+     const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
@@ -64,7 +64,7 @@ std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
 std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges = 0);
+     const Ranges< Uint31_Index >& way_ranges);
 
 std::map< Uint32_Index, std::vector< Node_Skeleton > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
@@ -960,13 +960,13 @@ Ranges< Uint31_Index > relation_way_member_indices
 }
 
 
-std::vector< Uint31_Index > relation_relation_member_indices
+Ranges< Uint31_Index > relation_relation_member_indices
     (const Statement& stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end);
 
 
-std::vector< Uint31_Index > relation_relation_member_indices
+Ranges< Uint31_Index > relation_relation_member_indices
     (const Statement& stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,

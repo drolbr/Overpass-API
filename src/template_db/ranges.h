@@ -54,6 +54,7 @@ public:
   bool empty() const { return data.empty(); }
   
   Ranges intersect(const Ranges& rhs) const;
+  Ranges union_(const Ranges& rhs) const;
   Ranges skip_start(Index lower_bound) const;
   void push_back(Index begin, Index end)
   { data.insert({ begin, end }); }
@@ -89,6 +90,43 @@ Ranges< Index > Ranges< Index >::intersect(const Ranges< Index >& rhs) const
     }
   }
 
+  return result;
+}
+
+
+template< typename Index >
+Ranges< Index > Ranges< Index >::union_(const Ranges< Index >& rhs) const
+{
+  Ranges< Index > result;
+  
+  auto it_a = data.begin();
+  auto it_b = rhs.data.begin();
+  
+  while (it_a != data.end() && it_b != rhs.data.end())
+  {
+    if (it_a->first < it_b->first)
+    {
+      result.data.insert(*it_a);
+      ++it_a;
+    }
+    else
+    {
+      result.data.insert(*it_b);
+      ++it_b;
+    }
+  }
+  while (it_a != data.end())
+  {
+    result.data.insert(*it_a);
+    ++it_a;
+  }
+  while (it_b != rhs.data.end())
+  {
+    result.data.insert(*it_b);
+    ++it_b;
+  }
+  
+  result.sort();
   return result;
 }
 

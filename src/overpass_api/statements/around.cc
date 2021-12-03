@@ -514,7 +514,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     get_ranges(rman, way_ranges);
 
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
+        = relation_way_members(&query, rman, into.attic_relations, way_ranges);
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
         = order_attic_by_id(way_members_, Order_By_Way_Id());
 
@@ -1074,7 +1074,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members
-        = relation_way_members(&query, rman, input.attic_relations);
+        = relation_way_members(&query, rman, input.attic_relations, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }});
     add_ways(way_members, Way_Geometry_Store(way_members, query, rman));
   }
 }

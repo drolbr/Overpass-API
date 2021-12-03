@@ -240,7 +240,7 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, &get_ranges_31());
+        = relation_way_members(&query, rman, into.attic_relations, get_ranges_31());
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
         = order_attic_by_id(way_members_, Order_By_Way_Id());
 
