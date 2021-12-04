@@ -33,6 +33,7 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
 
   virtual void write_start(pid_t pid, const std::vector< pid_t >& registered);
   virtual void write_rollback(pid_t pid);
+  virtual void write_pending(pid_t pid, const std::set< pid_t >& reading);
   virtual void write_commit(pid_t pid);
   virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
   virtual void read_idx_finished(pid_t pid);
@@ -62,6 +63,16 @@ void Default_Dispatcher_Logger::write_rollback(pid_t pid)
 {
   std::ostringstream out;
   out<<"write_rollback of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+void Default_Dispatcher_Logger::write_pending(pid_t pid, const std::set< pid_t >& registered)
+{
+  std::ostringstream out;
+  out<<"write_pending of process "<<pid<<". Considered as reading:";
+  for (std::set< pid_t >::const_iterator it = registered.begin(); it != registered.end(); ++it)
+    out<<' '<<*it;
+  out<<'.';
   logger->annotated_log(out.str());
 }
 
