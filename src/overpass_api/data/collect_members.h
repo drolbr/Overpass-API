@@ -975,8 +975,7 @@ Ranges< Uint31_Index > relation_relation_member_indices
 
 
 std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
-    (const Statement* stmt, Resource_Manager& rman,
-     const std::vector< Node::Id_Type >& map_ids, const std::vector< uint32 >& parents);
+    (const Statement* stmt, Resource_Manager& rman, const std::vector< uint32 >& parents);
 
 
 template< typename Relation_Skeleton >
@@ -1007,7 +1006,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 
@@ -1060,7 +1059,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 

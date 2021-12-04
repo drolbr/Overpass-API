@@ -42,7 +42,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > small_way_nd_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 

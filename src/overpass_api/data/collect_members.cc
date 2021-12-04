@@ -297,23 +297,9 @@ Ranges< Uint31_Index > collect_way_req
 
 
 std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
-    (const Statement* stmt, Resource_Manager& rman,
-     const std::vector< Node::Id_Type >& map_ids, const std::vector< uint32 >& parents)
+    (const Statement* stmt, Resource_Manager& rman, const std::vector< uint32 >& parents)
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > req = calc_node_children_ranges(parents);
-
-  Random_File< Node_Skeleton::Id_Type, Uint32_Index > random
-      (rman.get_transaction()->random_index(osm_base_settings().NODES));
-  for (std::vector< Node::Id_Type >::const_iterator
-      it(map_ids.begin()); it != map_ids.end(); ++it)
-  {
-    Uint32_Index idx = random.get(it->val());
-    req.insert(std::make_pair(idx, idx.val() + 1));
-  }
-
-  if (stmt)
-    rman.health_check(*stmt);
-
   return req;
 }
 
@@ -400,7 +386,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 
@@ -452,7 +438,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 
@@ -470,7 +456,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 
@@ -493,7 +479,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 
