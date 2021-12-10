@@ -1036,16 +1036,14 @@ void keep_matching_skeletons
 }
 
 
-void collect_ways(const Statement& query, Resource_Manager& rman,
-		  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-		  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-		  const std::vector< Way::Id_Type >& ids, bool invert_ids,
-		  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
+void collect_ways(
+    const Statement& query, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+    const Ranges< Uint31_Index >& ranges,
+    const std::vector< Way::Id_Type >& ids, bool invert_ids,
+    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
 {
-  if (ranges.empty())
-    ways = relation_way_members(&query, rman, rels, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }}, ids, ids.empty() || invert_ids);
-  else
-    ways = relation_way_members(&query, rman, rels, ranges, ids, ids.empty() || invert_ids);
+  ways = relation_way_members(&query, rman, rels, ranges, ids, invert_ids);
 }
 
 

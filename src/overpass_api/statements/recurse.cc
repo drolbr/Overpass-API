@@ -1360,11 +1360,12 @@ bool Recurse_Constraint::get_data
       return true;
     }
 
+    Ranges< Uint31_Index > ranges_(ranges.empty() ? std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }} : ranges);
     if (stmt->get_type() == RECURSE_RELATION_WAY
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_NW && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_WAY))
-      collect_ways(query, rman, input->relations, ranges, ids, invert_ids, into.ways);
+      collect_ways(query, rman, input->relations, ranges_, ids, ids.empty() || invert_ids, into.ways);
     else if (stmt->get_type() == RECURSE_RELATION_RELATION
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
@@ -1375,7 +1376,7 @@ bool Recurse_Constraint::get_data
     {
       if (type != QUERY_WAY)
         return true;
-      collect_ways(query, rman, input->relations, ranges, ids, invert_ids, into.ways);
+      collect_ways(query, rman, input->relations, ranges_, ids, ids.empty() || invert_ids, into.ways);
       return true;
     }
     else if (stmt->get_type() == RECURSE_DOWN_REL)
@@ -1383,7 +1384,7 @@ bool Recurse_Constraint::get_data
       std::map< Uint31_Index, std::vector< Relation_Skeleton > > rel_rels;
       relations_loop(query, rman, input->relations, rel_rels);
       if (type == QUERY_WAY)
-        collect_ways(query, rman, rel_rels, ranges, ids, invert_ids, into.ways);
+        collect_ways(query, rman, rel_rels, ranges_, ids, ids.empty() || invert_ids, into.ways);
       else
       {
         if (!ids.empty())
@@ -2031,8 +2032,8 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
       std::vector< Node::Id_Type > rel_ids
           = relation_node_member_ids(rman, input->relations);
       std::map< Uint31_Index, std::vector< Way_Skeleton > > intermediate_ways;
-      collect_ways(query, rman, input->relations, std::set< std::pair< Uint31_Index, Uint31_Index > >(),
-	  std::vector< Way::Id_Type >(), false, intermediate_ways);
+      collect_ways(query, rman, input->relations, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }},
+	  std::vector< Way::Id_Type >{}, true, intermediate_ways);
       std::vector< Node::Id_Type > way_ids = way_nd_ids(intermediate_ways, 0);
       rman.health_check(*stmt);
 
@@ -2080,8 +2081,8 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
       std::vector< Node::Id_Type > rel_ids
           = relation_node_member_ids(rman, rel_rels);
       std::map< Uint31_Index, std::vector< Way_Skeleton > > intermediate_ways;
-      collect_ways(query, rman, rel_rels, std::set< std::pair< Uint31_Index, Uint31_Index > >(),
-		   std::vector< Way::Id_Type >(), false, intermediate_ways);
+      collect_ways(query, rman, rel_rels, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }},
+		   std::vector< Way::Id_Type >{}, true, intermediate_ways);
       std::vector< Node::Id_Type > way_ids = way_nd_ids(intermediate_ways, 0);
       rman.health_check(*stmt);
 
