@@ -1160,13 +1160,14 @@ void collect_ways(
     std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways);
 
 
-void collect_ways(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways);
+void collect_ways(
+    const Statement& query, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+    const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
+    const Ranges< Uint31_Index >& ranges,
+    const std::vector< Way::Id_Type >& ids, bool invert_ids,
+    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways);
 
 
 void collect_ways(const Statement& query, Resource_Manager& rman,
