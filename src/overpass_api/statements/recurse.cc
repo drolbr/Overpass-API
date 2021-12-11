@@ -731,79 +731,31 @@ void collect_nodes(const Statement& query, Resource_Manager& rman,
 }
 
 
-void collect_relations(const Statement& query, Resource_Manager& rman,
-		  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-		  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-		  const std::vector< Relation::Id_Type >& ids, bool invert_ids,
-		  std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations)
+void collect_relations(
+    const Statement& query, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+    const Ranges< Uint31_Index >* ranges,
+    const std::vector< Relation::Id_Type >& ids, bool invert_ids,
+    std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
+    uint32* role_id)
 {
-  if (ranges.empty())
-    relations = relation_relation_members(query, rman, rels, 0, ids, ids.empty() || invert_ids);
-  else
-  {
-    Ranges< Uint31_Index > ranges_(ranges);
-    relations = relation_relation_members(query, rman, rels, &ranges_, ids, ids.empty() || invert_ids);
-  }
+  relations = relation_relation_members(query, rman, rels, ranges, ids, invert_ids, role_id);
 }
 
 
-void collect_relations(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Relation::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-                  std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations)
+void collect_relations(
+    const Statement& query, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+    const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
+    const Ranges< Uint31_Index >* ranges,
+    const std::vector< Relation::Id_Type >& ids, bool invert_ids,
+    std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
+    std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
+    uint32* role_id)
 {
-  if (ranges.empty())
-    swap_components(relation_relation_members
-        (query, rman, rels, attic_rels, 0, ids, ids.empty() || invert_ids), relations, attic_relations);
-  else
-  {
-    Ranges< Uint31_Index > ranges_(ranges);
-    swap_components(relation_relation_members
-        (query, rman, rels, attic_rels, &ranges_, ids, ids.empty() || invert_ids), relations, attic_relations);
-  }
-}
-
-
-void collect_relations(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Relation::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-                  uint32 role_id)
-{
-  if (ranges.empty())
-    relations = relation_relation_members(query, rman, rels, 0, ids, ids.empty() || invert_ids, &role_id);
-  else
-  {
-    Ranges< Uint31_Index > ranges_(ranges);
-    relations = relation_relation_members(query, rman, rels, &ranges_, ids, ids.empty() || invert_ids, &role_id);
-  }
-}
-
-
-void collect_relations(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Relation::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-                  std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
-                  uint32 role_id)
-{
-  if (ranges.empty())
-    swap_components(
-        relation_relation_members(query, rman, rels, attic_rels, 0, ids, ids.empty() || invert_ids, &role_id),
-        relations, attic_relations);
-  else
-  {
-    Ranges< Uint31_Index > ranges_(ranges);
-    swap_components(
-        relation_relation_members(query, rman, rels, attic_rels, &ranges_, ids, ids.empty() || invert_ids, &role_id),
-        relations, attic_relations);
-  }
+  swap_components(
+      relation_relation_members(query, rman, rels, attic_rels, ranges, ids, invert_ids, role_id),
+      relations, attic_relations);
 }
 
 
@@ -1331,8 +1283,8 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION))
-        collect_relations(query, rman, input->relations, ranges,
-                        ids, invert_ids, into.relations, role_id);
+        collect_relations(query, rman, input->relations, ranges.empty() ? 0 : &ranges_,
+                        ids, ids.empty() || invert_ids, into.relations, &role_id);
       else if (stmt->get_type() == RECURSE_NODE_RELATION)
       {
         if (ids.empty())
@@ -1371,8 +1323,8 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION))
-      collect_relations(query, rman, input->relations, ranges,
-		      ids, invert_ids, into.relations);
+      collect_relations(query, rman, input->relations, ranges.empty() ? 0 : &ranges_,
+		      ids, ids.empty() || invert_ids, into.relations, 0);
     else if (stmt->get_type() == RECURSE_DOWN)
     {
       if (type != QUERY_WAY)
@@ -1535,7 +1487,8 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION))
         collect_relations(query, rman, input->relations, input->attic_relations,
-                     ranges, ids, invert_ids, into.relations, into.attic_relations, role_id);
+            ranges.empty() ? 0 : &ranges_,
+            ids, ids.empty() || invert_ids, into.relations, into.attic_relations, &role_id);
       else if (stmt->get_type() == RECURSE_NODE_RELATION)
       {
         if (ids.empty())
@@ -1582,7 +1535,8 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION))
       collect_relations(query, rman, input->relations, input->attic_relations,
-                     ranges, ids, invert_ids, into.relations, into.attic_relations);
+          ranges.empty() ? 0 : &ranges_,
+          ids, ids.empty() || invert_ids, into.relations, into.attic_relations, 0);
     else if (stmt->get_type() == RECURSE_DOWN)
     {
       if (type != QUERY_WAY)
