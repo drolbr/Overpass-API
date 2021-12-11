@@ -1041,9 +1041,10 @@ void collect_ways(
     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
     const Ranges< Uint31_Index >& ranges,
     const std::vector< Way::Id_Type >& ids, bool invert_ids,
-    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
+    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    uint32* role_id)
 {
-  ways = relation_way_members(&query, rman, rels, ranges, ids, invert_ids);
+  ways = relation_way_members(&query, rman, rels, ranges, ids, invert_ids, role_id);
 }
 
 
@@ -1054,42 +1055,11 @@ void collect_ways(
     const Ranges< Uint31_Index >& ranges,
     const std::vector< Way::Id_Type >& ids, bool invert_ids,
     std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways)
+    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+    uint32* role_id)
 {
   swap_components(relation_way_members
-      (&query, rman, rels, attic_rels, ranges, ids, ids.empty() || invert_ids), ways, attic_ways);
-}
-
-
-void collect_ways(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                  uint32 role_id)
-{
-  if (ranges.empty())
-    ways = relation_way_members(&query, rman, rels, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }}, ids, ids.empty() || invert_ids, &role_id);
-  else
-    ways = relation_way_members(&query, rman, rels, ranges, ids, ids.empty() || invert_ids, &role_id);
-}
-
-
-void collect_ways(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
-                  uint32 role_id)
-{
-  if (ranges.empty())
-    swap_components(relation_way_members
-        (&query, rman, rels, attic_rels, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }}, ids, ids.empty() || invert_ids, &role_id), ways, attic_ways);
-  else
-    swap_components(relation_way_members
-        (&query, rman, rels, attic_rels, ranges, ids, ids.empty() || invert_ids, &role_id), ways, attic_ways);
+      (&query, rman, rels, attic_rels, ranges, ids, invert_ids, role_id), ways, attic_ways);
 }
 
 

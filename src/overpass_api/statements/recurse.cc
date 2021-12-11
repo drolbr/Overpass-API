@@ -1312,6 +1312,8 @@ bool Recurse_Constraint::get_data
   if (!input)
     return true;
 
+  Ranges< Uint31_Index > ranges_(ranges.empty() ? std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }} : ranges);
+
   if (rman.get_desired_timestamp() == NOW)
   {
     if (stmt->get_role())
@@ -1324,7 +1326,7 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_NW && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_WAY))
-        collect_ways(query, rman, input->relations, ranges, ids, invert_ids, into.ways, role_id);
+        collect_ways(query, rman, input->relations, ranges_, ids, ids.empty() || invert_ids, into.ways, &role_id);
       else if (stmt->get_type() == RECURSE_RELATION_RELATION
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION)
@@ -1360,7 +1362,6 @@ bool Recurse_Constraint::get_data
       return true;
     }
 
-    Ranges< Uint31_Index > ranges_(ranges.empty() ? std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }} : ranges);
     if (stmt->get_type() == RECURSE_RELATION_WAY
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_NW && type == QUERY_WAY)
@@ -1528,7 +1529,7 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_NW && type == QUERY_WAY))
         collect_ways(query, rman, input->relations, input->attic_relations,
-                     ranges, ids, invert_ids, into.ways, into.attic_ways, role_id);
+                     ranges_, ids, ids.empty() || invert_ids, into.ways, into.attic_ways, &role_id);
       else if (stmt->get_type() == RECURSE_RELATION_RELATION
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
@@ -1570,7 +1571,6 @@ bool Recurse_Constraint::get_data
       return true;
     }
 
-    Ranges< Uint31_Index > ranges_(ranges.empty() ? std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }} : ranges);
     if (stmt->get_type() == RECURSE_RELATION_WAY
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_NW && type == QUERY_WAY)
