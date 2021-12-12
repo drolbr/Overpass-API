@@ -557,7 +557,7 @@ void sieve_first_arg(
 std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
-     const Ranges< Uint31_Index >* children_ranges,
+     const Ranges< Uint31_Index >& children_ranges,
      const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id)
 {
   std::vector< Relation::Id_Type > intersect_ids = relation_relation_member_ids(rman, parents, role_id);
@@ -568,8 +568,8 @@ std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_mem
   if (intersect_ids.empty())
     return result;
 
-  if (children_ranges)
-    collect_items_range(&stmt, rman, *children_ranges,
+  if (!children_ranges.is_global())
+    collect_items_range(&stmt, rman, children_ranges,
         Id_Predicate< Relation_Skeleton >(intersect_ids), result);
   else
   {
@@ -587,7 +587,7 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_parents,
-     const Ranges< Uint31_Index >* children_ranges,
+     const Ranges< Uint31_Index >& children_ranges,
      const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id)
 {
   std::vector< Relation::Id_Type > intersect_ids =
@@ -600,8 +600,8 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
   if (intersect_ids.empty())
     return result;
 
-  if (children_ranges)
-    collect_items_range_by_timestamp(&stmt, rman, *children_ranges,
+  if (!children_ranges.is_global())
+    collect_items_range_by_timestamp(&stmt, rman, children_ranges,
         Id_Predicate< Relation_Skeleton >(intersect_ids), result.first, result.second);
   else
   {

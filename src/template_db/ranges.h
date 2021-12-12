@@ -60,6 +60,10 @@ public:
   { data.insert({ begin, end }); }
   void sort();
 
+  bool is_global() const
+  { return data.size() == 1 && data.begin()->first == Index::min() && data.begin()->second == Index::max(); }
+  static Ranges global() { return Ranges(Index::min(), Index::max()); } 
+
 private:
   std::set< std::pair< Index, Index > > data;
 };

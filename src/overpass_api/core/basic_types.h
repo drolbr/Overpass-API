@@ -133,6 +133,9 @@ struct Uint31_Index : Uint32_Index
     }
     return (this->value < index.value);
   }
+  
+  static Uint31_Index min() { return Uint31_Index(0u); }
+  static Uint31_Index max() { return Uint31_Index(0xffffffffu); }
 };
 
 

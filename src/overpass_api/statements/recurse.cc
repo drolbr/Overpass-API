@@ -734,7 +734,7 @@ void collect_nodes(const Statement& query, Resource_Manager& rman,
 void collect_relations(
     const Statement& query, Resource_Manager& rman,
     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-    const Ranges< Uint31_Index >* ranges,
+    const Ranges< Uint31_Index >& ranges,
     const std::vector< Relation::Id_Type >& ids, bool invert_ids,
     std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
     uint32* role_id)
@@ -747,7 +747,7 @@ void collect_relations(
     const Statement& query, Resource_Manager& rman,
     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-    const Ranges< Uint31_Index >* ranges,
+    const Ranges< Uint31_Index >& ranges,
     const std::vector< Relation::Id_Type >& ids, bool invert_ids,
     std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
     std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
@@ -766,7 +766,7 @@ void relations_loop(const Statement& query, Resource_Manager& rman,
   uint old_rel_count = count(source);
   while (true)
   {
-    result = relation_relation_members(query, rman, source, 0, {}, true);
+    result = relation_relation_members(query, rman, source, Ranges< Uint31_Index >::global(), {}, true);
     sort_second(source);
     sort_second(result);
     indexed_set_union(result, source);
@@ -790,7 +790,7 @@ void relations_loop(const Statement& query, Resource_Manager& rman,
   {
     std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
         std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > > result_pair
-        = relation_relation_members(query, rman, source, attic_source, 0, {}, true);
+        = relation_relation_members(query, rman, source, attic_source, Ranges< Uint31_Index >::global(), {}, true);
     sort_second(source);
     sort_second(attic_source);
     sort_second(result_pair.first);
@@ -1264,7 +1264,7 @@ bool Recurse_Constraint::get_data
   if (!input)
     return true;
 
-  Ranges< Uint31_Index > ranges_(ranges.empty() ? std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }} : ranges);
+  Ranges< Uint31_Index > ranges_(ranges.empty() ? Ranges< Uint31_Index >::global() : ranges);
 
   if (rman.get_desired_timestamp() == NOW)
   {
@@ -1283,7 +1283,7 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION))
-        collect_relations(query, rman, input->relations, ranges.empty() ? 0 : &ranges_,
+        collect_relations(query, rman, input->relations, ranges_,
                         ids, ids.empty() || invert_ids, into.relations, &role_id);
       else if (stmt->get_type() == RECURSE_NODE_RELATION)
       {
@@ -1323,7 +1323,7 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION))
-      collect_relations(query, rman, input->relations, ranges.empty() ? 0 : &ranges_,
+      collect_relations(query, rman, input->relations, ranges_,
 		      ids, ids.empty() || invert_ids, into.relations, 0);
     else if (stmt->get_type() == RECURSE_DOWN)
     {
@@ -1487,8 +1487,7 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION))
         collect_relations(query, rman, input->relations, input->attic_relations,
-            ranges.empty() ? 0 : &ranges_,
-            ids, ids.empty() || invert_ids, into.relations, into.attic_relations, &role_id);
+            ranges_, ids, ids.empty() || invert_ids, into.relations, into.attic_relations, &role_id);
       else if (stmt->get_type() == RECURSE_NODE_RELATION)
       {
         if (ids.empty())
@@ -1535,8 +1534,7 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION))
       collect_relations(query, rman, input->relations, input->attic_relations,
-          ranges.empty() ? 0 : &ranges_,
-          ids, ids.empty() || invert_ids, into.relations, into.attic_relations, 0);
+          ranges_, ids, ids.empty() || invert_ids, into.relations, into.attic_relations, 0);
     else if (stmt->get_type() == RECURSE_DOWN)
     {
       if (type != QUERY_WAY)
@@ -2461,11 +2459,11 @@ void Recurse_Statement::execute(Resource_Manager& rman)
         || type == RECURSE_RELATION_NR)
     {
       if (rman.get_desired_timestamp() == NOW)
-        into.relations = relation_relation_members(*this, rman, input_set->relations,
-                                                 0, {}, true, &role_id);
+        into.relations = relation_relation_members(
+            *this, rman, input_set->relations, Ranges< Uint31_Index >::global(), {}, true, &role_id);
       else
         swap_components(relation_relation_members(
-                *this, rman, input_set->relations, input_set->attic_relations, 0, {}, true, &role_id),
+            *this, rman, input_set->relations, input_set->attic_relations, Ranges< Uint31_Index >::global(), {}, true, &role_id),
             into.relations, into.attic_relations);
     }
     if (type == RECURSE_RELATION_WAY || type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NW
@@ -2520,9 +2518,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   else if (type == RECURSE_RELATION_RELATION)
   {
     if (rman.get_desired_timestamp() == NOW)
-      into.relations = relation_relation_members(*this, rman, input_set->relations, 0, {}, true);
+      into.relations = relation_relation_members(*this, rman, input_set->relations, Ranges< Uint31_Index >::global(), {}, true);
     else
-      swap_components(relation_relation_members(*this, rman, input_set->relations, input_set->attic_relations, 0, {}, true),
+      swap_components(relation_relation_members(*this, rman, input_set->relations, input_set->attic_relations, Ranges< Uint31_Index >::global(), {}, true),
           into.relations, into.attic_relations);
   }
   else if (type == RECURSE_RELATION_BACKWARDS)
@@ -2555,7 +2553,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     if (rman.get_desired_timestamp() == NOW)
     {
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NR || type == RECURSE_RELATION_WR)
-        into.relations = relation_relation_members(*this, rman, input_set->relations, 0, {}, true);
+        into.relations = relation_relation_members(*this, rman, input_set->relations, Ranges< Uint31_Index >::global(), {}, true);
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NW || type == RECURSE_RELATION_WR)
         into.ways = relation_way_members(this, rman, input_set->relations, std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }}, {}, true);
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NW || type == RECURSE_RELATION_NR)
@@ -2564,7 +2562,7 @@ void Recurse_Statement::execute(Resource_Manager& rman)
     else
     {
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NR || type == RECURSE_RELATION_WR)
-        swap_components(relation_relation_members(*this, rman, input_set->relations, input_set->attic_relations, 0, {}, true),
+        swap_components(relation_relation_members(*this, rman, input_set->relations, input_set->attic_relations, Ranges< Uint31_Index >::global(), {}, true),
             into.relations, into.attic_relations);
 
       if (type == RECURSE_RELATION_NWR || type == RECURSE_RELATION_NW || type == RECURSE_RELATION_WR)

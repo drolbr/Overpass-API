@@ -36,7 +36,7 @@ class Statement;
 std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
-     const Ranges< Uint31_Index >* children_ranges,
+     const Ranges< Uint31_Index >& children_ranges,
      const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
@@ -44,7 +44,7 @@ std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_parents,
-     const Ranges< Uint31_Index >* children_ranges,
+     const Ranges< Uint31_Index >& children_ranges,
      const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
