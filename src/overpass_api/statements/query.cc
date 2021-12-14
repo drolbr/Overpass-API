@@ -1692,19 +1692,21 @@ void Query_Statement::execute(Resource_Manager& rman)
 
     if (type & QUERY_NODE)
     {
+      Ranges< Uint32_Index > ranges(range_req_32.empty() ? Ranges< Uint32_Index >::global() : range_req_32);
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && node_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, range_req_32, node_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, ranges, node_ids, invert_ids))
 	  node_answer_state = data_collected;
       }
     }
     if (type & QUERY_WAY)
     {
+      Ranges< Uint31_Index > ranges(way_range_req_31.empty() ? Ranges< Uint31_Index >::global() : way_range_req_31);
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && way_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, way_range_req_31, type & QUERY_WAY, way_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, ranges, type & QUERY_WAY, way_ids, invert_ids))
         {
           if (type & QUERY_CLOSED_WAY)
             filter_elems_for_closed_ways(into);
@@ -1714,10 +1716,11 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
     if (type & QUERY_RELATION)
     {
+      Ranges< Uint31_Index > ranges(relation_range_req_31.empty() ? Ranges< Uint31_Index >::global() : relation_range_req_31);
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && relation_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, relation_range_req_31, type & QUERY_RELATION,
+	if ((*it)->get_data(*this, rman, into, ranges, type & QUERY_RELATION,
             relation_ids, invert_ids))
 	  relation_answer_state = data_collected;
       }
@@ -1727,8 +1730,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && area_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, std::set< std::pair< Uint31_Index, Uint31_Index > >(),
-            type & QUERY_AREA, area_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, {}, type & QUERY_AREA, area_ids, invert_ids))
 	  area_answer_state = data_collected;
       }
     }

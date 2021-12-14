@@ -74,12 +74,12 @@ class Query_Constraint
       { return false; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+			  const Ranges< Uint32_Index >& ranges,
 			  const std::vector< Node::Id_Type >& ids,
                           bool invert_ids)
       { return false; }
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+			  const Ranges< Uint31_Index >& ranges,
 			  int type,
                           const std::vector< Uint32_Index >& ids,
                           bool invert_ids)

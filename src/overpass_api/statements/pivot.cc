@@ -151,11 +151,11 @@ class Pivot_Constraint : public Query_Constraint
     Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-                          const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+                          const Ranges< Uint32_Index >& ranges,
                           const std::vector< Node::Id_Type >& ids,
                           bool invert_ids);
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-                          const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+                          const Ranges< Uint31_Index >& ranges,
                           int type,
                           const std::vector< Uint32_Index >& ids,
                           bool invert_ids);
@@ -169,7 +169,7 @@ class Pivot_Constraint : public Query_Constraint
 
 bool Pivot_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+     const Ranges< Uint32_Index >& ranges,
      const std::vector< Node_Skeleton::Id_Type >& ids,
      bool invert_ids)
 {
@@ -198,7 +198,7 @@ bool Pivot_Constraint::get_data
 
 bool Pivot_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+     const Ranges< Uint31_Index >& ranges,
      int type,
      const std::vector< Uint32_Index >& ids,
      bool invert_ids)
