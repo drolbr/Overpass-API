@@ -95,6 +95,9 @@ struct Uint32_Index
   {
     return value;
   }
+  
+  static Uint32_Index min() { return Uint32_Index(0u); }
+  static Uint32_Index max() { return Uint32_Index(0xffffffffu); }
 
   protected:
     uint32 value;
