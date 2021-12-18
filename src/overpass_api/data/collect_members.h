@@ -276,27 +276,18 @@ bool Collect_Items< Index, Object >::get_chunk(
 {
   elements.clear();
   attic_elements.clear();
-  if (ids->empty())
-    return get_elements_by_id_from_db_generic(
-        elements, attic_elements, Trivial_Predicate< Object >(), ranges, min_idx, *query, *rman);
-  else if (!invert_ids)
-    return get_elements_by_id_from_db_generic(
-        elements, attic_elements, Id_Predicate< Object >(*ids), ranges, min_idx, *query, *rman);
-  else if (!ranges.empty())
-    return get_elements_by_id_from_db_generic(
-        elements, attic_elements, Not_Predicate< Object, Id_Predicate< Object > >(Id_Predicate< Object >(*ids)),
-        ranges, min_idx, *query, *rman);
-  else
+  if (invert_ids)
   {
-    if (rman->get_desired_timestamp() == NOW)
-      collect_items_flat(*query, *rman, *current_skeleton_file_properties< Object >(),
-          Not_Predicate< Object, Id_Predicate< Object > >(Id_Predicate< Object >(*ids)),
-          elements);
-    else
-      collect_items_flat_by_timestamp(*query, *rman,
-          Not_Predicate< Object, Id_Predicate< Object > >(Id_Predicate< Object >(*ids)),
-          elements, attic_elements);
+    if (ids->empty())
+      return get_elements_by_id_from_db_generic(
+          elements, attic_elements, Trivial_Predicate< Object >(), ranges, min_idx, *query, *rman);
+    else 
+      return get_elements_by_id_from_db_generic(
+          elements, attic_elements, Not_Predicate< Object, Id_Predicate< Object > >(Id_Predicate< Object >(*ids)),
+          ranges, min_idx, *query, *rman);
   }
+  return get_elements_by_id_from_db_generic(
+      elements, attic_elements, Id_Predicate< Object >(*ids), ranges, min_idx, *query, *rman);
 
   return false;
 }

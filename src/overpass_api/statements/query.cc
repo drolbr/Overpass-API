@@ -1772,11 +1772,11 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (range_req_32.empty())
           ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
               (into.nodes, into.attic_nodes,
-              node_ids, invert_ids, range_req_32, *this, rman);
+              node_ids, node_ids.empty() || invert_ids, range_req_32, *this, rman);
         else
         {
           Collect_Items< Uint32_Index, Node_Skeleton > db_reader(
-              node_ids, invert_ids, range_req_32, *this, rman);
+              node_ids, node_ids.empty() || invert_ids, range_req_32, *this, rman);
           while (db_reader.get_chunk(into.nodes, into.attic_nodes))
           {
             Set to_filter;
@@ -1803,14 +1803,14 @@ void Query_Statement::execute(Resource_Manager& rman)
         {
           ::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
               (into.ways, into.attic_ways,
-              way_ids, invert_ids, way_range_req_31, *this, rman);
+              way_ids, way_ids.empty() || invert_ids, way_range_req_31, *this, rman);
           if (type & QUERY_CLOSED_WAY)
             filter_elems_for_closed_ways(into);
         }
         else
         {
           Collect_Items< Uint31_Index, Way_Skeleton > db_reader(
-              way_ids, invert_ids, way_range_req_31, *this, rman);
+              way_ids, way_ids.empty() || invert_ids, way_range_req_31, *this, rman);
           while (db_reader.get_chunk(into.ways, into.attic_ways))
           {
             Set to_filter;
@@ -1841,11 +1841,11 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (relation_range_req_31.empty())
           ::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
               (into.relations, into.attic_relations,
-              relation_ids, invert_ids, relation_range_req_31, *this, rman);
+              relation_ids, relation_ids.empty() || invert_ids, relation_range_req_31, *this, rman);
         else
         {
           Collect_Items< Uint31_Index, Relation_Skeleton > db_reader(
-              relation_ids, invert_ids, relation_range_req_31, *this, rman);
+              relation_ids, relation_ids.empty() || invert_ids, relation_range_req_31, *this, rman);
           while (db_reader.get_chunk(into.relations, into.attic_relations))
           {
             Set to_filter;
