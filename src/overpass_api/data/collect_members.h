@@ -198,33 +198,45 @@ void get_elements_by_id_from_db
     (std::map< TIndex, std::vector< TObject > >& elements,
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
      const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
+     const Statement& query, Resource_Manager& rman)
+{
+  elements.clear();
+  attic_elements.clear();
+  if (ids.empty() || invert_ids)
+  {
+    if (ids.empty())
+      get_elements_by_id_from_db_generic(
+          elements, attic_elements, Trivial_Predicate< TObject >(), {}, query, rman);
+    else
+    {
+      if (rman.get_desired_timestamp() == NOW)
+        collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
+            Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+            elements);
+      else
+        collect_items_flat_by_timestamp(query, rman,
+            Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+            elements, attic_elements);
+    }
+  }
+  else
+    get_elements_by_id_from_db_generic(
+        elements, attic_elements, Id_Predicate< TObject >(ids), {}, query, rman);
+}
+
+
+template < typename TIndex, typename TObject >
+void get_elements_from_db
+    (std::map< TIndex, std::vector< TObject > >& elements,
+     std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
      const std::set< std::pair< TIndex, TIndex > >& range_req,
      const Statement& query, Resource_Manager& rman)
 {
   elements.clear();
   attic_elements.clear();
   Ranges< TIndex > ranges(range_req);
-  if (ids.empty())
-    get_elements_by_id_from_db_generic(
-        elements, attic_elements, Trivial_Predicate< TObject >(), ranges, query, rman);
-  else if (!invert_ids)
-    get_elements_by_id_from_db_generic(
-        elements, attic_elements, Id_Predicate< TObject >(ids), ranges, query, rman);
-  else if (!ranges.empty())
-    get_elements_by_id_from_db_generic(
-        elements, attic_elements, Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-        ranges, query, rman);
-  else
-  {
-    if (rman.get_desired_timestamp() == NOW)
-      collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-          elements);
-    else
-      collect_items_flat_by_timestamp(query, rman,
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-          elements, attic_elements);
-  }
+  get_elements_by_id_from_db_generic(
+      elements, attic_elements, Trivial_Predicate< TObject >(), ranges, query, rman);
 }
 
 
@@ -234,10 +246,10 @@ class Collect_Items
 public:
   Collect_Items(
       const std::vector< typename Object::Id_Type >& ids_, bool invert_ids_,
-      const std::set< std::pair< Index, Index > >& range_req,
+      const Ranges< Index >& ranges_,
       const Statement& query_, Resource_Manager& rman_)
-      : ids(&ids_), invert_ids(invert_ids_), ranges(range_req), query(&query_), rman(&rman_),
-      min_idx(range_req.empty() ? Index() : range_req.begin()->first) {}
+      : ids(&ids_), invert_ids(invert_ids_), ranges(ranges_), query(&query_), rman(&rman_),
+      min_idx(ranges_.empty() ? Index() : ranges_.begin().lower_bound()) {}
   
   bool get_chunk(
       std::map< Index, std::vector< Object > >& elements,
@@ -288,8 +300,6 @@ bool Collect_Items< Index, Object >::get_chunk(
   }
   return get_elements_by_id_from_db_generic(
       elements, attic_elements, Id_Predicate< Object >(*ids), ranges, min_idx, *query, *rman);
-
-  return false;
 }
 
 

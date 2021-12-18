@@ -346,9 +346,8 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
     constraint.get_ranges(rman, ranges);
-    get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-        (into.nodes, into.attic_nodes,
-         std::vector< Node::Id_Type >(), false, ranges, *this, rman);
+    get_elements_from_db< Uint32_Index, Node_Skeleton >(
+        into.nodes, into.attic_nodes, ranges, *this, rman);
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
   }
 
@@ -356,9 +355,8 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
     constraint.get_ranges(rman, ranges);
-    get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
-        (into.ways, into.attic_ways,
-         std::vector< Way::Id_Type >(), false, ranges, *this, rman);
+    get_elements_from_db< Uint31_Index, Way_Skeleton >(
+        into.ways, into.attic_ways, ranges, *this, rman);
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.ways, into.attic_ways);
   }
 
@@ -366,9 +364,8 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
     constraint.get_ranges(rman, ranges);
-    get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
-        (into.relations, into.attic_relations,
-         std::vector< Relation::Id_Type >(), false, ranges, *this, rman);
+    get_elements_from_db< Uint31_Index, Relation_Skeleton >(
+        into.relations, into.attic_relations, ranges, *this, rman);
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.relations, into.attic_relations);
   }
 

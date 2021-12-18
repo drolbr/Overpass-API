@@ -1067,9 +1067,8 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   Area_Constraint constraint(*this);
   std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
   constraint.get_ranges(rman, ranges);
-  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-      (into.nodes, into.attic_nodes,
-       std::vector< Node::Id_Type >(), false, ranges, *this, rman);
+  get_elements_from_db< Uint32_Index, Node_Skeleton >(
+      into.nodes, into.attic_nodes, ranges, *this, rman);
   constraint.filter(rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
   constraint.filter(*this, rman, into);
