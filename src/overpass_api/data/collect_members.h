@@ -202,26 +202,18 @@ void get_elements_by_id_from_db
 {
   elements.clear();
   attic_elements.clear();
-  if (ids.empty() || invert_ids)
+  if (invert_ids)
   {
-    if (ids.empty())
-      get_elements_by_id_from_db_generic(
-          elements, attic_elements, Trivial_Predicate< TObject >(), {}, query, rman);
+    if (rman.get_desired_timestamp() == NOW)
+      collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+          elements);
     else
-    {
-      if (rman.get_desired_timestamp() == NOW)
-        collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
-            Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-            elements);
-      else
-        collect_items_flat_by_timestamp(query, rman,
-            Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-            elements, attic_elements);
-    }
+      collect_items_flat_by_timestamp(query, rman,
+          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
+          elements, attic_elements);
   }
-  else
-    get_elements_by_id_from_db_generic(
-        elements, attic_elements, Id_Predicate< TObject >(ids), {}, query, rman);
+  // otherwise the result is always empty
 }
 
 
