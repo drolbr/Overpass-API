@@ -1764,7 +1764,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (node_answer_state < data_collected)
       {
         Ranges< Uint32_Index > node_ranges(range_req_32);
-        if (node_answer_state < ranges_collected && node_ranges.empty())
+        if (node_answer_state < ranges_collected)
         {
           if (invert_ids)
             ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
@@ -1799,7 +1799,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (way_answer_state < data_collected)
       {
         Ranges< Uint31_Index > way_ranges(way_range_req_31);
-        if (way_answer_state < ranges_collected && way_ranges.empty())
+        if (way_answer_state < ranges_collected)
         {
           if (invert_ids)
             ::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
@@ -1839,7 +1839,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (relation_answer_state < data_collected)
       {
         Ranges< Uint31_Index > rel_ranges(relation_range_req_31);
-        if (relation_answer_state < ranges_collected && rel_ranges.empty())
+        if (relation_answer_state < ranges_collected)
         {
           if (invert_ids)
             ::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
