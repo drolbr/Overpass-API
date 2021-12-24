@@ -1764,21 +1764,21 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (node_answer_state < data_collected)
       {
         Ranges< Uint32_Index > node_ranges(range_req_32);
-        if (node_answer_state < ranges_collected && node_ranges.empty() && !invert_ids)
+        if (node_answer_state < ranges_collected && node_ranges.empty())
         {
-          std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);
-          for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            node_ranges.push_back(*it, ++Uint32_Index(*it));
-          node_ranges.sort();
-        }
-        // assert: node_answer_state == ranges_collected || !node_ids.empty()
-        if (node_ranges.empty())
-        {
-          if (!node_ids.empty())
+          if (invert_ids)
             ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
                 (into.nodes, into.attic_nodes, node_ids, invert_ids, *this, rman);
+          else
+          {
+            std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);
+            for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+              node_ranges.push_back(*it, ++Uint32_Index(*it));
+            node_ranges.sort();
+          }
         }
-        else
+
+        if (!node_ranges.empty())
         {
           Collect_Items< Uint32_Index, Node_Skeleton > db_reader(
               node_ids, node_ids.empty() || invert_ids, node_ranges, *this, rman);
@@ -1799,23 +1799,21 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (way_answer_state < data_collected)
       {
         Ranges< Uint31_Index > way_ranges(way_range_req_31);
-        if (way_answer_state < ranges_collected && way_ranges.empty() && !invert_ids)
+        if (way_answer_state < ranges_collected && way_ranges.empty())
         {
-          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
-          for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            way_ranges.push_back(*it, inc(*it));
-          way_ranges.sort();
-        }
-        // assert: way_answer_state == ranges_collected || !way_ids.empty()
-        if (way_ranges.empty())
-        {
-          if (!way_ids.empty())
+          if (invert_ids)
             ::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
                 (into.ways, into.attic_ways, way_ids, invert_ids, *this, rman);
-          if (type & QUERY_CLOSED_WAY)
-            filter_elems_for_closed_ways(into);
+          else
+          {
+            std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
+            for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+              way_ranges.push_back(*it, inc(*it));
+            way_ranges.sort();
+          }
         }
-        else
+
+        if (!way_ranges.empty())
         {
           Collect_Items< Uint31_Index, Way_Skeleton > db_reader(
               way_ids, way_ids.empty() || invert_ids, way_ranges, *this, rman);
@@ -1841,21 +1839,21 @@ void Query_Statement::execute(Resource_Manager& rman)
       if (relation_answer_state < data_collected)
       {
         Ranges< Uint31_Index > rel_ranges(relation_range_req_31);
-        if (relation_answer_state < ranges_collected && rel_ranges.empty() && !invert_ids)
+        if (relation_answer_state < ranges_collected && rel_ranges.empty())
         {
-          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids, rman);
-          for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            rel_ranges.push_back(*it, inc(*it));
-          rel_ranges.sort();
-        }
-        // assert: relation_answer_state == ranges_collected || !relation_ids.empty()
-        if (rel_ranges.empty())
-        {
-          if (!relation_ids.empty())
+          if (invert_ids)
             ::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
                 (into.relations, into.attic_relations, relation_ids, invert_ids, *this, rman);
+          else
+          {
+            std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids, rman);
+            for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+              rel_ranges.push_back(*it, inc(*it));
+            rel_ranges.sort();
+          }
         }
-        else
+
+        if (!rel_ranges.empty())
         {
           Collect_Items< Uint31_Index, Relation_Skeleton > db_reader(
               relation_ids, relation_ids.empty() || invert_ids, rel_ranges, *this, rman);
