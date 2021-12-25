@@ -1444,7 +1444,10 @@ void Query_Statement::execute(Resource_Manager& rman)
     std::vector< Way::Id_Type > way_ids;
     std::vector< Relation::Id_Type > relation_ids;
     std::vector< Area_Skeleton::Id_Type > area_ids;
-    bool invert_ids = false;
+    bool invert_node_ids = false;
+    bool invert_way_ids = false;
+    bool invert_relation_ids = false;
+    bool invert_area_ids = false;
 
     std::set< std::pair< Uint32_Index, Uint32_Index > > range_req_32;
     std::vector< Uint32_Index > range_vec_32;
@@ -1456,25 +1459,25 @@ void Query_Statement::execute(Resource_Manager& rman)
     if (type & QUERY_NODE)
     {
       progress_1< Node_Skeleton, Node::Id_Type, Uint32_Index >(
-	  node_ids, range_vec_32, invert_ids, timestamp, node_answer_state, check_keys_late,
+	  node_ids, range_vec_32, invert_node_ids, timestamp, node_answer_state, check_keys_late,
           *osm_base_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL, rman);
-      collect_nodes(node_ids, invert_ids, node_answer_state, into, rman);
+      collect_nodes(node_ids, invert_node_ids, node_answer_state, into, rman);
     }
     if (type & QUERY_WAY)
     {
       progress_1< Way_Skeleton, Way::Id_Type, Uint31_Index >(
-	  way_ids, way_range_vec_31, invert_ids, timestamp, way_answer_state, check_keys_late,
+	  way_ids, way_range_vec_31, invert_way_ids, timestamp, way_answer_state, check_keys_late,
           *osm_base_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL, rman);
-      collect_elems(QUERY_WAY, way_ids, invert_ids, way_answer_state, into, rman);
+      collect_elems(QUERY_WAY, way_ids, invert_way_ids, way_answer_state, into, rman);
       if (type & QUERY_CLOSED_WAY)
         filter_elems_for_closed_ways(into);
     }
     if (type & QUERY_RELATION)
     {
       progress_1< Relation_Skeleton, Relation::Id_Type, Uint31_Index >(
-	  relation_ids, relation_range_vec_31, invert_ids, timestamp, relation_answer_state, check_keys_late,
+	  relation_ids, relation_range_vec_31, invert_relation_ids, timestamp, relation_answer_state, check_keys_late,
           *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman);
-      collect_elems(QUERY_RELATION, relation_ids, invert_ids, relation_answer_state, into, rman);
+      collect_elems(QUERY_RELATION, relation_ids, invert_relation_ids, relation_answer_state, into, rman);
     }
     if (type & QUERY_DERIVED)
     {
@@ -1485,9 +1488,9 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       try
       {
-        progress_1(area_ids, invert_ids, area_answer_state,
+        progress_1(area_ids, invert_area_ids, area_answer_state,
                   check_keys_late, *area_settings().AREA_TAGS_GLOBAL, rman);
-        collect_elems(QUERY_AREA, area_ids, invert_ids, area_answer_state, into, rman);
+        collect_elems(QUERY_AREA, area_ids, invert_area_ids, area_answer_state, into, rman);
       }
       catch (const File_Error& e)
       {
@@ -1696,7 +1699,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && node_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, ranges, node_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, ranges, node_ids, invert_node_ids))
 	  node_answer_state = data_collected;
       }
     }
@@ -1706,7 +1709,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && way_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, ranges, type & QUERY_WAY, way_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, ranges, type & QUERY_WAY, way_ids, invert_way_ids))
         {
           if (type & QUERY_CLOSED_WAY)
             filter_elems_for_closed_ways(into);
@@ -1721,7 +1724,7 @@ void Query_Statement::execute(Resource_Manager& rman)
           it != constraints.end() && relation_answer_state < data_collected; ++it)
       {
 	if ((*it)->get_data(*this, rman, into, ranges, type & QUERY_RELATION,
-            relation_ids, invert_ids))
+            relation_ids, invert_relation_ids))
 	  relation_answer_state = data_collected;
       }
     }
@@ -1730,34 +1733,18 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && area_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, {}, type & QUERY_AREA, area_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, {}, type & QUERY_AREA, area_ids, invert_area_ids))
 	  area_answer_state = data_collected;
       }
     }
+    
+    invert_node_ids |= node_ids.empty();
+    invert_way_ids |= way_ids.empty();
+    invert_relation_ids |= relation_ids.empty();
+    invert_area_ids |= area_ids.empty();
 
     set_progress(4);
     rman.health_check(*this);
-
-    if (type & QUERY_NODE)
-    {
-      if (node_answer_state == nothing && node_ids.empty())
-        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-    }
-    if (type & QUERY_WAY)
-    {
-      if (way_answer_state == nothing && way_ids.empty())
-        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-    }
-    if (type & QUERY_RELATION)
-    {
-      if (relation_answer_state == nothing && relation_ids.empty())
-        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-    }
-    if (type & QUERY_AREA)
-    {
-      if (area_answer_state == nothing && area_ids.empty())
-        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-    }
 
     if (type & QUERY_NODE)
     {
@@ -1766,9 +1753,11 @@ void Query_Statement::execute(Resource_Manager& rman)
         Ranges< Uint32_Index > node_ranges(range_req_32);
         if (node_answer_state < ranges_collected)
         {
-          if (invert_ids)
+          if (node_ids.empty())
+            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+          if (invert_node_ids)
             ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-                (into.nodes, into.attic_nodes, node_ids, invert_ids, *this, rman);
+                (into.nodes, into.attic_nodes, node_ids, invert_node_ids, *this, rman);
           else
           {
             std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);
@@ -1781,7 +1770,7 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (!node_ranges.empty())
         {
           Collect_Items< Uint32_Index, Node_Skeleton > db_reader(
-              node_ids, node_ids.empty() || invert_ids, node_ranges, *this, rman);
+              node_ids, node_ids.empty() || invert_node_ids, node_ranges, *this, rman);
           while (db_reader.get_chunk(into.nodes, into.attic_nodes))
           {
             Set to_filter;
@@ -1801,9 +1790,11 @@ void Query_Statement::execute(Resource_Manager& rman)
         Ranges< Uint31_Index > way_ranges(way_range_req_31);
         if (way_answer_state < ranges_collected)
         {
-          if (invert_ids)
+          if (way_ids.empty())
+            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+          if (invert_way_ids)
             ::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
-                (into.ways, into.attic_ways, way_ids, invert_ids, *this, rman);
+                (into.ways, into.attic_ways, way_ids, invert_way_ids, *this, rman);
           else
           {
             std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
@@ -1816,7 +1807,7 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (!way_ranges.empty())
         {
           Collect_Items< Uint31_Index, Way_Skeleton > db_reader(
-              way_ids, way_ids.empty() || invert_ids, way_ranges, *this, rman);
+              way_ids, way_ids.empty() || invert_way_ids, way_ranges, *this, rman);
           while (db_reader.get_chunk(into.ways, into.attic_ways))
           {
             Set to_filter;
@@ -1841,9 +1832,11 @@ void Query_Statement::execute(Resource_Manager& rman)
         Ranges< Uint31_Index > rel_ranges(relation_range_req_31);
         if (relation_answer_state < ranges_collected)
         {
-          if (invert_ids)
+          if (relation_ids.empty())
+            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+          if (invert_relation_ids)
             ::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
-                (into.relations, into.attic_relations, relation_ids, invert_ids, *this, rman);
+                (into.relations, into.attic_relations, relation_ids, invert_relation_ids, *this, rman);
           else
           {
             std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids, rman);
@@ -1856,7 +1849,7 @@ void Query_Statement::execute(Resource_Manager& rman)
         if (!rel_ranges.empty())
         {
           Collect_Items< Uint31_Index, Relation_Skeleton > db_reader(
-              relation_ids, relation_ids.empty() || invert_ids, rel_ranges, *this, rman);
+              relation_ids, relation_ids.empty() || invert_relation_ids, rel_ranges, *this, rman);
           while (db_reader.get_chunk(into.relations, into.attic_relations))
           {
             Set to_filter;
@@ -1871,10 +1864,12 @@ void Query_Statement::execute(Resource_Manager& rman)
     }
     if (type & QUERY_AREA)
     {
+      if (area_answer_state == nothing && area_ids.empty())
+        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
       try
       {
         if (area_answer_state < data_collected)
-          get_elements_by_id_from_db(into.areas, area_ids, invert_ids, rman, *area_settings().AREAS);
+          get_elements_by_id_from_db(into.areas, area_ids, invert_area_ids, rman, *area_settings().AREAS);
       }
       catch (const File_Error& e)
       {
