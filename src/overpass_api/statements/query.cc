@@ -1503,7 +1503,7 @@ void Query_Statement::execute(Resource_Manager& rman)
     set_progress(2);
     rman.health_check(*this);
 
-    if (type & QUERY_NODE)
+    if ((type & QUERY_NODE) && check_keys_late == prefer_ranges)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && node_answer_state < data_collected; ++it)
@@ -1527,7 +1527,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
-    if (type & QUERY_WAY)
+    if ((type & QUERY_WAY) && check_keys_late == prefer_ranges)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && way_answer_state < data_collected; ++it)
@@ -1551,7 +1551,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
-    if (type & QUERY_RELATION)
+    if ((type & QUERY_RELATION) && check_keys_late == prefer_ranges)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && relation_answer_state < data_collected; ++it)
@@ -1575,7 +1575,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
-    if (type & QUERY_AREA)
+    if ((type & QUERY_AREA) && check_keys_late == prefer_ranges)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && area_answer_state < data_collected; ++it)
@@ -1605,10 +1605,10 @@ void Query_Statement::execute(Resource_Manager& rman)
     invert_relation_ids |= relation_ids.empty();
     invert_area_ids |= area_ids.empty();
 
-    if (type & QUERY_NODE)
+    if ((type & QUERY_NODE) && node_answer_state < data_collected)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && node_answer_state < data_collected; ++it)
+          it != constraints.end(); ++it)
       {
         std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
         if ((*it)->get_ranges(rman, range_req))
@@ -1760,6 +1760,7 @@ void Query_Statement::execute(Resource_Manager& rman)
                 (into.nodes, into.attic_nodes, node_ids, invert_node_ids, *this, rman);
           else
           {
+            node_ranges = Ranges< Uint32_Index >();
             std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);
             for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
               node_ranges.push_back(*it, ++Uint32_Index(*it));
@@ -1797,6 +1798,7 @@ void Query_Statement::execute(Resource_Manager& rman)
                 (into.ways, into.attic_ways, way_ids, invert_way_ids, *this, rman);
           else
           {
+            way_ranges = Ranges< Uint31_Index >();
             std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
             for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
               way_ranges.push_back(*it, inc(*it));
@@ -1839,6 +1841,7 @@ void Query_Statement::execute(Resource_Manager& rman)
                 (into.relations, into.attic_relations, relation_ids, invert_relation_ids, *this, rman);
           else
           {
+            rel_ranges = Ranges< Uint31_Index >();
             std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids, rman);
             for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
               rel_ranges.push_back(*it, inc(*it));
