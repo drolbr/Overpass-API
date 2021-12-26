@@ -1599,6 +1599,11 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
+    
+    invert_node_ids |= node_ids.empty();
+    invert_way_ids |= way_ids.empty();
+    invert_relation_ids |= relation_ids.empty();
+    invert_area_ids |= area_ids.empty();
 
     if (type & QUERY_NODE)
     {
@@ -1737,11 +1742,6 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  area_answer_state = data_collected;
       }
     }
-    
-    invert_node_ids |= node_ids.empty();
-    invert_way_ids |= way_ids.empty();
-    invert_relation_ids |= relation_ids.empty();
-    invert_area_ids |= area_ids.empty();
 
     set_progress(4);
     rman.health_check(*this);

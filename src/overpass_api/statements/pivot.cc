@@ -178,15 +178,15 @@ bool Pivot_Constraint::get_data
   if (input_set)
     pivot_ids = get_node_pivot_ids(input_set->areas);
   std::vector< Node::Id_Type > intersect_ids(pivot_ids.size());
-  if (ids.empty())
+  if (invert_ids && ids.empty())
     pivot_ids.swap(intersect_ids);
   else if (!invert_ids)
-    intersect_ids.erase(set_intersection
+    intersect_ids.erase(std::set_intersection
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
   else
-    intersect_ids.erase(set_difference
+    intersect_ids.erase(std::set_difference
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
@@ -211,15 +211,15 @@ bool Pivot_Constraint::get_data
     if (input_set)
       pivot_ids = get_way_pivot_ids(input_set->areas);
     std::vector< Way::Id_Type > intersect_ids(pivot_ids.size());
-    if (ids.empty())
+    if (invert_ids && ids.empty())
       pivot_ids.swap(intersect_ids);
     else if (!invert_ids)
-      intersect_ids.erase(set_intersection
+      intersect_ids.erase(std::set_intersection
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
     else
-      intersect_ids.erase(set_difference
+      intersect_ids.erase(std::set_difference
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
@@ -236,15 +236,15 @@ bool Pivot_Constraint::get_data
     if (input_set)
       pivot_ids = get_relation_pivot_ids(input_set->areas);
     std::vector< Relation::Id_Type > intersect_ids(pivot_ids.size());
-    if (ids.empty())
+    if (invert_ids && ids.empty())
       pivot_ids.swap(intersect_ids);
     else if (!invert_ids)
-      intersect_ids.erase(set_intersection
+      intersect_ids.erase(std::set_intersection
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
     else
-      intersect_ids.erase(set_difference
+      intersect_ids.erase(std::set_difference
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
