@@ -1208,6 +1208,7 @@ void Query_Statement::progress_1(std::vector< Id_Type >& ids, std::vector< Index
           && (!keys.empty() || !key_regexes.empty() || !regkey_regexes.empty())))
   {
     bool result_valid = true;
+    invert_ids = false;
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_ids< Skeleton, Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late, result_valid);
 
@@ -1242,7 +1243,6 @@ void Query_Statement::progress_1(std::vector< Id_Type >& ids, std::vector< Index
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty()) && check_keys_late != prefer_ranges)
   {
-    invert_ids = true;
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_non_ids< Id_Type >(file_prop, attic_file_prop, rman, timestamp);
     for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = id_idxs.begin();
@@ -1262,6 +1262,7 @@ void Query_Statement::progress_1(std::vector< Id_Type >& ids, bool& invert_ids,
       || (check_keys_late != prefer_ranges
           && (!keys.empty() || !key_regexes.empty() || !regkey_regexes.empty())))
   {
+    invert_ids = false;
     collect_ids< Id_Type >(file_prop, rman, check_keys_late).swap(ids);
     if (!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
     {
@@ -1276,16 +1277,13 @@ void Query_Statement::progress_1(std::vector< Id_Type >& ids, bool& invert_ids,
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
       && check_keys_late != prefer_ranges)
-  {
-    invert_ids = true;
     collect_non_ids< Id_Type >(file_prop, rman).swap(ids);
-  }
 }
 
 
 template< class Id_Type >
-void Query_Statement::collect_nodes(std::vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
+void Query_Statement::collect_nodes(const std::vector< Id_Type >& ids,
+				 bool invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman)
 {
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
@@ -1298,8 +1296,8 @@ void Query_Statement::collect_nodes(std::vector< Id_Type >& ids,
 
 
 template< typename Id_Type >
-void Query_Statement::collect_elems(int type, std::vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
+void Query_Statement::collect_elems(int type, const std::vector< Id_Type >& ids,
+				 bool invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman)
 {
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
@@ -1444,10 +1442,10 @@ void Query_Statement::execute(Resource_Manager& rman)
     std::vector< Way::Id_Type > way_ids;
     std::vector< Relation::Id_Type > relation_ids;
     std::vector< Area_Skeleton::Id_Type > area_ids;
-    bool invert_node_ids = false;
-    bool invert_way_ids = false;
-    bool invert_relation_ids = false;
-    bool invert_area_ids = false;
+    bool invert_node_ids = true;
+    bool invert_way_ids = true;
+    bool invert_relation_ids = true;
+    bool invert_area_ids = true;
 
     std::set< std::pair< Uint32_Index, Uint32_Index > > range_req_32;
     std::vector< Uint32_Index > range_vec_32;
@@ -1512,7 +1510,10 @@ void Query_Statement::execute(Resource_Manager& rman)
 	if ((*it)->get_node_ids(rman, constraint_node_ids))
 	{
 	  if (node_ids.empty())
+          {
 	    node_ids.swap(constraint_node_ids);
+            invert_node_ids = false;
+          }
 	  else
 	  {
 	    std::vector< Node::Id_Type > new_ids(node_ids.size());
@@ -1536,7 +1537,10 @@ void Query_Statement::execute(Resource_Manager& rman)
 	if ((*it)->get_way_ids(rman, constraint_way_ids))
 	{
 	  if (way_ids.empty())
+          {
 	    way_ids.swap(constraint_way_ids);
+            invert_way_ids = false;
+          }
 	  else
 	  {
 	    std::vector< Way::Id_Type > new_ids(way_ids.size());
@@ -1560,8 +1564,11 @@ void Query_Statement::execute(Resource_Manager& rman)
 	if ((*it)->get_relation_ids(rman, constraint_relation_ids))
 	{
 	  if (relation_ids.empty())
+          {
 	    relation_ids.swap(constraint_relation_ids);
-	  else
+            invert_relation_ids = false;
+          }
+          else
 	  {
 	    std::vector< Relation::Id_Type > new_ids(relation_ids.size());
 	    new_ids.erase(std::set_intersection(
@@ -1584,7 +1591,10 @@ void Query_Statement::execute(Resource_Manager& rman)
 	if ((*it)->get_area_ids(rman, constraint_area_ids))
 	{
 	  if (area_ids.empty())
+          {
 	    area_ids.swap(constraint_area_ids);
+            invert_area_ids = false;
+          }
 	  else
 	  {
 	    std::vector< Area_Skeleton::Id_Type > new_ids(area_ids.size());
@@ -1599,11 +1609,6 @@ void Query_Statement::execute(Resource_Manager& rman)
 	}
       }
     }
-    
-    invert_node_ids |= node_ids.empty();
-    invert_way_ids |= way_ids.empty();
-    invert_relation_ids |= relation_ids.empty();
-    invert_area_ids |= area_ids.empty();
 
     if ((type & QUERY_NODE) && node_answer_state < data_collected)
     {

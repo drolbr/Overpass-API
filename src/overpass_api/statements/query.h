@@ -222,13 +222,13 @@ class Query_Statement : public Output_Statement
                     Resource_Manager& rman);
 
     template< class Id_Type >
-    void collect_nodes(std::vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
+    void collect_nodes(const std::vector< Id_Type >& ids,
+				 bool invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman);
 
     template< class Id_Type >
-    void collect_elems(int type, std::vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
+    void collect_elems(int type, const std::vector< Id_Type >& ids,
+				 bool invert_ids, Answer_State& answer_state, Set& into,
 				 Resource_Manager& rman);
 
     void collect_elems(Answer_State& answer_state, Set& into, Resource_Manager& rman);
