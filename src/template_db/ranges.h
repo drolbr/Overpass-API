@@ -52,6 +52,7 @@ public:
   Iterator begin() const { return Iterator(data.begin()); }
   Iterator end() const { return Iterator(data.end()); }
   bool empty() const { return data.empty(); }
+  void swap(Ranges& rhs) { data.swap(rhs.data); }
   
   Ranges intersect(const Ranges& rhs) const;
   Ranges union_(const Ranges& rhs) const;

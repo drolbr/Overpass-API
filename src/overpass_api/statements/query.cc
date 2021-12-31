@@ -1321,7 +1321,7 @@ void Query_Statement::collect_elems(Answer_State& answer_state, Set& into, Resou
 
 
 template< typename Index >
-std::set< std::pair< Index, Index > > intersect_ranges
+Ranges< Index > intersect_ranges
     (const std::set< std::pair< Index, Index > >& range_a,
      std::vector< Index >& range_vec)
 {
@@ -1610,6 +1610,10 @@ void Query_Statement::execute(Resource_Manager& rman)
       }
     }
 
+    Ranges< Uint32_Index > node_ranges;
+    Ranges< Uint31_Index > way_ranges;
+    Ranges< Uint31_Index > rel_ranges;
+
     if ((type & QUERY_NODE) && node_answer_state < data_collected)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
@@ -1625,6 +1629,9 @@ void Query_Statement::execute(Resource_Manager& rman)
 	  node_answer_state = ranges_collected;
         }
       }
+      
+      node_ranges = (node_answer_state < ranges_collected
+        ? Ranges< Uint32_Index >::global() : range_req_32);
 
       if (!range_vec_32.empty())
       {
@@ -1633,10 +1640,8 @@ void Query_Statement::execute(Resource_Manager& rman)
           node_answer_state = ranges_collected;
           range_req_32.clear();
           range_req_32.insert(std::make_pair(Uint32_Index(0u), Uint32_Index(0xffffffff)));
-          intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
         }
-        else
-          intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
+        intersect_ranges(range_req_32, range_vec_32).swap(node_ranges);
       }
     }
     if ((type & QUERY_WAY) && way_answer_state < data_collected)
@@ -1655,6 +1660,9 @@ void Query_Statement::execute(Resource_Manager& rman)
             way_answer_state = ranges_collected;
         }
       }
+      
+      way_ranges = (way_answer_state < ranges_collected
+        ? Ranges< Uint31_Index >::global() : way_range_req_31);
 
       if (!way_range_vec_31.empty())
       {
@@ -1663,10 +1671,8 @@ void Query_Statement::execute(Resource_Manager& rman)
           way_answer_state = ranges_collected;
           way_range_req_31.clear();
           way_range_req_31.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
-          intersect_ranges(way_range_req_31, way_range_vec_31).swap(way_range_req_31);
         }
-        else
-          intersect_ranges(way_range_req_31, way_range_vec_31).swap(way_range_req_31);
+        intersect_ranges(way_range_req_31, way_range_vec_31).swap(way_ranges);
       }
     }
     if ((type & QUERY_RELATION) && relation_answer_state < data_collected)
@@ -1685,6 +1691,9 @@ void Query_Statement::execute(Resource_Manager& rman)
             relation_answer_state = ranges_collected;
         }
       }
+      
+      rel_ranges = (relation_answer_state < ranges_collected
+        ? Ranges< Uint31_Index >::global() : relation_range_req_31);
 
       if (!relation_range_vec_31.empty())
       {
@@ -1693,22 +1702,13 @@ void Query_Statement::execute(Resource_Manager& rman)
           relation_answer_state = ranges_collected;
           relation_range_req_31.clear();
           relation_range_req_31.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
-          intersect_ranges(relation_range_req_31, relation_range_vec_31).swap(relation_range_req_31);
         }
-        else
-          intersect_ranges(relation_range_req_31, relation_range_vec_31).swap(relation_range_req_31);
+        intersect_ranges(relation_range_req_31, relation_range_vec_31).swap(rel_ranges);
       }
     }
 
     set_progress(3);
     rman.health_check(*this);
-
-    Ranges< Uint32_Index > node_ranges(node_answer_state < ranges_collected
-        ? Ranges< Uint32_Index >::global() : range_req_32);
-    Ranges< Uint31_Index > way_ranges(way_answer_state < ranges_collected
-        ? Ranges< Uint31_Index >::global() : way_range_req_31);
-    Ranges< Uint31_Index > rel_ranges(relation_answer_state < ranges_collected
-        ? Ranges< Uint31_Index >::global() : relation_range_req_31);
 
     if (type & QUERY_NODE)
     {
