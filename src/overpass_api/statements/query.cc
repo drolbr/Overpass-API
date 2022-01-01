@@ -1444,11 +1444,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     bool invert_relation_ids = true;
     bool invert_area_ids = true;
 
-    std::set< std::pair< Uint32_Index, Uint32_Index > > range_req_32;
     std::vector< Uint32_Index > range_vec_32;
-    std::set< std::pair< Uint31_Index, Uint31_Index > > way_range_req_31;
     std::vector< Uint31_Index > way_range_vec_31;
-    std::set< std::pair< Uint31_Index, Uint31_Index > > relation_range_req_31;
     std::vector< Uint31_Index > relation_range_vec_31;
 
     if (type & QUERY_NODE)
@@ -1607,12 +1604,9 @@ void Query_Statement::execute(Resource_Manager& rman)
       }
     }
 
-    Ranges< Uint32_Index > node_ranges(node_answer_state < ranges_collected
-        ? Ranges< Uint32_Index >::global() : range_req_32);
-    Ranges< Uint31_Index > way_ranges(way_answer_state < ranges_collected
-        ? Ranges< Uint31_Index >::global() : way_range_req_31);
-    Ranges< Uint31_Index > rel_ranges(relation_answer_state < ranges_collected
-        ? Ranges< Uint31_Index >::global() : relation_range_req_31);
+    Ranges< Uint32_Index > node_ranges = Ranges< Uint32_Index >::global();
+    Ranges< Uint31_Index > way_ranges = Ranges< Uint31_Index >::global();
+    Ranges< Uint31_Index > rel_ranges = Ranges< Uint31_Index >::global();
 
     if ((type & QUERY_NODE) && node_answer_state < data_collected)
     {
@@ -1621,17 +1615,10 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
         if ((*it)->get_ranges(rman, range_req))
-        {
           node_ranges.intersect(range_req).swap(node_ranges);
-          node_answer_state = ranges_collected;
-        }
       }
-      
       if (!range_vec_32.empty())
-      {
         intersect_ranges(node_ranges, range_vec_32).swap(node_ranges);
-        node_answer_state = ranges_collected;
-      }
     }
     if ((type & QUERY_WAY) && way_answer_state < data_collected)
     {
@@ -1640,17 +1627,10 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
         if ((*it)->get_way_ranges(rman, range_req))
-        {
           way_ranges.intersect(range_req).swap(way_ranges);
-          way_answer_state = ranges_collected;
-        }
       }
-      
       if (!way_range_vec_31.empty())
-      {
         intersect_ranges(way_ranges, way_range_vec_31).swap(way_ranges);
-        way_answer_state = ranges_collected;
-      }
     }
     if ((type & QUERY_RELATION) && relation_answer_state < data_collected)
     {
@@ -1659,17 +1639,10 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
         if ((*it)->get_relation_ranges(rman, range_req))
-        {
           rel_ranges.intersect(range_req).swap(rel_ranges);
-          relation_answer_state = ranges_collected;
-        }
-      }
-      
+      }      
       if (!relation_range_vec_31.empty())
-      {
         intersect_ranges(rel_ranges, relation_range_vec_31).swap(rel_ranges);
-        relation_answer_state = ranges_collected;
-      }
     }
 
     set_progress(3);
@@ -1724,13 +1697,11 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       if (node_answer_state < data_collected)
       {
-        if (node_answer_state < ranges_collected)
+        if (node_ranges.is_global())
         {
           if (node_ids.empty())
             runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-          if (invert_node_ids)
-            node_ranges = Ranges< Uint32_Index >::global();
-          else
+          if (!invert_node_ids)
           {
             node_ranges = Ranges< Uint32_Index >();
             std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);
@@ -1757,13 +1728,11 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       if (way_answer_state < data_collected)
       {
-        if (way_answer_state < ranges_collected)
+        if (way_ranges.is_global())
         {
           if (way_ids.empty())
             runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-          if (invert_way_ids)
-            way_ranges = Ranges< Uint31_Index >::global();
-          else
+          if (!invert_way_ids)
           {
             way_ranges = Ranges< Uint31_Index >();
             std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
@@ -1795,13 +1764,11 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       if (relation_answer_state < data_collected)
       {
-        if (relation_answer_state < ranges_collected)
+        if (rel_ranges.is_global())
         {
           if (relation_ids.empty())
             runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-          if (invert_relation_ids)
-            rel_ranges = Ranges< Uint31_Index >::global();
-          else
+          if (!invert_relation_ids)
           {
             rel_ranges = Ranges< Uint31_Index >();
             std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids, rman);
