@@ -42,6 +42,18 @@ class Regular_Expression;
 class Bbox_Query_Statement;
 
 
+template< typename Id >
+struct Id_Constraint
+{
+  Id_Constraint() : invert(true) {}
+  bool empty() const { return !invert && ids.empty(); }
+  void restrict_to(const std::vector< Id >& ids);
+  
+  std::vector< Id > ids;
+  bool invert;
+};
+
+
 /* === The Query Statement ===
 
 The most important statement is the ''query'' statement. This is not a single statement but rather consists of one of the type specifiers ''node'', ''way'', ''relation'' (or shorthand ''rel''), ''derived'', ''area'', or ''nwr'' (shorthand for nodes, ways or relations) followed by one or more filters. The result set is the set of all elements that match the conditions of all the filters.
@@ -222,14 +234,11 @@ class Query_Statement : public Output_Statement
                     Resource_Manager& rman);
 
     template< class Id_Type >
-    void collect_nodes(const std::vector< Id_Type >& ids,
-				 bool invert_ids, Answer_State& answer_state, Set& into,
-				 Resource_Manager& rman);
-
+    void collect_nodes(
+        const Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Set& into, Resource_Manager& rman);
     template< class Id_Type >
-    void collect_elems(int type, const std::vector< Id_Type >& ids,
-				 bool invert_ids, Answer_State& answer_state, Set& into,
-				 Resource_Manager& rman);
+    void collect_elems(
+        int type, const Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Set& into, Resource_Manager& rman);
 
     void collect_elems(Answer_State& answer_state, Set& into, Resource_Manager& rman);
     void apply_all_filters(
