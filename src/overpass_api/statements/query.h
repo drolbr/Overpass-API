@@ -221,17 +221,15 @@ class Query_Statement : public Output_Statement
     void filter_by_tags(std::map< Uint31_Index, std::vector< Derived_Structure > >& items);
 
     template< typename Skeleton, typename Id_Type, typename Index >
-    void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
-                    bool& invert_ids, uint64 timestamp,
-                    Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
-                    const File_Properties& file_prop, const File_Properties& attic_file_prop,
-                    Resource_Manager& rman);
+    void progress_1(
+        Id_Constraint< Id_Type >& ids, std::vector< Index >& range_req,
+        uint64 timestamp, Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
+        const File_Properties& file_prop, const File_Properties& attic_file_prop, Resource_Manager& rman);
 
     template< class Id_Type >
-    void progress_1(std::vector< Id_Type >& ids, bool& invert_ids,
-                    Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
-                    const File_Properties& file_prop,
-                    Resource_Manager& rman);
+    void progress_1(
+        Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
+        const File_Properties& file_prop, Resource_Manager& rman);
 
     template< class Id_Type >
     void collect_nodes(

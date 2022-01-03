@@ -60,6 +60,19 @@ class Query_Constraint
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
       { return false; }
 
+    virtual bool get_ranges
+        (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
+      { return false; }
+    virtual bool get_way_ranges
+        (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
+      { return get_ranges(rman, ranges); }
+    virtual bool get_relation_ranges
+        (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
+      { return get_ranges(rman, ranges); }
+    virtual bool get_ranges
+        (Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
+      { return false; }
+
     virtual bool get_node_ids
         (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
       { return false; }

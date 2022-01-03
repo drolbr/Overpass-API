@@ -832,9 +832,9 @@ class Recurse_Constraint : public Query_Constraint
     Recurse_Constraint(Recurse_Statement& stmt_) : stmt(&stmt_) {}
 
     virtual bool get_way_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+        (Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
     virtual bool get_relation_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+        (Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
     virtual bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
 
@@ -915,9 +915,9 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair<
 }
 
 
-bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
-  ranges.clear();
+  ranges = Ranges< Uint31_Index >();
 
   const Set* input = rman.get_set(stmt->get_input());
   if (!input)
@@ -928,11 +928,8 @@ bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, std::set< std::p
     if (stmt->get_type() == RECURSE_RELATION_WAY || stmt->get_type() == RECURSE_RELATION_NWR
         || stmt->get_type() == RECURSE_RELATION_NW || stmt->get_type() == RECURSE_RELATION_WR)
     {
-      Ranges< Uint31_Index > req = relation_way_member_indices< Relation_Skeleton >(
+      ranges = relation_way_member_indices< Relation_Skeleton >(
           stmt, rman, input->relations.begin(), input->relations.end());
-      for (auto it = req.begin(); it != req.end(); ++it)
-        ranges.insert({it.lower_bound(), it.upper_bound()});
-
       return true;
     }
     else if (stmt->get_type() == RECURSE_DOWN)
@@ -943,7 +940,8 @@ bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, std::set< std::p
     {
       std::set< Uint31_Index > req = extract_parent_indices(input->nodes);
       for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
+      ranges.sort();
 
       return true;
     }
@@ -959,12 +957,9 @@ bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, std::set< std::p
     if (stmt->get_type() == RECURSE_RELATION_WAY || stmt->get_type() == RECURSE_RELATION_NWR
         || stmt->get_type() == RECURSE_RELATION_NW || stmt->get_type() == RECURSE_RELATION_WR)
     {
-      Ranges< Uint31_Index > req = relation_way_member_indices< Relation_Skeleton >(
+      ranges = relation_way_member_indices< Relation_Skeleton >(
           stmt, rman, input->relations.begin(), input->relations.end(),
           input->attic_relations.begin(), input->attic_relations.end());
-      for (auto it = req.begin(); it != req.end(); ++it)
-        ranges.insert({it.lower_bound(), it.upper_bound()});
-
       return true;
     }
     else if (stmt->get_type() == RECURSE_DOWN)
@@ -975,10 +970,11 @@ bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, std::set< std::p
     {
       std::set< Uint31_Index > req = extract_parent_indices(input->nodes);
       for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
       std::set< Uint31_Index > attic_req = extract_parent_indices(input->attic_nodes);
       for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
+      ranges.sort();
 
       return true;
     }
@@ -994,9 +990,9 @@ bool Recurse_Constraint::get_way_ranges(Resource_Manager& rman, std::set< std::p
 }
 
 
-bool Recurse_Constraint::get_relation_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+bool Recurse_Constraint::get_relation_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
-  ranges.clear();
+  ranges = Ranges< Uint31_Index >();
 
   const Set* input = rman.get_set(stmt->get_input());
   if (!input)
@@ -1015,7 +1011,7 @@ bool Recurse_Constraint::get_relation_ranges(Resource_Manager& rman, std::set< s
     {
       std::set< Uint31_Index > req = extract_parent_indices(input->nodes);
       for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
 
       return true;
     }
@@ -1023,7 +1019,7 @@ bool Recurse_Constraint::get_relation_ranges(Resource_Manager& rman, std::set< s
     {
       std::set< Uint31_Index > req = extract_parent_indices(input->ways);
       for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
 
       return true;
     }
@@ -1049,10 +1045,10 @@ bool Recurse_Constraint::get_relation_ranges(Resource_Manager& rman, std::set< s
     {
       std::set< Uint31_Index > req = extract_parent_indices(input->nodes);
       for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
       std::set< Uint31_Index > attic_req = extract_parent_indices(input->attic_nodes);
       for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
 
       return true;
     }
@@ -1060,10 +1056,10 @@ bool Recurse_Constraint::get_relation_ranges(Resource_Manager& rman, std::set< s
     {
       std::set< Uint31_Index > req = extract_parent_indices(input->ways);
       for (std::set< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
       std::set< Uint31_Index > attic_req = extract_parent_indices(input->attic_ways);
       for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
-        ranges.insert(std::make_pair(*it, inc(*it)));
+        ranges.push_back(*it, inc(*it));
 
       return true;
     }
