@@ -156,7 +156,7 @@ output_formats_cc = \
 
 libcore_la_SOURCES = overpass_api/frontend/output_handler_parser.cc overpass_api/statements/statement_dump.cc expat/map_ql_input.cc
 libcore_la_LIBADD = libdispatcher.la libexpatwrapper.la libsettings.la libfrontend.la
-libdata_la_SOURCES = overpass_api/data/collect_members.cc overpass_api/data/diff_set.cc overpass_api/data/geometry_from_quad_coords.cc overpass_api/data/relation_geometry_store.cc overpass_api/data/set_comparison.cc overpass_api/data/way_geometry_store.cc
+libdata_la_SOURCES = overpass_api/data/collect_members.cc overpass_api/data/diff_set.cc overpass_api/data/geometry_from_quad_coords.cc overpass_api/data/ranges.inst.cc overpass_api/data/relation_geometry_store.cc overpass_api/data/set_comparison.cc overpass_api/data/way_geometry_store.cc
 libdata_la_LIBADD =
 libdispatcherclient_la_SOURCES = template_db/dispatcher_client.cc
 libdispatcherclient_la_LIBADD =
@@ -333,6 +333,8 @@ nobase_dist_HEADERS = \
   template_db/lz4_wrapper.h\
   template_db/random_file.h\
   template_db/random_file_index.h\
+  template_db/ranges.h\
+  template_db/ranges.def.h\
   template_db/transaction.h\
   template_db/transaction_insulator.h\
   template_db/types.h\

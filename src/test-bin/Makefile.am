@@ -14,6 +14,7 @@ statements_cc = \
   ../overpass_api/data/collect_members.cc \
   ../overpass_api/data/diff_set.cc \
   ../overpass_api/data/geometry_from_quad_coords.cc \
+  ../overpass_api/data/ranges.inst.cc \
   ../overpass_api/data/relation_geometry_store.cc \
   ../overpass_api/data/set_comparison.cc \
   ../overpass_api/data/way_geometry_store.cc \
