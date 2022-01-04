@@ -836,7 +836,7 @@ class Recurse_Constraint : public Query_Constraint
     virtual bool get_relation_ranges
         (Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
     virtual bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
+        (Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
 
     Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
 
@@ -858,9 +858,9 @@ class Recurse_Constraint : public Query_Constraint
 };
 
 
-bool Recurse_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Recurse_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
 {
-  ranges.clear();
+  ranges = Ranges< Uint32_Index >();
 
   const Set* input = rman.get_set(stmt->get_input());
   if (!input)
@@ -871,14 +871,14 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair<
     if (stmt->get_type() == RECURSE_RELATION_NODE || stmt->get_type() == RECURSE_RELATION_NWR
         || stmt->get_type() == RECURSE_RELATION_NW || stmt->get_type() == RECURSE_RELATION_NR)
     {
-      relation_node_member_indices< Relation_Skeleton >(
-          stmt, rman, input->relations.begin(), input->relations.end()).swap(ranges);
+      ranges = relation_node_member_indices< Relation_Skeleton >(
+          stmt, rman, input->relations.begin(), input->relations.end());
 
       return true;
     }
     else if (stmt->get_type() == RECURSE_WAY_NODE)
     {
-      way_nd_indices(stmt, rman, input->ways.begin(), input->ways.end()).swap(ranges);
+      ranges = way_nd_indices(stmt, rman, input->ways.begin(), input->ways.end());
 
       return true;
     }
@@ -892,16 +892,16 @@ bool Recurse_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair<
     if (stmt->get_type() == RECURSE_RELATION_NODE || stmt->get_type() == RECURSE_RELATION_NWR
         || stmt->get_type() == RECURSE_RELATION_NW || stmt->get_type() == RECURSE_RELATION_NR)
     {
-      relation_node_member_indices< Relation_Skeleton >(
+      ranges = relation_node_member_indices< Relation_Skeleton >(
           stmt, rman, input->relations.begin(), input->relations.end(),
-          input->attic_relations.begin(), input->attic_relations.end()).swap(ranges);
+          input->attic_relations.begin(), input->attic_relations.end());
 
       return true;
     }
     else if (stmt->get_type() == RECURSE_WAY_NODE)
     {
-      way_nd_indices(stmt, rman, input->ways.begin(), input->ways.end(),
-          input->attic_ways.begin(), input->attic_ways.end()).swap(ranges);
+      ranges = way_nd_indices(stmt, rman, input->ways.begin(), input->ways.end(),
+          input->attic_ways.begin(), input->attic_ways.end());
 
       return true;
     }

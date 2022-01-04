@@ -46,8 +46,11 @@ class Area_Constraint : public Query_Constraint
 
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
+
     void filter(Resource_Manager& rman, Set& into);
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Area_Constraint() {}
@@ -100,7 +103,49 @@ bool Area_Constraint::get_ranges
 
 
 bool Area_Constraint::get_ranges
+    (Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
+{
+  std::set< Uint31_Index > area_blocks_req;
+  if (area->areas_from_input())
+  {
+    const Set* input = rman.get_set(area->get_input());
+    if (!input)
+      return true;
+
+    area->get_ranges(input->ways, input->areas, area_blocks_req, rman);
+
+    if (rman.get_desired_timestamp() == NOW)
+      ranges = way_covered_indices(area, rman, input->ways.begin(), input->ways.end());
+    else
+      ranges = way_covered_indices(area, rman, input->ways.begin(), input->ways.end(),
+          input->attic_ways.begin(), input->attic_ways.end());
+  }
+  else
+  {
+    area->get_ranges(area_blocks_req, rman);
+    ranges = Ranges< Uint32_Index >();
+  }
+
+  std::set< std::pair< Uint32_Index, Uint32_Index > > area_ranges;
+  copy_discrete_to_area_ranges(area_blocks_req, area_ranges);
+  ranges.union_(area_ranges).swap(ranges);
+
+  return true;
+}
+
+
+bool Area_Constraint::get_ranges
     (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  this->get_ranges(rman, node_ranges);
+  ranges = calc_parents(node_ranges);
+  return true;
+}
+
+
+bool Area_Constraint::get_ranges
+    (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   this->get_ranges(rman, node_ranges);

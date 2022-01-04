@@ -117,10 +117,8 @@ class Id_Query_Constraint : public Query_Constraint
 
     Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
 
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
 
     bool get_node_ids
         (Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids);
@@ -175,32 +173,33 @@ bool Id_Query_Constraint::get_area_ids(Resource_Manager& rman, std::vector< Area
 }
 
 
-bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
 {
   std::vector< Node_Skeleton::Id_Type > ids;
   ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
 
   std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
 
-  ranges.clear();
+  ranges = Ranges< Uint32_Index >();
   for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-    ranges.insert(std::make_pair(*it, ++Uint32_Index(*it)));
+    ranges.push_back(*it, ++Uint32_Index(*it));
+  ranges.sort();
 
   return true;
 }
 
 
-bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
   std::vector< Uint31_Index > req;
-  ranges.clear();
+  ranges = Ranges< Uint31_Index >();
 
   {
     std::vector< Way_Skeleton::Id_Type > ids;
     ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
     get_indexes_< Uint31_Index, Way_Skeleton >(ids, rman).swap(req);
     for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-      ranges.insert(std::make_pair(*it, inc(*it)));
+      ranges.push_back(*it, inc(*it));
   }
 
   {
@@ -208,8 +207,10 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, std::set< std::pair
     ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
     get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman).swap(req);
     for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-      ranges.insert(std::make_pair(*it, inc(*it)));
+      ranges.push_back(*it, inc(*it));
   }
+
+  ranges.sort();
 
   return true;
 }

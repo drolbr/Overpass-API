@@ -1575,11 +1575,8 @@ void Query_Statement::execute(Resource_Manager& rman)
           it != constraints.end(); ++it)
       {
         Ranges< Uint32_Index > i_ranges;
-        std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
         if ((*it)->get_ranges(rman, i_ranges))
           node_ranges.intersect(i_ranges).swap(node_ranges);
-        else if ((*it)->get_ranges(rman, range_req))
-          node_ranges.intersect(range_req).swap(node_ranges);
       }
       if (!range_vec_32.empty())
         intersect_ranges(node_ranges, range_vec_32).swap(node_ranges);
@@ -1590,11 +1587,8 @@ void Query_Statement::execute(Resource_Manager& rman)
           it != constraints.end(); ++it)
       {
         Ranges< Uint31_Index > i_ranges;
-        std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
         if ((*it)->get_way_ranges(rman, i_ranges))
           way_ranges.intersect(i_ranges).swap(way_ranges);
-        else if ((*it)->get_way_ranges(rman, range_req))
-          way_ranges.intersect(range_req).swap(way_ranges);
       }
       if (!way_range_vec_31.empty())
         intersect_ranges(way_ranges, way_range_vec_31).swap(way_ranges);
@@ -1605,11 +1599,8 @@ void Query_Statement::execute(Resource_Manager& rman)
           it != constraints.end(); ++it)
       {
         Ranges< Uint31_Index > i_ranges;
-        std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
         if ((*it)->get_relation_ranges(rman, i_ranges))
           rel_ranges.intersect(i_ranges).swap(rel_ranges);
-        else if ((*it)->get_relation_ranges(rman, range_req))
-          rel_ranges.intersect(range_req).swap(rel_ranges);
       }      
       if (!relation_range_vec_31.empty())
         intersect_ranges(rel_ranges, relation_range_vec_31).swap(rel_ranges);

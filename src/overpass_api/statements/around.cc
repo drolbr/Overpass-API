@@ -274,8 +274,10 @@ class Around_Constraint : public Query_Constraint
 
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
     void filter(Resource_Manager& rman, Set& into);
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Around_Constraint() {}
@@ -298,7 +300,28 @@ bool Around_Constraint::get_ranges
 
 
 bool Around_Constraint::get_ranges
+    (Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
+{
+  ranges_used = true;
+
+  const Set* input = rman.get_set(around->get_source_name());
+  ranges = around->calc_ranges(input ? *input : Set(), rman);
+  return true;
+}
+
+
+bool Around_Constraint::get_ranges
     (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  this->get_ranges(rman, node_ranges);
+  ranges = calc_parents(node_ranges);
+  return true;
+}
+
+
+bool Around_Constraint::get_ranges
+    (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
   this->get_ranges(rman, node_ranges);

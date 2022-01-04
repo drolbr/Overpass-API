@@ -42,8 +42,11 @@ class Polygon_Constraint : public Query_Constraint
     Polygon_Constraint(Polygon_Query_Statement& polygon_) : polygon(&polygon_) {}
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
     bool get_ranges
         (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
+
     void filter(Resource_Manager& rman, Set& into);
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Polygon_Constraint() {}
@@ -68,7 +71,23 @@ bool Polygon_Constraint::get_ranges
 
 
 bool Polygon_Constraint::get_ranges
+    (Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
+{
+  ranges = polygon->calc_ranges();
+  return true;
+}
+
+
+bool Polygon_Constraint::get_ranges
     (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+{
+  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges = polygon->calc_ranges();
+  ranges = calc_parents(node_ranges);
+  return true;
+}
+
+
+bool Polygon_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges = polygon->calc_ranges();
   ranges = calc_parents(node_ranges);

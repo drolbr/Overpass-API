@@ -40,7 +40,9 @@ class User_Constraint : public Query_Constraint
     Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return ids_required; }
 
     bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
     bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~User_Constraint() {}
 
@@ -316,11 +318,31 @@ bool User_Constraint::get_ranges
 }
 
 
+bool User_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
+{
+  std::set< std::pair< Uint32_Index, Uint32_Index > > set_ranges;
+  std::set< std::pair< Uint31_Index, Uint31_Index > > nonnodes;
+  calc_ranges(set_ranges, nonnodes, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
+  ranges = Ranges< Uint32_Index >(set_ranges);
+  return true;
+}
+
+
 bool User_Constraint::get_ranges
     (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > nodes;
   calc_ranges(nodes, ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
+  return true;
+}
+
+
+bool User_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
+{
+  std::set< std::pair< Uint32_Index, Uint32_Index > > nodes;
+  std::set< std::pair< Uint31_Index, Uint31_Index > > set_ranges;
+  calc_ranges(nodes, set_ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
+  ranges = Ranges< Uint31_Index >(set_ranges);
   return true;
 }
 

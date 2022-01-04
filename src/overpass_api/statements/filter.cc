@@ -30,8 +30,8 @@ class Filter_Constraint : public Query_Constraint
     Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return ids_required; }
 
     Filter_Constraint(Filter_Statement& stmt_) : stmt(&stmt_) {}
-    bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges) { return false; }
-    bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges) { return false; }
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges) { return false; }
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges) { return false; }
     void filter(Resource_Manager& rman, Set& into) {}
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Filter_Constraint() {}
