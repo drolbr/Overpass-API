@@ -39,9 +39,7 @@ class User_Constraint : public Query_Constraint
 
     Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return ids_required; }
 
-    bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
-    bool get_ranges(Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~User_Constraint() {}
@@ -281,8 +279,7 @@ std::set< Uint32_Index > User_Statement::get_ids(Transaction& transaction)
 
 
 void calc_ranges
-  (std::set< std::pair< Uint32_Index, Uint32_Index > >& node_req,
-   std::set< std::pair< Uint31_Index, Uint31_Index > >& other_req,
+  (Ranges< Uint32_Index >& node_req, Ranges< Uint31_Index >& other_req,
    const std::set< Uint32_Index >& user_ids, Transaction& transaction)
 {
 
@@ -294,63 +291,37 @@ void calc_ranges
   {
     if ((user_it.object().val() & 0x80000000) == 0)
     {
-      node_req.insert(std::make_pair(Uint32_Index(user_it.object().val()),
-			        Uint32_Index(user_it.object().val() + 0x100)));
-      other_req.insert(std::make_pair(Uint31_Index(user_it.object().val()),
-			         Uint31_Index(user_it.object().val() + 0x100)));
+      node_req.push_back(Uint32_Index(user_it.object().val()), Uint32_Index(user_it.object().val() + 0x100));
+      other_req.push_back(Uint31_Index(user_it.object().val()), Uint31_Index(user_it.object().val() + 0x100));
     }
     else if ((user_it.object().val() & 0xff) == 0)
-      other_req.insert(std::make_pair(Uint31_Index(user_it.object().val()),
-			         Uint31_Index(user_it.object().val() + 0x100)));
+      other_req.push_back(Uint31_Index(user_it.object().val()), Uint31_Index(user_it.object().val() + 0x100));
     else
-      other_req.insert(std::make_pair(Uint31_Index(user_it.object().val()),
-			         Uint31_Index(user_it.object().val() + 1)));
+      other_req.push_back(Uint31_Index(user_it.object().val()), Uint31_Index(user_it.object().val() + 1));
   }
-}
-
-
-bool User_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
-{
-  std::set< std::pair< Uint31_Index, Uint31_Index > > nonnodes;
-  calc_ranges(ranges, nonnodes, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
-  return true;
+  node_req.sort();
+  other_req.sort();
 }
 
 
 bool User_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > set_ranges;
-  std::set< std::pair< Uint31_Index, Uint31_Index > > nonnodes;
-  calc_ranges(set_ranges, nonnodes, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
-  ranges = Ranges< Uint32_Index >(set_ranges);
-  return true;
-}
-
-
-bool User_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
-{
-  std::set< std::pair< Uint32_Index, Uint32_Index > > nodes;
-  calc_ranges(nodes, ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
+  Ranges< Uint31_Index > nonnodes;
+  calc_ranges(ranges, nonnodes, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
   return true;
 }
 
 
 bool User_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > nodes;
-  std::set< std::pair< Uint31_Index, Uint31_Index > > set_ranges;
-  calc_ranges(nodes, set_ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
-  ranges = Ranges< Uint31_Index >(set_ranges);
+  Ranges< Uint32_Index > nodes;
+  calc_ranges(nodes, ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
   return true;
 }
 
 
-void User_Statement::calc_ranges
-    (std::set< std::pair< Uint32_Index, Uint32_Index > >& node_req,
-     std::set< std::pair< Uint31_Index, Uint31_Index > >& other_req,
-     Transaction& transaction)
+void User_Statement::calc_ranges(
+    Ranges< Uint32_Index >& node_req, Ranges< Uint31_Index >& other_req, Transaction& transaction)
 {
   if (!user_names.empty())
     user_ids = get_user_ids(user_names, transaction);
@@ -366,7 +337,7 @@ void User_Statement::execute(Resource_Manager& rman)
 
   if ((result_type == "") || (result_type == "node"))
   {
-    std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
+    Ranges< Uint32_Index > ranges;
     constraint.get_ranges(rman, ranges);
     get_elements_from_db< Uint32_Index, Node_Skeleton >(
         into.nodes, into.attic_nodes, ranges, *this, rman);
@@ -375,7 +346,7 @@ void User_Statement::execute(Resource_Manager& rman)
 
   if ((result_type == "") || (result_type == "way"))
   {
-    std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
+    Ranges< Uint31_Index > ranges;
     constraint.get_ranges(rman, ranges);
     get_elements_from_db< Uint31_Index, Way_Skeleton >(
         into.ways, into.attic_ways, ranges, *this, rman);
@@ -384,7 +355,7 @@ void User_Statement::execute(Resource_Manager& rman)
 
   if ((result_type == "") || (result_type == "relation"))
   {
-    std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
+    Ranges< Uint31_Index > ranges;
     constraint.get_ranges(rman, ranges);
     get_elements_from_db< Uint31_Index, Relation_Skeleton >(
         into.relations, into.attic_relations, ranges, *this, rman);

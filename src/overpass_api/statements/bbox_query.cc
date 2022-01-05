@@ -39,11 +39,7 @@ class Bbox_Constraint : public Query_Constraint
 
     Bbox_Constraint(Bbox_Query_Statement& bbox_) : bbox(&bbox_),
         filter_(Bbox_Double(bbox->get_south(), bbox->get_west(), bbox->get_north(), bbox->get_east())) {}
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
 
     void filter(Resource_Manager& rman, Set& into);
@@ -68,25 +64,9 @@ Query_Filter_Strategy Bbox_Constraint::delivers_data(Resource_Manager& rman)
 
 
 bool Bbox_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
-{
-  ranges = filter_.get_ranges_32();
-  return true;
-}
-
-
-bool Bbox_Constraint::get_ranges
     (Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
 {
   ranges = filter_.get_ranges_32();
-  return true;
-}
-
-
-bool Bbox_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
-{
-  ranges = filter_.get_ranges_31();
   return true;
 }
 
@@ -250,7 +230,7 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   Set into;
 
   Bbox_Constraint constraint(*this);
-  std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
+  Ranges< Uint32_Index > ranges;
   constraint.get_ranges(rman, ranges);
   get_elements_from_db< Uint32_Index, Node_Skeleton >(
       into.nodes, into.attic_nodes, ranges, *this, rman);

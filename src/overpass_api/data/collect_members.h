@@ -221,12 +221,11 @@ template < typename TIndex, typename TObject >
 void get_elements_from_db
     (std::map< TIndex, std::vector< TObject > >& elements,
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
-     const std::set< std::pair< TIndex, TIndex > >& range_req,
+     const Ranges< TIndex >& ranges,
      const Statement& query, Resource_Manager& rman)
 {
   elements.clear();
   attic_elements.clear();
-  Ranges< TIndex > ranges(range_req);
   get_elements_by_id_from_db_generic(
       elements, attic_elements, Trivial_Predicate< TObject >(), ranges, query, rman);
 }

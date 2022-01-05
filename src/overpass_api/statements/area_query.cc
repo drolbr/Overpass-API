@@ -44,11 +44,7 @@ class Area_Constraint : public Query_Constraint
 
     Query_Filter_Strategy delivers_data(Resource_Manager& rman);
 
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
 
     void filter(Resource_Manager& rman, Set& into);
@@ -67,38 +63,6 @@ void copy_discrete_to_area_ranges(
   nodes_req.clear();
   for (std::set< Uint31_Index >::const_iterator it = area_blocks_req.begin(); it != area_blocks_req.end(); ++it)
     nodes_req.insert(std::make_pair(Uint32_Index(it->val()), Uint32_Index((it->val()) + 0x100)));
-}
-
-
-bool Area_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
-{
-  std::set< Uint31_Index > area_blocks_req;
-  if (area->areas_from_input())
-  {
-    const Set* input = rman.get_set(area->get_input());
-    if (!input)
-      return true;
-
-    area->get_ranges(input->ways, input->areas, area_blocks_req, rman);
-
-    if (rman.get_desired_timestamp() == NOW)
-      way_covered_indices(area, rman, input->ways.begin(), input->ways.end()).swap(ranges);
-    else
-      way_covered_indices(area, rman, input->ways.begin(), input->ways.end(),
-          input->attic_ways.begin(), input->attic_ways.end()).swap(ranges);
-  }
-  else
-  {
-    area->get_ranges(area_blocks_req, rman);
-    ranges.clear();
-  }
-
-  std::set< std::pair< Uint32_Index, Uint32_Index > > area_ranges;
-  copy_discrete_to_area_ranges(area_blocks_req, area_ranges);
-  range_union(ranges, area_ranges).swap(ranges);
-
-  return true;
 }
 
 
@@ -135,19 +99,9 @@ bool Area_Constraint::get_ranges
 
 
 bool Area_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
-{
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
-  this->get_ranges(rman, node_ranges);
-  ranges = calc_parents(node_ranges);
-  return true;
-}
-
-
-bool Area_Constraint::get_ranges
     (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  Ranges< Uint32_Index > node_ranges;
   this->get_ranges(rman, node_ranges);
   ranges = calc_parents(node_ranges);
   return true;
@@ -156,7 +110,7 @@ bool Area_Constraint::get_ranges
 
 void Area_Constraint::filter(Resource_Manager& rman, Set& into)
 {
-  std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
+  Ranges< Uint31_Index > ranges;
   get_ranges(rman, ranges);
 
   // pre-process ways to reduce the load of the expensive filter
@@ -346,7 +300,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   //Process relations
 
   // Retrieve all nodes referred by the relations.
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  Ranges< Uint32_Index > node_ranges;
   get_ranges(rman, node_ranges);
   std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
       = relation_node_members(&query, rman, into.relations, node_ranges, {}, true);
@@ -361,7 +315,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   } 
 
   // Retrieve all ways referred by the relations.
-  std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
+  Ranges< Uint31_Index > way_ranges;
   get_ranges(rman, way_ranges);
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
       = relation_way_members(&query, rman, into.relations, way_ranges, {}, true);
@@ -405,7 +359,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   if (!into.attic_relations.empty())
   {
     // Retrieve all nodes referred by the relations.
-    std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+    Ranges< Uint32_Index > node_ranges;
     get_ranges(rman, node_ranges);
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
         = relation_node_members(&query, rman, into.attic_relations, node_ranges);
@@ -420,7 +374,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     } 
 
     // Retrieve all ways referred by the relations.
-    std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
+    Ranges< Uint31_Index > way_ranges;
     get_ranges(rman, way_ranges);
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
         = relation_way_members(&query, rman, into.attic_relations, way_ranges);
@@ -1110,7 +1064,7 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   Set into;
 
   Area_Constraint constraint(*this);
-  std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
+  Ranges< Uint32_Index > ranges;
   constraint.get_ranges(rman, ranges);
   get_elements_from_db< Uint32_Index, Node_Skeleton >(
       into.nodes, into.attic_nodes, ranges, *this, rman);
