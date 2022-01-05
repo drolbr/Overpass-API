@@ -84,7 +84,6 @@ struct Relation_Updater
               const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons);
 
 private:
-  uint32 update_counter;
   Transaction* transaction;
   bool external_transaction;
   std::map< std::string, uint32 > role_ids;

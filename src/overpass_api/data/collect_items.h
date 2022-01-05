@@ -56,7 +56,7 @@ void reconstruct_items(
 }
 
 
-struct Statement;
+class Statement;
 
 
 template < class Index, class Object, class Attic_Iterator, class Current_Iterator, class Predicate >

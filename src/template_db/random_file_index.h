@@ -134,8 +134,8 @@ inline Random_File_Index::Random_File_Index
   }
   catch (File_Error e)
   {
-    if (e.error_number != 2)
-      throw e;
+    if (e.error_number != ENOENT)
+      throw;
   }
 
   try
@@ -221,8 +221,8 @@ inline Random_File_Index::Random_File_Index
   }
   catch (File_Error e)
   {
-    if (e.error_number != 2)
-      throw e;
+    if (e.error_number != ENOENT)
+      throw;
   }
 
   if (empty_index_file_name != "")

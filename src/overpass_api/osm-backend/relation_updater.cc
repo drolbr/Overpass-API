@@ -32,13 +32,13 @@
 
 
 Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_)
-  : update_counter(0), transaction(&transaction_),
+  : transaction(&transaction_),
     external_transaction(true),
     max_role_id(0), max_written_role_id(0), meta(meta_), keys(*osm_base_settings().RELATION_KEYS)
 {}
 
 Relation_Updater::Relation_Updater(std::string db_dir_, meta_modes meta_)
-  : update_counter(0), transaction(0),
+  : transaction(0),
     external_transaction(false),
     max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_),
     keys(*osm_base_settings().RELATION_KEYS)

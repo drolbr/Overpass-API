@@ -430,16 +430,6 @@ void end(const char *el)
 }
 
 
-// Bitfield for change evaluation
-const int TAGS = 1;
-const int GEOMETRY = 2;
-const int MEMBERS = 4;
-const int WAY_MEMBERSHIP = 8;
-const int RELATION_MEMBERSHIP = 16;
-const int INDIRECT_MEMBERSHIP = 32;
-const int MEMBER_PROPERTIES = 64;
-
-
 void Osm_Updater::finish_updater()
 {
   if (state == IN_NODES)
