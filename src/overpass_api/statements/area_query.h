@@ -67,13 +67,6 @@ class Area_Query_Statement : public Output_Statement
        std::set< Uint31_Index >& area_blocks_req,
        Resource_Manager& rman);
 
-    void collect_nodes
-      (const std::set< std::pair< Uint32_Index, Uint32_Index > >& nodes_req,
-       const std::set< Uint31_Index >& req,
-       std::vector< Node::Id_Type >* ids,
-       std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
-       Resource_Manager& rman);
-
     template< typename Node_Skeleton >
     void collect_nodes
       (std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,

@@ -67,7 +67,7 @@ bool Polygon_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index
 
 bool Polygon_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges = polygon->calc_ranges();
+  Ranges< Uint32_Index > node_ranges = polygon->calc_ranges();
   ranges = calc_parents(node_ranges);
   return true;
 }
@@ -333,7 +333,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > Polygon_Query_Statement::cal
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > result;
   for (std::vector< Aligned_Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
-    result.insert(std::make_pair(it->ll_upper_, it->ll_upper_ + 0x100));
+    result.insert(std::make_pair( it->ll_upper_, it->ll_upper_ + 0x100));
   return result;
 }
 

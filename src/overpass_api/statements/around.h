@@ -82,8 +82,7 @@ class Around_Statement : public Output_Statement
 
     std::string get_source_name() const { return input; }
 
-    std::set< std::pair< Uint32_Index, Uint32_Index > > calc_ranges
-        (const Set& input_nodes, Resource_Manager& rman) const;
+    Ranges< Uint32_Index > calc_ranges(const Set& input_nodes, Resource_Manager& rman) const;
 
     void calc_lat_lons(const Set& input_nodes, Statement& query, Resource_Manager& rman);
 

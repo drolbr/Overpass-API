@@ -888,37 +888,37 @@ inline void add_decomp_range(const std::pair< Uint32_Index, Uint32_Index >& rang
   {
     uint32 upper = 0;
     if ((lower & 0x3) != 0 || lower + 4 > range.second.val())
-      upper =  lower + 1;
+      upper = lower + 1;
     else if ((lower & 0xf) != 0 || lower + 0x10 > range.second.val())
-      upper =  lower + 4;
+      upper = lower + 4;
     else if ((lower & 0x3f) != 0 || lower + 0x40 > range.second.val())
-      upper =  lower + 0x10;
+      upper = lower + 0x10;
     else if ((lower & 0xff) != 0 || lower + 0x100 > range.second.val())
-      upper =  lower + 0x40;
+      upper = lower + 0x40;
     else if ((lower & 0x3ff) != 0 || lower + 0x400 > range.second.val())
-      upper =  lower + 0x100;
+      upper = lower + 0x100;
     else if ((lower & 0xfff) != 0 || lower + 0x1000 > range.second.val())
-      upper =  lower + 0x400;
+      upper = lower + 0x400;
     else if ((lower & 0x3fff) != 0 || lower + 0x4000 > range.second.val())
-      upper =  lower + 0x1000;
+      upper = lower + 0x1000;
     else if ((lower & 0xffff) != 0 || lower + 0x10000 > range.second.val())
-      upper =  lower + 0x4000;
+      upper = lower + 0x4000;
     else if ((lower & 0x3ffff) != 0 || lower + 0x40000 > range.second.val())
-      upper =  lower + 0x10000;
+      upper = lower + 0x10000;
     else if ((lower & 0xfffff) != 0 || lower + 0x100000 > range.second.val())
-      upper =  lower + 0x40000;
+      upper = lower + 0x40000;
     else if ((lower & 0x3fffff) != 0 || lower + 0x400000 > range.second.val())
-      upper =  lower + 0x100000;
+      upper = lower + 0x100000;
     else if ((lower & 0xffffff) != 0 || lower + 0x1000000 > range.second.val())
-      upper =  lower + 0x400000;
+      upper = lower + 0x400000;
     else if ((lower & 0x3ffffff) != 0 || lower + 0x4000000 > range.second.val())
-      upper =  lower + 0x1000000;
+      upper = lower + 0x1000000;
     else if ((lower & 0xfffffff) != 0 || lower + 0x10000000 > range.second.val())
-      upper =  lower + 0x4000000;
+      upper = lower + 0x4000000;
     else if ((lower & 0x3fffffff) != 0 || lower + 0x40000000 > range.second.val())
-      upper =  lower + 0x10000000;
+      upper = lower + 0x10000000;
     else
-      upper =  lower + 0x40000000;
+      upper = lower + 0x40000000;
     node_decomp.push_back(std::make_pair(lower, upper));
     lower = upper;
   }
@@ -997,6 +997,7 @@ std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
 
   return result_set;
 }
+
 
 /**--------------------------------------------------------------------------*/
 

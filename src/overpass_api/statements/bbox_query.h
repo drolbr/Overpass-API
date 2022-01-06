@@ -54,8 +54,8 @@ class Bbox_Query_Statement : public Output_Statement
 
     virtual Query_Constraint* get_query_constraint();
 
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >& get_ranges_32();
-    const std::set< std::pair< Uint31_Index, Uint31_Index > >& get_ranges_31();
+    const Ranges< Uint32_Index >& get_ranges_32();
+    const Ranges< Uint31_Index >& get_ranges_31();
 
     double get_south() const { return south; }
     double get_north() const { return north; }
@@ -90,8 +90,8 @@ class Bbox_Query_Statement : public Output_Statement
 
   private:
     double south, north, west, east;
-    std::set< std::pair< Uint32_Index, Uint32_Index > > ranges_32;
-    std::set< std::pair< Uint31_Index, Uint31_Index > > ranges_31;
+    Ranges< Uint32_Index > ranges_32;
+    Ranges< Uint31_Index > ranges_31;
     std::vector< Query_Constraint* > constraints;
 };
 

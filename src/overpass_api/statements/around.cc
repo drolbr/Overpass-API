@@ -272,8 +272,6 @@ class Around_Constraint : public Query_Constraint
     Query_Filter_Strategy delivers_data(Resource_Manager& rman)
     { return (around->get_radius() < 2000) ? prefer_ranges : ids_useful; }
 
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
     bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
 
@@ -285,17 +283,6 @@ class Around_Constraint : public Query_Constraint
     Around_Statement* around;
     bool ranges_used;
 };
-
-
-bool Around_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
-{
-  ranges_used = true;
-
-  const Set* input = rman.get_set(around->get_source_name());
-  ranges = around->calc_ranges(input ? *input : Set(), rman);
-  return true;
-}
 
 
 bool Around_Constraint::get_ranges
@@ -312,7 +299,7 @@ bool Around_Constraint::get_ranges
 bool Around_Constraint::get_ranges
     (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  Ranges< Uint32_Index > node_ranges;
   this->get_ranges(rman, node_ranges);
   ranges = calc_parents(node_ranges);
   return true;
@@ -322,21 +309,21 @@ bool Around_Constraint::get_ranges
 void Around_Constraint::filter(Resource_Manager& rman, Set& into)
 {
   {
-    std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
+    Ranges< Uint32_Index > ranges;
     get_ranges(rman, ranges);
 
-    std::set< std::pair< Uint32_Index, Uint32_Index > >::const_iterator ranges_it = ranges.begin();
+    auto ranges_it = ranges.begin();
     std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator nit = into.nodes.begin();
     for (; nit != into.nodes.end() && ranges_it != ranges.end(); )
     {
-      if (!(nit->first < ranges_it->second))
-	  ++ranges_it;
-      else if (!(nit->first < ranges_it->first))
-	  ++nit;
+      if (!(nit->first < ranges_it.upper_bound()))
+        ++ranges_it;
+      else if (!(nit->first < ranges_it.lower_bound()))
+        ++nit;
       else
       {
-	  nit->second.clear();
-	  ++nit;
+        nit->second.clear();
+        ++nit;
       }
     }
     for (; nit != into.nodes.end(); ++nit)
@@ -346,14 +333,14 @@ void Around_Constraint::filter(Resource_Manager& rman, Set& into)
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::iterator it = into.attic_nodes.begin();
     for (; it != into.attic_nodes.end() && ranges_it != ranges.end(); )
     {
-      if (!(it->first < ranges_it->second))
-	  ++ranges_it;
-      else if (!(it->first < ranges_it->first))
-	  ++it;
+      if (!(it->first < ranges_it.upper_bound()))
+        ++ranges_it;
+      else if (!(it->first < ranges_it.lower_bound()))
+        ++it;
       else
       {
-	  it->second.clear();
-	  ++it;
+        it->second.clear();
+        ++it;
       }
     }
     for (; it != into.attic_nodes.end(); ++it)
@@ -820,8 +807,7 @@ bool intersect(double alat1, double alon1, double alat2, double alon2,
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > Around_Statement::calc_ranges
-    (const Set& input, Resource_Manager& rman) const
+Ranges< Uint32_Index > Around_Statement::calc_ranges(const Set& input, Resource_Manager& rman) const
 {
   if (points.size() == 1)
     return expand(ranges(points[0].lat, points[0].lon), radius);
