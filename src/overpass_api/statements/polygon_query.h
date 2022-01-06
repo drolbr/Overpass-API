@@ -56,7 +56,7 @@ class Polygon_Query_Statement : public Output_Statement
 
     virtual Query_Constraint* get_query_constraint();
 
-    std::set< std::pair< Uint32_Index, Uint32_Index > > calc_ranges();
+    Ranges< Uint32_Index > calc_ranges();
 
     template< typename Node_Skeleton >
     void collect_nodes(std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes, bool add_border);

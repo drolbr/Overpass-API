@@ -39,15 +39,12 @@ inline std::pair< Uint32_Index, Uint32_Index > calc_bbox_bounds(Uint31_Index way
 inline std::vector< Uint32_Index > calc_node_children(const std::vector< uint32 >& way_rel_idxs);
 inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& way_rel_idxs);
 inline std::vector< uint32 > calc_parents(const std::vector< uint32 >& node_idxs);
-inline std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
-    (const std::set< std::pair< Uint31_Index, Uint31_Index > >& total_idxs);
 
-inline std::vector< std::pair< uint32, uint32 > > calc_ranges
-    (double south, double north, double west, double east);
+inline Ranges< Uint32_Index > calc_ranges(double south, double north, double west, double east);
 
 inline void recursively_calc_ranges
     (uint32 south, uint32 north, int32 west, int32 east,
-     uint32 bitlevel, std::vector< std::pair< uint32, uint32 > >& ranges);
+     uint32 bitlevel, Ranges< Uint32_Index >& ranges);
 
 /** ------------------------------------------------------------------------ */
 
@@ -730,6 +727,92 @@ inline Ranges< Uint31_Index > calc_children_(const std::vector< Uint31_Index >& 
 }
 
 
+inline Ranges< Uint32_Index > calc_children(const Ranges< Uint31_Index >& way_rel_idxs)
+{
+  Ranges< Uint32_Index > ranges;
+
+  for (auto it = way_rel_idxs.begin(); it != way_rel_idxs.end(); ++it)
+  {
+    for (Uint31_Index idx = it.lower_bound(); idx < it.upper_bound(); idx = inc(idx))
+    {
+      if (idx.val() & 0x80000000)
+      {
+	uint32 lat = 0;
+	uint32 lon = 0;
+	uint32 offset = 0;
+
+	if (idx.val() & 0x00000001)
+	{
+	  lat = upper_ilat(idx.val() & 0x2aaaaaa8);
+	  lon = upper_ilon(idx.val() & 0x55555554);
+	  offset = 2;
+	}
+	else if (idx.val() & 0x00000002)
+	{
+	  lat = upper_ilat(idx.val() & 0x2aaaaa80);
+	  lon = upper_ilon(idx.val() & 0x55555540);
+	  offset = 8;
+	}
+	else if (idx.val() & 0x00000004)
+	{
+	  lat = upper_ilat(idx.val() & 0x2aaaa800);
+	  lon = upper_ilon(idx.val() & 0x55555400);
+	  offset = 0x20;
+	}
+	else if (idx.val() & 0x00000008)
+	{
+	  lat = upper_ilat(idx.val() & 0x2aaa8000);
+	  lon = upper_ilon(idx.val() & 0x55554000);
+	  offset = 0x80;
+	}
+	else if (idx.val() & 0x00000010)
+	{
+	  lat = upper_ilat(idx.val() & 0x2aa80000);
+	  lon = upper_ilon(idx.val() & 0x55540000);
+	  offset = 0x200;
+	}
+	else if (idx.val() & 0x00000020)
+	{
+	  lat = upper_ilat(idx.val() & 0x2a800000);
+	  lon = upper_ilon(idx.val() & 0x55400000);
+	  offset = 0x800;
+	}
+	else if (idx.val() & 0x00000040)
+	{
+	  lat = upper_ilat(idx.val() & 0x28000000);
+	  lon = upper_ilon(idx.val() & 0x54000000);
+	  offset = 0x2000;
+	}
+	else // idx.val() == 0x80000080
+	{
+	  lat = 0;
+	  lon = 0;
+	  offset = 0x8000;
+	}
+
+	ranges.push_back(
+            ll_upper(lat<<16, lon<<16),
+            ll_upper((lat+offset-1)<<16, (lon+offset-1)<<16)+1);
+	ranges.push_back(
+            ll_upper(lat<<16, (lon+offset)<<16),
+            ll_upper((lat+offset-1)<<16, (lon+2*offset-1)<<16)+1);
+        ranges.push_back(
+            ll_upper((lat+offset)<<16, lon<<16),
+            ll_upper((lat+2*offset-1)<<16, (lon+offset-1)<<16)+1);
+	ranges.push_back(
+            ll_upper((lat+offset)<<16, (lon+offset)<<16),
+            ll_upper((lat+2*offset-1)<<16, (lon+2*offset-1)<<16)+1);
+      }
+      else
+	ranges.push_back(idx.val(), idx.val() + 1);
+    }
+  }
+  ranges.sort();
+
+  return ranges;
+}
+
+
 inline std::set< Uint31_Index > calc_parents(const std::set< Uint31_Index >& node_idxs)
 {
   std::set< Uint31_Index > result;
@@ -1003,10 +1086,9 @@ std::set< std::pair< Uint31_Index, Uint31_Index > > calc_parents
 
 // Calculates the ranges touched by the given bbox.
 // This function implicitly depends on the chosen coordinate encoding.
-inline std::vector< std::pair< uint32, uint32 > > calc_ranges
-    (double south, double north, double west, double east)
+inline Ranges< Uint32_Index > calc_ranges(double south, double north, double west, double east)
 {
-  std::vector< std::pair< uint32, uint32 > > ranges;
+  Ranges< Uint32_Index > ranges;
 
   uint32 isouth((south + 91.0)*10000000+0.5);
   uint32 inorth((north + 91.0)*10000000+0.5);
@@ -1059,6 +1141,8 @@ inline std::vector< std::pair< uint32, uint32 > > calc_ranges
           (isouth & 0xffff0000, inorth & 0xffff0000,
 	   int32(-180.0*10000000 - 0.5) & 0xffff0000, ieast & 0xffff0000, 1, ranges);
   }
+  ranges.sort();
+  
   return ranges;
 }
 
@@ -1068,14 +1152,9 @@ inline std::set< std::pair< Uint32_Index, Uint32_Index > > get_ranges_32(
 {
   std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
 
-  std::vector< std::pair< uint32, uint32 > > uint_ranges = ::calc_ranges(south, north, west, east);
-  for (std::vector< std::pair< uint32, uint32 > >::const_iterator
-      it(uint_ranges.begin()); it != uint_ranges.end(); ++it)
-  {
-    std::pair< Uint32_Index, Uint32_Index > range
-      (std::make_pair(Uint32_Index(it->first), Uint32_Index(it->second)));
-    ranges.insert(range);
-  }
+  auto uint_ranges = ::calc_ranges(south, north, west, east);
+  for (auto it = uint_ranges.begin(); it != uint_ranges.end(); ++it)
+    ranges.insert(std::make_pair(it.lower_bound(), it.upper_bound()));
 
   return ranges;
 }
@@ -1087,7 +1166,7 @@ inline std::set< std::pair< Uint32_Index, Uint32_Index > > get_ranges_32(
 // on the first bitlevel bits. Also, indexes must have the last 16 bit set to zero.
 inline void recursively_calc_ranges
     (uint32 south, uint32 north, int32 west, int32 east,
-     uint32 bitlevel, std::vector< std::pair< uint32, uint32 > >& ranges)
+     uint32 bitlevel, Ranges< Uint32_Index >& ranges)
 {
   int32 dist = ((0xffff0000u>>bitlevel)&0xffff0000);
 
@@ -1095,9 +1174,7 @@ inline void recursively_calc_ranges
   // and we can add this square to the ranges.
   if ((south + dist == north) && (west + dist == east))
   {
-    ranges.push_back
-        (std::make_pair(ll_upper_(south, west),
-		   ll_upper_(north, east) + 1));
+    ranges.push_back(ll_upper_(south, west), ll_upper_(north, east) + 1);
     return;
   }
 
@@ -1270,71 +1347,6 @@ inline double lon(uint32 ll_upper, uint32 ll_lower)
 inline double lon(int32 ilon)
 {
   return ((double)ilon)/10000000;
-}
-
-
-template< typename Index >
-std::set< std::pair< Index, Index > > range_union(
-    const std::set< std::pair< Index, Index > >& lhs,
-    const std::set< std::pair< Index, Index > >& rhs)
-{
-  std::vector< std::pair< Index, Index > > result;
-  typename std::set< std::pair< Index, Index > >::const_iterator it_l = lhs.begin();
-  typename std::set< std::pair< Index, Index > >::const_iterator it_r = rhs.begin();
-  
-  while (true)
-  {
-    if (it_l != lhs.end() && (it_r == rhs.end() || it_l->first < it_r->first))
-    {
-      if (result.empty() || result.back().second < it_l->first)
-        result.push_back(*it_l);
-      else if (result.back().second < it_l->second)
-        result.back().second = it_l->second;
-      ++it_l;
-    }
-    else if (it_r != rhs.end())
-    {
-      if (result.empty() || result.back().second < it_r->first)
-        result.push_back(*it_r);
-      else if (result.back().second < it_r->second)
-        result.back().second = it_r->second;
-      ++it_r;
-    }
-    else
-      break;
-  }
-  return std::set< std::pair< Index, Index > >(result.begin(), result.end());
-}
-
-
-template< typename Index >
-std::set< std::pair< Index, Index > > intersect_ranges
-    (const std::set< std::pair< Index, Index > >& range_a,
-     const std::set< std::pair< Index, Index > >& range_b)
-{
-  std::set< std::pair< Index, Index > > result;
-  typename std::set< std::pair< Index, Index > >::const_iterator it_a = range_a.begin();
-  typename std::set< std::pair< Index, Index > >::const_iterator it_b = range_b.begin();
-
-  while (it_a != range_a.end() && it_b != range_b.end())
-  {
-    if (!(it_a->first < it_b->second))
-      ++it_b;
-    else if (!(it_b->first < it_a->second))
-      ++it_a;
-    else if (it_b->second < it_a->second)
-    {
-      result.insert(std::make_pair(std::max(it_a->first, it_b->first), it_b->second));
-      ++it_b;
-    }
-    else
-    {
-      result.insert(std::make_pair(std::max(it_a->first, it_b->first), it_a->second));
-      ++it_a;
-    }
-  }
-
-  return result;
 }
 
 

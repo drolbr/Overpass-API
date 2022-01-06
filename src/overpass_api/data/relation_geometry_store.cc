@@ -40,8 +40,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
   }
 
   Ranges< Uint32_Index > node_ranges(south <= north
-      ? get_ranges_32(south_, north_, west_, east_)
-      : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }});
+      ? get_ranges_32(south_, north_, west_, east_) : Ranges< Uint32_Index >::global());
 
   // Retrieve all nodes referred by the relations.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
@@ -58,8 +57,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
 
   Ranges< Uint31_Index > way_ranges(south <= north
-      ? calc_parents(node_ranges)
-      : std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }});
+      ? calc_parents(node_ranges) : Ranges< Uint31_Index >::global());
 
   // Retrieve all ways referred by the relations.
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members
@@ -93,8 +91,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
   }
 
   Ranges< Uint32_Index > node_ranges(south <= north
-      ? get_ranges_32(south_, north_, west_, east_)
-      : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }});
+      ? get_ranges_32(south_, north_, west_, east_) : Ranges< Uint32_Index >::global());
 
   // Retrieve all nodes referred by the relations.
   std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
@@ -121,8 +118,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
 
   Ranges< Uint31_Index > way_ranges(south <= north
-      ? calc_parents(node_ranges)
-      : std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffffu) }});
+      ? calc_parents(node_ranges) : Ranges< Uint31_Index >::global());
 
   // Retrieve all ways referred by the relations.
   std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,

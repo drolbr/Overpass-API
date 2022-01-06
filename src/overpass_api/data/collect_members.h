@@ -1199,8 +1199,7 @@ void collect_ways
 
 
 void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into,
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >* ranges_32 = 0,
-    const std::set< std::pair< Uint31_Index, Uint31_Index > >* ranges_31 = 0);
+    const Ranges< Uint32_Index >* ranges_32 = 0, const Ranges< Uint31_Index >* ranges_31 = 0);
 
 
 template< typename Index, typename Object >

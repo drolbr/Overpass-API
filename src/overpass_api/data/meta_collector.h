@@ -39,7 +39,7 @@ public:
   Meta_Collector(const std::map< Index, std::vector< Object > >& items,
       Transaction& transaction, const File_Properties* meta_file_prop = 0);
 
-  Meta_Collector(const std::set< std::pair< Index, Index > >& used_ranges,
+  Meta_Collector(const Ranges< Index >& used_ranges,
       Transaction& transaction, const File_Properties* meta_file_prop = 0);
 
   void reset();
@@ -122,7 +122,7 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
 
 template< typename Index, typename Id_Type >
 Meta_Collector< Index, Id_Type >::Meta_Collector
-    (const std::set< std::pair< Index, Index > >& used_ranges_,
+    (const Ranges< Index >& used_ranges_,
      Transaction& transaction, const File_Properties* meta_file_prop)
   : used_ranges(used_ranges_), meta_db(0), db_it(0), range_it(0), current_index(0), last_index(0)
 {

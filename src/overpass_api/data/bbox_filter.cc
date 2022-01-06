@@ -19,18 +19,18 @@
 #include "bbox_filter.h"
 
 
-const std::set< std::pair< Uint32_Index, Uint32_Index > >& Bbox_Filter::get_ranges_32() const
+const Ranges< Uint32_Index >& Bbox_Filter::get_ranges_32() const
 {
   if (ranges_32.empty() && bbox.valid())
-    ::get_ranges_32(bbox.south, bbox.north, bbox.west, bbox.east).swap(ranges_32);
+    ranges_32 = ::get_ranges_32(bbox.south, bbox.north, bbox.west, bbox.east);
   return ranges_32;
 }
 
 
-const std::set< std::pair< Uint31_Index, Uint31_Index > >& Bbox_Filter::get_ranges_31() const
+const Ranges< Uint31_Index >& Bbox_Filter::get_ranges_31() const
 {
   if (ranges_31.empty())
-    calc_parents(get_ranges_32()).swap(ranges_31);
+    ranges_31 = calc_parents(get_ranges_32());
   return ranges_31;
 }
 
@@ -88,7 +88,7 @@ void Bbox_Filter::filter(Set& into) const
   filter_by_bbox(bbox, into.nodes);
   filter_by_bbox(bbox, into.attic_nodes);
 
-  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges = get_ranges_31();
+  const Ranges< Uint31_Index >& ranges = get_ranges_31();
 
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);

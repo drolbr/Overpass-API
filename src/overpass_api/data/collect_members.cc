@@ -1182,13 +1182,10 @@ void collect_ways
 
 
 void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into,
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >* ranges_32_,
-    const std::set< std::pair< Uint31_Index, Uint31_Index > >* ranges_31_)
+    const Ranges< Uint32_Index >* ranges_32_, const Ranges< Uint31_Index >* ranges_31_)
 {
-  Ranges< Uint32_Index > ranges_32(ranges_32_ ? *ranges_32_
-      : std::set< std::pair< Uint32_Index, Uint32_Index > >{{ Uint32_Index(0u), Uint32_Index(0x7fffffff) }});
-  Ranges< Uint31_Index > ranges_31(ranges_31_ ? *ranges_31_
-      : std::set< std::pair< Uint31_Index, Uint31_Index > >{{ Uint31_Index(0u), Uint31_Index(0x7fffffff) }});
+  Ranges< Uint32_Index > ranges_32(ranges_32_ ? *ranges_32_ : Ranges< Uint32_Index >::global());
+  Ranges< Uint31_Index > ranges_31(ranges_31_ ? *ranges_31_ : Ranges< Uint31_Index >::global());
   if (rman.get_desired_timestamp() == NOW)
   {
     std::map< Uint32_Index, std::vector< Node_Skeleton > > rel_nodes

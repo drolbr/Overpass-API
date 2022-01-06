@@ -29,8 +29,8 @@ struct Bbox_Filter
 {
   Bbox_Filter(const Bbox_Double& bbox_) : bbox(bbox_) {}
   const Bbox_Double& get_bbox() const { return bbox; }
-  const std::set< std::pair< Uint32_Index, Uint32_Index > >& get_ranges_32() const;
-  const std::set< std::pair< Uint31_Index, Uint31_Index > >& get_ranges_31() const;
+  const Ranges< Uint32_Index >& get_ranges_32() const;
+  const Ranges< Uint31_Index >& get_ranges_31() const;
 
   bool matches(const std::vector< Quad_Coord >& way_geometry) const;
 
@@ -39,8 +39,8 @@ struct Bbox_Filter
 
 private:
   Bbox_Double bbox;
-  mutable std::set< std::pair< Uint32_Index, Uint32_Index > > ranges_32;
-  mutable std::set< std::pair< Uint31_Index, Uint31_Index > > ranges_31;
+  mutable Ranges< Uint32_Index > ranges_32;
+  mutable Ranges< Uint31_Index > ranges_31;
 };
 
 

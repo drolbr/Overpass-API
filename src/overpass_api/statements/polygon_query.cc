@@ -329,11 +329,11 @@ Polygon_Query_Statement::~Polygon_Query_Statement()
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > Polygon_Query_Statement::calc_ranges()
+Ranges< Uint32_Index > Polygon_Query_Statement::calc_ranges()
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > result;
+  Ranges< Uint32_Index > result;
   for (std::vector< Aligned_Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
-    result.insert(std::make_pair( it->ll_upper_, it->ll_upper_ + 0x100));
+    result.push_back(it->ll_upper_, it->ll_upper_ + 0x100);
   return result;
 }
 
