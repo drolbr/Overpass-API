@@ -966,12 +966,12 @@ Ranges< Uint31_Index > relation_relation_member_indices
      std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator attic_rels_end);
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
+Ranges< Uint32_Index > collect_node_req
     (const Statement* stmt, Resource_Manager& rman, const std::vector< uint32 >& parents);
 
 
 template< typename Relation_Skeleton >
-std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
+Ranges< Uint32_Index > relation_node_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
@@ -1003,7 +1003,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
 
 
 template< typename Relation_Skeleton >
-std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
+Ranges< Uint32_Index > relation_node_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
@@ -1055,13 +1055,13 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
+Ranges< Uint32_Index > way_nd_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end);
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
+Ranges< Uint32_Index > way_nd_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
@@ -1069,13 +1069,13 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end);
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+Ranges< Uint32_Index > way_covered_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end);
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+Ranges< Uint32_Index > way_covered_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,

@@ -24,11 +24,10 @@
 #include <vector>
 
 
-void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& result)
+void cout_ranges(const Ranges< Uint31_Index >& result)
 {
   std::cout<<"0x__80: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && (it->first.val() & 0xff) == 0x80)
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
@@ -36,8 +35,7 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<'\n';
 
   std::cout<<"0x__40: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && (it->first.val() & 0x7f) == 0x40)
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
@@ -45,8 +43,7 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<'\n';
 
   std::cout<<"0x__20: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && (it->first.val() & 0x3f) == 0x20)
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
@@ -54,8 +51,7 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<'\n';
 
   std::cout<<"0x__10: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && (it->first.val() & 0x1f) == 0x10)
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
@@ -63,8 +59,7 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<'\n';
 
   std::cout<<"0x___8: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && (it->first.val() & 0xf) == 0x8)
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
@@ -72,8 +67,7 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<'\n';
 
   std::cout<<"0x___4: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && (it->first.val() & 0x7) == 0x4)
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
@@ -81,8 +75,7 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<'\n';
 
   std::cout<<"0x___2: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && (it->first.val() & 0x3) == 0x2)
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
@@ -90,8 +83,7 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<'\n';
 
   std::cout<<"0x___1: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && (it->first.val() & 0x1))
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
@@ -99,14 +91,14 @@ void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& resu
   std::cout<<'\n';
 
   std::cout<<"plain: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if (!(it->first.val() & 0x80000000))
       std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
   }
   std::cout<<"\n\n";
 }
+
 
 int main(int argc, char* args[])
 {

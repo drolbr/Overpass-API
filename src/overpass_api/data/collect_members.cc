@@ -110,12 +110,10 @@ std::vector< Node::Id_Type > way_nd_ids(
 }
 
 
-inline std::set< std::pair< Uint32_Index, Uint32_Index > > calc_node_children_ranges
+inline Ranges< Uint32_Index > calc_node_children_ranges
     (const std::vector< uint32 >& way_rel_idxs)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > result;
-
-  std::vector< std::pair< uint32, uint32 > > ranges;
+  Ranges< Uint32_Index > result;
 
   for (std::vector< uint32 >::const_iterator it = way_rel_idxs.begin();
       it != way_rel_idxs.end(); ++it)
@@ -177,33 +175,22 @@ inline std::set< std::pair< Uint32_Index, Uint32_Index > > calc_node_children_ra
 	offset = 0x8000;
       }
 
-      ranges.push_back(std::make_pair(ll_upper(lat<<16, lon<<16),
-				 ll_upper((lat+offset-1)<<16, (lon+offset-1)<<16)+1));
-      ranges.push_back(std::make_pair(ll_upper(lat<<16, (lon+offset)<<16),
-				 ll_upper((lat+offset-1)<<16, (lon+2*offset-1)<<16)+1));
-      ranges.push_back(std::make_pair(ll_upper((lat+offset)<<16, lon<<16),
-				 ll_upper((lat+2*offset-1)<<16, (lon+offset-1)<<16)+1));
-      ranges.push_back(std::make_pair(ll_upper((lat+offset)<<16, (lon+offset)<<16),
-				 ll_upper((lat+2*offset-1)<<16, (lon+2*offset-1)<<16)+1));
+      result.push_back(ll_upper(lat<<16, lon<<16), ll_upper((lat+offset-1)<<16, (lon+offset-1)<<16)+1);
+      result.push_back(ll_upper(lat<<16, (lon+offset)<<16), ll_upper((lat+offset-1)<<16, (lon+2*offset-1)<<16)+1);
+      result.push_back(ll_upper((lat+offset)<<16, lon<<16), ll_upper((lat+2*offset-1)<<16, (lon+offset-1)<<16)+1);
+      result.push_back(
+          ll_upper((lat+offset)<<16, (lon+offset)<<16), ll_upper((lat+2*offset-1)<<16, (lon+2*offset-1)<<16)+1);
       for (uint32 i = lat; i <= lat_u; ++i)
       {
-	for (uint32 j = lon; j <= lon_u; ++j)
-	  result.insert(std::make_pair(ll_upper(i<<16, j<<16), ll_upper(i<<16, j<<16)+1));
+        for (uint32 j = lon; j <= lon_u; ++j)
+          result.push_back(ll_upper(i<<16, j<<16), ll_upper(i<<16, j<<16)+1);
       }
     }
     else
-      ranges.push_back(std::make_pair(*it, (*it) + 1));
+      result.push_back(*it, (*it) + 1);
   }
-  std::sort(ranges.begin(), ranges.end());
-  uint32 pos = 0;
-  for (std::vector< std::pair< uint32, uint32 > >::const_iterator it = ranges.begin();
-      it != ranges.end(); ++it)
-  {
-    if (pos < it->first)
-      pos = it->first;
-    result.insert(std::make_pair(pos, it->second));
-    pos = it->second;
-  }
+  result.sort();
+
   return result;
 }
 
@@ -296,11 +283,10 @@ Ranges< Uint31_Index > collect_way_req
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
+Ranges< Uint32_Index > collect_node_req
     (const Statement* stmt, Resource_Manager& rman, const std::vector< uint32 >& parents)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > req = calc_node_children_ranges(parents);
-  return req;
+  return calc_node_children_ranges(parents);
 }
 
 
@@ -357,7 +343,7 @@ Ranges< Uint31_Index > relation_relation_member_indices
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
+Ranges< Uint32_Index > way_nd_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end)
@@ -390,7 +376,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
+Ranges< Uint32_Index > way_nd_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
@@ -442,7 +428,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+Ranges< Uint32_Index > way_covered_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end)
@@ -460,7 +446,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+Ranges< Uint32_Index > way_covered_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
