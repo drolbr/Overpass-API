@@ -44,7 +44,7 @@ Ranges< Tag_Index_Global > get_k_req(const std::string& key)
 template< typename Skeleton >
 Ranges< Tag_Index_Global > get_regk_req(Regular_Expression* key, Resource_Manager& rman, Statement& stmt)
 {
-  std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > result;
+  Ranges< Tag_Index_Global > result;
 
   Block_Backend< Uint32_Index, String_Object > db
       (rman.get_transaction()->data_index(key_file_properties< Skeleton >()));
@@ -52,18 +52,12 @@ Ranges< Tag_Index_Global > get_regk_req(Regular_Expression* key, Resource_Manage
        it(db.flat_begin()); !(it == db.flat_end()); ++it)
   {
     if (key->matches(it.object().val()))
-    {
-      std::pair< Tag_Index_Global, Tag_Index_Global > idx_pair;
-      idx_pair.first.key = it.object().val();
-      idx_pair.first.value = "";
-      idx_pair.second.key = it.object().val() + (char)0;
-      idx_pair.second.value = "";
-      result.insert(idx_pair);
-    }
+      result.push_back({ it.object().val(), "" }, { it.object().val() + (char)0, "" });
   }
+  result.sort();
   rman.health_check(stmt);
 
-  return Ranges< Tag_Index_Global >(result);
+  return result;
 }
 
 
