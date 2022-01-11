@@ -107,13 +107,11 @@ int main(int argc, char* args[])
     for (unsigned int i = 0; i < 0x80000000u; i += 0x10000)
     {
       std::cerr<<"Checking way index "<<std::hex<<i<<" ...";
-      std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
-      range_req.insert(std::make_pair(Uint31_Index(i), Uint31_Index(i + 0x10000)));
 
       std::map< Uint31_Index, std::vector< Way_Skeleton > > elements;
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_elements;
 
-      collect_items_range_by_timestamp(0, rman, range_req,
+      collect_items_range_by_timestamp(0, rman, Ranges< Uint31_Index >(Uint31_Index(i), Uint31_Index(i + 0x10000)),
 	  Trivial_Predicate< Way_Skeleton >(), elements, attic_elements);
 
       std::cerr<<' '<<std::dec<<elements.size() + attic_elements.size()<<" indexes reconstructed.\n";
@@ -148,13 +146,11 @@ int main(int argc, char* args[])
     for (unsigned int i = 0; i < 0x80000000u; i += 0x10000)
     {
       std::cerr<<"Checking relation index "<<std::hex<<i<<" ...";
-      std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
-      range_req.insert(std::make_pair(Uint31_Index(i), Uint31_Index(i + 0x10000)));
 
       std::map< Uint31_Index, std::vector< Relation_Skeleton > > elements;
       std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic_elements;
 
-      collect_items_range_by_timestamp(0, rman, range_req,
+      collect_items_range_by_timestamp(0, rman, Ranges< Uint31_Index >(Uint31_Index(i), Uint31_Index(i + 0x10000)),
 	  Trivial_Predicate< Relation_Skeleton >(), elements, attic_elements);
 
       std::cerr<<' '<<std::dec<<elements.size() + attic_elements.size()<<" indexes reconstructed.\n";

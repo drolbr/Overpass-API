@@ -19,7 +19,8 @@
 #ifndef DE__OSM3S___TEMPLATE_DB__RANGES_H
 #define DE__OSM3S___TEMPLATE_DB__RANGES_H
 
-#include <set>
+#include <utility>
+#include <vector>
 
 
 template< typename Index >
@@ -27,13 +28,12 @@ class Ranges
 {
 public:
   Ranges() {}
-  Ranges(const std::set< std::pair< Index, Index > >& data_) : data(data_) {}
   Ranges(Index begin, Index end) : data({{ begin, end }}) {}
   
   class Iterator
   {
   public:
-    Iterator(typename std::set< std::pair< Index, Index > >::const_iterator it_) : it(it_) {}
+    Iterator(typename std::vector< std::pair< Index, Index > >::const_iterator it_) : it(it_) {}
     Iterator() {}
     const Index& lower_bound() const { return it->first; }
     const Index& upper_bound() const { return it->second; }
@@ -46,7 +46,7 @@ public:
     bool operator==(const Iterator& rhs) const { return it == rhs.it; }
     bool operator!=(const Iterator& rhs) const { return it != rhs.it; }
   private:
-    typename std::set< std::pair< Index, Index > >::const_iterator it; 
+    typename std::vector< std::pair< Index, Index > >::const_iterator it; 
   };
   
   Iterator begin() const { return Iterator(data.begin()); }
@@ -58,7 +58,7 @@ public:
   Ranges union_(const Ranges& rhs) const;
   Ranges skip_start(Index lower_bound) const;
   void push_back(Index begin, Index end)
-  { data.insert({ begin, end }); }
+  { data.push_back({ begin, end }); }
   void sort();
 
   bool is_global() const
@@ -66,7 +66,7 @@ public:
   static Ranges global() { return Ranges(Index::min(), Index::max()); } 
 
 private:
-  std::set< std::pair< Index, Index > > data;
+  std::vector< std::pair< Index, Index > > data;
 };
 
 

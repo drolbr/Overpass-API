@@ -57,6 +57,8 @@ struct Tag_Index_Local
   Tag_Index_Local(const Tag_Entry< Id_Type >& entry)
       : index(entry.index), key(entry.key), value(entry.value) {}
 
+  Tag_Index_Local(uint32 index_, std::string key_, std::string value_)
+      : index(index_), key(key_), value(value_) {}
   Tag_Index_Local(Uint31_Index index_, std::string key_, std::string value_)
       : index(index_.val() & 0x7fffff00), key(key_), value(value_) {}
 
@@ -113,6 +115,9 @@ struct Tag_Index_Local
     throw Unsupported_Error("static uint32 Tag_Index_Local::max_size_of()");
     return 0;
   }
+  
+  static Tag_Index_Local min() { return Tag_Index_Local{ 0u, "", "" }; }
+  static Tag_Index_Local max() { return Tag_Index_Local{ 0x7fffffff, "\xff", "\xff" }; }
 };
 
 
@@ -258,6 +263,9 @@ struct Tag_Index_Global
     throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
     return 0;
   }
+  
+  static Tag_Index_Global min() { return Tag_Index_Global{ "", "" }; }
+  static Tag_Index_Global max() { return Tag_Index_Global{ "\xff", "\xff" }; }
 };
 
 

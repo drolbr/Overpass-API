@@ -391,11 +391,9 @@ void read_test(unsigned int step)
     read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
 
-    std::set< std::pair< IntIndex, IntIndex > > range_list;
     uint32 fool(0), foou(10);
-    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    Ranges< IntIndex > ranges((IntIndex(&fool)), (IntIndex(&foou)));
     std::cout<<"Reading blocks with indices [0, 10[ ...\n";
-    Ranges< IntIndex > ranges(range_list);
     Block_Backend< IntIndex, IntObject >::Range_Iterator
 	rit(db_backend.range_begin(ranges));
     read_loop(db_backend, rit);
@@ -409,11 +407,9 @@ void read_test(unsigned int step)
     read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
 
-    range_list.clear();
     fool = 90;
     foou = 100;
-    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
-    ranges = Ranges< IntIndex >(range_list);
+    ranges = Ranges< IntIndex >(IntIndex(&fool), IntIndex(&foou));
     std::cout<<"Reading blocks with indices [90, 100[ ...\n";
     rit = db_backend.range_begin(ranges);
     read_loop(db_backend, rit);
@@ -427,28 +423,25 @@ void read_test(unsigned int step)
     read_loop(db_backend, it);
     std::cout<<"... all blocks read.\n";
 
-    range_list.clear();
     fool = 50;
     foou = 51;
-    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
-    ranges = Ranges< IntIndex >(range_list);
+    ranges = Ranges< IntIndex >(IntIndex(&fool), IntIndex(&foou));
     std::cout<<"Reading blocks with indices [50, 51[ ...\n";
     rit = db_backend.range_begin(ranges);
     read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";
 
-    range_list.clear();
+    ranges = Ranges< IntIndex >();
     fool = 0;
     foou = 10;
-    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    ranges.push_back(IntIndex(&fool), IntIndex(&foou));
     fool = 50;
     foou = 51;
-    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    ranges.push_back(IntIndex(&fool), IntIndex(&foou));
     fool = 90;
     foou = 100;
-    range_list.insert(std::make_pair(IntIndex(&fool), IntIndex(&foou)));
+    ranges.push_back(IntIndex(&fool), IntIndex(&foou));
     std::cout<<"Reading blocks with indices [0,10[\\cup [50, 51[\\cup [90, 100[ ...\n";
-    ranges = Ranges< IntIndex >(range_list);
     rit = db_backend.range_begin(ranges);
     read_loop(db_backend, rit);
     std::cout<<"... all blocks read.\n";

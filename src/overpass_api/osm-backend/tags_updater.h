@@ -74,28 +74,6 @@ std::map< uint32, std::set< Id_Type > > collect_coarse
 }
 
 
-// formulate range query
-template< typename Id_Type >
-std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > make_range_set
-    (const std::map< uint32, std::set< Id_Type > >& coarse)
-{
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (typename std::map< uint32, std::set< Id_Type > >::const_iterator
-      it(coarse.begin()); it != coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(std::make_pair(lower, upper));
-  }
-  return range_set;
-}
-
-
 //-----------------------------------------------------------------------------
 
 
@@ -118,20 +96,10 @@ void prepare_delete_tags
   }
 
   // formulate range query
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (typename std::map< uint32, std::set< Id_Type > >::const_iterator
-    it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(std::make_pair(lower, upper));
-  }
-  Ranges< Tag_Index_Local > ranges(range_set);
+  Ranges< Tag_Index_Local > ranges;
+  for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
+    ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
+  ranges.sort();
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Id_Type > rels_db(&tags_local);
@@ -172,20 +140,10 @@ void get_existing_tags
     to_delete_coarse[it->second.val() & 0x7fffff00].insert(it->first);
 
   // formulate range query
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (typename std::map< uint32, std::set< Id_Type > >::const_iterator
-    it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(std::make_pair(lower, upper));
-  }
-  Ranges< Tag_Index_Local > ranges(range_set);
+  Ranges< Tag_Index_Local > ranges;
+  for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
+    ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
+  ranges.sort();
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Id_Type > rels_db(&tags_local);
@@ -232,20 +190,10 @@ void prepare_tags
   }
 
   // formulate range query
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (typename std::map< uint32, std::set< typename TObject::Id_Type > >::const_iterator
-      it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(std::make_pair(lower, upper));
-  }
-  Ranges< Tag_Index_Local > ranges(range_set);
+  Ranges< Tag_Index_Local > ranges;
+  for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
+    ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
+  ranges.sort();
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > elems_db(&tags_local);

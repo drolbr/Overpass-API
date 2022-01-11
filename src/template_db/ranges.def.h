@@ -21,6 +21,8 @@
 
 #include "ranges.h"
 
+#include <algorithm>
+
 
 template< typename Index >
 Ranges< Index > Ranges< Index >::intersect(const Ranges< Index >& rhs) const
@@ -63,23 +65,23 @@ Ranges< Index > Ranges< Index >::union_(const Ranges< Index >& rhs) const
   {
     if (it_a->first < it_b->first)
     {
-      result.data.insert(*it_a);
+      result.data.push_back(*it_a);
       ++it_a;
     }
     else
     {
-      result.data.insert(*it_b);
+      result.data.push_back(*it_b);
       ++it_b;
     }
   }
   while (it_a != data.end())
   {
-    result.data.insert(*it_a);
+    result.data.push_back(*it_a);
     ++it_a;
   }
   while (it_b != rhs.data.end())
   {
-    result.data.insert(*it_b);
+    result.data.push_back(*it_b);
     ++it_b;
   }
   
@@ -95,7 +97,7 @@ Ranges< Index > Ranges< Index >::skip_start(Index lower_bound) const
   for (const auto& i : data)
   {
     if (lower_bound < i.second)
-      result.data.insert({ std::max(i.first, lower_bound), i.second });
+      result.data.push_back({ std::max(i.first, lower_bound), i.second });
   }
   return result;
 }
@@ -104,7 +106,7 @@ Ranges< Index > Ranges< Index >::skip_start(Index lower_bound) const
 template< typename Index >
 void Ranges< Index >::sort()
 {
-  //TODO  sort bei Umstellung auf vector
+  std::sort(data.begin(), data.end());
   
   if (!data.empty())
   {
@@ -115,13 +117,13 @@ void Ranges< Index >::sort()
     {
       if (buf.second < it->first)
       {
-        result.insert(buf);
+        result.push_back(buf);
         buf = *it;
       }
       else
         buf.second = std::max(buf.second, it->second);
     }
-    result.insert(buf);
+    result.push_back(buf);
     result.swap(data);
   }
 }

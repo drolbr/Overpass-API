@@ -22,3 +22,5 @@
 
 template class Ranges< Uint31_Index >;
 template class Ranges< Uint32_Index >;
+template class Ranges< Tag_Index_Local >;
+template class Ranges< Tag_Index_Global >;
