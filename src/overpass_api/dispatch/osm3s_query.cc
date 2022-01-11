@@ -64,7 +64,12 @@ int main(int argc, char *argv[])
     if (!(strncmp(argv[argpos], "--db-dir=", 9)))
     {
       db_dir = ((std::string)argv[argpos]).substr(9);
-      if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
+      if (db_dir.empty())
+      {
+        std::cerr<<"Please provide a directory name after --db-dir=\n";
+        return 0;
+      }
+      if (db_dir[db_dir.size()-1] != '/')
 	db_dir += '/';
     }
     else if (!(strcmp(argv[argpos], "--quiet")))
@@ -94,6 +99,8 @@ int main(int argc, char *argv[])
       if ((clone_db_dir.size() > 0) && (clone_db_dir[clone_db_dir.size()-1] != '/'))
 	clone_db_dir += '/';
     }
+    else if (!(strncmp(argv[argpos], "--clone-file=", 13)))
+      clone_settings.single_file_name = ((std::string)argv[argpos]).substr(13);
     else if (!(strncmp(argv[argpos], "--request=", 10)))
       xml_raw = ((std::string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--clone-compression=", 20)))
@@ -155,6 +162,7 @@ int main(int argc, char *argv[])
       "  --clone=$TARGET_DIR: Write a consistent copy of the entire database to the given $TARGET_DIR.\n"
       "  --clone-compression=$METHOD: Use a specific compression method $METHOD for clone bin files\n"
       "  --clone-map-compression=$METHOD: Use a specific compression method $METHOD for clone map files\n"
+      "  --clone-file=$FILENAME: Restrict cloning to the given file name (provided without directories).\n"
       "  --rules: Ignore all time limits and allow area creation by this query.\n"
       "  --request=$QL: Use $QL instead of standard input as the request text.\n"
       "  --quiet: Don't print anything on stderr.\n"

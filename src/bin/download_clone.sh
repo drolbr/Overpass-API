@@ -84,8 +84,14 @@ fetch_file()
 
 retry_fetch_file()
 {
+  DEADLINE=$(($(date '+%s') + 86400))
+  rm -f "$2"
   fetch_file "$1" "$2"
   until [[ -s "$2" ]]; do {
+    if [[ $(date '+%s') -ge $DEADLINE ]]; then
+      echo "File $1 unavailable. Aborting."
+      exit 1
+    fi
     sleep 15
     fetch_file "$1" "$2"
   }; done
@@ -103,7 +109,7 @@ download_file()
 mkdir -p "$CLONE_DIR"
 fetch_file "$SOURCE/trigger_clone" "$CLONE_DIR/base-url"
 
-REMOTE_DIR=`cat <"$CLONE_DIR/base-url"`
+REMOTE_DIR=$(cat <"$CLONE_DIR/base-url")
 #echo "Triggered generation of a recent clone"
 #sleep 30
 

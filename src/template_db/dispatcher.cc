@@ -270,11 +270,12 @@ void Global_Resource_Planner::remove_entry(std::vector< Reader_Entry >::iterator
   {
     // Calculate afterwards blocking time
     uint32 penalty_time =
-      std::max(global_available_space * (end_time - it->start_time + 1)
-          / (global_available_space - average_used_space),
-	  uint64(global_available_time) * (end_time - it->start_time + 1)
-	  / (global_available_time - average_used_time))
-      - (end_time - it->start_time + 1);
+        std::min(60ull,
+            std::max(global_available_space * (end_time - it->start_time + 1)
+                / (global_available_space - average_used_space),
+                uint64(global_available_time) * (end_time - it->start_time + 1)
+                / (global_available_time - average_used_time))
+            - (end_time - it->start_time + 1));
     afterwards.push_back(Quota_Entry(it->client_token, penalty_time + end_time));
   }
 
@@ -499,6 +500,8 @@ void Dispatcher::write_commit(pid_t pid)
   if (!processes_reading_idx.empty())
   {
     pending_commit = true;
+    if (logger)
+      logger->write_pending(pid, processes_reading_idx);
     return;
   }
   pending_commit = false;
@@ -596,6 +599,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     uint32 command = 0;
     uint32 client_pid = 0;
     connection_per_pid.poll_command_round_robin(command, client_pid);
+    if (pending_commit)
+      std::cout<<"poll "<<command<<' '<<client_pid<<'\n';
 
     if (command == 0)
     {
