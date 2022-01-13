@@ -149,8 +149,9 @@ inline void Comment_Replacer< In >::get(char& c)
 
       if (c == '*')
       {
-	c = ' ';
-	in.get(buffer);
+	in.get(c);
+        if (c == '/')
+          break;
 
 	if (buffer == '\n')
 	{
