@@ -174,6 +174,33 @@ public:
 };
 
 
+/* ==== Processing numbers ====
+
+The function <em>abs</em> returns the absolute value of its argument.
+If its argument starts with a number then <em>abs</em> still returns the absolute value of its argument.
+Otherwise it returns "NaN".
+
+Its syntax is
+
+  abs(<Evaluator>)
+
+*/
+
+class Evaluator_Abs : public Evaluator_String_Endom_Syntax< Evaluator_Abs >
+{
+public:
+  static String_Endom_Statement_Maker< Evaluator_Abs > statement_maker;
+  static String_Endom_Evaluator_Maker< Evaluator_Abs > evaluator_maker;
+  static std::string stmt_func_name() { return "abs"; }
+  static std::string stmt_name() { return "eval-abs"; }
+
+  Evaluator_Abs(int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
+      : Evaluator_String_Endom_Syntax< Evaluator_Abs >(line_number_, input_attributes) {}
+
+  virtual std::string process(const std::string& rhs_result) const;
+};
+
+
 /* ==== Date Check and Normalizer ====
 
 The function <em>date</em> turns its argument into a number representing a date.

@@ -611,6 +611,47 @@ void suffix_test(Parsed_Query& global_settings, Transaction& transaction,
 }
 
 
+void abs_test(Parsed_Query& global_settings, Transaction& transaction,
+    std::string type, uint64 global_node_offset)
+{
+  Resource_Manager rman(transaction, &global_settings);
+  Statement_Container stmt_cont(global_settings);
+
+  Make_Statement stmt(0, Attr()("type", type).kvs(), global_settings);
+
+  Statement* subs = add_prop_stmt("nan", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("-.", subs, stmt_cont);
+
+  subs = add_prop_stmt("pi", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("3.14", subs, stmt_cont);
+
+  subs = add_prop_stmt("minus_pi", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("-3.14", subs, stmt_cont);
+
+  subs = add_prop_stmt("one_trillion", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("1e12", subs, stmt_cont);
+
+  subs = add_prop_stmt("minus_one_trillion", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("-1e12", subs, stmt_cont);
+
+  subs = add_prop_stmt("fourty-two", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("42", subs, stmt_cont);
+
+  subs = add_prop_stmt("minus_fourty-two", &stmt, stmt_cont);
+  subs = stmt_cont.add_stmt(new Evaluator_Abs(0, Attr().kvs(), global_settings), subs);
+  add_fixed_stmt("-42", subs, stmt_cont);
+
+  stmt.execute(rman);
+  Print_Statement(0, Attr().kvs(), global_settings).execute(rman);
+}
+
+
 void lrs_test(Parsed_Query& global_settings, Transaction& transaction,
     std::string type, uint64 global_node_offset)
 {
@@ -1907,6 +1948,8 @@ int main(int argc, char* args[])
       triple_geom_test(global_settings, transaction, "test-ternary", "ternary-geom", "1");
     if ((test_to_execute == "") || (test_to_execute == "132"))
       triple_geom_test(global_settings, transaction, "test-ternary", "ternary-geom", "0");
+    if ((test_to_execute == "") || (test_to_execute == "133"))
+      abs_test(global_settings, transaction, "test-abs", global_node_offset);
 
     std::cout<<"</osm>\n";
   }

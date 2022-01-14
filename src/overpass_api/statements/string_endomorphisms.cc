@@ -76,6 +76,27 @@ std::string Evaluator_Suffix::process(const std::string& rhs_s) const
 //-----------------------------------------------------------------------------
 
 
+String_Endom_Statement_Maker< Evaluator_Abs > Evaluator_Abs::statement_maker;
+String_Endom_Evaluator_Maker< Evaluator_Abs > Evaluator_Abs::evaluator_maker;
+
+
+std::string Evaluator_Abs::process(const std::string& rhs_s) const
+{
+  int64 rhs_l = 0;
+  if (try_int64(rhs_s, rhs_l))
+    return to_string(std::abs(rhs_l));
+
+  double rhs_d = 0;
+  if (try_starts_with_double(rhs_s, rhs_d))
+    return to_string(std::abs(rhs_d));
+
+  return "NaN";
+}
+
+
+//-----------------------------------------------------------------------------
+
+
 String_Endom_Statement_Maker< Evaluator_Date > Evaluator_Date::statement_maker;
 String_Endom_Evaluator_Maker< Evaluator_Date > Evaluator_Date::evaluator_maker;
 
