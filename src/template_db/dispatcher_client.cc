@@ -35,28 +35,34 @@
 
 Dispatcher_Client::Dispatcher_Client
     (const std::string& dispatcher_share_name_)
-    : dispatcher_share_name(dispatcher_share_name_), socket("")
+    : dispatcher_share_name(dispatcher_share_name_), dispatcher_shm_ptr(0), socket("")
 {
   signal(SIGPIPE, SIG_IGN);
 
-  // open dispatcher_share
-  dispatcher_shm_fd = shm_open
-      (dispatcher_share_name.c_str(), O_RDWR, S_666);
-  if (dispatcher_shm_fd < 0)
-    throw File_Error
-        (errno, dispatcher_share_name, "Dispatcher_Client::1");
-  struct stat stat_buf;
-  fstat(dispatcher_shm_fd, &stat_buf);
-  dispatcher_shm_ptr = (uint8*)mmap
-      (0, stat_buf.st_size,
-       PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
+  char* db_dir_env = getenv("OVERPASS_DB_DIR");
+  if (db_dir_env)
+    db_dir = db_dir_env;
 
-  // get db_dir and shadow_name
-  db_dir = std::string((const char *)(dispatcher_shm_ptr + 4*sizeof(uint32)),
-		  *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32)));
-  shadow_name = std::string((const char *)(dispatcher_shm_ptr + 5*sizeof(uint32)
-      + db_dir.size()), *(uint32*)(dispatcher_shm_ptr + db_dir.size() +
-		       4*sizeof(uint32)));
+  if (db_dir.empty())
+  {
+    // open dispatcher_share
+    dispatcher_shm_fd = shm_open
+        (dispatcher_share_name.c_str(), O_RDWR, S_666);
+    if (dispatcher_shm_fd < 0)
+      throw File_Error
+          (errno, dispatcher_share_name, "Dispatcher_Client::1");
+    struct stat stat_buf;
+    fstat(dispatcher_shm_fd, &stat_buf);
+    dispatcher_shm_ptr = (uint8*)mmap
+        (0, stat_buf.st_size,
+        PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
+
+    // get db_dir and shadow_name
+    db_dir = std::string((const char *)(dispatcher_shm_ptr + 4*sizeof(uint32)),
+                    *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32)));
+    shadow_name = std::string((const char *)(dispatcher_shm_ptr + 5*sizeof(uint32)
+        + db_dir.size()), *(uint32*)(dispatcher_shm_ptr + db_dir.size() + 4*sizeof(uint32)));
+  }
 
   // initialize the socket for the client
   socket.open(db_dir + dispatcher_share_name_);
@@ -78,9 +84,12 @@ bool file_present(const std::string& full_path)
 
 Dispatcher_Client::~Dispatcher_Client()
 {
-  munmap((void*)dispatcher_shm_ptr,
-	 Dispatcher::SHM_SIZE + db_dir.size() + shadow_name.size());
-  close(dispatcher_shm_fd);
+  if (dispatcher_shm_ptr)
+  {
+    munmap((void*)dispatcher_shm_ptr,
+        Dispatcher::SHM_SIZE + db_dir.size() + shadow_name.size());
+    close(dispatcher_shm_fd);
+  }
 }
 
 
