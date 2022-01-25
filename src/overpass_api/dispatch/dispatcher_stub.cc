@@ -88,11 +88,11 @@ void set_limits(uint32 time, uint64 space)
 
 
 Dispatcher_Stub::Dispatcher_Stub
-    (std::string db_dir_, Error_Output* error_output_, std::string xml_raw, meta_modes meta_, int area_level,
-     uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings)
+    (std::string db_dir_, Error_Output* error_output_, std::string xml_raw,
+     int area_level, uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings)
     : db_dir(db_dir_), error_output(error_output_),
       dispatcher_client(0), area_dispatcher_client(0),
-      transaction(0), area_transaction(0), rman(0), meta(meta_), client_token(0)
+      transaction(0), area_transaction(0), rman(0), client_token(0)
 {
   if (max_allowed_time > 0)
     set_limits(2*max_allowed_time + 60, 2*max_allowed_space + 1024*1024*1024);
@@ -121,36 +121,17 @@ Dispatcher_Stub::Dispatcher_Stub
     transaction = new Nonsynced_Transaction
         (false, false, dispatcher_client->get_db_dir(), "");
 
-    transaction->data_index(osm_base_settings().NODES);
-    transaction->random_index(osm_base_settings().NODES);
-    transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL);
-    transaction->data_index(osm_base_settings().NODE_TAGS_GLOBAL);
-    transaction->data_index(osm_base_settings().NODE_KEYS);
-    transaction->data_index(osm_base_settings().WAYS);
-    transaction->random_index(osm_base_settings().WAYS);
-    transaction->data_index(osm_base_settings().WAY_TAGS_LOCAL);
-    transaction->data_index(osm_base_settings().WAY_TAGS_GLOBAL);
-    transaction->data_index(osm_base_settings().WAY_KEYS);
-    transaction->data_index(osm_base_settings().RELATIONS);
-    transaction->random_index(osm_base_settings().RELATIONS);
-    transaction->data_index(osm_base_settings().RELATION_ROLES);
-    transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL);
-    transaction->data_index(osm_base_settings().RELATION_TAGS_GLOBAL);
-    transaction->data_index(osm_base_settings().RELATION_KEYS);
-
-    if (meta == keep_meta || meta == keep_attic)
-    {
-      for (uint i = 0; i < meta_settings().idxs().size(); ++i)
-        transaction->data_index(meta_settings().idxs()[i]);
-    }
-
-    if (meta == keep_attic)
-    {
-      for (uint i = 0; i < meta_settings().idxs().size(); ++i)
-        transaction->data_index(meta_settings().idxs()[i]);
-      for (uint i = 0; i < attic_settings().idxs().size(); ++i)
-        transaction->data_index(attic_settings().idxs()[i]);
-    }
+    for (auto i : osm_base_settings().bin_idxs())
+      transaction->data_index(i);
+    for (auto i : osm_base_settings().map_idxs())
+      transaction->random_index(i);
+    for (auto i : meta_settings().bin_idxs())
+      transaction->data_index(i);
+    // meta_settings().map_idxs() is always empty
+    for (auto i : attic_settings().bin_idxs())
+      transaction->data_index(i);
+    for (auto i : attic_settings().map_idxs())
+      transaction->random_index(i);
 
     {
       std::ifstream version((dispatcher_client->get_db_dir() + "osm_base_version").c_str());
@@ -302,10 +283,9 @@ void Dispatcher_Stub::ping() const
 
 bool Dispatcher_Stub::all_meta_empty() const
 {
-  for (uint i = 0; i < meta_settings().idxs().size(); ++i)
+  for (auto i : meta_settings().bin_idxs())
   {
-    if (transaction->data_index(meta_settings().idxs()[i])
-        && !transaction->data_index(meta_settings().idxs()[i])->empty())
+    if (transaction->data_index(i) && !transaction->data_index(i)->empty())
       return false;
   }
   return true;
@@ -329,9 +309,9 @@ std::string basename(const std::string& filename)
 bool Dispatcher_Stub::is_meta_file(const std::string& filename) const
 {
   std::string trunk = basename(filename);
-  for (uint i = 0; i < meta_settings().idxs().size(); ++i)
+  for (auto i : meta_settings().bin_idxs())
   {
-    if (meta_settings().idxs()[i] && meta_settings().idxs()[i]->get_file_name_trunk() == trunk)
+    if (i && i->get_file_name_trunk() == trunk)
       return true;
   }
   return false;
@@ -340,10 +320,9 @@ bool Dispatcher_Stub::is_meta_file(const std::string& filename) const
 
 bool Dispatcher_Stub::all_attic_empty() const
 {
-  for (uint i = 0; i < attic_settings().idxs().size(); ++i)
+  for (auto i : attic_settings().bin_idxs())
   {
-    if (transaction->data_index(attic_settings().idxs()[i])
-        && !transaction->data_index(attic_settings().idxs()[i])->empty())
+    if (transaction->data_index(i) && !transaction->data_index(i)->empty())
       return false;
   }
   return true;
@@ -353,9 +332,9 @@ bool Dispatcher_Stub::all_attic_empty() const
 bool Dispatcher_Stub::is_attic_file(const std::string& filename) const
 {
   std::string trunk = basename(filename);
-  for (uint i = 0; i < attic_settings().idxs().size(); ++i)
+  for (auto i : attic_settings().bin_idxs())
   {
-    if (attic_settings().idxs()[i] && attic_settings().idxs()[i]->get_file_name_trunk() == trunk)
+    if (i && i->get_file_name_trunk() == trunk)
       return true;
   }
   return false;

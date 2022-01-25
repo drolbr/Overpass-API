@@ -31,13 +31,13 @@
 #include "tags_updater.h"
 
 
-Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_)
+Relation_Updater::Relation_Updater(Transaction& transaction_, Database_Meta_State::mode meta_)
   : transaction(&transaction_),
     external_transaction(true),
     max_role_id(0), max_written_role_id(0), meta(meta_), keys(*osm_base_settings().RELATION_KEYS)
 {}
 
-Relation_Updater::Relation_Updater(std::string db_dir_, meta_modes meta_)
+Relation_Updater::Relation_Updater(std::string db_dir_, Database_Meta_State::mode meta_)
   : transaction(0),
     external_transaction(false),
     max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_),
@@ -1072,7 +1072,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   // Prepare collecting all data of existing skeletons
   std::stable_sort(new_data.data.begin(), new_data.data.end());
-  if (meta == keep_attic)
+  if (meta == Database_Meta_State::keep_attic)
     remove_time_inconsistent_versions(new_data);
   else
     deduplicate_data(new_data);
@@ -1201,7 +1201,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
-  if (meta == keep_attic)
+  if (meta == Database_Meta_State::keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
     //cancel_out_equal_tags(attic_local_tags, new_local_tags);
@@ -1300,7 +1300,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     flush_roles();
   }
 
-  if (meta != only_data)
+  if (meta != Database_Meta_State::only_data)
   {
     copy_idxs_by_id(new_meta, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);

@@ -69,6 +69,13 @@ struct Osm_Base_Settings
   uint64 total_available_time_units;
 
   Osm_Base_Settings();
+
+  const std::vector< File_Properties* >& bin_idxs() const;
+  const std::vector< File_Properties* >& map_idxs() const;
+
+private:
+  std::vector< File_Properties* > bin_idxs_;
+  std::vector< File_Properties* > map_idxs_;
 };
 
 
@@ -99,10 +106,10 @@ struct Meta_Settings
 
   Meta_Settings();
 
-  const std::vector< File_Properties* >& idxs() const;
+  const std::vector< File_Properties* >& bin_idxs() const;
 
 private:
-  std::vector< File_Properties* > idxs_;
+  std::vector< File_Properties* > bin_idxs_;
 };
 
 
@@ -132,10 +139,12 @@ struct Attic_Settings
 
   Attic_Settings();
 
-  const std::vector< File_Properties* >& idxs() const;
+  const std::vector< File_Properties* >& bin_idxs() const;
+  const std::vector< File_Properties* >& map_idxs() const;
 
 private:
-  std::vector< File_Properties* > idxs_;
+  std::vector< File_Properties* > bin_idxs_;
+  std::vector< File_Properties* > map_idxs_;
 };
 
 
@@ -169,6 +178,15 @@ class Logger
 
   private:
     std::string logfile_full_name;
+};
+
+
+namespace Database_Meta_State
+{
+  enum mode { only_data, keep_meta, keep_attic };
+  
+  mode from_db_files(const std::string& db_dir);
+  std::vector< const File_Properties* > files_per_mode();
 };
 
 

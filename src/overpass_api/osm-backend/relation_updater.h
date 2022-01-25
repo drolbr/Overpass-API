@@ -35,9 +35,9 @@
 
 struct Relation_Updater
 {
-  Relation_Updater(Transaction& transaction, meta_modes meta);
+  Relation_Updater(Transaction& transaction, Database_Meta_State::mode meta);
 
-  Relation_Updater(std::string db_dir, meta_modes meta);
+  Relation_Updater(std::string db_dir, Database_Meta_State::mode meta);
 
   void set_id_deleted(Relation::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
@@ -94,7 +94,7 @@ private:
 
   Data_By_Id< Relation_Skeleton > new_data;
 
-  meta_modes meta;
+  Database_Meta_State::mode meta;
   std::map< uint32, std::string > user_by_id;
 
   std::map< Uint31_Index, std::set< Relation_Skeleton > > new_skeletons;

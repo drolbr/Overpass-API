@@ -489,7 +489,7 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& data_version_,
-			 meta_modes meta_, unsigned int flush_limit_)
+			 Database_Meta_State::mode meta_, unsigned int flush_limit_)
   : dispatcher_client(0), meta(meta_)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
@@ -526,7 +526,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
 
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, std::string db_dir, const std::string& data_version_,
-     meta_modes meta_, unsigned int flush_limit_)
+     Database_Meta_State::mode meta_, unsigned int flush_limit_)
   : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
 {
   if (file_present(db_dir + osm_base_settings().shared_name))
@@ -558,7 +558,7 @@ Osm_Updater::Osm_Updater
 void Osm_Updater::flush()
 {
   delete node_updater_;
-  node_updater_ = new Node_Updater(db_dir_, meta ? keep_meta : only_data);
+  node_updater_ = new Node_Updater(db_dir_, meta);
   delete way_updater_;
   way_updater_ = new Way_Updater(db_dir_, meta);
   delete relation_updater_;

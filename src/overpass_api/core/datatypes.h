@@ -709,9 +709,6 @@ struct Timestamp
 };
 
 
-typedef enum { only_data, keep_meta, keep_attic } meta_modes;
-
-
 template< typename Object >
 std::string name_of_type() { return "[undefined]"; }
 

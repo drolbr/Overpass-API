@@ -36,12 +36,12 @@
 
 
 
-Way_Updater::Way_Updater(Transaction& transaction_, meta_modes meta_)
+Way_Updater::Way_Updater(Transaction& transaction_, Database_Meta_State::mode meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().WAY_KEYS)
 {}
 
-Way_Updater::Way_Updater(std::string db_dir_, meta_modes meta_)
+Way_Updater::Way_Updater(std::string db_dir_, Database_Meta_State::mode meta_)
   : update_counter(0), transaction(0),
     external_transaction(false), partial_possible(true), db_dir(db_dir_), meta(meta_),
     keys(*osm_base_settings().WAY_KEYS)
@@ -801,7 +801,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
 
   // Prepare collecting all data of existing skeletons
   std::stable_sort(new_data.data.begin(), new_data.data.end());
-  if (meta == keep_attic)
+  if (meta == Database_Meta_State::keep_attic)
     remove_time_inconsistent_versions(new_data);
   else
     deduplicate_data(new_data);
@@ -922,7 +922,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
-  if (meta == keep_attic)
+  if (meta == Database_Meta_State::keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
     //cancel_out_equal_tags(attic_local_tags, new_local_tags);
@@ -1017,7 +1017,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
                     *transaction, *attic_settings().WAY_CHANGELOG);
   }
 
-  if (meta != only_data)
+  if (meta != Database_Meta_State::only_data)
   {
     copy_idxs_by_id(new_meta, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);

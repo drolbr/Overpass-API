@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
   // read command line arguments
   std::string db_dir, data_version;
   bool transactional = true;
-  meta_modes meta = only_data;
+  Database_Meta_State::mode meta = Database_Meta_State::only_data;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
 
@@ -53,9 +53,9 @@ int main(int argc, char* argv[])
     else if (!(strncmp(argv[argpos], "--version=", 10)))
       data_version = ((std::string)argv[argpos]).substr(10);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
-      meta = keep_meta;
+      meta = Database_Meta_State::keep_meta;
     else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
-      meta = keep_attic;
+      meta = Database_Meta_State::keep_attic;
     else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
     {
       flush_limit = atoll(std::string(argv[argpos]).substr(13).c_str()) *1024*1024;
@@ -112,10 +112,10 @@ int main(int argc, char* argv[])
   if (abort)
   {
 #ifdef HAVE_LZ4
-    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
+    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush-size=FLUSH_SIZE]"
         " [--compression-method=(no|gz|lz4)] [--map-compression-method=(no|gz|lz4)]\n";
 #else
-    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush_size=FLUSH_SIZE]"
+    std::cerr<<"Usage: "<<argv[0]<<" [--db-dir=DIR] [--version=VER] [--meta|--keep-attic] [--flush-size=FLUSH_SIZE]"
         " [--compression-method=(no|gz)] [--map-compression-method=(no|gz)]\n";
 #endif
     return 1;

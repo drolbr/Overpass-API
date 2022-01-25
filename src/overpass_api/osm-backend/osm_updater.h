@@ -34,9 +34,9 @@ class Osm_Updater
 {
   public:
     Osm_Updater(Osm_Backend_Callback* callback_, const std::string& data_version,
-		meta_modes meta, unsigned int flush_limit);
+		Database_Meta_State::mode meta, unsigned int flush_limit);
     Osm_Updater(Osm_Backend_Callback* callback_, std::string db_dir, const std::string& data_version,
-		meta_modes meta, unsigned int flush_limit);
+		Database_Meta_State::mode meta, unsigned int flush_limit);
     ~Osm_Updater();
 
     void finish_updater();
@@ -49,7 +49,7 @@ class Osm_Updater
     Way_Updater* way_updater_;
     Relation_Updater* relation_updater_;
     std::string db_dir_;
-    meta_modes meta;
+    Database_Meta_State::mode meta;
 
     void flush();
 };

@@ -399,55 +399,19 @@ int main(int argc, char* argv[])
 
   if (osm_base)
   {
-    files_to_manage.push_back(osm_base_settings().NODES);
-    files_to_manage.push_back(osm_base_settings().NODE_TAGS_LOCAL);
-    files_to_manage.push_back(osm_base_settings().NODE_TAGS_GLOBAL);
-    files_to_manage.push_back(osm_base_settings().NODE_KEYS);
-    files_to_manage.push_back(osm_base_settings().WAYS);
-    files_to_manage.push_back(osm_base_settings().WAY_TAGS_LOCAL);
-    files_to_manage.push_back(osm_base_settings().WAY_TAGS_GLOBAL);
-    files_to_manage.push_back(osm_base_settings().WAY_KEYS);
-    files_to_manage.push_back(osm_base_settings().RELATIONS);
-    files_to_manage.push_back(osm_base_settings().RELATION_ROLES);
-    files_to_manage.push_back(osm_base_settings().RELATION_TAGS_LOCAL);
-    files_to_manage.push_back(osm_base_settings().RELATION_TAGS_GLOBAL);
-    files_to_manage.push_back(osm_base_settings().RELATION_KEYS);
+    files_to_manage = osm_base_settings().bin_idxs();
 
-    std::vector< File_Properties* >* file_target = (meta || attic) ? &files_to_manage : &files_to_avoid;
-
-    file_target->push_back(meta_settings().NODES_META);
-    file_target->push_back(meta_settings().WAYS_META);
-    file_target->push_back(meta_settings().RELATIONS_META);
-    file_target->push_back(meta_settings().USER_DATA);
-    file_target->push_back(meta_settings().USER_INDICES);
-
-    suspicious_files_present |= assure_files_absent(db_dir, files_to_avoid, "--meta");
-    files_to_avoid.clear();
-    file_target = attic ? &files_to_manage : &files_to_avoid;
-
-    file_target->push_back(attic_settings().NODES);
-    file_target->push_back(attic_settings().NODES_UNDELETED);
-    file_target->push_back(attic_settings().NODE_IDX_LIST);
-    file_target->push_back(attic_settings().NODE_TAGS_LOCAL);
-    file_target->push_back(attic_settings().NODE_TAGS_GLOBAL);
-    file_target->push_back(attic_settings().NODES_META);
-    file_target->push_back(attic_settings().NODE_CHANGELOG);
-    file_target->push_back(attic_settings().WAYS);
-    file_target->push_back(attic_settings().WAYS_UNDELETED);
-    file_target->push_back(attic_settings().WAY_IDX_LIST);
-    file_target->push_back(attic_settings().WAY_TAGS_LOCAL);
-    file_target->push_back(attic_settings().WAY_TAGS_GLOBAL);
-    file_target->push_back(attic_settings().WAYS_META);
-    file_target->push_back(attic_settings().WAY_CHANGELOG);
-    file_target->push_back(attic_settings().RELATIONS);
-    file_target->push_back(attic_settings().RELATIONS_UNDELETED);
-    file_target->push_back(attic_settings().RELATION_IDX_LIST);
-    file_target->push_back(attic_settings().RELATION_TAGS_LOCAL);
-    file_target->push_back(attic_settings().RELATION_TAGS_GLOBAL);
-    file_target->push_back(attic_settings().RELATIONS_META);
-    file_target->push_back(attic_settings().RELATION_CHANGELOG);
-
-    suspicious_files_present |= assure_files_absent(db_dir, files_to_avoid, "--attic");
+    if (meta || attic)
+      files_to_manage.insert(
+          files_to_manage.end(), meta_settings().bin_idxs().begin(), meta_settings().bin_idxs().end());      
+    else
+      suspicious_files_present |= assure_files_absent(db_dir, meta_settings().bin_idxs(), "--meta");
+    
+    if (attic)
+      files_to_manage.insert(
+          files_to_manage.end(), attic_settings().bin_idxs().begin(), attic_settings().bin_idxs().end());
+    else
+      suspicious_files_present |= assure_files_absent(db_dir, attic_settings().bin_idxs(), "--attic");
   }
   else if (areas)
   {
