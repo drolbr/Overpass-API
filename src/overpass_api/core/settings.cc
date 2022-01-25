@@ -352,3 +352,22 @@ const std::string& get_logfile_name()
 
 
 const uint64 NOW = std::numeric_limits< unsigned long long >::max();
+
+//-----------------------------------------------------------------------------
+
+Database_Meta_State::mode Database_Meta_State::from_db_files(const std::string& db_dir)
+{
+  for (auto i : attic_settings().bin_idxs())
+  {
+    if (file_exists(db_dir + i->get_file_name_trunk() + i->get_data_suffix()))
+      return Database_Meta_State::keep_attic;
+  }
+
+  for (auto i : meta_settings().bin_idxs())
+  {
+    if (file_exists(db_dir + i->get_file_name_trunk() + i->get_data_suffix()))
+      return Database_Meta_State::keep_meta;
+  }
+  
+  return Database_Meta_State::only_data;
+}

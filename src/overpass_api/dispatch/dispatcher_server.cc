@@ -399,15 +399,20 @@ int main(int argc, char* argv[])
 
   if (osm_base)
   {
+    Database_Meta_State::mode mode =
+        attic ? Database_Meta_State::keep_attic :
+        meta ? Database_Meta_State::keep_meta :
+        Database_Meta_State::from_db_files(db_dir);
+    
     files_to_manage = osm_base_settings().bin_idxs();
 
-    if (meta || attic)
+    if (mode >= Database_Meta_State::keep_meta)
       files_to_manage.insert(
           files_to_manage.end(), meta_settings().bin_idxs().begin(), meta_settings().bin_idxs().end());      
     else
       suspicious_files_present |= assure_files_absent(db_dir, meta_settings().bin_idxs(), "--meta");
     
-    if (attic)
+    if (mode >= Database_Meta_State::keep_attic)
       files_to_manage.insert(
           files_to_manage.end(), attic_settings().bin_idxs().begin(), attic_settings().bin_idxs().end());
     else
