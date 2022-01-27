@@ -181,12 +181,29 @@ class Logger
 };
 
 
-namespace Database_Meta_State
+struct Database_Meta_State
 {
-  enum mode { only_data, keep_meta, keep_attic };
+  enum Mode { only_data, keep_meta, keep_attic };
   
-  mode from_db_files(const std::string& db_dir);
-  std::vector< const File_Properties* > files_per_mode();
+  Database_Meta_State() : mode_valid(false) {}
+  Mode value_or_autodetect(const std::string& db_dir)
+  {
+    if (!mode_valid)
+      mode = from_db_files(db_dir);
+    mode_valid = true;
+    return mode;
+  }
+  void set_mode(Mode mode_)
+  {
+    mode = mode_;
+    mode_valid = true;
+  }
+  
+private:
+  Mode mode;
+  bool mode_valid;
+  
+  static Mode from_db_files(const std::string& db_dir);
 };
 
 

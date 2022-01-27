@@ -36,12 +36,12 @@
 
 
 
-Way_Updater::Way_Updater(Transaction& transaction_, Database_Meta_State::mode meta_)
+Way_Updater::Way_Updater(Transaction& transaction_, Database_Meta_State::Mode meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().WAY_KEYS)
 {}
 
-Way_Updater::Way_Updater(std::string db_dir_, Database_Meta_State::mode meta_)
+Way_Updater::Way_Updater(std::string db_dir_, Database_Meta_State::Mode meta_)
   : update_counter(0), transaction(0),
     external_transaction(false), partial_possible(true), db_dir(db_dir_), meta(meta_),
     keys(*osm_base_settings().WAY_KEYS)

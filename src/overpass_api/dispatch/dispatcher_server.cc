@@ -399,10 +399,12 @@ int main(int argc, char* argv[])
 
   if (osm_base)
   {
-    Database_Meta_State::mode mode =
-        attic ? Database_Meta_State::keep_attic :
-        meta ? Database_Meta_State::keep_meta :
-        Database_Meta_State::from_db_files(db_dir);
+    Database_Meta_State mode_;
+    if (meta)
+      mode_.set_mode(Database_Meta_State::keep_meta);
+    if (attic)
+      mode_.set_mode(Database_Meta_State::keep_attic);
+    Database_Meta_State::Mode mode = mode_.value_or_autodetect(db_dir);
     
     files_to_manage = osm_base_settings().bin_idxs();
 

@@ -31,13 +31,13 @@
 #include "tags_updater.h"
 
 
-Relation_Updater::Relation_Updater(Transaction& transaction_, Database_Meta_State::mode meta_)
+Relation_Updater::Relation_Updater(Transaction& transaction_, Database_Meta_State::Mode meta_)
   : transaction(&transaction_),
     external_transaction(true),
     max_role_id(0), max_written_role_id(0), meta(meta_), keys(*osm_base_settings().RELATION_KEYS)
 {}
 
-Relation_Updater::Relation_Updater(std::string db_dir_, Database_Meta_State::mode meta_)
+Relation_Updater::Relation_Updater(std::string db_dir_, Database_Meta_State::Mode meta_)
   : transaction(0),
     external_transaction(false),
     max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_),

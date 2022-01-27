@@ -455,12 +455,12 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
 }
 
 
-Node_Updater::Node_Updater(Transaction& transaction_, Database_Meta_State::mode meta_)
+Node_Updater::Node_Updater(Transaction& transaction_, Database_Meta_State::Mode meta_)
   : update_counter(0), transaction(&transaction_),
     external_transaction(true), partial_possible(false), meta(meta_), keys(*osm_base_settings().NODE_KEYS)
 {}
 
-Node_Updater::Node_Updater(std::string db_dir_, Database_Meta_State::mode meta_)
+Node_Updater::Node_Updater(std::string db_dir_, Database_Meta_State::Mode meta_)
   : update_counter(0), transaction(0),
     external_transaction(false),
     partial_possible(meta_ == Database_Meta_State::only_data || meta_ == Database_Meta_State::keep_meta),

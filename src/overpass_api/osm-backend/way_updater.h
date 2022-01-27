@@ -35,9 +35,9 @@
 
 struct Way_Updater
 {
-  Way_Updater(Transaction& transaction, Database_Meta_State::mode meta);
+  Way_Updater(Transaction& transaction, Database_Meta_State::Mode meta);
 
-  Way_Updater(std::string db_dir, Database_Meta_State::mode meta);
+  Way_Updater(std::string db_dir, Database_Meta_State::Mode meta);
 
   void set_id_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
@@ -99,7 +99,7 @@ private:
 
   Data_By_Id< Way_Skeleton > new_data;
 
-  Database_Meta_State::mode meta;
+  Database_Meta_State::Mode meta;
   std::map< uint32, std::string > user_by_id;
 
   std::map< Uint31_Index, std::set< Way_Skeleton > > new_skeletons;
