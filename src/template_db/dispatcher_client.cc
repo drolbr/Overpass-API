@@ -63,6 +63,10 @@ Dispatcher_Client::Dispatcher_Client
     shadow_name = std::string((const char *)(dispatcher_shm_ptr + 5*sizeof(uint32)
         + db_dir.size()), *(uint32*)(dispatcher_shm_ptr + db_dir.size() + 4*sizeof(uint32)));
   }
+  else
+    shadow_name = db_dir + (dispatcher_share_name.size() >= 8
+        && dispatcher_share_name.substr(dispatcher_share_name.size()-8) == "osm_base"
+        ? "/osm_base_shadow" : "/areas_shadow");
 
   // initialize the socket for the client
   socket.open(db_dir + dispatcher_share_name_);
@@ -125,17 +129,21 @@ void Dispatcher_Client::write_start()
 
   while (true)
   {
-    if (ack_arrived() && file_exists(shadow_name + ".lock"))
+    if (ack_arrived())
     {
-      try
+      if (file_exists(shadow_name + ".lock"))
       {
-	pid_t locked_pid = 0;
-	std::ifstream lock((shadow_name + ".lock").c_str());
-	lock>>locked_pid;
-	if (locked_pid == pid)
-	  return;
+        try
+        {
+          pid_t locked_pid = 0;
+          std::ifstream lock((shadow_name + ".lock").c_str());
+          lock>>locked_pid;
+          if (locked_pid == pid)
+            return;
+        }
+        catch (...) {}
       }
-      catch (...) {}
+      send_message(Dispatcher::WRITE_START, "Dispatcher_Client::write_start::socket");
     }
     millisleep(500);
   }
@@ -166,6 +174,7 @@ void Dispatcher_Client::write_rollback()
       }
       else
         return;
+      send_message(Dispatcher::WRITE_ROLLBACK, "Dispatcher_Client::write_rollback::socket");
     }
 
     millisleep(500);

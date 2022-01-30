@@ -316,6 +316,7 @@ int main(int argc, char* argv[])
     catch (File_Error e)
     {
       std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+      return e.error_number;
     }
     return 0;
   }
