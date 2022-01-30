@@ -66,18 +66,15 @@ collect_minute_diffs()
   TEMP_TARGET_DIR=$3
   TARGET=$(($START + 1))
 
-  get_replicate_filename $TARGET
-  fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.state.txt" "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"
-  fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.osc.gz" "$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz"
-
   while [[ ( $TARGET -le $MAX_AVAILABLE_REPLICATE_ID ) && ( $(($START + 1440)) -ge $TARGET ) && ( $(du -m "$TEMP_TARGET_DIR" | awk '{ print $1; }') -le 64 ) ]]; do
   {
-    gunzip <"$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz" >"$TEMP_TARGET_DIR/$TARGET_FILE.osc"
-
-    TARGET=$(($TARGET + 1))
     get_replicate_filename $TARGET
     fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.state.txt" "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"
     fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.osc.gz" "$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz"
+
+    gunzip <"$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz" >"$TEMP_TARGET_DIR/$TARGET_FILE.osc"
+
+    TARGET=$(($TARGET + 1))
   }; done
   TARGET=$(($TARGET - 1))
 };
