@@ -501,9 +501,10 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 
   // Collect all data of existing meta elements
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
-      = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Node::Id_Type > >
-             (existing_map_positions, *transaction, *meta_settings().NODES_META) :
-         std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());
+      = (meta != Database_Meta_State::only_data 
+          ? get_existing_meta< OSM_Element_Metadata_Skeleton< Node::Id_Type > >
+              (existing_map_positions, *transaction, *meta_settings().NODES_META)
+          : std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());
 
   // Collect all data of existing tags
   std::vector< Tag_Entry< Node_Skeleton::Id_Type > > existing_local_tags;
@@ -511,6 +512,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       (existing_map_positions, *transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
        existing_local_tags);
 
+  callback->compute_started();
   // Compute which objects really have changed
   attic_skeletons.clear();
   new_skeletons.clear();
@@ -531,6 +533,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > new_global_tags;
   new_current_global_tags< Node_Skeleton::Id_Type >
       (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
+  callback->compute_finished();
 
   // Compute idx positions of new nodes
   std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > new_map_positions
@@ -553,8 +556,11 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   callback->update_coords_finished();
 
   // Update meta
-  if (meta)
+  if (meta != Database_Meta_State::only_data)
+  {
     update_elements(attic_meta, new_meta, *transaction, *meta_settings().NODES_META);
+    callback->meta_finished();
+  }
 
   // Update local tags
   update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().NODE_TAGS_LOCAL);
@@ -568,6 +574,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 
   if (meta == Database_Meta_State::keep_attic)
   {
+    callback->current_update_finished();
+
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
     //cancel_out_equal_tags(attic_local_tags, new_local_tags);
 
@@ -586,6 +594,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
             (existing_attic_map_positions, existing_idx_lists,
 	     *transaction, *attic_settings().NODES, *attic_settings().NODES_UNDELETED);
 
+    callback->compute_attic_started();
     // Compute which objects really have changed
     new_attic_skeletons.clear();
     std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
@@ -612,12 +621,15 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > changelog
         = compute_changelog(new_data, existing_map_positions, attic_skeletons);
+    callback->compute_attic_finished();
 
+    callback->attic_update_started();
     // Prepare user indices
     copy_idxs_by_id(attic_meta, idxs_by_id);
 
     // Update id indexes
     update_map_positions(new_attic_map_positions, *transaction, *attic_settings().NODES);
+    callback->update_ids_finished();
 
     // Update id index lists
     update_elements(existing_idx_lists, new_attic_idx_lists,
@@ -626,26 +638,32 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     // Add attic elements
     update_elements(std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >(), new_attic_skeletons,
                     *transaction, *attic_settings().NODES);
+    callback->update_coords_finished();
 
     // Add attic elements
     update_elements(std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > >(),
                     new_undeleted, *transaction, *attic_settings().NODES_UNDELETED);
+    callback->undeleted_finished();
 
     // Add attic meta
     update_elements
         (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >(),
          attic_meta, *transaction, *attic_settings().NODES_META);
+    callback->meta_finished();
 
     // Update tags
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Node_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().NODE_TAGS_LOCAL);
+    callback->tags_local_finished();
     update_elements(std::map< Tag_Index_Global,
                     std::set< Attic < Tag_Object_Global< Node_Skeleton::Id_Type > > > >(),
                     new_attic_global_tags, *transaction, *attic_settings().NODE_TAGS_GLOBAL);
+    callback->tags_global_finished();
 
     // Write changelog
     update_elements(std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > >(), changelog,
                     *transaction, *attic_settings().NODE_CHANGELOG);
+    callback->changelog_finished();
   }
 
   if (meta != Database_Meta_State::only_data)
@@ -709,7 +727,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     rename_referred_file(db_dir, "", to, *osm_base_settings().NODES);
     rename_referred_file(db_dir, "", to, *osm_base_settings().NODE_TAGS_LOCAL);
     rename_referred_file(db_dir, "", to, *osm_base_settings().NODE_TAGS_GLOBAL);
-    if (meta)
+    if (meta != Database_Meta_State::only_data)
       rename_referred_file(db_dir, "", to, *meta_settings().NODES_META);
 
     ++update_counter;
@@ -787,7 +805,7 @@ void Node_Updater::merge_files(const std::vector< std::string >& froms, std::str
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_LOCAL);
   ::merge_files< Tag_Index_Global, Tag_Object_Global< Node::Id_Type > >
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
-  if (meta)
+  if (meta != Database_Meta_State::only_data)
   {
     ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >
         (from_transactions, into_transaction, *meta_settings().NODES_META);

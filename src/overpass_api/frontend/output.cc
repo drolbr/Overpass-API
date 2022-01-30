@@ -26,14 +26,23 @@ class Verbose_Osm_Backend_Callback : public Osm_Backend_Callback
 {
   public:
     virtual void update_started() { std::cerr<<"Flushing to database ."; }
+    virtual void attic_update_started() { std::cerr<<"Flushing to database ."; }
+    virtual void compute_started() { std::cerr<<"Compute current ..."; }
+    virtual void compute_attic_started() { std::cerr<<"Compute attic ..."; }
+    virtual void compute_finished() { std::cerr<<" ready. "; }
+    virtual void compute_attic_finished() { std::cerr<<" ready. "; }
     virtual void compute_indexes_finished() { std::cerr<<'.'; }
     virtual void update_ids_finished() { std::cerr<<'.'; }
     virtual void update_coords_finished() { std::cerr<<'.'; }
     virtual void prepare_delete_tags_finished() { std::cerr<<'.'; }
+    virtual void undeleted_finished() { std::cerr<<'.'; }
+    virtual void meta_finished() { std::cerr<<'.'; }
     virtual void tags_local_finished() { std::cerr<<'.'; }
     virtual void tags_global_finished() { std::cerr<<'.'; }
     virtual void flush_roles_finished() { std::cerr<<'.'; }
+    virtual void changelog_finished() { std::cerr<<'.'; }
     virtual void update_finished() { std::cerr<<" done.\n"; }
+    virtual void current_update_finished() { std::cerr<<" done. "; }
     virtual void partial_started() { std::cerr<<"Reorganizing the database ..."; }
     virtual void partial_finished() { std::cerr<<" done.\n"; }
 
@@ -59,14 +68,23 @@ class Quiet_Osm_Backend_Callback : public Osm_Backend_Callback
 {
   public:
     virtual void update_started() {}
+    virtual void attic_update_started() {}
+    virtual void compute_started() {}
+    virtual void compute_attic_started() {}
+    virtual void compute_finished() {}
+    virtual void compute_attic_finished() {}
     virtual void compute_indexes_finished() {}
     virtual void update_ids_finished() {}
     virtual void update_coords_finished() {}
     virtual void prepare_delete_tags_finished() {}
+    virtual void undeleted_finished() {}
+    virtual void meta_finished() {}
     virtual void tags_local_finished() {}
     virtual void tags_global_finished() {}
     virtual void flush_roles_finished() {}
+    virtual void changelog_finished() {}
     virtual void update_finished() {}
+    virtual void current_update_finished() {}
     virtual void partial_started() {}
     virtual void partial_finished() {}
 
