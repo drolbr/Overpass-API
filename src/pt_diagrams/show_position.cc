@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
   "      xmlns:svg=\"http://www.w3.org/2000/svg\"\n"
   "      xmlns:xlink=\"http://www.w3.org/1999/xlink\" lang=\"en\"><head>\n"
   "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-  "<title>OSM3S Response</title>\n"
+  "<title>Overpass API Response</title>\n"
   "</head>\n"
   "<body>\n"
   "\n"

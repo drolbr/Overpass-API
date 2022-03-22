@@ -218,7 +218,7 @@ void Output_Popup::write_payload_header
   "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
   "<head>\n"
   "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-  "  <title>OSM3S Response</title>\n"
+  "  <title>Overpass API Response</title>\n"
   "</head>\n"
   "<body>\n";
 }

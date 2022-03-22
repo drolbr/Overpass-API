@@ -319,7 +319,7 @@ int main(int argc, char* args[])
     "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
     "<head>\n"
     "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-    "  <title>OSM3S Response</title>\n"
+    "  <title>Overpass API Response</title>\n"
     "</head>\n"
     "<body>\n"
     "\n"
@@ -723,7 +723,7 @@ int main(int argc, char* args[])
     "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
     "<head>\n"
     "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-    "  <title>OSM3S Response</title>\n"
+    "  <title>Overpass API Response</title>\n"
     "</head>\n";
     if (std::string(args[2]) == "interpreter_24")
       std::cout<<"<body>\n";
@@ -1051,7 +1051,7 @@ int main(int argc, char* args[])
     "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
     "<head>\n"
     "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-    "  <title>OSM3S Response</title>\n"
+    "  <title>Overpass API Response</title>\n"
     "</head>\n"
     "<body>\n"
     "\n"
@@ -1194,7 +1194,7 @@ int main(int argc, char* args[])
     "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
     "<head>\n"
     "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" lang=\"en\"/>\n"
-    "  <title>OSM3S Response</title>\n"
+    "  <title>Overpass API Response</title>\n"
     "</head>\n"
     "<body onload=\"init()\">\n"
     "\n"
