@@ -399,20 +399,22 @@ Dispatcher::Dispatcher
   dispatcher_shm_fd = shm_open
       (dispatcher_share_name.c_str(), O_RDWR|O_CREAT, S_666);
   if (dispatcher_shm_fd < 0)
-    throw File_Error
-        (errno, dispatcher_share_name, "Dispatcher_Server::APPLE::1");
+    throw File_Error(errno, dispatcher_share_name, "Dispatcher_Server::APPLE::1");
 #else
   dispatcher_shm_fd = shm_open
       (dispatcher_share_name.c_str(), O_RDWR|O_CREAT|O_TRUNC|O_EXCL, S_666);
   if (dispatcher_shm_fd < 0)
-    throw File_Error
-        (errno, dispatcher_share_name, "Dispatcher_Server::1");
+    throw File_Error(errno, dispatcher_share_name, "Dispatcher_Server::1");
   fchmod(dispatcher_shm_fd, S_666);
 #endif
 
   std::string db_dir = transaction_insulator.db_dir();
-  int foo = ftruncate(dispatcher_shm_fd,
-		      SHM_SIZE + db_dir.size() + shadow_name.size()); foo = foo;
+  {
+    int foo = ftruncate(
+        dispatcher_shm_fd, SHM_SIZE + db_dir.size() + shadow_name.size());
+    if (foo)
+      throw File_Error(errno, dispatcher_share_name, "Dispatcher_Server::2");
+  }
   dispatcher_shm_ptr = (uint8*)mmap
         (0, SHM_SIZE + db_dir.size() + shadow_name.size(),
          PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);

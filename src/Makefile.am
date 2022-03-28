@@ -341,20 +341,12 @@ nobase_dist_HEADERS = \
   template_db/zlib_wrapper.h
 
 EXTRA_DIST = \
-  html/command_line.html\
   html/full_installation.html\
   html/index.html\
+  html/logo.png\
   html/no_frills.html\
-  html/open_layers_bbox.html\
-  html/open_layers_fixed.html\
-  html/open_layers_mashup.html\
-  html/open_layers_multilayer.html\
-  html/open_layers_popup.html\
-  html/output_formats.html\
-  html/overpass.js\
   html/public_transport.html\
   html/query_form.html\
-  html/technical_overview.html\
   rules/areas.osm3s\
   rules/areas_delta.osm3s
 
