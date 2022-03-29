@@ -371,3 +371,27 @@ Database_Meta_State::Mode Database_Meta_State::from_db_files(const std::string& 
   
   return Database_Meta_State::only_data;
 }
+
+
+std::string get_server_name(const std::string& db_dir)
+{
+  std::string server_name("/api");
+  
+  try
+  {
+    std::ifstream server_name_f((db_dir + "server_name").c_str());
+    getline(server_name_f, server_name);
+  }
+  catch(...) {}
+
+  if (!server_name.empty() && server_name.back() != '/')
+    return server_name + '/';
+  return server_name;
+}
+
+
+void set_server_name(const std::string& db_dir, const std::string& server_name)
+{
+  std::ofstream out((db_dir + "/server_name").c_str());
+  out<<server_name<<'\n';
+}

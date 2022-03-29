@@ -207,6 +207,10 @@ private:
 };
 
 
+std::string get_server_name(const std::string& db_dir);
+void set_server_name(const std::string& db_dir, const std::string& server_name);
+
+
 extern const uint64 NOW;
 
 

@@ -193,6 +193,7 @@ int main(int argc, char* argv[])
   uint64 max_allowed_space = 0;
   uint64 max_allowed_time_units = 0;
   int rate_limit = -1;
+  std::string server_name;
 
   int argpos(1);
   while (argpos < argc)
@@ -229,6 +230,8 @@ int main(int argc, char* argv[])
       max_allowed_time_units = atoll(((std::string)argv[argpos]).substr(7).c_str());
     else if (!(strncmp(argv[argpos], "--rate-limit=", 13)))
       rate_limit = atoll(((std::string)argv[argpos]).substr(13).c_str());
+    else if (!(strncmp(argv[argpos], "--server-name=", 14)))
+      server_name = ((std::string)argv[argpos]).substr(14);
     else
     {
       std::cout<<"Unknown argument: "<<argv[argpos]<<"\n\n"
@@ -362,6 +365,9 @@ int main(int argc, char* argv[])
 
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+      if (server_name.empty())
+        server_name = get_server_name(client.get_db_dir());
+      std::cout<<"Announced endpoint: "<<(server_name == "/api/" ? "none" : server_name)<<'\n';
       Client_Status status = client.query_my_status(probe_client_token());
       std::cout<<"Rate limit: "<<status.rate_limit<<'\n';
       if (status.slot_starts.size() + status.queries.size() < status.rate_limit)
@@ -390,6 +396,29 @@ int main(int argc, char* argv[])
     catch (File_Error e)
     {
       std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+    return 0;
+  }
+  else if (db_dir.empty() && !server_name.empty())
+  {
+    try
+    {
+      Dispatcher_Client client
+          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
+      db_dir = client.get_db_dir();
+    }
+    catch (File_Error e)
+    {
+      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
+
+    try
+    {
+      set_server_name(db_dir, server_name);
+    }
+    catch (const std::exception& e)
+    {
+      std::cout<<"exception: "<<e.what()<<'\n';
     }
     return 0;
   }
@@ -467,8 +496,22 @@ int main(int argc, char* argv[])
 	 max_allowed_space,
 	 max_allowed_time_units,
 	 files_to_manage, &disp_logger);
+
     if (rate_limit > -1)
       dispatcher.set_rate_limit(rate_limit);
+    
+    if (!server_name.empty())
+    {
+      try
+      {
+        set_server_name(db_dir, server_name);
+      }
+      catch (const std::exception& e)
+      {
+        std::cout<<"exception: "<<e.what()<<'\n';
+      }
+    }
+    
     dispatcher.standby_loop(0);
   }
   catch (File_Error e)

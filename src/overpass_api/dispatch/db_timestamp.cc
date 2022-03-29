@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
   Output_Timestamp output;
   Web_Output error_output(Error_Output::ASSISTING);
   error_output.set_output_handler(&output);
+  std::string db_dir;
 
   try
   {
@@ -113,6 +114,7 @@ int main(int argc, char *argv[])
     {
       // open read transaction and log this.
       Dispatcher_Client dispatcher_client(osm_base_settings().shared_name);
+      db_dir = dispatcher_client.get_db_dir();
       Logger logger(dispatcher_client.get_db_dir());
       logger.annotated_log("\n-- db-timestamp --");
 
@@ -139,10 +141,10 @@ int main(int argc, char *argv[])
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
-      if (error_output.http_method == http_get
-          || error_output.http_method == http_post)
+      std::string server_name = get_server_name(db_dir);
+      if (error_output.http_method == http_get || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". Please check /api/status for the quota of your IP address.\n";
+            <<". Please check "<<server_name<<"status for the quota of your IP address.\n";
     }
     else
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
