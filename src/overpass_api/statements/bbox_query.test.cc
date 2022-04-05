@@ -36,18 +36,9 @@ void perform_bbox_print(std::string south, std::string north, std::string west, 
     // Select a bbox from the testset that contains one quarter
     // of only one bbox.
     Resource_Manager rman(transaction, &global_settings);
-    {
-      const char* attributes[] =
-          { "s", south.c_str(), "n", north.c_str(),
-            "w", west.c_str(), "e", east.c_str(), 0 };
-      Bbox_Query_Statement* stmt1 = new Bbox_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "mode", "body", "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
+    Bbox_Query_Statement(
+        0, { { "s", south }, { "n", north }, { "w", west }, { "e", east } }, global_settings).execute(rman);
+    Print_Statement(0, { { "mode", "body" }, { "order", "id" } }, global_settings).execute(rman);
   }
   catch (File_Error e)
   {

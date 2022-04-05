@@ -246,6 +246,8 @@ std::string find_value(const std::vector< std::pair< std::string, std::string > 
 struct Value_Eval_Task : public Eval_Task
 {
   Value_Eval_Task(Eval_Task* rhs_) : rhs(rhs_) {}
+  ~Value_Eval_Task()
+  { delete rhs; }
 
   virtual std::string eval(const std::string* key) const;
 

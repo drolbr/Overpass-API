@@ -32,6 +32,7 @@
 #include "print.h"
 #include "query.h"
 #include "recurse.h"
+#include "testing_tools.h"
 #include "union.h"
 
 #include <iomanip>
@@ -110,91 +111,44 @@ int main(int argc, char* args[])
 
   if (test_to_execute == "create")
   {
+    Statement_Container cont(global_settings);
     {
-      const char* attributes[] = { 0 };
-      Union_Statement* stmt3 = new Union_Statement(0, convert_c_pairs(attributes), global_settings);
+      Union_Statement stmt3(0, {}, global_settings);
       {
-	const char* attributes[] = { "type", "way", 0 };
-	Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes), global_settings);
-        {
-	  const char* attributes[] = { "k", "triangle", 0 };
-	  Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes), global_settings);
-          stmt1->add_statement(stmt2, "");
-        }
-	stmt3->add_statement(stmt1, "");
+        Statement* stmt1 = cont.create_stmt< Query_Statement >({ { "type", "way" } }, &stmt3);
+        cont.create_stmt< Has_Kv_Statement >({ { "k", "triangle" } }, stmt1);
       }
       {
-	const char* attributes[] = { "type", "way", 0 };
-	Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes), global_settings);
-        {
-	  const char* attributes[] = { "k", "shapes", 0 };
-	  Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes), global_settings);
-          stmt1->add_statement(stmt2, "");
-        }
-	stmt3->add_statement(stmt1, "");
+        Statement* stmt1 = cont.create_stmt< Query_Statement >({ { "type", "way" } }, &stmt3);
+        cont.create_stmt< Has_Kv_Statement >({ { "k", "shapes" } }, stmt1);
       }
-      stmt3->execute(rman);
+      stmt3.execute(rman);
     }
     {
-      const char* attributes[] = { "into", "way", 0 };
-      Foreach_Statement* stmt1 = new Foreach_Statement(0, convert_c_pairs(attributes), global_settings);
+      Foreach_Statement stmt1(0, { { "into", "way" } }, global_settings);
       {
-	const char* attributes[] = { 0 };
-	Union_Statement* stmt2 = new Union_Statement(0, convert_c_pairs(attributes), global_settings);
-        {
-	  const char* attributes[] = { "type", "way-node", "from", "way", 0 };
-	  Recurse_Statement* stmt3 = new Recurse_Statement(0, convert_c_pairs(attributes), global_settings);
-          stmt2->add_statement(stmt3, "");
-        }
-        {
-	  const char* attributes[] = { "set", "way", 0 };
-	  Item_Statement* stmt3 = new Item_Statement(0, convert_c_pairs(attributes), global_settings);
-          stmt2->add_statement(stmt3, "");
-        }
-        stmt1->add_statement(stmt2, "");
+        Statement* stmt2 = cont.create_stmt< Union_Statement >({}, &stmt1);
+        cont.create_stmt< Recurse_Statement >({ { "type", "way-node" }, { "from", "way" } }, stmt2);
+        cont.create_stmt< Item_Statement >({ { "set", "way" } }, stmt2);
       }
-      {
-	const char* attributes[] = { "pivot", "way", 0 };
-	Make_Area_Statement* stmt2 = new Make_Area_Statement(0, convert_c_pairs(attributes), global_settings);
-        stmt1->add_statement(stmt2, "");
-      }
-      stmt1->execute(rman);
+      cont.create_stmt< Make_Area_Statement >({ { "pivot", "way" } }, &stmt1);
+      stmt1.execute(rman);
     }
 
     {
-      const char* attributes[] = { "type", "relation", 0 };
-      Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes), global_settings);
-      {
-	const char* attributes[] = { "k", "multpoly", 0 };
-	Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes), global_settings);
-	stmt1->add_statement(stmt2, "");
-      }
-      stmt1->execute(rman);
+      Query_Statement stmt1(0, { { "type", "relation" } }, global_settings);
+      cont.create_stmt< Has_Kv_Statement >({ { "k", "multpoly" } }, &stmt1);
+      stmt1.execute(rman);
     }
     {
-      const char* attributes[] = { "into", "pivot", 0 };
-      Foreach_Statement* stmt1 = new Foreach_Statement(0, convert_c_pairs(attributes), global_settings);
+      Foreach_Statement stmt1(0, { { "into", "pivot" } }, global_settings);
       {
-	const char* attributes[] = { 0 };
-	Union_Statement* stmt2 = new Union_Statement(0, convert_c_pairs(attributes), global_settings);
-        {
-	  const char* attributes[] = { "type", "relation-way", "from", "pivot", 0 };
-	  Recurse_Statement* stmt3 = new Recurse_Statement(0, convert_c_pairs(attributes), global_settings);
-          stmt2->add_statement(stmt3, "");
-        }
-        {
-	  const char* attributes[] = { "type", "way-node", 0 };
-	  Recurse_Statement* stmt3 = new Recurse_Statement(0, convert_c_pairs(attributes), global_settings);
-          stmt2->add_statement(stmt3, "");
-        }
-        stmt1->add_statement(stmt2, "");
+        Statement* stmt2 = cont.create_stmt< Union_Statement >({}, &stmt1);
+        cont.create_stmt< Recurse_Statement >({ { "type", "relation-way" }, { "from", "pivot" } }, stmt2);
+        cont.create_stmt< Recurse_Statement >({ { "type", "way-node" } }, stmt2);
       }
-      {
-	const char* attributes[] = { "pivot", "pivot", 0 };
-	Make_Area_Statement* stmt2 = new Make_Area_Statement(0, convert_c_pairs(attributes), global_settings);
-        stmt1->add_statement(stmt2, "");
-      }
-      stmt1->execute(rman);
+      cont.create_stmt< Make_Area_Statement >({ { "pivot", "pivot" } }, &stmt1);
+      stmt1.execute(rman);
     }
   }
   else if (test_to_execute == "1")
