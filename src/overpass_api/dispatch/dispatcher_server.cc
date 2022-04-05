@@ -149,14 +149,6 @@ void Default_Dispatcher_Logger::purge(pid_t pid)
 }
 
 
-std::string to_date(time_t time)
-{
-  char result[21];
-  strftime(result, 21, "%FT%TZ", gmtime(&time));
-  return result;
-}
-
-
 bool assure_files_absent(const std::string& db_dir, const std::vector< File_Properties* >& files_to_avoid,
     const std::string& parameter)
 {
@@ -187,7 +179,7 @@ int main(int argc, char* argv[])
   // read command line arguments
   std::string db_dir;
   bool osm_base(false), areas(false), meta(false), attic(false),
-      terminate(false), status(false), my_status(false), show_dir(false);
+      terminate(false), status(false), show_dir(false);
   uint32 purge_id = 0;
   bool query_token = false;
   uint64 max_allowed_space = 0;
@@ -216,8 +208,6 @@ int main(int argc, char* argv[])
       terminate = true;
     else if (std::string("--status") == argv[argpos])
       status = true;
-    else if (std::string("--my-status") == argv[argpos])
-      my_status = true;
     else if (std::string("--show-dir") == argv[argpos])
       show_dir = true;
     else if (!(strncmp(argv[argpos], "--purge=", 8)))
@@ -244,13 +234,13 @@ int main(int argc, char* argv[])
       "  --terminate: Stop the adressed dispatcher.\n"
       "  --status: Let the adressed dispatcher dump its status into\n"
       "        $DB_DIR/osm_base_shadow.status or $DB_DIR/areas_shadow.status\n"
-      "  --my-status: Let the adressed dispatcher return everything known about this client token\n"
       "  --show-dir: Returns $DB_DIR\n"
       "  --purge=pid: Let the adressed dispatcher forget everything known about that pid.\n"
       "  --query_token: Returns the pid of a running query for the same client IP.\n"
       "  --space=number: Set the memory limit for the total of all running processes to this value in bytes.\n"
       "  --time=number: Set the time unit  limit for the total of all running processes to this value in bytes.\n"
-      "  --rate-limit=number: Set the maximum allowed number of concurrent accesses from a single IP.\n";
+      "  --rate-limit=number: Set the maximum allowed number of concurrent accesses from a single IP.\n"
+      "  --server-name: Set the server name used in status and error messages.\n";
 
       return 0;
     }
@@ -347,37 +337,6 @@ int main(int argc, char* argv[])
       pid_t pid = client.query_by_token(probe_client_token());
       if (pid > 0)
         std::cout<<pid<<'\n';
-    }
-    catch (File_Error e)
-    {
-      std::cout<<"File_Error "<<strerror(e.error_number)<<' '<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
-    return 0;
-  }
-  else if (my_status)
-  {
-    try
-    {
-      time_t now = time(0);
-      uint32 client_token = probe_client_token();
-      std::cout<<"Connected as: "<<client_token<<'\n';
-      std::cout<<"Current time: "<<to_date(now)<<'\n';
-
-      Dispatcher_Client client
-          (areas ? area_settings().shared_name : osm_base_settings().shared_name);
-      if (server_name.empty())
-        server_name = get_server_name(client.get_db_dir());
-      std::cout<<"Announced endpoint: "<<(server_name == "/api/" ? "none" : server_name)<<'\n';
-      Client_Status status = client.query_my_status(probe_client_token());
-      std::cout<<"Rate limit: "<<status.rate_limit<<'\n';
-      if (status.slot_starts.size() + status.queries.size() < status.rate_limit)
-        std::cout<<(status.rate_limit - status.slot_starts.size() - status.queries.size())<<" slots available now.\n";
-      for (std::vector< time_t >::const_iterator it = status.slot_starts.begin(); it != status.slot_starts.end();
-          ++it)
-        std::cout<<"Slot available after: "<<to_date(*it)<<", in "<<*it - now<<" seconds.\n";
-      std::cout<<"Currently running queries (pid, space limit, time limit, start time):\n";
-      for (std::vector< Running_Query >::const_iterator it = status.queries.begin(); it != status.queries.end(); ++it)
-        std::cout<<it->pid<<'\t'<<it->max_space<<'\t'<<it->max_time<<'\t'<<to_date(it->start_time)<<'\n';
     }
     catch (File_Error e)
     {

@@ -8,8 +8,8 @@ bin_script_mandatory = \
   bin/reboot.sh\
   bin/rules_delta_loop.sh\
   bin/rules_loop.sh
-cgi_bin_mandatory = cgi-bin/interpreter cgi-bin/timestamp
-cgi_bin_script_mandatory = cgi-bin/kill_my_queries cgi-bin/map cgi-bin/status
+cgi_bin_mandatory = cgi-bin/interpreter cgi-bin/status cgi-bin/timestamp
+cgi_bin_script_mandatory = cgi-bin/kill_my_queries cgi-bin/map
 
 bin_customoutput = bin/uncgi bin/escape_xml
 bin_script_customoutput =
@@ -185,6 +185,8 @@ bin_dispatcher_LDADD = libdispatcher.la libfrontend.la libsettings.la
 
 cgi_bin_interpreter_SOURCES = ${statements_cc} ${output_formats_cc} overpass_api/frontend/basic_formats.cc overpass_api/frontend/output_handler.cc overpass_api/dispatch/web_query.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc overpass_api/dispatch/scripting_core.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/map_ql_parser.cc overpass_api/frontend/tokenizer_utils.cc overpass_api/frontend/web_output.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 cgi_bin_interpreter_LDADD = libcore.la libdata.la @COMPRESS_LIBS@
+cgi_bin_status_SOURCES = overpass_api/dispatch/public_status.cc template_db/types.cc
+cgi_bin_status_LDADD = libdispatcherclient.la libfrontend.la libsettings.la
 cgi_bin_timestamp_SOURCES = overpass_api/dispatch/db_timestamp.cc overpass_api/frontend/basic_formats.cc overpass_api/frontend/decode_text.cc overpass_api/frontend/web_output.cc expat/escape_xml.cc template_db/types.cc
 cgi_bin_timestamp_LDADD = libdispatcherclient.la libsettings.la
 #cgi_bin_timestamp_SOURCES = overpass_api/frontend/basic_formats.cc overpass_api/dispatch/db_timestamp.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc overpass_api/dispatch/dispatcher_stub.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc

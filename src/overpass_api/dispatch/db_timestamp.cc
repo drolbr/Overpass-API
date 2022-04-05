@@ -138,6 +138,14 @@ int main(int argc, char *argv[])
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
             <<". Probably the server is overcrowded.\n";
     }
+    else if (e.origin.substr(e.origin.size()-20) == "Dispatcher_Client::1")
+    {
+      error_output.write_html_header("", "", 504, false);
+      if (error_output.http_method == http_get
+          || error_output.http_method == http_post)
+        temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
+            <<". Probably the server is down.\n";
+    }
     else if (e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
