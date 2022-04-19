@@ -791,6 +791,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
 	connection_per_pid.get(client_pid)->send_result(command);
       }
+      //TODO else connection_per_pid.get(client_pid)->clear_state()
     }
     catch (File_Error e)
     {

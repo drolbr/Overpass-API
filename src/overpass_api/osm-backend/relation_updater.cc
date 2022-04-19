@@ -643,7 +643,7 @@ Relation_Skeleton add_intermediate_versions
     idx_lists[skeleton.id].insert(idx);
 
     // Manage undelete entries
-    if (!(idx == reference_idx) && !(reference_idx == Uint31_Index(0xfe)))
+    if (!(idx == reference_idx))
       new_undeleted[reference_idx].insert(Attic< Relation_Skeleton::Id_Type >(skeleton.id, new_timestamp));
 
     if (!relevant_timestamps.empty() && relevant_timestamps.back() == new_timestamp)
@@ -672,7 +672,7 @@ Relation_Skeleton add_intermediate_versions
     idx_lists[skeleton.id].insert(idx);
 
     // Manage undelete entries
-    if (!(last_idx == idx) && !(last_idx == Uint31_Index(0xfe)))
+    if (!(last_idx == idx))
       new_undeleted[last_idx].insert(Attic< Relation_Skeleton::Id_Type >(skeleton.id, *it));
     last_idx = idx;
     last_skeleton = cur_skeleton;
