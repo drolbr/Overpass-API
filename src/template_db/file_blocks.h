@@ -213,7 +213,7 @@ struct File_Blocks_Write_Iterator
   bool is_empty;
   bool segments_mode;
 
-private:
+public: //TODO private:
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_begin;
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_it;
   typename std::list< File_Block_Index_Entry< TIndex > >::iterator block_end;
@@ -930,10 +930,10 @@ uint32 File_Blocks< TIndex, TIterator >::answer_size
 template< typename TIndex, typename TIterator >
 uint32 File_Blocks< TIndex, TIterator >::allocate_block(uint32 data_size)
 {
-  uint32 result = this->index->block_count;
+  uint32 result = this->index->get_block_count();
 
   if (this->index->get_void_blocks().empty())
-    this->index->block_count += data_size;
+    this->index->increase_block_count(data_size);
   else
   {
     std::vector< std::pair< uint32, uint32 > >::iterator pos_it
@@ -976,7 +976,7 @@ uint32 File_Blocks< TIndex, TIterator >::allocate_block(uint32 data_size)
 	rearrange_block(this->index->get_void_blocks().begin(), pos_it, *pos_it);
       }
       else
-	this->index->block_count += data_size;
+	this->index->increase_block_count(data_size);
     }
   }
 

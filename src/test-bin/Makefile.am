@@ -152,3 +152,7 @@ test_dispatcher_LDADD = @COMPRESS_LIBS@
 AM_CXXFLAGS = -std=c++11
 
 
+distdir = osm-3s_v0.7.57.1
+
+nobase_dist_HEADERS = \
+  ../overpass_api/statements/testing_tools.h
