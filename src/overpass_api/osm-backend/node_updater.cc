@@ -93,21 +93,18 @@ void compute_new_attic_meta
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the std::set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
-template< typename Element_Skeleton >
 void compute_new_attic_skeletons
-    (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-     const std::map< Uint31_Index, std::set< Element_Skeleton > >& attic_skeletons,
-     const std::map< Node_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Element_Skeleton > > >&
+    (const Data_By_Id< Node_Skeleton >& new_data,
+     const std::vector< std::pair< typename Node_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_skeletons,
+     const std::map< Node_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Node_Skeleton > > >&
          existing_attic_skeleton_timestamps,
-     std::map< Uint31_Index, std::set< Attic< Element_Skeleton > > >& full_attic,
-     std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+     std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& full_attic,
+     std::map< typename Node_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
 {
-  typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
-      = new_data.data.begin();
-  typename Element_Skeleton::Id_Type last_id = typename Element_Skeleton::Id_Type(0ull);
-  for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
-      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  auto next_it = new_data.data.begin();
+  auto last_id = Node_Skeleton::Id_Type(0ull);
+  for (auto it = new_data.data.begin(); it != new_data.data.end(); ++it)
   {
     ++next_it;
     if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
@@ -115,7 +112,7 @@ void compute_new_attic_skeletons
       // A later version exist also in new_data. Make this version a (short-lived) attic version.
       if (it->idx.val() != 0 && (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)))
       {
-        full_attic[it->idx].insert(Attic< Element_Skeleton >(it->elem, next_it->meta.timestamp));
+        full_attic[it->idx].insert(Attic< Node_Skeleton >(it->elem, next_it->meta.timestamp));
         idx_lists[it->elem.id].insert(it->idx);
       }
     }
@@ -130,14 +127,12 @@ void compute_new_attic_skeletons
       // No old data exists. So there is nothing to do here.
       continue;
 
-    typename std::map< Uint31_Index, std::set< Element_Skeleton > >::const_iterator it_attic_idx
-        = attic_skeletons.find(*idx);
+    auto it_attic_idx = attic_skeletons.find(*idx);
     if (it_attic_idx == attic_skeletons.end())
       // Something has gone wrong. Skip this object.
       continue;
 
-    typename std::set< Element_Skeleton >::iterator it_attic
-        = it_attic_idx->second.find(it->elem);
+    auto it_attic = it_attic_idx->second.find(it->elem);
     if (it_attic == it_attic_idx->second.end())
       // Something has gone wrong. Skip this object.
       continue;
@@ -146,12 +141,11 @@ void compute_new_attic_skeletons
       // We don't need to store a separate attic version
       continue;
 
-    typename std::map< Node_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Element_Skeleton > > >::const_iterator
-        it_attic_time = existing_attic_skeleton_timestamps.find(it->elem.id);
+    auto it_attic_time = existing_attic_skeleton_timestamps.find(it->elem.id);
     if (it_attic_time == existing_attic_skeleton_timestamps.end() ||
         it_attic_time->second.second.timestamp < it->meta.timestamp)
     {
-      full_attic[*idx].insert(Attic< Element_Skeleton >(*it_attic, it->meta.timestamp));
+      full_attic[*idx].insert(Attic< Node_Skeleton >(*it_attic, it->meta.timestamp));
       idx_lists[it_attic->id].insert(*idx);
     }
   }
@@ -405,7 +399,7 @@ std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
 std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > compute_changelog(
     const Data_By_Id< Node_Skeleton >& new_data,
     const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-    const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_skeletons)
+    const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_skeletons)
 {
   std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > result;
 
@@ -435,8 +429,7 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
       continue;
     }
 
-    std::map< Uint31_Index, std::set< Node_Skeleton > >::const_iterator it_attic_idx
-        = attic_skeletons.find(*idx);
+    auto it_attic_idx = attic_skeletons.find(*idx);
     if (it_attic_idx == attic_skeletons.end())
       // Something has gone wrong. Skip this object.
       continue;
@@ -495,8 +488,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().NODES);
 
   // Collect all data of existing skeletons
-  std::map< Uint31_Index, std::set< Node_Skeleton > > existing_skeletons
-      = get_existing_skeletons< Node_Skeleton >
+  std::map< Uint32_Index, std::set< Node_Skeleton > > existing_skeletons
+      = get_existing_skeletons< Uint32_Index, Node_Skeleton >
       (existing_map_positions, *transaction, *osm_base_settings().NODES);
 
   // Collect all data of existing meta elements

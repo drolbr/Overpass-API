@@ -150,21 +150,21 @@ struct Idx_Agnostic_Compare
 };
 
 
-template< typename Element_Skeleton >
-std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_skeletons
+template< typename Index, typename Element_Skeleton >
+std::map< Index, std::set< Element_Skeleton > > get_existing_skeletons
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  std::set< Uint31_Index > req;
+  std::set< Index > req;
   for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
       it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(it->second);
+    req.insert(Index(it->second.val()));
 
-  std::map< Uint31_Index, std::set< Element_Skeleton > > result;
+  std::map< Index, std::set< Element_Skeleton > > result;
   Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
 
-  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(&file_properties));
-  for (typename Block_Backend< Uint31_Index, Element_Skeleton >::Discrete_Iterator
+  Block_Backend< Index, Element_Skeleton > db(transaction.data_index(&file_properties));
+  for (typename Block_Backend< Index, Element_Skeleton >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
     if (binary_search(ids_with_position.begin(), ids_with_position.end(),
@@ -273,10 +273,10 @@ template< typename Element_Skeleton, typename Index_Type >
 void new_current_skeletons
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-     const std::map< Uint31_Index, std::set< Element_Skeleton > >& existing_skeletons,
+     const std::map< Index_Type, std::set< Element_Skeleton > >& existing_skeletons,
      bool record_minuscule_moves,
-     std::map< Uint31_Index, std::set< Element_Skeleton > >& attic_skeletons,
-     std::map< Uint31_Index, std::set< Element_Skeleton > >& new_skeletons,
+     std::map< Index_Type, std::set< Element_Skeleton > >& attic_skeletons,
+     std::map< Index_Type, std::set< Element_Skeleton > >& new_skeletons,
      std::vector< std::pair< typename Element_Skeleton::Id_Type, Index_Type > >& moved_objects)
 {
   attic_skeletons = existing_skeletons;
@@ -311,8 +311,7 @@ void new_current_skeletons
       continue;
     }
 
-    typename std::map< Uint31_Index, std::set< Element_Skeleton > >::iterator it_attic_idx
-        = attic_skeletons.find(*idx);
+    auto it_attic_idx = attic_skeletons.find(*idx);
     if (it_attic_idx == attic_skeletons.end())
     {
       // Something has gone wrong. Save at least the new object.
@@ -320,8 +319,7 @@ void new_current_skeletons
       continue;
     }
 
-    typename std::set< Element_Skeleton >::iterator it_attic
-        = it_attic_idx->second.find(it->elem);
+    auto it_attic = it_attic_idx->second.find(it->elem);
     if (it_attic == it_attic_idx->second.end())
     {
       // Something has gone wrong. Save at least the new object.
@@ -620,14 +618,13 @@ std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Id_Type > > > > 
 
 
 inline std::map< Node_Skeleton::Id_Type, Quad_Coord > dictionary_from_skeletons
-    (const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons)
+    (const std::map< Uint32_Index, std::set< Node_Skeleton > >& new_node_skeletons)
 {
   std::map< Node_Skeleton::Id_Type, Quad_Coord > result;
 
-  for (std::map< Uint31_Index, std::set< Node_Skeleton > >::const_iterator
-      it = new_node_skeletons.begin(); it != new_node_skeletons.end(); ++it)
+  for (auto it = new_node_skeletons.begin(); it != new_node_skeletons.end(); ++it)
   {
-    for (std::set< Node_Skeleton >::const_iterator nit = it->second.begin(); nit != it->second.end(); ++nit)
+    for (auto nit = it->second.begin(); nit != it->second.end(); ++nit)
       result.insert(std::make_pair(nit->id, Quad_Coord(it->first.val(), nit->ll_lower)));
   }
 

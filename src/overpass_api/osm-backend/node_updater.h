@@ -81,9 +81,9 @@ struct Node_Updater
     return moved_nodes;
   }
 
-  const std::map< Uint31_Index, std::set< Node_Skeleton > > get_new_skeletons() const
+  const std::map< Uint32_Index, std::set< Node_Skeleton > > get_new_skeletons() const
       { return new_skeletons; }
-  const std::map< Uint31_Index, std::set< Node_Skeleton > > get_attic_skeletons() const
+  const std::map< Uint32_Index, std::set< Node_Skeleton > > get_attic_skeletons() const
       { return attic_skeletons; }
   const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > get_new_attic_skeletons() const
       { return new_attic_skeletons; }
@@ -106,8 +106,8 @@ private:
   Database_Meta_State::Mode meta;
   std::map< uint32, std::string > user_by_id;
 
-  std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
-  std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
+  std::map< Uint32_Index, std::set< Node_Skeleton > > new_skeletons;
+  std::map< Uint32_Index, std::set< Node_Skeleton > > attic_skeletons;
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
 
   Key_Storage keys;
