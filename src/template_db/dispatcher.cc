@@ -599,8 +599,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     uint32 command = 0;
     uint32 client_pid = 0;
     connection_per_pid.poll_command_round_robin(command, client_pid);
-    if (pending_commit)
-      std::cout<<"poll "<<command<<' '<<client_pid<<'\n';
+//     if (pending_commit)
+//       std::cout<<"poll "<<command<<' '<<client_pid<<'\n';
 
     if (command == 0)
     {
