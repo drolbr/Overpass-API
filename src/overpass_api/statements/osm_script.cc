@@ -30,6 +30,33 @@
 Generic_Statement_Maker< Osm_Script_Statement > Osm_Script_Statement::statement_maker("osm-script");
 
 
+int64 eval_number_with_suffix(const std::string& arg)
+{
+  char* pos = 0;
+  errno = 0;
+  int64 result = strtoll(&arg[0], &pos, 0);
+  if (errno)
+    return 0;
+  auto offset = std::distance(&arg[0], (const char*)pos);
+  if (arg.size() <= offset)
+    return result;
+  std::string suffix = arg.substr(offset);
+  if (suffix == "ki" || suffix == " ki")
+    return result<<10;
+  if (suffix == "Mi" || suffix == " Mi")
+    return result<<20;
+  if (suffix == "Gi" || suffix == " Gi")
+    return result<<30;
+  if (suffix == "k" || suffix == " k")
+    return result * 1000;
+  if (suffix == "M" || suffix == " M")
+    return result * 1000000;
+  if (suffix == "G" || suffix == " G")
+    return result * 1000000000;
+  return 0;
+}
+
+
 Osm_Script_Statement::Osm_Script_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
     : Statement(line_number_),
@@ -50,20 +77,20 @@ Osm_Script_Statement::Osm_Script_Statement
 
   eval_attributes_array(get_name(), attributes, input_attributes);
 
-  int32 timeout(atoi(attributes["timeout"].c_str()));
+  int64 timeout = eval_number_with_suffix(attributes["timeout"]);
   if (timeout <= 0)
   {
     std::ostringstream temp;
     temp<<"For the attribute \"timeout\" of the element \"osm-script\""
-        <<" the only allowed values are positive integers.";
+        <<" the only allowed values are positive integers optionally with suffix \"ki\", \"Mi\", or \"Gi\".";
     add_static_error(temp.str());
   }
   max_allowed_time = timeout;
 
-  int64 max_space(atoll(attributes["element-limit"].c_str()));
+  int64 max_space = eval_number_with_suffix(attributes["element-limit"]);
   if (max_space <= 0)
     add_static_error("For the attribute \"element-limit\" of the element \"osm-script\""
-        " the only allowed values are positive integers.");
+        " the only allowed values are positive integers optionally with suffix \"ki\", \"Mi\", or \"Gi\".");
 
   max_allowed_space = max_space;
 

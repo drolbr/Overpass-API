@@ -243,8 +243,3 @@ std::vector< Statement* >* get_statement_stack()
 {
   return &statement_stack_;
 }
-
-meta_modes get_uses_meta_data()
-{
-  return keep_attic;
-}

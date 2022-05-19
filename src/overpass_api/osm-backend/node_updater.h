@@ -34,9 +34,9 @@
 
 struct Node_Updater
 {
-  Node_Updater(Transaction& transaction, meta_modes meta);
+  Node_Updater(Transaction& transaction, Database_Meta_State::Mode meta);
 
-  Node_Updater(std::string db_dir, meta_modes meta);
+  Node_Updater(std::string db_dir, Database_Meta_State::Mode meta);
 
   void set_id_deleted(Node::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
@@ -81,9 +81,9 @@ struct Node_Updater
     return moved_nodes;
   }
 
-  const std::map< Uint31_Index, std::set< Node_Skeleton > > get_new_skeletons() const
+  const std::map< Uint32_Index, std::set< Node_Skeleton > > get_new_skeletons() const
       { return new_skeletons; }
-  const std::map< Uint31_Index, std::set< Node_Skeleton > > get_attic_skeletons() const
+  const std::map< Uint32_Index, std::set< Node_Skeleton > > get_attic_skeletons() const
       { return attic_skeletons; }
   const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > get_new_attic_skeletons() const
       { return new_attic_skeletons; }
@@ -103,11 +103,11 @@ private:
   std::vector< Node > nodes_to_insert;
   std::vector< std::pair< Node::Id_Type, Uint32_Index > > moved_nodes;
 
-  meta_modes meta;
+  Database_Meta_State::Mode meta;
   std::map< uint32, std::string > user_by_id;
 
-  std::map< Uint31_Index, std::set< Node_Skeleton > > new_skeletons;
-  std::map< Uint31_Index, std::set< Node_Skeleton > > attic_skeletons;
+  std::map< Uint32_Index, std::set< Node_Skeleton > > new_skeletons;
+  std::map< Uint32_Index, std::set< Node_Skeleton > > attic_skeletons;
   std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > > new_attic_skeletons;
 
   Key_Storage keys;

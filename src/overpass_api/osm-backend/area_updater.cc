@@ -155,19 +155,9 @@ void Area_Updater::prepare_delete_tags
   }
 
   // formulate range query
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (std::map< uint32, std::set< Area::Id_Type > >::const_iterator
-      it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(std::make_pair(lower, upper));
-  }
+  Ranges< Tag_Index_Local > ranges;
+  for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
+    ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
@@ -175,11 +165,7 @@ void Area_Updater::prepare_delete_tags
   Tag_Index_Local current_index;
   Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-      it(areas_db.range_begin
-          (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-      !(it == areas_db.range_end()); ++it)
+  for (auto it = areas_db.range_begin(ranges); !(it == areas_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
     {
@@ -235,19 +221,9 @@ void Area_Updater::prepare_tags
   }
 
   // formulate range query
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  for (std::map< uint32, std::set< uint32 > >::const_iterator
-      it(to_delete_coarse.begin()); it != to_delete_coarse.end(); ++it)
-  {
-    Tag_Index_Local lower, upper;
-    lower.index = it->first;
-    lower.key = "";
-    lower.value = "";
-    upper.index = it->first + 1;
-    upper.key = "";
-    upper.value = "";
-    range_set.insert(std::make_pair(lower, upper));
-  }
+  Ranges< Tag_Index_Local > ranges;
+  for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
+    ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
@@ -255,11 +231,7 @@ void Area_Updater::prepare_tags
   Tag_Index_Local current_index;
   Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
-  for (Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-      it(areas_db.range_begin
-          (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-          Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
-      !(it == areas_db.range_end()); ++it)
+  for (auto it = areas_db.range_begin(ranges); !(it == areas_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
     {

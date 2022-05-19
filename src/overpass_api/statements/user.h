@@ -60,10 +60,7 @@ class User_Statement : public Output_Statement
 
     virtual Query_Constraint* get_query_constraint();
 
-    void calc_ranges
-        (std::set< std::pair< Uint32_Index, Uint32_Index > >& node_req,
-         std::set< std::pair< Uint31_Index, Uint31_Index > >& other_req,
-         Transaction& transaction);
+    void calc_ranges(Ranges< Uint32_Index >& node_req, Ranges< Uint31_Index >& other_req, Transaction& transaction);
 
     // Reads the user id from the database.
     std::set< Uint32_Index > get_ids(Transaction& transaction);

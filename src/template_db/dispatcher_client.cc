@@ -33,30 +33,45 @@
 #include <iostream>
 
 
-Dispatcher_Client::Dispatcher_Client
-    (const std::string& dispatcher_share_name_)
+Dispatcher_Client::Dispatcher_Client(const std::string& dispatcher_share_name_)
     : dispatcher_share_name(dispatcher_share_name_), socket("")
 {
   signal(SIGPIPE, SIG_IGN);
 
-  // open dispatcher_share
-  dispatcher_shm_fd = shm_open
-      (dispatcher_share_name.c_str(), O_RDWR, S_666);
-  if (dispatcher_shm_fd < 0)
-    throw File_Error
-        (errno, dispatcher_share_name, "Dispatcher_Client::1");
-  struct stat stat_buf;
-  fstat(dispatcher_shm_fd, &stat_buf);
-  dispatcher_shm_ptr = (uint8*)mmap
-      (0, stat_buf.st_size,
-       PROT_READ|PROT_WRITE, MAP_SHARED, dispatcher_shm_fd, 0);
+  char* db_dir_env = getenv("OVERPASS_DB_DIR");
+  if (db_dir_env)
+    db_dir = db_dir_env;
 
-  // get db_dir and shadow_name
-  db_dir = std::string((const char *)(dispatcher_shm_ptr + 4*sizeof(uint32)),
-		  *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32)));
-  shadow_name = std::string((const char *)(dispatcher_shm_ptr + 5*sizeof(uint32)
-      + db_dir.size()), *(uint32*)(dispatcher_shm_ptr + db_dir.size() +
-		       4*sizeof(uint32)));
+  if (db_dir.empty())
+  {
+    // open dispatcher_share
+    int dispatcher_shm_fd = shm_open
+        (dispatcher_share_name.c_str(), O_RDWR, S_666);
+    if (dispatcher_shm_fd < 0)
+      throw File_Error
+          (errno, dispatcher_share_name, "Dispatcher_Client::1");
+    struct stat stat_buf;
+    fstat(dispatcher_shm_fd, &stat_buf);
+    volatile uint8* dispatcher_shm_ptr = (uint8*)mmap(
+        0, stat_buf.st_size, PROT_READ, MAP_SHARED, dispatcher_shm_fd, 0);
+
+    if (dispatcher_shm_ptr)
+    {
+      // get db_dir and shadow_name
+      db_dir = std::string((const char *)(dispatcher_shm_ptr + 4*sizeof(uint32)),
+                      *(uint32*)(dispatcher_shm_ptr + 3*sizeof(uint32)));
+      shadow_name = std::string((const char *)(dispatcher_shm_ptr + 5*sizeof(uint32)
+          + db_dir.size()), *(uint32*)(dispatcher_shm_ptr + db_dir.size() + 4*sizeof(uint32)));
+
+      munmap((void*)dispatcher_shm_ptr,
+          Dispatcher::SHM_SIZE + db_dir.size() + shadow_name.size());
+    }
+    close(dispatcher_shm_fd);
+  }
+  else
+    shadow_name = db_dir + (dispatcher_share_name.size() >= 8
+        && dispatcher_share_name.substr(dispatcher_share_name.size()-8) == "osm_base"
+        ? "/osm_base_shadow" : "/areas_shadow");
 
   // initialize the socket for the client
   socket.open(db_dir + dispatcher_share_name_);
@@ -73,14 +88,6 @@ bool file_present(const std::string& full_path)
   struct stat stat_buf;
   int result = stat(full_path.c_str(), &stat_buf);
   return result == 0;
-}
-
-
-Dispatcher_Client::~Dispatcher_Client()
-{
-  munmap((void*)dispatcher_shm_ptr,
-	 Dispatcher::SHM_SIZE + db_dir.size() + shadow_name.size());
-  close(dispatcher_shm_fd);
 }
 
 
@@ -116,17 +123,21 @@ void Dispatcher_Client::write_start()
 
   while (true)
   {
-    if (ack_arrived() && file_exists(shadow_name + ".lock"))
+    if (ack_arrived())
     {
-      try
+      if (file_exists(shadow_name + ".lock"))
       {
-	pid_t locked_pid = 0;
-	std::ifstream lock((shadow_name + ".lock").c_str());
-	lock>>locked_pid;
-	if (locked_pid == pid)
-	  return;
+        try
+        {
+          pid_t locked_pid = 0;
+          std::ifstream lock((shadow_name + ".lock").c_str());
+          lock>>locked_pid;
+          if (locked_pid == pid)
+            return;
+        }
+        catch (...) {}
       }
-      catch (...) {}
+      send_message(Dispatcher::WRITE_START, "Dispatcher_Client::write_start::socket");
     }
     millisleep(500);
   }
@@ -157,6 +168,7 @@ void Dispatcher_Client::write_rollback()
       }
       else
         return;
+      send_message(Dispatcher::WRITE_ROLLBACK, "Dispatcher_Client::write_rollback::socket");
     }
 
     millisleep(500);
@@ -200,8 +212,6 @@ void Dispatcher_Client::write_commit()
 void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
 					     uint32 client_token)
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
   uint counter = 0;
   uint32 ack = 0;
   while (ack == 0 && ++counter <= 100)
@@ -227,8 +237,6 @@ void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max
 
 void Dispatcher_Client::read_idx_finished()
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
   uint counter = 0;
   while (++counter <= 300)
   {
@@ -243,8 +251,6 @@ void Dispatcher_Client::read_idx_finished()
 
 void Dispatcher_Client::read_finished()
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
   uint counter = 0;
   while (++counter <= 300)
   {
@@ -259,8 +265,6 @@ void Dispatcher_Client::read_finished()
 
 void Dispatcher_Client::purge(uint32 pid)
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
   while (true)
   {
     send_message(Dispatcher::PURGE, "Dispatcher_Client::purge::socket::1");
@@ -274,8 +278,6 @@ void Dispatcher_Client::purge(uint32 pid)
 
 pid_t Dispatcher_Client::query_by_token(uint32 token)
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
   send_message(Dispatcher::QUERY_BY_TOKEN, "Dispatcher_Client::query_by_token::socket::1");
   send_message(token, "Dispatcher_Client::query_by_token::socket::2");
 
@@ -285,7 +287,6 @@ pid_t Dispatcher_Client::query_by_token(uint32 token)
 
 Client_Status Dispatcher_Client::query_my_status(uint32 token)
 {
-
   send_message(Dispatcher::QUERY_MY_STATUS, "Dispatcher_Client::query_my_status::socket::1");
   send_message(token, "Dispatcher_Client::query_my_status::socket::2");
 
@@ -322,8 +323,6 @@ Client_Status Dispatcher_Client::query_my_status(uint32 token)
 void Dispatcher_Client::set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units,
                                           int rate_limit)
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
   while (true)
   {
     send_message(Dispatcher::SET_GLOBAL_LIMITS, "Dispatcher_Client::set_global_limits::1");
@@ -347,8 +346,6 @@ void Dispatcher_Client::ping()
 
 void Dispatcher_Client::terminate()
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
   while (true)
   {
     send_message(Dispatcher::TERMINATE, "Dispatcher_Client::terminate::socket");
@@ -361,8 +358,6 @@ void Dispatcher_Client::terminate()
 
 void Dispatcher_Client::output_status()
 {
-//   *(uint32*)(dispatcher_shm_ptr + 2*sizeof(uint32)) = 0;
-
   while (true)
   {
     send_message(Dispatcher::OUTPUT_STATUS, "Dispatcher_Client::output_status::socket");

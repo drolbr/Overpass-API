@@ -35,9 +35,9 @@
 
 struct Way_Updater
 {
-  Way_Updater(Transaction& transaction, meta_modes meta);
+  Way_Updater(Transaction& transaction, Database_Meta_State::Mode meta);
 
-  Way_Updater(std::string db_dir, meta_modes meta);
+  Way_Updater(std::string db_dir, Database_Meta_State::Mode meta);
 
   void set_id_deleted(Way::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
@@ -73,8 +73,8 @@ struct Way_Updater
   }
 
   void update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch, bool partial,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Uint32_Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons);
 
   const std::vector< std::pair< Way::Id_Type, Uint31_Index > >& get_moved_ways() const
@@ -99,7 +99,7 @@ private:
 
   Data_By_Id< Way_Skeleton > new_data;
 
-  meta_modes meta;
+  Database_Meta_State::Mode meta;
   std::map< uint32, std::string > user_by_id;
 
   std::map< Uint31_Index, std::set< Way_Skeleton > > new_skeletons;

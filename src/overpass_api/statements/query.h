@@ -42,6 +42,18 @@ class Regular_Expression;
 class Bbox_Query_Statement;
 
 
+template< typename Id >
+struct Id_Constraint
+{
+  Id_Constraint() : invert(true) {}
+  bool empty() const { return !invert && ids.empty(); }
+  void restrict_to(const std::vector< Id >& ids);
+  
+  std::vector< Id > ids;
+  bool invert;
+};
+
+
 /* === The Query Statement ===
 
 The most important statement is the ''query'' statement. This is not a single statement but rather consists of one of the type specifiers ''node'', ''way'', ''relation'' (or shorthand ''rel''), ''derived'', ''area'', or ''nwr'' (shorthand for nodes, ways or relations) followed by one or more filters. The result set is the set of all elements that match the conditions of all the filters.
@@ -209,27 +221,22 @@ class Query_Statement : public Output_Statement
     void filter_by_tags(std::map< Uint31_Index, std::vector< Derived_Structure > >& items);
 
     template< typename Skeleton, typename Id_Type, typename Index >
-    void progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_req,
-                    bool& invert_ids, uint64 timestamp,
-                    Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
-                    const File_Properties& file_prop, const File_Properties& attic_file_prop,
-                    Resource_Manager& rman);
+    void progress_1(
+        Id_Constraint< Id_Type >& ids, std::vector< Index >& range_req,
+        uint64 timestamp, Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
+        const File_Properties& file_prop, const File_Properties& attic_file_prop, Resource_Manager& rman);
 
     template< class Id_Type >
-    void progress_1(std::vector< Id_Type >& ids, bool& invert_ids,
-                    Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
-                    const File_Properties& file_prop,
-                    Resource_Manager& rman);
+    void progress_1(
+        Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
+        const File_Properties& file_prop, Resource_Manager& rman);
 
     template< class Id_Type >
-    void collect_nodes(std::vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
-				 Resource_Manager& rman);
-
+    void collect_nodes(
+        const Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Set& into, Resource_Manager& rman);
     template< class Id_Type >
-    void collect_elems(int type, std::vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
-				 Resource_Manager& rman);
+    void collect_elems(
+        int type, const Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Set& into, Resource_Manager& rman);
 
     void collect_elems(Answer_State& answer_state, Set& into, Resource_Manager& rman);
     void apply_all_filters(

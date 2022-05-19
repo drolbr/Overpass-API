@@ -69,6 +69,13 @@ struct Osm_Base_Settings
   uint64 total_available_time_units;
 
   Osm_Base_Settings();
+
+  const std::vector< File_Properties* >& bin_idxs() const;
+  const std::vector< File_Properties* >& map_idxs() const;
+
+private:
+  std::vector< File_Properties* > bin_idxs_;
+  std::vector< File_Properties* > map_idxs_;
 };
 
 
@@ -99,10 +106,10 @@ struct Meta_Settings
 
   Meta_Settings();
 
-  const std::vector< File_Properties* >& idxs() const;
+  const std::vector< File_Properties* >& bin_idxs() const;
 
 private:
-  std::vector< File_Properties* > idxs_;
+  std::vector< File_Properties* > bin_idxs_;
 };
 
 
@@ -132,10 +139,12 @@ struct Attic_Settings
 
   Attic_Settings();
 
-  const std::vector< File_Properties* >& idxs() const;
+  const std::vector< File_Properties* >& bin_idxs() const;
+  const std::vector< File_Properties* >& map_idxs() const;
 
 private:
-  std::vector< File_Properties* > idxs_;
+  std::vector< File_Properties* > bin_idxs_;
+  std::vector< File_Properties* > map_idxs_;
 };
 
 
@@ -170,6 +179,36 @@ class Logger
   private:
     std::string logfile_full_name;
 };
+
+
+struct Database_Meta_State
+{
+  enum Mode { only_data, keep_meta, keep_attic };
+  
+  Database_Meta_State() : mode_valid(false) {}
+  Mode value_or_autodetect(const std::string& db_dir)
+  {
+    if (!mode_valid)
+      mode = from_db_files(db_dir);
+    mode_valid = true;
+    return mode;
+  }
+  void set_mode(Mode mode_)
+  {
+    mode = mode_;
+    mode_valid = true;
+  }
+  
+private:
+  Mode mode;
+  bool mode_valid;
+  
+  static Mode from_db_files(const std::string& db_dir);
+};
+
+
+std::string get_server_name(const std::string& db_dir);
+void set_server_name(const std::string& db_dir, const std::string& server_name);
 
 
 extern const uint64 NOW;

@@ -379,14 +379,23 @@ class Osm_Backend_Callback
 {
   public:
     virtual void update_started() = 0;
+    virtual void attic_update_started() = 0;
+    virtual void compute_started() = 0;
+    virtual void compute_attic_started() = 0;
+    virtual void compute_finished() = 0;
+    virtual void compute_attic_finished() = 0;
     virtual void compute_indexes_finished() = 0;
     virtual void update_ids_finished() = 0;
     virtual void update_coords_finished() = 0;
     virtual void prepare_delete_tags_finished() = 0;
+    virtual void undeleted_finished() = 0;
+    virtual void meta_finished() = 0;
     virtual void tags_local_finished() = 0;
     virtual void tags_global_finished() = 0;
     virtual void flush_roles_finished() = 0;
+    virtual void changelog_finished() = 0;
     virtual void update_finished() = 0;
+    virtual void current_update_finished() = 0;
     virtual void partial_started() = 0;
     virtual void partial_finished() = 0;
 
@@ -707,9 +716,6 @@ struct Timestamp
     return 0;
   }
 };
-
-
-typedef enum { only_data, keep_meta, keep_attic } meta_modes;
 
 
 template< typename Object >

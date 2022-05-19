@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
   // read command line arguments
   std::string source_dir, db_dir, data_version;
   std::vector< std::string > source_file_names;
-  meta_modes meta = only_data;
+  Database_Meta_State meta;
   bool abort = false;
   unsigned int flush_limit = 16*1024*1024;
 
@@ -107,10 +107,12 @@ int main(int argc, char* argv[])
     }
     else if (!(strncmp(argv[argpos], "--version=", 10)))
       data_version = ((std::string)argv[argpos]).substr(10);
+    else if (!(strncmp(argv[argpos], "--data-only", 11)))
+      meta.set_mode(Database_Meta_State::only_data);
     else if (!(strncmp(argv[argpos], "--meta", 6)))
-      meta = keep_meta;
+      meta.set_mode(Database_Meta_State::keep_meta);
     else if (!(strncmp(argv[argpos], "--keep-attic", 12)))
-      meta = keep_attic;
+      meta.set_mode(Database_Meta_State::keep_attic);
     else if (!(strncmp(argv[argpos], "--flush-size=", 13)))
     {
       flush_limit = atoll(std::string(argv[argpos]).substr(13).c_str()) *1024*1024;

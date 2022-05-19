@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
   Parsed_Query global_settings;
   Web_Output error_output(Error_Output::ASSISTING);
   Statement::set_error_output(&error_output);
+  std::string db_dir;
 
   try
   {
@@ -91,9 +92,10 @@ int main(int argc, char *argv[])
     {
       // open read transaction and log this.
       int area_level = determine_area_level(&error_output, 0);
-      Dispatcher_Stub dispatcher("", &error_output, global_settings.get_input_params().find("data")->second,
-			         get_uses_meta_data(), area_level,
-				 max_allowed_time, max_allowed_space, global_settings);
+      Dispatcher_Stub dispatcher(
+          "", &error_output, global_settings.get_input_params().find("data")->second,
+          area_level, max_allowed_time, max_allowed_space, global_settings);
+      db_dir = dispatcher.get_db_dir();
       if (osm_script && osm_script->get_desired_timestamp())
         dispatcher.resource_manager().set_desired_timestamp(osm_script->get_desired_timestamp());
 
@@ -147,10 +149,11 @@ int main(int argc, char *argv[])
     else if (e.origin.size() >= 14 && e.origin.substr(e.origin.size()-14) == "::rate_limited")
     {
       error_output.write_html_header("", "", 429, false);
+      std::string server_name = get_server_name(db_dir);
       if (error_output.http_method == http_get
           || error_output.http_method == http_post)
         temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin
-            <<". Please check /api/status for the quota of your IP address.";
+            <<". Please check "<<server_name<<"status for the quota of your IP address.";
     }
     else if (e.origin == "Dispatcher_Client::1")
     {

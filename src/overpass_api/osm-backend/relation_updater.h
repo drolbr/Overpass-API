@@ -35,9 +35,9 @@
 
 struct Relation_Updater
 {
-  Relation_Updater(Transaction& transaction, meta_modes meta);
+  Relation_Updater(Transaction& transaction, Database_Meta_State::Mode meta);
 
-  Relation_Updater(std::string db_dir, meta_modes meta);
+  Relation_Updater(std::string db_dir, Database_Meta_State::Mode meta);
 
   void set_id_deleted(Relation::Id_Type id, const OSM_Element_Metadata* meta = 0)
   {
@@ -76,15 +76,14 @@ struct Relation_Updater
   std::vector< std::string > get_roles();
 
   void update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Uint32_Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& new_way_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_way_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons);
 
 private:
-  uint32 update_counter;
   Transaction* transaction;
   bool external_transaction;
   std::map< std::string, uint32 > role_ids;
@@ -95,7 +94,7 @@ private:
 
   Data_By_Id< Relation_Skeleton > new_data;
 
-  meta_modes meta;
+  Database_Meta_State::Mode meta;
   std::map< uint32, std::string > user_by_id;
 
   std::map< Uint31_Index, std::set< Relation_Skeleton > > new_skeletons;

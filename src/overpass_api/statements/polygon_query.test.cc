@@ -25,8 +25,7 @@
 #include "polygon_query.h"
 #include "print.h"
 #include "query.h"
-
-
+#include "testing_tools.h"
 
 
 void perform_polygon_print(std::string bounds, Transaction& transaction)
@@ -38,16 +37,8 @@ void perform_polygon_print(std::string bounds, Transaction& transaction)
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
-    {
-      const char* attributes[] = { "bounds", bounds.c_str(), 0 };
-      Polygon_Query_Statement* stmt1 = new Polygon_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
-    {
-      const char* attributes[] = { "mode", "body", "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
+    Polygon_Query_Statement(0, { { "bounds", bounds } }, global_settings).execute(rman);
+    Print_Statement(0, { { "mode", "body" } , { "order", "id" } }, global_settings).execute(rman);
   }
   catch (File_Error e)
   {
@@ -66,27 +57,15 @@ void perform_query_polygon_print(std::string bounds, std::string type, Transacti
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
+    Statement_Container cont(global_settings);
     {
-      const char* attributes[] = { "type", type.c_str(), 0 };
-      Query_Statement* stmt1 = new Query_Statement(0, convert_c_pairs(attributes), global_settings);
-      {
-        const char* attributes[] = { "bounds", bounds.c_str(), 0 };
-        Polygon_Query_Statement* stmt2 = new Polygon_Query_Statement(0, convert_c_pairs(attributes), global_settings);
-        stmt1->add_statement(stmt2, "");
-      }
+      Query_Statement stmt1(0, { { "type", type } }, global_settings);
+      cont.create_stmt< Polygon_Query_Statement >({ { "bounds", bounds } }, &stmt1);
       if (type == "node")
-      {
-        const char* attributes[] = { "k", "node_key_5", 0 };
-        Has_Kv_Statement* stmt2 = new Has_Kv_Statement(0, convert_c_pairs(attributes), global_settings);
-        stmt1->add_statement(stmt2, "");
-      }
-      stmt1->execute(rman);
+        cont.create_stmt< Has_Kv_Statement >({ { "k", "node_key_5" } }, &stmt1);
+      stmt1.execute(rman);
     }
-    {
-      const char* attributes[] = { "mode", "body", "order", "id", 0 };
-      Print_Statement* stmt1 = new Print_Statement(0, convert_c_pairs(attributes), global_settings);
-      stmt1->execute(rman);
-    }
+    Print_Statement(0, { { "mode", "body" }, { "order", "id" } }, global_settings).execute(rman);
   }
   catch (File_Error e)
   {

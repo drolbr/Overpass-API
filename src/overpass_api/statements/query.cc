@@ -296,10 +296,10 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
     {
       if (timestamp == NOW)
       {
-        std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
-	filter_id_list(new_ids, filtered,
-		       tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
-			Trivial_Regex(), Trivial_Regex(), check_keys_late);
+        Ranges< Tag_Index_Global > ranges = get_k_req(*kit);
+	filter_id_list(
+            new_ids, filtered, tags_db.range_begin(ranges), tags_db.range_end(),
+            Trivial_Regex(), Trivial_Regex(), check_keys_late);
         if (!filtered)
         {
           result_valid = false;
@@ -321,10 +321,9 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
     {
       if (timestamp == NOW)
       {
-        std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
+        Ranges< Tag_Index_Global > ranges = get_k_req(krit->first);
 	filter_id_list(new_ids, filtered,
-	    tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
-		Trivial_Regex(), *krit->second, check_keys_late);
+	    tags_db.range_begin(ranges), tags_db.range_end(), Trivial_Regex(), *krit->second, check_keys_late);
         if (!filtered)
         {
           result_valid = false;
@@ -346,11 +345,9 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_ids
     {
       if (timestamp == NOW)
       {
-	std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req
-	    = get_regk_req< Skeleton >(it->first, rman, *this);
+        Ranges< Tag_Index_Global > ranges = get_regk_req< Skeleton >(it->first, rman, *this);
 	filter_id_list(new_ids, filtered,
-	    tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
-	    *it->first, *it->second, check_keys_late);
+	    tags_db.range_begin(ranges), tags_db.range_end(), *it->first, *it->second, check_keys_late);
         if (!filtered)
         {
           result_valid = false;
@@ -400,9 +397,9 @@ std::vector< Id_Type > Query_Statement::collect_ids
   {
     for (std::vector< std::string >::const_iterator kit = keys.begin(); kit != keys.end(); ++kit)
     {
-      std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(*kit);
+      Ranges< Tag_Index_Global > ranges = get_k_req(*kit);
       filter_id_list(new_ids, filtered,
-	  tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
+	  tags_db.range_begin(ranges), tags_db.range_end(),
 	      Trivial_Regex(), Trivial_Regex());
 
       rman.health_check(*this);
@@ -412,10 +409,9 @@ std::vector< Id_Type > Query_Statement::collect_ids
     for (std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator krit = key_regexes.begin();
 	 krit != key_regexes.end(); ++krit)
     {
-      std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(krit->first);
-      filter_id_list(new_ids, filtered,
-	  tags_db.range_begin(range_req.begin(), range_req.end()), tags_db.range_end(),
-	      Trivial_Regex(), *krit->second);
+      Ranges< Tag_Index_Global > ranges = get_k_req(krit->first);
+      filter_id_list(new_ids, filtered, tags_db.range_begin(ranges), tags_db.range_end(),
+          Trivial_Regex(), *krit->second);
 
       rman.health_check(*this);
     }
@@ -482,12 +478,8 @@ std::vector< std::pair< Id_Type, Uint31_Index > > Query_Statement::collect_non_i
   {
     if (timestamp == NOW)
     {
-      std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
-      for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Range_Iterator
-          it2(tags_db.range_begin
-          (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-           Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-          !(it2 == tags_db.range_end()); ++it2)
+      Ranges< Tag_Index_Global > ranges = get_k_req(knrit->first);
+      for (auto it2 = tags_db.range_begin(ranges); !it2.is_end(); ++it2)
       {
         if (knrit->second->matches(it2.index().value))
           new_ids.push_back(std::make_pair(it2.object().id, it2.object().idx));
@@ -528,12 +520,8 @@ std::vector< Id_Type > Query_Statement::collect_non_ids
   for (std::vector< std::pair< std::string, std::string > >::const_iterator knvit = key_nvalues.begin();
       knvit != key_nvalues.end(); ++knvit)
   {
-    std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knvit->first);
-    for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
-        it2(tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-         Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-        !(it2 == tags_db.range_end()); ++it2)
+    Ranges< Tag_Index_Global > ranges = get_k_req(knvit->first);
+    for (auto it2 = tags_db.range_begin(ranges); !it2.is_end(); ++it2)
     {
       if (it2.index().value == knvit->second)
         new_ids.push_back(it2.object());
@@ -546,12 +534,8 @@ std::vector< Id_Type > Query_Statement::collect_non_ids
   for (std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator knrit = key_nregexes.begin();
       knrit != key_nregexes.end(); ++knrit)
   {
-    std::set< std::pair< Tag_Index_Global, Tag_Index_Global > > range_req = get_k_req(knrit->first);
-    for (typename Block_Backend< Tag_Index_Global, Id_Type >::Range_Iterator
-        it2(tags_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Global >(range_req.begin()),
-         Default_Range_Iterator< Tag_Index_Global >(range_req.end())));
-        !(it2 == tags_db.range_end()); ++it2)
+    Ranges< Tag_Index_Global > ranges = get_k_req(knrit->first);
+    for (auto it2 = tags_db.range_begin(ranges); !it2.is_end(); ++it2)
     {
       if (it2.index().value != void_tag_value() && knrit->second->matches(it2.index().value))
         new_ids.push_back(it2.object());
@@ -885,8 +869,7 @@ void Query_Statement::filter_by_tags
     generate_ids_by_coarse(ids_by_coarse, *attic_items);
 
   // formulate range query
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, ids_by_coarse);
+  Ranges< Tag_Index_Local > ranges = formulate_range_query(ids_by_coarse);
 
   // prepare straight keys
   std::map< std::string, std::pair< std::string, std::vector< Regular_Expression* > > > key_union;
@@ -907,10 +890,7 @@ void Query_Statement::filter_by_tags
 
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
       (transaction.data_index(&file_prop));
-  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
-    tag_it(items_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+  auto tag_it = items_db.range_begin(ranges);
 
   if (timestamp == NOW)
   {
@@ -929,10 +909,7 @@ void Query_Statement::filter_by_tags
   {
     Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > > attic_items_db
         (transaction.data_index(attic_file_prop));
-    typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
-      attic_tag_it(attic_items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    auto attic_tag_it = attic_items_db.range_begin(ranges);
 
     for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
         it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
@@ -966,10 +943,7 @@ void Query_Statement::filter_by_tags
   result.clear();
   attic_result.clear();
   coarse_count = 0;
-  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
-      ntag_it(items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+  auto ntag_it = items_db.range_begin(ranges);
 
   if (timestamp == NOW)
   {
@@ -988,10 +962,7 @@ void Query_Statement::filter_by_tags
   {
     Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > > attic_items_db
         (transaction.data_index(attic_file_prop));
-    typename Block_Backend< Tag_Index_Local, Attic< typename TObject::Id_Type > >::Range_Iterator
-      attic_ntag_it(attic_items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+    auto attic_ntag_it = attic_items_db.range_begin(ranges);
 
     for (typename std::map< uint32, std::vector< typename TObject::Id_Type > >::iterator
         it = ids_by_coarse.begin(); it != ids_by_coarse.end(); ++it)
@@ -1025,8 +996,7 @@ void Query_Statement::filter_by_tags
   generate_ids_by_coarse(ids_by_coarse, items);
 
   // formulate range query
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
-  formulate_range_query(range_set, ids_by_coarse);
+  Ranges< Tag_Index_Local > ranges = formulate_range_query(ids_by_coarse);
 
   // prepare straight keys
   std::map< std::string, std::pair< std::string, std::vector< Regular_Expression* > > > key_union;
@@ -1047,10 +1017,7 @@ void Query_Statement::filter_by_tags
 
   Block_Backend< Tag_Index_Local, typename TObject::Id_Type > items_db
       (transaction.data_index(&file_prop));
-  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
-    tag_it(items_db.range_begin
-    (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-     Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+  auto tag_it = items_db.range_begin(ranges);
 
   typename std::map< TIndex, std::vector< TObject > >::const_iterator item_it
       = items.begin();
@@ -1100,10 +1067,7 @@ void Query_Statement::filter_by_tags
   result.clear();
   attic_result.clear();
   coarse_count = 0;
-  typename Block_Backend< Tag_Index_Local, typename TObject::Id_Type >::Range_Iterator
-      ntag_it(items_db.range_begin
-      (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-       Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+  auto ntag_it = items_db.range_begin(ranges);
   item_it = items.begin();
 
   {
@@ -1230,20 +1194,41 @@ void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derive
 }
 
 
-template< typename Skeleton, typename Id_Type, typename Index >
-void Query_Statement::progress_1(std::vector< Id_Type >& ids, std::vector< Index >& range_vec,
-                                 bool& invert_ids, uint64 timestamp,
-                                 Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
-                                 const File_Properties& file_prop, const File_Properties& attic_file_prop,
-                                 Resource_Manager& rman)
+template< typename Id >
+void Id_Constraint< Id >::restrict_to(const std::vector< Id >& rhs)
 {
-  ids.clear();
+  if (invert)
+  {
+    std::vector< Id > new_ids(rhs.size());
+    new_ids.erase(std::set_difference(
+        rhs.begin(), rhs.end(), ids.begin(), ids.end(), new_ids.begin()), new_ids.end());
+    ids.swap(new_ids);
+    invert = false;
+  }
+  else
+  {
+    std::vector< Id > new_ids(std::min(ids.size(), rhs.size()));
+    new_ids.erase(std::set_intersection(
+        ids.begin(), ids.end(), rhs.begin(), rhs.end(), new_ids.begin()), new_ids.end());
+    ids.swap(new_ids);
+  }
+}
+
+
+template< typename Skeleton, typename Id_Type, typename Index >
+void Query_Statement::progress_1(
+    Id_Constraint< Id_Type >& ids, std::vector< Index >& range_vec,
+    uint64 timestamp, Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
+    const File_Properties& file_prop, const File_Properties& attic_file_prop, Resource_Manager& rman)
+{
+  ids.ids.clear();
   range_vec.clear();
   if (!key_values.empty()
       || (check_keys_late != prefer_ranges
           && (!keys.empty() || !key_regexes.empty() || !regkey_regexes.empty())))
   {
     bool result_valid = true;
+    ids.invert = false;
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_ids< Skeleton, Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late, result_valid);
 
@@ -1254,12 +1239,12 @@ void Query_Statement::progress_1(std::vector< Id_Type >& ids, std::vector< Index
       std::vector< std::pair< Id_Type, Uint31_Index > > diff_ids(id_idxs.size());
       diff_ids.erase(set_difference(id_idxs.begin(), id_idxs.end(), non_ids.begin(), non_ids.end(),
 		     diff_ids.begin()), diff_ids.end());
-      ids.clear();
+      ids.ids.clear();
       range_vec.clear();
       for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = diff_ids.begin();
           it != diff_ids.end(); ++it)
       {
-        ids.push_back(it->first);
+        ids.ids.push_back(it->first);
         range_vec.push_back(it->second);
       }
     }
@@ -1268,80 +1253,74 @@ void Query_Statement::progress_1(std::vector< Id_Type >& ids, std::vector< Index
       for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = id_idxs.begin();
           it != id_idxs.end(); ++it)
       {
-        ids.push_back(it->first);
+        ids.ids.push_back(it->first);
         range_vec.push_back(it->second);
       }
     }
 
-    if (ids.empty() && result_valid)
+    if (ids.ids.empty() && result_valid)
       answer_state = data_collected;
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty()) && check_keys_late != prefer_ranges)
   {
-    invert_ids = true;
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_non_ids< Id_Type >(file_prop, attic_file_prop, rman, timestamp);
     for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = id_idxs.begin();
         it != id_idxs.end(); ++it)
-      ids.push_back(it->first);
+      ids.ids.push_back(it->first);
   }
 }
 
 
 template< class Id_Type >
-void Query_Statement::progress_1(std::vector< Id_Type >& ids, bool& invert_ids,
-                                 Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
-                                 const File_Properties& file_prop,
-                                 Resource_Manager& rman)
+void Query_Statement::progress_1(
+    Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
+    const File_Properties& file_prop, Resource_Manager& rman)
 {
   if (!key_values.empty()
       || (check_keys_late != prefer_ranges
           && (!keys.empty() || !key_regexes.empty() || !regkey_regexes.empty())))
   {
-    collect_ids< Id_Type >(file_prop, rman, check_keys_late).swap(ids);
+    ids.invert = false;
+    collect_ids< Id_Type >(file_prop, rman, check_keys_late).swap(ids.ids);
     if (!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
     {
       std::vector< Id_Type > non_ids = collect_non_ids< Id_Type >(file_prop, rman);
-      std::vector< Id_Type > diff_ids(ids.size(), Id_Type());
-      diff_ids.erase(set_difference(ids.begin(), ids.end(), non_ids.begin(), non_ids.end(),
+      std::vector< Id_Type > diff_ids(ids.ids.size(), Id_Type());
+      diff_ids.erase(set_difference(ids.ids.begin(), ids.ids.end(), non_ids.begin(), non_ids.end(),
                      diff_ids.begin()), diff_ids.end());
-      ids.swap(diff_ids);
+      ids.ids.swap(diff_ids);
     }
-    if (ids.empty())
+    if (ids.ids.empty())
       answer_state = data_collected;
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
       && check_keys_late != prefer_ranges)
-  {
-    invert_ids = true;
-    collect_non_ids< Id_Type >(file_prop, rman).swap(ids);
-  }
+    collect_non_ids< Id_Type >(file_prop, rman).swap(ids.ids);
 }
 
 
 template< class Id_Type >
-void Query_Statement::collect_nodes(std::vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
-				 Resource_Manager& rman)
+void Query_Statement::collect_nodes(
+    const Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Set& into, Resource_Manager& rman)
 {
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end() && answer_state < data_collected; ++it)
   {
-    if ((*it)->collect_nodes(rman, into, ids, invert_ids))
+    if ((*it)->collect_nodes(rman, into, ids.ids, ids.invert))
       answer_state = data_collected;
   }
 }
 
 
 template< typename Id_Type >
-void Query_Statement::collect_elems(int type, std::vector< Id_Type >& ids,
-				 bool& invert_ids, Answer_State& answer_state, Set& into,
-				 Resource_Manager& rman)
+void Query_Statement::collect_elems(
+    int type, const Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Set& into, Resource_Manager& rman)
 {
   for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
       it != constraints.end() && answer_state < data_collected; ++it)
   {
-    if ((*it)->collect(rman, into, type, ids, invert_ids))
+    if ((*it)->collect(rman, into, type, ids.ids, ids.invert))
       answer_state = data_collected;
   }
 }
@@ -1359,39 +1338,36 @@ void Query_Statement::collect_elems(Answer_State& answer_state, Set& into, Resou
 
 
 template< typename Index >
-std::set< std::pair< Index, Index > > intersect_ranges
-    (const std::set< std::pair< Index, Index > >& range_a,
-     std::vector< Index >& range_vec)
+Ranges< Index > intersect_ranges(const Ranges< Index >& range_a, std::vector< Index >& range_vec)
 {
-  std::set< std::pair< Index, Index > > result;
+  Ranges< Index > result;
 
   unsigned long long sum = 0;
-  for (typename std::set< std::pair< Index, Index > >::const_iterator it = range_a.begin();
-       it != range_a.end(); ++it)
-    sum += difference(it->first, it->second);
+  for (auto it = range_a.begin(); it != range_a.end(); ++it)
+    sum += difference(it.lower_bound(), it.upper_bound());
 
   if (sum/256 < range_vec.size())
     return range_a;
 
   std::sort(range_vec.begin(), range_vec.end());
 
-  typename std::set< std::pair< Index, Index > >::const_iterator it_a = range_a.begin();
-  typename std::vector< Index >::const_iterator it_vec = range_vec.begin();
+  auto it_a = range_a.begin();
+  auto it_vec = range_vec.begin();
 
   while (it_a != range_a.end() && it_vec != range_vec.end())
   {
-    if (!(it_a->first < Index(it_vec->val() + 0x100)))
+    if (!(it_a.lower_bound() < Index(it_vec->val() + 0x100)))
       ++it_vec;
-    else if (!(*it_vec < it_a->second))
+    else if (!(*it_vec < it_a.upper_bound()))
       ++it_a;
-    else if (Index(it_vec->val() + 0x100) < it_a->second)
+    else if (Index(it_vec->val() + 0x100) < it_a.upper_bound())
     {
-      result.insert(std::make_pair(std::max(it_a->first, *it_vec), Index(it_vec->val() + 0x100)));
+      result.push_back(std::max(it_a.lower_bound(), *it_vec), Index(it_vec->val() + 0x100));
       ++it_vec;
     }
     else
     {
-      result.insert(std::make_pair(std::max(it_a->first, *it_vec), it_a->second));
+      result.push_back(std::max(it_a.lower_bound(), *it_vec), it_a.upper_bound());
       ++it_a;
     }
   }
@@ -1476,41 +1452,37 @@ void Query_Statement::execute(Resource_Manager& rman)
     check_keys_late = std::max(check_keys_late, (*it)->delivers_data(rman));
 
   {
-    std::vector< Node::Id_Type > node_ids;
-    std::vector< Way::Id_Type > way_ids;
-    std::vector< Relation::Id_Type > relation_ids;
-    std::vector< Area_Skeleton::Id_Type > area_ids;
-    bool invert_ids = false;
+    Id_Constraint< Node::Id_Type > node_ids;
+    Id_Constraint< Way::Id_Type > way_ids;
+    Id_Constraint< Relation::Id_Type > relation_ids;
+    Id_Constraint< Area_Skeleton::Id_Type > area_ids;
 
-    std::set< std::pair< Uint32_Index, Uint32_Index > > range_req_32;
     std::vector< Uint32_Index > range_vec_32;
-    std::set< std::pair< Uint31_Index, Uint31_Index > > way_range_req_31;
     std::vector< Uint31_Index > way_range_vec_31;
-    std::set< std::pair< Uint31_Index, Uint31_Index > > relation_range_req_31;
     std::vector< Uint31_Index > relation_range_vec_31;
 
     if (type & QUERY_NODE)
     {
       progress_1< Node_Skeleton, Node::Id_Type, Uint32_Index >(
-	  node_ids, range_vec_32, invert_ids, timestamp, node_answer_state, check_keys_late,
+	  node_ids, range_vec_32, timestamp, node_answer_state, check_keys_late,
           *osm_base_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL, rman);
-      collect_nodes(node_ids, invert_ids, node_answer_state, into, rman);
+      collect_nodes(node_ids, node_answer_state, into, rman);
     }
     if (type & QUERY_WAY)
     {
       progress_1< Way_Skeleton, Way::Id_Type, Uint31_Index >(
-	  way_ids, way_range_vec_31, invert_ids, timestamp, way_answer_state, check_keys_late,
+	  way_ids, way_range_vec_31, timestamp, way_answer_state, check_keys_late,
           *osm_base_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL, rman);
-      collect_elems(QUERY_WAY, way_ids, invert_ids, way_answer_state, into, rman);
+      collect_elems(QUERY_WAY, way_ids, way_answer_state, into, rman);
       if (type & QUERY_CLOSED_WAY)
         filter_elems_for_closed_ways(into);
     }
     if (type & QUERY_RELATION)
     {
       progress_1< Relation_Skeleton, Relation::Id_Type, Uint31_Index >(
-	  relation_ids, relation_range_vec_31, invert_ids, timestamp, relation_answer_state, check_keys_late,
+	  relation_ids, relation_range_vec_31, timestamp, relation_answer_state, check_keys_late,
           *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman);
-      collect_elems(QUERY_RELATION, relation_ids, invert_ids, relation_answer_state, into, rman);
+      collect_elems(QUERY_RELATION, relation_ids, relation_answer_state, into, rman);
     }
     if (type & QUERY_DERIVED)
     {
@@ -1521,9 +1493,9 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       try
       {
-        progress_1(area_ids, invert_ids, area_answer_state,
+        progress_1(area_ids, area_answer_state,
                   check_keys_late, *area_settings().AREA_TAGS_GLOBAL, rman);
-        collect_elems(QUERY_AREA, area_ids, invert_ids, area_answer_state, into, rman);
+        collect_elems(QUERY_AREA, area_ids, area_answer_state, into, rman);
       }
       catch (const File_Error& e)
       {
@@ -1536,191 +1508,102 @@ void Query_Statement::execute(Resource_Manager& rman)
     set_progress(2);
     rman.health_check(*this);
 
-    if (type & QUERY_NODE)
+    if ((type & QUERY_NODE) && check_keys_late == prefer_ranges)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && node_answer_state < data_collected; ++it)
       {
-	std::vector< Node::Id_Type > constraint_node_ids;
-	if ((*it)->get_node_ids(rman, constraint_node_ids))
-	{
-	  if (node_ids.empty())
-	    node_ids.swap(constraint_node_ids);
-	  else
-	  {
-	    std::vector< Node::Id_Type > new_ids(node_ids.size());
-	    new_ids.erase(std::set_intersection(
-	        node_ids.begin(), node_ids.end(), constraint_node_ids.begin(), constraint_node_ids.end(),
-	        new_ids.begin()), new_ids.end());
-	    node_ids.swap(new_ids);
-	  }
-
-	  if (node_ids.empty())
-	    node_answer_state = data_collected;
-	}
+        std::vector< Node::Id_Type > constraint_node_ids;
+        if ((*it)->get_node_ids(rman, constraint_node_ids))
+        {
+          node_ids.restrict_to(constraint_node_ids);
+          if (node_ids.empty())
+            node_answer_state = data_collected;
+        }
       }
     }
-    if (type & QUERY_WAY)
+    if ((type & QUERY_WAY) && check_keys_late == prefer_ranges)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && way_answer_state < data_collected; ++it)
       {
-	std::vector< Way::Id_Type > constraint_way_ids;
-	if ((*it)->get_way_ids(rman, constraint_way_ids))
-	{
-	  if (way_ids.empty())
-	    way_ids.swap(constraint_way_ids);
-	  else
-	  {
-	    std::vector< Way::Id_Type > new_ids(way_ids.size());
-	    new_ids.erase(std::set_intersection(
-	        way_ids.begin(), way_ids.end(), constraint_way_ids.begin(), constraint_way_ids.end(),
-	        new_ids.begin()), new_ids.end());
-	    way_ids.swap(new_ids);
-	  }
-
-	  if (way_ids.empty())
-	    way_answer_state = data_collected;
-	}
+        std::vector< Way::Id_Type > constraint_way_ids;
+        if ((*it)->get_way_ids(rman, constraint_way_ids))
+        {
+          way_ids.restrict_to(constraint_way_ids);
+          if (way_ids.empty())
+            way_answer_state = data_collected;
+        }
       }
     }
-    if (type & QUERY_RELATION)
+    if ((type & QUERY_RELATION) && check_keys_late == prefer_ranges)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && relation_answer_state < data_collected; ++it)
       {
-	std::vector< Relation::Id_Type > constraint_relation_ids;
-	if ((*it)->get_relation_ids(rman, constraint_relation_ids))
-	{
-	  if (relation_ids.empty())
-	    relation_ids.swap(constraint_relation_ids);
-	  else
-	  {
-	    std::vector< Relation::Id_Type > new_ids(relation_ids.size());
-	    new_ids.erase(std::set_intersection(
-	        relation_ids.begin(), relation_ids.end(), constraint_relation_ids.begin(), constraint_relation_ids.end(),
-	        new_ids.begin()), new_ids.end());
-	    relation_ids.swap(new_ids);
-	  }
-
-	  if (relation_ids.empty())
-	    relation_answer_state = data_collected;
-	}
+        std::vector< Relation::Id_Type > constraint_relation_ids;
+        if ((*it)->get_relation_ids(rman, constraint_relation_ids))
+        {
+          relation_ids.restrict_to(constraint_relation_ids);
+          if (relation_ids.empty())
+            relation_answer_state = data_collected;
+        }
       }
     }
-    if (type & QUERY_AREA)
+    if ((type & QUERY_AREA) && check_keys_late == prefer_ranges)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && area_answer_state < data_collected; ++it)
       {
-	std::vector< Area_Skeleton::Id_Type > constraint_area_ids;
-	if ((*it)->get_area_ids(rman, constraint_area_ids))
-	{
-	  if (area_ids.empty())
-	    area_ids.swap(constraint_area_ids);
-	  else
-	  {
-	    std::vector< Area_Skeleton::Id_Type > new_ids(area_ids.size());
-	    new_ids.erase(std::set_intersection(
-	        area_ids.begin(), area_ids.end(), constraint_area_ids.begin(), constraint_area_ids.end(),
-	        new_ids.begin()), new_ids.end());
-	    area_ids.swap(new_ids);
-	  }
-
-	  if (area_ids.empty())
-	    area_answer_state = data_collected;
-	}
+        std::vector< Area_Skeleton::Id_Type > constraint_area_ids;
+        if ((*it)->get_area_ids(rman, constraint_area_ids))
+        {
+          area_ids.restrict_to(constraint_area_ids);
+          if (area_ids.empty())
+            area_answer_state = data_collected;
+        }
       }
     }
 
-    if (type & QUERY_NODE)
+    Ranges< Uint32_Index > node_ranges = Ranges< Uint32_Index >::global();
+    Ranges< Uint31_Index > way_ranges = Ranges< Uint31_Index >::global();
+    Ranges< Uint31_Index > rel_ranges = Ranges< Uint31_Index >::global();
+
+    if ((type & QUERY_NODE) && node_answer_state < data_collected)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
-          it != constraints.end() && node_answer_state < data_collected; ++it)
+          it != constraints.end(); ++it)
       {
-        std::set< std::pair< Uint32_Index, Uint32_Index > > range_req;
-        if ((*it)->get_ranges(rman, range_req))
-        {
-          if (node_answer_state < ranges_collected)
-            range_req.swap(range_req_32);
-          else
-            intersect_ranges(range_req_32, range_req).swap(range_req_32);
-	  node_answer_state = ranges_collected;
-        }
+        Ranges< Uint32_Index > i_ranges;
+        if ((*it)->get_ranges(rman, i_ranges))
+          node_ranges.intersect(i_ranges).swap(node_ranges);
       }
-
       if (!range_vec_32.empty())
-      {
-        if (node_answer_state < ranges_collected)
-        {
-          node_answer_state = ranges_collected;
-          range_req_32.clear();
-          range_req_32.insert(std::make_pair(Uint32_Index(0u), Uint32_Index(0xffffffff)));
-          intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
-        }
-        else
-          intersect_ranges(range_req_32, range_vec_32).swap(range_req_32);
-      }
+        intersect_ranges(node_ranges, range_vec_32).swap(node_ranges);
     }
     if ((type & QUERY_WAY) && way_answer_state < data_collected)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end(); ++it)
       {
-        std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
-	if ((*it)->get_way_ranges(rman, range_req))
-        {
-          if (way_answer_state < ranges_collected)
-            range_req.swap(way_range_req_31);
-          else
-            intersect_ranges(way_range_req_31, range_req).swap(way_range_req_31);
-          if (way_answer_state < ranges_collected)
-            way_answer_state = ranges_collected;
-        }
+        Ranges< Uint31_Index > i_ranges;
+        if ((*it)->get_way_ranges(rman, i_ranges))
+          way_ranges.intersect(i_ranges).swap(way_ranges);
       }
-
       if (!way_range_vec_31.empty())
-      {
-        if (way_answer_state < ranges_collected)
-        {
-          way_answer_state = ranges_collected;
-          way_range_req_31.clear();
-          way_range_req_31.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
-          intersect_ranges(way_range_req_31, way_range_vec_31).swap(way_range_req_31);
-        }
-        else
-          intersect_ranges(way_range_req_31, way_range_vec_31).swap(way_range_req_31);
-      }
+        intersect_ranges(way_ranges, way_range_vec_31).swap(way_ranges);
     }
     if ((type & QUERY_RELATION) && relation_answer_state < data_collected)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end(); ++it)
       {
-        std::set< std::pair< Uint31_Index, Uint31_Index > > range_req;
-	if ((*it)->get_relation_ranges(rman, range_req))
-        {
-          if (relation_answer_state < ranges_collected)
-            range_req.swap(relation_range_req_31);
-          else
-            intersect_ranges(relation_range_req_31, range_req).swap(relation_range_req_31);
-          if (relation_answer_state < ranges_collected)
-            relation_answer_state = ranges_collected;
-        }
-      }
-
+        Ranges< Uint31_Index > i_ranges;
+        if ((*it)->get_relation_ranges(rman, i_ranges))
+          rel_ranges.intersect(i_ranges).swap(rel_ranges);
+      }      
       if (!relation_range_vec_31.empty())
-      {
-        if (relation_answer_state < ranges_collected)
-        {
-          relation_answer_state = ranges_collected;
-          relation_range_req_31.clear();
-          relation_range_req_31.insert(std::make_pair(Uint31_Index(0u), Uint31_Index(0xffffffff)));
-          intersect_ranges(relation_range_req_31, relation_range_vec_31).swap(relation_range_req_31);
-        }
-        else
-          intersect_ranges(relation_range_req_31, relation_range_vec_31).swap(relation_range_req_31);
-      }
+        intersect_ranges(rel_ranges, relation_range_vec_31).swap(rel_ranges);
     }
 
     set_progress(3);
@@ -1731,7 +1614,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && node_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, range_req_32, node_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, node_ranges, node_ids.ids, node_ids.invert))
 	  node_answer_state = data_collected;
       }
     }
@@ -1740,7 +1623,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && way_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, way_range_req_31, type & QUERY_WAY, way_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, way_ranges, type & QUERY_WAY, way_ids.ids, way_ids.invert))
         {
           if (type & QUERY_CLOSED_WAY)
             filter_elems_for_closed_ways(into);
@@ -1753,8 +1636,8 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && relation_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, relation_range_req_31, type & QUERY_RELATION,
-            relation_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, rel_ranges, type & QUERY_RELATION,
+            relation_ids.ids, relation_ids.invert))
 	  relation_answer_state = data_collected;
       }
     }
@@ -1763,8 +1646,7 @@ void Query_Statement::execute(Resource_Manager& rman)
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end() && area_answer_state < data_collected; ++it)
       {
-	if ((*it)->get_data(*this, rman, into, std::set< std::pair< Uint31_Index, Uint31_Index > >(),
-            type & QUERY_AREA, area_ids, invert_ids))
+	if ((*it)->get_data(*this, rman, into, {}, type & QUERY_AREA, area_ids.ids, area_ids.invert))
 	  area_answer_state = data_collected;
       }
     }
@@ -1774,53 +1656,32 @@ void Query_Statement::execute(Resource_Manager& rman)
 
     if (type & QUERY_NODE)
     {
-      if (node_answer_state == nothing && node_ids.empty())
-        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-    }
-    if (type & QUERY_WAY)
-    {
-      if (way_answer_state == nothing && way_ids.empty())
-        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-    }
-    if (type & QUERY_RELATION)
-    {
-      if (relation_answer_state == nothing && relation_ids.empty())
-        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-    }
-    if (type & QUERY_AREA)
-    {
-      if (area_answer_state == nothing && area_ids.empty())
-        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-    }
-
-    if (type & QUERY_NODE)
-    {
       if (node_answer_state < data_collected)
       {
-        if (range_req_32.empty() && node_answer_state < ranges_collected && !invert_ids)
+        if (node_ranges.is_global())
         {
-          std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids, rman);
-          for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            range_req_32.insert(std::make_pair(*it, ++Uint32_Index(*it)));
-        }
-        if (range_req_32.empty())
-          ::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-              (into.nodes, into.attic_nodes,
-              node_ids, invert_ids, range_req_32, 0, *this, rman);
-        else
-        {
-          Uint32_Index min_idx = range_req_32.begin()->first;
-          while (::get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-              (into.nodes, into.attic_nodes,
-              node_ids, invert_ids, range_req_32, &min_idx, *this, rman))
+          if (node_ids.ids.empty())
+            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+          if (!node_ids.invert)
           {
-            Set to_filter;
-            to_filter.nodes.swap(into.nodes);
-            to_filter.attic_nodes.swap(into.attic_nodes);
-            apply_all_filters(rman, timestamp, check_keys_late, to_filter);
-            indexed_set_union(filtered.nodes, to_filter.nodes);
-            indexed_set_union(filtered.attic_nodes, to_filter.attic_nodes);
+            node_ranges = Ranges< Uint32_Index >();
+            std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids.ids, rman);
+            for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+              node_ranges.push_back(*it, ++Uint32_Index(*it));
+            node_ranges.sort();
           }
+        }
+
+        Collect_Items< Uint32_Index, Node_Skeleton > db_reader(
+            node_ids.ids, node_ids.invert, node_ranges, *this, rman);
+        while (db_reader.get_chunk(into.nodes, into.attic_nodes))
+        {
+          Set to_filter;
+          to_filter.nodes.swap(into.nodes);
+          to_filter.attic_nodes.swap(into.attic_nodes);
+          apply_all_filters(rman, timestamp, check_keys_late, to_filter);
+          indexed_set_union(filtered.nodes, to_filter.nodes);
+          indexed_set_union(filtered.attic_nodes, to_filter.attic_nodes);
         }
       }
     }
@@ -1828,39 +1689,35 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       if (way_answer_state < data_collected)
       {
-        if (way_range_req_31.empty() && way_answer_state < ranges_collected && !invert_ids)
+        if (way_ranges.is_global())
         {
-          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids, rman);
-          for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            way_range_req_31.insert(std::make_pair(*it, inc(*it)));
-        }
-        if (way_range_req_31.empty())
-        {
-          ::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
-              (into.ways, into.attic_ways,
-              way_ids, invert_ids, way_range_req_31, 0, *this, rman);
-          if (type & QUERY_CLOSED_WAY)
-            filter_elems_for_closed_ways(into);
-        }
-        else
-        {
-          Uint31_Index min_idx = way_range_req_31.begin()->first;
-          while (::get_elements_by_id_from_db< Uint31_Index, Way_Skeleton >
-              (into.ways, into.attic_ways,
-              way_ids, invert_ids, way_range_req_31, &min_idx, *this, rman))
+          if (way_ids.ids.empty())
+            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+          if (!way_ids.invert)
           {
-            Set to_filter;
-            to_filter.ways.swap(into.ways);
-            to_filter.attic_ways.swap(into.attic_ways);
-            if (type & QUERY_CLOSED_WAY)
-            {
-              filter_elems_for_closed_ways(to_filter.ways);
-              filter_elems_for_closed_ways(to_filter.attic_ways);
-            }
-            apply_all_filters(rman, timestamp, check_keys_late, to_filter);
-            indexed_set_union(filtered.ways, to_filter.ways);
-            indexed_set_union(filtered.attic_ways, to_filter.attic_ways);
+            way_ranges = Ranges< Uint31_Index >();
+            std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids.ids, rman);
+            for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+              way_ranges.push_back(*it, inc(*it));
+            way_ranges.sort();
           }
+        }
+
+        Collect_Items< Uint31_Index, Way_Skeleton > db_reader(
+            way_ids.ids, way_ids.invert, way_ranges, *this, rman);
+        while (db_reader.get_chunk(into.ways, into.attic_ways))
+        {
+          Set to_filter;
+          to_filter.ways.swap(into.ways);
+          to_filter.attic_ways.swap(into.attic_ways);
+          if (type & QUERY_CLOSED_WAY)
+          {
+            filter_elems_for_closed_ways(to_filter.ways);
+            filter_elems_for_closed_ways(to_filter.attic_ways);
+          }
+          apply_all_filters(rman, timestamp, check_keys_late, to_filter);
+          indexed_set_union(filtered.ways, to_filter.ways);
+          indexed_set_union(filtered.attic_ways, to_filter.attic_ways);
         }
       }
     }
@@ -1868,39 +1725,41 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       if (relation_answer_state < data_collected)
       {
-        if (relation_range_req_31.empty() && relation_answer_state < ranges_collected && !invert_ids)
+        if (rel_ranges.is_global())
         {
-          std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids, rman);
-          for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
-            relation_range_req_31.insert(std::make_pair(*it, inc(*it)));
-        }
-        if (relation_range_req_31.empty())
-          ::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
-              (into.relations, into.attic_relations,
-              relation_ids, invert_ids, relation_range_req_31, 0, *this, rman);
-        else
-        {
-          Uint31_Index min_idx = relation_range_req_31.begin()->first;
-          while (::get_elements_by_id_from_db< Uint31_Index, Relation_Skeleton >
-              (into.relations, into.attic_relations,
-              relation_ids, invert_ids, relation_range_req_31, &min_idx, *this, rman))
+          if (relation_ids.ids.empty())
+            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+          if (!relation_ids.invert)
           {
-            Set to_filter;
-            to_filter.relations.swap(into.relations);
-            to_filter.attic_relations.swap(into.attic_relations);
-            apply_all_filters(rman, timestamp, check_keys_late, to_filter);
-            indexed_set_union(filtered.relations, to_filter.relations);
-            indexed_set_union(filtered.attic_relations, to_filter.attic_relations);
+            rel_ranges = Ranges< Uint31_Index >();
+            std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids.ids, rman);
+            for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
+              rel_ranges.push_back(*it, inc(*it));
+            rel_ranges.sort();
           }
+        }
+
+        Collect_Items< Uint31_Index, Relation_Skeleton > db_reader(
+            relation_ids.ids, relation_ids.invert, rel_ranges, *this, rman);
+        while (db_reader.get_chunk(into.relations, into.attic_relations))
+        {
+          Set to_filter;
+          to_filter.relations.swap(into.relations);
+          to_filter.attic_relations.swap(into.attic_relations);
+          apply_all_filters(rman, timestamp, check_keys_late, to_filter);
+          indexed_set_union(filtered.relations, to_filter.relations);
+          indexed_set_union(filtered.attic_relations, to_filter.attic_relations);
         }
       }
     }
     if (type & QUERY_AREA)
     {
+      if (area_answer_state == nothing && area_ids.empty())
+        runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
       try
       {
         if (area_answer_state < data_collected)
-          get_elements_by_id_from_db(into.areas, area_ids, invert_ids, rman, *area_settings().AREAS);
+          get_elements_by_id_from_db(into.areas, area_ids.ids, area_ids.invert, rman, *area_settings().AREAS);
       }
       catch (const File_Error& e)
       {

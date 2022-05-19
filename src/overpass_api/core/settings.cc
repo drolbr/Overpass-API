@@ -147,7 +147,26 @@ Osm_Base_Settings::Osm_Base_Settings()
   purge_timeout(900),
   total_available_space(12ll*1024*1024*1024),
   total_available_time_units(256*1024)
-{}
+{
+  bin_idxs_ = {
+      NODES, NODE_TAGS_LOCAL, NODE_TAGS_GLOBAL, NODE_KEYS,
+      WAYS, WAY_TAGS_LOCAL, WAY_TAGS_GLOBAL, WAY_KEYS,
+      RELATIONS, RELATION_ROLES, RELATION_TAGS_LOCAL, RELATION_TAGS_GLOBAL, RELATION_KEYS };
+  map_idxs_ = { NODES, WAYS, RELATIONS };
+}
+
+
+const std::vector< File_Properties* >& Osm_Base_Settings::bin_idxs() const
+{
+  return bin_idxs_;
+}
+
+
+const std::vector< File_Properties* >& Osm_Base_Settings::map_idxs() const
+{
+  return map_idxs_;
+}
+
 
 const Osm_Base_Settings& osm_base_settings()
 {
@@ -174,6 +193,7 @@ Area_Settings::Area_Settings()
   total_available_time_units(256*1024)
 {}
 
+
 const Area_Settings& area_settings()
 {
   static Area_Settings obj;
@@ -195,18 +215,13 @@ Meta_Settings::Meta_Settings()
   RELATIONS_META(new OSM_File_Properties< Uint31_Index >
       ("relations_meta", 128*1024, 0))
 {
-  idxs_.reserve(5);
-  idxs_.push_back(USER_DATA);
-  idxs_.push_back(USER_INDICES);
-  idxs_.push_back(NODES_META);
-  idxs_.push_back(WAYS_META);
-  idxs_.push_back(RELATIONS_META);
+  bin_idxs_ = { USER_DATA, USER_INDICES, NODES_META, WAYS_META, RELATIONS_META };
 }
 
 
-const std::vector< File_Properties* >& Meta_Settings::idxs() const
+const std::vector< File_Properties* >& Meta_Settings::bin_idxs() const
 {
-  return idxs_;
+  return bin_idxs_;
 }
 
 
@@ -259,34 +274,27 @@ Attic_Settings::Attic_Settings()
   RELATION_CHANGELOG(new OSM_File_Properties< Timestamp >
       ("relation_changelog", 128*1024, 0))
 {
-  idxs_.reserve(21);
-  idxs_.push_back(NODES);
-  idxs_.push_back(NODES_UNDELETED);
-  idxs_.push_back(NODE_IDX_LIST);
-  idxs_.push_back(NODE_TAGS_LOCAL);
-  idxs_.push_back(NODE_TAGS_GLOBAL);
-  idxs_.push_back(NODES_META);
-  idxs_.push_back(NODE_CHANGELOG);
-  idxs_.push_back(WAYS);
-  idxs_.push_back(WAYS_UNDELETED);
-  idxs_.push_back(WAY_IDX_LIST);
-  idxs_.push_back(WAY_TAGS_LOCAL);
-  idxs_.push_back(WAY_TAGS_GLOBAL);
-  idxs_.push_back(WAYS_META);
-  idxs_.push_back(WAY_CHANGELOG);
-  idxs_.push_back(RELATIONS);
-  idxs_.push_back(RELATIONS_UNDELETED);
-  idxs_.push_back(RELATION_IDX_LIST);
-  idxs_.push_back(RELATION_TAGS_LOCAL);
-  idxs_.push_back(RELATION_TAGS_GLOBAL);
-  idxs_.push_back(RELATIONS_META);
-  idxs_.push_back(RELATION_CHANGELOG);
+  bin_idxs_ = {
+      NODES, NODES_UNDELETED, NODE_IDX_LIST, NODE_TAGS_LOCAL, NODE_TAGS_GLOBAL, NODES_META, NODE_CHANGELOG,
+      WAYS, WAYS_UNDELETED, WAY_IDX_LIST, WAY_TAGS_LOCAL, WAY_TAGS_GLOBAL, WAYS_META, WAY_CHANGELOG,
+      RELATIONS, RELATIONS_UNDELETED, RELATION_IDX_LIST, RELATION_TAGS_LOCAL, RELATION_TAGS_GLOBAL,
+      RELATIONS_META, RELATION_CHANGELOG };
+  map_idxs_ = {
+      NODES, NODES_UNDELETED,
+      WAYS, WAYS_UNDELETED,
+      RELATIONS, RELATIONS_UNDELETED };
 }
 
 
-const std::vector< File_Properties* >& Attic_Settings::idxs() const
+const std::vector< File_Properties* >& Attic_Settings::bin_idxs() const
 {
-  return idxs_;
+  return bin_idxs_;
+}
+
+
+const std::vector< File_Properties* >& Attic_Settings::map_idxs() const
+{
+  return map_idxs_;
 }
 
 
@@ -344,3 +352,46 @@ const std::string& get_logfile_name()
 
 
 const uint64 NOW = std::numeric_limits< unsigned long long >::max();
+
+//-----------------------------------------------------------------------------
+
+Database_Meta_State::Mode Database_Meta_State::from_db_files(const std::string& db_dir)
+{
+  for (auto i : attic_settings().bin_idxs())
+  {
+    if (file_exists(db_dir + i->get_file_name_trunk() + i->get_data_suffix()))
+      return Database_Meta_State::keep_attic;
+  }
+
+  for (auto i : meta_settings().bin_idxs())
+  {
+    if (file_exists(db_dir + i->get_file_name_trunk() + i->get_data_suffix()))
+      return Database_Meta_State::keep_meta;
+  }
+  
+  return Database_Meta_State::only_data;
+}
+
+
+std::string get_server_name(const std::string& db_dir)
+{
+  std::string server_name("/api");
+  
+  try
+  {
+    std::ifstream server_name_f((db_dir + "server_name").c_str());
+    getline(server_name_f, server_name);
+  }
+  catch(...) {}
+
+  if (!server_name.empty() && server_name.back() != '/')
+    return server_name + '/';
+  return server_name;
+}
+
+
+void set_server_name(const std::string& db_dir, const std::string& server_name)
+{
+  std::ofstream out((db_dir + "/server_name").c_str());
+  out<<server_name<<'\n';
+}

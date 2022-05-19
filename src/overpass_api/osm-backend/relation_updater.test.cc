@@ -267,11 +267,11 @@ int main(int argc, char* args[])
     std::ofstream tags_local_out((db_dir + "tags_local.csv").c_str());
     std::ofstream tags_global_out((db_dir + "tags_global.csv").c_str());
     {
-      Node_Updater node_updater_("./", only_data);
+      Node_Updater node_updater_("./", Database_Meta_State::only_data);
       node_updater = &node_updater_;
-      Way_Updater way_updater_("./", only_data);
+      Way_Updater way_updater_("./", Database_Meta_State::only_data);
       way_updater = &way_updater_;
-      Relation_Updater relation_updater_("./", only_data);
+      Relation_Updater relation_updater_("./", Database_Meta_State::only_data);
       relation_updater = &relation_updater_;
 
       member_source_out = new std::ofstream((db_dir + "member_source.csv").c_str());

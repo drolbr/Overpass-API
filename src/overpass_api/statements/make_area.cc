@@ -316,7 +316,6 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
 
   //formulate range query to query tags of the pivot
   std::set< Uint31_Index > coarse_indices;
-  std::set< std::pair< Tag_Index_Local, Tag_Index_Local > > range_set;
   if (pivot_type == NODE)
     coarse_indices.insert(pivot_set->nodes.begin()->first.val() & 0x7fffff00);
   else if (pivot_type == WAY)
@@ -324,7 +323,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   else if (pivot_type == RELATION)
     coarse_indices.insert(pivot_set->relations.begin()->first.val() & 0x7fffff00);
 
-  formulate_range_query(range_set, coarse_indices);
+  Ranges< Tag_Index_Local > ranges = formulate_range_query(coarse_indices);
 
   // iterate over the result
   std::vector< std::pair< std::string, std::string > > new_tags;
@@ -338,9 +337,7 @@ void Make_Area_Statement::execute(Resource_Manager& rman)
   Block_Backend< Tag_Index_Local, Uint32_Index > items_db
       (rman.get_transaction()->data_index(file_prop));
   Block_Backend< Tag_Index_Local, Uint32_Index >::Range_Iterator
-      tag_it(items_db.range_begin
-        (Default_Range_Iterator< Tag_Index_Local >(range_set.begin()),
-         Default_Range_Iterator< Tag_Index_Local >(range_set.end())));
+      tag_it(items_db.range_begin(ranges));
   for (; !(tag_it == items_db.range_end()); ++tag_it)
   {
     if (tag_it.object().val() == pivot_id)

@@ -23,7 +23,7 @@
 
 
 template< typename Object >
-std::set< std::pair< Uint32_Index, Uint32_Index > > small_way_nd_indices
+Ranges< Uint32_Index > small_way_nd_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Object > >::const_iterator ways_begin,
      typename std::map< Uint31_Index, std::vector< Object > >::const_iterator ways_end)
@@ -42,7 +42,7 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > small_way_nd_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 
@@ -76,14 +76,12 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
 {
   std::map< Uint32_Index, std::vector< Node_Skeleton > > result;
-  std::set< std::pair< Uint32_Index, Uint32_Index > > req
-      = small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end());
+  Ranges< Uint32_Index > req = small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end());
   if (req.empty())
     return result;
 
-  Uint32_Index cur_idx = req.begin()->first;
-  while (collect_items_range(stmt, rman,
-      req, Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), cur_idx, result));
+  collect_items_range(stmt, rman, req,
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), result);
 
   return result;
 }
@@ -114,14 +112,12 @@ Way_Geometry_Store::Way_Geometry_Store
   // Retrieve all nodes referred by the ways.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > current;
   std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic;
-  std::set< std::pair< Uint32_Index, Uint32_Index > > req
-      = small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end());
+  Ranges< Uint32_Index > req = small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end());
   if (req.empty())
     return;
 
-  Uint32_Index cur_idx = req.begin()->first;
-  while (collect_items_range_by_timestamp(&query, rman, req,
-      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), cur_idx, current, attic));
+  collect_items_range_by_timestamp(&query, rman, req,
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current, attic);
 
   keep_matching_skeletons(nodes, current, attic, rman.get_desired_timestamp());
 }

@@ -172,6 +172,7 @@ public:
   virtual bool value_relevant(const std::string& value) const = 0;
   virtual void eval_id(Id_Type id, uint64 timestamp, bool value_relevant) = 0;
   virtual void filter_ids(std::vector< Id_Type >& new_ids) = 0;
+  virtual ~Tag_Entry_Listener() {}
 };
 
 

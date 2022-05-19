@@ -48,16 +48,16 @@ class Query_Constraint
     virtual bool collect(Resource_Manager& rman, Set& into) { return false; }
 
     virtual bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+        (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
       { return false; }
     virtual bool get_way_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+        (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
       { return get_ranges(rman, ranges); }
     virtual bool get_relation_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+        (Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
       { return get_ranges(rman, ranges); }
     virtual bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
+        (Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
       { return false; }
 
     virtual bool get_node_ids
@@ -74,12 +74,12 @@ class Query_Constraint
       { return false; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+			  const Ranges< Uint32_Index >& ranges,
 			  const std::vector< Node::Id_Type >& ids,
                           bool invert_ids)
       { return false; }
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-			  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+			  const Ranges< Uint31_Index >& ranges,
 			  int type,
                           const std::vector< Uint32_Index >& ids,
                           bool invert_ids)

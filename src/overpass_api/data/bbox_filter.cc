@@ -19,18 +19,18 @@
 #include "bbox_filter.h"
 
 
-const std::set< std::pair< Uint32_Index, Uint32_Index > >& Bbox_Filter::get_ranges_32() const
+const Ranges< Uint32_Index >& Bbox_Filter::get_ranges_32() const
 {
   if (ranges_32.empty() && bbox.valid())
-    ::get_ranges_32(bbox.south, bbox.north, bbox.west, bbox.east).swap(ranges_32);
+    ranges_32 = ::get_ranges_32(bbox.south, bbox.north, bbox.west, bbox.east);
   return ranges_32;
 }
 
 
-const std::set< std::pair< Uint31_Index, Uint31_Index > >& Bbox_Filter::get_ranges_31() const
+const Ranges< Uint31_Index >& Bbox_Filter::get_ranges_31() const
 {
   if (ranges_31.empty())
-    calc_parents(get_ranges_32()).swap(ranges_31);
+    ranges_31 = calc_parents(get_ranges_32());
   return ranges_31;
 }
 
@@ -88,7 +88,7 @@ void Bbox_Filter::filter(Set& into) const
   filter_by_bbox(bbox, into.nodes);
   filter_by_bbox(bbox, into.attic_nodes);
 
-  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges = get_ranges_31();
+  const Ranges< Uint31_Index >& ranges = get_ranges_31();
 
   // pre-process ways to reduce the load of the expensive filter
   filter_ways_by_ranges(into.ways, ranges);
@@ -211,13 +211,13 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
 
     // Retrieve all nodes referred by the relations.
     std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-        = relation_node_members(&query, rman, into.relations, &get_ranges_32());
+        = relation_node_members(&query, rman, into.relations, get_ranges_32(), {}, true);
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
         = order_by_id(node_members, Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
-        = relation_way_members(&query, rman, into.relations, &get_ranges_31());
+        = relation_way_members(&query, rman, into.relations, get_ranges_31(), {}, true);
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
         = order_by_id(way_members_, Order_By_Way_Id());
 
@@ -234,13 +234,13 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
 
     // Retrieve all nodes referred by the relations.
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(&query, rman, into.attic_relations, &get_ranges_32());
+        = relation_node_members(&query, rman, into.attic_relations, get_ranges_32());
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
         = order_attic_by_id(node_members, Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, &get_ranges_31());
+        = relation_way_members(&query, rman, into.attic_relations, get_ranges_31());
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
         = order_attic_by_id(way_members_, Order_By_Way_Id());
 

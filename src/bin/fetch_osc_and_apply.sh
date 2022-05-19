@@ -19,7 +19,7 @@
 
 if [[ -z $1  ]]; then
 {
-  echo "Usage: $0 diff_url --meta=(yes|no|attic)"
+  echo "Usage: $0 diff_url"
   echo "Error : Set the URL to get diffs from (like https://planet.osm.org/replication/minute )"
   exit 0
 };
@@ -27,28 +27,19 @@ fi
 
 SOURCE_DIR="$1"
 
-EXEC_DIR="`dirname $0`/"
+EXEC_DIR="$(dirname $0)/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
 {
-  EXEC_DIR="`pwd`/$EXEC_DIR"
+  EXEC_DIR="$(pwd)/$EXEC_DIR"
 }; fi
 
-DB_DIR=`$EXEC_DIR/dispatcher --show-dir`
+DB_DIR=$($EXEC_DIR/dispatcher --show-dir)
+if [[ ! -s "$DB_DIR/replicate_id" ]]; then
+  echo "$DB_DIR/replicate_id does not exist"
+  exit 1
+fi
 
-META=
-
-if [[ $2 == "--meta=attic" ]]; then
-  META="--keep-attic"
-elif [[ $2 == "--meta=yes" || $3 == "--meta" ]]; then
-  META="--meta"
-elif [[ $2 == "--meta=no" ]]; then
-  META=
-else
-{
-  echo "You must specify --meta=yes or --meta=no"
-  exit 0
-}; fi
-
+START="auto"
 
 get_replicate_filename()
 {
@@ -57,8 +48,8 @@ get_replicate_filename()
   printf -v TDIGIT2 %03u $(($ARG % 1000))
   ARG=$(($ARG / 1000))
   printf -v TDIGIT1 %03u $ARG
-  REPLICATE_TRUNK_DIR=$TDIGIT1/$TDIGIT2/
   REPLICATE_FILENAME=$TDIGIT1/$TDIGIT2/$TDIGIT3
+  printf -v TARGET_FILE %09u $TARGET
 };
 
 
@@ -70,45 +61,35 @@ fetch_file()
 
 collect_minute_diffs()
 {
-  TEMP_SOURCE_DIR=$1
-  TEMP_TARGET_DIR=$2
+  MAX_AVAILABLE_REPLICATE_ID=$1
+  TEMP_SOURCE_DIR=$2
+  TEMP_TARGET_DIR=$3
   TARGET=$(($START + 1))
 
-  get_replicate_filename $TARGET
-  printf -v TARGET_FILE %09u $TARGET
-
-  fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.state.txt" "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"
-  fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.osc.gz" "$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz"
-
-  while [[ ( -s "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt" ) && ( $(($START + 1440)) -ge $(($TARGET)) ) && ( `du -m "$TEMP_TARGET_DIR" | awk '{ print $1; }'` -le 64 ) ]];
-  do
+  while [[ ( $TARGET -le $MAX_AVAILABLE_REPLICATE_ID ) && ( $(($START + 1440)) -ge $TARGET ) && ( $(du -m "$TEMP_TARGET_DIR" | awk '{ print $1; }') -le 64 ) ]]; do
   {
+    get_replicate_filename $TARGET
+    fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.state.txt" "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"
+    fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.osc.gz" "$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz"
+
     gunzip <"$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz" >"$TEMP_TARGET_DIR/$TARGET_FILE.osc"
 
     TARGET=$(($TARGET + 1))
-    get_replicate_filename $TARGET
-    printf -v TARGET_FILE %09u $TARGET
-
-    fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.state.txt" "$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"
-    fetch_file "$SOURCE_DIR/$REPLICATE_FILENAME.osc.gz" "$TEMP_SOURCE_DIR/$TARGET_FILE.osc.gz"
-  };
-  done
+  }; done
   TARGET=$(($TARGET - 1))
 };
 
 
 apply_minute_diffs()
 {
-  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION --flush-size=0
   EXITCODE=$?
-  while [[ $EXITCODE -ne 0 ]];
-  do
+  while [[ $EXITCODE -ne 0 ]]; do
   {
     sleep 60
-    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION --flush-size=0
     EXITCODE=$?
-  };
-  done
+  }; done
   DIFF_COUNT=$(($DIFF_COUNT + 1))
 };
 
@@ -116,8 +97,7 @@ apply_minute_diffs()
 update_state()
 {
   get_replicate_filename $TARGET
-  printf -v TARGET_FILE %09u $TARGET
-  TIMESTAMP_LINE=`grep "^timestamp" <"$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt"`
+  TIMESTAMP_LINE=$(grep "^timestamp" <$TEMP_SOURCE_DIR/$TARGET_FILE.state.txt)
   DATA_VERSION=${TIMESTAMP_LINE:10}
 };
 
@@ -130,25 +110,34 @@ DIFF_COUNT=0
 # update_state
 
 pushd "$EXEC_DIR"
-START=`cat $DB_DIR/replicate_id`
+
+if [[ $START == "auto" ]]; then
+{
+  START=$(($(cat $DB_DIR/replicate_id) + 0))
+}; fi
 
 while [[ true ]]; do
 {
-  echo "`date -u '+%F %T'`: updating from $START" >>$DB_DIR/fetch_osc_and_apply.log
+  echo "$(date -u '+%F %T'): updating from $START" >>$DB_DIR/fetch_osc_and_apply.log
 
-  TEMP_SOURCE_DIR=`mktemp -d /tmp/osm-3s_update_XXXXXX`
-  TEMP_TARGET_DIR=`mktemp -d /tmp/osm-3s_update_XXXXXX`
-  collect_minute_diffs $TEMP_SOURCE_DIR $TEMP_TARGET_DIR
+  TEMP_SOURCE_DIR=$(mktemp -d /tmp/osm-3s_update_XXXXXX)
+  TEMP_TARGET_DIR=$(mktemp -d /tmp/osm-3s_update_XXXXXX)
+
+  fetch_file "$SOURCE_DIR/state.txt" "$TEMP_SOURCE_DIR/state.txt"
+  MAX_SEQ_NR=$(cat "$TEMP_SOURCE_DIR/state.txt" | grep -aE '^sequenceNumber')
+  MAX_AVAILABLE_REPLICATE_ID=$((${MAX_SEQ_NR:15} + 0))
+ 
+  collect_minute_diffs $MAX_AVAILABLE_REPLICATE_ID $TEMP_SOURCE_DIR $TEMP_TARGET_DIR
 
   if [[ $TARGET -gt $START ]]; then
   {
-    echo "`date -u '+%F %T'`: updating to $TARGET" >>$DB_DIR/fetch_osc_and_apply.log
+    echo "$(date -u '+%F %T'): updating to $TARGET" >>$DB_DIR/fetch_osc_and_apply.log
 
     update_state
     apply_minute_diffs $TEMP_TARGET_DIR
     echo "$TARGET" >$DB_DIR/replicate_id
 
-    echo "`date -u '+%F %T'`: update complete" $TARGET >>$DB_DIR/fetch_osc_and_apply.log
+    echo "$(date -u '+%F %T'): update complete $TARGET" >>$DB_DIR/fetch_osc_and_apply.log
   };
   else
   {
@@ -162,4 +151,3 @@ while [[ true ]]; do
 
   START=$TARGET
 }; done
-

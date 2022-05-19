@@ -31,14 +31,14 @@
 #include "tags_updater.h"
 
 
-Relation_Updater::Relation_Updater(Transaction& transaction_, meta_modes meta_)
-  : update_counter(0), transaction(&transaction_),
+Relation_Updater::Relation_Updater(Transaction& transaction_, Database_Meta_State::Mode meta_)
+  : transaction(&transaction_),
     external_transaction(true),
     max_role_id(0), max_written_role_id(0), meta(meta_), keys(*osm_base_settings().RELATION_KEYS)
 {}
 
-Relation_Updater::Relation_Updater(std::string db_dir_, meta_modes meta_)
-  : update_counter(0), transaction(0),
+Relation_Updater::Relation_Updater(std::string db_dir_, Database_Meta_State::Mode meta_)
+  : transaction(0),
     external_transaction(false),
     max_role_id(0), max_written_role_id(0), db_dir(db_dir_), meta(meta_),
     keys(*osm_base_settings().RELATION_KEYS)
@@ -80,23 +80,21 @@ uint32 Relation_Updater::get_role_id(const std::string& s)
 
 
 std::map< Uint31_Index, std::set< Relation_Skeleton > > get_implicitly_moved_skeletons
-    (const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_nodes,
+    (const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_nodes,
      const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_ways,
      const std::map< Uint31_Index, std::set< Relation_Skeleton > >& already_known_skeletons,
      Transaction& transaction, const File_Properties& file_properties)
 {
   std::set< Uint31_Index > member_req;
-  for (std::map< Uint31_Index, std::set< Node_Skeleton > >::const_iterator
-      it = attic_nodes.begin(); it != attic_nodes.end(); ++it)
-    member_req.insert(it->first);
+  for (auto it = attic_nodes.begin(); it != attic_nodes.end(); ++it)
+    member_req.insert(Uint31_Index(it->first.val()));
   for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator
       it = attic_ways.begin(); it != attic_ways.end(); ++it)
     member_req.insert(it->first);
   std::set< Uint31_Index > req = calc_parents(member_req);
 
   std::vector< Node_Skeleton::Id_Type > node_ids;
-  for (std::map< Uint31_Index, std::set< Node_Skeleton > >::const_iterator
-      it = attic_nodes.begin(); it != attic_nodes.end(); ++it)
+  for (auto it = attic_nodes.begin(); it != attic_nodes.end(); ++it)
   {
     for (std::set< Node_Skeleton >::const_iterator nit = it->second.begin(); nit != it->second.end(); ++nit)
       node_ids.push_back(nit->id);
@@ -322,11 +320,11 @@ void lookup_missing_nodes
       = get_existing_map_positions(missing_ids, transaction, *osm_base_settings().NODES);
 
   // Collect all data of existing skeletons
-  std::map< Uint31_Index, std::set< Node_Skeleton > > existing_skeletons
-      = get_existing_skeletons< Node_Skeleton >
+  std::map< Uint32_Index, std::set< Node_Skeleton > > existing_skeletons
+      = get_existing_skeletons< Uint32_Index, Node_Skeleton >
       (existing_map_positions, transaction, *osm_base_settings().NODES);
 
-  for (std::map< Uint31_Index, std::set< Node_Skeleton > >::const_iterator it = existing_skeletons.begin();
+  for (std::map< Uint32_Index, std::set< Node_Skeleton > >::const_iterator it = existing_skeletons.begin();
        it != existing_skeletons.end(); ++it)
   {
     for (std::set< Node_Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
@@ -400,7 +398,7 @@ void lookup_missing_ways
 
   // Collect all data of existing skeletons
   std::map< Uint31_Index, std::set< Way_Skeleton > > existing_skeletons
-      = get_existing_skeletons< Way_Skeleton >
+      = get_existing_skeletons< Uint31_Index, Way_Skeleton >
       (existing_map_positions, transaction, *osm_base_settings().WAYS);
 
   for (std::map< Uint31_Index, std::set< Way_Skeleton > >::const_iterator it = existing_skeletons.begin();
@@ -1057,8 +1055,8 @@ std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > co
 
 
 void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint31_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Uint32_Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& new_way_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_way_skeletons,
@@ -1072,7 +1070,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   // Prepare collecting all data of existing skeletons
   std::stable_sort(new_data.data.begin(), new_data.data.end());
-  if (meta == keep_attic)
+  if (meta == Database_Meta_State::keep_attic)
     remove_time_inconsistent_versions(new_data);
   else
     deduplicate_data(new_data);
@@ -1084,7 +1082,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   // Collect all data of existing and explicitly changed skeletons
   std::map< Uint31_Index, std::set< Relation_Skeleton > > existing_skeletons
-      = get_existing_skeletons< Relation_Skeleton >
+      = get_existing_skeletons< Uint31_Index, Relation_Skeleton >
       (existing_map_positions, *transaction, *osm_base_settings().RELATIONS);
 
   // Collect also all data of existing and implicitly changed skeletons
@@ -1201,7 +1199,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
-  if (meta == keep_attic)
+  if (meta == Database_Meta_State::keep_attic)
   {
     // TODO: For compatibility with the update_logger, this doesn't happen during the tag processing itself.
     //cancel_out_equal_tags(attic_local_tags, new_local_tags);
@@ -1300,7 +1298,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     flush_roles();
   }
 
-  if (meta != only_data)
+  if (meta != Database_Meta_State::only_data)
   {
     copy_idxs_by_id(new_meta, idxs_by_id);
     process_user_data(*transaction, user_by_id, idxs_by_id);

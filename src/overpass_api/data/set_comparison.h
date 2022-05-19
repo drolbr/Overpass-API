@@ -53,7 +53,7 @@ struct Extra_Data_For_Diff
 };
 
 
-class Evaluator;
+struct Evaluator;
 
 
 class Set_Comparison

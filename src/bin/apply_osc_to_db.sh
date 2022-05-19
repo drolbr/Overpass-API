@@ -52,7 +52,6 @@ else
   exit 0
 }; fi
 
-PRODUCE_DIFF=
 
 get_replicate_filename()
 {

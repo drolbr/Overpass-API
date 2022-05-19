@@ -34,19 +34,17 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
   {
     File_Blocks_Index< TIndex >& src_idx =
         *dynamic_cast< File_Blocks_Index< TIndex >* >(transaction.data_index(&src_file_prop));
-    File_Blocks< TIndex, typename std::set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
-	src_file(&src_idx);
+    File_Blocks< TIndex, typename std::set< TIndex >::const_iterator > src_file(&src_idx);
     uint32 block_size = src_idx.get_block_size() * src_idx.get_compression_factor();
 
     if (block_size == dest_file_prop.get_block_size() * dest_file_prop.get_compression_factor())
     {
       File_Blocks_Index< TIndex > dest_idx(dest_file_prop, true, false, dest_db_dir, "",
           clone_settings.compression_method);
-      File_Blocks< TIndex, typename std::set< TIndex >::const_iterator, Default_Range_Iterator< TIndex > >
+      File_Blocks< TIndex, typename std::set< TIndex >::const_iterator >
           dest_file(&dest_idx);
 
-      typename File_Blocks< TIndex, typename std::set< TIndex >::const_iterator,
-          Default_Range_Iterator< TIndex > >::Flat_Iterator
+      typename File_Blocks< TIndex, typename std::set< TIndex >::const_iterator >::Flat_Iterator
           src_it = src_file.flat_begin();
 
       uint32 excess_bytes = 0;

@@ -449,6 +449,15 @@ std::vector< std::string > parse_setup(Tokenizer_Wrapper& token,
       clear_until_after(token, error_output, "]");
     }
   }
+  else if (result.front() == "maxsize" || result.front() == "timeout")
+  {
+    while (token.good() && *token != "]")
+    {
+      result.back() += (' ' + *token);
+      ++token;
+    }
+    clear_until_after(token, error_output, "]");
+  }
   else
     clear_until_after(token, error_output, "]");
   return result;

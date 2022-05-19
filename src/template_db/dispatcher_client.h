@@ -46,7 +46,6 @@ class Dispatcher_Client
   public:
     /** Opens a shared memory for dispatcher communication.*/
     Dispatcher_Client(const std::string& dispatcher_share_name);
-    ~Dispatcher_Client();
 
     /** Write operations: -------------------------------------------------- */
 
@@ -102,8 +101,6 @@ class Dispatcher_Client
 
   private:
     std::string dispatcher_share_name;
-    int dispatcher_shm_fd;
-    volatile uint8* dispatcher_shm_ptr;
     std::string db_dir, shadow_name;
     Unix_Socket socket;
 

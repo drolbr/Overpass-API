@@ -151,11 +151,11 @@ class Pivot_Constraint : public Query_Constraint
     Query_Filter_Strategy delivers_data(Resource_Manager& rman) { return prefer_ranges; }
 
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-                          const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+                          const Ranges< Uint32_Index >& ranges,
                           const std::vector< Node::Id_Type >& ids,
                           bool invert_ids);
     virtual bool get_data(const Statement& query, Resource_Manager& rman, Set& into,
-                          const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+                          const Ranges< Uint31_Index >& ranges,
                           int type,
                           const std::vector< Uint32_Index >& ids,
                           bool invert_ids);
@@ -169,7 +169,7 @@ class Pivot_Constraint : public Query_Constraint
 
 bool Pivot_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges,
+     const Ranges< Uint32_Index >& ranges,
      const std::vector< Node_Skeleton::Id_Type >& ids,
      bool invert_ids)
 {
@@ -178,15 +178,15 @@ bool Pivot_Constraint::get_data
   if (input_set)
     pivot_ids = get_node_pivot_ids(input_set->areas);
   std::vector< Node::Id_Type > intersect_ids(pivot_ids.size());
-  if (ids.empty())
+  if (invert_ids && ids.empty())
     pivot_ids.swap(intersect_ids);
   else if (!invert_ids)
-    intersect_ids.erase(set_intersection
+    intersect_ids.erase(std::set_intersection
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
   else
-    intersect_ids.erase(set_difference
+    intersect_ids.erase(std::set_difference
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
@@ -198,7 +198,7 @@ bool Pivot_Constraint::get_data
 
 bool Pivot_Constraint::get_data
     (const Statement& query, Resource_Manager& rman, Set& into,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
+     const Ranges< Uint31_Index >& ranges,
      int type,
      const std::vector< Uint32_Index >& ids,
      bool invert_ids)
@@ -211,15 +211,15 @@ bool Pivot_Constraint::get_data
     if (input_set)
       pivot_ids = get_way_pivot_ids(input_set->areas);
     std::vector< Way::Id_Type > intersect_ids(pivot_ids.size());
-    if (ids.empty())
+    if (invert_ids && ids.empty())
       pivot_ids.swap(intersect_ids);
     else if (!invert_ids)
-      intersect_ids.erase(set_intersection
+      intersect_ids.erase(std::set_intersection
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
     else
-      intersect_ids.erase(set_difference
+      intersect_ids.erase(std::set_difference
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
@@ -236,15 +236,15 @@ bool Pivot_Constraint::get_data
     if (input_set)
       pivot_ids = get_relation_pivot_ids(input_set->areas);
     std::vector< Relation::Id_Type > intersect_ids(pivot_ids.size());
-    if (ids.empty())
+    if (invert_ids && ids.empty())
       pivot_ids.swap(intersect_ids);
     else if (!invert_ids)
-      intersect_ids.erase(set_intersection
+      intersect_ids.erase(std::set_intersection
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());
     else
-      intersect_ids.erase(set_difference
+      intersect_ids.erase(std::set_difference
           (pivot_ids.begin(), pivot_ids.end(),
            ids.begin(), ids.end(),
           intersect_ids.begin()), intersect_ids.end());

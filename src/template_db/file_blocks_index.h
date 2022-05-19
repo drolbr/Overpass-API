@@ -51,6 +51,40 @@ struct File_Block_Index_Entry
 };
 
 
+struct File_Blocks_Index_File
+{
+public:
+  File_Blocks_Index_File(
+      const File_Properties& file_prop, const std::string& db_dir,
+      bool use_shadow, const std::string& file_name_extension);
+  
+  std::string file_name;
+  Void_Pointer< uint8 > buf;
+  uint32 size;
+};
+
+
+struct File_Blocks_Index_Structure_Params
+{
+  File_Blocks_Index_Structure_Params(
+      const File_Properties& file_prop, const std::string& file_name_extension, int compression_method_,
+      const File_Blocks_Index_File& idx_file, uint64 file_size);
+
+  bool empty_;
+  uint64 block_size_;
+  uint32 compression_factor;
+  int compression_method;
+
+  uint32 block_count;
+
+  static const int NO_COMPRESSION = 0;
+  static const int ZLIB_COMPRESSION = 1;
+  static const int LZ4_COMPRESSION = 2;
+
+  static const int FILE_FORMAT_VERSION = 7560;
+};
+
+
 template< class TIndex >
 struct File_Blocks_Index : public File_Blocks_Index_Base
 {
@@ -64,14 +98,16 @@ public:
   const std::string& file_name_extension() const { return file_name_extension_; }
 
   std::string get_data_file_name() const { return data_file_name; }
-  uint64 get_block_size() const { return block_size_; }
-  uint32 get_compression_factor() const { return compression_factor; }
-  uint32 get_compression_method() const { return compression_method; }
-  virtual bool empty() const { return file_size == 0; }
+  uint64 get_block_size() const { return params.block_size_; }
+  uint32 get_compression_factor() const { return params.compression_factor; }
+  uint32 get_compression_method() const { return params.compression_method; }
+  uint32 get_block_count() const { return params.block_count; }
+  void increase_block_count(uint32 delta) { params.block_count += delta; }
+  virtual bool empty() const { return params.empty_; }
 
   std::list< File_Block_Index_Entry< TIndex > >& get_block_list()
   {
-    if (index_buf.ptr)
+    if (idx_file.buf.ptr)
       init_blocks();
     if (block_list.empty() && !block_array.empty())
       block_list.assign(block_array.begin(), block_array.end());
@@ -79,7 +115,7 @@ public:
   }
   const std::vector< File_Block_Index_Entry< TIndex > >& get_blocks()
   {
-    if (index_buf.ptr)
+    if (idx_file.buf.ptr)
       init_blocks();
     if (block_array.empty() && !block_list.empty())
       block_array.assign(block_list.begin(), block_list.end());
@@ -98,34 +134,20 @@ public:
     block_array.clear();
   }
 
-  static const int FILE_FORMAT_VERSION = 7560;
-  static const int NO_COMPRESSION = 0;
-  static const int ZLIB_COMPRESSION = 1;
-  static const int LZ4_COMPRESSION = 2;
-
 private:
-  std::string index_file_name;
+  File_Blocks_Index_File idx_file;
   std::string empty_index_file_name;
   std::string data_file_name;
+  File_Blocks_Index_Structure_Params params;
   std::string file_name_extension_;
-  Void_Pointer< uint8 > index_buf;
-  uint64 file_size;
-  uint32 index_size;
+
   std::vector< File_Block_Index_Entry< TIndex > > block_array;
   std::list< File_Block_Index_Entry< TIndex > > block_list;
   std::vector< std::pair< uint32, uint32 > > void_blocks;
   bool void_blocks_initialized;
 
-  uint64 block_size_;
-  uint32 compression_factor;
-  int compression_method;
-
-  void init_structure_params();
   void init_blocks();
   void init_void_blocks();
-
-public:
-  uint32 block_count;
 };
 
 
@@ -135,139 +157,159 @@ std::vector< bool > get_data_index_footprint(const File_Properties& file_prop,
 
 /** Implementation File_Blocks_Index: ---------------------------------------*/
 
+inline uint64 file_size_of(const std::string& data_file_name)
+{
+  try
+  {
+    Raw_File val_file(data_file_name, O_RDONLY, S_666, "File_Blocks_Index::File_Blocks_Index::1");
+    return val_file.size("File_Blocks_Index::File_Blocks_Index::2");
+  }
+  catch (File_Error e)
+  {
+    if (e.error_number != ENOENT)
+      throw;
+  }
+  return 0;
+}
+
+
+inline File_Blocks_Index_File::File_Blocks_Index_File(
+    const File_Properties& file_prop, const std::string& db_dir,
+    bool use_shadow, const std::string& file_name_extension)
+    : file_name(db_dir + file_prop.get_file_name_trunk()
+        + file_name_extension + file_prop.get_data_suffix()
+        + file_prop.get_index_suffix()
+        + (use_shadow ? file_prop.get_shadow_suffix() : "")),
+      buf(0), size(0)
+{
+  try
+  {
+    Raw_File source_file(file_name, O_RDONLY, S_666, "File_Blocks_Index::File_Blocks_Index::3");
+
+    // read index file
+    size = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
+    buf.resize(size);
+    source_file.read(buf.ptr, size, "File_Blocks_Index::File_Blocks_Index::5");
+  }
+  catch (File_Error e)
+  {
+    if (e.error_number != ENOENT)
+      throw;
+    buf.resize(0);
+  }
+}
+
+
+inline File_Blocks_Index_Structure_Params::File_Blocks_Index_Structure_Params(
+    const File_Properties& file_prop, const std::string& file_name_extension, int compression_method_,
+    const File_Blocks_Index_File& idx_file, uint64 file_size)
+    : empty_(false),
+     block_size_(file_prop.get_block_size()), // can be overwritten by index file
+     compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
+     compression_method(compression_method_ == File_Blocks_Index_Base::USE_DEFAULT ?
+        file_prop.get_compression_method() : compression_method_), // can be overwritten by index file
+     block_count(0)
+{
+  if (idx_file.buf.ptr)
+  {
+    if (file_name_extension != ".legacy")
+    {
+      if (*(int32*)idx_file.buf.ptr != FILE_FORMAT_VERSION && *(int32*)idx_file.buf.ptr != 7512)
+	throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Unsupported index file format version");
+      block_size_ = 1ull<<*(uint8*)(idx_file.buf.ptr + 4);
+      if (!block_size_)
+        throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Illegal block size");
+      compression_factor = 1u<<*(uint8*)(idx_file.buf.ptr + 5);
+      if (!compression_factor || compression_factor > block_size_)
+        throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Illegal compression factor");
+      compression_method = *(uint16*)(idx_file.buf.ptr + 6);
+    }
+    if (file_size % block_size_)
+      throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Data file size does not match block size");
+    block_count = file_size / block_size_;
+  }
+  empty_ = (file_size == 0);
+}
+
+
 template< class TIndex >
 File_Blocks_Index< TIndex >::File_Blocks_Index
     (const File_Properties& file_prop, bool writeable, bool use_shadow,
      const std::string& db_dir, const std::string& file_name_extension,
      int compression_method_) :
-     index_file_name(db_dir + file_prop.get_file_name_trunk()
-         + file_name_extension + file_prop.get_data_suffix()
-         + file_prop.get_index_suffix()
-	 + (use_shadow ? file_prop.get_shadow_suffix() : "")),
+     idx_file(file_prop, db_dir, use_shadow, file_name_extension),
      empty_index_file_name(writeable ? db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()
          + file_prop.get_shadow_suffix() : ""),
      data_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()),
-     file_name_extension_(file_name_extension),
-     index_buf(0), file_size(0), index_size(0),
-     void_blocks_initialized(false),
-     block_size_(file_prop.get_block_size()), // can be overwritten by index file
-     compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
-     compression_method(compression_method_ == USE_DEFAULT ?
-        file_prop.get_compression_method() : compression_method_), // can be overwritten by index file
-     block_count(0)
+     params(file_prop, file_name_extension, compression_method_, idx_file, file_size_of(data_file_name)), 
+     file_name_extension_(file_name_extension), void_blocks_initialized(false)
 {
-  try
-  {
-    Raw_File val_file(data_file_name, O_RDONLY, S_666, "File_Blocks_Index::File_Blocks_Index::1");
-    file_size = val_file.size("File_Blocks_Index::File_Blocks_Index::2");
-  }
-  catch (File_Error e)
-  {
-    if (e.error_number != ENOENT)
-      throw e;
-  }
-
-  try
-  {
-    Raw_File source_file(index_file_name, O_RDONLY, S_666,
-			 "File_Blocks_Index::File_Blocks_Index::3");
-
-    // read index file
-    index_size = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
-    index_buf.resize(index_size);
-    source_file.read(index_buf.ptr, index_size, "File_Blocks_Index::File_Blocks_Index::5");
-  }
-  catch (File_Error e)
-  {
-    if (e.error_number != ENOENT)
-      throw e;
-    index_buf.resize(0);
-  }
-
-  init_structure_params();
-
   if (empty_index_file_name != "")
     init_void_blocks();
 }
 
 
-template< class TIndex >
-void File_Blocks_Index< TIndex >::init_structure_params()
-{
-  if (index_buf.ptr)
-  {
-    if (file_name_extension_ != ".legacy")
-    {
-      if (*(int32*)index_buf.ptr != FILE_FORMAT_VERSION && *(int32*)index_buf.ptr != 7512)
-	throw File_Error(0, index_file_name, "File_Blocks_Index: Unsupported index file format version");
-      block_size_ = 1ull<<*(uint8*)(index_buf.ptr + 4);
-      if (!block_size_)
-        throw File_Error(0, index_file_name, "File_Blocks_Index: Illegal block size");
-      compression_factor = 1u<<*(uint8*)(index_buf.ptr + 5);
-      if (!compression_factor || compression_factor > block_size_)
-        throw File_Error(0, index_file_name, "File_Blocks_Index: Illegal compression factor");
-      compression_method = *(uint16*)(index_buf.ptr + 6);
-    }
-    if (file_size % block_size_)
-      throw File_Error(0, index_file_name, "File_Blocks_Index: Data file size does not match block size");
-    block_count = file_size / block_size_;
-  }
-}
-
-
+#include <iostream>
 template< class TIndex >
 void File_Blocks_Index< TIndex >::init_blocks()
 {
-  if (index_buf.ptr)
+  if (idx_file.buf.ptr)
   {
+//     clock_t start = clock();
+    
     if (file_name_extension_ == ".legacy")
       // We support this way the old format although it has no version marker.
     {
       uint32 pos = 0;
-      while (pos < index_size)
+      while (pos < idx_file.size)
       {
-        TIndex index(index_buf.ptr+pos);
+        TIndex index(idx_file.buf.ptr+pos);
         File_Block_Index_Entry< TIndex >
             entry(index,
-	    *(uint32*)(index_buf.ptr + (pos + TIndex::size_of(index_buf.ptr+pos))),
+	    *(uint32*)(idx_file.buf.ptr + (pos + TIndex::size_of(idx_file.buf.ptr+pos))),
 	    1, //block size is always 1 in the legacy format
-	    *(uint32*)(index_buf.ptr + (pos + TIndex::size_of(index_buf.ptr+pos) + 4)));
+	    *(uint32*)(idx_file.buf.ptr + (pos + TIndex::size_of(idx_file.buf.ptr+pos) + 4)));
+        if (entry.pos >= params.block_count)
+	  throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
+        pos += TIndex::size_of(idx_file.buf.ptr+pos) + 8;
+
         if (writeable())
           block_list.push_back(entry);
         else
           block_array.push_back(entry);
-        if (entry.pos >= block_count)
-	  throw File_Error(0, index_file_name, "File_Blocks_Index: bad pos in index file");
-        pos += TIndex::size_of(index_buf.ptr+pos) + 8;
       }
     }
-    else if (index_size > 0)
+    else if (idx_file.size > 0)
     {
       uint32 pos = 8;
-      while (pos < index_size)
+      while (pos < idx_file.size)
       {
-        TIndex index(index_buf.ptr + pos + 12);
+        TIndex index(idx_file.buf.ptr + pos + 12);
         File_Block_Index_Entry< TIndex >
             entry(index,
-	    *(uint32*)(index_buf.ptr + pos),
-	    *(uint32*)(index_buf.ptr + pos + 4),
-	    *(uint32*)(index_buf.ptr + pos + 8));
+	    *(uint32*)(idx_file.buf.ptr + pos),
+	    *(uint32*)(idx_file.buf.ptr + pos + 4),
+	    *(uint32*)(idx_file.buf.ptr + pos + 8));
+        if (entry.pos >= params.block_count)
+          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
+        if (entry.pos + entry.size > params.block_count)
+          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad size in index file");
+        pos += 12;
+        pos += TIndex::size_of(idx_file.buf.ptr + pos);
+
         if (writeable())
           block_list.push_back(entry);
         else
           block_array.push_back(entry);
-        if (entry.pos >= block_count)
-          throw File_Error(0, index_file_name, "File_Blocks_Index: bad pos in index file");
-        if (entry.pos + entry.size > block_count)
-          throw File_Error(0, index_file_name, "File_Blocks_Index: bad size in index file");
-        pos += 12;
-        pos += TIndex::size_of(index_buf.ptr + pos);
       }
     }
 
-    index_buf.resize(0);
+    idx_file.buf.resize(0);
+    
+//     clock_t end = clock();
+//     std::cout<<std::dec<<params.block_size_<<'\t'<<(end - start)<<'\t'<<data_file_name<<'\n';
   }
 }
 
@@ -275,7 +317,7 @@ void File_Blocks_Index< TIndex >::init_blocks()
 template< class TIndex >
 void File_Blocks_Index< TIndex >::init_void_blocks()
 {
-  if (index_buf.ptr)
+  if (idx_file.buf.ptr)
     init_blocks();
 
   bool empty_index_file_used = false;
@@ -297,7 +339,7 @@ void File_Blocks_Index< TIndex >::init_void_blocks()
 
   if (!empty_index_file_used)
   {
-    std::vector< bool > is_referred(block_count, false);
+    std::vector< bool > is_referred(params.block_count, false);
     for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = block_list.begin();
         it != block_list.end(); ++it)
     {
@@ -313,7 +355,7 @@ void File_Blocks_Index< TIndex >::init_void_blocks()
 
     // determine void_blocks
     uint32 last_start = 0;
-    for (uint32 i = 0; i < block_count; ++i)
+    for (uint32 i = 0; i < params.block_count; ++i)
     {
       if (is_referred[i])
       {
@@ -322,8 +364,8 @@ void File_Blocks_Index< TIndex >::init_void_blocks()
         last_start = i+1;
       }
     }
-    if (last_start < block_count)
-      void_blocks.push_back(std::make_pair(block_count - last_start, last_start));
+    if (last_start < params.block_count)
+      void_blocks.push_back(std::make_pair(params.block_count - last_start, last_start));
   }
 
   std::stable_sort(void_blocks.begin(), void_blocks.end());
@@ -347,10 +389,10 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
 
   Void_Pointer< uint8 > index_buf(index_size);
 
-  *(uint32*)index_buf.ptr = FILE_FORMAT_VERSION;
-  *(uint8*)(index_buf.ptr + 4) = shift_log(block_size_);
-  *(uint8*)(index_buf.ptr + 5) = shift_log(compression_factor);
-  *(uint16*)(index_buf.ptr + 6) = compression_method;
+  *(uint32*)index_buf.ptr = File_Blocks_Index_Structure_Params::FILE_FORMAT_VERSION;
+  *(uint8*)(index_buf.ptr + 4) = shift_log(params.block_size_);
+  *(uint8*)(index_buf.ptr + 5) = shift_log(params.compression_factor);
+  *(uint16*)(index_buf.ptr + 6) = params.compression_method;
 
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
       it(block_list.begin()); it != block_list.end(); ++it)
@@ -365,7 +407,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
     pos += it->index.size_of();
   }
 
-  Raw_File dest_file(index_file_name, O_RDWR|O_CREAT, S_666,
+  Raw_File dest_file(idx_file.file_name, O_RDWR|O_CREAT, S_666,
 		     "File_Blocks_Index::~File_Blocks_Index::1");
 
   if (index_size < dest_file.size("File_Blocks_Index::~File_Blocks_Index::2"))
@@ -397,7 +439,7 @@ std::vector< bool > get_data_index_footprint
 {
   File_Blocks_Index< TIndex > index(file_prop, false, false, db_dir, "");
 
-  std::vector< bool > result(index.block_count, true);
+  std::vector< bool > result(index.get_block_count(), true);
   for (typename std::vector< std::pair< uint32, uint32 > >::const_iterator
       it = index.get_void_blocks().begin(); it != index.get_void_blocks().end(); ++it)
   {

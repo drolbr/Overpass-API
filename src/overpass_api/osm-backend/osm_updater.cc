@@ -430,16 +430,6 @@ void end(const char *el)
 }
 
 
-// Bitfield for change evaluation
-const int TAGS = 1;
-const int GEOMETRY = 2;
-const int MEMBERS = 4;
-const int WAY_MEMBERSHIP = 8;
-const int RELATION_MEMBERSHIP = 16;
-const int INDIRECT_MEMBERSHIP = 32;
-const int MEMBER_PROPERTIES = 64;
-
-
 void Osm_Updater::finish_updater()
 {
   if (state == IN_NODES)
@@ -499,8 +489,8 @@ void parse_relations_only(FILE* in)
 }
 
 Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& data_version_,
-			 meta_modes meta_, unsigned int flush_limit_)
-  : dispatcher_client(0), meta(meta_)
+			 Database_Meta_State meta_, unsigned int flush_limit_)
+  : dispatcher_client(0), meta(Database_Meta_State::only_data)
 {
   dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
   Logger logger(dispatcher_client->get_db_dir());
@@ -514,6 +504,8 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
         + "osm_base_version.shadow").c_str());
     version<<data_version_<<'\n';
   }
+
+  meta = meta_.value_or_autodetect(dispatcher_client->get_db_dir());
 
   node_updater_ = new Node_Updater(*transaction, meta);
   way_updater_ = new Way_Updater(*transaction, meta);
@@ -536,8 +528,8 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
 
 Osm_Updater::Osm_Updater
     (Osm_Backend_Callback* callback_, std::string db_dir, const std::string& data_version_,
-     meta_modes meta_, unsigned int flush_limit_)
-  : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(meta_)
+     Database_Meta_State meta_, unsigned int flush_limit_)
+  : transaction(0), dispatcher_client(0), db_dir_(db_dir), meta(Database_Meta_State::only_data)
 {
   if (file_present(db_dir + osm_base_settings().shared_name))
     throw Context_Error("File " + db_dir + osm_base_settings().shared_name + " present, "
@@ -547,6 +539,8 @@ Osm_Updater::Osm_Updater
     std::ofstream version((db_dir + "osm_base_version").c_str());
     version<<data_version_<<'\n';
   }
+  
+  meta = meta_.value_or_autodetect(db_dir);
 
   node_updater_ = new Node_Updater(db_dir, meta);
   way_updater_ = new Way_Updater(db_dir, meta);
@@ -568,7 +562,7 @@ Osm_Updater::Osm_Updater
 void Osm_Updater::flush()
 {
   delete node_updater_;
-  node_updater_ = new Node_Updater(db_dir_, meta ? keep_meta : only_data);
+  node_updater_ = new Node_Updater(db_dir_, meta);
   delete way_updater_;
   way_updater_ = new Way_Updater(db_dir_, meta);
   delete relation_updater_;

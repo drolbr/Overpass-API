@@ -24,89 +24,81 @@
 #include <vector>
 
 
-void cout_ranges(const std::set< std::pair< Uint31_Index, Uint31_Index > >& result)
+void cout_ranges(const Ranges< Uint31_Index >& result)
 {
   std::cout<<"0x__80: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if ((it->first.val() & 0x80000000) && (it->first.val() & 0xff) == 0x80)
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if ((it.lower_bound().val() & 0x80000000) && (it.lower_bound().val() & 0xff) == 0x80)
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<'\n';
 
   std::cout<<"0x__40: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x7f) == 0x40)
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if ((it.lower_bound().val() & 0x80000000) && (it.lower_bound().val() & 0x7f) == 0x40)
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<'\n';
 
   std::cout<<"0x__20: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x3f) == 0x20)
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if ((it.lower_bound().val() & 0x80000000) && (it.lower_bound().val() & 0x3f) == 0x20)
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<'\n';
 
   std::cout<<"0x__10: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x1f) == 0x10)
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if ((it.lower_bound().val() & 0x80000000) && (it.lower_bound().val() & 0x1f) == 0x10)
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<'\n';
 
   std::cout<<"0x___8: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if ((it->first.val() & 0x80000000) && (it->first.val() & 0xf) == 0x8)
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if ((it.lower_bound().val() & 0x80000000) && (it.lower_bound().val() & 0xf) == 0x8)
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<'\n';
 
   std::cout<<"0x___4: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x7) == 0x4)
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if ((it.lower_bound().val() & 0x80000000) && (it.lower_bound().val() & 0x7) == 0x4)
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<'\n';
 
   std::cout<<"0x___2: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x3) == 0x2)
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if ((it.lower_bound().val() & 0x80000000) && (it.lower_bound().val() & 0x3) == 0x2)
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<'\n';
 
   std::cout<<"0x___1: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if ((it->first.val() & 0x80000000) && (it->first.val() & 0x1))
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if ((it.lower_bound().val() & 0x80000000) && (it.lower_bound().val() & 0x1))
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<'\n';
 
   std::cout<<"plain: ";
-  for (std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator it = result.begin();
-      it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
-    if (!(it->first.val() & 0x80000000))
-      std::cout<<std::hex<<it->first.val()<<' '<<it->second.val()<<' ';
+    if (!(it.lower_bound().val() & 0x80000000))
+      std::cout<<std::hex<<it.lower_bound().val()<<' '<<it.upper_bound().val()<<' ';
   }
   std::cout<<"\n\n";
 }
+
 
 int main(int argc, char* args[])
 {
@@ -143,8 +135,8 @@ int main(int argc, char* args[])
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
       std::cout<<std::hex<<ll_upper(0, lon)<<' ';
     std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
-      std::cout<<std::hex<<ll_upper(0, lon)<<' ';
+    for (int32 lon = 0xffff8000; lon < (int32)0x8000; lon += 0x1000)
+      std::cout<<std::hex<<ll_upper(0, lon<<16)<<' ';
     std::cout<<'\n';
   }
 
@@ -176,8 +168,8 @@ int main(int argc, char* args[])
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
       std::cout<<std::hex<<upper_ilon(ll_upper(0, lon))<<' ';
     std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
-      std::cout<<std::hex<<upper_ilon(ll_upper(0, lon))<<' ';
+    for (int32 lon = 0xffff8000; lon < (int32)0x8000; lon += 0x1000)
+      std::cout<<std::hex<<upper_ilon(ll_upper(0, lon<<16))<<' ';
     std::cout<<'\n';
   }
 
@@ -207,8 +199,8 @@ int main(int argc, char* args[])
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
       std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
     std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
-      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(0, lon) ^ 0x40000000))<<' ';
+    for (int32 lon = 0xffff8000; lon < (int32)0x8000; lon += 0x1000)
+      std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, ll_upper(0, lon<<16) ^ 0x40000000))<<' ';
     std::cout<<'\n';
 
     std::cout<<"\nTest calc_index with 2 entries:\n";
@@ -263,10 +255,10 @@ int main(int argc, char* args[])
       std::cout<<std::hex<<calc_index(idxs)<<' ';
     }
     std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
+    for (int32 lon = 0xffff8000; lon < (int32)0x8000; lon += 0x1000)
     {
       std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
+      idxs.push_back(ll_upper(0, lon<<16) ^ 0x40000000);
       std::cout<<std::hex<<calc_index(idxs)<<' ';
     }
     std::cout<<'\n';
@@ -323,10 +315,10 @@ int main(int argc, char* args[])
       std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
+    for (int32 lon = 0xffff8000; lon < (int32)0x8000; lon += 0x1000)
     {
       std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
+      idxs.push_back(ll_upper(0, lon<<16) ^ 0x40000000);
       std::cout<<std::hex<<calc_index(std::vector< uint32 >(1, calc_index(idxs)))<<' ';
     }
     std::cout<<'\n';
@@ -390,10 +382,10 @@ int main(int argc, char* args[])
       std::cout<<std::hex<<calc_index(idxs)<<' ';
     }
     std::cout<<'\n';
-    for (int32 lon = 0x90000000; lon > (int32)0x80000000; lon += 0x10000000)
+    for (int32 lon = 0xffff8000; lon < (int32)0x8000; lon += 0x1000)
     {
       std::vector< uint32 > idxs(1, 0x40000000);
-      idxs.push_back(ll_upper(0, lon) ^ 0x40000000);
+      idxs.push_back(ll_upper(0, lon<<16) ^ 0x40000000);
       idxs[1] = calc_index(idxs);
       std::cout<<std::hex<<calc_index(idxs)<<' ';
     }
@@ -587,220 +579,172 @@ int main(int argc, char* args[])
 
     for (uint32 lat = 0x40000000; lat <= 0x40100000; lat += 0x10000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     for (uint32 lat = 0x40000000; lat <= 0x41000000; lat += 0x100000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     for (uint32 lat = 0x40000000; lat <= 0x50000000; lat += 0x1000000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     for (uint32 lat = 0x40000000; lat < 0x80000000; lat += 0x10000000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(lat, 0) ^ 0x40000000, (ll_upper(lat, 0) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
 
     for (int32 lon = 0; lon <= 0x100000; lon += 0x10000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair(ll_upper(0x40000000, lon) ^ 0x40000000,
-			     (ll_upper(0x40000000, lon) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40000000, lon) ^ 0x40000000, (ll_upper(0x40000000, lon) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     for (int32 lon = 0; lon <= 0x1000000; lon += 0x100000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair(ll_upper(0x40000000, lon) ^ 0x40000000,
-			     (ll_upper(0x40000000, lon) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40000000, lon) ^ 0x40000000,
+			     (ll_upper(0x40000000, lon) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     for (int32 lon = 0; lon <= 0x10000000; lon += 0x1000000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair(ll_upper(0x40000000, lon) ^ 0x40000000,
-			     (ll_upper(0x40000000, lon) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40000000, lon) ^ 0x40000000,
+			     (ll_upper(0x40000000, lon) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     for (uint32 lon = 0; (uint32)lon < (uint32)0x80000000; lon += 0x10000000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000,
-	   (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000,
+	   (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     for (uint32 lon = 0x80000000; (uint32)lon != (uint32)0; lon += 0x10000000)
     {
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000,
-	   (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000,
+	   (ll_upper(0x40000000ul, (int32)lon) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 1\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40010000, 0) ^ 0x40000000, (ll_upper(0x40010000, 0) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40010000, 0) ^ 0x40000000, (ll_upper(0x40010000, 0) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 2\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40020000, 0) ^ 0x40000000, (ll_upper(0x40030000, 0x10000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40020000, 0) ^ 0x40000000, (ll_upper(0x40030000, 0x10000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 3\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40040000, 0) ^ 0x40000000, (ll_upper(0x40070000, 0x30000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40040000, 0) ^ 0x40000000, (ll_upper(0x40070000, 0x30000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 4\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40080000, 0) ^ 0x40000000, (ll_upper(0x400f0000, 0x70000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40080000, 0) ^ 0x40000000, (ll_upper(0x400f0000, 0x70000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 5\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40100000, 0) ^ 0x40000000, (ll_upper(0x401f0000, 0xf0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40100000, 0) ^ 0x40000000, (ll_upper(0x401f0000, 0xf0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 6\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40200000, 0) ^ 0x40000000, (ll_upper(0x403f0000, 0x1f0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40200000, 0) ^ 0x40000000, (ll_upper(0x403f0000, 0x1f0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 7\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40400000, 0) ^ 0x40000000, (ll_upper(0x407f0000, 0x3f0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40400000, 0) ^ 0x40000000, (ll_upper(0x407f0000, 0x3f0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 8\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x40800000, 0) ^ 0x40000000, (ll_upper(0x40ff0000, 0x7f0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x40800000, 0) ^ 0x40000000, (ll_upper(0x40ff0000, 0x7f0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 9\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x41000000, 0) ^ 0x40000000, (ll_upper(0x41ff0000, 0xff0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x41000000, 0) ^ 0x40000000, (ll_upper(0x41ff0000, 0xff0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 10\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x42000000, 0) ^ 0x40000000, (ll_upper(0x43ff0000, 0x1ff0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x42000000, 0) ^ 0x40000000, (ll_upper(0x43ff0000, 0x1ff0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 11\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x44000000, 0) ^ 0x40000000, (ll_upper(0x47ff0000, 0x3ff0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x44000000, 0) ^ 0x40000000, (ll_upper(0x47ff0000, 0x3ff0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 12\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x48000000, 0) ^ 0x40000000, (ll_upper(0x4fff0000, 0x7ff0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x48000000, 0) ^ 0x40000000, (ll_upper(0x4fff0000, 0x7ff0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 13\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x50000000, 0) ^ 0x40000000, (ll_upper(0x5fff0000, 0xfff0000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x50000000, 0) ^ 0x40000000, (ll_upper(0x5fff0000, 0xfff0000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Two Size 1\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
-	   (ll_upper(0x40000000, 0) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
+	   (ll_upper(0x40000000, 0) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 1 + Size 2\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
-	   (ll_upper(0x40010000, 0x10000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
+	   (ll_upper(0x40010000, 0x10000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 1 + Size 2 + Size 1\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
-	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x3fff0000, 0x7fff0000) ^ 0x40000000,
+	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 3 + Size 2 + Size 1\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x3ffc0000, 0x7ffc0000) ^ 0x40000000,
-	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x3ffc0000, 0x7ffc0000) ^ 0x40000000,
+	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';
     {
       std::cout<<"Size 4 + Size 2 + Size 1\n";
-      std::set< std::pair< Uint32_Index, Uint32_Index > > input;
-      input.insert(std::make_pair
-          (ll_upper(0x3ff80000, 0x7ff80000) ^ 0x40000000,
-	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1));
+      Ranges< Uint32_Index > input(ll_upper(0x3ff80000, 0x7ff80000) ^ 0x40000000,
+	   (ll_upper(0x40000000, 0x20000) ^ 0x40000000) + 1);
       cout_ranges(calc_parents(input));
     }
     std::cout<<'\n';

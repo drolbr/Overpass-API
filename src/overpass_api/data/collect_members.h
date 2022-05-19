@@ -36,54 +36,54 @@ class Statement;
 std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
-     const std::vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint31_Index >& children_ranges,
+     const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::pair< std::map< Uint31_Index, std::vector< Relation_Skeleton > >,
     std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_parents,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* children_ranges = 0,
-     const std::vector< Relation::Id_Type >* children_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint31_Index >& children_ranges,
+     const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::map< Uint31_Index, std::vector< Way_Skeleton > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges = 0,
-     const std::vector< Way::Id_Type >* way_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint31_Index >& way_ranges,
+     const std::vector< Way::Id_Type >& way_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::pair< std::map< Uint31_Index, std::vector< Way_Skeleton > >,
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges = 0,
-     const std::vector< Way::Id_Type >* way_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint31_Index >& way_ranges,
+     const std::vector< Way::Id_Type >& way_ids, bool invert_ids, const uint32* role_id = 0);
 
 std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const std::set< std::pair< Uint31_Index, Uint31_Index > >* way_ranges = 0);
+     const Ranges< Uint31_Index >& way_ranges);
 
 std::map< Uint32_Index, std::vector< Node_Skeleton > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint32_Index >& node_ranges,
+     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false, const uint32* role_id = 0);
 
 std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false, const uint32* role_id = 0);
+     const Ranges< Uint32_Index >& node_ranges,
+     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false, const uint32* role_id = 0);
 
 std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0);
+     const Ranges< Uint32_Index >& node_ranges);
 
 std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > way_members
@@ -91,8 +91,8 @@ std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
      const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
      const std::vector< int >* pos,
-     const std::set< std::pair< Uint32_Index, Uint32_Index > >* node_ranges = 0,
-     const std::vector< Node::Id_Type >* node_ids = 0, bool invert_ids = false);
+     const Ranges< Uint32_Index >* node_ranges,
+     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false);
 
 template< typename Relation_Skeleton >
 std::vector< Node::Id_Type > relation_node_member_ids
@@ -148,22 +148,22 @@ std::vector< Quad_Coord > make_geometry(const Way_Skeleton& way, const std::vect
 
 
 void filter_ways_by_ranges(std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                           const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+                           const Ranges< Uint31_Index >& ranges);
 void filter_ways_by_ranges(std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& ways,
-                           const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+                           const Ranges< Uint31_Index >& ranges);
 
 
 template< typename Relation_Skeleton >
-void filter_relations_by_ranges(std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
-                                const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+void filter_relations_by_ranges(
+    std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations, const Ranges< Uint31_Index >& ranges)
 {
-  std::set< std::pair< Uint31_Index, Uint31_Index > >::const_iterator ranges_it = ranges.begin();
+  auto ranges_it = ranges.begin();
   typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::iterator it = relations.begin();
   for (; it != relations.end() && ranges_it != ranges.end(); )
   {
-    if (!(it->first < ranges_it->second))
+    if (!(it->first < ranges_it.upper_bound()))
       ++ranges_it;
-    else if (!(it->first < ranges_it->first))
+    else if (!(it->first < ranges_it.lower_bound()))
       ++it;
     else
     {
@@ -180,54 +180,29 @@ void filter_relations_by_ranges(std::map< Uint31_Index, std::vector< Relation_Sk
 
 
 template < typename Index, typename Object, typename Predicate >
-bool get_elements_by_id_from_db_generic(
+void get_elements_by_id_from_db_generic(
     std::map< Index, std::vector< Object > >& elements,
     std::map< Index, std::vector< Attic< Object > > >& attic_elements,
-    const Predicate& pred,
-    const std::set< std::pair< Index, Index > >& range_req, Index* min_idx,
+    const Predicate& pred, const Ranges< Index >& ranges,
     const Statement& query, Resource_Manager& rman)
 {
-  uint64 timestamp = rman.get_desired_timestamp();
-
-  if (range_req.empty())
-    return false;
-  Index cur_idx = min_idx ? *min_idx : range_req.begin()->first;
-  while (timestamp == NOW
-      ? collect_items_range(&query, rman, range_req, pred, cur_idx, elements)
-      : collect_items_range_by_timestamp(&query, rman, range_req, pred, cur_idx, elements, attic_elements))
-  {
-    if (min_idx)
-    {
-      *min_idx = cur_idx;
-      return true;
-    }
-  }
-  return false;
+  if (rman.get_desired_timestamp() == NOW)
+    collect_items_range(&query, rman, ranges, pred, elements);
+  else
+    collect_items_range_by_timestamp(&query, rman, ranges, pred, elements, attic_elements);
 }
 
 
-
 template < typename TIndex, typename TObject >
-bool get_elements_by_id_from_db
+void get_elements_by_id_from_db
     (std::map< TIndex, std::vector< TObject > >& elements,
      std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
      const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
-     const std::set< std::pair< TIndex, TIndex > >& range_req, TIndex* min_idx,
      const Statement& query, Resource_Manager& rman)
 {
   elements.clear();
   attic_elements.clear();
-  if (ids.empty())
-    return get_elements_by_id_from_db_generic(
-        elements, attic_elements, Trivial_Predicate< TObject >(), range_req, min_idx, query, rman);
-  else if (!invert_ids)
-    return get_elements_by_id_from_db_generic(
-        elements, attic_elements, Id_Predicate< TObject >(ids), range_req, min_idx, query, rman);
-  else if (!range_req.empty())
-    return get_elements_by_id_from_db_generic(
-        elements, attic_elements, Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-        range_req, min_idx, query, rman);
-  else
+  if (invert_ids)
   {
     if (rman.get_desired_timestamp() == NOW)
       collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
@@ -238,8 +213,84 @@ bool get_elements_by_id_from_db
           Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
           elements, attic_elements);
   }
+  // otherwise the result is always empty
+}
 
-  return false;
+
+template < typename TIndex, typename TObject >
+void get_elements_from_db
+    (std::map< TIndex, std::vector< TObject > >& elements,
+     std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
+     const Ranges< TIndex >& ranges,
+     const Statement& query, Resource_Manager& rman)
+{
+  elements.clear();
+  attic_elements.clear();
+  get_elements_by_id_from_db_generic(
+      elements, attic_elements, Trivial_Predicate< TObject >(), ranges, query, rman);
+}
+
+
+template < typename Index, typename Object >
+class Collect_Items
+{
+public:
+  Collect_Items(
+      const std::vector< typename Object::Id_Type >& ids_, bool invert_ids_,
+      const Ranges< Index >& ranges_,
+      const Statement& query_, Resource_Manager& rman_)
+      : ids(&ids_), invert_ids(invert_ids_), ranges(ranges_), query(&query_), rman(&rman_),
+      min_idx(ranges_.empty() ? Index() : ranges_.begin().lower_bound()) {}
+  
+  bool get_chunk(
+      std::map< Index, std::vector< Object > >& elements,
+      std::map< Index, std::vector< Attic< Object > > >& attic_elements);
+
+private:
+  const std::vector< typename Object::Id_Type >* ids;
+  bool invert_ids;
+  Ranges< Index > ranges;
+  const Statement* query;
+  Resource_Manager* rman;
+  Index min_idx;
+};
+
+
+template < typename Index, typename Object, typename Predicate >
+bool get_elements_by_id_from_db_generic(
+    std::map< Index, std::vector< Object > >& elements,
+    std::map< Index, std::vector< Attic< Object > > >& attic_elements,
+    const Predicate& pred,
+    const Ranges< Index >& ranges, Index& cur_idx,
+    const Statement& query, Resource_Manager& rman)
+{
+  if (ranges.empty())
+    return false;
+  return rman.get_desired_timestamp() == NOW
+      ? collect_items_range(&query, rman, ranges, pred, cur_idx, elements)
+      : collect_items_range_by_timestamp(&query, rman, ranges, pred, cur_idx, elements, attic_elements);
+}
+
+
+template < typename Index, typename Object >
+bool Collect_Items< Index, Object >::get_chunk(
+    std::map< Index, std::vector< Object > >& elements,
+    std::map< Index, std::vector< Attic< Object > > >& attic_elements)
+{
+  elements.clear();
+  attic_elements.clear();
+  if (invert_ids)
+  {
+    if (ids->empty())
+      return get_elements_by_id_from_db_generic(
+          elements, attic_elements, Trivial_Predicate< Object >(), ranges, min_idx, *query, *rman);
+    else 
+      return get_elements_by_id_from_db_generic(
+          elements, attic_elements, Not_Predicate< Object, Id_Predicate< Object > >(Id_Predicate< Object >(*ids)),
+          ranges, min_idx, *query, *rman);
+  }
+  return get_elements_by_id_from_db_generic(
+      elements, attic_elements, Id_Predicate< Object >(*ids), ranges, min_idx, *query, *rman);
 }
 
 
@@ -805,15 +856,18 @@ std::vector< Uint31_Index > collect_way_req
      const std::vector< uint32 >& parents,
      const std::vector< uint32 >& map_ids,
      const std::vector< Uint31_Index >& children_idxs);
+Ranges< Uint31_Index > collect_way_req(
+    const std::vector< Uint31_Index >& parents,
+    const std::vector< Uint31_Index >& children_idxs);
 
 
 template< typename Relation_Skeleton >
-std::vector< Uint31_Index > relation_way_member_indices
+Ranges< Uint31_Index > relation_way_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
 {
-  std::vector< uint32 > parents;
+  std::vector< Uint31_Index > parents;
   std::vector< Uint31_Index > children_idxs;
 
   for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
@@ -831,19 +885,19 @@ std::vector< Uint31_Index > relation_way_member_indices
       }
     }
     else
-      parents.push_back(it->first.val());
+      parents.push_back(it->first);
   }
   if (stmt)
     rman.health_check(*stmt);
   std::sort(children_idxs.begin(), children_idxs.end());
   children_idxs.erase(std::unique(children_idxs.begin(), children_idxs.end()), children_idxs.end());
 
-  return collect_way_req(stmt, rman, parents, std::vector< uint32 >(), children_idxs);
+  return collect_way_req(parents, children_idxs);
 }
 
 
 template< typename Relation_Skeleton >
-std::vector< Uint31_Index > relation_way_member_indices
+Ranges< Uint31_Index > relation_way_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
@@ -852,7 +906,7 @@ std::vector< Uint31_Index > relation_way_member_indices
      typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
          attic_rels_end)
 {
-  std::vector< uint32 > parents;
+  std::vector< Uint31_Index > parents;
   std::vector< Uint31_Index > children_idxs;
 
   for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
@@ -870,7 +924,7 @@ std::vector< Uint31_Index > relation_way_member_indices
       }
     }
     else
-      parents.push_back(it->first.val());
+      parents.push_back(it->first);
   }
   for (typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
       it = attic_rels_begin; it != attic_rels_end; ++it)
@@ -887,24 +941,24 @@ std::vector< Uint31_Index > relation_way_member_indices
       }
     }
     else
-      parents.push_back(it->first.val());
+      parents.push_back(it->first);
   }
   if (stmt)
     rman.health_check(*stmt);
   std::sort(children_idxs.begin(), children_idxs.end());
   children_idxs.erase(std::unique(children_idxs.begin(), children_idxs.end()), children_idxs.end());
 
-  return collect_way_req(stmt, rman, parents, std::vector< uint32 >(), children_idxs);
+  return collect_way_req(parents, children_idxs);
 }
 
 
-std::vector< Uint31_Index > relation_relation_member_indices
+Ranges< Uint31_Index > relation_relation_member_indices
     (const Statement& stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end);
 
 
-std::vector< Uint31_Index > relation_relation_member_indices
+Ranges< Uint31_Index > relation_relation_member_indices
     (const Statement& stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
@@ -912,13 +966,12 @@ std::vector< Uint31_Index > relation_relation_member_indices
      std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator attic_rels_end);
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > collect_node_req
-    (const Statement* stmt, Resource_Manager& rman,
-     const std::vector< Node::Id_Type >& map_ids, const std::vector< uint32 >& parents);
+Ranges< Uint32_Index > collect_node_req
+    (const Statement* stmt, Resource_Manager& rman, const std::vector< uint32 >& parents);
 
 
 template< typename Relation_Skeleton >
-std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
+Ranges< Uint32_Index > relation_node_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
@@ -945,12 +998,12 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 
 template< typename Relation_Skeleton >
-std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
+Ranges< Uint32_Index > relation_node_member_indices
     (const Statement* stmt, Resource_Manager& rman,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
      typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
@@ -998,17 +1051,17 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > relation_node_member_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, std::vector< Node::Id_Type >(), parents);
+  return collect_node_req(stmt, rman, parents);
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
+Ranges< Uint32_Index > way_nd_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end);
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
+Ranges< Uint32_Index > way_nd_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
@@ -1016,13 +1069,13 @@ std::set< std::pair< Uint32_Index, Uint32_Index > > way_nd_indices
      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end);
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+Ranges< Uint32_Index > way_covered_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end);
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > way_covered_indices
+Ranges< Uint32_Index > way_covered_indices
     (const Statement* stmt, Resource_Manager& rman,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
      std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
@@ -1091,38 +1144,24 @@ std::set< Uint31_Index > extract_parent_indices(const std::map< TIndex, std::vec
 }
 
 
-void collect_ways(const Statement& query, Resource_Manager& rman,
-		  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-		  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-		  const std::vector< Way::Id_Type >& ids, bool invert_ids,
-		  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways);
+void collect_ways(
+    const Statement& query, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+    const Ranges< Uint31_Index >& ranges,
+    const std::vector< Way::Id_Type >& ids, bool invert_ids,
+    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    uint32* role_id = 0);
 
 
-void collect_ways(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways);
-
-
-void collect_ways(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                  uint32 role_id);
-
-
-void collect_ways(const Statement& query, Resource_Manager& rman,
-                  const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-                  const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-                  const std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges,
-                  const std::vector< Way::Id_Type >& ids, bool invert_ids,
-                  std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-                  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
-                  uint32 role_id);
+void collect_ways(
+    const Statement& query, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+    const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
+    const Ranges< Uint31_Index >& ranges,
+    const std::vector< Way::Id_Type >& ids, bool invert_ids,
+    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+    uint32* role_id = 0);
 
 
 void collect_ways
@@ -1160,8 +1199,7 @@ void collect_ways
 
 
 void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into,
-    const std::set< std::pair< Uint32_Index, Uint32_Index > >* ranges_32 = 0,
-    const std::set< std::pair< Uint31_Index, Uint31_Index > >* ranges_31 = 0);
+    const Ranges< Uint32_Index >* ranges_32 = 0, const Ranges< Uint31_Index >* ranges_31 = 0);
 
 
 template< typename Index, typename Object >

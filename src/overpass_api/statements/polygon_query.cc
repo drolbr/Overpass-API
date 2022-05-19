@@ -40,10 +40,9 @@ class Polygon_Constraint : public Query_Constraint
     Query_Filter_Strategy delivers_data(Resource_Manager& rman);
 
     Polygon_Constraint(Polygon_Query_Statement& polygon_) : polygon(&polygon_) {}
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges);
-    bool get_ranges
-        (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges);
+    bool get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges);
+
     void filter(Resource_Manager& rman, Set& into);
     void filter(const Statement& query, Resource_Manager& rman, Set& into);
     virtual ~Polygon_Constraint() {}
@@ -59,18 +58,16 @@ Query_Filter_Strategy Polygon_Constraint::delivers_data(Resource_Manager& rman)
 }
 
 
-bool Polygon_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint32_Index, Uint32_Index > >& ranges)
+bool Polygon_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
 {
   ranges = polygon->calc_ranges();
   return true;
 }
 
 
-bool Polygon_Constraint::get_ranges
-    (Resource_Manager& rman, std::set< std::pair< Uint31_Index, Uint31_Index > >& ranges)
+bool Polygon_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges = polygon->calc_ranges();
+  Ranges< Uint32_Index > node_ranges = polygon->calc_ranges();
   ranges = calc_parents(node_ranges);
   return true;
 }
@@ -82,7 +79,7 @@ void Polygon_Constraint::filter(Resource_Manager& rman, Set& into)
   if (!into.attic_nodes.empty())
     polygon->collect_nodes(into.attic_nodes, true);
 
-  std::set< std::pair< Uint31_Index, Uint31_Index > > ranges;
+  Ranges< Uint31_Index > ranges;
   get_ranges(rman, ranges);
 
   // pre-process ways to reduce the load of the expensive filter
@@ -107,19 +104,19 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   //Process relations
 
   // Retrieve all nodes referred by the relations.
-  std::set< std::pair< Uint32_Index, Uint32_Index > > node_ranges;
+  Ranges< Uint32_Index > node_ranges;
   get_ranges(rman, node_ranges);
   std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-      = relation_node_members(&query, rman, into.relations, &node_ranges);
+      = relation_node_members(&query, rman, into.relations, node_ranges, {}, true);
 
   // filter for those nodes that are in one of the areas
   polygon->collect_nodes(node_members, false);
 
   // Retrieve all ways referred by the relations.
-  std::set< std::pair< Uint31_Index, Uint31_Index > > way_ranges;
+  Ranges< Uint31_Index > way_ranges;
   get_ranges(rman, way_ranges);
   std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
-      = relation_way_members(&query, rman, into.relations, &way_ranges);
+      = relation_way_members(&query, rman, into.relations, way_ranges, {}, true);
 
   polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, query, rman), false, query, rman);
 
@@ -137,14 +134,14 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   {
     // Retrieve all nodes referred by the relations.
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(&query, rman, into.attic_relations, &node_ranges);
+        = relation_node_members(&query, rman, into.attic_relations, node_ranges);
 
     // filter for those nodes that are in one of the areas
     polygon->collect_nodes(node_members, false);
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, &way_ranges);
+        = relation_way_members(&query, rman, into.attic_relations, way_ranges);
 
     polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, query, rman),
 			  false, query, rman);
@@ -332,11 +329,11 @@ Polygon_Query_Statement::~Polygon_Query_Statement()
 }
 
 
-std::set< std::pair< Uint32_Index, Uint32_Index > > Polygon_Query_Statement::calc_ranges()
+Ranges< Uint32_Index > Polygon_Query_Statement::calc_ranges()
 {
-  std::set< std::pair< Uint32_Index, Uint32_Index > > result;
+  Ranges< Uint32_Index > result;
   for (std::vector< Aligned_Segment >::const_iterator it = segments.begin(); it != segments.end(); ++it)
-    result.insert(std::make_pair(it->ll_upper_, it->ll_upper_ + 0x100));
+    result.push_back(it->ll_upper_, it->ll_upper_ + 0x100);
   return result;
 }
 
@@ -548,11 +545,10 @@ void Polygon_Query_Statement::execute(Resource_Manager& rman)
   Set into;
 
   Polygon_Constraint constraint(*this);
-  std::set< std::pair< Uint32_Index, Uint32_Index > > ranges;
+  Ranges< Uint32_Index > ranges;
   constraint.get_ranges(rman, ranges);
-  get_elements_by_id_from_db< Uint32_Index, Node_Skeleton >
-      (into.nodes, into.attic_nodes,
-       std::vector< Node::Id_Type >(), false, ranges, 0, *this, rman);
+  get_elements_from_db< Uint32_Index, Node_Skeleton >(
+      into.nodes, into.attic_nodes, ranges, *this, rman);
   constraint.filter(rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
