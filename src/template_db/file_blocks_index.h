@@ -383,7 +383,7 @@ File_Blocks_Index< TIndex >::~File_Blocks_Index()
   {
     Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666,
 		       "File_Blocks_Index::~File_Blocks_Index::5");
-    void_file.write(void_index_buf.ptr, void_blocks.size()*sizeof(uint32),
+    void_file.write(void_index_buf.ptr, void_blocks.size() * 8,
 		    "File_Blocks_Index::~File_Blocks_Index::6");
   }
   catch (File_Error e) {}
