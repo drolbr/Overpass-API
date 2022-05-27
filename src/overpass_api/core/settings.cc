@@ -208,11 +208,11 @@ Meta_Settings::Meta_Settings()
       ("user_data", 512*1024, 0)),
   USER_INDICES(new OSM_File_Properties< Uint32_Index >
       ("user_indices", 128*1024, 0)),
-  NODES_META(new OSM_File_Properties< Uint31_Index >
+  NODES_META(new OSM_File_Properties< Node::Index >
       ("nodes_meta", 128*1024, 0)),
-  WAYS_META(new OSM_File_Properties< Uint31_Index >
+  WAYS_META(new OSM_File_Properties< Way::Index >
       ("ways_meta", 128*1024, 0)),
-  RELATIONS_META(new OSM_File_Properties< Uint31_Index >
+  RELATIONS_META(new OSM_File_Properties< Relation::Index >
       ("relations_meta", 128*1024, 0))
 {
   bin_idxs_ = { USER_DATA, USER_INDICES, NODES_META, WAYS_META, RELATIONS_META };
@@ -243,7 +243,7 @@ Attic_Settings::Attic_Settings()
       ("node_tags_local_attic", 128*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
       ("node_tags_global_attic", 512*1024, 0)),
-  NODES_META(new OSM_File_Properties< Uint31_Index >
+  NODES_META(new OSM_File_Properties< Node::Index >
       ("nodes_meta_attic", 128*1024, 0)),
   NODE_CHANGELOG(new OSM_File_Properties< Timestamp >
       ("node_changelog", 128*1024, 0)),

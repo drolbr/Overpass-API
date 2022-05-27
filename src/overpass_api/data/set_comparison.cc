@@ -483,7 +483,7 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
         = find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(
             rman, rman.get_desired_timestamp(), req, searched_ids);
     std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > > found_meta
-        = find_meta_elements< Uint32_Index, Node_Skeleton >(rman, rman.get_diff_to_timestamp(), req, searched_ids);
+        = find_meta_elements< Node::Index, Node_Skeleton >(rman, rman.get_diff_to_timestamp(), req, searched_ids);
 
     for (std::vector< Node_With_Context >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
@@ -511,7 +511,7 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
     get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, rman, true).swap(req);
     find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
-    find_meta_elements< Uint32_Index, Node_Skeleton >(
+    find_meta_elements< Node::Index, Node_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
     for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::iterator
@@ -613,7 +613,7 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
         = find_still_existing_skeletons< Uint31_Index, Way_Skeleton >(
             rman, rman.get_desired_timestamp(), req, searched_ids);
     std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > > found_meta
-        = find_meta_elements< Uint31_Index, Way_Skeleton >(rman, rman.get_diff_to_timestamp(), req, searched_ids);
+        = find_meta_elements< Way::Index, Way_Skeleton >(rman, rman.get_diff_to_timestamp(), req, searched_ids);
 
     for (std::vector< Way_With_Context >::const_iterator it = ways.begin(); it != ways.end(); ++it)
     {
@@ -642,7 +642,7 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
     get_indexes_< Uint31_Index, Way_Skeleton >(searched_ids, rman, true).swap(req);
     find_still_existing_skeletons< Uint31_Index, Way_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
-    find_meta_elements< Uint31_Index, Way_Skeleton >(
+    find_meta_elements< Way::Index, Way_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
     for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::iterator
@@ -745,7 +745,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
         = find_still_existing_skeletons< Uint31_Index, Relation_Skeleton >(
             rman, rman.get_diff_to_timestamp(), req, searched_ids);
     std::map< Relation_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Relation::Id_Type > > found_meta
-        = find_meta_elements< Uint31_Index, Relation_Skeleton >(
+        = find_meta_elements< Relation::Index, Relation_Skeleton >(
             rman, rman.get_diff_to_timestamp(), req, searched_ids);
 
     for (std::vector< Relation_With_Context >::const_iterator it = relations.begin(); it != relations.end(); ++it)
@@ -777,7 +777,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
     get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, rman, true).swap(req);
     find_still_existing_skeletons< Uint31_Index, Relation_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
-    find_meta_elements< Uint31_Index, Relation_Skeleton >(
+    find_meta_elements< Relation::Index, Relation_Skeleton >(
         rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
     for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::iterator

@@ -187,30 +187,30 @@ void Set_With_Context::prefetch(uint usage, const Set& set, const Statement& stm
 
   if (usage & Set_Usage::META)
   {
-    meta_collector_nodes = new Meta_Collector< Uint32_Index, Node_Skeleton::Id_Type >(
+    meta_collector_nodes = new Meta_Collector< Node::Index, Node_Skeleton::Id_Type >(
         set.nodes, transaction, current_meta_file_properties< Node_Skeleton >());
 
     if (!set.attic_nodes.empty())
     {
-      meta_collector_attic_nodes = new Attic_Meta_Collector< Uint32_Index, Node_Skeleton >(
+      meta_collector_attic_nodes = new Attic_Meta_Collector< Node::Index, Node_Skeleton >(
           set.attic_nodes, transaction, true);
     }
 
-    meta_collector_ways = new Meta_Collector< Uint31_Index, Way_Skeleton::Id_Type >(
+    meta_collector_ways = new Meta_Collector< Way::Index, Way_Skeleton::Id_Type >(
         set.ways, transaction, current_meta_file_properties< Way_Skeleton >());
 
     if (!set.attic_ways.empty())
     {
-      meta_collector_attic_ways = new Attic_Meta_Collector< Uint31_Index, Way_Skeleton >(
+      meta_collector_attic_ways = new Attic_Meta_Collector< Way::Index, Way_Skeleton >(
           set.attic_ways, transaction, true);
     }
 
-    meta_collector_relations = new Meta_Collector< Uint31_Index, Relation_Skeleton::Id_Type >(
+    meta_collector_relations = new Meta_Collector< Relation::Index, Relation_Skeleton::Id_Type >(
         set.relations, transaction, current_meta_file_properties< Relation_Skeleton >());
 
     if (!set.attic_relations.empty())
     {
-      meta_collector_attic_relations = new Attic_Meta_Collector< Uint31_Index, Relation_Skeleton >(
+      meta_collector_attic_relations = new Attic_Meta_Collector< Relation::Index, Relation_Skeleton >(
           set.attic_relations, transaction, true);
     }
   }

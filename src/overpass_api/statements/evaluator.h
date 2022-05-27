@@ -175,12 +175,12 @@ public:
   Relation_Geometry_Store* relation_geometry_store;
   Relation_Geometry_Store* attic_relation_geometry_store;
 
-  Meta_Collector< Uint32_Index, Node_Skeleton::Id_Type >* meta_collector_nodes;
-  Attic_Meta_Collector< Uint32_Index, Node_Skeleton >* meta_collector_attic_nodes;
-  Meta_Collector< Uint31_Index, Way_Skeleton::Id_Type >* meta_collector_ways;
-  Attic_Meta_Collector< Uint31_Index, Way_Skeleton >* meta_collector_attic_ways;
-  Meta_Collector< Uint31_Index, Relation_Skeleton::Id_Type >* meta_collector_relations;
-  Attic_Meta_Collector< Uint31_Index, Relation_Skeleton >* meta_collector_attic_relations;
+  Meta_Collector< Node::Index, Node_Skeleton::Id_Type >* meta_collector_nodes;
+  Attic_Meta_Collector< Node::Index, Node_Skeleton >* meta_collector_attic_nodes;
+  Meta_Collector< Way::Index, Way_Skeleton::Id_Type >* meta_collector_ways;
+  Attic_Meta_Collector< Way::Index, Way_Skeleton >* meta_collector_attic_ways;
+  Meta_Collector< Relation::Index, Relation_Skeleton::Id_Type >* meta_collector_relations;
+  Attic_Meta_Collector< Relation::Index, Relation_Skeleton >* meta_collector_attic_relations;
 };
 
 

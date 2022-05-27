@@ -54,6 +54,7 @@ struct Relation_Entry
 struct Relation
 {
   typedef Uint32_Index Id_Type;
+  typedef Uint31_Index Index;
 
   Id_Type id;
   uint32 index;

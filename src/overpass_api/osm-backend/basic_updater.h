@@ -122,17 +122,17 @@ std::vector< typename Element_Skeleton::Id_Type > ids_to_update
 }
 
 
-template< typename Id_Type >
-std::vector< std::pair< Id_Type, Uint31_Index > > get_existing_map_positions
+template< typename Index, typename Id_Type >
+std::vector< std::pair< Id_Type, Index > > get_existing_map_positions
     (const std::vector< Id_Type >& ids,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  Random_File< Id_Type, Uint31_Index > random(transaction.random_index(&file_properties));
+  Random_File< Id_Type, Index > random(transaction.random_index(&file_properties));
 
-  std::vector< std::pair< Id_Type, Uint31_Index > > result;
+  std::vector< std::pair< Id_Type, Index > > result;
   for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
   {
-    Uint31_Index idx = random.get(it->val());
+    Index idx = random.get(it->val());
     if (idx.val() > 0)
       result.push_back(std::make_pair(*it, idx));
   }
@@ -140,10 +140,10 @@ std::vector< std::pair< Id_Type, Uint31_Index > > get_existing_map_positions
 }
 
 
-template< typename Id_Type >
+template< typename Index, typename Id_Type >
 struct Idx_Agnostic_Compare
 {
-  bool operator()(const std::pair< Id_Type, Uint31_Index >& a, const std::pair< Id_Type, Uint31_Index >& b)
+  bool operator()(const std::pair< Id_Type, Index >& a, const std::pair< Id_Type, Index >& b)
   {
     return (a.first < b.first);
   }
@@ -152,16 +152,16 @@ struct Idx_Agnostic_Compare
 
 template< typename Index, typename Element_Skeleton >
 std::map< Index, std::set< Element_Skeleton > > get_existing_skeletons
-    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
+    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
 {
   std::set< Index > req;
-  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
+  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >::const_iterator
       it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
     req.insert(Index(it->second.val()));
 
   std::map< Index, std::set< Element_Skeleton > > result;
-  Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
+  Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
 
   Block_Backend< Index, Element_Skeleton > db(transaction.data_index(&file_properties));
   for (typename Block_Backend< Index, Element_Skeleton >::Discrete_Iterator
@@ -197,7 +197,7 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
   }
 
   std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > > result;
-  Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
+  Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
 
   Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&skel_file_properties));
   for (typename Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > >::Discrete_Iterator
@@ -240,21 +240,20 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
 }
 
 
-template< typename Element_Skeleton >
-std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
-    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
+template< typename Index, typename Element_Skeleton >
+std::map< Index, std::set< Element_Skeleton > > get_existing_meta
+    (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  std::set< Uint31_Index > req;
-  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
-      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+  std::set< Index > req;
+  for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
     req.insert(it->second);
 
-  std::map< Uint31_Index, std::set< Element_Skeleton > > result;
-  Idx_Agnostic_Compare< typename Element_Skeleton::Id_Type > comp;
+  std::map< Index, std::set< Element_Skeleton > > result;
+  Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
 
-  Block_Backend< Uint31_Index, Element_Skeleton > db(transaction.data_index(&file_properties));
-  for (typename Block_Backend< Uint31_Index, Element_Skeleton >::Discrete_Iterator
+  Block_Backend< Index, Element_Skeleton > db(transaction.data_index(&file_properties));
+  for (typename Block_Backend< Index, Element_Skeleton >::Discrete_Iterator
       it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
   {
     if (binary_search(ids_with_position.begin(), ids_with_position.end(),
@@ -272,7 +271,7 @@ std::map< Uint31_Index, std::set< Element_Skeleton > > get_existing_meta
 template< typename Element_Skeleton, typename Index_Type >
 void new_current_skeletons
     (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index_Type > >& existing_map_positions,
      const std::map< Index_Type, std::set< Element_Skeleton > >& existing_skeletons,
      bool record_minuscule_moves,
      std::map< Index_Type, std::set< Element_Skeleton > >& attic_skeletons,
@@ -296,7 +295,7 @@ void new_current_skeletons
       // attic_skeletons.
       continue;
 
-    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+    const Index_Type* idx = binary_pair_search(existing_map_positions, it->elem.id);
     if (!idx)
     {
       // No old data exists. So we can add the new data and are done.
@@ -345,13 +344,13 @@ void new_current_skeletons
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the deletion and insertion lists for the
  * database operation.  Also, the list of moved nodes is filled. */
-template< typename Element_Skeleton >
+template< typename Index, typename Element_Skeleton >
 void new_current_meta
     (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-     const std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& existing_meta,
-     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta,
-     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_meta)
+     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >& existing_map_positions,
+     const std::map< Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& existing_meta,
+     std::map< Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& attic_meta,
+     std::map< Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_meta)
 {
   attic_meta = existing_meta;
 
@@ -365,7 +364,7 @@ void new_current_meta
       // A later version exist also in new_data. So there is nothing to do.
       continue;
 
-    if (it->idx == Uint31_Index(0u))
+    if (it->idx == Index(0u))
       // There is nothing to do for elements to delete. If they exist, they are contained in the
       // attic_meta.
       continue;
@@ -389,10 +388,10 @@ void add_tags(Id_Type id, Uint31_Index idx,
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the deletion and insertion lists for the
  * database operation.  Also, the list of moved nodes is filled. */
-template< typename Element_Skeleton, typename Id_Type >
+template< typename Index, typename Element_Skeleton, typename Id_Type >
 void new_current_local_tags
     (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< Id_Type, Index > >& existing_map_positions,
      const std::vector< Tag_Entry< Id_Type > >& existing_local_tags,
      std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
      std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags)
@@ -418,12 +417,12 @@ void new_current_local_tags
       // A later version exist also in new_data. So there is nothing to do.
       continue;
 
-    if (it->idx == Uint31_Index(0u))
+    if (it->idx == Index(0u))
       // There is nothing to do for elements to delete. If they exist, they are contained in the
       // attic_skeletons.
       continue;
 
-    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+    const Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
     if (!idx)
     {
       // No old data exists. So we can add the new data and are done.

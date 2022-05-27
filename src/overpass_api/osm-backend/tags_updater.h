@@ -128,15 +128,14 @@ void prepare_delete_tags
 }
 
 
-template< class Id_Type >
+template< typename Index, typename Id_Type >
 void get_existing_tags
-    (const std::vector< std::pair< Id_Type, Uint31_Index > >& ids_with_position,
+    (const std::vector< std::pair< Id_Type, Index > >& ids_with_position,
      File_Blocks_Index_Base& tags_local, std::vector< Tag_Entry< Id_Type > >& tags_to_delete)
 {
   // make indices appropriately coarse
   std::map< uint32, std::set< Id_Type > > to_delete_coarse;
-  for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
-      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+  for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
     to_delete_coarse[it->second.val() & 0x7fffff00].insert(it->first);
 
   // formulate range query

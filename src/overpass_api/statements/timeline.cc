@@ -138,11 +138,11 @@ void Timeline_Statement::execute(Resource_Manager& rman)
   Set into;
 
   if (type == NODE)
-    create_timeline_entries< Uint32_Index, Node_Skeleton >(ref, version, this, rman, "node", into.deriveds);
+    create_timeline_entries< Node::Index, Node_Skeleton >(ref, version, this, rman, "node", into.deriveds);
   else if (type == WAY)
-    create_timeline_entries< Uint31_Index, Way_Skeleton >(ref, version, this, rman, "way", into.deriveds);
+    create_timeline_entries< Way::Index, Way_Skeleton >(ref, version, this, rman, "way", into.deriveds);
   else if (type == RELATION)
-    create_timeline_entries< Uint31_Index, Relation_Skeleton >(ref, version, this, rman, "relation", into.deriveds);
+    create_timeline_entries< Relation::Index, Relation_Skeleton >(ref, version, this, rman, "relation", into.deriveds);
 
   transfer_output(rman, into);
   rman.health_check(*this);

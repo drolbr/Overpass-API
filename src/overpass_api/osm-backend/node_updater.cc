@@ -46,12 +46,12 @@ bool geometrically_equal(const Node_Skeleton& a, const Node_Skeleton& b)
 template< typename Element_Skeleton >
 void compute_new_attic_meta
     (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-     std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_attic_meta)
+     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Node::Index > >& existing_map_positions,
+     std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< typename Element_Skeleton::Id_Type > > >& new_attic_meta)
 {
   typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator next_it
       = new_data.data.begin();
-  Uint31_Index last_index(0u);
+  Node::Index last_index(0u);
   typename Element_Skeleton::Id_Type last_id(0ull);
   for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
       it = new_data.data.begin(); it != new_data.data.end(); ++it)
@@ -65,7 +65,7 @@ void compute_new_attic_meta
       // We don't have an earlier version of this element in new_data
       if (!(last_id == it->elem.id))
       {
-        const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+        const Node::Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
         if (idx)
           // Take index of the existing element.
           last_index = *idx;
@@ -81,7 +81,7 @@ void compute_new_attic_meta
       continue;
     }
     last_id = it->elem.id;
-    last_index = it->idx;
+    last_index = Node::Index(it->idx.val());
 
     if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
       // A later version also exists in new_data. Store the meta data of this version directly in attic.
@@ -95,7 +95,7 @@ void compute_new_attic_meta
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
 void compute_new_attic_skeletons
     (const Data_By_Id< Node_Skeleton >& new_data,
-     const std::vector< std::pair< typename Node_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< typename Node_Skeleton::Id_Type, Node::Index > >& existing_map_positions,
      const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_skeletons,
      const std::map< Node_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Node_Skeleton > > >&
          existing_attic_skeleton_timestamps,
@@ -122,7 +122,7 @@ void compute_new_attic_skeletons
       continue;
     last_id = it->elem.id;
 
-    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+    const Node::Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
     if (!idx)
       // No old data exists. So there is nothing to do here.
       continue;
@@ -145,8 +145,8 @@ void compute_new_attic_skeletons
     if (it_attic_time == existing_attic_skeleton_timestamps.end() ||
         it_attic_time->second.second.timestamp < it->meta.timestamp)
     {
-      full_attic[*idx].insert(Attic< Node_Skeleton >(*it_attic, it->meta.timestamp));
-      idx_lists[it_attic->id].insert(*idx);
+      full_attic[Uint31_Index(idx->val())].insert(Attic< Node_Skeleton >(*it_attic, it->meta.timestamp));
+      idx_lists[it_attic->id].insert(Uint31_Index(idx->val()));
     }
   }
 }
@@ -158,7 +158,7 @@ template< typename Element_Skeleton >
 std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > >
     compute_undeleted_skeletons
     (const Data_By_Id< Element_Skeleton >& new_data,
-     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< typename Element_Skeleton::Id_Type, Node::Index > >& existing_map_positions,
      const std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists)
 {
   std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > > result;
@@ -182,8 +182,8 @@ std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > 
       if (attic_idx_it != existing_idx_lists.end()
           && attic_idx_it->second.find(it->idx) != attic_idx_it->second.end())
       {
-        const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
-        if (!idx || !(*idx == it->idx))
+        const Node::Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+        if (!idx || idx->val() != it->idx.val())
           result[it->idx].insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
       }
     }
@@ -264,7 +264,7 @@ void cancel_out_equal_tags
 std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
     compute_new_attic_local_tags
     (const Data_By_Id< Node_Skeleton >& new_data,
-     const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
+     const std::vector< std::pair< Node_Skeleton::Id_Type, Node::Index > >& existing_map_positions,
      const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& existing_attic_map_positions,
      const std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > >& attic_local_tags)
 {
@@ -288,7 +288,7 @@ std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
       // This is the oldest version of this id in this diff. If an object with this id existed
       // already before then we need to store explicit void tags for all tags that have not been
       // removed.
-      const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+      const Node::Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
       if (idx && !(it->idx == Uint31_Index(0u)) && (idx->val() & 0x7fffff00) == (it->idx.val() & 0x7fffff00))
       {
         for (std::vector< std::pair< std::string, std::string > >::const_iterator tag_it = it->tags.begin();
@@ -300,7 +300,7 @@ std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
       {
 	// This is object is just going to be undeleted or moved
 	// Explicitly add to undeleted all tags the object now gets
-	idx = binary_pair_search(existing_attic_map_positions, it->elem.id);
+	const Uint31_Index* idx = binary_pair_search(existing_attic_map_positions, it->elem.id);
 	if (idx && !(it->idx == Uint31_Index(0u)))
 	{
           for (std::vector< std::pair< std::string, std::string > >::const_iterator tag_it = it->tags.begin();
@@ -398,8 +398,8 @@ std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
 std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > compute_changelog(
     const Data_By_Id< Node_Skeleton >& new_data,
-    const std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
-    const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_skeletons)
+    const std::vector< std::pair< Node_Skeleton::Id_Type, Node::Index > >& existing_map_positions,
+    const std::map< Node::Index, std::set< Node_Skeleton > >& attic_skeletons)
 {
   std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > result;
 
@@ -420,7 +420,7 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
       continue;
     last_id = it->elem.id;
 
-    const Uint31_Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
+    const Node::Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
     if (!idx)
     {
       // No old data exists.
@@ -441,7 +441,7 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
       continue;
 
     result[it->meta.timestamp].insert(
-        Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, *idx, it->idx));
+        Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, Uint31_Index(idx->val()), it->idx));
   }
 
   return result;
@@ -484,8 +484,9 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   std::vector< Node_Skeleton::Id_Type > ids_to_update_ = ids_to_update(new_data);
 
   // Collect all data of existing id indexes
-  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
-      = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().NODES);
+  std::vector< std::pair< Node_Skeleton::Id_Type, Node::Index > > existing_map_positions
+      = get_existing_map_positions< Node::Index, Node_Skeleton::Id_Type >(
+            ids_to_update_, *transaction, *osm_base_settings().NODES);
 
   // Collect all data of existing skeletons
   std::map< Uint32_Index, std::set< Node_Skeleton > > existing_skeletons
@@ -493,15 +494,15 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       (existing_map_positions, *transaction, *osm_base_settings().NODES);
 
   // Collect all data of existing meta elements
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
+  std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
       = (meta != Database_Meta_State::only_data 
-          ? get_existing_meta< OSM_Element_Metadata_Skeleton< Node::Id_Type > >
+          ? get_existing_meta< Node::Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >
               (existing_map_positions, *transaction, *meta_settings().NODES_META)
-          : std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());
+          : std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());
 
   // Collect all data of existing tags
   std::vector< Tag_Entry< Node_Skeleton::Id_Type > > existing_local_tags;
-  get_existing_tags< Node_Skeleton::Id_Type >
+  get_existing_tags< Node::Index, Node_Skeleton::Id_Type >
       (existing_map_positions, *transaction->data_index(osm_base_settings().NODE_TAGS_LOCAL),
        existing_local_tags);
 
@@ -513,14 +514,14 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
       0, attic_skeletons, new_skeletons, moved_nodes);
 
   // Compute which meta data really has changed
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta;
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_meta;
+  std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > attic_meta;
+  std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > > new_meta;
   new_current_meta(new_data, existing_map_positions, existing_meta, attic_meta, new_meta);
 
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > attic_local_tags;
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
-  new_current_local_tags< Node_Skeleton, Node_Skeleton::Id_Type >
+  new_current_local_tags< Node::Index, Node_Skeleton, Node_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > attic_global_tags;
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > new_global_tags;
@@ -574,7 +575,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 
     // Collect all data of existing attic id indexes
     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
-        = get_existing_map_positions(ids_to_update_, *transaction, *attic_settings().NODES);
+        = get_existing_map_positions< Uint31_Index, Node_Skeleton::Id_Type >(
+            ids_to_update_, *transaction, *attic_settings().NODES);
     std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
         = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
                                  *transaction, *attic_settings().NODE_IDX_LIST);
@@ -640,7 +642,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 
     // Add attic meta
     update_elements
-        (std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >(),
+        (std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node_Skeleton::Id_Type > > >(),
          attic_meta, *transaction, *attic_settings().NODES_META);
     callback->meta_finished();
 
@@ -792,7 +794,7 @@ void Node_Updater::merge_files(const std::vector< std::string >& froms, std::str
 {
   Transaction_Collection from_transactions(false, false, db_dir, froms);
   Nonsynced_Transaction into_transaction(true, false, db_dir, into);
-  ::merge_files< Uint32_Index, Node_Skeleton >
+  ::merge_files< Node::Index, Node_Skeleton >
       (from_transactions, into_transaction, *osm_base_settings().NODES);
   ::merge_files< Tag_Index_Local, Node::Id_Type >
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_LOCAL);
@@ -800,7 +802,7 @@ void Node_Updater::merge_files(const std::vector< std::string >& froms, std::str
       (from_transactions, into_transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
   if (meta != Database_Meta_State::only_data)
   {
-    ::merge_files< Uint31_Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >
+    ::merge_files< Node::Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >
         (from_transactions, into_transaction, *meta_settings().NODES_META);
   }
 }

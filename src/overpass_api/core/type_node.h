@@ -29,6 +29,7 @@
 struct Node
 {
   typedef Uint64 Id_Type;
+  typedef Uint32_Index Index;
 
   Id_Type id;
   uint32 index;

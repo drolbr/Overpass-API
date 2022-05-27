@@ -276,9 +276,9 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
   clone_matching_bin_file< Uint32_Index, String_Object >(
       *osm_base_settings().RELATION_ROLES, transaction, dest_db_dir, clone_settings);
 
-  clone_meta_file< Uint31_Index, Node_Skeleton >(transaction, dest_db_dir, clone_settings);
-  clone_meta_file< Uint31_Index, Way_Skeleton >(transaction, dest_db_dir, clone_settings);
-  clone_meta_file< Uint31_Index, Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_meta_file< Node::Index, Node_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_meta_file< Way::Index, Way_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_meta_file< Relation::Index, Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_matching_bin_file< Uint32_Index, User_Data >(
       *meta_settings().USER_DATA, transaction, dest_db_dir, clone_settings);
   clone_matching_bin_file< Uint32_Index, Uint31_Index >(
@@ -290,7 +290,7 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
   clone_attic_idx_list_file< Node_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_attic_local_tags_file< Node_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_attic_global_tags_file< Node_Skeleton >(transaction, dest_db_dir, clone_settings);
-  clone_attic_meta_file< Uint31_Index, Node_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_attic_meta_file< Node::Index, Node_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_changelog_file< Node_Skeleton >(transaction, dest_db_dir, clone_settings);
 
   clone_attic_skel_file< Uint31_Index, Way_Skeleton, Way_Delta >(transaction, dest_db_dir, clone_settings);
@@ -299,7 +299,7 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
   clone_attic_idx_list_file< Way_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_attic_local_tags_file< Way_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_attic_global_tags_file< Way_Skeleton >(transaction, dest_db_dir, clone_settings);
-  clone_attic_meta_file< Uint31_Index, Way_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_attic_meta_file< Way::Index, Way_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_changelog_file< Way_Skeleton >(transaction, dest_db_dir, clone_settings);
 
   clone_attic_skel_file< Uint31_Index, Relation_Skeleton, Relation_Delta >(transaction, dest_db_dir, clone_settings);
@@ -308,6 +308,6 @@ void clone_database(Transaction& transaction, const std::string& dest_db_dir, co
   clone_attic_idx_list_file< Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_attic_local_tags_file< Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_attic_global_tags_file< Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
-  clone_attic_meta_file< Uint31_Index, Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
+  clone_attic_meta_file< Relation::Index, Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
   clone_changelog_file< Relation_Skeleton >(transaction, dest_db_dir, clone_settings);
 }

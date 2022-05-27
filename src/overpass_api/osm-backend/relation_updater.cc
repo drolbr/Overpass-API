@@ -316,12 +316,13 @@ void lookup_missing_nodes
   missing_ids.erase(std::unique(missing_ids.begin(), missing_ids.end()), missing_ids.end());
 
   // Collect all data of existing id indexes
-  std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
-      = get_existing_map_positions(missing_ids, transaction, *osm_base_settings().NODES);
+  std::vector< std::pair< Node_Skeleton::Id_Type, Node::Index > > existing_map_positions
+      = get_existing_map_positions< Node::Index, Node_Skeleton::Id_Type >(
+            missing_ids, transaction, *osm_base_settings().NODES);
 
   // Collect all data of existing skeletons
   std::map< Uint32_Index, std::set< Node_Skeleton > > existing_skeletons
-      = get_existing_skeletons< Uint32_Index, Node_Skeleton >
+      = get_existing_skeletons< Node::Index, Node_Skeleton >
       (existing_map_positions, transaction, *osm_base_settings().NODES);
 
   for (std::map< Uint32_Index, std::set< Node_Skeleton > >::const_iterator it = existing_skeletons.begin();
@@ -393,8 +394,9 @@ void lookup_missing_ways
   missing_ids.erase(std::unique(missing_ids.begin(), missing_ids.end()), missing_ids.end());
 
   // Collect all data of existing id indexes
-  std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
-      = get_existing_map_positions(missing_ids, transaction, *osm_base_settings().WAYS);
+  std::vector< std::pair< Way_Skeleton::Id_Type, Way::Index > > existing_map_positions
+      = get_existing_map_positions< Way::Index, Way_Skeleton::Id_Type >(
+          missing_ids, transaction, *osm_base_settings().WAYS);
 
   // Collect all data of existing skeletons
   std::map< Uint31_Index, std::set< Way_Skeleton > > existing_skeletons
@@ -1078,7 +1080,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   // Collect all data of existing id indexes
   std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > existing_map_positions
-      = get_existing_map_positions(ids_to_update_, *transaction, *osm_base_settings().RELATIONS);
+      = get_existing_map_positions< Relation::Index, Relation_Skeleton::Id_Type >(
+          ids_to_update_, *transaction, *osm_base_settings().RELATIONS);
 
   // Collect all data of existing and explicitly changed skeletons
   std::map< Uint31_Index, std::set< Relation_Skeleton > > existing_skeletons
@@ -1093,27 +1096,27 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
   // Collect all data of existing meta elements
   std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > > existing_meta
-      = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Relation::Id_Type > >
+      = (meta ? get_existing_meta< Relation::Index, OSM_Element_Metadata_Skeleton< Relation::Id_Type > >
              (existing_map_positions, *transaction, *meta_settings().RELATIONS_META) :
          std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > >());
 
   // Collect all data of existing meta elements
   std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > implicitly_moved_positions
       = make_id_idx_directory(implicitly_moved_skeletons);
-  std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > > implicitly_moved_meta
-      = (meta ? get_existing_meta< OSM_Element_Metadata_Skeleton< Relation::Id_Type > >
+  std::map< Relation::Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > > implicitly_moved_meta
+      = (meta ? get_existing_meta< Relation::Index, OSM_Element_Metadata_Skeleton< Relation::Id_Type > >
              (implicitly_moved_positions, *transaction, *meta_settings().RELATIONS_META) :
-         std::map< Uint31_Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > >());
+         std::map< Relation::Index, std::set< OSM_Element_Metadata_Skeleton< Relation::Id_Type > > >());
 
   // Collect all data of existing tags
   std::vector< Tag_Entry< Relation_Skeleton::Id_Type > > existing_local_tags;
-  get_existing_tags< Relation_Skeleton::Id_Type >
+  get_existing_tags< Relation::Index, Relation_Skeleton::Id_Type >
       (existing_map_positions, *transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
        existing_local_tags);
 
   // Collect all data of existing tags for moved relations
   std::vector< Tag_Entry< Relation_Skeleton::Id_Type > > implicitly_moved_local_tags;
-  get_existing_tags< Relation_Skeleton::Id_Type >
+  get_existing_tags< Relation::Index, Relation_Skeleton::Id_Type >
       (implicitly_moved_positions, *transaction->data_index(osm_base_settings().RELATION_TAGS_LOCAL),
        implicitly_moved_local_tags);
 
@@ -1159,7 +1162,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
   // Compute which tags really have changed
   std::map< Tag_Index_Local, std::set< Relation_Skeleton::Id_Type > > attic_local_tags;
   std::map< Tag_Index_Local, std::set< Relation_Skeleton::Id_Type > > new_local_tags;
-  new_current_local_tags< Relation_Skeleton, Relation_Skeleton::Id_Type >
+  new_current_local_tags< Relation::Index, Relation_Skeleton, Relation_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
   std::map< Tag_Index_Global, std::set< Tag_Object_Global< Relation_Skeleton::Id_Type > > > attic_global_tags;
@@ -1209,7 +1212,8 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
 
     // Collect all data of existing attic id indexes
     std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
-        = get_existing_map_positions(ids_to_update_, *transaction, *attic_settings().RELATIONS);
+        = get_existing_map_positions< Relation::Index, Relation_Skeleton::Id_Type >(
+            ids_to_update_, *transaction, *attic_settings().RELATIONS);
     std::map< Relation_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
         = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
                                  *transaction, *attic_settings().RELATION_IDX_LIST);
