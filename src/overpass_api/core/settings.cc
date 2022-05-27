@@ -99,11 +99,11 @@ Basic_Settings::Basic_Settings()
   version("0.7.58"),
   source_hash("af71d8c8d17360a3b2956cf12edf463d6167fc0d"),
 #ifdef HAVE_LZ4
-  compression_method(File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION),
+  compression_method(File_Blocks_Index_Base::LZ4_COMPRESSION),
 #else
-  compression_method(File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION),
+  compression_method(File_Blocks_Index_Base::ZLIB_COMPRESSION),
 #endif
-  map_compression_method(File_Blocks_Index< Uint31_Index >::NO_COMPRESSION)
+  map_compression_method(File_Blocks_Index_Base::NO_COMPRESSION)
 {}
 
 Basic_Settings& basic_settings()

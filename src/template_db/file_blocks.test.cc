@@ -145,12 +145,12 @@ struct Test_File : File_Properties
 
   uint32 get_compression_method() const
   {
-    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+    return File_Blocks_Index_Base::NO_COMPRESSION;
   }
 
   uint32 get_map_compression_method() const
   {
-    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+    return File_Blocks_Index_Base::NO_COMPRESSION;
   }
 
   uint32 get_map_block_size() const
@@ -236,12 +236,12 @@ struct Variable_Block_Test_File : File_Properties
 
   uint32 get_compression_method() const
   {
-    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+    return File_Blocks_Index_Base::NO_COMPRESSION;
   }
 
   uint32 get_map_compression_method() const
   {
-    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+    return File_Blocks_Index_Base::NO_COMPRESSION;
   }
 
   uint32 get_map_block_size() const
@@ -328,15 +328,15 @@ struct Compressed_Test_File : File_Properties
   uint32 get_compression_method() const
   {
 #ifdef HAVE_LZ4
-    return File_Blocks_Index< IntIndex >::LZ4_COMPRESSION;
+    return File_Blocks_Index_Base::LZ4_COMPRESSION;
 #else
-    return File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION;
+    return File_Blocks_Index_Base::ZLIB_COMPRESSION;
 #endif
   }
 
   uint32 get_map_compression_method() const
   {
-    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+    return File_Blocks_Index_Base::NO_COMPRESSION;
   }
 
   uint32 get_map_block_size() const
@@ -787,18 +787,18 @@ int main(int argc, char* args[])
   {
     Compressed_Test_File tf;
 
-    if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::NO_COMPRESSION)
+    if (tf.get_compression_method() == File_Blocks_Index_Base::NO_COMPRESSION)
       std::cout<<"Using no compression for bin files.\n";
-    else if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION)
+    else if (tf.get_compression_method() == File_Blocks_Index_Base::ZLIB_COMPRESSION)
       std::cout<<"Using zlib compression for bin files.\n";
-    else if (tf.get_compression_method() == File_Blocks_Index< IntIndex >::LZ4_COMPRESSION)
+    else if (tf.get_compression_method() == File_Blocks_Index_Base::LZ4_COMPRESSION)
       std::cout<<"Using lz4 compression for bin files.\n";
 
-    if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::NO_COMPRESSION)
+    if (tf.get_map_compression_method() == File_Blocks_Index_Base::NO_COMPRESSION)
       std::cout<<"Using no compression for map files.\n";
-    else if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::ZLIB_COMPRESSION)
+    else if (tf.get_map_compression_method() == File_Blocks_Index_Base::ZLIB_COMPRESSION)
       std::cout<<"Using zlib compression for map files.\n";
-    else if (tf.get_map_compression_method() == File_Blocks_Index< IntIndex >::LZ4_COMPRESSION)
+    else if (tf.get_map_compression_method() == File_Blocks_Index_Base::LZ4_COMPRESSION)
       std::cout<<"Using lz4 compression for map files.\n";
   }
 

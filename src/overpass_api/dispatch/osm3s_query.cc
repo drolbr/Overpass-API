@@ -106,12 +106,12 @@ int main(int argc, char *argv[])
     else if (!(strncmp(argv[argpos], "--clone-compression=", 20)))
     {
       if (std::string(argv[argpos]).substr(20) == "no")
-        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+        clone_settings.compression_method = File_Blocks_Index_Base::NO_COMPRESSION;
       else if (std::string(argv[argpos]).substr(20) == "gz")
-        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+        clone_settings.compression_method = File_Blocks_Index_Base::ZLIB_COMPRESSION;
 #ifdef HAVE_LZ4
       else if (std::string(argv[argpos]).substr(20) == "lz4")
-        clone_settings.compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+        clone_settings.compression_method = File_Blocks_Index_Base::LZ4_COMPRESSION;
 #endif
       else
       {
@@ -126,12 +126,12 @@ int main(int argc, char *argv[])
     else if (!(strncmp(argv[argpos], "--clone-map-compression=", 24)))
     {
       if (std::string(argv[argpos]).substr(24) == "no")
-        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::NO_COMPRESSION;
+        clone_settings.map_compression_method = File_Blocks_Index_Base::NO_COMPRESSION;
       else if (std::string(argv[argpos]).substr(24) == "gz")
-        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::ZLIB_COMPRESSION;
+        clone_settings.map_compression_method = File_Blocks_Index_Base::ZLIB_COMPRESSION;
 #ifdef HAVE_LZ4
       else if (std::string(argv[argpos]).substr(24) == "lz4")
-        clone_settings.map_compression_method = File_Blocks_Index< Uint31_Index >::LZ4_COMPRESSION;
+        clone_settings.map_compression_method = File_Blocks_Index_Base::LZ4_COMPRESSION;
 #endif
       else
       {

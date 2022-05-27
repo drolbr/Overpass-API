@@ -222,7 +222,7 @@ struct Test_File : File_Properties
 
   uint32 get_map_compression_method() const
   {
-    return File_Blocks_Index< IntIndex >::NO_COMPRESSION;
+    return File_Blocks_Index_Base::NO_COMPRESSION;
   }
 
   uint32 get_map_block_size() const

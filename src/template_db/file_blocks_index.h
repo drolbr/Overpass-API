@@ -77,10 +77,6 @@ struct File_Blocks_Index_Structure_Params
 
   uint32 block_count;
 
-  static const int NO_COMPRESSION = 0;
-  static const int ZLIB_COMPRESSION = 1;
-  static const int LZ4_COMPRESSION = 2;
-
   static const int FILE_FORMAT_VERSION = 7560;
 };
 

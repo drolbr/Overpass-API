@@ -820,9 +820,9 @@ uint64* File_Blocks< TIndex, TIterator >::read_block
 {
   data_file.seek((int64)(it.block().pos) * block_size, "File_Blocks::read_block::1");
 
-  if (compression_method == File_Blocks_Index< TIndex >::NO_COMPRESSION)
+  if (compression_method == File_Blocks_Index_Base::NO_COMPRESSION)
     data_file.read((uint8*)buffer_, block_size * it.block().size, "File_Blocks::read_block::2");
-  else if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
+  else if (compression_method == File_Blocks_Index_Base::ZLIB_COMPRESSION)
   {
     data_file.read((uint8*)temp_buffer, block_size * it.block().size, "File_Blocks::read_block::3");
     try
@@ -840,7 +840,7 @@ uint64* File_Blocks< TIndex, TIterator >::read_block
       throw File_Error(it.block().pos, index->get_data_file_name(), out.str());
     }
   }
-  else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
+  else if (compression_method == File_Blocks_Index_Base::LZ4_COMPRESSION)
   {
     data_file.read((uint8*)temp_buffer, block_size * it.block().size, "File_Blocks::read_block::4");
     try
@@ -988,14 +988,14 @@ template< typename TIndex, typename TIterator >
 void File_Blocks< TIndex, TIterator >::write_block(uint64* buf, uint32 payload_size, uint32& block_count, uint32& pos)
 {
   void* payload = buf;
-  if (compression_method == File_Blocks_Index< TIndex >::ZLIB_COMPRESSION)
+  if (compression_method == File_Blocks_Index_Base::ZLIB_COMPRESSION)
   {
     payload = buffer.ptr;
     block_count = (
         Zlib_Deflate(1).compress(buf, payload_size, payload, block_size * compression_factor)
         - 1) / block_size + 1;
   }
-  else if (compression_method == File_Blocks_Index< TIndex >::LZ4_COMPRESSION)
+  else if (compression_method == File_Blocks_Index_Base::LZ4_COMPRESSION)
   {
     payload = buffer.ptr;
     block_count = (
