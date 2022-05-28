@@ -609,10 +609,8 @@ struct Block_Backend
 template< class TIndex, class TObject, class TIterator >
 Block_Backend< TIndex, TObject, TIterator >::Block_Backend(File_Blocks_Index_Base* index_)
   : file_blocks(index_),
-    block_size(((File_Blocks_Index< TIndex >*)index_)->get_block_size()
-        * ((File_Blocks_Index< TIndex >*)index_)->get_compression_factor()),
-    data_filename
-      (((File_Blocks_Index< TIndex >*)index_)->get_data_file_name())
+    block_size(index_->get_block_size() * index_->get_compression_factor()),
+    data_filename(index_->get_data_file_name())
 {
   flat_end_it = new Flat_Iterator(file_blocks, block_size, true);
   discrete_end_it = new Discrete_Iterator(file_blocks, block_size);

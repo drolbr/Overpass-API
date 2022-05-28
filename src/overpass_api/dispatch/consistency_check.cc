@@ -218,11 +218,12 @@ int main(int argc, char *argv[])
       File_Properties* props = meta_settings().WAYS_META;
       File_Blocks_Index_Base* index_base = rman.get_transaction()->data_index(props);
       std::cout<<"ways_meta address "<<index_base<<'\n';
-      File_Blocks_Index< Uint31_Index >* index = (File_Blocks_Index< Uint31_Index >*)index_base;
+//       Readonly_File_Blocks_Index< Uint31_Index >* index =
+//         dynamic_cast< Readonly_File_Blocks_Index< Uint31_Index >* >(index_base);
       std::cout<<"ways_meta";
-      for (int i = 0; i < (int)index->get_void_blocks().size(); ++i)
-	std::cout<<' '<<index->get_void_blocks()[i].first<<' '<<index->get_void_blocks()[i].second;
-      std::cout<<'\n';
+//       for (int i = 0; i < (int)index->get_void_blocks().size(); ++i)
+// 	std::cout<<' '<<index->get_void_blocks()[i].first<<' '<<index->get_void_blocks()[i].second;
+//       std::cout<<'\n';
       Flat_Meta_Collector< Uint31_Index, Way::Id_Type > meta_collector
           (*rman.get_transaction(), props);
       Block_Backend< Uint31_Index, Way_Skeleton > db

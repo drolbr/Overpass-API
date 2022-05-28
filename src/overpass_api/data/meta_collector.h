@@ -96,8 +96,7 @@ void generate_index_query
   (std::set< Index >& indices,
    const std::map< Index, std::vector< Object > >& items)
 {
-  for (typename std::map< Index, std::vector< Object > >::const_iterator
-      it(items.begin()); it != items.end(); ++it)
+  for (auto it = items.begin(); it != items.end(); ++it)
     indices.insert(it->first);
 }
 

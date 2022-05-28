@@ -74,8 +74,11 @@ struct OSM_File_Properties : public File_Properties
       (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    return new File_Blocks_Index< TVal >
-        (*this, writeable, use_shadow, db_dir, file_name_extension);
+    if (writeable)
+      return new Writeable_File_Blocks_Index< TVal >
+          (*this, use_shadow, db_dir, file_name_extension);
+    return new Readonly_File_Blocks_Index< TVal >
+        (*this, use_shadow, db_dir, file_name_extension);
   }
 
   std::string file_base_name;

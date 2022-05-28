@@ -32,14 +32,14 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 {
   try
   {
-    File_Blocks_Index< TIndex >& src_idx =
-        *dynamic_cast< File_Blocks_Index< TIndex >* >(transaction.data_index(&src_file_prop));
+    Readonly_File_Blocks_Index< TIndex >& src_idx =
+        *dynamic_cast< Readonly_File_Blocks_Index< TIndex >* >(transaction.data_index(&src_file_prop));
     File_Blocks< TIndex, typename std::set< TIndex >::const_iterator > src_file(&src_idx);
     uint32 block_size = src_idx.get_block_size() * src_idx.get_compression_factor();
 
     if (block_size == dest_file_prop.get_block_size() * dest_file_prop.get_compression_factor())
     {
-      File_Blocks_Index< TIndex > dest_idx(dest_file_prop, true, false, dest_db_dir, "",
+      Writeable_File_Blocks_Index< TIndex > dest_idx(dest_file_prop, false, dest_db_dir, "",
           clone_settings.compression_method);
       File_Blocks< TIndex, typename std::set< TIndex >::const_iterator >
           dest_file(&dest_idx);
@@ -77,7 +77,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
       typename Block_Backend< TIndex, TObject >::Flat_Iterator it = from_db.flat_begin();
       typename std::map< TIndex, std::set< TObject > >::iterator dit = db_to_insert.begin();
 
-      File_Blocks_Index< TIndex > dest_idx(dest_file_prop, true, false, dest_db_dir, "",
+      Writeable_File_Blocks_Index< TIndex > dest_idx(dest_file_prop, false, dest_db_dir, "",
           clone_settings.compression_method);
       Block_Backend< TIndex, TObject > into_db(&dest_idx);
 

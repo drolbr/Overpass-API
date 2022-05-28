@@ -178,8 +178,11 @@ struct Test_File : File_Properties
       (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    return new File_Blocks_Index< IntIndex >
-        (*this, writeable, use_shadow, db_dir, file_name_extension);
+    if (writeable)
+      return new Writeable_File_Blocks_Index< IntIndex >
+          (*this, use_shadow, db_dir, file_name_extension);
+    return new Readonly_File_Blocks_Index< IntIndex >
+        (*this, use_shadow, db_dir, file_name_extension);
   }
 };
 
@@ -269,8 +272,11 @@ struct Variable_Block_Test_File : File_Properties
       (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    return new File_Blocks_Index< IntIndex >
-        (*this, writeable, use_shadow, db_dir, file_name_extension);
+    if (writeable)
+      return new Writeable_File_Blocks_Index< IntIndex >
+          (*this, use_shadow, db_dir, file_name_extension);
+    return new Readonly_File_Blocks_Index< IntIndex >
+        (*this, use_shadow, db_dir, file_name_extension);
   }
 };
 
@@ -364,8 +370,11 @@ struct Compressed_Test_File : File_Properties
       (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    return new File_Blocks_Index< IntIndex >
-        (*this, writeable, use_shadow, db_dir, file_name_extension);
+    if (writeable)
+      return new Writeable_File_Blocks_Index< IntIndex >
+          (*this, use_shadow, db_dir, file_name_extension);
+    return new Readonly_File_Blocks_Index< IntIndex >
+        (*this, use_shadow, db_dir, file_name_extension);
   }
 };
 
@@ -1859,8 +1868,7 @@ int main(int argc, char* args[])
       + Variable_Block_Test_File().get_shadow_suffix()).c_str());
   remove((BASE_DIRECTORY
       + Variable_Block_Test_File().get_file_name_trunk() + Variable_Block_Test_File().get_data_suffix()).c_str());
-
-
+  
   data_fd = open64
       ((BASE_DIRECTORY
         + Compressed_Test_File().get_file_name_trunk()
