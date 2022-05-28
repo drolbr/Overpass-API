@@ -79,16 +79,15 @@ struct Ascending_By_Timestamp
 };
 
 
-std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
+std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > >
     collect_nodes_by_id(
-    const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
+    const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id)
 {
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id;
-  for (std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >::const_iterator
-      it = new_attic_node_skeletons.begin(); it != new_attic_node_skeletons.end(); ++it)
+         std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > > nodes_by_id;
+  for (auto it = new_attic_node_skeletons.begin(); it != new_attic_node_skeletons.end(); ++it)
   {
     for (std::set< Attic< Node_Skeleton > >::const_iterator it2 = it->second.begin();
          it2 != it->second.end(); ++it2)
@@ -101,10 +100,9 @@ std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< N
         (it->second.ll_upper, Attic< Node_Skeleton >(Node_Skeleton(it->first, it->second.ll_lower),
              NOW)));
 
-  for (std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
-      ::iterator it = nodes_by_id.begin(); it != nodes_by_id.end(); ++it)
+  for (auto it = nodes_by_id.begin(); it != nodes_by_id.end(); ++it)
     std::sort(it->second.begin(), it->second.end(),
-	      Ascending_By_Timestamp< Uint31_Index, Node_Skeleton >());
+	      Ascending_By_Timestamp< Node::Index, Node_Skeleton >());
 
   return nodes_by_id;
 }

@@ -76,9 +76,9 @@ struct Relation_Updater
   std::vector< std::string > get_roles();
 
   void update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch,
-              const std::map< Uint32_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
-              const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
+              const std::map< Node::Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Node::Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& new_way_skeletons,
               const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_way_skeletons,
               const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons);

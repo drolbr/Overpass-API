@@ -235,8 +235,8 @@ const Meta_Settings& meta_settings()
 
 Attic_Settings::Attic_Settings()
 :
-  NODES(new OSM_File_Properties< Uint31_Index >("nodes_attic", 128*1024, 256*1024)),
-  NODES_UNDELETED(new OSM_File_Properties< Uint31_Index >("nodes_attic_undeleted", 128*1024, 64*1024)),
+  NODES(new OSM_File_Properties< Node::Index >("nodes_attic", 128*1024, 256*1024)),
+  NODES_UNDELETED(new OSM_File_Properties< Node::Index >("nodes_attic_undeleted", 128*1024, 64*1024)),
   NODE_IDX_LIST(new OSM_File_Properties< Node::Id_Type >
       ("node_attic_indexes", 128*1024, 0)),
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
@@ -248,8 +248,8 @@ Attic_Settings::Attic_Settings()
   NODE_CHANGELOG(new OSM_File_Properties< Timestamp >
       ("node_changelog", 128*1024, 0)),
 
-  WAYS(new OSM_File_Properties< Uint31_Index >("ways_attic", 128*1024, 256*1024)),
-  WAYS_UNDELETED(new OSM_File_Properties< Uint31_Index >("ways_attic_undeleted", 128*1024, 64*1024)),
+  WAYS(new OSM_File_Properties< Way::Index >("ways_attic", 128*1024, 256*1024)),
+  WAYS_UNDELETED(new OSM_File_Properties< Way::Index >("ways_attic_undeleted", 128*1024, 64*1024)),
   WAY_IDX_LIST(new OSM_File_Properties< Way::Id_Type >
       ("way_attic_indexes", 128*1024, 0)),
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
@@ -261,8 +261,8 @@ Attic_Settings::Attic_Settings()
   WAY_CHANGELOG(new OSM_File_Properties< Timestamp >
       ("way_changelog", 128*1024, 0)),
 
-  RELATIONS(new OSM_File_Properties< Uint31_Index >("relations_attic", 512*1024, 256*1024)),
-  RELATIONS_UNDELETED(new OSM_File_Properties< Uint31_Index >("relations_attic_undeleted", 128*1024, 64*1024)),
+  RELATIONS(new OSM_File_Properties< Relation::Index >("relations_attic", 512*1024, 256*1024)),
+  RELATIONS_UNDELETED(new OSM_File_Properties< Relation::Index >("relations_attic_undeleted", 128*1024, 64*1024)),
   RELATION_IDX_LIST(new OSM_File_Properties< Relation::Id_Type >
       ("relation_attic_indexes", 128*1024, 0)),
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >

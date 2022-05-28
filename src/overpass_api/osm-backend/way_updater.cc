@@ -64,19 +64,17 @@ void compute_idx_and_geometry
     (Uint31_Index& idx, Way_Skeleton& skeleton,
      uint64 expiration_timestamp,
      const std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id)
+         std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > >& nodes_by_id)
 {
   std::vector< Quad_Coord > geometry;
 
   for (std::vector< Node_Skeleton::Id_Type >::const_iterator it = skeleton.nds.begin();
        it != skeleton.nds.end(); ++it)
   {
-    std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
-        ::const_iterator nit = nodes_by_id.find(*it);
+    auto nit = nodes_by_id.find(*it);
     if (nit != nodes_by_id.end() && !nit->second.empty())
     {
-      std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
-          it2 = nit->second.begin();
+      auto it2 = nit->second.begin();
       while (it2 != nit->second.end() && it2->second.timestamp < expiration_timestamp)
         ++it2;
       if (it2 != nit->second.end())
@@ -108,7 +106,7 @@ Way_Skeleton add_intermediate_versions
     (const Way_Skeleton& skeleton, const Way_Skeleton& reference,
      const uint64 old_timestamp, const uint64 new_timestamp,
      const std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
+         std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      bool add_last_version, Uint31_Index attic_idx, Uint31_Index& last_idx,
      std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& full_attic,
      std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >& new_undeleted,
@@ -118,12 +116,10 @@ Way_Skeleton add_intermediate_versions
   for (std::vector< Node_Skeleton::Id_Type >::const_iterator it = skeleton.nds.begin();
        it != skeleton.nds.end(); ++it)
   {
-    std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
-        ::const_iterator nit = nodes_by_id.find(*it);
+    auto nit = nodes_by_id.find(*it);
     if (nit != nodes_by_id.end() && !nit->second.empty())
     {
-      for (std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
-          it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
+      for (auto it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
       {
         if (old_timestamp < it2->second.timestamp && it2->second.timestamp <= new_timestamp)
           relevant_timestamps.push_back(it2->second.timestamp);
@@ -207,7 +203,7 @@ Way_Skeleton add_intermediate_versions
 void add_intermediate_changelog_entries
     (const Way_Skeleton& skeleton, const uint64 old_timestamp, const uint64 new_timestamp,
      const std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >& nodes_by_id,
+         std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      bool add_last_version, Uint31_Index attic_idx, Uint31_Index new_idx,
      std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > >& result)
 {
@@ -215,12 +211,10 @@ void add_intermediate_changelog_entries
   for (std::vector< Node_Skeleton::Id_Type >::const_iterator it = skeleton.nds.begin();
        it != skeleton.nds.end(); ++it)
   {
-    std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
-        ::const_iterator nit = nodes_by_id.find(*it);
+    auto nit = nodes_by_id.find(*it);
     if (nit != nodes_by_id.end() && !nit->second.empty())
     {
-      for (std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > >::const_iterator
-          it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
+      for (auto it2 = nit->second.begin(); it2 != nit->second.end(); ++it2)
       {
         if (old_timestamp < it2->second.timestamp && it2->second.timestamp <= new_timestamp)
           relevant_timestamps.push_back(it2->second.timestamp);
@@ -306,7 +300,7 @@ void compute_new_attic_skeletons
      const std::map< Way_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Way_Delta > > >&
          existing_attic_skeleton_timestamps,
      const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
-     const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
+     const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
      std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& full_attic,
      std::map< Uint31_Index, std::set< Attic< Way_Skeleton::Id_Type > > >& new_undeleted,
      std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists,
@@ -314,7 +308,7 @@ void compute_new_attic_skeletons
 {
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id
+         std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > > nodes_by_id
          = collect_nodes_by_id(new_attic_node_skeletons, new_node_idx_by_id);
 
   // Create full_attic and idx_lists by going through new_data and filling the gaps
@@ -703,13 +697,13 @@ std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute
     const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& attic_map_positions,
     const std::map< Uint31_Index, std::set< Way_Skeleton > >& attic_skeletons,
     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
-    const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
+    const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
 {
   std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > result;
 
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
-         std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > > nodes_by_id
+         std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > > nodes_by_id
          = collect_nodes_by_id(new_attic_node_skeletons, new_node_idx_by_id);
 
   std::vector< Data_By_Id< Way_Skeleton >::Entry >::const_iterator next_it
@@ -788,9 +782,9 @@ std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute
 
 
 void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch, bool partial,
-              const std::map< Uint32_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
-              const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
+              const std::map< Node::Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Node::Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
 {
   if (cpu_stopwatch)
     cpu_stopwatch->start_cpu_timer(2);
@@ -941,8 +935,8 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
         = get_existing_map_positions< Way::Index, Way_Skeleton::Id_Type >(
           ids_to_update_, *transaction, *attic_settings().WAYS);
     std::map< Way_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
-        = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
-                                 *transaction, *attic_settings().WAY_IDX_LIST);
+        = get_existing_idx_lists< Uint31_Index, Way_Skeleton::Id_Type >(
+            ids_to_update_, existing_attic_map_positions, *transaction, *attic_settings().WAY_IDX_LIST);
 
     // Collect known change times of attic elements. This allows that
     // for each object no older version than the youngest known attic version can be written

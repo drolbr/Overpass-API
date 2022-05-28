@@ -96,11 +96,11 @@ void compute_new_attic_meta
 void compute_new_attic_skeletons
     (const Data_By_Id< Node_Skeleton >& new_data,
      const std::vector< std::pair< typename Node_Skeleton::Id_Type, Node::Index > >& existing_map_positions,
-     const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_skeletons,
-     const std::map< Node_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Node_Skeleton > > >&
+     const std::map< Node::Index, std::set< Node_Skeleton > >& attic_skeletons,
+     const std::map< Node_Skeleton::Id_Type, std::pair< Node::Index, Attic< Node_Skeleton > > >&
          existing_attic_skeleton_timestamps,
-     std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& full_attic,
-     std::map< typename Node_Skeleton::Id_Type, std::set< Uint31_Index > >& idx_lists)
+     std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& full_attic,
+     std::map< typename Node_Skeleton::Id_Type, std::set< Node::Index > >& idx_lists)
 {
   auto next_it = new_data.data.begin();
   auto last_id = Node_Skeleton::Id_Type(0ull);
@@ -113,7 +113,7 @@ void compute_new_attic_skeletons
       if (it->idx.val() != 0 && (next_it->idx.val() == 0 || !geometrically_equal(it->elem, next_it->elem)))
       {
         full_attic[it->idx].insert(Attic< Node_Skeleton >(it->elem, next_it->meta.timestamp));
-        idx_lists[it->elem.id].insert(it->idx);
+        idx_lists[it->elem.id].insert(Node::Index(it->idx.val()));
       }
     }
 
@@ -145,8 +145,8 @@ void compute_new_attic_skeletons
     if (it_attic_time == existing_attic_skeleton_timestamps.end() ||
         it_attic_time->second.second.timestamp < it->meta.timestamp)
     {
-      full_attic[Uint31_Index(idx->val())].insert(Attic< Node_Skeleton >(*it_attic, it->meta.timestamp));
-      idx_lists[it_attic->id].insert(Uint31_Index(idx->val()));
+      full_attic[idx->val()].insert(Attic< Node_Skeleton >(*it_attic, it->meta.timestamp));
+      idx_lists[it_attic->id].insert(*idx);
     }
   }
 }
@@ -155,13 +155,13 @@ void compute_new_attic_skeletons
 /* Collects undeleted elements with their index and their timestamp. This is necessary to identify
  * for an undeleted object the fact that is was deleted before its recreation. */
 template< typename Element_Skeleton >
-std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > >
+std::map< Node::Index, std::set< Attic< typename Element_Skeleton::Id_Type > > >
     compute_undeleted_skeletons
     (const Data_By_Id< Element_Skeleton >& new_data,
      const std::vector< std::pair< typename Element_Skeleton::Id_Type, Node::Index > >& existing_map_positions,
-     const std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists)
+     const std::map< Node_Skeleton::Id_Type, std::set< Node::Index > >& existing_idx_lists)
 {
-  std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > > result;
+  std::map< Node::Index, std::set< Attic< typename Element_Skeleton::Id_Type > > > result;
 
   typename Element_Skeleton::Id_Type last_id = typename Element_Skeleton::Id_Type(0ull);
   for (typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator
@@ -173,18 +173,17 @@ std::map< Uint31_Index, std::set< Attic< typename Element_Skeleton::Id_Type > > 
       typename std::vector< typename Data_By_Id< Element_Skeleton >::Entry >::const_iterator last_it = it;
       --last_it;
       if (!(last_it->idx == it->idx))
-        result[it->idx].insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+        result[Uint32_Index(it->idx.val())].insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
     }
     else
     {
-      std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > >::const_iterator
-          attic_idx_it = existing_idx_lists.find(it->elem.id);
+      auto attic_idx_it = existing_idx_lists.find(it->elem.id);
       if (attic_idx_it != existing_idx_lists.end()
           && attic_idx_it->second.find(it->idx) != attic_idx_it->second.end())
       {
         const Node::Index* idx = binary_pair_search(existing_map_positions, it->elem.id);
         if (!idx || idx->val() != it->idx.val())
-          result[it->idx].insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
+          result[Uint32_Index(it->idx.val())].insert(Attic< typename Element_Skeleton::Id_Type >(it->elem.id, it->meta.timestamp));
       }
     }
     last_id = it->elem.id;
@@ -577,27 +576,27 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     std::vector< std::pair< Node_Skeleton::Id_Type, Uint31_Index > > existing_attic_map_positions
         = get_existing_map_positions< Uint31_Index, Node_Skeleton::Id_Type >(
             ids_to_update_, *transaction, *attic_settings().NODES);
-    std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > existing_idx_lists
-        = get_existing_idx_lists(ids_to_update_, existing_attic_map_positions,
-                                 *transaction, *attic_settings().NODE_IDX_LIST);
+    std::map< Node_Skeleton::Id_Type, std::set< Node::Index > > existing_idx_lists
+        = get_existing_idx_lists< Node::Index, Node_Skeleton::Id_Type >(
+            ids_to_update_, existing_attic_map_positions, *transaction, *attic_settings().NODE_IDX_LIST);
 
     // Collect known change times of attic elements. This allows that
     // for each object no older version than the youngest known attic version can be written
-    std::map< Node_Skeleton::Id_Type, std::pair< Uint31_Index, Attic< Node_Skeleton > > >
+    std::map< Node_Skeleton::Id_Type, std::pair< Node::Index, Attic< Node_Skeleton > > >
         existing_attic_skeleton_timestamps
-        = get_existing_attic_skeleton_timestamps< Uint31_Index, Node_Skeleton, Node_Skeleton >
+        = get_existing_attic_skeleton_timestamps< Node::Index, Node_Skeleton, Node_Skeleton >
             (existing_attic_map_positions, existing_idx_lists,
 	     *transaction, *attic_settings().NODES, *attic_settings().NODES_UNDELETED);
 
     callback->compute_attic_started();
     // Compute which objects really have changed
     new_attic_skeletons.clear();
-    std::map< Node_Skeleton::Id_Type, std::set< Uint31_Index > > new_attic_idx_lists = existing_idx_lists;
+    std::map< Node_Skeleton::Id_Type, std::set< Node::Index > > new_attic_idx_lists = existing_idx_lists;
     compute_new_attic_skeletons(new_data, existing_map_positions, attic_skeletons,
 				existing_attic_skeleton_timestamps,
                                 new_attic_skeletons, new_attic_idx_lists);
 
-    std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > > new_undeleted
+    std::map< Node::Index, std::set< Attic< Node_Skeleton::Id_Type > > > new_undeleted
         = compute_undeleted_skeletons(new_data, existing_map_positions, existing_idx_lists);
 
     strip_single_idxs(existing_idx_lists);
@@ -631,12 +630,12 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
                     *transaction, *attic_settings().NODE_IDX_LIST);
 
     // Add attic elements
-    update_elements(std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >(), new_attic_skeletons,
+    update_elements(std::map< Node::Index, std::set< Attic< Node_Skeleton > > >(), new_attic_skeletons,
                     *transaction, *attic_settings().NODES);
     callback->update_coords_finished();
 
     // Add attic elements
-    update_elements(std::map< Uint31_Index, std::set< Attic< Node_Skeleton::Id_Type > > >(),
+    update_elements(std::map< Node::Index, std::set< Attic< Node_Skeleton::Id_Type > > >(),
                     new_undeleted, *transaction, *attic_settings().NODES_UNDELETED);
     callback->undeleted_finished();
 

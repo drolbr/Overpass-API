@@ -180,28 +180,25 @@ template< typename Index, typename Element_Skeleton, typename Element_Skeleton_D
 std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > >
     get_existing_attic_skeleton_timestamps
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >& ids_with_position,
-     const std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >& existing_idx_lists,
+     const std::map< typename Element_Skeleton::Id_Type, std::set< Index > >& existing_idx_lists,
      Transaction& transaction, const File_Properties& skel_file_properties,
      const File_Properties& undelete_file_properties)
 {
-  std::set< Uint31_Index > req;
-  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > >::const_iterator
-      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(it->second);
+  std::set< Index > req;
+  for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+    req.insert(Index(it->second.val()));
 
-  for (typename std::map< typename Element_Skeleton::Id_Type, std::set< Uint31_Index > >::const_iterator
-      it = existing_idx_lists.begin(); it != existing_idx_lists.end(); ++it)
+  for (auto it = existing_idx_lists.begin(); it != existing_idx_lists.end(); ++it)
   {
-    for (std::set< Uint31_Index >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       req.insert(*it2);
   }
 
   std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > > result;
   Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
 
-  Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&skel_file_properties));
-  for (typename Block_Backend< Uint31_Index, Attic< Element_Skeleton_Delta > >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  Block_Backend< Index, Attic< Element_Skeleton_Delta > > db(transaction.data_index(&skel_file_properties));
+  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
   {
     if (binary_search(ids_with_position.begin(), ids_with_position.end(),
         std::make_pair(it.object().id, 0), comp))
@@ -216,10 +213,9 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
     }
   }
 
-  Block_Backend< Uint31_Index, Attic< typename Element_Skeleton::Id_Type > >
+  Block_Backend< Index, Attic< typename Element_Skeleton::Id_Type > >
       undelete_db(transaction.data_index(&undelete_file_properties));
-  for (typename Block_Backend< Uint31_Index, Attic< typename Element_Skeleton::Id_Type > >::Discrete_Iterator
-      it(undelete_db.discrete_begin(req.begin(), req.end())); !(it == undelete_db.discrete_end()); ++it)
+  for (auto it = undelete_db.discrete_begin(req.begin(), req.end()); !(it == undelete_db.discrete_end()); ++it)
   {
     if (binary_search(ids_with_position.begin(), ids_with_position.end(),
         std::pair< typename Element_Skeleton::Id_Type, Uint31_Index >(it.object(), 0u), comp))
@@ -514,13 +510,13 @@ void update_elements
 }
 
 
-template< typename Id_Type >
-std::map< Id_Type, std::set< Uint31_Index > > get_existing_idx_lists
+template< typename Index, typename Id_Type >
+std::map< Id_Type, std::set< Index > > get_existing_idx_lists
     (const std::vector< Id_Type >& ids,
      const std::vector< std::pair< Id_Type, Uint31_Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  std::map< Id_Type, std::set< Uint31_Index > > result;
+  std::map< Id_Type, std::set< Index > > result;
 
   std::set< Id_Type > req;
   typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
@@ -532,14 +528,13 @@ std::map< Id_Type, std::set< Uint31_Index > > get_existing_idx_lists
       if (it_pos->second.val() == 0xff)
         req.insert(*it);
       else
-        result[*it].insert(it_pos->second);
+        result[*it].insert(Index(it_pos->second.val()));
       ++it_pos;
     }
   }
 
-  Block_Backend< Id_Type, Uint31_Index > db(transaction.data_index(&file_properties));
-  for (typename Block_Backend< Id_Type, Uint31_Index >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  Block_Backend< Id_Type, Index > db(transaction.data_index(&file_properties));
+  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
     result[it.index()].insert(it.object());
 
   return result;
@@ -547,23 +542,21 @@ std::map< Id_Type, std::set< Uint31_Index > > get_existing_idx_lists
 
 
 /* Moves idx entries with only one idx to the return value and erases them from the list. */
-template< typename Id_Type >
+template< typename Index, typename Id_Type >
 std::vector< std::pair< Id_Type, Uint31_Index > > strip_single_idxs
-    (std::map< Id_Type, std::set< Uint31_Index > >& idx_list)
+    (std::map< Id_Type, std::set< Index > >& idx_list)
 {
   std::vector< std::pair< Id_Type, Uint31_Index > > result;
 
-  for (typename std::map< Id_Type, std::set< Uint31_Index > >::const_iterator it = idx_list.begin();
-       it != idx_list.end(); ++it)
+  for (auto it = idx_list.begin(); it != idx_list.end(); ++it)
   {
     if (it->second.size() == 1)
-      result.push_back(std::make_pair(it->first, *it->second.begin()));
+      result.push_back(std::make_pair(it->first, Uint31_Index(it->second.begin()->val())));
     else
       result.push_back(std::make_pair(it->first, Uint31_Index(0xffu)));
   }
 
-  for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = result.begin();
-       it != result.end(); ++it)
+  for (auto it = result.begin(); it != result.end(); ++it)
   {
     if (it->second.val() != 0xff)
       idx_list.erase(it->first);
@@ -1197,9 +1190,9 @@ void store_new_keys(const Data_By_Id< Skeleton >& new_data,
 }
 
 
-std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Uint31_Index, Attic< Node_Skeleton > > > >
+std::map< Node_Skeleton::Id_Type, std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > >
     collect_nodes_by_id(
-    const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
+    const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons,
     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id);
 
 

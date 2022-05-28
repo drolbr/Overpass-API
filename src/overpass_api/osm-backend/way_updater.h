@@ -73,9 +73,9 @@ struct Way_Updater
   }
 
   void update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stopwatch, bool partial,
-              const std::map< Uint32_Index, std::set< Node_Skeleton > >& new_node_skeletons,
-              const std::map< Uint32_Index, std::set< Node_Skeleton > >& attic_node_skeletons,
-              const std::map< Uint31_Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons);
+              const std::map< Node::Index, std::set< Node_Skeleton > >& new_node_skeletons,
+              const std::map< Node::Index, std::set< Node_Skeleton > >& attic_node_skeletons,
+              const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons);
 
   const std::vector< std::pair< Way::Id_Type, Uint31_Index > >& get_moved_ways() const
   {
