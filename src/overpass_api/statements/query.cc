@@ -178,7 +178,7 @@ void filter_id_list(
   {
     if (key_regex.matches(it.index().key) && it.index().value != void_tag_value()
         && val_regex.matches(it.index().value) && (!filtered ||
-	binary_search(old_ids.begin(), old_ids.end(), std::make_pair(it.object().id, Uint31_Index(0u)))))
+	std::binary_search(old_ids.begin(), old_ids.end(), std::make_pair(it.object().id, Uint31_Index(0u)))))
       new_ids.push_back(std::make_pair(it.object().id, it.object().idx));
 
     if (!filtered && new_ids.size() == 1024*1024)
@@ -216,7 +216,7 @@ void filter_id_list(
   {
     if (key_regex.matches(it.index().key) && it.index().value != void_tag_value()
         && val_regex.matches(it.index().value) &&
-	(!filtered || binary_search(old_ids.begin(), old_ids.end(), it.object())))
+	(!filtered || std::binary_search(old_ids.begin(), old_ids.end(), it.object())))
       new_ids.push_back(it.object());
   }
 
@@ -238,7 +238,7 @@ void filter_id_list(
   for (typename Container::const_iterator it = container.begin(); it != container.end(); ++it)
   {
     if (!filtered ||
-	binary_search(old_ids.begin(), old_ids.end(), std::make_pair(it->first, Uint31_Index(0u))))
+	std::binary_search(old_ids.begin(), old_ids.end(), std::make_pair(it->first, Uint31_Index(0u))))
       new_ids.push_back(std::make_pair(it->first, it->second.second));
   }
 
@@ -428,6 +428,106 @@ std::vector< Id_Type > Query_Statement::collect_ids
   }
 
   return new_ids;
+}
+
+
+template< typename Id_Type >
+class Id_Remover
+{
+public:
+  Id_Remover(std::vector< std::pair< Id_Type, Uint31_Index > >& ids_) : ids(ids_), found(ids.size(), false) {}
+  ~Id_Remover()
+  {
+    auto t_it = ids.begin();
+    decltype(found.size()) i = 0;
+    for (auto s_it = ids.begin(); s_it != ids.end(); ++s_it)
+    {
+      if (!found[i++])
+      {
+        *t_it = *s_it;
+        ++t_it;
+      }
+    }
+    ids.erase(t_it, ids.end());
+  }
+  void remove(Id_Type id)
+  {
+    auto it = std::lower_bound(ids.begin(), ids.end(), std::pair< Id_Type, Uint31_Index >{ id, Uint31_Index(0u) });
+    if (it != ids.end() && it->first == id)
+      found[std::distance(ids.begin(), it)] = true;
+  }
+
+private:
+  std::vector< std::pair< Id_Type, Uint31_Index > >& ids;
+  std::vector< bool > found;
+};
+
+
+template< class Id_Type >
+void Query_Statement::filter_non_ids
+  (std::vector< std::pair< Id_Type, Uint31_Index > >& ids,
+   const File_Properties& file_prop, const File_Properties& attic_file_prop,
+   Resource_Manager& rman, uint64 timestamp)
+{
+  if (key_nvalues.empty() && key_nregexes.empty())
+    return;
+
+  Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > > tags_db
+      (rman.get_transaction()->data_index(&file_prop));
+  Optional< Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > > > attic_tags_db
+      (timestamp == NOW ? 0 :
+        new Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >
+        (rman.get_transaction()->data_index(&attic_file_prop)));
+  Id_Remover< Id_Type > idr(ids);
+
+  // Handle Key-Non-Value pairs
+  for (std::vector< std::pair< std::string, std::string > >::const_iterator knvit = key_nvalues.begin();
+      knvit != key_nvalues.end(); ++knvit)
+  {
+    if (timestamp == NOW)
+    {
+      std::set< Tag_Index_Global > tag_req = get_kv_req(knvit->first, knvit->second);
+      for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Discrete_Iterator
+          it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
+          !(it2 == tags_db.discrete_end()); ++it2)
+        idr.remove(it2.object().id);
+    }
+    else
+    {
+      std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id
+          = collect_attic_kv(knvit, timestamp, tags_db, *attic_tags_db.obj);
+
+      for (typename std::map< Id_Type, std::pair< uint64, Uint31_Index > >::const_iterator
+          it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
+        idr.remove(it->first);
+    }
+    rman.health_check(*this);
+  }
+
+  // Handle Key-Regular-Expression-Non-Value pairs
+  for (std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator knrit = key_nregexes.begin();
+      knrit != key_nregexes.end(); ++knrit)
+  {
+    if (timestamp == NOW)
+    {
+      Ranges< Tag_Index_Global > ranges = get_k_req(knrit->first);
+      for (auto it2 = tags_db.range_begin(ranges); !it2.is_end(); ++it2)
+      {
+        if (knrit->second->matches(it2.index().value))
+          idr.remove(it2.object().id);
+      }
+    }
+    else
+    {
+      std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id
+          = collect_attic_kregv(knrit, timestamp, tags_db, *attic_tags_db.obj);
+
+      for (typename std::map< Id_Type, std::pair< uint64, Uint31_Index > >::const_iterator
+          it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
+        idr.remove(it->first);
+    }
+    rman.health_check(*this);
+  }
 }
 
 
@@ -804,7 +904,7 @@ void filter_by_ids(
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
              eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(it->second.begin(), it->second.end(), eit->id))
+          if (std::binary_search(it->second.begin(), it->second.end(), eit->id))
             result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
@@ -825,7 +925,7 @@ void filter_by_ids(
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
              eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(it->second.begin(), it->second.end(), eit->id))
+          if (std::binary_search(it->second.begin(), it->second.end(), eit->id))
             result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
@@ -837,7 +937,7 @@ void filter_by_ids(
         for (typename std::vector< Attic< TObject > >::const_iterator eit = attic_item_it->second.begin();
              eit != attic_item_it->second.end(); ++eit)
         {
-          if (binary_search(it->second.begin(), it->second.end(), eit->id))
+          if (std::binary_search(it->second.begin(), it->second.end(), eit->id))
             attic_result[attic_item_it->first.val()].push_back(*eit);
         }
         ++attic_item_it;
@@ -1041,7 +1141,7 @@ void Query_Statement::filter_by_tags
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
 	     eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
+          if (std::binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
 	    result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
@@ -1091,7 +1191,7 @@ void Query_Statement::filter_by_tags
         for (typename std::vector< TObject >::const_iterator eit = item_it->second.begin();
              eit != item_it->second.end(); ++eit)
         {
-          if (binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
+          if (std::binary_search(ids_by_coarse_.begin(), ids_by_coarse_.end(), eit->id))
             result[item_it->first.val()].push_back(*eit);
         }
         ++item_it;
@@ -1233,29 +1333,12 @@ void Query_Statement::progress_1(
         collect_ids< Skeleton, Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late, result_valid);
 
     if (!key_nvalues.empty() || (check_keys_late != prefer_ranges && !key_nregexes.empty()))
+      filter_non_ids< Id_Type >(id_idxs, file_prop, attic_file_prop, rman, timestamp);
+
+    for (auto it = id_idxs.begin(); it != id_idxs.end(); ++it)
     {
-      std::vector< std::pair< Id_Type, Uint31_Index > > non_ids
-          = collect_non_ids< Id_Type >(file_prop, attic_file_prop, rman, timestamp);
-      std::vector< std::pair< Id_Type, Uint31_Index > > diff_ids(id_idxs.size());
-      diff_ids.erase(set_difference(id_idxs.begin(), id_idxs.end(), non_ids.begin(), non_ids.end(),
-		     diff_ids.begin()), diff_ids.end());
-      ids.ids.clear();
-      range_vec.clear();
-      for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = diff_ids.begin();
-          it != diff_ids.end(); ++it)
-      {
-        ids.ids.push_back(it->first);
-        range_vec.push_back(it->second);
-      }
-    }
-    else
-    {
-      for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = id_idxs.begin();
-          it != id_idxs.end(); ++it)
-      {
-        ids.ids.push_back(it->first);
-        range_vec.push_back(it->second);
-      }
+      ids.ids.push_back(it->first);
+      range_vec.push_back(it->second);
     }
 
     if (ids.ids.empty() && result_valid)

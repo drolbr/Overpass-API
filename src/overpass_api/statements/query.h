@@ -191,6 +191,12 @@ class Query_Statement : public Output_Statement
          Resource_Manager& rman, Query_Filter_Strategy check_keys_late);
 
     template< class Id_Type >
+    void filter_non_ids
+        (std::vector< std::pair< Id_Type, Uint31_Index > >& ids,
+         const File_Properties& file_prop, const File_Properties& attic_file_prop,
+         Resource_Manager& rman, uint64 timestamp);
+
+    template< class Id_Type >
     std::vector< std::pair< Id_Type, Uint31_Index > > collect_non_ids
         (const File_Properties& file_prop, const File_Properties& attic_file_prop,
          Resource_Manager& rman, uint64 timestamp);
