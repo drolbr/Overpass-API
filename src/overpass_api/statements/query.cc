@@ -495,7 +495,7 @@ void Query_Statement::filter_non_ids
     else
     {
       std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id
-          = collect_attic_kv(knvit, timestamp, tags_db, *attic_tags_db.obj);
+          = collect_attic_kv(knvit, timestamp, tags_db, *attic_tags_db.obj, &ids);
 
       for (typename std::map< Id_Type, std::pair< uint64, Uint31_Index > >::const_iterator
           it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
@@ -520,7 +520,7 @@ void Query_Statement::filter_non_ids
     else
     {
       std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id
-          = collect_attic_kregv(knrit, timestamp, tags_db, *attic_tags_db.obj);
+          = collect_attic_kregv(knrit, timestamp, tags_db, *attic_tags_db.obj, &ids);
 
       for (typename std::map< Id_Type, std::pair< uint64, Uint31_Index > >::const_iterator
           it = timestamp_per_id.begin(); it != timestamp_per_id.end(); ++it)
