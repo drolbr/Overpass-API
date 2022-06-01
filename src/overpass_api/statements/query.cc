@@ -1328,9 +1328,9 @@ void Query_Statement::progress_1(
           && (!keys.empty() || !key_regexes.empty() || !regkey_regexes.empty())))
   {
     bool result_valid = true;
-    ids.invert = false;
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_ids< Skeleton, Id_Type >(file_prop, attic_file_prop, rman, timestamp, check_keys_late, result_valid);
+    ids.invert = !result_valid;
 
     if (!key_nvalues.empty() || (check_keys_late != prefer_ranges && !key_nregexes.empty()))
       filter_non_ids< Id_Type >(id_idxs, file_prop, attic_file_prop, rman, timestamp);
