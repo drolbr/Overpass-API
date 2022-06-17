@@ -387,7 +387,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
       while (!tai.is_end() && tai.get_idx().val() < idx.val())
         tai.next();
       if (tai.is_end())
-        continue;
+        break;
       
       if (cur_it->first == tai.get_idx())
       {
