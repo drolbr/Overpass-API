@@ -81,7 +81,25 @@ struct File_Blocks_Index_Structure_Params
 };
 
 
-template< class TIndex >
+template< typename Index >
+struct File_Blocks_Index_Iterator
+{
+public:
+  File_Blocks_Index_Iterator(typename std::vector< File_Block_Index_Entry< Index > >::const_iterator it_) : it(it_) {}
+  
+  void operator++() { ++it; }
+  bool operator==(File_Blocks_Index_Iterator rhs) const { return it == rhs.it; }
+  Index index() const { return it->index; }
+  uint32 pos() const { return it->pos; }
+  uint32 size() const { return it->size; }
+  uint32 max_keysize() const { return it->max_keysize; }
+
+private:
+  typename std::vector< File_Block_Index_Entry< Index > >::const_iterator it;
+};
+
+
+template< typename Index >
 struct Readonly_File_Blocks_Index : public File_Blocks_Index_Base
 {
 public:
@@ -99,12 +117,14 @@ public:
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
 
-  const std::vector< File_Block_Index_Entry< TIndex > >& get_blocks()
+  const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
   {
     if (idx_file.buf.ptr)
       init_blocks();
     return block_array;
   }
+  File_Blocks_Index_Iterator< Index > begin() { return get_blocks().begin(); }
+  File_Blocks_Index_Iterator< Index > end() { return get_blocks().end(); }
 
 private:
   File_Blocks_Index_File idx_file;
@@ -112,7 +132,7 @@ private:
   File_Blocks_Index_Structure_Params params;
   std::string file_name_extension_;
 
-  std::vector< File_Block_Index_Entry< TIndex > > block_array;
+  std::vector< File_Block_Index_Entry< Index > > block_array;
 
   void init_blocks();
 };

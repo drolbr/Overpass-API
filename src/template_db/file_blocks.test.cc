@@ -1252,7 +1252,7 @@ int main(int argc, char* args[])
     while (!blocks.flat_begin().is_end())
     {
       std::list< IntIndex > indices;
-      indices.push_back(blocks.flat_begin().block_it->index);
+      indices.push_back(blocks.flat_begin().block().index());
       File_Blocks_Write_Iterator< IntIndex, std::list< IntIndex >::const_iterator > it =
           blocks.write_begin(indices.begin(), indices.end());
       while (!it.is_end())
