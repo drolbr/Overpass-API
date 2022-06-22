@@ -743,7 +743,7 @@ typename File_Blocks< TIndex, TIterator >::Flat_Iterator
     File_Blocks< TIndex, TIterator >::flat_begin()
 {
   if (rd_idx)
-    return Flat_Iterator(rd_idx->get_blocks().begin(), rd_idx->get_blocks().end());
+    return Flat_Iterator(rd_idx->begin(), rd_idx->end());
   return Flat_Iterator(wr_idx->get_blocks().begin(), wr_idx->get_blocks().end());
 }
 
@@ -753,7 +753,7 @@ typename File_Blocks< TIndex, TIterator >::Flat_Iterator
     File_Blocks< TIndex, TIterator >::flat_end()
 {
   if (rd_idx)
-    return Flat_Iterator(rd_idx->get_blocks().end(), rd_idx->get_blocks().end());
+    return Flat_Iterator(rd_idx->end(), rd_idx->end());
   return Flat_Iterator(wr_idx->get_blocks().end(), wr_idx->get_blocks().end());
 }
 
@@ -765,7 +765,7 @@ typename File_Blocks< TIndex, TIterator >::Discrete_Iterator
 {
   if (rd_idx)
     return File_Blocks_Discrete_Iterator< TIndex, TIterator >
-        (begin, end, rd_idx->get_blocks().begin(), rd_idx->get_blocks().end());
+        (begin, end, rd_idx->begin(), rd_idx->end());
   return File_Blocks_Discrete_Iterator< TIndex, TIterator >
       (begin, end, wr_idx->get_blocks().begin(), wr_idx->get_blocks().end());
 }
@@ -776,7 +776,7 @@ typename File_Blocks< TIndex, TIterator >::Discrete_Iterator
     File_Blocks< TIndex, TIterator >::discrete_end()
 {
   if (rd_idx)
-    return Discrete_Iterator(rd_idx->get_blocks().end());
+    return Discrete_Iterator(rd_idx->end());
   return Discrete_Iterator(wr_idx->get_blocks().end());
 }
 
@@ -788,7 +788,7 @@ File_Blocks_Range_Iterator< TIndex, Range_Iterator > File_Blocks< TIndex, TItera
 {
   if (rd_idx)
     return File_Blocks_Range_Iterator< TIndex, Range_Iterator >
-        (rd_idx->get_blocks().begin(), rd_idx->get_blocks().end(), begin, end);
+        (rd_idx->begin(), rd_idx->end(), begin, end);
   return File_Blocks_Range_Iterator< TIndex, Range_Iterator >
       (wr_idx->get_blocks().begin(), wr_idx->get_blocks().end(), begin, end);
 }
@@ -799,7 +799,7 @@ template< typename Range_Iterator >
 File_Blocks_Range_Iterator< TIndex, Range_Iterator > File_Blocks< TIndex, TIterator >::range_end()
 {
   if (rd_idx)
-    return File_Blocks_Range_Iterator< TIndex, Range_Iterator >(rd_idx->get_blocks().end());
+    return File_Blocks_Range_Iterator< TIndex, Range_Iterator >(rd_idx->end());
   return File_Blocks_Range_Iterator< TIndex, Range_Iterator >(wr_idx->get_blocks().end());
 }
 

@@ -89,6 +89,7 @@ public:
   
   void operator++() { ++it; }
   bool operator==(File_Blocks_Index_Iterator rhs) const { return it == rhs.it; }
+  bool operator!=(File_Blocks_Index_Iterator rhs) const { return it != rhs.it; }
   Index index() const { return it->index; }
   uint32 pos() const { return it->pos; }
   uint32 size() const { return it->size; }
@@ -116,13 +117,6 @@ public:
   virtual uint32 get_block_count() const { return params.block_count; }
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
-
-  const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
-  {
-    if (idx_file.buf.ptr)
-      init_blocks();
-    return block_array;
-  }
   File_Blocks_Index_Iterator< Index > begin() { return get_blocks().begin(); }
   File_Blocks_Index_Iterator< Index > end() { return get_blocks().end(); }
 
@@ -135,6 +129,13 @@ private:
   std::vector< File_Block_Index_Entry< Index > > block_array;
 
   void init_blocks();
+
+  const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
+  {
+    if (idx_file.buf.ptr)
+      init_blocks();
+    return block_array;
+  }
 };
 
 
@@ -428,33 +429,12 @@ void Writeable_File_Blocks_Index< TIndex >::init_blocks()
 }
 
 
-template< class TIndex >
-std::vector< std::pair< uint32, uint32 > > compute_void_blocks(
-    const std::vector< File_Block_Index_Entry< TIndex > >& block_array,
-    const std::list< File_Block_Index_Entry< TIndex > >* block_list,
-    uint32 block_count)
+inline std::vector< std::pair< uint32, uint32 > > compute_void_blocks(const std::vector< bool >& is_referred)
 {
-  std::vector< bool > is_referred(block_count, false);
-  if (block_list)
-  {
-    for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator it = block_list->begin();
-        it != block_list->end(); ++it)
-    {
-      for (uint32 i = 0; i < it->size; ++i)
-        is_referred[it->pos + i] = true;
-    }
-  }
-  for (typename std::vector< File_Block_Index_Entry< TIndex > >::const_iterator it = block_array.begin();
-      it != block_array.end(); ++it)
-  {
-    for (uint32 i = 0; i < it->size; ++i)
-      is_referred[it->pos + i] = true;
-  }
-
   std::vector< std::pair< uint32, uint32 > > void_blocks;
   // determine void_blocks
   uint32 last_start = 0;
-  for (uint32 i = 0; i < block_count; ++i)
+  for (uint32 i = 0; i < is_referred.size(); ++i)
   {
     if (is_referred[i])
     {
@@ -463,10 +443,38 @@ std::vector< std::pair< uint32, uint32 > > compute_void_blocks(
       last_start = i+1;
     }
   }
-  if (last_start < block_count)
-    void_blocks.push_back(std::make_pair(block_count - last_start, last_start));
+  if (last_start < is_referred.size())
+    void_blocks.push_back(std::make_pair(is_referred.size() - last_start, last_start));
 
   return void_blocks;
+}
+
+
+template< typename Iterator >
+std::vector< std::pair< uint32, uint32 > > compute_void_blocks(Iterator begin, Iterator end, uint32 block_count)
+{
+  std::vector< bool > is_referred(block_count, false);
+  for (auto it = begin; it != end; ++it)
+  {
+    for (uint32 i = 0; i < it.size(); ++i)
+      is_referred[it.pos() + i] = true;
+  }
+  
+  return compute_void_blocks(is_referred);
+}
+
+
+template< typename List >
+std::vector< std::pair< uint32, uint32 > > compute_void_blocks(const List& block_list, uint32 block_count)
+{
+  std::vector< bool > is_referred(block_count, false);
+  for (auto it = block_list.begin(); it != block_list.end(); ++it)
+  {
+    for (uint32 i = 0; i < it->size; ++i)
+      is_referred[it->pos + i] = true;
+  }
+  
+  return compute_void_blocks(is_referred);
 }
 
 
@@ -494,7 +502,7 @@ void Writeable_File_Blocks_Index< TIndex >::init_void_blocks()
   }
 
   if (!empty_index_file_used)
-    void_blocks = compute_void_blocks(block_array, &block_list, params.block_count);
+    void_blocks = compute_void_blocks(block_list, params.block_count);
 
   std::stable_sort(void_blocks.begin(), void_blocks.end());
   void_blocks_initialized = true;
@@ -559,12 +567,12 @@ Writeable_File_Blocks_Index< TIndex >::~Writeable_File_Blocks_Index()
 
 /** Implementation non-members: ---------------------------------------------*/
 
-template< class TIndex >
+template< class Index >
 std::vector< bool > get_data_index_footprint
     (const File_Properties& file_prop, std::string db_dir)
 {
-  Readonly_File_Blocks_Index< TIndex > index(file_prop, false, db_dir, "");
-  auto void_blocks = compute_void_blocks< TIndex >(index.get_blocks(), nullptr, index.get_block_count());
+  Readonly_File_Blocks_Index< Index > index(file_prop, false, db_dir, "");
+  auto void_blocks = compute_void_blocks(index.begin(), index.end(), index.get_block_count());
 
   std::vector< bool > result(index.get_block_count(), true);
   for (typename std::vector< std::pair< uint32, uint32 > >::const_iterator
