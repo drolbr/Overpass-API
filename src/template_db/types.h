@@ -147,6 +147,20 @@ public:
   explicit Void_Pointer(int block_size) { ptr = block_size > 0 ? (T*)malloc(block_size) : 0; }
   ~Void_Pointer() { clear(); }
 
+  Void_Pointer(Void_Pointer&& rhs) : ptr(rhs.ptr)
+  {
+    rhs.ptr = nullptr;
+  }
+  Void_Pointer& operator=(Void_Pointer&& rhs)
+  {
+    if (ptr != rhs.ptr)
+    {
+      clear();
+      ptr = rhs.ptr;
+      rhs.ptr = nullptr;
+    }
+  }
+
   void clear()
   {
     if (ptr)

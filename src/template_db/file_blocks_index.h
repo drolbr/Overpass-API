@@ -510,10 +510,13 @@ void Writeable_File_Blocks_Index< TIndex >::init_void_blocks()
 
 
 template< class TIndex >
-Writeable_File_Blocks_Index< TIndex >::~Writeable_File_Blocks_Index()
+Void_Pointer< uint8 > make_index_buf(
+    const File_Blocks_Index_Structure_Params& params,
+    const std::list< File_Block_Index_Entry< TIndex > >& block_list,
+    uint32& index_size)
 {
   // Keep space for file version and size information
-  uint32 index_size = 8;
+  index_size = 8;
   uint32 pos = 8;
 
   for (typename std::list< File_Block_Index_Entry< TIndex > >::const_iterator
@@ -539,6 +542,17 @@ Writeable_File_Blocks_Index< TIndex >::~Writeable_File_Blocks_Index()
     it->index.to_data(index_buf.ptr+pos);
     pos += it->index.size_of();
   }
+  
+  return index_buf;
+}
+
+
+template< class TIndex >
+Writeable_File_Blocks_Index< TIndex >::~Writeable_File_Blocks_Index()
+{
+  // Keep space for file version and size information
+  uint32 index_size = 8;  
+  Void_Pointer< uint8 > index_buf = make_index_buf(params, block_list, index_size);
 
   Raw_File dest_file(idx_file.file_name, O_RDWR|O_CREAT, S_666,
 		     "File_Blocks_Index::~File_Blocks_Index::1");
