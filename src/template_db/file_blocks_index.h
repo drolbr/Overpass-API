@@ -57,10 +57,28 @@ public:
   File_Blocks_Index_File(
       const File_Properties& file_prop, const std::string& db_dir,
       bool use_shadow, const std::string& file_name_extension);
+  const uint8* header() const { return buf.ptr; }
+  const uint8* begin() const { return buf.ptr ? buf.ptr + 8 : 0; }
+  const uint8* end() const { return buf.ptr + size_; }
+  
+  void clear_buf()
+  {
+    buf.resize(0);
+    size_ = 0;
+  }
   
   std::string file_name;
+  
+  template< typename Index >
+  static void inc(const uint8*& ptr)
+  {
+    ptr += 12;
+    ptr += Index::size_of((void*)ptr);
+  }
+  
+private:
   Void_Pointer< uint8 > buf;
-  uint32 size;
+  uint32 size_;
 };
 
 
@@ -132,7 +150,7 @@ private:
 
   const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
   {
-    if (idx_file.buf.ptr)
+    if (idx_file.header())
       init_blocks();
     return block_array;
   }
@@ -163,7 +181,7 @@ public:
 
   std::list< File_Block_Index_Entry< Index > >& get_block_list()
   {
-    if (idx_file.buf.ptr)
+    if (idx_file.header())
       init_blocks();
     if (block_list.empty() && !block_array.empty())
       block_list.assign(block_array.begin(), block_array.end());
@@ -199,7 +217,7 @@ private:
 
   const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
   {
-    if (idx_file.buf.ptr)
+    if (idx_file.header())
       init_blocks();
     if (block_array.empty() && !block_list.empty())
       block_array.assign(block_list.begin(), block_list.end());
@@ -237,16 +255,16 @@ inline File_Blocks_Index_File::File_Blocks_Index_File(
         + file_name_extension + file_prop.get_data_suffix()
         + file_prop.get_index_suffix()
         + (use_shadow ? file_prop.get_shadow_suffix() : "")),
-      buf(0), size(0)
+      buf(0), size_(0)
 {
   try
   {
     Raw_File source_file(file_name, O_RDONLY, S_666, "File_Blocks_Index::File_Blocks_Index::3");
 
     // read index file
-    size = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
-    buf.resize(size);
-    source_file.read(buf.ptr, size, "File_Blocks_Index::File_Blocks_Index::5");
+    size_ = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
+    buf.resize(size_);
+    source_file.read(buf.ptr, size_, "File_Blocks_Index::File_Blocks_Index::5");
   }
   catch (File_Error e)
   {
@@ -267,19 +285,20 @@ inline File_Blocks_Index_Structure_Params::File_Blocks_Index_Structure_Params(
         file_prop.get_compression_method() : compression_method_), // can be overwritten by index file
      block_count(0)
 {
-  if (idx_file.buf.ptr)
+  const uint8* header = idx_file.header();
+  if (header)
   {
     if (file_name_extension != ".legacy")
     {
-      if (*(int32*)idx_file.buf.ptr != FILE_FORMAT_VERSION && *(int32*)idx_file.buf.ptr != 7512)
+      if (*(int32*)header != FILE_FORMAT_VERSION && *(int32*)header != 7512)
 	throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Unsupported index file format version");
-      block_size_ = 1ull<<*(uint8*)(idx_file.buf.ptr + 4);
+      block_size_ = 1ull<<*(uint8*)(header + 4);
       if (!block_size_)
         throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Illegal block size");
-      compression_factor = 1u<<*(uint8*)(idx_file.buf.ptr + 5);
+      compression_factor = 1u<<*(uint8*)(header + 5);
       if (!compression_factor || compression_factor > block_size_)
         throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Illegal compression factor");
-      compression_method = *(uint16*)(idx_file.buf.ptr + 6);
+      compression_method = *(uint16*)(header + 6);
     }
     if (file_size % block_size_)
       throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Data file size does not match block size");
@@ -303,52 +322,26 @@ Readonly_File_Blocks_Index< Index >::Readonly_File_Blocks_Index(
 template< class Index >
 void Readonly_File_Blocks_Index< Index >::init_blocks()
 {
-  if (idx_file.buf.ptr)
+  if (idx_file.header())
   {
 //     clock_t start = clock();
     
-    if (file_name_extension_ == ".legacy")
-      // We support this way the old format although it has no version marker.
+    const uint8* ptr = idx_file.begin();
+    while (ptr < idx_file.end())
     {
-      uint32 pos = 0;
-      while (pos < idx_file.size)
-      {
-        Index index(idx_file.buf.ptr+pos);
-        File_Block_Index_Entry< Index >
-            entry(index,
-	    *(uint32*)(idx_file.buf.ptr + (pos + Index::size_of(idx_file.buf.ptr+pos))),
-	    1, //block size is always 1 in the legacy format
-	    *(uint32*)(idx_file.buf.ptr + (pos + Index::size_of(idx_file.buf.ptr+pos) + 4)));
-        if (entry.pos >= params.block_count)
-	  throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
-        pos += Index::size_of(idx_file.buf.ptr+pos) + 8;
+      Index index((void*)(ptr + 12));
+      File_Block_Index_Entry< Index >
+          entry(index, *(uint32*)(ptr), *(uint32*)(ptr + 4), *(uint32*)(ptr + 8));
+      if (entry.pos >= params.block_count)
+        throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
+      if (entry.pos + entry.size > params.block_count)
+        throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad size in index file");
+      File_Blocks_Index_File::inc< Index >(ptr);
 
-        block_array.push_back(entry);
-      }
-    }
-    else if (idx_file.size > 0)
-    {
-      uint32 pos = 8;
-      while (pos < idx_file.size)
-      {
-        Index index(idx_file.buf.ptr + pos + 12);
-        File_Block_Index_Entry< Index >
-            entry(index,
-	    *(uint32*)(idx_file.buf.ptr + pos),
-	    *(uint32*)(idx_file.buf.ptr + pos + 4),
-	    *(uint32*)(idx_file.buf.ptr + pos + 8));
-        if (entry.pos >= params.block_count)
-          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
-        if (entry.pos + entry.size > params.block_count)
-          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad size in index file");
-        pos += 12;
-        pos += Index::size_of(idx_file.buf.ptr + pos);
-
-        block_array.push_back(entry);
-      }
+      block_array.push_back(entry);
     }
 
-    idx_file.buf.resize(0);
+    idx_file.clear_buf();
     
 //     clock_t end = clock();
 //     std::cout<<std::dec<<params.block_size_<<'\t'<<(end - start)<<'\t'<<data_file_name<<'\n';
@@ -378,52 +371,26 @@ Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
 template< class Index >
 void Writeable_File_Blocks_Index< Index >::init_blocks()
 {
-  if (idx_file.buf.ptr)
+  if (idx_file.header())
   {
 //     clock_t start = clock();
     
-    if (file_name_extension_ == ".legacy")
-      // We support this way the old format although it has no version marker.
+    const uint8* ptr = idx_file.begin();
+    while (ptr < idx_file.end())
     {
-      uint32 pos = 0;
-      while (pos < idx_file.size)
-      {
-        Index index(idx_file.buf.ptr+pos);
-        File_Block_Index_Entry< Index >
-            entry(index,
-	    *(uint32*)(idx_file.buf.ptr + (pos + Index::size_of(idx_file.buf.ptr+pos))),
-	    1, //block size is always 1 in the legacy format
-	    *(uint32*)(idx_file.buf.ptr + (pos + Index::size_of(idx_file.buf.ptr+pos) + 4)));
-        if (entry.pos >= params.block_count)
-	  throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
-        pos += Index::size_of(idx_file.buf.ptr+pos) + 8;
+      Index index((void*)(ptr + 12));
+      File_Block_Index_Entry< Index >
+          entry(index, *(uint32*)(ptr), *(uint32*)(ptr + 4), *(uint32*)(ptr + 8));
+      if (entry.pos >= params.block_count)
+        throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
+      if (entry.pos + entry.size > params.block_count)
+        throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad size in index file");
+      File_Blocks_Index_File::inc< Index >(ptr);
 
-        block_list.push_back(entry);
-      }
-    }
-    else if (idx_file.size > 0)
-    {
-      uint32 pos = 8;
-      while (pos < idx_file.size)
-      {
-        Index index(idx_file.buf.ptr + pos + 12);
-        File_Block_Index_Entry< Index >
-            entry(index,
-	    *(uint32*)(idx_file.buf.ptr + pos),
-	    *(uint32*)(idx_file.buf.ptr + pos + 4),
-	    *(uint32*)(idx_file.buf.ptr + pos + 8));
-        if (entry.pos >= params.block_count)
-          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
-        if (entry.pos + entry.size > params.block_count)
-          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad size in index file");
-        pos += 12;
-        pos += Index::size_of(idx_file.buf.ptr + pos);
-
-        block_list.push_back(entry);
-      }
+      block_list.push_back(entry);
     }
 
-    idx_file.buf.resize(0);
+    idx_file.clear_buf();
     
 //     clock_t end = clock();
 //     std::cout<<std::dec<<params.block_size_<<'\t'<<(end - start)<<'\t'<<data_file_name<<'\n';
@@ -483,7 +450,7 @@ std::vector< std::pair< uint32, uint32 > > compute_void_blocks(const List& block
 template< class Index >
 void Writeable_File_Blocks_Index< Index >::init_void_blocks()
 {
-  if (idx_file.buf.ptr)
+  if (idx_file.header())
     init_blocks();
 
   bool empty_index_file_used = false;

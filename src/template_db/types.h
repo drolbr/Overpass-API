@@ -159,6 +159,7 @@ public:
       ptr = rhs.ptr;
       rhs.ptr = nullptr;
     }
+    return *this;
   }
 
   void clear()
@@ -193,6 +194,21 @@ public:
     ptr = block_size > 0 ? (T*)aligned_alloc(8, block_size) : 0;
   }
   ~Void64_Pointer() { clear(); }
+
+  Void64_Pointer(Void64_Pointer&& rhs) : ptr(rhs.ptr)
+  {
+    rhs.ptr = nullptr;
+  }
+  Void64_Pointer& operator=(Void64_Pointer&& rhs)
+  {
+    if (ptr != rhs.ptr)
+    {
+      clear();
+      ptr = rhs.ptr;
+      rhs.ptr = nullptr;
+    }
+    return *this;
+  }
 
   void clear()
   {
