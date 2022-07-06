@@ -51,6 +51,9 @@ struct File_Block_Index_Entry
 };
 
 
+struct File_Blocks_Index_Structure_Params;
+
+
 struct File_Blocks_Index_File
 {
 public:
@@ -60,7 +63,8 @@ public:
   const uint8* header() const { return buf.ptr; }
   const uint8* begin() const { return buf.ptr ? buf.ptr + 8 : 0; }
   const uint8* end() const { return buf.ptr + size_; }
-  
+  uint32 size() const { return size_; }
+
   void clear_buf()
   {
     buf.resize(0);
@@ -75,7 +79,12 @@ public:
     ptr += 12;
     ptr += Index::size_of((void*)ptr);
   }
-  
+
+  template< class Index >
+  void rebuild_index_buf(
+      const File_Blocks_Index_Structure_Params& params,
+      const std::list< File_Block_Index_Entry< Index > >& block_list);
+
 private:
   Void_Pointer< uint8 > buf;
   uint32 size_;
@@ -145,12 +154,13 @@ private:
   std::string file_name_extension_;
 
   std::vector< File_Block_Index_Entry< Index > > block_array;
+  bool block_array_initialized;
 
   void init_blocks();
 
   const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
   {
-    if (idx_file.header())
+    if (!block_array_initialized)
       init_blocks();
     return block_array;
   }
@@ -179,14 +189,23 @@ public:
   File_Blocks_Index_Iterator< Index > begin() { return get_blocks().begin(); }
   File_Blocks_Index_Iterator< Index > end() { return get_blocks().end(); }
 
-  std::list< File_Block_Index_Entry< Index > >& get_block_list()
-  {
-    if (idx_file.header())
-      init_blocks();
-    if (block_list.empty() && !block_array.empty())
-      block_list.assign(block_array.begin(), block_array.end());
-    return block_list;
-  }
+  const typename std::list< File_Block_Index_Entry< Index > >::iterator wr_begin() { return block_list.begin(); }
+  const typename std::list< File_Block_Index_Entry< Index > >::iterator wr_end() { return block_list.end(); }
+
+  typename std::list< File_Block_Index_Entry< Index > >::iterator insert(
+      typename std::list< File_Block_Index_Entry< Index > >::iterator& block_it,
+      const File_Block_Index_Entry< Index >& entry)
+  { return block_list.insert(block_it, entry); }
+  typename std::list< File_Block_Index_Entry< Index > >::iterator erase(
+      typename std::list< File_Block_Index_Entry< Index > >::iterator& block_it)
+  { return block_list.erase(block_it); }
+
+//   std::list< File_Block_Index_Entry< Index > >& get_block_list()
+//   {
+//     if (!block_list_initialized)
+//       init_blocks();
+//     return block_list;
+//   }
   std::vector< std::pair< uint32, uint32 > >& get_void_blocks()
   {
     if (!void_blocks_initialized)
@@ -195,8 +214,6 @@ public:
   }
   void drop_block_array()
   {
-    if (block_list.empty() && !block_array.empty())
-      block_list.assign(block_array.begin(), block_array.end());
     block_array.clear();
   }
 
@@ -209,6 +226,7 @@ private:
 
   std::vector< File_Block_Index_Entry< Index > > block_array;
   std::list< File_Block_Index_Entry< Index > > block_list;
+  bool block_list_initialized;
   std::vector< std::pair< uint32, uint32 > > void_blocks;
   bool void_blocks_initialized;
 
@@ -217,7 +235,7 @@ private:
 
   const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
   {
-    if (idx_file.header())
+    if (!block_list_initialized)
       init_blocks();
     if (block_array.empty() && !block_list.empty())
       block_array.assign(block_list.begin(), block_list.end());
@@ -316,12 +334,13 @@ Readonly_File_Blocks_Index< Index >::Readonly_File_Blocks_Index(
       data_file_name(db_dir + file_prop.get_file_name_trunk()
           + file_name_extension + file_prop.get_data_suffix()),
       params(file_prop, file_name_extension, USE_DEFAULT, idx_file, file_size_of(data_file_name)), 
-      file_name_extension_(file_name_extension) {}
+      file_name_extension_(file_name_extension), block_array_initialized(false) {}
 
 
 template< class Index >
 void Readonly_File_Blocks_Index< Index >::init_blocks()
 {
+  block_array_initialized = true;
   if (idx_file.header())
   {
 //     clock_t start = clock();
@@ -341,7 +360,7 @@ void Readonly_File_Blocks_Index< Index >::init_blocks()
       block_array.push_back(entry);
     }
 
-    idx_file.clear_buf();
+    //idx_file.clear_buf();
     
 //     clock_t end = clock();
 //     std::cout<<std::dec<<params.block_size_<<'\t'<<(end - start)<<'\t'<<data_file_name<<'\n';
@@ -361,7 +380,7 @@ Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
      data_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()),
      params(file_prop, file_name_extension, compression_method_, idx_file, file_size_of(data_file_name)), 
-     file_name_extension_(file_name_extension), void_blocks_initialized(false)
+     file_name_extension_(file_name_extension), block_list_initialized(false), void_blocks_initialized(false)
 {
   init_void_blocks();
 }
@@ -371,6 +390,7 @@ Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
 template< class Index >
 void Writeable_File_Blocks_Index< Index >::init_blocks()
 {
+  block_list_initialized = true;
   if (idx_file.header())
   {
 //     clock_t start = clock();
@@ -390,7 +410,7 @@ void Writeable_File_Blocks_Index< Index >::init_blocks()
       block_list.push_back(entry);
     }
 
-    idx_file.clear_buf();
+    //idx_file.clear_buf();
     
 //     clock_t end = clock();
 //     std::cout<<std::dec<<params.block_size_<<'\t'<<(end - start)<<'\t'<<data_file_name<<'\n';
@@ -450,7 +470,7 @@ std::vector< std::pair< uint32, uint32 > > compute_void_blocks(const List& block
 template< class Index >
 void Writeable_File_Blocks_Index< Index >::init_void_blocks()
 {
-  if (idx_file.header())
+  if (!block_list_initialized)
     init_blocks();
 
   bool empty_index_file_used = false;
@@ -479,40 +499,37 @@ void Writeable_File_Blocks_Index< Index >::init_void_blocks()
 
 
 template< class Index >
-Void_Pointer< uint8 > make_index_buf(
+void File_Blocks_Index_File::rebuild_index_buf(
     const File_Blocks_Index_Structure_Params& params,
-    const std::list< File_Block_Index_Entry< Index > >& block_list,
-    uint32& index_size)
+    const std::list< File_Block_Index_Entry< Index > >& block_list)
 {
   // Keep space for file version and size information
-  index_size = 8;
+  size_ = 8;
   uint32 pos = 8;
 
   for (typename std::list< File_Block_Index_Entry< Index > >::const_iterator
       it(block_list.begin()); it != block_list.end(); ++it)
-    index_size += 12 + it->index.size_of();
+    size_ += 12 + it->index.size_of();
 
-  Void_Pointer< uint8 > index_buf(index_size);
+  buf.resize(size_);
 
-  *(uint32*)index_buf.ptr = File_Blocks_Index_Structure_Params::FILE_FORMAT_VERSION;
-  *(uint8*)(index_buf.ptr + 4) = shift_log(params.block_size_);
-  *(uint8*)(index_buf.ptr + 5) = shift_log(params.compression_factor);
-  *(uint16*)(index_buf.ptr + 6) = params.compression_method;
+  *(uint32*)buf.ptr = File_Blocks_Index_Structure_Params::FILE_FORMAT_VERSION;
+  *(uint8*)(buf.ptr + 4) = shift_log(params.block_size_);
+  *(uint8*)(buf.ptr + 5) = shift_log(params.compression_factor);
+  *(uint16*)(buf.ptr + 6) = params.compression_method;
 
   for (typename std::list< File_Block_Index_Entry< Index > >::const_iterator
       it(block_list.begin()); it != block_list.end(); ++it)
   {
-    *(uint32*)(index_buf.ptr+pos) = it->pos;
+    *(uint32*)(buf.ptr+pos) = it->pos;
     pos += 4;
-    *(uint32*)(index_buf.ptr+pos) = it->size;
+    *(uint32*)(buf.ptr+pos) = it->size;
     pos += 4;
-    *(uint32*)(index_buf.ptr+pos) = it->max_keysize;
+    *(uint32*)(buf.ptr+pos) = it->max_keysize;
     pos += 4;
-    it->index.to_data(index_buf.ptr+pos);
+    it->index.to_data(buf.ptr+pos);
     pos += it->index.size_of();
   }
-  
-  return index_buf;
 }
 
 
@@ -520,15 +537,14 @@ template< class Index >
 Writeable_File_Blocks_Index< Index >::~Writeable_File_Blocks_Index()
 {
   // Keep space for file version and size information
-  uint32 index_size = 8;  
-  Void_Pointer< uint8 > index_buf = make_index_buf(params, block_list, index_size);
+  idx_file.rebuild_index_buf(params, block_list);
 
   Raw_File dest_file(idx_file.file_name, O_RDWR|O_CREAT, S_666,
 		     "File_Blocks_Index::~File_Blocks_Index::1");
 
-  if (index_size < dest_file.size("File_Blocks_Index::~File_Blocks_Index::2"))
-    dest_file.resize(index_size, "File_Blocks_Index::~File_Blocks_Index::3");
-  dest_file.write(index_buf.ptr, index_size, "File_Blocks_Index::~File_Blocks_Index::4");
+  if (idx_file.size() < dest_file.size("File_Blocks_Index::~File_Blocks_Index::2"))
+    dest_file.resize(idx_file.size(), "File_Blocks_Index::~File_Blocks_Index::3");
+  dest_file.write((void*)idx_file.header(), idx_file.size(), "File_Blocks_Index::~File_Blocks_Index::4");
 
   // Write void blocks
   Void_Pointer< uint8 > void_index_buf(void_blocks.size() * 8);

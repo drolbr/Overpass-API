@@ -199,7 +199,11 @@ struct File_Blocks_Write_Iterator
   const TIterator& upper_bound() const { return index_upper; }
 
   const File_Block_Index_Entry< TIndex >& block() const { return *block_it; }
-  void set_block(const File_Block_Index_Entry< TIndex >& rhs) { *block_it = rhs; }
+  void set_block(Writeable_File_Blocks_Index< TIndex >& index, const File_Block_Index_Entry< TIndex >& rhs)
+  {
+    index.drop_block_array();
+    *block_it = rhs;
+  }
   void insert_block(Writeable_File_Blocks_Index< TIndex >& index, const File_Block_Index_Entry< TIndex >& entry);
   void erase_block(Writeable_File_Blocks_Index< TIndex >& index);
   void erase_blocks(Writeable_File_Blocks_Index< TIndex >& index, const File_Blocks_Write_Iterator& upper_limit);
@@ -607,11 +611,11 @@ void File_Blocks_Write_Iterator< TIndex, TIterator >::insert_block(
   index.drop_block_array();
   if (block_it == block_begin)
   {
-    block_it = index.get_block_list().insert(block_it, entry);
+    block_it = index.insert(block_it, entry);
     block_begin = block_it;
   }
   else
-    block_it = index.get_block_list().insert(block_it, entry);
+    block_it = index.insert(block_it, entry);
   ++block_it;
 }
 
@@ -625,11 +629,11 @@ void File_Blocks_Write_Iterator< TIndex, TIterator >::erase_block(Writeable_File
   index.drop_block_array();
   if (to_delete == block_begin)
   {
-    to_delete = index.get_block_list().erase(to_delete);
+    to_delete = index.erase(to_delete);
     block_begin = to_delete;
   }
   else
-    to_delete = index.get_block_list().erase(to_delete);
+    to_delete = index.erase(to_delete);
 }
 
 
@@ -637,10 +641,9 @@ template< typename TIndex, typename TIterator >
 void File_Blocks_Write_Iterator< TIndex, TIterator >::erase_blocks(
     Writeable_File_Blocks_Index< TIndex >& index, const File_Blocks_Write_Iterator< TIndex, TIterator >& rhs)
 {
-  std::list< File_Block_Index_Entry< TIndex > >& block_list = index.get_block_list();
   index.drop_block_array();
   while (block_it != rhs.block_it)
-    block_it = block_list.erase(block_it);
+    block_it = index.erase(block_it);
 }
 
 
@@ -810,7 +813,7 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
     (const TIterator& begin, const TIterator& end, bool is_empty)
 {
   return File_Blocks_Write_Iterator< TIndex, TIterator >
-      (begin, end, wr_idx->get_block_list().begin(), wr_idx->get_block_list().end(), is_empty);
+      (begin, end, wr_idx->wr_begin(), wr_idx->wr_end(), is_empty);
 }
 
 
@@ -818,7 +821,7 @@ template< typename TIndex, typename TIterator >
 typename File_Blocks< TIndex, TIterator >::Write_Iterator
     File_Blocks< TIndex, TIterator >::write_end()
 {
-  return File_Blocks_Write_Iterator< TIndex, TIterator >(wr_idx->get_block_list().end());
+  return File_Blocks_Write_Iterator< TIndex, TIterator >(wr_idx->wr_end());
 }
 
 
@@ -1091,7 +1094,7 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
   uint32 pos = 0;
   write_block(buf, payload_size, data_size, pos);
 
-  it.set_block(File_Block_Index_Entry< TIndex >(block_idx, pos, data_size, max_keysize));
+  it.set_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, data_size, max_keysize));
   return it;
 }
 
