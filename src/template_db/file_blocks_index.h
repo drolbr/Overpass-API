@@ -200,12 +200,6 @@ public:
       typename std::list< File_Block_Index_Entry< Index > >::iterator& block_it)
   { return block_list.erase(block_it); }
 
-//   std::list< File_Block_Index_Entry< Index > >& get_block_list()
-//   {
-//     if (!block_list_initialized)
-//       init_blocks();
-//     return block_list;
-//   }
   std::vector< std::pair< uint32, uint32 > >& get_void_blocks()
   {
     if (!void_blocks_initialized)
@@ -214,11 +208,13 @@ public:
   }
   void drop_block_array()
   {
+    idx_file_buf_valid = false;
     block_array.clear();
   }
 
 private:
   File_Blocks_Index_File idx_file;
+  bool idx_file_buf_valid;
   std::string empty_index_file_name;
   std::string data_file_name;
   File_Blocks_Index_Structure_Params params;
@@ -226,7 +222,6 @@ private:
 
   std::vector< File_Block_Index_Entry< Index > > block_array;
   std::list< File_Block_Index_Entry< Index > > block_list;
-  bool block_list_initialized;
   std::vector< std::pair< uint32, uint32 > > void_blocks;
   bool void_blocks_initialized;
 
@@ -235,10 +230,29 @@ private:
 
   const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
   {
-    if (!block_list_initialized)
-      init_blocks();
-    if (block_array.empty() && !block_list.empty())
-      block_array.assign(block_list.begin(), block_list.end());
+    if (!idx_file_buf_valid)
+    {
+      idx_file.rebuild_index_buf(params, block_list);
+      idx_file_buf_valid = true;      
+      block_array.clear();
+    }
+    if (block_array.empty())
+    {
+      const uint8* ptr = idx_file.begin();
+      while (ptr < idx_file.end())
+      {
+        Index index((void*)(ptr + 12));
+        File_Block_Index_Entry< Index >
+            entry(index, *(uint32*)(ptr), *(uint32*)(ptr + 4), *(uint32*)(ptr + 8));
+        if (entry.pos >= params.block_count)
+          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
+        if (entry.pos + entry.size > params.block_count)
+          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad size in index file");
+        File_Blocks_Index_File::inc< Index >(ptr);
+
+        block_array.push_back(entry);
+      }
+    }
     return block_array;
   }
 };
@@ -373,15 +387,16 @@ Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
     (const File_Properties& file_prop, bool use_shadow,
      const std::string& db_dir, const std::string& file_name_extension,
      int compression_method_) :
-     idx_file(file_prop, db_dir, use_shadow, file_name_extension),
+     idx_file(file_prop, db_dir, use_shadow, file_name_extension), idx_file_buf_valid(true),
      empty_index_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()
          + file_prop.get_shadow_suffix()),
      data_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()),
      params(file_prop, file_name_extension, compression_method_, idx_file, file_size_of(data_file_name)), 
-     file_name_extension_(file_name_extension), block_list_initialized(false), void_blocks_initialized(false)
+     file_name_extension_(file_name_extension), void_blocks_initialized(false)
 {
+  init_blocks();
   init_void_blocks();
 }
 
@@ -390,7 +405,6 @@ Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
 template< class Index >
 void Writeable_File_Blocks_Index< Index >::init_blocks()
 {
-  block_list_initialized = true;
   if (idx_file.header())
   {
 //     clock_t start = clock();
@@ -470,9 +484,6 @@ std::vector< std::pair< uint32, uint32 > > compute_void_blocks(const List& block
 template< class Index >
 void Writeable_File_Blocks_Index< Index >::init_void_blocks()
 {
-  if (!block_list_initialized)
-    init_blocks();
-
   bool empty_index_file_used = false;
   if (empty_index_file_name != "")
   {
@@ -537,7 +548,8 @@ template< class Index >
 Writeable_File_Blocks_Index< Index >::~Writeable_File_Blocks_Index()
 {
   // Keep space for file version and size information
-  idx_file.rebuild_index_buf(params, block_list);
+  if (!idx_file_buf_valid)
+    idx_file.rebuild_index_buf(params, block_list);
 
   Raw_File dest_file(idx_file.file_name, O_RDWR|O_CREAT, S_666,
 		     "File_Blocks_Index::~File_Blocks_Index::1");
