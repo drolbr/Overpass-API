@@ -112,18 +112,43 @@ template< typename Index >
 struct File_Blocks_Index_Iterator
 {
 public:
-  File_Blocks_Index_Iterator(typename std::vector< File_Block_Index_Entry< Index > >::const_iterator it_) : it(it_) {}
-  
-  void operator++() { ++it; }
-  bool operator==(File_Blocks_Index_Iterator rhs) const { return it == rhs.it; }
-  bool operator!=(File_Blocks_Index_Iterator rhs) const { return it != rhs.it; }
-  Index index() const { return it->index; }
-  uint32 pos() const { return it->pos; }
-  uint32 size() const { return it->size; }
-  uint32 max_keysize() const { return it->max_keysize; }
+  File_Blocks_Index_Iterator(const uint8* ptr_) : ptr(ptr_), idx(0) {}
+  ~File_Blocks_Index_Iterator() { delete idx; }
+  File_Blocks_Index_Iterator(const File_Blocks_Index_Iterator& rhs) : ptr(rhs.ptr), idx(0) {}
+  File_Blocks_Index_Iterator& operator=(const File_Blocks_Index_Iterator& rhs)
+  {
+    if (ptr != rhs.ptr)
+    {
+      delete idx;
+      idx = 0;
+      ptr = rhs.ptr;
+    }
+    return *this;
+  }
+
+  void operator++()
+  {
+    delete idx;
+    idx = 0;
+    ptr += 12;
+    ptr += Index::size_of((void*)ptr);
+  }
+  bool operator==(File_Blocks_Index_Iterator rhs) const
+  { return ptr == rhs.ptr; }
+  bool operator!=(File_Blocks_Index_Iterator rhs) const { return ptr != rhs.ptr; }
+  Index index() const
+  {
+    if (!idx)
+      idx = new Index((void*)(ptr + 12));
+    return *idx;
+  }
+  uint32 pos() const { return *(uint32*)ptr; }
+  uint32 size() const { return *(uint32*)(ptr + 4); }
+  uint32 max_keysize() const { return *(uint32*)(ptr + 8); }
 
 private:
-  typename std::vector< File_Block_Index_Entry< Index > >::const_iterator it;
+  const uint8* ptr;
+  mutable Index* idx;
 };
 
 
@@ -144,27 +169,24 @@ public:
   virtual uint32 get_block_count() const { return params.block_count; }
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
-  File_Blocks_Index_Iterator< Index > begin() { return get_blocks().begin(); }
-  File_Blocks_Index_Iterator< Index > end() { return get_blocks().end(); }
+  File_Blocks_Index_Iterator< Index > begin()
+  { return File_Blocks_Index_Iterator< Index >(idx_file.begin()); }
+  File_Blocks_Index_Iterator< Index > end()
+  { return File_Blocks_Index_Iterator< Index >(idx_file.end()); }
 
 private:
   File_Blocks_Index_File idx_file;
   std::string data_file_name;
   File_Blocks_Index_Structure_Params params;
   std::string file_name_extension_;
-
-  std::vector< File_Block_Index_Entry< Index > > block_array;
-  bool block_array_initialized;
-
-  void init_blocks();
-
-  const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
-  {
-    if (!block_array_initialized)
-      init_blocks();
-    return block_array;
-  }
 };
+
+
+template< class Index >
+Void_Pointer< uint8 > make_index_buf(
+    const File_Blocks_Index_Structure_Params& params,
+    const std::list< File_Block_Index_Entry< Index > >& block_list,
+    uint32& index_size);
 
 
 template< class Index >
@@ -186,8 +208,24 @@ public:
   virtual uint32 get_block_count() const { return params.block_count; }
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
-  File_Blocks_Index_Iterator< Index > begin() { return get_blocks().begin(); }
-  File_Blocks_Index_Iterator< Index > end() { return get_blocks().end(); }
+  File_Blocks_Index_Iterator< Index > begin()
+  {
+    if (!idx_file_buf_valid)
+    {
+      idx_file.rebuild_index_buf(params, block_list);
+      idx_file_buf_valid = true;      
+    }
+    return File_Blocks_Index_Iterator< Index >(idx_file.begin());
+  }
+  File_Blocks_Index_Iterator< Index > end()
+  { 
+    if (!idx_file_buf_valid)
+    {
+      idx_file.rebuild_index_buf(params, block_list);
+      idx_file_buf_valid = true;      
+    }
+    return File_Blocks_Index_Iterator< Index >(idx_file.end());
+  }
 
   const typename std::list< File_Block_Index_Entry< Index > >::iterator wr_begin() { return block_list.begin(); }
   const typename std::list< File_Block_Index_Entry< Index > >::iterator wr_end() { return block_list.end(); }
@@ -209,7 +247,6 @@ public:
   void drop_block_array()
   {
     idx_file_buf_valid = false;
-    block_array.clear();
   }
 
 private:
@@ -220,41 +257,12 @@ private:
   File_Blocks_Index_Structure_Params params;
   std::string file_name_extension_;
 
-  std::vector< File_Block_Index_Entry< Index > > block_array;
   std::list< File_Block_Index_Entry< Index > > block_list;
   std::vector< std::pair< uint32, uint32 > > void_blocks;
   bool void_blocks_initialized;
 
   void init_blocks();
   void init_void_blocks();
-
-  const std::vector< File_Block_Index_Entry< Index > >& get_blocks()
-  {
-    if (!idx_file_buf_valid)
-    {
-      idx_file.rebuild_index_buf(params, block_list);
-      idx_file_buf_valid = true;      
-      block_array.clear();
-    }
-    if (block_array.empty())
-    {
-      const uint8* ptr = idx_file.begin();
-      while (ptr < idx_file.end())
-      {
-        Index index((void*)(ptr + 12));
-        File_Block_Index_Entry< Index >
-            entry(index, *(uint32*)(ptr), *(uint32*)(ptr + 4), *(uint32*)(ptr + 8));
-        if (entry.pos >= params.block_count)
-          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
-        if (entry.pos + entry.size > params.block_count)
-          throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad size in index file");
-        File_Blocks_Index_File::inc< Index >(ptr);
-
-        block_array.push_back(entry);
-      }
-    }
-    return block_array;
-  }
 };
 
 
@@ -348,38 +356,7 @@ Readonly_File_Blocks_Index< Index >::Readonly_File_Blocks_Index(
       data_file_name(db_dir + file_prop.get_file_name_trunk()
           + file_name_extension + file_prop.get_data_suffix()),
       params(file_prop, file_name_extension, USE_DEFAULT, idx_file, file_size_of(data_file_name)), 
-      file_name_extension_(file_name_extension), block_array_initialized(false) {}
-
-
-template< class Index >
-void Readonly_File_Blocks_Index< Index >::init_blocks()
-{
-  block_array_initialized = true;
-  if (idx_file.header())
-  {
-//     clock_t start = clock();
-    
-    const uint8* ptr = idx_file.begin();
-    while (ptr < idx_file.end())
-    {
-      Index index((void*)(ptr + 12));
-      File_Block_Index_Entry< Index >
-          entry(index, *(uint32*)(ptr), *(uint32*)(ptr + 4), *(uint32*)(ptr + 8));
-      if (entry.pos >= params.block_count)
-        throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
-      if (entry.pos + entry.size > params.block_count)
-        throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad size in index file");
-      File_Blocks_Index_File::inc< Index >(ptr);
-
-      block_array.push_back(entry);
-    }
-
-    //idx_file.clear_buf();
-    
-//     clock_t end = clock();
-//     std::cout<<std::dec<<params.block_size_<<'\t'<<(end - start)<<'\t'<<data_file_name<<'\n';
-  }
-}
+      file_name_extension_(file_name_extension) {}
 
 
 template< class Index >
@@ -401,7 +378,6 @@ Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
 }
 
 
-#include <iostream>
 template< class Index >
 void Writeable_File_Blocks_Index< Index >::init_blocks()
 {
@@ -423,8 +399,6 @@ void Writeable_File_Blocks_Index< Index >::init_blocks()
 
       block_list.push_back(entry);
     }
-
-    //idx_file.clear_buf();
     
 //     clock_t end = clock();
 //     std::cout<<std::dec<<params.block_size_<<'\t'<<(end - start)<<'\t'<<data_file_name<<'\n';

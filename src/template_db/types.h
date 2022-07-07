@@ -86,6 +86,7 @@ struct File_Blocks_Index_Base
   static const int NO_COMPRESSION = 0;
   static const int ZLIB_COMPRESSION = 1;
   static const int LZ4_COMPRESSION = 2;
+  static const unsigned int IDX_HEADER_LENGTH = 8;
 };
 
 
