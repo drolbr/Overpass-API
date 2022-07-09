@@ -383,7 +383,7 @@ File_Blocks_Discrete_Iterator< TIndex, TIterator >::operator++()
 {
   auto it = this->block_it;
   ++(this->block_it);
-  if (!this->is_end() && !(this->block_it.index() == it.index()))
+  if (!this->is_end() && !TIndex::equal(this->block_it.idx_ptr(), it.idx_ptr()))
     find_next_block();
   return *this;
 }
@@ -396,7 +396,7 @@ void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
 
   while (!this->is_end())
   {
-    while (index_lower != index_end && *index_lower < this->block_it.index())
+    while (index_lower != index_end && index_lower->less(this->block_it.idx_ptr()))
       ++index_lower;
     if (index_lower == index_end)
     {
@@ -413,22 +413,22 @@ void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
       index_upper = index_end;
       return;
     }
-    else if (*index_lower < next_block.index())
+    else if (index_lower->less(next_block.idx_ptr()))
     {
       index_upper = index_lower;
-      while (index_upper != index_end && *index_upper < next_block.index())
+      while (index_upper != index_end && index_upper->less(next_block.idx_ptr()))
         ++index_upper;
       return;
     }
-    else if (*index_lower == this->block_it.index()) // implies: this->block_it->index == next_block->index
+    else if (index_lower == this->block_it.index()) // implies: this->block_it->index == next_block->index
     {
       index_upper = index_lower;
       ++index_upper;
       return;
     }
-    else if (this->block_it.index() == next_block.index())
+    else if (TIndex::equal(this->block_it.idx_ptr(), next_block.idx_ptr()))
     {
-      while (!this->is_end() && this->block_it.index() == next_block.index())
+      while (!this->is_end() && TIndex::equal(this->block_it.idx_ptr(), next_block.idx_ptr()))
         ++this->block_it;
     }
     else
@@ -461,7 +461,7 @@ bool File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator==(const File
 }
 
 
-template< typename Iterator >
+template< typename Index, typename Iterator >
 bool index_equals_next_index(Iterator it, Iterator end)
 {
   if (it == end)
@@ -470,7 +470,7 @@ bool index_equals_next_index(Iterator it, Iterator end)
   ++next;
   if (next == end)
     return false;
-  return it.index() == next.index();
+  return Index::equal(it.idx_ptr(), next.idx_ptr());
 }
 
 
@@ -478,7 +478,8 @@ template< typename TIndex, typename TRangeIterator >
 File_Blocks_Range_Iterator< TIndex, TRangeIterator >&
 File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator++()
 {
-  index_equals_last_index = index_equals_next_index(this->block_it, this->block_end);
+  index_equals_last_index = index_equals_next_index
+      < TIndex, File_Blocks_Index_Iterator< TIndex > >(this->block_it, this->block_end);
   ++(this->block_it);
   find_next_block();
   return *this;
@@ -490,7 +491,7 @@ void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
 {
   while (!this->is_end())
   {
-    while ((index_it != index_end) && (!(this->block_it.index() < index_it.upper_bound())))
+    while (index_it != index_end && index_it.upper_bound().leq(this->block_it.idx_ptr()))
       ++index_it;
 
     if (index_it == index_end)
@@ -502,20 +503,22 @@ void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
 
     auto next_block = this->block_it;
     ++next_block;
-    while ((!(next_block == this->block_end)) && (!(index_it.lower_bound() < next_block.index())))
+    while ((!(next_block == this->block_end)) && (!index_it.lower_bound().less(next_block.idx_ptr())))
     {
-      if (!(this->block_it.index() < index_it.lower_bound()))
+      if (index_it.lower_bound().leq(this->block_it.idx_ptr()))
 	// We have found a relevant block that is a segment
 	return;
-      index_equals_last_index = index_equals_next_index(this->block_it, this->block_end);
+      index_equals_last_index = index_equals_next_index
+          < TIndex, File_Blocks_Index_Iterator< TIndex > >(this->block_it, this->block_end);
       ++(this->block_it);
       ++next_block;
     }
 
-    if (!index_equals_last_index || (!(this->block_it.index() < index_it.lower_bound())))
+    if (!index_equals_last_index || index_it.lower_bound().leq(this->block_it.idx_ptr()))
       break;
 
-    index_equals_last_index = index_equals_next_index(this->block_it, this->block_end);
+    index_equals_last_index = index_equals_next_index
+        < TIndex, File_Blocks_Index_Iterator< TIndex > >(this->block_it, this->block_end);
     ++(this->block_it);
   }
 }

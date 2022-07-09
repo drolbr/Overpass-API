@@ -683,6 +683,14 @@ struct Timestamp
     return out.str();
   }
 
+  static bool equal(void* lhs, void* rhs) { return !memcmp(lhs, rhs, 5); }
+  bool less(void* rhs) const
+  { return (timestamp>>32) < *(((uint8*)rhs) + 4)
+        || ((timestamp>>32) == *(((uint8*)rhs) + 4) && (timestamp & 0xffffffffull) < *(uint32*)rhs); }
+  bool leq(void* rhs) const
+  { return (timestamp>>32) < *(((uint8*)rhs) + 4)
+        || ((timestamp>>32) == *(((uint8*)rhs) + 4) && (timestamp & 0xffffffffull) <= *(uint32*)rhs); }
+
   uint32 size_of() const
   {
     return 5;
@@ -697,7 +705,7 @@ struct Timestamp
   {
     void* pos = (uint8*)data;
     *(uint32*)(pos) = (timestamp & 0xffffffffull);
-    *(uint8*)((uint8*)pos+4) = ((timestamp & 0xff00000000ull)>>32);
+    *(((uint8*)pos)+4) = ((timestamp & 0xff00000000ull)>>32);
   }
 
   bool operator<(const Timestamp& rhs) const

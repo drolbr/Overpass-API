@@ -43,6 +43,10 @@ struct Uint32_Index
   Uint32_Index(uint32 i) : value(i) {}
   Uint32_Index(void* data) : value(*(uint32*)data) {}
 
+  static bool equal(void* lhs, void* rhs) { return *(uint32*)lhs == *(uint32*)rhs; }
+  bool less(void* rhs) const { return value < *(uint32*)rhs; }
+  bool leq(void* rhs) const { return value <= *(uint32*)rhs; }
+
   uint32 size_of() const
   {
     return 4;
@@ -128,12 +132,23 @@ struct Uint31_Index : Uint32_Index
   Uint31_Index(uint32 i) : Uint32_Index(i) {}
   Uint31_Index(void* data) : Uint32_Index(*(uint32*)data) {}
 
+  bool less(void* rhs) const
+  {
+    if ((value & 0x7fffffff) != (*(uint32*)rhs & 0x7fffffff))
+      return (value & 0x7fffffff) < (*(uint32*)rhs & 0x7fffffff);
+    return value < *(uint32*)rhs;
+  }
+  bool leq(void* rhs) const
+  {
+    if ((value & 0x7fffffff) != (*(uint32*)rhs & 0x7fffffff))
+      return (value & 0x7fffffff) < (*(uint32*)rhs & 0x7fffffff);
+    return value <= *(uint32*)rhs;
+  }
+
   bool operator<(const Uint31_Index& index) const
   {
     if ((this->value & 0x7fffffff) != (index.value & 0x7fffffff))
-    {
       return (this->value & 0x7fffffff) < (index.value & 0x7fffffff);
-    }
     return (this->value < index.value);
   }
   
@@ -164,6 +179,10 @@ struct Uint64
   Uint64() : value(0ull) {}
   Uint64(uint64 i) : value(i) {}
   Uint64(void* data) : value(*(uint64*)data) {}
+
+  static bool equal(void* lhs, void* rhs) { return *(uint64*)lhs == *(uint64*)rhs; }
+  bool less(void* rhs) const { return value < *(uint64*)rhs; }
+  bool leq(void* rhs) const { return value <= *(uint64*)rhs; }
 
   uint32 size_of() const { return 8; }
   static uint32 max_size_of() { return 8; }

@@ -45,6 +45,18 @@ struct Tag_Entry
 };
 
 
+inline int strnncmp(const char* lhs, const char* rhs, int lhs_len, int rhs_len)
+{
+  if (rhs_len < lhs_len)
+  {
+    int cmp = strncmp(lhs, rhs, rhs_len);
+    return cmp ? cmp : 1;
+  }
+  int cmp = strncmp(lhs, rhs, lhs_len);
+  return cmp ? cmp : -(lhs_len < rhs_len);
+}
+
+
 struct Tag_Index_Local
 {
   uint32 index;
@@ -68,6 +80,37 @@ struct Tag_Index_Local
     key = std::string(((int8*)data + 7), *(uint16*)data);
     value = std::string(((int8*)data + 7 + key.length()),
 		   *((uint16*)data + 1));
+  }
+
+  static bool equal(void* lhs, void* rhs)
+  { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, (*(uint16*)lhs) + (*(uint16*)lhs+2) + 7); }
+  bool less(void* rhs) const
+  {
+    uint32 lhs_idx = index>>8;
+    uint32 rhs_idx = (*(((uint32*)rhs) + 1) & 0xffffff);
+    if ((lhs_idx & 0x7fffff) != (rhs_idx & 0x7fffff))
+      return (lhs_idx & 0x7fffff) < (rhs_idx & 0x7fffff);
+    if (lhs_idx != rhs_idx)
+      return lhs_idx < rhs_idx;
+
+    int keycmp = strnncmp(&key[0], ((const char*)rhs)+7, key.size(), *((uint16*)rhs));
+    if (keycmp)
+      return keycmp < 0;
+    return strnncmp(&value[0], ((const char*)rhs) + 7 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1)) < 0;
+  }
+  bool leq(void* rhs) const
+  {
+    uint32 lhs_idx = index>>8;
+    uint32 rhs_idx = (*(((uint32*)rhs) + 1) & 0xffffff);
+    if ((lhs_idx & 0x7fffff) != (rhs_idx & 0x7fffff))
+      return (lhs_idx & 0x7fffff) < (rhs_idx & 0x7fffff);
+    if (lhs_idx != rhs_idx)
+      return lhs_idx < rhs_idx;
+
+    int keycmp = strnncmp(&key[0], ((const char*)rhs)+7, key.size(), *((uint16*)rhs));
+    if (keycmp)
+      return keycmp < 0;
+    return strnncmp(&value[0], ((const char*)rhs) + 7 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1)) <= 0;
   }
 
   uint32 size_of() const
@@ -224,6 +267,23 @@ struct Tag_Index_Global
   Tag_Index_Global(const Tag_Index_Local& tag_idx) : key(tag_idx.key), value(tag_idx.value) {}
 
   Tag_Index_Global(const std::string& key_, const std::string& value_) : key(key_), value(value_) {}
+
+  static bool equal(void* lhs, void* rhs)
+  { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, (*(uint16*)lhs) + (*(uint16*)lhs+2) + 4); }
+  bool less(void* rhs) const
+  {
+    int keycmp = strnncmp(&key[0], ((const char*)rhs)+4, key.size(), *((uint16*)rhs));
+    if (keycmp)
+      return keycmp < 0;
+    return strnncmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1)) < 0;
+  }
+  bool leq(void* rhs) const
+  {
+    int keycmp = strnncmp(&key[0], ((const char*)rhs)+4, key.size(), *((uint16*)rhs));
+    if (keycmp)
+      return keycmp < 0;
+    return strnncmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1)) <= 0;
+  }
 
   uint32 size_of() const
   {

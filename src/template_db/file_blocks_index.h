@@ -136,6 +136,8 @@ public:
   bool operator==(File_Blocks_Index_Iterator rhs) const
   { return ptr == rhs.ptr; }
   bool operator!=(File_Blocks_Index_Iterator rhs) const { return ptr != rhs.ptr; }
+
+  void* idx_ptr() const { return (void*)(ptr + 12); }
   Index index() const
   {
     if (!idx)
