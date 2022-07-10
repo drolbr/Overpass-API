@@ -112,6 +112,13 @@ struct Tag_Index_Local
       return keycmp < 0;
     return strnncmp(&value[0], ((const char*)rhs) + 7 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1)) <= 0;
   }
+  bool equal(void* rhs) const
+  {
+    return key.size() == *(uint16*)rhs && value.size() == *((uint16*)rhs + 1)
+      && (index>>8) == (*(((uint32*)rhs) + 1) & 0xffffff)
+      && !memcmp(&key[0], ((const char*)rhs) + 7, *((uint16*)rhs))
+      && !memcmp(&key[0], ((const char*)rhs) + 7 + *(uint16*)rhs, *((uint16*)rhs + 1));
+  }
 
   uint32 size_of() const
   {
@@ -283,6 +290,12 @@ struct Tag_Index_Global
     if (keycmp)
       return keycmp < 0;
     return strnncmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1)) <= 0;
+  }
+  bool equal(void* rhs) const
+  {
+    return key.size() == *(uint16*)rhs && value.size() == *((uint16*)rhs + 1)
+      && !memcmp(&key[0], ((const char*)rhs) + 4, *((uint16*)rhs))
+      && !memcmp(&key[0], ((const char*)rhs) + 4 + *(uint16*)rhs, *((uint16*)rhs + 1));
   }
 
   uint32 size_of() const

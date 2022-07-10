@@ -690,6 +690,8 @@ struct Timestamp
   bool leq(void* rhs) const
   { return (timestamp>>32) < *(((uint8*)rhs) + 4)
         || ((timestamp>>32) == *(((uint8*)rhs) + 4) && (timestamp & 0xffffffffull) <= *(uint32*)rhs); }
+  bool equal(void* rhs) const
+  { return (timestamp>>32) == *(((uint8*)rhs) + 4) && (timestamp & 0xffffffffull) == *(uint32*)rhs; }
 
   uint32 size_of() const
   {

@@ -40,6 +40,7 @@ struct IntIndex
   static bool equal(void* lhs, void* rhs) { return *(uint32*)lhs == *(uint32*)rhs; }
   bool less(void* rhs) const { return value < *(uint32*)rhs; }
   bool leq(void* rhs) const { return value <= *(uint32*)rhs; }
+  bool equal(void* rhs) const { return value == *(uint32*)rhs; }
   
   uint32 size_of() const { return (value < 24 ? 12 : value-12); }
   static uint32 size_of(void* data) { return ((*(uint32*)data) < 24 ? 12 : (*(uint32*)data)-12); }

@@ -46,6 +46,7 @@ struct Uint32_Index
   static bool equal(void* lhs, void* rhs) { return *(uint32*)lhs == *(uint32*)rhs; }
   bool less(void* rhs) const { return value < *(uint32*)rhs; }
   bool leq(void* rhs) const { return value <= *(uint32*)rhs; }
+  bool equal(void* rhs) const { return value == *(uint32*)rhs; }
 
   uint32 size_of() const
   {
@@ -183,6 +184,7 @@ struct Uint64
   static bool equal(void* lhs, void* rhs) { return *(uint64*)lhs == *(uint64*)rhs; }
   bool less(void* rhs) const { return value < *(uint64*)rhs; }
   bool leq(void* rhs) const { return value <= *(uint64*)rhs; }
+  bool equal(void* rhs) const { return value == *(uint32*)rhs; }
 
   uint32 size_of() const { return 8; }
   static uint32 max_size_of() { return 8; }

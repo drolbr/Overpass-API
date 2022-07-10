@@ -420,7 +420,7 @@ void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
         ++index_upper;
       return;
     }
-    else if (index_lower == this->block_it.index()) // implies: this->block_it->index == next_block->index
+    else if (index_lower->equal(this->block_it.idx_ptr())) // implies: this->block_it->index == next_block->index
     {
       index_upper = index_lower;
       ++index_upper;
