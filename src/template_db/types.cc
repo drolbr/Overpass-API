@@ -27,6 +27,9 @@ void copy_file(const std::string& source, const std::string& dest)
 {
   if (!file_exists(source))
     return;
+  
+  if (file_exists(dest))
+    remove(dest.c_str());
 
   Raw_File source_file(source, O_RDONLY, S_666, "Dispatcher:1");
   uint64 size = source_file.size("Dispatcher:2");

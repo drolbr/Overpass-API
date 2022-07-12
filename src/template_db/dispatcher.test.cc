@@ -409,9 +409,8 @@ void data_read_test(const Test_File& tf, Transaction& transaction)
     std::vector< bool > footprint = get_data_index_footprint< IntIndex >
         (tf, tf.get_basedir());
     std::cout<<"Index footprint: ";
-    for (std::vector< bool >::const_iterator it(footprint.begin());
-    it != footprint.end(); ++it)
-    std::cout<<*it;
+    for (std::vector< bool >::const_iterator it(footprint.begin()); it != footprint.end(); ++it)
+      std::cout<<*it;
     std::cout<<'\n';
 
     Block_Backend< IntIndex, IntObject >::Flat_Iterator fit(db_backend.flat_begin());

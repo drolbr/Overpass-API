@@ -148,7 +148,7 @@ dispatcher_client_server()
   perform_serial_test test_dispatcher $1
   ls "run/${EXEC}_s$1/" >"run/${EXEC}_$1/after.ls"
   mv before.ls "run/${EXEC}_$1/before.ls"
-  sleep 5
+  sleep 4
 };
 
 dispatcher_two_clients()
@@ -164,7 +164,7 @@ dispatcher_two_clients()
   perform_twin_test test_dispatcher $1
   ls "run/${EXEC}_s$1/" >"run/${EXEC}_$1/after.ls"
   mv before.ls "run/${EXEC}_$1/before.ls"
-  sleep 5
+  sleep 4
 };
 
 # Test template_db

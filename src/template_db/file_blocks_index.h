@@ -21,6 +21,7 @@
 
 #include "types.h"
 
+#include <sys/mman.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -91,11 +92,36 @@ private:
 };
 
 
+struct File_Blocks_Index_Mmap
+{
+public:
+  File_Blocks_Index_Mmap(
+      const File_Properties& file_prop, const std::string& db_dir,
+      bool use_shadow, const std::string& file_name_extension);
+  ~File_Blocks_Index_Mmap()
+  {
+    if (ptr)
+      munmap(ptr, size_);
+  }
+  const uint8* header() const { return (uint8*)ptr; }
+  const uint8* begin() const { return ptr ? ((uint8*)ptr) + 8 : 0; }
+  const uint8* end() const { return ((uint8*)ptr) + size_; }
+  uint32 size() const { return size_; }
+
+  std::string file_name;
+
+private:
+  void* ptr;
+  uint32 size_;
+};
+
+
 struct File_Blocks_Index_Structure_Params
 {
+  template< typename Idx_File >
   File_Blocks_Index_Structure_Params(
       const File_Properties& file_prop, const std::string& file_name_extension, int compression_method_,
-      const File_Blocks_Index_File& idx_file, uint64 file_size);
+      const Idx_File& idx_file, uint64 file_size);
 
   bool empty_;
   uint64 block_size_;
@@ -177,7 +203,7 @@ public:
   { return File_Blocks_Index_Iterator< Index >(idx_file.end()); }
 
 private:
-  File_Blocks_Index_File idx_file;
+  File_Blocks_Index_Mmap idx_file;
   std::string data_file_name;
   File_Blocks_Index_Structure_Params params;
   std::string file_name_extension_;
@@ -317,9 +343,38 @@ inline File_Blocks_Index_File::File_Blocks_Index_File(
 }
 
 
-inline File_Blocks_Index_Structure_Params::File_Blocks_Index_Structure_Params(
+inline File_Blocks_Index_Mmap::File_Blocks_Index_Mmap(
+    const File_Properties& file_prop, const std::string& db_dir,
+    bool use_shadow, const std::string& file_name_extension)
+    : file_name(db_dir + file_prop.get_file_name_trunk()
+        + file_name_extension + file_prop.get_data_suffix()
+        + file_prop.get_index_suffix()
+        + (use_shadow ? file_prop.get_shadow_suffix() : "")),
+      ptr(0), size_(0)
+{
+  try
+  {
+    Raw_File source_file(file_name, O_RDONLY, S_666, "File_Blocks_Index_Mmap::File_Blocks_Index_Mmap::1");
+    
+    // read index file
+    size_ = source_file.size("File_Blocks_Index_Mmap::File_Blocks_Index_Mmap::2");
+    if (size_)
+      ptr = mmap(0, size_, PROT_READ, MAP_PRIVATE, source_file.fd(), 0);
+    if (ptr == (void*)(-1))
+      throw File_Error(errno, file_name, "File_Blocks_Index_Mmap::File_Blocks_Index_Mmap::3");
+  }
+  catch (File_Error e)
+  {
+    if (e.error_number != ENOENT)
+      throw;
+  }
+}
+
+
+template< typename Idx_File >
+File_Blocks_Index_Structure_Params::File_Blocks_Index_Structure_Params(
     const File_Properties& file_prop, const std::string& file_name_extension, int compression_method_,
-    const File_Blocks_Index_File& idx_file, uint64 file_size)
+    const Idx_File& idx_file, uint64 file_size)
     : empty_(false),
      block_size_(file_prop.get_block_size()), // can be overwritten by index file
      compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
