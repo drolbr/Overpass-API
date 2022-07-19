@@ -224,6 +224,7 @@ void Area_Updater::prepare_tags
   Ranges< Tag_Index_Local > ranges;
   for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
     ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
+  ranges.sort();
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
