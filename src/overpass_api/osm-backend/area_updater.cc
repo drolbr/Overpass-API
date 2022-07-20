@@ -158,13 +158,15 @@ void Area_Updater::prepare_delete_tags
   Ranges< Tag_Index_Local > ranges;
   for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
     ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
-
+  ranges.sort();
+  
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
       (transaction->data_index(area_settings().AREA_TAGS_LOCAL));
   Tag_Index_Local current_index;
   Tag_Entry< uint32 > tag_entry;
   current_index.index = 0xffffffff;
+  std::set< Area::Id_Type >* handle = 0;
   for (auto it = areas_db.range_begin(ranges); !(it == areas_db.range_end()); ++it)
   {
     if (!(current_index == it.index()))
@@ -176,15 +178,17 @@ void Area_Updater::prepare_delete_tags
       tag_entry.key = it.index().key;
       tag_entry.value = it.index().value;
       tag_entry.ids.clear();
+    
+      handle = &to_delete_coarse[it.index().index];
     }
 
-    std::set< Area::Id_Type >& handle(to_delete_coarse[it.index().index]);
-    if (handle.find(it.object().val()) != handle.end())
+    if (handle->find(it.object().val()) != handle->end())
       tag_entry.ids.push_back(it.object().val());
   }
   if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
     tags_to_delete.push_back(tag_entry);
 }
+
 
 Area_Location* binary_search_for_id
     (std::vector< std::pair< Area_Location, Uint31_Index > >& vect, uint32 id)
@@ -203,59 +207,6 @@ Area_Location* binary_search_for_id
       lower = pos + 1;
   }
   return 0;
-}
-
-void Area_Updater::prepare_tags
-    (std::vector< Tag_Entry< uint32 > >& tags_to_delete,
-       const std::map< uint32, std::vector< uint32 > >& to_delete)
-{
-  // make indices appropriately coarse
-  std::map< uint32, std::set< uint32 > > to_delete_coarse;
-  for (std::map< uint32, std::vector< uint32 > >::const_iterator
-      it(to_delete.begin()); it != to_delete.end(); ++it)
-  {
-    std::set< uint32 >& handle(to_delete_coarse[it->first & 0xffffff00]);
-    for (std::vector< uint32 >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
-      handle.insert(*it2);
-  }
-
-  // formulate range query
-  Ranges< Tag_Index_Local > ranges;
-  for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
-    ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
-  ranges.sort();
-
-  // iterate over the result
-  Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
-      (transaction->data_index(area_settings().AREA_TAGS_LOCAL));
-  Tag_Index_Local current_index;
-  Tag_Entry< uint32 > tag_entry;
-  current_index.index = 0xffffffff;
-  for (auto it = areas_db.range_begin(ranges); !(it == areas_db.range_end()); ++it)
-  {
-    if (!(current_index == it.index()))
-    {
-      if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-	tags_to_delete.push_back(tag_entry);
-      current_index = it.index();
-      tag_entry.index = it.index().index;
-      tag_entry.key = it.index().key;
-      tag_entry.value = it.index().value;
-      tag_entry.ids.clear();
-    }
-
-    std::set< uint32 >& handle(to_delete_coarse[it.index().index]);
-    if (handle.find(it.object().val()) != handle.end())
-    {
-      Area_Location* area(binary_search_for_id(areas_to_insert, it.object().val()));
-      if (area != 0)
-        area->tags.push_back(std::make_pair(it.index().key, it.index().value));
-      tag_entry.ids.push_back(it.object().val());
-    }
-  }
-  if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
-    tags_to_delete.push_back(tag_entry);
 }
 
 void Area_Updater::update_area_tags_local
