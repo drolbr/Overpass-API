@@ -17,6 +17,7 @@
  */
 
 #include "block_backend.h"
+#include "block_backend_write.h"
 #include "dispatcher.h"
 #include "dispatcher_client.h"
 #include "file_blocks.h"

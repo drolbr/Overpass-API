@@ -21,6 +21,7 @@
 #include "../core/settings.h"
 #include "../data/filenames.h"
 #include "../../template_db/block_backend.h"
+#include "../../template_db/block_backend_write.h"
 #include "../../template_db/file_blocks.h"
 #include "../../template_db/random_file.h"
 

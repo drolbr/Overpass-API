@@ -23,6 +23,7 @@
 #include <cstdio>
 
 #include "block_backend.h"
+#include "block_backend_write.h"
 #include "transaction.h"
 
 

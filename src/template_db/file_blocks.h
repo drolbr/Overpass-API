@@ -271,7 +271,7 @@ public:
   }
 
   uint read_count() const { return read_count_; }
-  void reset_read_count() { read_count_ = 0; }
+  void reset_read_count() const { read_count_ = 0; }
 
   Write_Iterator insert_block(const Write_Iterator& it, uint64* buf, uint32 max_keysize);
   Write_Iterator insert_block(

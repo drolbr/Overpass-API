@@ -327,6 +327,7 @@ nobase_dist_HEADERS = \
   pt_diagrams/read_input.h\
   pt_diagrams/test_output.h\
   template_db/block_backend.h\
+  template_db/block_backend_write.h\
   template_db/dispatcher_client.h\
   template_db/dispatcher.h\
   template_db/file_blocks.h\

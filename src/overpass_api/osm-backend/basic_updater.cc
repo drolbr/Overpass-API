@@ -24,6 +24,8 @@
 
 #include "basic_updater.h"
 
+#include "../../template_db/block_backend_write.h"
+
 
 void Key_Storage::flush_keys(Transaction& transaction)
 {

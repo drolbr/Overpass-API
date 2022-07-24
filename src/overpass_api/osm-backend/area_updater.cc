@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "../../template_db/block_backend.h"
+#include "../../template_db/block_backend_write.h"
 #include "../../template_db/random_file.h"
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
