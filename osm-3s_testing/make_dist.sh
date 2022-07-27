@@ -6,9 +6,11 @@ mv _ ../src/overpass_api/core/settings.cc
 VERSION=$(cat ../src/overpass_api/core/settings.cc | grep -E '^ *version' | awk '{ print substr($1,10,length($1)-12); }')
 
 { echo "$VERSION"; cat ../src/configure.ac; } | awk -f patch_configure_ac.awk >_
+mv ../src/configure.ac configure.test.ac
 mv _ ../src/configure.ac
 
 cat ../src/Makefile.am | awk '{ if ($1 == "distdir") print $1" = osm-3s_v'$VERSION'"; else print $0; }' >_
+mv ../src/Makefile.am ../src/Makefile.test.am
 mv _ ../src/Makefile.am
 
 git commit -a -m "Automated commit for release $VERSION"
