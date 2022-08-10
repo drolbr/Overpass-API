@@ -2,29 +2,29 @@
 Read test
 Index footprint: 1
 Reading all blocks ...
-Predicted size 508, real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
+Real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
 ... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
-Predicted size 372, real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
+Real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
 ... all blocks read.
 Reading blocks with indices {0, 1, ..., 9} ...
 ... all blocks read.
 Reading blocks with indices [0, 10[ ...
 ... all blocks read.
 Reading blocks with indices {90, 91, ..., 99} ...
-Predicted size 508, real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
+Real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
 ... all blocks read.
 Reading blocks with indices [90, 100[ ...
-Predicted size 508, real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
+Real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
 ... all blocks read.
 Reading blocks with index 50 ...
-Predicted size 62, real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
+Real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
 ... all blocks read.
 Reading blocks with indices [50, 51[ ...
-Predicted size 508, real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
+Real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
 ... all blocks read.
 Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
-Predicted size 508, real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
+Real size 127 bytes, first block size 61 bytes, first index 49, second block size 62 bytes, second index 50
 ... all blocks read.
 Reading blocks with indices \emptyset ...
 ... all blocks read.

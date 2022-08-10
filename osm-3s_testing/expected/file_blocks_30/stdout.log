@@ -2,8 +2,8 @@
 Compressed Read test
 Index footprint: 
 Reading all blocks ...
-Predicted size 8188, real size 36 bytes, first block size 32 bytes, first index 20
-Predicted size 8188, real size 36274 bytes, first block size 112 bytes, first index 100, second block size 113 bytes, second index 101
-Predicted size 8188, real size 62494 bytes, first block size 1012 bytes, first index 1000, second block size 1013 bytes, second index 1001
+Real size 36 bytes, first block size 32 bytes, first index 20
+Real size 36274 bytes, first block size 112 bytes, first index 100, second block size 113 bytes, second index 101
+Real size 62494 bytes, first block size 1012 bytes, first index 1000, second block size 1013 bytes, second index 1001
 ... all blocks read.
 This block of read tests is complete.

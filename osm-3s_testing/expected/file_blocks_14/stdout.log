@@ -2,7 +2,7 @@
 Read test
 Index footprint: 1110000000000000
 Reading all blocks ...
-Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
+Real size 512 bytes, first block size 1280 bytes, first index 6
 Checking 1536 bytes for oversized object.
 Content ok in block 0.
 Content ok in block 1.
@@ -11,11 +11,11 @@ Content ok in block 2.
 Reading blocks with indices {0, 9, ..., 99} ...
 ... all blocks read.
 Reading blocks with indices {0, 1, ..., 9} ...
-Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
+Real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
 ... all blocks read.
 Reading blocks with indices [0, 10[ ...
-Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
+Real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
 ... all blocks read.
 Reading blocks with indices {90, 91, ..., 99} ...
@@ -27,7 +27,7 @@ Reading blocks with index 50 ...
 Reading blocks with indices [50, 51[ ...
 ... all blocks read.
 Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
-Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
+Real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
 ... all blocks read.
 Reading blocks with indices \emptyset ...

@@ -2,14 +2,14 @@
 Read test
 Index footprint: 111111110000
 Reading all blocks ...
-Predicted size 508, real size 56 bytes, first block size 52 bytes, first index 40
-Predicted size 508, real size 56 bytes, first block size 52 bytes, first index 40
-Predicted size 508, real size 56 bytes, first block size 52 bytes, first index 40
-Predicted size 508, real size 56 bytes, first block size 52 bytes, first index 40
-Predicted size 508, real size 76 bytes, first block size 72 bytes, first index 60
-Predicted size 508, real size 76 bytes, first block size 72 bytes, first index 60
-Predicted size 508, real size 76 bytes, first block size 72 bytes, first index 60
-Predicted size 508, real size 76 bytes, first block size 72 bytes, first index 60
+Real size 56 bytes, first block size 52 bytes, first index 40
+Real size 56 bytes, first block size 52 bytes, first index 40
+Real size 56 bytes, first block size 52 bytes, first index 40
+Real size 56 bytes, first block size 52 bytes, first index 40
+Real size 76 bytes, first block size 72 bytes, first index 60
+Real size 76 bytes, first block size 72 bytes, first index 60
+Real size 76 bytes, first block size 72 bytes, first index 60
+Real size 76 bytes, first block size 72 bytes, first index 60
 ... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
 ... all blocks read.

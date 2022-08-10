@@ -2,35 +2,35 @@
 Read test
 Index footprint: 1111111000000000
 Reading all blocks ...
-Predicted size 508, real size 512 bytes, first block size 508 bytes, first index 5
-Predicted size 508, real size 512 bytes, first block size 509 bytes, first index 5
+Real size 512 bytes, first block size 508 bytes, first index 5
+Real size 512 bytes, first block size 509 bytes, first index 5
 Checking 1024 bytes for oversized object.
 Content ok in block 0.
 Content ok in block 1.
-Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
+Real size 512 bytes, first block size 1280 bytes, first index 6
 Checking 1536 bytes for oversized object.
 Content ok in block 0.
 Content ok in block 1.
 Content ok in block 2.
-Predicted size 508, real size 22 bytes, first block size 18 bytes, first index 6
+Real size 22 bytes, first block size 18 bytes, first index 6
 ... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
 ... all blocks read.
 Reading blocks with indices {0, 1, ..., 9} ...
-Predicted size 508, real size 512 bytes, first block size 508 bytes, first index 5
-Predicted size 508, real size 512 bytes, first block size 509 bytes, first index 5
+Real size 512 bytes, first block size 508 bytes, first index 5
+Real size 512 bytes, first block size 509 bytes, first index 5
 Skipping 1024 bytes for oversized object.
-Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
+Real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
-Predicted size 18, real size 22 bytes, first block size 18 bytes, first index 6
+Real size 22 bytes, first block size 18 bytes, first index 6
 ... all blocks read.
 Reading blocks with indices [0, 10[ ...
-Predicted size 508, real size 512 bytes, first block size 508 bytes, first index 5
-Predicted size 508, real size 512 bytes, first block size 509 bytes, first index 5
+Real size 512 bytes, first block size 508 bytes, first index 5
+Real size 512 bytes, first block size 509 bytes, first index 5
 Skipping 1024 bytes for oversized object.
-Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
+Real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
-Predicted size 508, real size 22 bytes, first block size 18 bytes, first index 6
+Real size 22 bytes, first block size 18 bytes, first index 6
 ... all blocks read.
 Reading blocks with indices {90, 91, ..., 99} ...
 ... all blocks read.
@@ -41,12 +41,12 @@ Reading blocks with index 50 ...
 Reading blocks with indices [50, 51[ ...
 ... all blocks read.
 Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
-Predicted size 508, real size 512 bytes, first block size 508 bytes, first index 5
-Predicted size 508, real size 512 bytes, first block size 509 bytes, first index 5
+Real size 512 bytes, first block size 508 bytes, first index 5
+Real size 512 bytes, first block size 509 bytes, first index 5
 Skipping 1024 bytes for oversized object.
-Predicted size 508, real size 512 bytes, first block size 1280 bytes, first index 6
+Real size 512 bytes, first block size 1280 bytes, first index 6
 Skipping 1536 bytes for oversized object.
-Predicted size 508, real size 22 bytes, first block size 18 bytes, first index 6
+Real size 22 bytes, first block size 18 bytes, first index 6
 ... all blocks read.
 Reading blocks with indices \emptyset ...
 ... all blocks read.

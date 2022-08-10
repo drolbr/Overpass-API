@@ -258,18 +258,6 @@ public:
   uint64* read_block(
       const File_Blocks_Write_Iterator< TIndex, TIterator >& it, uint64* buffer, bool check_idx = true) const;
 
-  uint32 answer_size(const Flat_Iterator& it) const
-  {
-    return (block_size * it.block().size() - sizeof(uint32));
-  }
-  uint32 answer_size(const Discrete_Iterator& it) const;
-
-  template< typename Range_Iterator >
-  uint32 answer_size(const File_Blocks_Range_Iterator< TIndex, Range_Iterator >& it) const
-  {
-    return (block_size * it.block().size() - sizeof(uint32));
-  }
-
   uint read_count() const { return read_count_; }
   void reset_read_count() const { read_count_ = 0; }
 
@@ -969,28 +957,6 @@ uint64* File_Blocks< TIndex, TIterator >::read_block
   return read_block_(
       Write_Iterator_Adapter< File_Blocks_Write_Iterator< TIndex, TIterator >, TIndex >(it),
       buffer_, check_idx);
-}
-
-
-template< typename TIndex, typename TIterator >
-uint32 File_Blocks< TIndex, TIterator >::answer_size
-    (const Discrete_Iterator& it) const
-{
-  if (it.is_end())
-    return 0;
-
-  uint32 count(0);
-  TIterator index_it(it.lower_bound());
-  while (index_it != it.upper_bound())
-  {
-    ++index_it;
-    ++count;
-  }
-
-  if (count*(it.block().max_keysize()) > block_size * it.block().size() - sizeof(uint32))
-    return (block_size * it.block().size() - sizeof(uint32));
-  else
-    return count*(it.block().max_keysize());
 }
 
 

@@ -392,10 +392,9 @@ void read_loop(
 {
   while (!it.is_end())
   {
-    std::cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data = (uint8*)(blocks.read_block(it));
     uint32 max_keysize = *(uint32*)(data+sizeof(uint32));
-    std::cout<<", real size "<<(*(uint32*)data)<<" bytes, "
+    std::cout<<"Real size "<<(*(uint32*)data)<<" bytes, "
     <<"first block size "<<max_keysize<<" bytes, "
     <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
     if (max_keysize < (*(uint32*)data)-sizeof(uint32))
@@ -466,33 +465,28 @@ void read_loop(
 {
   while (!it.is_end())
   {
-    uint32 answer_size(blocks.answer_size(it));
-    std::cout<<"Predicted size "<<answer_size;
-    if (answer_size > 0)
+    uint8* data((uint8*)(blocks.read_block(it)));
+    std::cout<<"Real size "<<(*(uint32*)data)<<" bytes, "
+        <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
+        <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
+    if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
     {
-      uint8* data((uint8*)(blocks.read_block(it)));
-      std::cout<<", real size "<<(*(uint32*)data)<<" bytes, "
-	  <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
-	  <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
-      if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
+      uint8* pos(data+sizeof(uint32));
+      pos += *(uint32*)pos;
+      std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
+          <<"second index "<<*(uint32*)(pos+sizeof(uint32));
+    }
+    else if (*(uint32*)(data+sizeof(uint32)) > (*(uint32*)data)-sizeof(uint32))
+    {
+      uint32 large_block_size = (((*(uint32*)(data+4))+3)/block_size+1)*block_size;
+      std::cout<<"\nSkipping "<<large_block_size<<" bytes for oversized object.";
+      for (uint i = block_size; i < large_block_size; i += block_size)
       {
-	uint8* pos(data+sizeof(uint32));
-	pos += *(uint32*)pos;
-	std::cout<<", second block size "<<(*(uint32*)pos)<<" bytes, "
-	    <<"second index "<<*(uint32*)(pos+sizeof(uint32));
-      }
-      else if (*(uint32*)(data+sizeof(uint32)) > (*(uint32*)data)-sizeof(uint32))
-      {
-        uint32 large_block_size = (((*(uint32*)(data+4))+3)/block_size+1)*block_size;
-        std::cout<<"\nSkipping "<<large_block_size<<" bytes for oversized object.";
-        for (uint i = block_size; i < large_block_size; i += block_size)
+        ++it;
+        if (it.is_end())
         {
-          ++it;
-          if (it.is_end())
-          {
-            std::cout<<"\nUnexpected end of index inside oversized object.";
-            break;
-          }
+          std::cout<<"\nUnexpected end of index inside oversized object.";
+          break;
         }
       }
     }
@@ -509,9 +503,8 @@ void read_loop(
 {
   while (!it.is_end())
   {
-    std::cout<<"Predicted size "<<blocks.answer_size(it);
     uint8* data((uint8*)(blocks.read_block(it)));
-    std::cout<<", real size "<<(*(uint32*)data)<<" bytes, "
+    std::cout<<"Real size "<<(*(uint32*)data)<<" bytes, "
     <<"first block size "<<*(uint32*)(data+sizeof(uint32))<<" bytes, "
     <<"first index "<<*(uint32*)(data+2*sizeof(uint32));
     if (*(uint32*)(data+sizeof(uint32)) < (*(uint32*)data)-sizeof(uint32))
