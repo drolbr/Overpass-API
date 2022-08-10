@@ -426,6 +426,7 @@ void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
       ++index_upper;
       return;
     }
+    // seek
     else if (TIndex::equal(this->block_it.idx_ptr(), next_block.idx_ptr()))
     {
       while (!this->is_end() && TIndex::equal(this->block_it.idx_ptr(), next_block.idx_ptr()))
@@ -481,7 +482,8 @@ File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator++()
   index_equals_last_index = index_equals_next_index
       < TIndex, File_Blocks_Index_Iterator< TIndex > >(this->block_it, this->block_end);
   ++(this->block_it);
-  find_next_block();
+  if (!index_equals_last_index)
+    find_next_block();
   return *this;
 }
 
@@ -503,6 +505,7 @@ void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
 
     auto next_block = this->block_it;
     ++next_block;
+    //seek
     while ((!(next_block == this->block_end)) && (!index_it.lower_bound().less(next_block.idx_ptr())))
     {
       if (index_it.lower_bound().leq(this->block_it.idx_ptr()))
@@ -514,6 +517,7 @@ void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
       ++next_block;
     }
 
+    // i.e. it is not a last part of a sequence of segments
     if (!index_equals_last_index || index_it.lower_bound().leq(this->block_it.idx_ptr()))
       break;
 
