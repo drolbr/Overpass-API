@@ -42,13 +42,12 @@ struct File_Block_Index_Entry
   static const int SEGMENT = 3;
   static const int LAST_SEGMENT = 4;
 
-  File_Block_Index_Entry(const Index& index_, uint32 pos_, uint32 size_, uint32 max_keysize_)
-    : index(index_), pos(pos_), size(size_), max_keysize(max_keysize_) {}
+  File_Block_Index_Entry(const Index& index_, uint32 pos_, uint32 size_)
+    : index(index_), pos(pos_), size(size_) {}
 
   Index index;
   uint32 pos;
   uint32 size;
-  uint32 max_keysize;
 };
 
 
@@ -172,7 +171,6 @@ public:
   }
   uint32 pos() const { return *(uint32*)ptr; }
   uint32 size() const { return *(uint32*)(ptr + 4); }
-  uint32 max_keysize() const { return *(uint32*)(ptr + 8); }
 
 private:
   const uint8* ptr;
@@ -447,7 +445,7 @@ void Writeable_File_Blocks_Index< Index >::init_blocks()
     {
       Index index((void*)(ptr + 12));
       File_Block_Index_Entry< Index >
-          entry(index, *(uint32*)(ptr), *(uint32*)(ptr + 4), *(uint32*)(ptr + 8));
+          entry(index, *(uint32*)(ptr), *(uint32*)(ptr + 4));
       if (entry.pos >= params.block_count)
         throw File_Error(0, idx_file.file_name, "File_Blocks_Index: bad pos in index file");
       if (entry.pos + entry.size > params.block_count)
@@ -567,7 +565,7 @@ void File_Blocks_Index_File::rebuild_index_buf(
     pos += 4;
     *(uint32*)(buf.ptr+pos) = it->size;
     pos += 4;
-    *(uint32*)(buf.ptr+pos) = it->max_keysize;
+    *(uint32*)(buf.ptr+pos) = 0;
     pos += 4;
     it->index.to_data(buf.ptr+pos);
     pos += it->index.size_of();

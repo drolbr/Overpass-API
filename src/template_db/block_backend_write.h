@@ -169,7 +169,7 @@ void flush_if_necessary_and_write_obj(
     {
       *(uint32*)start_ptr = bytes_written;
       *(((uint32*)start_ptr)+1) = bytes_written;
-      file_it = file_blocks.insert_block(file_it, start_ptr, bytes_written - 4);
+      file_it = file_blocks.insert_block(file_it, start_ptr);
     }
     if (idx_size + obj_size + 8 > block_size)
     {
@@ -185,13 +185,11 @@ void flush_if_necessary_and_write_obj(
 
       for (uint i = 0; i+1 < buf_scale; ++i)
       {
-        file_it = file_blocks.insert_block(
-            file_it, large_buf.ptr + i*block_size/8, block_size,
-            i == 0 ? idx_size + obj_size + 4 : 0, idx);
+        file_it = file_blocks.insert_block(file_it, large_buf.ptr + i*block_size/8, block_size, idx);
       }
       file_it = file_blocks.insert_block(
           file_it, large_buf.ptr + (buf_scale-1)*block_size/8, idx_size + obj_size + 8 - block_size*(buf_scale-1),
-          0, idx);
+          idx);
 
       insert_ptr = ((uint8*)start_ptr) + 8 + idx_size;
       return;
@@ -242,7 +240,6 @@ void create_from_scratch(
   // really write data
   typename std::vector< Index >::const_iterator split_it(split.begin());
   uint8* pos(buffer.ptr + 4);
-  uint32 max_size(0);
   typename std::set< Index >::const_iterator upper_bound(file_it.upper_bound());
   for (typename std::set< Index >::const_iterator fit(file_it.lower_bound());
       fit != upper_bound; ++fit)
@@ -255,15 +252,11 @@ void create_from_scratch(
       if (pos > buffer.ptr + 4)
       {
         *(uint32*)buffer.ptr = pos - buffer.ptr;
-        file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size);
+        file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr);
         pos = buffer.ptr + 4;
       }
       ++split_it;
-      max_size = 0;
     }
-
-    if (sizes[*fit] > max_size)
-      max_size = sizes[*fit];
 
     if (sizes[*fit] == 0)
       continue;
@@ -297,10 +290,7 @@ void create_from_scratch(
       }
 
       if (pos - buffer.ptr > fit->size_of() + 8)
-      {
         *(uint32*)(buffer.ptr+4) = pos - buffer.ptr;
-        max_size = (*(uint32*)(buffer.ptr + 4)) - 4;
-      }
       else
         pos = buffer.ptr + 4;
     }
@@ -308,7 +298,7 @@ void create_from_scratch(
   if (pos > buffer.ptr + 4)
   {
     *(uint32*)buffer.ptr = pos - buffer.ptr;
-    file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr, max_size);
+    file_it = file_blocks.insert_block(file_it, (uint64*)buffer.ptr);
   }
   ++file_it;
 }
@@ -430,7 +420,6 @@ void update_group(
   // really write data
   typename std::vector< Index >::const_iterator split_it(split.begin());
   pos = (dest.ptr + 4);
-  uint32 max_size = 0;
   for (typename std::map< Index, Index_Collection< Index, Object > >::const_iterator
     it(index_values.begin()); it != index_values.end(); ++it)
   {
@@ -438,14 +427,10 @@ void update_group(
     {
       *(uint32*)dest.ptr = pos - dest.ptr;
       if (pos - dest.ptr > 8)
-        file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr, max_size);
+        file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
       ++split_it;
       pos = dest.ptr + 4;
-      max_size = 0;
     }
-
-    if (sizes[it->first] > max_size)
-      max_size = sizes[it->first];
 
     if (sizes[it->first] == 0)
       continue;
@@ -524,14 +509,13 @@ void update_group(
 	pos = dest.ptr + 4;
 
       *(uint32*)(dest.ptr+4) = pos - dest.ptr;
-      max_size = pos - dest.ptr - 4;
     }
   }
 
   if (pos > dest.ptr + 4)
   {
     *(uint32*)dest.ptr = pos - dest.ptr;
-    file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr, max_size);
+    file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr);
     ++file_it;
   }
   else
@@ -547,7 +531,7 @@ void flush_or_delete_block(
   {
     *(uint32*)start_ptr = bytes_written;
     *(((uint32*)start_ptr)+1) = bytes_written;
-    file_it = file_blocks.replace_block(file_it, start_ptr, bytes_written - 4);
+    file_it = file_blocks.replace_block(file_it, start_ptr);
     ++file_it;
   }
   else
@@ -718,7 +702,7 @@ void update_segments(
   {
     *(uint32*)dest.ptr = pos - (uint8*)dest.ptr;
     *(((uint32*)dest.ptr)+1) = pos - (uint8*)dest.ptr;
-    file_it = file_blocks.insert_block(file_it, dest.ptr, pos - (uint8*)dest.ptr - 4);
+    file_it = file_blocks.insert_block(file_it, dest.ptr);
   }
 
   file_it.end_segments_mode();

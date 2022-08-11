@@ -261,12 +261,12 @@ public:
   uint read_count() const { return read_count_; }
   void reset_read_count() const { read_count_ = 0; }
 
-  Write_Iterator insert_block(const Write_Iterator& it, uint64* buf, uint32 max_keysize);
+  Write_Iterator insert_block(const Write_Iterator& it, uint64* buf);
   Write_Iterator insert_block(
-      const Write_Iterator& it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx);
-  Write_Iterator replace_block(const Write_Iterator& it, uint64* buf, uint32 max_keysize);
+      const Write_Iterator& it, uint64* buf, uint32 payload_size, const TIndex& block_idx);
+  Write_Iterator replace_block(const Write_Iterator& it, uint64* buf);
   Write_Iterator replace_block(
-      Write_Iterator it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx);
+      Write_Iterator it, uint64* buf, uint32 payload_size, const TIndex& block_idx);
   Write_Iterator erase_block(Write_Iterator it);
   void erase_blocks(
       Write_Iterator& block_it, const Write_Iterator& it);
@@ -933,7 +933,6 @@ struct Write_Iterator_Adapter
   Index index() const { return it.block().index; }
   uint32 pos() const { return it.block().pos; }
   uint32 size() const { return it.block().size; }
-  uint32 max_keysize() const { return it.block().max_keysize; }
   
 private:
   Iterator it;
@@ -1047,16 +1046,16 @@ void File_Blocks< TIndex, TIterator >::write_block(uint64* buf, uint32 payload_s
 template< typename TIndex, typename TIterator >
 typename File_Blocks< TIndex, TIterator >::Write_Iterator
     File_Blocks< TIndex, TIterator >::insert_block
-    (const Write_Iterator& it, uint64* buf, uint32 max_keysize)
+    (const Write_Iterator& it, uint64* buf)
 {
-  return insert_block(it, buf, *(uint32*)buf, max_keysize, TIndex((void*)(buf+1)));
+  return insert_block(it, buf, *(uint32*)buf, TIndex((void*)(buf+1)));
 }
 
 
 template< typename TIndex, typename TIterator >
 typename File_Blocks< TIndex, TIterator >::Write_Iterator
     File_Blocks< TIndex, TIterator >::insert_block
-    (const Write_Iterator& it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx)
+    (const Write_Iterator& it, uint64* buf, uint32 payload_size, const TIndex& block_idx)
 {
   if (buf == 0)
     return it;
@@ -1068,7 +1067,7 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
   write_block(buf, payload_size, data_size, pos);
 
   Write_Iterator return_it = it;
-  return_it.insert_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, data_size, max_keysize));
+  return_it.insert_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, data_size));
   return_it.is_empty = it.is_empty;
   return return_it;
 }
@@ -1077,16 +1076,16 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
 template< typename TIndex, typename TIterator >
 typename File_Blocks< TIndex, TIterator >::Write_Iterator
     File_Blocks< TIndex, TIterator >::replace_block
-    (const Write_Iterator& it, uint64* buf, uint32 max_keysize)
+    (const Write_Iterator& it, uint64* buf)
 {
-  return replace_block(it, buf, *(uint32*)buf, max_keysize, TIndex((void*)(buf+1)));
+  return replace_block(it, buf, *(uint32*)buf, TIndex((void*)(buf+1)));
 }
 
 
 template< typename TIndex, typename TIterator >
 typename File_Blocks< TIndex, TIterator >::Write_Iterator
     File_Blocks< TIndex, TIterator >::replace_block
-    (Write_Iterator it, uint64* buf, uint32 payload_size, uint32 max_keysize, const TIndex& block_idx)
+    (Write_Iterator it, uint64* buf, uint32 payload_size, const TIndex& block_idx)
 {
   if (!buf)
     return erase_block(it);
@@ -1097,7 +1096,7 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
   uint32 pos = 0;
   write_block(buf, payload_size, data_size, pos);
 
-  it.set_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, data_size, max_keysize));
+  it.set_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, data_size));
   return it;
 }
 

@@ -55,14 +55,13 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
         {
           uint64* buf = src_file.read_block(src_it, false);
           dest_file.insert_block(
-              dest_file.write_end(), buf, std::min(excess_bytes, block_size),
-              src_it.block().max_keysize(), src_it.block().index());
+              dest_file.write_end(), buf, std::min(excess_bytes, block_size), src_it.block().index());
           excess_bytes = std::max(excess_bytes, block_size) - block_size;
         }
         else
         {
           uint64* buf = src_file.read_block(src_it);
-          dest_file.insert_block(dest_file.write_end(), buf, src_it.block().max_keysize());
+          dest_file.insert_block(dest_file.write_end(), buf);
           if (((uint32*)buf)[1] > block_size)
             excess_bytes = ((uint32*)buf)[1] - block_size;
         }
