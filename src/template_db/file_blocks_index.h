@@ -137,9 +137,9 @@ template< typename Index >
 struct File_Blocks_Index_Iterator
 {
 public:
-  File_Blocks_Index_Iterator(const uint8* ptr_) : ptr(ptr_), idx(0) {}
+  File_Blocks_Index_Iterator(const uint8* ptr_, const uint8* end_) : ptr(ptr_), end(end_), idx(0) {}
   ~File_Blocks_Index_Iterator() { delete idx; }
-  File_Blocks_Index_Iterator(const File_Blocks_Index_Iterator& rhs) : ptr(rhs.ptr), idx(0) {}
+  File_Blocks_Index_Iterator(const File_Blocks_Index_Iterator& rhs) : ptr(rhs.ptr), end(rhs.end), idx(0) {}
   File_Blocks_Index_Iterator& operator=(const File_Blocks_Index_Iterator& rhs)
   {
     if (ptr != rhs.ptr)
@@ -147,6 +147,7 @@ public:
       delete idx;
       idx = 0;
       ptr = rhs.ptr;
+      end = rhs.end;
     }
     return *this;
   }
@@ -161,6 +162,13 @@ public:
   bool operator==(File_Blocks_Index_Iterator rhs) const
   { return ptr == rhs.ptr; }
   bool operator!=(File_Blocks_Index_Iterator rhs) const { return ptr != rhs.ptr; }
+  
+  bool is_end() const { return ptr == end; }
+  void set_end() { ptr = end; }
+  
+  void seek(const Index& idx);
+  // asserts: is_end() || idx == index() || (this+1).is_end() || idx < (this+1).index()
+  // NB: index() <= idx is not guaranteed, because idx < index() indicates that idx does not exist in the file
 
   void* idx_ptr() const { return (void*)(ptr + 12); }
   Index index() const
@@ -174,6 +182,7 @@ public:
 
 private:
   const uint8* ptr;
+  const uint8* end;
   mutable Index* idx;
 };
 
@@ -196,9 +205,9 @@ public:
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
   File_Blocks_Index_Iterator< Index > begin()
-  { return File_Blocks_Index_Iterator< Index >(idx_file.begin()); }
+  { return File_Blocks_Index_Iterator< Index >(idx_file.begin(), idx_file.end()); }
   File_Blocks_Index_Iterator< Index > end()
-  { return File_Blocks_Index_Iterator< Index >(idx_file.end()); }
+  { return File_Blocks_Index_Iterator< Index >(idx_file.end(), idx_file.end()); }
 
 private:
   File_Blocks_Index_Mmap idx_file;
@@ -241,7 +250,7 @@ public:
       idx_file.rebuild_index_buf(params, block_list);
       idx_file_buf_valid = true;      
     }
-    return File_Blocks_Index_Iterator< Index >(idx_file.begin());
+    return File_Blocks_Index_Iterator< Index >(idx_file.begin(), idx_file.end());
   }
   File_Blocks_Index_Iterator< Index > end()
   { 
@@ -250,7 +259,7 @@ public:
       idx_file.rebuild_index_buf(params, block_list);
       idx_file_buf_valid = true;      
     }
-    return File_Blocks_Index_Iterator< Index >(idx_file.end());
+    return File_Blocks_Index_Iterator< Index >(idx_file.end(), idx_file.end());
   }
 
   const typename std::list< File_Block_Index_Entry< Index > >::iterator wr_begin() { return block_list.begin(); }
