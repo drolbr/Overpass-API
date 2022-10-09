@@ -205,7 +205,8 @@ public:
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
   File_Blocks_Index_Iterator< Index > begin()
-  { return File_Blocks_Index_Iterator< Index >(idx_file.begin(), idx_file.end()); }
+  { //std::cout<<"DEBUG File_Blocks_Idx "<<(void*)idx_file.begin()<<' '<<(void*)idx_file.end()<<' '<<data_file_name<<'\n';
+    return File_Blocks_Index_Iterator< Index >(idx_file.begin(), idx_file.end()); }
   File_Blocks_Index_Iterator< Index > end()
   { return File_Blocks_Index_Iterator< Index >(idx_file.end(), idx_file.end()); }
 
@@ -320,6 +321,32 @@ inline uint64 file_size_of(const std::string& data_file_name)
       throw;
   }
   return 0;
+}
+
+
+template< typename Index >
+void File_Blocks_Index_Iterator< Index >::seek(const Index& target)
+{
+  if (ptr == end || target.less((void*)(ptr+12)))
+    return;
+  while (!target.equal((void*)(ptr+12)))
+  {
+    decltype(ptr) next = ptr+12;
+    next += Index::size_of((void*)next);
+    bool is_segment = false;
+    while (next != end && Index::equal((void*)(ptr+12), (void*)(next+12)))
+    {
+      is_segment = true;
+      next += 12;
+      next += Index::size_of((void*)next);
+    }
+//     std::cout<<"DEBUG seek "<<(void*)ptr<<' '<<(void*)next<<' '<<(void*)end<<' '<<is_segment<<'\n';
+    if (is_segment)
+      ptr = next;
+    if (next == end || target.less((void*)(next+12)))
+      return;
+    ptr = next;
+  }
 }
 
 

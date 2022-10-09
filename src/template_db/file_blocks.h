@@ -82,6 +82,10 @@ struct File_Blocks_Discrete_Iterator : File_Blocks_Basic_Iterator< TIndex >
       index_lower(index_it_), index_upper(index_it_), index_end(index_end_)
   {
     find_next_block();
+//     if (this->block_it.is_end())
+//       std::cout<<"DEBUG Disc_Ctor end\n";
+//     else
+//       std::cout<<"DEBUG Disc_Ctor "<<(void*)this->block_it.idx_ptr()<<' '<<std::hex<<this->block_it.pos()<<'\n';
   }
 
   File_Blocks_Discrete_Iterator
@@ -123,6 +127,10 @@ struct File_Blocks_Range_Iterator : File_Blocks_Basic_Iterator< TIndex >
       index_it(index_it_), index_end(index_end_), index_equals_last_index(false)
   {
     find_next_block();
+//     if (this->block_it.is_end())
+//       std::cout<<"DEBUG Range_Ctor end\n";
+//     else
+//       std::cout<<"DEBUG Range_Ctor "<<(void*)this->block_it.idx_ptr()<<' '<<std::hex<<this->block_it.pos()<<'\n';
   }
 
   File_Blocks_Range_Iterator
@@ -346,10 +354,12 @@ template< typename TIndex, typename TIterator >
 File_Blocks_Discrete_Iterator< TIndex, TIterator >&
 File_Blocks_Discrete_Iterator< TIndex, TIterator >::operator++()
 {
-  auto it = this->block_it;
   ++(this->block_it);
-  if (!this->is_end() && !TIndex::equal(this->block_it.idx_ptr(), it.idx_ptr()))
-    find_next_block();
+  find_next_block();
+//   if (this->block_it.is_end())
+//     std::cout<<"DEBUG Disc_++ end\n";
+//   else
+//     std::cout<<"DEBUG Disc_++ "<<(void*)this->block_it.idx_ptr()<<' '<<std::hex<<this->block_it.pos()<<'\n';
   return *this;
 }
 
@@ -357,51 +367,51 @@ File_Blocks_Discrete_Iterator< TIndex, TIterator >::operator++()
 template< typename TIndex, typename TIterator >
 void File_Blocks_Discrete_Iterator< TIndex, TIterator >::find_next_block()
 {
-  index_lower = index_upper;
-
-  while (!this->is_end())
+  while (index_lower != index_end)
   {
-    while (index_lower != index_end && index_lower->less(this->block_it.idx_ptr()))
-      ++index_lower;
-    if (index_lower == index_end)
-    {
-      index_upper = index_end;
-      this->block_it.set_end();
-      return;
-    }
-
-    auto next_block = this->block_it;
-    ++next_block;
-
-    if (next_block.is_end())
-    {
-      index_upper = index_end;
-      return;
-    }
-    else if (index_lower->less(next_block.idx_ptr()))
+//     if (this->block_it.is_end())
+//       std::cout<<"DEBUG find_next_block_A end\n";
+//     else
+//       std::cout<<"DEBUG find_next_block_A "<<(void*)this->block_it.idx_ptr()<<' '<<std::hex<<this->block_it.pos()<<'\n';
+    this->block_it.seek(*index_lower);
+//     if (this->block_it.is_end())
+//       std::cout<<"DEBUG find_next_block_B end\n";
+//     else
+//       std::cout<<"DEBUG find_next_block_B "<<(void*)this->block_it.idx_ptr()<<' '<<std::hex<<this->block_it.pos()<<'\n';
+    if (this->block_it.is_end())
     {
       index_upper = index_lower;
-      while (index_upper != index_end && index_upper->less(next_block.idx_ptr()))
+      while (index_upper != index_end)
         ++index_upper;
       return;
     }
-    else if (index_lower->equal(this->block_it.idx_ptr())) // implies: this->block_it->index == next_block->index
+    if (!index_lower->less(this->block_it.idx_ptr()))
     {
-      index_upper = index_lower;
-      ++index_upper;
+      if (!(*index_lower < *index_upper))
+      {
+        index_upper = index_lower;
+        decltype(this->block_it) next = this->block_it;
+        ++next;
+        if (next.is_end())
+        {
+          while (index_upper != index_end)
+            ++index_upper;
+        }
+        else
+        {
+          while (index_upper != index_end && index_upper->less(next.idx_ptr()))
+            ++index_upper;
+        }
+      }
       return;
     }
-    // seek
-    else if (TIndex::equal(this->block_it.idx_ptr(), next_block.idx_ptr()))
-    {
-      while (!this->is_end() && TIndex::equal(this->block_it.idx_ptr(), next_block.idx_ptr()))
-        ++this->block_it;
-    }
-    else
-      ++this->block_it;
+    ++index_lower;
   }
-
-  index_upper = index_end;
+//   if (this->block_it.is_end())
+//     std::cout<<"DEBUG find_next_block_C end\n";
+//   else
+//     std::cout<<"DEBUG find_next_block_C "<<(void*)this->block_it.idx_ptr()<<' '<<std::hex<<this->block_it.pos()<<'\n';
+  this->block_it.set_end();
 }
 
 
@@ -427,28 +437,16 @@ bool File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator==(const File
 }
 
 
-template< typename Index, typename Iterator >
-bool index_equals_next_index(Iterator it)
-{
-  if (it.is_end())
-    return false;
-  Iterator next = it;
-  ++next;
-  if (next.is_end())
-    return false;
-  return Index::equal(it.idx_ptr(), next.idx_ptr());
-}
-
-
 template< typename TIndex, typename TRangeIterator >
 File_Blocks_Range_Iterator< TIndex, TRangeIterator >&
 File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator++()
 {
-  index_equals_last_index = index_equals_next_index
-      < TIndex, File_Blocks_Index_Iterator< TIndex > >(this->block_it);
   ++(this->block_it);
-  if (!index_equals_last_index)
-    find_next_block();
+  find_next_block();
+//   if (this->block_it.is_end())
+//     std::cout<<"DEBUG Range_++ end\n";
+//   else
+//     std::cout<<"DEBUG Range_++ "<<(void*)this->block_it.idx_ptr()<<' '<<std::hex<<this->block_it.pos()<<'\n';
   return *this;
 }
 
@@ -456,40 +454,14 @@ File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator++()
 template< typename TIndex, typename TRangeIterator >
 void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
 {
-  while (!this->is_end())
+  while (index_it != index_end)
   {
-    while (index_it != index_end && index_it.upper_bound().leq(this->block_it.idx_ptr()))
-      ++index_it;
-
-    if (index_it == index_end)
-    {
-      // We are done - there are no more indices left
-      this->block_it.set_end();
+    this->block_it.seek(index_it.lower_bound());
+    if (this->block_it.is_end() || !index_it.upper_bound().leq(this->block_it.idx_ptr()))
       return;
-    }
-
-    auto next_block = this->block_it;
-    ++next_block;
-    //seek
-    while ((!next_block.is_end()) && (!index_it.lower_bound().less(next_block.idx_ptr())))
-    {
-      if (index_it.lower_bound().leq(this->block_it.idx_ptr()))
-	// We have found a relevant block that is a segment
-	return;
-      index_equals_last_index = index_equals_next_index
-          < TIndex, File_Blocks_Index_Iterator< TIndex > >(this->block_it);
-      ++(this->block_it);
-      ++next_block;
-    }
-
-    // i.e. it is not a last part of a sequence of segments
-    if (!index_equals_last_index || index_it.lower_bound().leq(this->block_it.idx_ptr()))
-      break;
-
-    index_equals_last_index = index_equals_next_index
-        < TIndex, File_Blocks_Index_Iterator< TIndex > >(this->block_it);
-    ++(this->block_it);
+    ++index_it;
   }
+  this->block_it.set_end();
 }
 
 

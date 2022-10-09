@@ -83,7 +83,7 @@ struct Tag_Index_Local
   }
 
   static bool equal(void* lhs, void* rhs)
-  { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, (*(uint16*)lhs) + (*(uint16*)lhs+2) + 7); }
+  { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, *(uint16*)lhs + *(((uint16*)lhs)+2) + 7); }
   bool less(void* rhs) const
   {
     uint32 lhs_idx = index>>8;
@@ -117,7 +117,7 @@ struct Tag_Index_Local
     return key.size() == *(uint16*)rhs && value.size() == *((uint16*)rhs + 1)
       && (index>>8) == (*(((uint32*)rhs) + 1) & 0xffffff)
       && !memcmp(&key[0], ((const char*)rhs) + 7, *((uint16*)rhs))
-      && !memcmp(&key[0], ((const char*)rhs) + 7 + *(uint16*)rhs, *((uint16*)rhs + 1));
+      && !memcmp(&value[0], ((const char*)rhs) + 7 + *(uint16*)rhs, *((uint16*)rhs + 1));
   }
 
   uint32 size_of() const
@@ -276,7 +276,7 @@ struct Tag_Index_Global
   Tag_Index_Global(const std::string& key_, const std::string& value_) : key(key_), value(value_) {}
 
   static bool equal(void* lhs, void* rhs)
-  { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, (*(uint16*)lhs) + (*(uint16*)lhs+2) + 4); }
+  { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, *(uint16*)lhs + *(((uint16*)lhs)+2) + 4); }
   bool less(void* rhs) const
   {
     int keycmp = strnncmp(&key[0], ((const char*)rhs)+4, key.size(), *((uint16*)rhs));
@@ -295,7 +295,7 @@ struct Tag_Index_Global
   {
     return key.size() == *(uint16*)rhs && value.size() == *((uint16*)rhs + 1)
       && !memcmp(&key[0], ((const char*)rhs) + 4, *((uint16*)rhs))
-      && !memcmp(&key[0], ((const char*)rhs) + 4 + *(uint16*)rhs, *((uint16*)rhs + 1));
+      && !memcmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, *((uint16*)rhs + 1));
   }
 
   uint32 size_of() const

@@ -1479,7 +1479,7 @@ int main(int argc, char* args[])
 			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "78"))
     perform_query_with_recurse("relation", "node-relation", "", "",
-			       52.0 - 1.0/pattern_size, 52.0, 8.0 - 1.0/pattern_size, 8.0, false,
+			       51.0, 51.0 + 1.0/pattern_size, 8.0 - 1.0/pattern_size, 8.0, false,
 			       pattern_size, global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "79"))
     perform_query_with_recurse("relation", "node-relation", "relation_key_2/4", "relation_value_0",
