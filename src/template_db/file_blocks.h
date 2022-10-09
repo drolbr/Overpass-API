@@ -451,11 +451,26 @@ File_Blocks_Range_Iterator< TIndex, TRangeIterator >::operator++()
 }
 
 
+// template< typename TIndex >
+// void debug_dump(const TIndex& idx)
+// {
+//   static char buf[1024];
+//   static const char* hex = "0123456789abcdef";
+//   idx.to_data((void*)&buf);
+//   int size = idx.size_of();
+//   std::cout<<"DEBUG debug_dump";
+//   for (unsigned int i = 0; i < size; ++i)
+//     std::cout<<' '<<hex[(((int)buf[i])>>4)&0xf]<<hex[((int)buf[i])&0xf];
+//   std::cout<<'\n';
+// }
+
+
 template< typename TIndex, typename TRangeIterator >
 void File_Blocks_Range_Iterator< TIndex, TRangeIterator >::find_next_block()
 {
   while (index_it != index_end)
   {
+//     debug_dump(index_it.lower_bound());
     this->block_it.seek(index_it.lower_bound());
     if (this->block_it.is_end() || !index_it.upper_bound().leq(this->block_it.idx_ptr()))
       return;

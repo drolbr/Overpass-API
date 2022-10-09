@@ -500,6 +500,8 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
               (existing_map_positions, *transaction, *meta_settings().NODES_META)
           : std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());
 
+//   for (const auto& i : existing_map_positions)
+//     std::cout<<"DEBUG existing_map_positions "<<std::hex<<i.second.val()<<' '<<std::dec<<i.first.val()<<'\n';
   // Collect all data of existing tags
   std::vector< Tag_Entry< Node_Skeleton::Id_Type > > existing_local_tags;
   get_existing_tags< Node::Index, Node_Skeleton::Id_Type >
@@ -557,10 +559,18 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   }
 
   // Update local tags
+//   std::cout<<"DEBUG node_updater_loc del\n";
+//   for (const auto& i : attic_local_tags)
+//     for (const auto& j : i.second)
+//       std::cout<<"DEBUG node_updater_loc del "<<std::dec<<j.val()<<' '<<i.first.key<<' '<<i.first.value<<'\n';
   update_elements(attic_local_tags, new_local_tags, *transaction, *osm_base_settings().NODE_TAGS_LOCAL);
   callback->tags_local_finished();
 
   // Update global tags
+//   std::cout<<"DEBUG node_updater del\n";
+//   for (const auto& i : attic_global_tags)
+//     for (const auto& j : i.second)
+//       std::cout<<"DEBUG node_updater del "<<std::dec<<j.id.val()<<' '<<i.first.key<<' '<<i.first.value<<'\n';
   update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
   callback->tags_global_finished();
 

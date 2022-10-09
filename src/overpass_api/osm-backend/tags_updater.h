@@ -141,8 +141,11 @@ void get_existing_tags
   // formulate range query
   Ranges< Tag_Index_Local > ranges;
   for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
-    ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
+    ranges.push_back({ it->first, "", "" }, { it->first + 0x100, "", "" });
   ranges.sort();
+//   for (auto i = ranges.begin(); i != ranges.end(); ++i)
+//     std::cout<<"DEBUG "<<std::hex<<(*i).first.index<<' '<<(*i).first.key<<' '<<(*i).first.value<<" - "
+//         <<(*i).second.index<<' '<<(*i).second.key<<' '<<(*i).second.value<<'\n';
 
   // iterate over the result
   Block_Backend< Tag_Index_Local, Id_Type > rels_db(&tags_local);
@@ -151,6 +154,8 @@ void get_existing_tags
   current_index.index = 0xffffffff;
   for (auto it = rels_db.range_begin(ranges); !(it == rels_db.range_end()); ++it)
   {
+    //std::cout<<"DEBUG get_existing_tags "<<std::hex<<it.index().index<<' '<<it.index().key<<' '<<it.index().value<<' '<<std::dec<<it.object().val()<<'\n';
+    
     if (!(current_index == it.index()))
     {
       if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))

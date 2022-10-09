@@ -154,6 +154,7 @@ public:
 
   void operator++()
   {
+    //std::cout<<"DEBUG ++ "<<(void*)ptr<<' '<<(void*)end<<'\n';
     delete idx;
     idx = 0;
     ptr += 12;
@@ -340,7 +341,7 @@ void File_Blocks_Index_Iterator< Index >::seek(const Index& target)
       next += 12;
       next += Index::size_of((void*)next);
     }
-//     std::cout<<"DEBUG seek "<<(void*)ptr<<' '<<(void*)next<<' '<<(void*)end<<' '<<is_segment<<'\n';
+    //std::cout<<"DEBUG seek "<<(void*)ptr<<' '<<(void*)next<<' '<<(void*)end<<' '<<is_segment<<'\n';
     if (is_segment)
       ptr = next;
     if (next == end || target.less((void*)(next+12)))
