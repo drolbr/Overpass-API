@@ -326,10 +326,38 @@ inline uint64 file_size_of(const std::string& data_file_name)
 
 
 template< typename Index >
+const uint8* binary_seek(const uint8* begin, const uint8* end, const Index& target)
+{
+  auto min = begin;
+  auto max = end;
+  while (max - min > 2*(Index::const_size() + 12))
+  {
+    auto middle = min + ((max - min)/(Index::const_size() + 12)/2*(Index::const_size() + 12));
+    if (target.less((void*)(middle+12)))
+      max = middle;
+    else
+      min = middle;
+  }
+  return min;
+}
+
+
+template< typename Index >
 void File_Blocks_Index_Iterator< Index >::seek(const Index& target)
 {
   if (ptr == end || target.less((void*)(ptr+12)))
     return;
+  if (Index::const_size() && ((end - ptr) > 32*(Index::const_size() + 12))
+      && !target.less((void*)(ptr + 32*(Index::const_size() + 12) + 12)))
+  {
+    decltype(ptr) next = binary_seek(ptr, end, target);
+    if (next != end)
+    {
+      while (ptr < next && target.equal((void*)(next+12)))
+        next -= (Index::const_size() + 12);
+    }
+    ptr = next;
+  }
   while (!target.equal((void*)(ptr+12)))
   {
     decltype(ptr) next = ptr+12;

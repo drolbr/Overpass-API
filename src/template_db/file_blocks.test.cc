@@ -43,6 +43,7 @@ struct IntIndex
   bool equal(void* rhs) const { return value == *(uint32*)rhs; }
   
   uint32 size_of() const { return (value < 24 ? 12 : value-12); }
+  static constexpr uint32 const_size() { return 0; }
   static uint32 size_of(void* data) { return ((*(uint32*)data) < 24 ? 12 : (*(uint32*)data)-12); }
 
   void to_data(void* data) const

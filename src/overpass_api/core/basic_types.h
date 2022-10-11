@@ -48,20 +48,10 @@ struct Uint32_Index
   bool leq(void* rhs) const { return value <= *(uint32*)rhs; }
   bool equal(void* rhs) const { return value == *(uint32*)rhs; }
 
-  uint32 size_of() const
-  {
-    return 4;
-  }
-
-  static uint32 max_size_of()
-  {
-    return 4;
-  }
-
-  static uint32 size_of(void* data)
-  {
-    return 4;
-  }
+  uint32 size_of() const { return 4; }
+  static constexpr uint32 const_size() { return 4; }
+  static uint32 max_size_of() { return 4; }
+  static uint32 size_of(void* data) { return 4; }
 
   void to_data(void* data) const
   {
@@ -187,6 +177,7 @@ struct Uint64
   bool equal(void* rhs) const { return value == *(uint32*)rhs; }
 
   uint32 size_of() const { return 8; }
+  static constexpr uint32 const_size() { return 8; }
   static uint32 max_size_of() { return 8; }
   static uint32 size_of(void* data) { return 8; }
 

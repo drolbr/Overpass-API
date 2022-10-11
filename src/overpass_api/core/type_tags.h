@@ -125,6 +125,8 @@ struct Tag_Index_Local
     return 7 + key.length() + value.length();
   }
 
+  static constexpr uint32 const_size() { return 0; }
+
   static uint32 size_of(void* data)
   {
     return (*((uint16*)data) + *((uint16*)data + 1) + 7);
@@ -302,6 +304,8 @@ struct Tag_Index_Global
   {
     return 4 + key.length() + value.length();
   }
+
+  static constexpr uint32 const_size() { return 0; }
 
   static uint32 size_of(void* data)
   {

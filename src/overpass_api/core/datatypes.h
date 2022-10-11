@@ -693,15 +693,9 @@ struct Timestamp
   bool equal(void* rhs) const
   { return (timestamp>>32) == *(((uint8*)rhs) + 4) && (timestamp & 0xffffffffull) == *(uint32*)rhs; }
 
-  uint32 size_of() const
-  {
-    return 5;
-  }
-
-  static uint32 size_of(void* data)
-  {
-    return 5;
-  }
+  uint32 size_of() const { return 5; }
+  static constexpr uint32 const_size() { return 5; }
+  static uint32 size_of(void* data) { return 5; }
 
   void to_data(void* data) const
   {
