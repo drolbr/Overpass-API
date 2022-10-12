@@ -79,7 +79,8 @@ template< class Id_Type >
 std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kv(
     std::vector< std::pair< std::string, std::string > >::const_iterator kvit, uint64 timestamp,
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
-    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db)
+    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db,
+    std::vector< std::pair< Id_Type, Uint31_Index > >* relevant_ids = 0)
 {
   std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id;
   std::set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
@@ -87,13 +88,19 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kv(
   for (typename Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >::Discrete_Iterator
       it2(tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
       !(it2 == tags_db.discrete_end()); ++it2)
-    timestamp_per_id[it2.object().id] = std::make_pair(NOW, it2.object().idx);
+  {
+    if (!relevant_ids || std::binary_search(
+        relevant_ids->begin(), relevant_ids->end(), std::make_pair(it2.object().id, Uint31_Index(0u))))
+      timestamp_per_id[it2.object().id] = std::make_pair(NOW, it2.object().idx);
+  }
 
   for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Discrete_Iterator
       it2(attic_tags_db.discrete_begin(tag_req.begin(), tag_req.end()));
       !(it2 == attic_tags_db.discrete_end()); ++it2)
   {
-    if (it2.object().timestamp > timestamp)
+    if (it2.object().timestamp > timestamp &&
+        (!relevant_ids || std::binary_search(
+        relevant_ids->begin(), relevant_ids->end(), std::make_pair(it2.object().id, Uint31_Index(0u)))))
     {
       std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id];
       if (ref.first == 0 || it2.object().timestamp < ref.first)
@@ -165,20 +172,25 @@ template< class Id_Type >
 std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kregv(
     std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator krit, uint64 timestamp,
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
-    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db)
+    Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db,
+    std::vector< std::pair< Id_Type, Uint31_Index > >* relevant_ids = 0)
 {
   std::map< Id_Type, std::pair< uint64, Uint31_Index > > timestamp_per_id;
   Ranges< Tag_Index_Global > ranges = get_k_req(krit->first);
 
   for (auto it2 = tags_db.range_begin(ranges); !(it2 == tags_db.range_end()); ++it2)
   {
-    if (krit->second->matches(it2.index().value))
+    if ((!relevant_ids || std::binary_search(
+        relevant_ids->begin(), relevant_ids->end(), std::make_pair(it2.object().id, Uint31_Index(0u))))
+        && krit->second->matches(it2.index().value))
       timestamp_per_id[it2.object().id] = std::make_pair(NOW, it2.object().idx);
   }
 
   for (auto it2 = attic_tags_db.range_begin(ranges); !(it2 == attic_tags_db.range_end()); ++it2)
   {
     if (it2.object().timestamp > timestamp && it2.index().value != void_tag_value()
+        && (!relevant_ids || std::binary_search(
+            relevant_ids->begin(), relevant_ids->end(), std::make_pair(it2.object().id, Uint31_Index(0u))))
         && krit->second->matches(it2.index().value))
     {
       std::pair< uint64, Uint31_Index >& ref = timestamp_per_id[it2.object().id];

@@ -86,9 +86,6 @@ private:
   void prepare_delete_tags
       (std::vector< Tag_Entry< uint32 > >& tags_to_delete,
        const std::map< Uint31_Index, std::set< Area_Skeleton > >& to_delete);
-  void prepare_tags
-      (std::vector< Tag_Entry< uint32 > >& tags_to_delete,
-       const std::map< uint32, std::vector< uint32 > >& to_delete);
   void update_area_tags_local
       (const std::vector< Tag_Entry< uint32 > >& tags_to_delete);
   void update_area_tags_global
