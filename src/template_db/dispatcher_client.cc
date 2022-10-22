@@ -72,6 +72,9 @@ Dispatcher_Client::Dispatcher_Client(const std::string& dispatcher_share_name_)
     shadow_name = db_dir + (dispatcher_share_name.size() >= 8
         && dispatcher_share_name.substr(dispatcher_share_name.size()-8) == "osm_base"
         ? "/osm_base_shadow" : "/areas_shadow");
+    
+  if (!db_dir.empty() && db_dir.back() != '/')
+    db_dir += '/';
 
   // initialize the socket for the client
   socket.open(db_dir + dispatcher_share_name_);
