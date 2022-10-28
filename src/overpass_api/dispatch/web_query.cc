@@ -161,7 +161,11 @@ int main(int argc, char *argv[])
       temp<<"The dispatcher (i.e. the database management system) is turned off.";
     }
     else
+    {
       temp<<"open64: "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin;
+      if (!db_dir.empty())
+        Logger(db_dir).annotated_log(temp.str());
+    }
     error_output.runtime_error(temp.str());
   }
   catch(Resource_Error e)
