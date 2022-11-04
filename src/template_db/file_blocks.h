@@ -794,6 +794,7 @@ public:
       addr = mmap(0, length, PROT_READ, MAP_PRIVATE, fd, offset);
     if (addr == (void*)(-1))
       throw File_Error(errno, file_name, origin);
+    posix_madvise(addr, length, POSIX_MADV_WILLNEED);
   }
   ~Mmap()
   { 

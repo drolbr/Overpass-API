@@ -206,7 +206,7 @@ public:
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
   File_Blocks_Index_Iterator< Index > begin()
-  { //std::cout<<"DEBUG File_Blocks_Idx "<<(void*)idx_file.begin()<<' '<<(void*)idx_file.end()<<' '<<data_file_name<<'\n';
+  { posix_madvise((void*)idx_file.header(), idx_file.size(), POSIX_MADV_WILLNEED);
     return File_Blocks_Index_Iterator< Index >(idx_file.begin(), idx_file.end()); }
   File_Blocks_Index_Iterator< Index > end()
   { return File_Blocks_Index_Iterator< Index >(idx_file.end(), idx_file.end()); }
