@@ -377,36 +377,38 @@ class Area_Usage_Listener
 
 class Osm_Backend_Callback
 {
-  public:
-    virtual void update_started() = 0;
-    virtual void attic_update_started() = 0;
-    virtual void compute_started() = 0;
-    virtual void compute_attic_started() = 0;
-    virtual void compute_finished() = 0;
-    virtual void compute_attic_finished() = 0;
-    virtual void compute_indexes_finished() = 0;
-    virtual void update_ids_finished() = 0;
-    virtual void update_coords_finished() = 0;
-    virtual void prepare_delete_tags_finished() = 0;
-    virtual void undeleted_finished() = 0;
-    virtual void meta_finished() = 0;
-    virtual void tags_local_finished() = 0;
-    virtual void tags_global_finished() = 0;
-    virtual void flush_roles_finished() = 0;
-    virtual void changelog_finished() = 0;
-    virtual void update_finished() = 0;
-    virtual void current_update_finished() = 0;
-    virtual void partial_started() = 0;
-    virtual void partial_finished() = 0;
+public:
+  virtual void update_started() = 0;
+  virtual void attic_update_started() = 0;
+  virtual void compute_started() = 0;
+  virtual void compute_attic_started() = 0;
+  virtual void compute_finished() = 0;
+  virtual void compute_attic_finished() = 0;
+  virtual void compute_indexes_finished() = 0;
+  virtual void update_ids_finished() = 0;
+  virtual void update_coords_finished() = 0;
+  virtual void prepare_delete_tags_finished() = 0;
+  virtual void undeleted_finished() = 0;
+  virtual void meta_finished() = 0;
+  virtual void tags_local_finished() = 0;
+  virtual void tags_global_finished() = 0;
+  virtual void flush_roles_finished() = 0;
+  virtual void changelog_finished() = 0;
+  virtual void update_finished() = 0;
+  virtual void current_update_finished() = 0;
+  virtual void partial_started() = 0;
+  virtual void partial_finished() = 0;
 
-    virtual void parser_started() = 0;
-    virtual void node_elapsed(Node::Id_Type id) = 0;
-    virtual void nodes_finished() = 0;
-    virtual void way_elapsed(Way::Id_Type id) = 0;
-    virtual void ways_finished() = 0;
-    virtual void relation_elapsed(Relation::Id_Type id) = 0;
-    virtual void relations_finished() = 0;
-    virtual void parser_succeeded() = 0;
+  virtual void parser_started() = 0;
+  virtual void node_elapsed(Node::Id_Type id) = 0;
+  virtual void nodes_finished() = 0;
+  virtual void way_elapsed(Way::Id_Type id) = 0;
+  virtual void ways_finished() = 0;
+  virtual void relation_elapsed(Relation::Id_Type id) = 0;
+  virtual void relations_finished() = 0;
+  virtual void parser_succeeded() = 0;
+  
+  virtual void set_db_dir(const std::string& db_dir) = 0;
 };
 
 

@@ -520,6 +520,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
   way_updater = way_updater_;
   relation_updater = relation_updater_;
   callback = callback_;
+  callback->set_db_dir(dispatcher_client->get_db_dir());
   cpu_stopwatch = new Cpu_Stopwatch();
   cpu_stopwatch->start_cpu_timer(0);
   if (meta)

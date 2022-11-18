@@ -38,7 +38,7 @@ int64 eval_number_with_suffix(const std::string& arg)
   if (errno)
     return 0;
   auto offset = std::distance(&arg[0], (const char*)pos);
-  if (arg.size() <= offset)
+  if ((decltype(offset))arg.size() <= offset)
     return result;
   std::string suffix = arg.substr(offset);
   if (suffix == "ki" || suffix == " ki")
