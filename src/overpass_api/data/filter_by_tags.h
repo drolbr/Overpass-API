@@ -42,7 +42,7 @@ Ranges< Tag_Index_Global > get_k_req(const std::string& key)
 
 
 template< typename Skeleton >
-Ranges< Tag_Index_Global > get_regk_req(Regular_Expression* key, Resource_Manager& rman, Statement& stmt)
+Ranges< Tag_Index_Global > get_regk_req(Regular_Expression* key, Resource_Manager& rman, const Statement& stmt)
 {
   Ranges< Tag_Index_Global > result;
 
@@ -222,7 +222,7 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_regkregv(
     std::vector< std::pair< Regular_Expression*, Regular_Expression* > >::const_iterator krit, uint64 timestamp,
     Block_Backend< Tag_Index_Global, Tag_Object_Global< Id_Type > >& tags_db,
     Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >& attic_tags_db,
-    Resource_Manager& rman, Statement& stmt)
+    Resource_Manager& rman, const Statement& stmt)
 {
   std::map< Id_Type, std::map< std::string, std::pair< uint64, Uint31_Index > > > timestamp_per_id;
   Ranges< Tag_Index_Global > ranges = get_regk_req< Skeleton >(krit->first, rman, stmt);
