@@ -35,23 +35,8 @@ const int QUERY_DERIVED = 16;
 const int QUERY_AREA = 32;
 
 
-typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } Answer_State;
-
-
 class Regular_Expression;
 class Bbox_Query_Statement;
-
-
-template< typename Id >
-struct Id_Constraint
-{
-  Id_Constraint() : invert(true) {}
-  bool empty() const { return !invert && ids.empty(); }
-  void restrict_to(const std::vector< Id >& ids);
-  
-  std::vector< Id > ids;
-  bool invert;
-};
 
 
 /* === The Query Statement ===
@@ -180,31 +165,6 @@ class Query_Statement : public Output_Statement
 
     static bool area_query_exists_;
 
-    template< typename Skeleton, typename Id_Type >
-    std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids
-        (const File_Properties& file_prop, const File_Properties& attic_file_prop,
-         Resource_Manager& rman, uint64 timestamp, Query_Filter_Strategy& check_keys_late, bool& result_valid);
-
-    template< class Id_Type >
-    std::vector< Id_Type > collect_ids
-        (const File_Properties& file_prop,
-         Resource_Manager& rman, Query_Filter_Strategy check_keys_late);
-
-    template< class Id_Type >
-    void filter_non_ids
-        (std::vector< std::pair< Id_Type, Uint31_Index > >& ids,
-         const File_Properties& file_prop, const File_Properties& attic_file_prop,
-         Resource_Manager& rman, uint64 timestamp);
-
-    template< class Id_Type >
-    std::vector< std::pair< Id_Type, Uint31_Index > > collect_non_ids
-        (const File_Properties& file_prop, const File_Properties& attic_file_prop,
-         Resource_Manager& rman, uint64 timestamp);
-
-    template< class Id_Type >
-    std::vector< Id_Type > collect_non_ids
-        (const File_Properties& file_prop, Resource_Manager& rman);
-
     void get_elements_by_id_from_db
         (std::map< Uint31_Index, std::vector< Area_Skeleton > >& elements,
 	 const std::vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
@@ -225,17 +185,6 @@ class Query_Statement : public Output_Statement
          Resource_Manager& rman, Transaction& transaction);
 
     void filter_by_tags(std::map< Uint31_Index, std::vector< Derived_Structure > >& items);
-
-    template< typename Skeleton, typename Id_Type, typename Index >
-    void progress_1(
-        Id_Constraint< Id_Type >& ids, std::vector< Index >& range_req,
-        uint64 timestamp, Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
-        const File_Properties& file_prop, const File_Properties& attic_file_prop, Resource_Manager& rman);
-
-    template< class Id_Type >
-    void progress_1(
-        Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
-        const File_Properties& file_prop, Resource_Manager& rman);
 
     template< class Id_Type >
     void collect_nodes(
@@ -295,5 +244,6 @@ class Has_Kv_Statement : public Statement
     bool straight;
     bool case_sensitive;
 };
+
 
 #endif
