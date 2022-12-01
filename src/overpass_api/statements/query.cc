@@ -978,16 +978,18 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       progress_1< Node_Skeleton, Node::Id_Type, Uint32_Index >(
           keys, key_values, key_regexes, regkey_regexes, key_nvalues, key_nregexes, regkey_nregexes,
-          node_ids, range_vec_32, timestamp, node_answer_state, check_keys_late,
-          *osm_base_settings().NODE_TAGS_GLOBAL, *attic_settings().NODE_TAGS_GLOBAL, rman, *this);
+          node_ids, range_vec_32, timestamp, check_keys_late, rman, *this);
+      if (node_ids.empty())
+        node_answer_state = data_collected;
       collect_nodes(node_ids, node_answer_state, into, rman);
     }
     if (type & QUERY_WAY)
     {
       progress_1< Way_Skeleton, Way::Id_Type, Uint31_Index >(
 	  keys, key_values, key_regexes, regkey_regexes, key_nvalues, key_nregexes, regkey_nregexes,
-          way_ids, way_range_vec_31, timestamp, way_answer_state, check_keys_late,
-          *osm_base_settings().WAY_TAGS_GLOBAL, *attic_settings().WAY_TAGS_GLOBAL, rman, *this);
+          way_ids, way_range_vec_31, timestamp, check_keys_late, rman, *this);
+      if (way_ids.empty())
+        way_answer_state = data_collected;
       collect_elems(QUERY_WAY, way_ids, way_answer_state, into, rman);
       if (type & QUERY_CLOSED_WAY)
         filter_elems_for_closed_ways(into);
@@ -996,8 +998,9 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       progress_1< Relation_Skeleton, Relation::Id_Type, Uint31_Index >(
 	  keys, key_values, key_regexes, regkey_regexes, key_nvalues, key_nregexes, regkey_nregexes,
-          relation_ids, relation_range_vec_31, timestamp, relation_answer_state, check_keys_late,
-          *osm_base_settings().RELATION_TAGS_GLOBAL,  *attic_settings().RELATION_TAGS_GLOBAL, rman, *this);
+          relation_ids, relation_range_vec_31, timestamp, check_keys_late, rman, *this);
+      if (relation_ids.empty())
+        relation_answer_state = data_collected;
       collect_elems(QUERY_RELATION, relation_ids, relation_answer_state, into, rman);
     }
     if (type & QUERY_DERIVED)
@@ -1011,7 +1014,9 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         progress_1(
           keys, key_values, key_regexes, regkey_regexes, key_nvalues, key_nregexes, regkey_nregexes,
-          area_ids, area_answer_state, check_keys_late, *area_settings().AREA_TAGS_GLOBAL, rman, *this);
+          area_ids, check_keys_late, rman, *this);
+        if (area_ids.empty())
+          area_answer_state = data_collected;
         collect_elems(QUERY_AREA, area_ids, area_answer_state, into, rman);
       }
       catch (const File_Error& e)

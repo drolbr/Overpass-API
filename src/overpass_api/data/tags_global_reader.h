@@ -59,7 +59,7 @@ template< typename Id_Type, typename Iterator, typename Key_Regex, typename Val_
 void filter_id_list(
     std::vector< std::pair< Id_Type, Uint31_Index > >& new_ids, bool& filtered,
     Iterator begin, Iterator end, const Key_Regex& key_regex, const Val_Regex& val_regex,
-    Query_Filter_Strategy& check_keys_late)
+    bool limit_size)
 {
   std::vector< std::pair< Id_Type, Uint31_Index > > old_ids;
   old_ids.swap(new_ids);
@@ -71,19 +71,10 @@ void filter_id_list(
 	std::binary_search(old_ids.begin(), old_ids.end(), std::make_pair(it.object().id, Uint31_Index(0u)))))
       new_ids.push_back(std::make_pair(it.object().id, it.object().idx));
 
-    if (!filtered && new_ids.size() == 1024*1024)
+    if (!filtered && limit_size && new_ids.size() == 1024*1024)
     {
-      if (check_keys_late == prefer_ranges)
-      {
-        new_ids.clear();
-        return;
-      }
-      else if (check_keys_late == ids_useful)
-      {
-        check_keys_late = prefer_ranges;
-        new_ids.clear();
-        return;
-      }
+      new_ids.clear();
+      return;
     }
   }
 
@@ -147,7 +138,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
     const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_regexes,
     const File_Properties& file_prop, const File_Properties& attic_file_prop,
     Resource_Manager& rman, const Statement& stmt,
-    uint64 timestamp, Query_Filter_Strategy& check_keys_late, bool& result_valid)
+    uint64 timestamp, Query_Filter_Strategy check_keys_late, bool& result_valid)
 {
   if (key_values.empty() && keys.empty() && key_regexes.empty() && regkey_regexes.empty())
     return std::vector< std::pair< Id_Type, Uint31_Index > >();
@@ -162,6 +153,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
   // Handle simple Key-Value pairs
   std::vector< std::pair< Id_Type, Uint31_Index > > new_ids;
   bool filtered = false;
+  result_valid = false;
 
   for (std::vector< std::pair< std::string, std::string > >::const_iterator kvit = key_values.begin();
        kvit != key_values.end(); ++kvit)
@@ -169,14 +161,11 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
     if (timestamp == NOW)
     {
       std::set< Tag_Index_Global > tag_req = get_kv_req(kvit->first, kvit->second);
-      filter_id_list(new_ids, filtered,
-		     tags_db.discrete_begin(tag_req.begin(), tag_req.end()), tags_db.discrete_end(),
-		     Trivial_Regex(), Trivial_Regex(), check_keys_late);
+      filter_id_list(
+          new_ids, filtered, tags_db.discrete_begin(tag_req.begin(), tag_req.end()), tags_db.discrete_end(),
+          Trivial_Regex(), Trivial_Regex(), check_keys_late == prefer_ranges || check_keys_late == ids_useful);
       if (!filtered)
-      {
-	result_valid = false;
-	break;
-      }
+        return new_ids;
     }
     else
       filter_id_list(new_ids, filtered, collect_attic_kv(kvit, timestamp, tags_db, *attic_tags_db.obj));
@@ -194,22 +183,16 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
         Ranges< Tag_Index_Global > ranges = get_k_req(*kit);
 	filter_id_list(
             new_ids, filtered, tags_db.range_begin(ranges), tags_db.range_end(),
-            Trivial_Regex(), Trivial_Regex(), check_keys_late);
+            Trivial_Regex(), Trivial_Regex(), check_keys_late == ids_useful);
         if (!filtered)
-        {
-          result_valid = false;
-          break;
-        }
+          return new_ids;
       }
       else
 	filter_id_list(new_ids, filtered, collect_attic_k(kit, timestamp, tags_db, *attic_tags_db.obj));
 
       rman.health_check(stmt);
     }
-  }
 
-  if (check_keys_late != prefer_ranges)
-  {
     // Handle Key-Regular-Expression-Value pairs
     for (std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator krit = key_regexes.begin();
 	 krit != key_regexes.end(); ++krit)
@@ -217,23 +200,18 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
       if (timestamp == NOW)
       {
         Ranges< Tag_Index_Global > ranges = get_k_req(krit->first);
-	filter_id_list(new_ids, filtered,
-	    tags_db.range_begin(ranges), tags_db.range_end(), Trivial_Regex(), *krit->second, check_keys_late);
+        filter_id_list(
+            new_ids, filtered, tags_db.range_begin(ranges), tags_db.range_end(),
+            Trivial_Regex(), *krit->second, check_keys_late == ids_useful);
         if (!filtered)
-        {
-          result_valid = false;
-          break;
-        }
+          return new_ids;
       }
       else
 	filter_id_list(new_ids, filtered, collect_attic_kregv(krit, timestamp, tags_db, *attic_tags_db.obj));
 
       rman.health_check(stmt);
     }
-  }
 
-  if (check_keys_late != prefer_ranges)
-  {
     // Handle Regular-Key-Regular-Expression-Value pairs
     for (std::vector< std::pair< Regular_Expression*, Regular_Expression* > >::const_iterator it = regkey_regexes.begin();
 	 it != regkey_regexes.end(); ++it)
@@ -241,13 +219,11 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
       if (timestamp == NOW)
       {
         Ranges< Tag_Index_Global > ranges = get_regk_req< Skeleton >(it->first, rman, stmt);
-	filter_id_list(new_ids, filtered,
-	    tags_db.range_begin(ranges), tags_db.range_end(), *it->first, *it->second, check_keys_late);
+        filter_id_list(
+            new_ids, filtered, tags_db.range_begin(ranges), tags_db.range_end(),
+            *it->first, *it->second, check_keys_late == ids_useful);
         if (!filtered)
-        {
-          result_valid = false;
-          break;
-        }
+          return new_ids;
       }
       else
 	filter_id_list(new_ids, filtered, collect_attic_regkregv< Skeleton, Id_Type >(
@@ -257,6 +233,7 @@ std::vector< std::pair< Id_Type, Uint31_Index > > collect_ids(
     }
   }
 
+  result_valid = true;
   return new_ids;
 }
 
@@ -291,9 +268,9 @@ std::vector< Id_Type > collect_ids(
     rman.health_check(stmt);
   }
 
-  // Handle simple Keys Only
   if (check_keys_late != prefer_ranges)
   {
+    // Handle simple Keys Only
     for (std::vector< std::string >::const_iterator kit = keys.begin(); kit != keys.end(); ++kit)
     {
       Ranges< Tag_Index_Global > ranges = get_k_req(*kit);
@@ -567,10 +544,12 @@ void progress_1(
     const std::vector< std::pair< std::string, Regular_Expression* > >& key_nregexes,
     const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_nregexes,
     Id_Constraint< Id_Type >& ids, std::vector< Index >& range_vec,
-    uint64 timestamp, Answer_State& answer_state, Query_Filter_Strategy& check_keys_late,
-    const File_Properties& file_prop, const File_Properties& attic_file_prop,
+    uint64 timestamp, Query_Filter_Strategy& check_keys_late,
     Resource_Manager& rman, const Statement& stmt)
 {
+  File_Properties* file_prop = current_global_tags_file_properties< Skeleton >();
+  File_Properties* attic_file_prop = attic_local_tags_file_properties< Skeleton >();
+  
   ids.ids.clear();
   range_vec.clear();
   if (!key_values.empty()
@@ -581,27 +560,26 @@ void progress_1(
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_ids< Skeleton, Id_Type >(
             keys, key_values, key_regexes, regkey_regexes,
-            file_prop, attic_file_prop, rman, stmt, timestamp, check_keys_late, result_valid);
+            *file_prop, *attic_file_prop, rman, stmt, timestamp, check_keys_late, result_valid);
+    if (check_keys_late == ids_useful && !result_valid)
+      check_keys_late = prefer_ranges;
     ids.invert = !result_valid;
 
     if (!key_nvalues.empty() || (check_keys_late != prefer_ranges && !key_nregexes.empty()))
       filter_non_ids< Id_Type >(
-          key_nvalues, key_nregexes, regkey_nregexes, id_idxs, file_prop, attic_file_prop, rman, stmt, timestamp);
+          key_nvalues, key_nregexes, regkey_nregexes, id_idxs, *file_prop, *attic_file_prop, rman, stmt, timestamp);
 
     for (auto it = id_idxs.begin(); it != id_idxs.end(); ++it)
     {
       ids.ids.push_back(it->first);
       range_vec.push_back(it->second);
     }
-
-    if (ids.ids.empty() && result_valid)
-      answer_state = data_collected;
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty()) && check_keys_late != prefer_ranges)
   {
     std::vector< std::pair< Id_Type, Uint31_Index > > id_idxs =
         collect_non_ids< Id_Type >(
-            key_nvalues, key_nregexes, file_prop, attic_file_prop, rman, stmt, timestamp);
+            key_nvalues, key_nregexes, *file_prop, *attic_file_prop, rman, stmt, timestamp);
     for (typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator it = id_idxs.begin();
         it != id_idxs.end(); ++it)
       ids.ids.push_back(it->first);
@@ -618,8 +596,8 @@ void progress_1(
     const std::vector< std::pair< std::string, std::string > >& key_nvalues,
     const std::vector< std::pair< std::string, Regular_Expression* > >& key_nregexes,
     const std::vector< std::pair< Regular_Expression*, Regular_Expression* > >& regkey_nregexes,
-    Id_Constraint< Id_Type >& ids, Answer_State& answer_state, Query_Filter_Strategy check_keys_late,
-    const File_Properties& file_prop, Resource_Manager& rman, const Statement& stmt)
+    Id_Constraint< Id_Type >& ids, Query_Filter_Strategy check_keys_late,
+    Resource_Manager& rman, const Statement& stmt)
 {
   if (!key_values.empty()
       || (check_keys_late != prefer_ranges
@@ -628,22 +606,20 @@ void progress_1(
     ids.invert = false;
     collect_ids< Id_Type >(
         keys, key_values, key_regexes, regkey_regexes,
-        file_prop, rman, stmt, check_keys_late).swap(ids.ids);
+        *area_settings().AREA_TAGS_GLOBAL, rman, stmt, check_keys_late).swap(ids.ids);
     if (!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
     {
       std::vector< Id_Type > non_ids = collect_non_ids< Id_Type >(
-          key_nvalues, key_nregexes, file_prop, rman, stmt);
+          key_nvalues, key_nregexes, *area_settings().AREA_TAGS_GLOBAL, rman, stmt);
       std::vector< Id_Type > diff_ids(ids.ids.size(), Id_Type());
       diff_ids.erase(set_difference(ids.ids.begin(), ids.ids.end(), non_ids.begin(), non_ids.end(),
                      diff_ids.begin()), diff_ids.end());
       ids.ids.swap(diff_ids);
     }
-    if (ids.ids.empty())
-      answer_state = data_collected;
   }
   else if ((!key_nvalues.empty() || !key_nregexes.empty() || !regkey_nregexes.empty())
       && check_keys_late != prefer_ranges)
-    collect_non_ids< Id_Type >(key_nvalues, key_nregexes, file_prop, rman, stmt).swap(ids.ids);
+    collect_non_ids< Id_Type >(key_nvalues, key_nregexes, *area_settings().AREA_TAGS_GLOBAL, rman, stmt).swap(ids.ids);
 }
 
 
