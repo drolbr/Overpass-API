@@ -217,18 +217,16 @@ void create_from_scratch(
   for (typename std::set< Index >::const_iterator fit(file_it.lower_bound());
       fit != file_it.upper_bound(); ++fit)
   {
-    typename std::map< Index, std::set< Object > >::const_iterator
-        it(to_insert.find(*fit));
+    auto it = to_insert.find(*fit);
 
-    uint32 current_size(4);
+    uint32 current_size = 4;
     if ((it == to_insert.end()) || (it->second.empty()))
       current_size = 0;
     else
     {
       // only add nonempty indices
       current_size += fit->size_of();
-      for (typename std::set< Object >::const_iterator it2(it->second.begin());
-          it2 != it->second.end(); ++it2)
+      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
         current_size += it2->size_of();
     }
 
@@ -244,8 +242,7 @@ void create_from_scratch(
   for (typename std::set< Index >::const_iterator fit(file_it.lower_bound());
       fit != upper_bound; ++fit)
   {
-    typename std::map< Index, std::set< Object > >::const_iterator
-        it(to_insert.find(*fit));
+    auto it = to_insert.find(*fit);
 
     if ((split_it != split.end()) && (*fit == *split_it))
     {
@@ -267,8 +264,7 @@ void create_from_scratch(
       pos = pos + fit->size_of() + 4;
       if (it != to_insert.end())
       {
-        for (typename std::set< Object >::const_iterator
-          it2(it->second.begin()); it2 != it->second.end(); ++it2)
+        for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
         {
           it2->to_data(pos);
           pos = pos + it2->size_of();
@@ -283,8 +279,7 @@ void create_from_scratch(
 
       if (it != to_insert.end())
       {
-        for (typename std::set< Object >::const_iterator
-            it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+        for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
           flush_if_necessary_and_write_obj(
               (uint64*)buffer.ptr, pos, file_blocks, file_it, *fit, *it2, block_size, data_filename);
       }
@@ -330,14 +325,11 @@ void update_group(
         (pos, source.ptr + *(uint32*)pos, to_delete.end(), to_insert.end())));
     pos = source.ptr + *(uint32*)pos;
   }
-  typename std::map< Index, std::set< Object > >::const_iterator
-      to_delete_begin(to_delete.lower_bound(*(file_it.lower_bound())));
-  typename std::map< Index, std::set< Object > >::const_iterator
-      to_delete_end(to_delete.end());
+  auto to_delete_begin = to_delete.lower_bound(*(file_it.lower_bound()));
+  auto to_delete_end = to_delete.end();
   if (file_it.upper_bound() != relevant_idxs.end())
     to_delete_end = to_delete.lower_bound(*(file_it.upper_bound()));
-  for (typename std::map< Index, std::set< Object > >::const_iterator
-    it(to_delete_begin); it != to_delete_end; ++it)
+  for (auto it = to_delete_begin; it != to_delete_end; ++it)
   {
     typename std::map< Index, Index_Collection< Index, Object > >::iterator
         ic_it(index_values.find(it->first));
@@ -350,14 +342,11 @@ void update_group(
       ic_it->second.delete_it = it;
   }
 
-  typename std::map< Index, std::set< Object > >::const_iterator
-      to_insert_begin(to_insert.lower_bound(*(file_it.lower_bound())));
-  typename std::map< Index, std::set< Object > >::const_iterator
-      to_insert_end(to_insert.end());
+  auto to_insert_begin = to_insert.lower_bound(*(file_it.lower_bound()));
+  auto to_insert_end = to_insert.end();
   if (file_it.upper_bound() != relevant_idxs.end())
     to_insert_end = to_insert.lower_bound(*(file_it.upper_bound()));
-  for (typename std::map< Index, std::set< Object > >::const_iterator
-      it(to_insert_begin); it != to_insert_end; ++it)
+  for (auto it = to_insert_begin; it != to_insert_end; ++it)
   {
     typename std::map< Index, Index_Collection< Index, Object > >::iterator
         ic_it(index_values.find(it->first));
@@ -401,9 +390,7 @@ void update_group(
       // only add nonempty indices
       if (current_size == 0)
 	current_size += it->first.size_of() + 4;
-      for (typename std::set< Object >::const_iterator
-	it2(it->second.insert_it->second.begin());
-      it2 != it->second.insert_it->second.end(); ++it2)
+      for (auto it2 = it->second.insert_it->second.begin(); it2 != it->second.insert_it->second.end(); ++it2)
 	current_size += it2->size_of();
     }
 
@@ -461,9 +448,7 @@ void update_group(
 	(!(it->second.insert_it->second.empty())))
       {
 	// only add nonempty indices
-	for (typename std::set< Object >::const_iterator
-	  it2(it->second.insert_it->second.begin());
-	it2 != it->second.insert_it->second.end(); ++it2)
+	for (auto it2 = it->second.insert_it->second.begin(); it2 != it->second.insert_it->second.end(); ++it2)
 	{
 	  it2->to_data(pos);
 	  pos = pos + it2->size_of();
@@ -497,9 +482,7 @@ void update_group(
       if ((it->second.insert_it != to_insert.end()) &&
 	(!(it->second.insert_it->second.empty())))
       {
-        for (typename std::set< Object >::const_iterator
-            it2(it->second.insert_it->second.begin());
-            it2 != it->second.insert_it->second.end(); ++it2)
+        for (auto it2 = it->second.insert_it->second.begin(); it2 != it->second.insert_it->second.end(); ++it2)
           flush_if_necessary_and_write_obj(
               (uint64*)dest.ptr, pos, file_blocks, file_it, it->first, *it2, block_size, data_filename);
       }
@@ -636,13 +619,11 @@ void update_segments(
   Void64_Pointer< uint64 > source(buffer_size);
   Void64_Pointer< uint64 > dest(buffer_size);
   Index idx = file_it.block().index;
-  typename std::map< Index, std::set< Object > >::const_iterator
-      delete_it(to_delete.find(idx));
-  typename std::map< Index, std::set< Object > >::const_iterator
-      insert_it(to_insert.find(idx));
+  auto delete_it = to_delete.find(idx);
+  auto insert_it = to_insert.find(idx);
   uint32 idx_size = idx.size_of();
 
-  typename std::set< Object >::const_iterator cur_insert;
+  decltype(insert_it->second.begin()) cur_insert;
   if (insert_it != to_insert.end())
     cur_insert = insert_it->second.begin();
 
