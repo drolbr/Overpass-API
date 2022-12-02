@@ -203,10 +203,10 @@ void flush_if_necessary_and_write_obj(
 }
 
 
-template< typename Index, typename Object, typename File_Blocks, typename Iterator >
+template< typename Index, typename Container, typename File_Blocks, typename Iterator >
 void create_from_scratch(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
-    const std::map< Index, std::set< Object > >& to_insert)
+    const std::map< Index, Container >& to_insert)
 {
   std::map< Index, uint32 > sizes;
   std::vector< Index > split;
@@ -297,6 +297,22 @@ void create_from_scratch(
   }
   ++file_it;
 }
+
+
+template< class TIndex, class TObject >
+struct Index_Collection
+{
+  Index_Collection(uint8* source_begin_, uint8* source_end_,
+		   const typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it_,
+		   const typename std::map< TIndex, std::set< TObject > >::const_iterator& insert_it_)
+      : source_begin(source_begin_), source_end(source_end_),
+        delete_it(delete_it_), insert_it(insert_it_) {}
+
+  uint8* source_begin;
+  uint8* source_end;
+  typename std::map< TIndex, std::set< TObject > >::const_iterator delete_it;
+  typename std::map< TIndex, std::set< TObject > >::const_iterator insert_it;
+};
 
 
 template< typename Index, typename Object, typename File_Blocks, typename Iterator, typename Update_Logger >
@@ -587,11 +603,10 @@ uint32 skip_deleted_objects(
 }
 
 
-template< typename Object >
+template< typename Iterator >
 void append_insertables(
     uint64* dest_start_ptr, uint32 block_size,
-    typename std::set< Object >::const_iterator& cur_insert,
-    const typename std::set< Object >::const_iterator& cur_end)
+    Iterator& cur_insert, const Iterator& cur_end)
 {
   uint32 obj_append_offset = *(uint32*)dest_start_ptr;
 
@@ -607,11 +622,11 @@ void append_insertables(
 }
 
 
-template< typename Index, typename Object, typename File_Blocks, typename Iterator, typename Update_Logger >
+template< typename Index, typename Container, typename File_Blocks, typename Iterator, typename Update_Logger >
 void update_segments(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
-    const std::map< Index, std::set< Object > >& to_delete,
-    const std::map< Index, std::set< Object > >& to_insert,
+    const std::map< Index, Container >& to_delete,
+    const std::map< Index, Container >& to_insert,
     Update_Logger& update_logger)
 {
   file_it.start_segments_mode();
@@ -634,7 +649,7 @@ void update_segments(
     if (oversized)
     {
       ++file_it;
-      Object obj(((uint8*)source.ptr) + 8 + idx_size);
+      decltype(*(insert_it->second.begin())) obj(((uint8*)source.ptr) + 8 + idx_size);
       if (delete_it != to_delete.end() && delete_it->second.find(obj) != delete_it->second.end())
         file_blocks.erase_blocks(delta_it, file_it);
     }
@@ -656,12 +671,12 @@ void update_segments(
       if (obj_append_offset)
       {
         if (insert_it != to_insert.end())
-          append_insertables< Object >(dest.ptr, block_size, cur_insert, insert_it->second.end());
+          append_insertables(dest.ptr, block_size, cur_insert, insert_it->second.end());
         flush_or_delete_block(dest.ptr, *(uint32*)dest.ptr, file_blocks, file_it, idx_size);
       }
       else if (insert_it != to_insert.end() && *(uint32*)source.ptr < block_size/2)
       {
-        append_insertables< Object >(dest.ptr, block_size, cur_insert, insert_it->second.end());
+        append_insertables(dest.ptr, block_size, cur_insert, insert_it->second.end());
         flush_or_delete_block(dest.ptr, *(uint32*)dest.ptr, file_blocks, file_it, idx_size);
       }
       else

@@ -481,22 +481,6 @@ struct Block_Backend_Range_Iterator
 
 
 template< class TIndex, class TObject >
-struct Index_Collection
-{
-  Index_Collection(uint8* source_begin_, uint8* source_end_,
-		   const typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it_,
-		   const typename std::map< TIndex, std::set< TObject > >::const_iterator& insert_it_)
-      : source_begin(source_begin_), source_end(source_end_),
-        delete_it(delete_it_), insert_it(insert_it_) {}
-
-  uint8* source_begin;
-  uint8* source_end;
-  typename std::map< TIndex, std::set< TObject > >::const_iterator delete_it;
-  typename std::map< TIndex, std::set< TObject > >::const_iterator insert_it;
-};
-
-
-template< class TIndex, class TObject >
 struct Empty_Update_Logger
 {
 public:
