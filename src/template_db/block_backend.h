@@ -480,14 +480,6 @@ struct Block_Backend_Range_Iterator
 //-----------------------------------------------------------------------------
 
 
-template< class TIndex, class TObject >
-struct Empty_Update_Logger
-{
-public:
-  void deletion(const TIndex&, const TObject&) {}
-};
-
-
 template< class TIndex, class TObject, class TIterator = typename std::set< TIndex >::const_iterator >
 struct Block_Backend
 {
@@ -512,19 +504,9 @@ struct Block_Backend
 
   const Range_Iterator& range_end() const { return *range_end_it; }
 
-  template< class Update_Logger >
-  void update
-      (const std::map< TIndex, std::set< TObject > >& to_delete,
-        const std::map< TIndex, std::set< TObject > >& to_insert,
-        Update_Logger& update_logger);
-
-  void update
-      (const std::map< TIndex, std::set< TObject > >& to_delete,
-        const std::map< TIndex, std::set< TObject > >& to_insert)
-  {
-    Empty_Update_Logger< TIndex, TObject> empty_logger;
-    update< Empty_Update_Logger< TIndex, TObject> >(to_delete, to_insert, empty_logger);
-  }
+  void update(
+      const std::map< TIndex, std::set< TObject > >& to_delete,
+      const std::map< TIndex, std::set< TObject > >& to_insert);
 
   uint read_count() const { return file_blocks.read_count(); }
   void reset_read_count() const { file_blocks.reset_read_count(); }

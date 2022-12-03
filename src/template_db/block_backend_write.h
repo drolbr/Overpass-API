@@ -315,12 +315,12 @@ struct Index_Collection
 };
 
 
-template< typename Index, typename Object, typename File_Blocks, typename Iterator, typename Update_Logger >
+template< typename Index, typename Object, typename File_Blocks, typename Iterator >
 void update_group(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
     const std::map< Index, std::set< Object > >& to_delete,
     const std::map< Index, std::set< Object > >& to_insert,
-    const std::set< Index >& relevant_idxs, Update_Logger& update_logger)
+    const std::set< Index >& relevant_idxs)
 {
   std::map< Index, Index_Collection< Index, Object > > index_values;
   std::map< Index, uint32 > sizes;
@@ -388,16 +388,14 @@ void update_group(
       pos = pos + Index::size_of((it->second.source_begin) + 4);
       while (pos < it->second.source_end)
       {
-	Object obj(pos);
-	if ((it->second.delete_it == to_delete.end()) ||
-	  (it->second.delete_it->second.find(obj) == it->second.delete_it->second.end()))
-	  current_size += obj.size_of();
-	else
-	  update_logger.deletion(it->first, obj);
-	pos = pos + obj.size_of();
+        Object obj(pos);
+        if ((it->second.delete_it == to_delete.end()) ||
+          (it->second.delete_it->second.find(obj) == it->second.delete_it->second.end()))
+          current_size += obj.size_of();
+        pos = pos + obj.size_of();
       }
       if (current_size > 0)
-	current_size += Index::size_of((it->second.source_begin) + 4) + 4;
+        current_size += Index::size_of((it->second.source_begin) + 4) + 4;
     }
 
     if ((it->second.insert_it != to_insert.end()) &&
@@ -568,11 +566,11 @@ bool read_block_or_blocks(
 }
 
 
-template< typename Index, typename Object, typename Update_Logger >
+template< typename Index, typename Object >
 uint32 skip_deleted_objects(
     uint64* source_start_ptr, uint64* dest_start_ptr,
     const std::set< Object >& objs_to_delete, uint32 idx_size,
-    Update_Logger& update_logger, const Index& idx)
+    uint64& num_remaining_obj, const Index& idx)
 {
   uint32 src_obj_offset = 8 + idx_size;
   uint32 dest_obj_offset = src_obj_offset;
@@ -588,9 +586,8 @@ uint32 skip_deleted_objects(
           ((uint8*)dest_start_ptr) + dest_obj_offset, ((uint8*)source_start_ptr) + src_obj_offset,
           obj.size_of());
       dest_obj_offset += obj.size_of();
+      ++num_remaining_obj;
     }
-    else
-      update_logger.deletion(idx, obj);
 
     src_obj_offset += obj.size_of();
   }
@@ -622,12 +619,11 @@ void append_insertables(
 }
 
 
-template< typename Index, typename Container, typename File_Blocks, typename Iterator, typename Update_Logger >
+template< typename Index, typename Container, typename File_Blocks, typename Iterator >
 void update_segments(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
     const std::map< Index, Container >& to_delete,
-    const std::map< Index, Container >& to_insert,
-    Update_Logger& update_logger)
+    const std::map< Index, Container >& to_insert)
 {
   file_it.start_segments_mode();
   uint32 buffer_size = block_size;
@@ -636,6 +632,7 @@ void update_segments(
   Index idx = file_it.block().index;
   auto delete_it = to_delete.find(idx);
   auto insert_it = to_insert.find(idx);
+  uint64 num_remaining_obj = 0;
   uint32 idx_size = idx.size_of();
 
   decltype(insert_it->second.begin()) cur_insert;
@@ -664,7 +661,7 @@ void update_segments(
       uint32 obj_append_offset = 0;
       if (delete_it != to_delete.end())
         obj_append_offset = skip_deleted_objects(
-            source.ptr, dest.ptr, delete_it->second, idx_size, update_logger, idx);
+            source.ptr, dest.ptr, delete_it->second, idx_size, num_remaining_obj, idx);
       else
         memcpy(dest.ptr, source.ptr, *(uint32*)source.ptr);
 
@@ -706,11 +703,9 @@ void update_segments(
 
 
 template< class Index, class Object, class TIterator >
-template< class Update_Logger >
 void Block_Backend< Index, Object, TIterator >::update
     (const std::map< Index, std::set< Object > >& to_delete,
-     const std::map< Index, std::set< Object > >& to_insert,
-     Update_Logger& update_logger)
+     const std::map< Index, std::set< Object > >& to_insert)
 {
   std::set< Index > relevant_idxs;
   for (auto it = to_delete.begin(); it != to_delete.end(); ++it)
@@ -726,9 +721,9 @@ void Block_Backend< Index, Object, TIterator >::update
     if (file_it.block_type() == File_Block_Index_Entry< Index >::EMPTY)
       create_from_scratch(file_blocks, file_it, block_size, data_filename, to_insert);
     else if (file_it.block_type() == File_Block_Index_Entry< Index >::GROUP)
-      update_group(file_blocks, file_it, block_size, data_filename, to_delete, to_insert, relevant_idxs, update_logger);
+      update_group(file_blocks, file_it, block_size, data_filename, to_delete, to_insert, relevant_idxs);
     else //if (file_it.block_type() == File_Block_Index_Entry< Index >::SEGMENT)
-      update_segments(file_blocks, file_it, block_size, data_filename, to_delete, to_insert, update_logger);
+      update_segments(file_blocks, file_it, block_size, data_filename, to_delete, to_insert);
   }
 }
 
