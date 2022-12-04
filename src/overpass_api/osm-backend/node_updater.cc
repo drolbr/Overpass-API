@@ -571,7 +571,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 //   for (const auto& i : attic_global_tags)
 //     for (const auto& j : i.second)
 //       std::cout<<"DEBUG node_updater del "<<std::dec<<j.id.val()<<' '<<i.first.key<<' '<<i.first.value<<'\n';
-  update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
+  update_elements_cnt(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
   callback->tags_global_finished();
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
@@ -660,7 +660,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Node_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().NODE_TAGS_LOCAL);
     callback->tags_local_finished();
-    update_elements(std::map< Tag_Index_Global,
+    update_elements_cnt(std::map< Tag_Index_Global,
                     std::set< Attic < Tag_Object_Global< Node_Skeleton::Id_Type > > > >(),
                     new_attic_global_tags, *transaction, *attic_settings().NODE_TAGS_GLOBAL);
     callback->tags_global_finished();

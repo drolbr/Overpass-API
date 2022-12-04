@@ -510,6 +510,25 @@ void update_elements
 }
 
 
+#include <iostream>
+template< typename Object >
+void update_elements_cnt
+    (const std::map< Tag_Index_Global, std::set< Object > >& attic_objects,
+     const std::map< Tag_Index_Global, std::set< Object > >& new_objects,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  std::map< Tag_Index_Global, uint64 > cnt;
+  Block_Backend< Tag_Index_Global, Object > db(transaction.data_index(&file_properties));
+  db.update(attic_objects, new_objects, &cnt);
+  std::cerr<<"DEBUG_22b04\n"<<file_properties.get_file_name_trunk()<<'\n';
+  for (auto& i : cnt)
+  {
+    if (i.second > 1000)
+      std::cerr<<i.second<<'\t'<<i.first.key<<'\t'<<i.first.value<<'\n';
+  }
+}
+
+
 template< typename Index, typename Id_Type >
 std::map< Id_Type, std::set< Index > > get_existing_idx_lists
     (const std::vector< Id_Type >& ids,
