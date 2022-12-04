@@ -506,7 +506,8 @@ struct Block_Backend
 
   void update(
       const std::map< TIndex, std::set< TObject > >& to_delete,
-      const std::map< TIndex, std::set< TObject > >& to_insert);
+      const std::map< TIndex, std::set< TObject > >&   to_insert,
+      std::map< TIndex, uint64 >* obj_count = nullptr);
 
   uint read_count() const { return file_blocks.read_count(); }
   void reset_read_count() const { file_blocks.reset_read_count(); }
