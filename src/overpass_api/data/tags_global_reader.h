@@ -548,7 +548,7 @@ void progress_1(
     Resource_Manager& rman, const Statement& stmt)
 {
   File_Properties* file_prop = current_global_tags_file_properties< Skeleton >();
-  File_Properties* attic_file_prop = attic_local_tags_file_properties< Skeleton >();
+  File_Properties* attic_file_prop = attic_global_tags_file_properties< Skeleton >();
   
   ids.ids.clear();
   range_vec.clear();
