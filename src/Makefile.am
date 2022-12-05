@@ -270,6 +270,7 @@ nobase_dist_HEADERS = \
   overpass_api/osm-backend/node_updater.h\
   overpass_api/osm-backend/osm_updater.h\
   overpass_api/osm-backend/relation_updater.h\
+  overpass_api/osm-backend/tags_global_writer.h\
   overpass_api/osm-backend/tags_updater.h\
   overpass_api/osm-backend/way_updater.h\
   overpass_api/output_formats/output_csv.h\

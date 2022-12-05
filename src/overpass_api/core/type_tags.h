@@ -57,6 +57,72 @@ inline int strnncmp(const char* lhs, const char* rhs, int lhs_len, int rhs_len)
 }
 
 
+struct String_Index
+{
+  std::string key;
+
+  String_Index() {}
+  String_Index(std::string key_) : key(key_) {}
+
+  String_Index(void* data)
+  {
+    key = std::string(((int8*)data + 2), *(uint16*)data);
+  }
+
+  static bool equal(void* lhs, void* rhs)
+  { return *(uint16*)lhs == *(uint16*)rhs && !memcmp(lhs, rhs, *(uint16*)lhs + 2); }
+  bool less(void* rhs) const
+  {
+    return strnncmp(&key[0], ((const char*)rhs)+2, key.size(), *((uint16*)rhs)) < 0;
+  }
+  bool leq(void* rhs) const
+  {
+    return strnncmp(&key[0], ((const char*)rhs)+7, key.size(), *((uint16*)rhs)) <= 0;
+  }
+  bool equal(void* rhs) const
+  {
+    return key.size() == *(uint16*)rhs && !memcmp(&key[0], ((const char*)rhs) + 2, *((uint16*)rhs));
+  }
+
+  uint32 size_of() const
+  {
+    return 2 + key.length();
+  }
+
+  static constexpr uint32 const_size() { return 0; }
+
+  static uint32 size_of(void* data)
+  {
+    return *((uint16*)data) + 2;
+  }
+
+  void to_data(void* data) const
+  {
+    *(uint16*)data = key.length();
+    memcpy((uint8*)data + 2, key.data(), key.length());
+  }
+
+  bool operator<(const String_Index& a) const
+  {
+    return (key < a.key);
+  }
+
+  bool operator==(const String_Index& a) const
+  {
+    return key == a.key;
+  }
+
+  static uint32 max_size_of()
+  {
+    throw Unsupported_Error("static uint32 String_Index::max_size_of()");
+    return 0;
+  }
+  
+  static String_Index min() { return String_Index{ "" }; }
+  static String_Index max() { return String_Index{ "\xff" }; }
+};
+
+
 struct Tag_Index_Local
 {
   uint32 index;

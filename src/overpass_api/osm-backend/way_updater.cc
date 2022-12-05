@@ -32,9 +32,9 @@
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
 #include "meta_updater.h"
+#include "tags_global_writer.h"
 #include "tags_updater.h"
 #include "way_updater.h"
-
 
 
 Way_Updater::Way_Updater(Transaction& transaction_, Database_Meta_State::Mode meta_)
@@ -917,7 +917,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   callback->tags_local_finished();
 
   // Update global tags
-  update_elements_cnt(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
+  update_current_global_tags< Way_Skeleton >(attic_global_tags, new_global_tags, *transaction);
   callback->tags_global_finished();
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
@@ -1018,9 +1018,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Way_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().WAY_TAGS_LOCAL);
     callback->tags_local_finished();
-    update_elements_cnt(std::map< Tag_Index_Global,
+    update_attic_global_tags< Way_Skeleton >(std::map< Tag_Index_Global,
                         std::set< Attic < Tag_Object_Global< Way_Skeleton::Id_Type > > > >(),
-                    new_attic_global_tags, *transaction, *attic_settings().WAY_TAGS_GLOBAL);
+                    new_attic_global_tags, *transaction);
     callback->tags_global_finished();
 
     // Write changelog
