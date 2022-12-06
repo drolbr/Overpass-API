@@ -32,6 +32,7 @@
 #include "../core/settings.h"
 #include "../frontend/output.h"
 #include "node_updater.h"
+#include "tags_global_writer.h"
 
 
 int main(int argc, char* args[])
@@ -113,6 +114,17 @@ int main(int argc, char* args[])
         std::cout<<std::hex<<it.object().idx.val()<<'\t'
             <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
+      }
+    }
+    else if (std::string("--node-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(osm_base_settings().NODE_FREQUENT_TAGS));
+      for (Block_Backend< String_Index, Frequent_Value_Entry >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<it.index().key<<'\t'<<it.object().value<<'\n';
       }
     }
     else if (std::string("--node-keys") == args[2])
@@ -275,6 +287,17 @@ int main(int argc, char* args[])
         std::cout<<std::hex<<it.object().idx.val()<<'\t'
             <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
+      }
+    }
+    else if (std::string("--way-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(osm_base_settings().WAY_FREQUENT_TAGS));
+      for (Block_Backend< String_Index, Frequent_Value_Entry >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<it.index().key<<'\t'<<it.object().value<<'\n';
       }
     }
     else if (std::string("--way-keys") == args[2])
@@ -498,6 +521,17 @@ int main(int argc, char* args[])
         std::cout<<std::hex<<it.object().idx.val()<<'\t'
             <<std::dec<<it.object().id.val()<<'\t'
             <<it.index().key<<'\t'<<it.index().value<<'\n';
+      }
+    }
+    else if (std::string("--rel-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(osm_base_settings().RELATION_FREQUENT_TAGS));
+      for (Block_Backend< String_Index, Frequent_Value_Entry >::Flat_Iterator
+           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      {
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<it.index().key<<'\t'<<it.object().value<<'\n';
       }
     }
     else if (std::string("--rel-keys") == args[2])

@@ -116,6 +116,23 @@ template< > inline File_Properties* current_global_tags_file_properties< Area_Sk
 
 
 template< typename Skeleton >
+File_Properties* current_global_tag_frequency_file_properties()
+{
+  return 0;
+}
+
+template< > inline File_Properties* current_global_tag_frequency_file_properties< Node_Skeleton >()
+{ return osm_base_settings().NODE_FREQUENT_TAGS; }
+
+template< > inline File_Properties* current_global_tag_frequency_file_properties< Way_Skeleton >()
+{ return osm_base_settings().WAY_FREQUENT_TAGS; }
+
+template< > inline File_Properties* current_global_tag_frequency_file_properties< Relation_Skeleton >()
+{ return osm_base_settings().RELATION_FREQUENT_TAGS; }
+
+
+
+template< typename Skeleton >
 File_Properties* key_file_properties()
 {
   return 0;
@@ -214,6 +231,23 @@ template< > inline File_Properties* attic_global_tags_file_properties< Way_Skele
 
 template< > inline File_Properties* attic_global_tags_file_properties< Relation_Skeleton >()
 { return attic_settings().RELATION_TAGS_GLOBAL; }
+
+
+
+template< typename Skeleton >
+File_Properties* attic_global_tag_frequency_file_properties()
+{
+  return 0;
+}
+
+template< > inline File_Properties* attic_global_tag_frequency_file_properties< Node_Skeleton >()
+{ return osm_base_settings().NODE_FREQUENT_TAGS; }
+
+template< > inline File_Properties* attic_global_tag_frequency_file_properties< Way_Skeleton >()
+{ return osm_base_settings().WAY_FREQUENT_TAGS; }
+
+template< > inline File_Properties* attic_global_tag_frequency_file_properties< Relation_Skeleton >()
+{ return osm_base_settings().RELATION_FREQUENT_TAGS; }
 
 
 
