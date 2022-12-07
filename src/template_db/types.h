@@ -81,6 +81,7 @@ struct File_Blocks_Index_Base
   virtual uint32 get_compression_factor() const = 0;
   virtual uint32 get_compression_method() const = 0;
   virtual uint32 get_block_count() const = 0;
+  virtual int32 get_file_format_version() const = 0;
 
   static const int USE_DEFAULT = -1;
   static const int NO_COMPRESSION = 0;

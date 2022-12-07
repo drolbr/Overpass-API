@@ -126,6 +126,7 @@ struct File_Blocks_Index_Structure_Params
   uint64 block_size_;
   uint32 compression_factor;
   int compression_method;
+  int32 file_format_version;
 
   uint32 block_count;
 
@@ -203,6 +204,8 @@ public:
   virtual uint32 get_compression_factor() const { return params.compression_factor; }
   virtual uint32 get_compression_method() const { return params.compression_method; }
   virtual uint32 get_block_count() const { return params.block_count; }
+  virtual int32 get_file_format_version() const { return params.file_format_version; }
+
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
   File_Blocks_Index_Iterator< Index > begin()
@@ -243,6 +246,8 @@ public:
   virtual uint32 get_compression_factor() const { return params.compression_factor; }
   virtual uint32 get_compression_method() const { return params.compression_method; }
   virtual uint32 get_block_count() const { return params.block_count; }
+  virtual int32 get_file_format_version() const { return params.file_format_version; }
+
   void increase_block_count(uint32 delta) { params.block_count += delta; }
   virtual bool empty() const { return params.empty_; }
   File_Blocks_Index_Iterator< Index > begin()
@@ -443,14 +448,15 @@ File_Blocks_Index_Structure_Params::File_Blocks_Index_Structure_Params(
      compression_factor(file_prop.get_compression_factor()), // can be overwritten by index file
      compression_method(compression_method_ == File_Blocks_Index_Base::USE_DEFAULT ?
         file_prop.get_compression_method() : compression_method_), // can be overwritten by index file
-     block_count(0)
+     file_format_version(0), block_count(0)
 {
   const uint8* header = idx_file.header();
   if (header)
   {
     if (file_name_extension != ".legacy")
     {
-      if (*(int32*)header != FILE_FORMAT_VERSION && *(int32*)header != 7512)
+      file_format_version = *(int32*)header;
+      if (file_format_version != FILE_FORMAT_VERSION && file_format_version != 7512)
 	throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Unsupported index file format version");
       block_size_ = 1ull<<*(uint8*)(header + 4);
       if (!block_size_)
