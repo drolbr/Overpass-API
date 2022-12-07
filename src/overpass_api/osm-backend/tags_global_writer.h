@@ -74,6 +74,22 @@ struct Frequent_Value_Entry
 };
 
 
+inline uint calc_tag_split_level(uint64 cnt)
+{
+  return cnt < 8192 ? 0 
+      : cnt < 512*1024 ? 8
+      : cnt < 32*1024*1024 ? 16
+      : 24;
+}
+
+
+inline void reorganize_tag_split_level(
+    uint old_level, uint new_level, const std::string& key, const std::string& value)
+{
+  // ...
+}
+
+
 template< typename Skeleton >
 void update_current_global_tags(
     const std::map< Tag_Index_Global,
@@ -83,8 +99,51 @@ void update_current_global_tags(
     Transaction& transaction)
 {
   std::map< std::string, std::vector< Frequent_Value_Entry > > frequent;
-  std::map< Tag_Index_Global, uint64 > cnt;
+  {
+    Block_Backend< String_Index, Frequent_Value_Entry >
+        db(transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()));
+    for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+      frequent[it.index().key].push_back(it.object());
+  }
+  for (auto& i : frequent)
+    std::sort(i.second.begin(), i.second.end());
+
+  auto it_attic = attic_objects.begin();
+  auto it_new = new_objects.begin();
+  for (const auto& i : frequent)
+  {
+    while (it_new != new_objects.end() && it_new->first.key < i.first)
+      ++it_new;
+    if (it_new != new_objects.end() && it_new->first.key == i.first)
+    {
+      for (const auto& j : i.second)
+      {
+        while (it_new != new_objects.end() && it_new->first.key == i.first && it_new->first.value < j.value)
+          ++it_new;
+        if (it_new != new_objects.end() && it_new->first.key == i.first && it_new->first.value == j.value)
+        {
+          // adjust new_objects
+        }
+      }
+    }
+
+    while (it_attic != attic_objects.end() && it_attic->first.key < i.first)
+      ++it_attic;
+    if (it_attic != attic_objects.end() && it_attic->first.key == i.first)
+    {
+      for (const auto& j : i.second)
+      {
+        while (it_attic != attic_objects.end() && it_attic->first.key == i.first && it_attic->first.value < j.value)
+          ++it_attic;
+        if (it_attic != attic_objects.end() && it_attic->first.key == i.first && it_attic->first.value == j.value)
+        {
+          // adjust attic_objects
+        }
+      }
+    }
+  }
   
+  std::map< Tag_Index_Global, uint64 > cnt;
   {
     Block_Backend< Tag_Index_Global, Tag_Object_Global< typename Skeleton::Id_Type > >
         db(transaction.data_index(current_global_tags_file_properties< Skeleton >()));
@@ -94,30 +153,57 @@ void update_current_global_tags(
   std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_delete;
   std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_insert;
 
-  for (auto& i : cnt)
+  auto it_cnt = cnt.begin();
+  for (auto& i : frequent)
   {
-    if (i.second > 8192)
+    while (it_cnt != cnt.end() && it_cnt->first.key < i.first)
     {
-      uint level = (i.second < 512*1024 ? 8 : i.second < 32*1024*1024 ? 16 : 24);
-      
-      auto& val_vec = frequent[i.first.key];
-      auto it = val_vec.begin();
-      while (it != val_vec.end() && it->value != i.first.value)
-        ++it;
-      if (it == val_vec.end())
+      uint level = calc_tag_split_level(it_cnt->second);
+      if (level > 0)
+        reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
+      freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second, level });        
+      ++it_cnt;
+    }
+    if (it_cnt != cnt.end() && it_cnt->first.key == i.first)
+    {
+      for (auto& j : i.second)
       {
-        freq_to_insert[i.first.key].insert({ i.first.value, i.second, level });
-        // reorganize to level
-      }
-      else
-      {
-        if (it->level < level)
-          ;//reorganize to level
-        freq_to_delete[{ i.first.key }].insert(Frequent_Value_Entry{ i.first.value, (uint64)i.second, level });
-        freq_to_insert[{ i.first.key }].insert({ i.first.value, (uint64)i.second, level });        
+        while (it_cnt != cnt.end() && it_cnt->first.value < j.value)
+        {
+          uint level = calc_tag_split_level(it_cnt->second);
+          if (level > 0)
+            reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
+          freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second, level });        
+          ++it_cnt;
+        }
+        uint64 kv_cnt = j.count;
+        while (it_cnt != cnt.end() && it_cnt->first.value == j.value)
+        {
+          kv_cnt = it_cnt->second;
+          // kv_cnt += it_cnt->second;
+          // kv_cnt -= ...;
+          ++it_cnt;
+        }
+        if (kv_cnt != j.count)
+        {
+          uint level = calc_tag_split_level(kv_cnt);
+          if (level != j.level)
+            reorganize_tag_split_level(j.level, level, i.first, j.value);
+          freq_to_delete[{ i.first }].insert({ j.value, (uint64)j.count, level });
+          freq_to_insert[{ i.first }].insert({ j.value, (uint64)kv_cnt, level });        
+        }
       }
     }
   }
+  while (it_cnt != cnt.end())
+  {
+    uint level = calc_tag_split_level(it_cnt->second);
+    if (level > 0)
+      reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
+    freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second, level });        
+    ++it_cnt;
+  }
+
   {
     Block_Backend< String_Index, Frequent_Value_Entry >
         db(transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()));
