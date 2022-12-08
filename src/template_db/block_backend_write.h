@@ -206,7 +206,7 @@ void flush_if_necessary_and_write_obj(
 template< typename Index, typename Container, typename File_Blocks, typename Iterator >
 void create_from_scratch(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
-    const std::map< Index, Container >& to_insert, std::map< Index, uint64 >* obj_count)
+    const std::map< Index, Container >& to_insert, std::map< Index, Delta_Count >* obj_count)
 {
   std::map< Index, uint32 > sizes;
   std::vector< Index > split;
@@ -229,7 +229,7 @@ void create_from_scratch(
       for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
         current_size += it2->size_of();
       if (obj_count)
-        (*obj_count)[it->first] += it->second.size();
+        (*obj_count)[it->first].after += it->second.size();
     }
 
     sizes[*fit] += current_size;
@@ -323,7 +323,7 @@ void update_group(
     const std::map< Index, std::set< Object > >& to_delete,
     const std::map< Index, std::set< Object > >& to_insert,
     const std::set< Index >& relevant_idxs,
-    std::map< Index, uint64 >* obj_count)
+    std::map< Index, Delta_Count >* obj_count)
 {
   std::map< Index, Index_Collection< Index, Object > > index_values;
   std::map< Index, uint32 > sizes;
@@ -383,12 +383,8 @@ void update_group(
   for (typename std::map< Index, Index_Collection< Index, Object > >::const_iterator
       it(index_values.begin()); it != index_values.end(); ++it)
   {
-    uint32 current_size(0);
-
-    uint64 num_remaining_obj_ = 0;
-    uint64* num_remaining_obj = &num_remaining_obj_;
-    if (obj_count)
-      num_remaining_obj = &(*obj_count)[it->first];
+    uint32 current_size = 0;
+    Delta_Count count;
 
     if (it->second.source_begin != 0)
     {
@@ -396,12 +392,13 @@ void update_group(
       pos = pos + Index::size_of((it->second.source_begin) + 4);
       while (pos < it->second.source_end)
       {
+        ++count.before;
         Object obj(pos);
         if ((it->second.delete_it == to_delete.end()) ||
           (it->second.delete_it->second.find(obj) == it->second.delete_it->second.end()))
         {
           current_size += obj.size_of();
-          ++(*num_remaining_obj);
+          ++count.after;
         }
         pos = pos + obj.size_of();
       }
@@ -417,9 +414,12 @@ void update_group(
 	current_size += it->first.size_of() + 4;
       for (auto it2 = it->second.insert_it->second.begin(); it2 != it->second.insert_it->second.end(); ++it2)
 	current_size += it2->size_of();
-      *num_remaining_obj += it->second.insert_it->second.size();
+      count.after += it->second.insert_it->second.size();
     }
 
+    if (obj_count)
+      (*obj_count)[it->first] += count;
+    
     sizes[it->first] += current_size;
     vsizes.push_back(current_size);
   }
@@ -578,12 +578,13 @@ bool read_block_or_blocks(
 }
 
 
-template< typename Index, typename Object >
-uint32 skip_deleted_objects(
+template< typename Object >
+Delta_Count skip_deleted_objects(
     uint64* source_start_ptr, uint64* dest_start_ptr,
-    const std::set< Object >& objs_to_delete, uint32 idx_size,
-    uint64& num_remaining_obj, const Index& idx)
+    const std::set< Object >& objs_to_delete, uint32 idx_size)
 {
+  Delta_Count count;
+  
   uint32 src_obj_offset = 8 + idx_size;
   uint32 dest_obj_offset = src_obj_offset;
   uint32 src_size = *(uint32*)source_start_ptr;
@@ -592,32 +593,33 @@ uint32 skip_deleted_objects(
   while (src_obj_offset < src_size)
   {
     Object obj(((uint8*)source_start_ptr) + src_obj_offset);
+    uint32 obj_size = obj.size_of();
+    
     if (objs_to_delete.find(obj) == objs_to_delete.end())
     {
       memcpy(
-          ((uint8*)dest_start_ptr) + dest_obj_offset, ((uint8*)source_start_ptr) + src_obj_offset,
-          obj.size_of());
-      dest_obj_offset += obj.size_of();
-      ++num_remaining_obj;
+          ((uint8*)dest_start_ptr) + dest_obj_offset, ((uint8*)source_start_ptr) + src_obj_offset, obj_size);
+      dest_obj_offset += obj_size;
+      ++count.after;
     }
-
-    src_obj_offset += obj.size_of();
+    src_obj_offset += obj_size;
+    ++count.before;
   }
 
   *(uint32*)dest_start_ptr = dest_obj_offset;
   *(((uint32*)dest_start_ptr)+1) = dest_obj_offset;
   memcpy(dest_start_ptr + 1, source_start_ptr + 1, idx_size);
 
-  return src_obj_offset == dest_obj_offset ? 0 : dest_obj_offset;
+  return count;
 }
 
 
 template< typename Iterator >
-void append_insertables(
-    uint64* dest_start_ptr, uint32 block_size,
-    Iterator& cur_insert, const Iterator& cur_end, uint64& counter)
+uint64 append_insertables(
+    uint64* dest_start_ptr, uint32 block_size, Iterator& cur_insert, const Iterator& cur_end)
 {
   uint32 obj_append_offset = *(uint32*)dest_start_ptr;
+  uint64 counter = 0;
 
   while ((cur_insert != cur_end) && (obj_append_offset + cur_insert->size_of() < block_size))
   {
@@ -629,6 +631,8 @@ void append_insertables(
 
   *(uint32*)dest_start_ptr = obj_append_offset;
   *(((uint32*)dest_start_ptr)+1) = obj_append_offset;
+  
+  return counter;
 }
 
 
@@ -636,20 +640,20 @@ template< typename Index, typename Container, typename File_Blocks, typename Ite
 void update_segments(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
     const std::map< Index, Container >& to_delete, const std::map< Index, Container >& to_insert,
-    std::map< Index, uint64 >* obj_count)
+    std::map< Index, Delta_Count >* obj_count)
 {
   file_it.start_segments_mode();
+
   uint32 buffer_size = block_size;
   Void64_Pointer< uint64 > source(buffer_size);
   Void64_Pointer< uint64 > dest(buffer_size);
+
   Index idx = file_it.block().index;
   auto delete_it = to_delete.find(idx);
   auto insert_it = to_insert.find(idx);
-  uint64 num_remaining_obj_ = 0;
-  uint64* num_remaining_obj = &num_remaining_obj_;
-  if (obj_count)
-    num_remaining_obj = &(*obj_count)[idx];
   uint32 idx_size = idx.size_of();
+
+  Delta_Count count;
 
   decltype(insert_it->second.begin()) cur_insert;
   if (insert_it != to_insert.end())
@@ -666,7 +670,8 @@ void update_segments(
       if (delete_it != to_delete.end() && delete_it->second.find(obj) != delete_it->second.end())
         file_blocks.erase_blocks(delta_it, file_it);
       else
-        ++*num_remaining_obj;
+        ++count.after;
+      ++count.before;
     }
     else
     {
@@ -676,22 +681,16 @@ void update_segments(
         continue;
       }
 
-      uint32 obj_append_offset = 0;
       if (delete_it != to_delete.end())
-        obj_append_offset = skip_deleted_objects(
-            source.ptr, dest.ptr, delete_it->second, idx_size, *num_remaining_obj, idx);
+        count += skip_deleted_objects(source.ptr, dest.ptr, delete_it->second, idx_size);
       else
         memcpy(dest.ptr, source.ptr, *(uint32*)source.ptr);
 
-      if (obj_append_offset)
+      if (*(uint32*)source.ptr != *(uint32*)dest.ptr
+          || (insert_it != to_insert.end() && *(uint32*)source.ptr < block_size/2))
       {
         if (insert_it != to_insert.end())
-          append_insertables(dest.ptr, block_size, cur_insert, insert_it->second.end(), *num_remaining_obj);
-        flush_or_delete_block(dest.ptr, *(uint32*)dest.ptr, file_blocks, file_it, idx_size);
-      }
-      else if (insert_it != to_insert.end() && *(uint32*)source.ptr < block_size/2)
-      {
-        append_insertables(dest.ptr, block_size, cur_insert, insert_it->second.end(), *num_remaining_obj);
+          count.after += append_insertables(dest.ptr, block_size, cur_insert, insert_it->second.end());
         flush_or_delete_block(dest.ptr, *(uint32*)dest.ptr, file_blocks, file_it, idx_size);
       }
       else
@@ -707,6 +706,7 @@ void update_segments(
     {
       flush_if_necessary_and_write_obj(dest.ptr, pos, file_blocks, file_it, idx, *cur_insert, block_size, data_filename);
       ++cur_insert;
+      ++count.after;
     }
   }
   if (pos > ((uint8*)dest.ptr) + idx_size + 8)
@@ -716,6 +716,8 @@ void update_segments(
     file_it = file_blocks.insert_block(file_it, dest.ptr);
   }
 
+  if (obj_count)
+    (*obj_count)[idx] += count;
   file_it.end_segments_mode();
 }
 
@@ -724,7 +726,7 @@ template< class Index, class Object, class TIterator >
 void Block_Backend< Index, Object, TIterator >::update(
     const std::map< Index, std::set< Object > >& to_delete,
     const std::map< Index, std::set< Object > >& to_insert,
-    std::map< Index, uint64 >* obj_count)
+    std::map< Index, Delta_Count >* obj_count)
 {
   std::set< Index > relevant_idxs;
   for (auto it = to_delete.begin(); it != to_delete.end(); ++it)

@@ -480,6 +480,22 @@ struct Block_Backend_Range_Iterator
 //-----------------------------------------------------------------------------
 
 
+struct Delta_Count
+{
+  Delta_Count() : before(0), after(0) {}
+  
+  Delta_Count& operator+=(Delta_Count rhs)
+  {
+    before += rhs.before;
+    after += rhs.after;
+    return *this;
+  }
+  
+  uint64 before;
+  uint64 after;
+};
+
+
 template< class TIndex, class TObject, class TIterator = typename std::set< TIndex >::const_iterator >
 struct Block_Backend
 {
@@ -507,7 +523,7 @@ struct Block_Backend
   void update(
       const std::map< TIndex, std::set< TObject > >& to_delete,
       const std::map< TIndex, std::set< TObject > >&   to_insert,
-      std::map< TIndex, uint64 >* obj_count = nullptr);
+      std::map< TIndex, Delta_Count >* obj_count = nullptr);
 
   uint read_count() const { return file_blocks.read_count(); }
   void reset_read_count() const { file_blocks.reset_read_count(); }
