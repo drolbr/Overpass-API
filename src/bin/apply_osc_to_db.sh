@@ -123,13 +123,18 @@ DIFF_COUNT=0
 
 pushd "$EXEC_DIR"
 
+if [[ $START == "auto" ]]; then
+{
+  START=$(($(cat $DB_DIR/replicate_id) + 0))
+}; fi
+
+if [[ $(./migrate_database) ]]; then
+{
+  ./migrate_database --migrate
+}; fi
+
 while [[ true ]]; do
 {
-  if [[ $START == "auto" ]]; then
-  {
-    START=$(cat $DB_DIR/replicate_id)
-  }; fi
-
   echo "$(date -u '+%F %T'): updating from $START" >>$DB_DIR/apply_osc_to_db.log
 
   TEMP_DIR=$(mktemp -d /tmp/osm-3s_update_XXXXXX)
