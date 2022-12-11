@@ -106,14 +106,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--node-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > db
-          (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+        Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< Node_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< Node_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
       }
     }
     else if (std::string("--node-frequent-tags") == args[2])
@@ -279,14 +293,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--way-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > db
-          (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+        Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< Way_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< Way_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
       }
     }
     else if (std::string("--way-frequent-tags") == args[2])
@@ -513,14 +541,28 @@ int main(int argc, char* args[])
     }
     else if (std::string("--rel-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > db
-          (transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+        Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< Relation_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< Relation_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<it.index().key<<'\t'<<it.index().value<<'\n';
+        }
       }
     }
     else if (std::string("--rel-frequent-tags") == args[2])

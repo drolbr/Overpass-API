@@ -152,7 +152,7 @@ void update_current_global_tags(
 
   std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_delete;
   std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_insert;
-
+  
   auto it_cnt = cnt.begin();
   for (auto& i : frequent)
   {
@@ -160,8 +160,10 @@ void update_current_global_tags(
     {
       uint level = calc_tag_split_level(it_cnt->second.after);
       if (level > 0)
+      {
         reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
-      freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });        
+        freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });
+      }
       ++it_cnt;
     }
     if (it_cnt != cnt.end() && it_cnt->first.key == i.first)
@@ -172,12 +174,14 @@ void update_current_global_tags(
         {
           uint level = calc_tag_split_level(it_cnt->second.after);
           if (level > 0)
+          {
             reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
-          freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });        
+            freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });
+          }
           ++it_cnt;
         }
         uint64 kv_cnt = j.count;
-        while (it_cnt != cnt.end() && it_cnt->first.value == j.value)
+        while (it_cnt != cnt.end() && it_cnt->first.key == i.first && it_cnt->first.value == j.value)
         {
           kv_cnt += it_cnt->second.after;
           kv_cnt -= it_cnt->second.before;
@@ -198,8 +202,10 @@ void update_current_global_tags(
   {
     uint level = calc_tag_split_level(it_cnt->second.after);
     if (level > 0)
+    {
       reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
-    freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });        
+      freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });
+    }
     ++it_cnt;
   }
 
