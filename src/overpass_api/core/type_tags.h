@@ -325,23 +325,23 @@ void generate_ids_by_coarse
 }
 
 
-struct Tag_Index_Global
+struct Tag_Index_Global_Until756
 {
   std::string key;
   std::string value;
 
-  Tag_Index_Global() {}
+  Tag_Index_Global_Until756() {}
 
-  Tag_Index_Global(void* data)
+  Tag_Index_Global_Until756(void* data)
   {
     key = std::string(((int8*)data + 4), *(uint16*)data);
     value = std::string(((int8*)data + 4 + key.length()),
 		   *((uint16*)data + 1));
   }
 
-  Tag_Index_Global(const Tag_Index_Local& tag_idx) : key(tag_idx.key), value(tag_idx.value) {}
+  Tag_Index_Global_Until756(const Tag_Index_Local& tag_idx) : key(tag_idx.key), value(tag_idx.value) {}
 
-  Tag_Index_Global(const std::string& key_, const std::string& value_) : key(key_), value(value_) {}
+  Tag_Index_Global_Until756(const std::string& key_, const std::string& value_) : key(key_), value(value_) {}
 
   static bool equal(void* lhs, void* rhs)
   { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, *(uint16*)lhs + *(((uint16*)lhs)+2) + 4); }
@@ -387,14 +387,14 @@ struct Tag_Index_Global
 	   value.length());
   }
 
-  bool operator<(const Tag_Index_Global& a) const
+  bool operator<(const Tag_Index_Global_Until756& a) const
   {
     if (key != a.key)
       return (key < a.key);
     return (value < a.value);
   }
 
-  bool operator==(const Tag_Index_Global& a) const
+  bool operator==(const Tag_Index_Global_Until756& a) const
   {
     if (key != a.key)
       return false;
@@ -403,13 +403,111 @@ struct Tag_Index_Global
 
   static uint32 max_size_of()
   {
-    throw Unsupported_Error("static uint32 Tag_Index_Global::max_size_of()");
+    throw Unsupported_Error("static uint32 Tag_Index_Global_Until756::max_size_of()");
     return 0;
   }
   
-  static Tag_Index_Global min() { return Tag_Index_Global{ "", "" }; }
-  static Tag_Index_Global max() { return Tag_Index_Global{ "\xff", "\xff" }; }
+  static Tag_Index_Global_Until756 min() { return Tag_Index_Global_Until756{ "", "" }; }
+  static Tag_Index_Global_Until756 max() { return Tag_Index_Global_Until756{ "\xff", "\xff" }; }
 };
+
+
+struct Tag_Index_Global_KVI
+{
+  std::string key;
+  std::string value;
+  uint32 idx;
+
+  Tag_Index_Global_KVI() : idx(0) {}
+
+  Tag_Index_Global_KVI(void* data)
+  {
+    key = std::string(((int8*)data + 8), *(uint16*)data);
+    value = std::string(((int8*)data + 8 + key.length()), *((uint16*)data + 1));
+    idx = *(uint32*)((int8*)data + 4);
+  }
+
+  Tag_Index_Global_KVI(const Tag_Index_Local& tag_idx) : key(tag_idx.key), value(tag_idx.value), idx(0) {}
+
+  Tag_Index_Global_KVI(const std::string& key_, const std::string& value_) : key(key_), value(value_), idx(0) {}
+
+  static bool equal(void* lhs, void* rhs)
+  { return *(uint32*)lhs == *(uint32*)rhs
+      && !memcmp(lhs, rhs, *(uint16*)lhs + *(((uint16*)lhs)+2) + 8); }
+  bool less(void* rhs) const
+  {
+    int keycmp = strnncmp(&key[0], ((const char*)rhs)+4, key.size(), *((uint16*)rhs));
+    if (keycmp)
+      return keycmp < 0;
+    int valcmp = strnncmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1));
+    if (valcmp)
+      return valcmp < 0;
+    return idx < *(uint32*)((int8*)rhs + 4);
+  }
+  bool leq(void* rhs) const
+  {
+    int keycmp = strnncmp(&key[0], ((const char*)rhs)+4, key.size(), *((uint16*)rhs));
+    if (keycmp)
+      return keycmp < 0;
+    int valcmp = strnncmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1));
+    if (valcmp)
+      return valcmp < 0;
+    return idx <= *(uint32*)((int8*)rhs + 4);
+  }
+  bool equal(void* rhs) const
+  {
+    return key.size() == *(uint16*)rhs && value.size() == *((uint16*)rhs + 1) && idx == *(uint32*)((int8*)rhs + 4)
+      && !memcmp(&key[0], ((const char*)rhs) + 4, *((uint16*)rhs))
+      && !memcmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, *((uint16*)rhs + 1));
+  }
+
+  uint32 size_of() const
+  {
+    return 8 + key.length() + value.length();
+  }
+
+  static constexpr uint32 const_size() { return 0; }
+
+  static uint32 size_of(void* data)
+  {
+    return *((uint16*)data) + *((uint16*)data + 1) + 8;
+  }
+
+  void to_data(void* data) const
+  {
+    *(uint16*)data = key.length();
+    *((uint16*)data + 1) = value.length();
+    *(uint32*)((int8*)data + 4) = idx;
+    memcpy((uint8*)data + 8, key.data(), key.length());
+    memcpy((uint8*)data + 8 + key.length(), value.data(), value.length());
+  }
+
+  bool operator<(const Tag_Index_Global_KVI& a) const
+  {
+    if (key != a.key)
+      return (key < a.key);
+    if (value != a.value)
+      return (value < a.value);
+    return idx < a.idx;
+  }
+
+  bool operator==(const Tag_Index_Global_KVI& a) const
+  {
+    return key == a.key && value == a.value && idx == a.idx;
+  }
+
+  static uint32 max_size_of()
+  {
+    throw Unsupported_Error("static uint32 Tag_Index_Global_KVI::max_size_of()");
+    return 0;
+  }
+  
+  static Tag_Index_Global_KVI min() { return Tag_Index_Global_KVI{ "", "" }; }
+  static Tag_Index_Global_KVI max() { return Tag_Index_Global_KVI{ "\xff", "\xff" }; }
+};
+
+
+typedef Tag_Index_Global_KVI Tag_Index_Global;
 
 
 template< typename Id_Type_ >
