@@ -124,6 +124,8 @@ Osm_Base_Settings::Osm_Base_Settings()
       ("node_tags_local", 128*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
       ("node_tags_global", 128*1024, 0)),
+  NODE_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
+      ("node_tags_global", 128*1024, 0)),
   NODE_KEYS(new OSM_File_Properties< Uint32_Index >
       ("node_keys", 512*1024, 0)),
   NODE_FREQUENT_TAGS(new OSM_File_Properties< String_Index >
@@ -133,6 +135,8 @@ Osm_Base_Settings::Osm_Base_Settings()
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("way_tags_local", 128*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+      ("way_tags_global", 128*1024, 0)),
+  WAY_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
       ("way_tags_global", 128*1024, 0)),
   WAY_KEYS(new OSM_File_Properties< Uint32_Index >
       ("way_keys", 512*1024, 0)),
@@ -145,6 +149,8 @@ Osm_Base_Settings::Osm_Base_Settings()
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("relation_tags_local", 128*1024, 0)),
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
+      ("relation_tags_global", 128*1024, 0)),
+  RELATION_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
       ("relation_tags_global", 128*1024, 0)),
   RELATION_KEYS(new OSM_File_Properties< Uint32_Index >
       ("relation_keys", 512*1024, 0)),

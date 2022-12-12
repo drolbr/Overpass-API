@@ -20,6 +20,9 @@
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__TAGS_GLOBAL_WRITER_H
 
 
+#include "../../template_db/block_backend.h"
+#include "../../template_db/block_backend_write.h"
+#include "../../template_db/transaction.h"
 #include "../data/filenames.h"
 
 
@@ -213,6 +216,114 @@ void update_current_global_tags(
     Block_Backend< String_Index, Frequent_Value_Entry >
         db(transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()));
     db.update(freq_to_delete, freq_to_insert);
+  }
+}
+
+
+template< typename Id_Type >
+void rebuild_db_to_insert(
+    std::map< Tag_Index_Global_KVI, std::set< Tag_Object_Global< Id_Type > > >& db_to_insert,
+    const std::string& key, const std::string& value, uint target_level)
+{
+  std::vector< std::set< Tag_Object_Global< Id_Type > > > to_do;
+  for (auto it = db_to_insert.lower_bound(Tag_Index_Global_KVI(key, value)); it != db_to_insert.end(); ++it)
+  {
+    if (it->first.key != key || it->first.value != value)
+      break;
+    to_do.push_back({});
+    to_do.back().swap(it->second);
+  }
+  
+  for (const auto& i : to_do)
+  {
+    for (auto j : i)
+      db_to_insert[Tag_Index_Global_KVI(key, value, j.idx.val() & (0xffffffff<<(32-target_level)))].insert(j);
+  }
+}
+
+
+template< typename Skeleton >
+void migrate_current_global_tags(Transaction& transaction)
+{
+  std::map< Tag_Index_Global_KVI, std::set< Tag_Object_Global< typename Skeleton::Id_Type > > > db_to_insert;
+
+  Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< typename Skeleton::Id_Type > >
+      from_db(transaction.data_index(current_global_tags_file_properties_756< Skeleton >()));
+  auto from_it = from_db.flat_begin();
+  auto to_it = db_to_insert.begin();
+
+  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< typename Skeleton::Id_Type > >
+      into_db(into_transaction.data_index(current_global_tags_file_properties< Skeleton >()));
+
+  std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_insert;
+
+  // We have two different flush criteria here:
+  // - total number of objects after a couple of relatively small kvs
+  // - number of objects alone for a sufficently large kv
+  // On top of this, we need to rebuild the index for the affected kv if a kv passes its size threshold.
+  uint64 total = 0;
+  uint64 per_kv = 0;
+  uint64 level_threshold = 8*1024;
+  uint level = 0;
+  while (!(from_it == from_db.flat_end()))
+  {
+    if (to_it == db_to_insert.end() || to_it->first.key != from_it.index().key
+        || to_it->first.value != from_it.index().value)
+    {
+      if (level > 0)
+        freq_to_insert[{ to_it->first.key }].insert({ to_it->first.value, per_kv, level });
+      
+      total += per_kv;
+      if (total >= 32*1024*1024)
+      {
+        into_db.update({}, db_to_insert);
+        db_to_insert.clear();
+        total = 0;
+      }
+      
+      to_it = db_to_insert.insert(std::make_pair(
+          Tag_Index_Global_KVI(from_it.index().key, from_it.index().value),
+          std::set< Tag_Object_Global< typename Skeleton::Id_Type > >())).first;
+      level_threshold = 8*1024;
+      level = 0;
+      per_kv = 0;
+    }
+    else if (per_kv >= level_threshold)
+    {
+      if (level < 24)
+      {
+        level = calc_tag_split_level(per_kv);
+        rebuild_db_to_insert(db_to_insert, from_it.index().key, from_it.index().value, level);
+        level_threshold = (level < 16 ? 512*1024 : 32*1024*1024);
+      }
+      if (level == 24)
+      {
+        into_db.update({}, db_to_insert);
+        db_to_insert.clear();
+        level_threshold += 32*1024*1024;
+        
+        to_it = db_to_insert.insert(std::make_pair(
+            Tag_Index_Global_KVI(from_it.index().key, from_it.index().value),
+            std::set< Tag_Object_Global< typename Skeleton::Id_Type > >())).first;
+      }
+    }
+
+    if (level == 0)
+      to_it->second.insert(from_it.object());
+    else
+      db_to_insert[Tag_Index_Global_KVI(
+          from_it.index().key, from_it.index().value, (from_it.object().idx.val() & (0xffffffff<<(32-level))))]
+          .insert(from_it.object());
+    ++per_kv;
+    ++from_it;
+  }
+  into_db.update({}, db_to_insert);
+
+  {
+    Block_Backend< String_Index, Frequent_Value_Entry >
+        db(transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()));
+    db.update({}, freq_to_insert);
   }
 }
 

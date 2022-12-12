@@ -456,8 +456,11 @@ File_Blocks_Index_Structure_Params::File_Blocks_Index_Structure_Params(
     if (file_name_extension != ".legacy")
     {
       file_format_version = *(int32*)header;
-      if (file_format_version != FILE_FORMAT_VERSION && file_format_version != 7512)
-	throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Unsupported index file format version");
+      if (file_format_version < 7512 || file_format_version > FILE_FORMAT_VERSION)
+        throw File_Error(
+            0, idx_file.file_name,
+            "File_Blocks_Index: Unsupported index file format version "
+            + std::to_string(file_format_version) + " outside range [7512, " + std::to_string(FILE_FORMAT_VERSION) + "]");
       block_size_ = 1ull<<*(uint8*)(header + 4);
       if (!block_size_)
         throw File_Error(0, idx_file.file_name, "File_Blocks_Index: Illegal block size");

@@ -430,6 +430,8 @@ struct Tag_Index_Global_KVI
   Tag_Index_Global_KVI(const Tag_Index_Local& tag_idx) : key(tag_idx.key), value(tag_idx.value), idx(0) {}
 
   Tag_Index_Global_KVI(const std::string& key_, const std::string& value_) : key(key_), value(value_), idx(0) {}
+  Tag_Index_Global_KVI(const std::string& key_, const std::string& value_, uint32 idx_)
+    : key(key_), value(value_), idx(idx_) {}
 
   static bool equal(void* lhs, void* rhs)
   { return *(uint32*)lhs == *(uint32*)rhs
