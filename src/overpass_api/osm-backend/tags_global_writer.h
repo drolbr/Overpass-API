@@ -77,11 +77,19 @@ struct Frequent_Value_Entry
 };
 
 
+namespace
+{
+  constexpr uint64 THRESHOLD_8 = 8*1024;
+  constexpr uint64 THRESHOLD_16 = 512*1024;
+  constexpr uint64 THRESHOLD_24 = 32*1024*1024;
+};
+
+
 inline uint calc_tag_split_level(uint64 cnt)
 {
-  return cnt < 8192 ? 0 
-      : cnt < 512*1024 ? 8
-      : cnt < 32*1024*1024 ? 16
+  return cnt < THRESHOLD_8 ? 0 
+      : cnt < THRESHOLD_16 ? 8
+      : cnt < THRESHOLD_24 ? 16
       : 24;
 }
 
@@ -243,8 +251,10 @@ void rebuild_db_to_insert(
 
 
 template< typename Skeleton >
-void migrate_current_global_tags(Transaction& transaction)
+void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& transaction)
 {
+  callback->migration_started(current_global_tags_file_properties< Skeleton >()->get_file_name_trunk());
+
   std::map< Tag_Index_Global_KVI, std::set< Tag_Object_Global< typename Skeleton::Id_Type > > > db_to_insert;
 
   Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< typename Skeleton::Id_Type > >
@@ -264,7 +274,7 @@ void migrate_current_global_tags(Transaction& transaction)
   // On top of this, we need to rebuild the index for the affected kv if a kv passes its size threshold.
   uint64 total = 0;
   uint64 per_kv = 0;
-  uint64 level_threshold = 8*1024;
+  uint64 level_threshold = THRESHOLD_8;
   uint level = 0;
   while (!(from_it == from_db.flat_end()))
   {
@@ -275,8 +285,9 @@ void migrate_current_global_tags(Transaction& transaction)
         freq_to_insert[{ to_it->first.key }].insert({ to_it->first.value, per_kv, level });
       
       total += per_kv;
-      if (total >= 32*1024*1024)
+      if (total >= THRESHOLD_24)
       {
+        callback->migration_flush();
         into_db.update({}, db_to_insert);
         db_to_insert.clear();
         total = 0;
@@ -285,7 +296,7 @@ void migrate_current_global_tags(Transaction& transaction)
       to_it = db_to_insert.insert(std::make_pair(
           Tag_Index_Global_KVI(from_it.index().key, from_it.index().value),
           std::set< Tag_Object_Global< typename Skeleton::Id_Type > >())).first;
-      level_threshold = 8*1024;
+      level_threshold = THRESHOLD_8;
       level = 0;
       per_kv = 0;
     }
@@ -295,13 +306,14 @@ void migrate_current_global_tags(Transaction& transaction)
       {
         level = calc_tag_split_level(per_kv);
         rebuild_db_to_insert(db_to_insert, from_it.index().key, from_it.index().value, level);
-        level_threshold = (level < 16 ? 512*1024 : 32*1024*1024);
+        level_threshold = (level < 16 ? THRESHOLD_16 : THRESHOLD_24);
       }
       if (level == 24)
       {
+        callback->migration_flush_single_kv();
         into_db.update({}, db_to_insert);
         db_to_insert.clear();
-        level_threshold += 32*1024*1024;
+        level_threshold += THRESHOLD_24;
         
         to_it = db_to_insert.insert(std::make_pair(
             Tag_Index_Global_KVI(from_it.index().key, from_it.index().value),
@@ -318,13 +330,16 @@ void migrate_current_global_tags(Transaction& transaction)
     ++per_kv;
     ++from_it;
   }
+  callback->migration_flush();
   into_db.update({}, db_to_insert);
 
+  callback->migration_write_frequent();
   {
     Block_Backend< String_Index, Frequent_Value_Entry >
         db(transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()));
     db.update({}, freq_to_insert);
   }
+  callback->migration_completed();
 }
 
 

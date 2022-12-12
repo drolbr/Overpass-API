@@ -177,6 +177,9 @@ int main(int argc, char* argv[])
         dispatcher_client.read_idx_finished();
         logger.annotated_log("migrate_read_idx_finished() end");
 
+        Osm_Backend_Callback* callback = get_verbatim_callback();
+        callback->set_db_dir(dispatcher_client.get_db_dir());
+        
         if (migrate && !ver_checker.files_to_update.empty())
         {
           Dispatcher_Write_Guard guard(&dispatcher_client, logger);
@@ -185,14 +188,15 @@ int main(int argc, char* argv[])
           for (auto i : ver_checker.files_to_update)
           {
             if (i == osm_base_settings().NODE_TAGS_GLOBAL)
-              migrate_current_global_tags< Node_Skeleton >(transaction);
+              migrate_current_global_tags< Node_Skeleton >(callback, transaction);
             else if (i == osm_base_settings().WAY_TAGS_GLOBAL)
-              migrate_current_global_tags< Way_Skeleton >(transaction);
+              migrate_current_global_tags< Way_Skeleton >(callback, transaction);
             else if (i == osm_base_settings().RELATION_TAGS_GLOBAL)
-              migrate_current_global_tags< Relation_Skeleton >(transaction);
+              migrate_current_global_tags< Relation_Skeleton >(callback, transaction);
             // attic ...
           }
         }
+        delete callback;
       }
       catch (const File_Error& e)
       {
@@ -204,6 +208,8 @@ int main(int argc, char* argv[])
     }
     else
     {
+      Osm_Backend_Callback* callback = get_verbatim_callback();
+      callback->set_db_dir(db_dir);
       {
         Nonsynced_Transaction transaction(false, false, db_dir, "");
         ver_checker.check(transaction, *osm_base_settings().NODE_TAGS_GLOBAL);
@@ -221,14 +227,15 @@ int main(int argc, char* argv[])
         for (auto i : ver_checker.files_to_update)
         {
           if (i == osm_base_settings().NODE_TAGS_GLOBAL)
-            migrate_current_global_tags< Node_Skeleton >(transaction);
+            migrate_current_global_tags< Node_Skeleton >(callback, transaction);
           else if (i == osm_base_settings().WAY_TAGS_GLOBAL)
-            migrate_current_global_tags< Way_Skeleton >(transaction);
+            migrate_current_global_tags< Way_Skeleton >(callback, transaction);
           else if (i == osm_base_settings().RELATION_TAGS_GLOBAL)
-            migrate_current_global_tags< Relation_Skeleton >(transaction);
+            migrate_current_global_tags< Relation_Skeleton >(callback, transaction);
           // attic ...
         }
       }
+      delete callback;
     }
   }
   catch(Context_Error e)

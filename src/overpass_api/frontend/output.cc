@@ -141,6 +141,27 @@ public:
       Logger(db_dir).annotated_log("write() parser_succeeded");
     std::cerr<<"Update complete.\n"; }
 
+  virtual void migration_started(const std::string& filename)
+  { if (!db_dir.empty())
+      Logger(db_dir).annotated_log("migration() started " + filename);
+    std::cerr<<"Migrating "<<filename<<" "; }
+  virtual void migration_flush()
+  { if (!db_dir.empty())
+      Logger(db_dir).annotated_log("migration() flush");
+    std::cerr<<'.'; }
+  virtual void migration_flush_single_kv()
+  { if (!db_dir.empty())
+      Logger(db_dir).annotated_log("migration() flush_single_kv");
+    std::cerr<<'.'; }
+  virtual void migration_write_frequent()
+  { if (!db_dir.empty())
+      Logger(db_dir).annotated_log("migration() write_frequent");
+    std::cerr<<'.'; }
+  virtual void migration_completed()
+  { if (!db_dir.empty())
+      Logger(db_dir).annotated_log("migration() finished");
+    std::cerr<<"Migration complete.\n"; }
+
   virtual void set_db_dir(const std::string& db_dir_) { db_dir = db_dir_; }
 
 private:
@@ -187,6 +208,12 @@ public:
   virtual void relations_finished() {}
 
   virtual void parser_succeeded() {}
+
+  virtual void migration_started(const std::string& filename) {}
+  virtual void migration_flush() {}
+  virtual void migration_flush_single_kv() {}
+  virtual void migration_write_frequent() {}
+  virtual void migration_completed() {}
 
   virtual void set_db_dir(const std::string& db_dir) {}
 };
