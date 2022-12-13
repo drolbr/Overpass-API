@@ -234,7 +234,7 @@ void create_dummy_files
       test_bin_out<<"This is test file bin 1\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_1.get_file_name_trunk()
           + test_file_1.get_data_suffix() + test_file_1.get_index_suffix()).c_str());
-      test_idx_out<<"This is test file bin idx 1\n";
+      test_idx_out<<"\x89\x1d"<<std::string(2, '\x0')<<"This is test file bin idx 1\n";
     }
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_2.get_file_name_trunk()
@@ -250,7 +250,7 @@ void create_dummy_files
       test_bin_out<<"This is test file bin 3\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
           + test_file_3.get_data_suffix() + test_file_3.get_index_suffix()).c_str());
-      test_idx_out<<"This is test file bin idx 3\n";
+      test_idx_out<<"\x89\x1d"<<std::string(2, '\x0')<<"This is test file bin idx 3\n";
     }
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_3.get_file_name_trunk()
@@ -266,7 +266,7 @@ void create_dummy_files
       test_bin_out<<"This is test file bin 4\n";
       std::ofstream test_idx_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()
           + test_file_4.get_data_suffix() + test_file_4.get_index_suffix()).c_str());
-      test_idx_out<<"This is test file bin idx 4\n";
+      test_idx_out<<"\x89\x1d"<<std::string(2, '\x0')<<"This is test file bin idx 4\n";
     }
     {
       std::ofstream test_bin_out((BASE_DIRECTORY + test_file_4.get_file_name_trunk()

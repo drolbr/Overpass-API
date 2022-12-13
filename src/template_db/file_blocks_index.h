@@ -309,8 +309,8 @@ private:
 
 
 template< class Index >
-std::vector< bool > get_data_index_footprint(const File_Properties& file_prop,
-					std::string db_dir);
+std::vector< bool > get_data_index_footprint(
+    const File_Properties& file_prop, std::string db_dir, int32 min_version = 0);
 
 /** Implementation File_Blocks_Index: ---------------------------------------*/
 
@@ -682,10 +682,13 @@ Writeable_File_Blocks_Index< Index >::~Writeable_File_Blocks_Index()
 /** Implementation non-members: ---------------------------------------------*/
 
 template< class Index >
-std::vector< bool > get_data_index_footprint
-    (const File_Properties& file_prop, std::string db_dir)
+std::vector< bool > get_data_index_footprint(
+    const File_Properties& file_prop, std::string db_dir, int32 min_version)
 {
   Readonly_File_Blocks_Index< Index > index(file_prop, false, db_dir, "");
+  if (index.get_file_format_version() < min_version)
+    return {};
+
   auto void_blocks = compute_void_blocks(index.begin(), index.end(), index.get_block_count());
 
   std::vector< bool > result(index.get_block_count(), true);

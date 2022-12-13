@@ -36,9 +36,10 @@
 template < typename TVal >
 struct OSM_File_Properties : public File_Properties
 {
-  OSM_File_Properties(const std::string& file_base_name_, uint32 block_size_,
-		      uint32 map_block_size_)
-    : file_base_name(file_base_name_), block_size(block_size_), map_block_size(map_block_size_) {}
+  OSM_File_Properties(
+      const std::string& file_base_name_, uint32 block_size_, uint32 map_block_size_, int32 min_version_ = 0)
+    : file_base_name(file_base_name_), block_size(block_size_), map_block_size(map_block_size_),
+      min_version(min_version_) {}
 
   const std::string& get_file_name_trunk() const { return file_base_name; }
 
@@ -56,7 +57,7 @@ struct OSM_File_Properties : public File_Properties
 
   std::vector< bool > get_data_footprint(const std::string& db_dir) const
   {
-    std::vector< bool > temp = get_data_index_footprint< TVal >(*this, db_dir);
+    std::vector< bool > temp = get_data_index_footprint< TVal >(*this, db_dir, min_version);
     return temp;
   }
 
@@ -84,6 +85,7 @@ struct OSM_File_Properties : public File_Properties
   std::string file_base_name;
   uint32 block_size;
   uint32 map_block_size;
+  int32 min_version;
 };
 
 
@@ -123,7 +125,7 @@ Osm_Base_Settings::Osm_Base_Settings()
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("node_tags_local", 128*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("node_tags_global", 128*1024, 0)),
+      ("node_tags_global", 128*1024, 0, 7561)),
   NODE_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
       ("node_tags_global", 128*1024, 0)),
   NODE_KEYS(new OSM_File_Properties< Uint32_Index >
@@ -135,7 +137,7 @@ Osm_Base_Settings::Osm_Base_Settings()
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("way_tags_local", 128*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("way_tags_global", 128*1024, 0)),
+      ("way_tags_global", 128*1024, 0, 7561)),
   WAY_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
       ("way_tags_global", 128*1024, 0)),
   WAY_KEYS(new OSM_File_Properties< Uint32_Index >
@@ -149,7 +151,7 @@ Osm_Base_Settings::Osm_Base_Settings()
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("relation_tags_local", 128*1024, 0)),
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("relation_tags_global", 128*1024, 0)),
+      ("relation_tags_global", 128*1024, 0, 7561)),
   RELATION_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
       ("relation_tags_global", 128*1024, 0)),
   RELATION_KEYS(new OSM_File_Properties< Uint32_Index >
@@ -257,7 +259,7 @@ Attic_Settings::Attic_Settings()
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("node_tags_local_attic", 128*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("node_tags_global_attic", 128*1024, 0)),
+      ("node_tags_global_attic", 128*1024, 0, 7561)),
   NODE_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
       ("node_tags_global_attic", 128*1024, 0)),
   NODE_FREQUENT_TAGS(new OSM_File_Properties< String_Index >
@@ -274,7 +276,7 @@ Attic_Settings::Attic_Settings()
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("way_tags_local_attic", 128*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("way_tags_global_attic", 128*1024, 0)),
+      ("way_tags_global_attic", 128*1024, 0, 7561)),
   WAY_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
       ("way_tags_global_attic", 128*1024, 0)),
   WAY_FREQUENT_TAGS(new OSM_File_Properties< String_Index >
@@ -291,7 +293,7 @@ Attic_Settings::Attic_Settings()
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("relation_tags_local_attic", 128*1024, 0)),
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("relation_tags_global_attic", 128*1024, 0)),
+      ("relation_tags_global_attic", 128*1024, 0, 7561)),
   RELATION_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
       ("relation_tags_global_attic", 128*1024, 0)),
   RELATION_FREQUENT_TAGS(new OSM_File_Properties< String_Index >
