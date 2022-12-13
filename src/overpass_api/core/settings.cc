@@ -257,7 +257,9 @@ Attic_Settings::Attic_Settings()
   NODE_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("node_tags_local_attic", 128*1024, 0)),
   NODE_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("node_tags_global_attic", 512*1024, 0)),
+      ("node_tags_global_attic", 128*1024, 0)),
+  NODE_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
+      ("node_tags_global_attic", 128*1024, 0)),
   NODE_FREQUENT_TAGS(new OSM_File_Properties< String_Index >
       ("node_frequent_tags_attic", 512*1024, 0)),
   NODES_META(new OSM_File_Properties< Node::Index >
@@ -272,7 +274,9 @@ Attic_Settings::Attic_Settings()
   WAY_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("way_tags_local_attic", 128*1024, 0)),
   WAY_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("way_tags_global_attic", 512*1024, 0)),
+      ("way_tags_global_attic", 128*1024, 0)),
+  WAY_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
+      ("way_tags_global_attic", 128*1024, 0)),
   WAY_FREQUENT_TAGS(new OSM_File_Properties< String_Index >
       ("way_frequent_tags_attic", 512*1024, 0)),
   WAYS_META(new OSM_File_Properties< Uint31_Index >
@@ -287,7 +291,9 @@ Attic_Settings::Attic_Settings()
   RELATION_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("relation_tags_local_attic", 128*1024, 0)),
   RELATION_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("relation_tags_global_attic", 512*1024, 0)),
+      ("relation_tags_global_attic", 128*1024, 0)),
+  RELATION_TAGS_GLOBAL_756(new OSM_File_Properties< Tag_Index_Global_Until756 >
+      ("relation_tags_global_attic", 128*1024, 0)),
   RELATION_FREQUENT_TAGS(new OSM_File_Properties< String_Index >
       ("relation_frequent_tags_attic", 512*1024, 0)),
   RELATIONS_META(new OSM_File_Properties< Uint31_Index >
