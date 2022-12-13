@@ -126,6 +126,7 @@ struct Attic_Settings
   File_Properties* NODE_IDX_LIST;
   File_Properties* NODE_TAGS_LOCAL;
   File_Properties* NODE_TAGS_GLOBAL;
+  File_Properties* NODE_TAGS_GLOBAL_756;
   File_Properties* NODE_FREQUENT_TAGS;
   File_Properties* NODES_META;
   File_Properties* NODE_CHANGELOG;
@@ -134,6 +135,7 @@ struct Attic_Settings
   File_Properties* WAY_IDX_LIST;
   File_Properties* WAY_TAGS_LOCAL;
   File_Properties* WAY_TAGS_GLOBAL;
+  File_Properties* WAY_TAGS_GLOBAL_756;
   File_Properties* WAY_FREQUENT_TAGS;
   File_Properties* WAYS_META;
   File_Properties* WAY_CHANGELOG;
@@ -142,6 +144,7 @@ struct Attic_Settings
   File_Properties* RELATION_IDX_LIST;
   File_Properties* RELATION_TAGS_LOCAL;
   File_Properties* RELATION_TAGS_GLOBAL;
+  File_Properties* RELATION_TAGS_GLOBAL_756;
   File_Properties* RELATION_FREQUENT_TAGS;
   File_Properties* RELATIONS_META;
   File_Properties* RELATION_CHANGELOG;

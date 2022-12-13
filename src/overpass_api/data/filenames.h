@@ -252,6 +252,23 @@ template< > inline File_Properties* attic_global_tags_file_properties< Relation_
 
 
 template< typename Skeleton >
+File_Properties* attic_global_tags_file_properties_756()
+{
+  return 0;
+}
+
+template< > inline File_Properties* attic_global_tags_file_properties_756< Node_Skeleton >()
+{ return attic_settings().NODE_TAGS_GLOBAL_756; }
+
+template< > inline File_Properties* attic_global_tags_file_properties_756< Way_Skeleton >()
+{ return attic_settings().WAY_TAGS_GLOBAL_756; }
+
+template< > inline File_Properties* attic_global_tags_file_properties_756< Relation_Skeleton >()
+{ return attic_settings().RELATION_TAGS_GLOBAL_756; }
+
+
+
+template< typename Skeleton >
 File_Properties* attic_global_tag_frequency_file_properties()
 {
   return 0;

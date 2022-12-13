@@ -228,12 +228,12 @@ void update_current_global_tags(
 }
 
 
-template< typename Id_Type >
+template< typename Ref_Entry >
 void rebuild_db_to_insert(
-    std::map< Tag_Index_Global_KVI, std::set< Tag_Object_Global< Id_Type > > >& db_to_insert,
+    std::map< Tag_Index_Global_KVI, std::set< Ref_Entry > >& db_to_insert,
     const std::string& key, const std::string& value, uint target_level)
 {
-  std::vector< std::set< Tag_Object_Global< Id_Type > > > to_do;
+  std::vector< std::set< Ref_Entry > > to_do;
   for (auto it = db_to_insert.lower_bound(Tag_Index_Global_KVI(key, value)); it != db_to_insert.end(); ++it)
   {
     if (it->first.key != key || it->first.value != value)
@@ -251,22 +251,36 @@ void rebuild_db_to_insert(
 
 
 template< typename Skeleton >
-void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& transaction)
+void update_attic_global_tags(
+    const std::map< Tag_Index_Global,
+        std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >& attic_objects,
+    const std::map< Tag_Index_Global,
+        std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >& new_objects,
+    Transaction& transaction)
 {
-  callback->migration_started(current_global_tags_file_properties< Skeleton >()->get_file_name_trunk());
+  std::map< Tag_Index_Global, Delta_Count > cnt;
+  Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< typename Skeleton::Id_Type > > >
+      db(transaction.data_index(attic_global_tags_file_properties< Skeleton >()));
+  db.update(attic_objects, new_objects, &cnt);
+  std::cerr<<"DEBUG_22b05c\n"
+      <<attic_global_tags_file_properties< Skeleton >()->get_file_name_trunk()<<'\n';
+  for (auto& i : cnt)
+  {
+    if (i.second.after > 1000)
+      std::cerr<<i.second.after<<'\t'<<i.first.key<<'\t'<<i.first.value<<'\n';
+  }
+}
 
-  std::map< Tag_Index_Global_KVI, std::set< Tag_Object_Global< typename Skeleton::Id_Type > > > db_to_insert;
 
-  Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< typename Skeleton::Id_Type > >
-      from_db(transaction.data_index(current_global_tags_file_properties_756< Skeleton >()));
+template< typename Ref_Entry, typename Src_Idx, typename Target_Idx >
+void migrate_loop(
+    Block_Backend< Src_Idx, Ref_Entry >& from_db, Block_Backend< Target_Idx, Ref_Entry >& into_db,
+    Osm_Backend_Callback* callback, std::map< String_Index, std::set< Frequent_Value_Entry > >& freq_to_insert)
+{
   auto from_it = from_db.flat_begin();
+
+  std::map< Tag_Index_Global_KVI, std::set< Ref_Entry > > db_to_insert;
   auto to_it = db_to_insert.begin();
-
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
-  Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< typename Skeleton::Id_Type > >
-      into_db(into_transaction.data_index(current_global_tags_file_properties< Skeleton >()));
-
-  std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_insert;
 
   // We have two different flush criteria here:
   // - total number of objects after a couple of relatively small kvs
@@ -295,7 +309,7 @@ void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& tr
       
       to_it = db_to_insert.insert(std::make_pair(
           Tag_Index_Global_KVI(from_it.index().key, from_it.index().value),
-          std::set< Tag_Object_Global< typename Skeleton::Id_Type > >())).first;
+          std::set< Ref_Entry >())).first;
       level_threshold = THRESHOLD_8;
       level = 0;
       per_kv = 0;
@@ -317,7 +331,7 @@ void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& tr
         
         to_it = db_to_insert.insert(std::make_pair(
             Tag_Index_Global_KVI(from_it.index().key, from_it.index().value),
-            std::set< Tag_Object_Global< typename Skeleton::Id_Type > >())).first;
+            std::set< Ref_Entry >())).first;
       }
     }
 
@@ -332,6 +346,23 @@ void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& tr
   }
   callback->migration_flush();
   into_db.update({}, db_to_insert);
+}
+
+
+template< typename Skeleton >
+void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& transaction)
+{
+  callback->migration_started(current_global_tags_file_properties< Skeleton >()->get_file_name_trunk());
+
+  Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< typename Skeleton::Id_Type > >
+      from_db(transaction.data_index(current_global_tags_file_properties_756< Skeleton >()));
+
+  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< typename Skeleton::Id_Type > >
+      into_db(into_transaction.data_index(current_global_tags_file_properties< Skeleton >()));
+
+  std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_insert;
+  migrate_loop(from_db, into_db, callback, freq_to_insert);
 
   callback->migration_write_frequent();
   {
@@ -344,24 +375,27 @@ void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& tr
 
 
 template< typename Skeleton >
-void update_attic_global_tags(
-    const std::map< Tag_Index_Global,
-        std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >& attic_objects,
-    const std::map< Tag_Index_Global,
-        std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >& new_objects,
-    Transaction& transaction)
+void migrate_attic_global_tags(Osm_Backend_Callback* callback, Transaction& transaction)
 {
-  std::map< Tag_Index_Global, Delta_Count > cnt;
-  Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< typename Skeleton::Id_Type > > >
-      db(transaction.data_index(attic_global_tags_file_properties< Skeleton >()));
-  db.update(attic_objects, new_objects, &cnt);
-  std::cerr<<"DEBUG_22b05c\n"
-      <<attic_global_tags_file_properties< Skeleton >()->get_file_name_trunk()<<'\n';
-  for (auto& i : cnt)
+  callback->migration_started(attic_global_tags_file_properties< Skeleton >()->get_file_name_trunk());
+
+  Block_Backend< Tag_Index_Global_Until756, Attic< Tag_Object_Global< typename Skeleton::Id_Type > > >
+      from_db(transaction.data_index(attic_global_tags_file_properties_756< Skeleton >()));
+
+  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Block_Backend< Tag_Index_Global_KVI, Attic< Tag_Object_Global< typename Skeleton::Id_Type > > >
+      into_db(into_transaction.data_index(attic_global_tags_file_properties< Skeleton >()));
+
+  std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_insert;
+  migrate_loop(from_db, into_db, callback, freq_to_insert);
+
+  callback->migration_write_frequent();
   {
-    if (i.second.after > 1000)
-      std::cerr<<i.second.after<<'\t'<<i.first.key<<'\t'<<i.first.value<<'\n';
+    Block_Backend< String_Index, Frequent_Value_Entry >
+        db(transaction.data_index(attic_global_tag_frequency_file_properties< Skeleton >()));
+    db.update({}, freq_to_insert);
   }
+  callback->migration_completed();
 }
 
 

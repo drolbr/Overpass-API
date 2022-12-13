@@ -60,7 +60,7 @@ class Dispatcher_Write_Guard
 public:
   Dispatcher_Write_Guard(Dispatcher_Client* dispatcher_client, Logger& logger);
   ~Dispatcher_Write_Guard();
-  void clear();
+  void commit();
   
 private:
   Dispatcher_Client* dispatcher_client;
@@ -80,7 +80,7 @@ Dispatcher_Write_Guard::Dispatcher_Write_Guard(Dispatcher_Client* dispatcher_cli
 }
 
 
-void Dispatcher_Write_Guard::clear()
+void Dispatcher_Write_Guard::commit()
 {
   if (dispatcher_client)
   {
@@ -183,18 +183,26 @@ int main(int argc, char* argv[])
         if (migrate && !ver_checker.files_to_update.empty())
         {
           Dispatcher_Write_Guard guard(&dispatcher_client, logger);
-          Nonsynced_Transaction transaction(true, false, dispatcher_client.get_db_dir(), "");
-
-          for (auto i : ver_checker.files_to_update)
           {
-            if (i == osm_base_settings().NODE_TAGS_GLOBAL)
-              migrate_current_global_tags< Node_Skeleton >(callback, transaction);
-            else if (i == osm_base_settings().WAY_TAGS_GLOBAL)
-              migrate_current_global_tags< Way_Skeleton >(callback, transaction);
-            else if (i == osm_base_settings().RELATION_TAGS_GLOBAL)
-              migrate_current_global_tags< Relation_Skeleton >(callback, transaction);
-            // attic ...
+            Nonsynced_Transaction transaction(true, false, dispatcher_client.get_db_dir(), "");
+
+            for (auto i : ver_checker.files_to_update)
+            {
+              if (i == osm_base_settings().NODE_TAGS_GLOBAL)
+                migrate_current_global_tags< Node_Skeleton >(callback, transaction);
+              else if (i == osm_base_settings().WAY_TAGS_GLOBAL)
+                migrate_current_global_tags< Way_Skeleton >(callback, transaction);
+              else if (i == osm_base_settings().RELATION_TAGS_GLOBAL)
+                migrate_current_global_tags< Relation_Skeleton >(callback, transaction);
+              else if (i == attic_settings().NODE_TAGS_GLOBAL)
+                migrate_attic_global_tags< Node_Skeleton >(callback, transaction);
+              else if (i == attic_settings().WAY_TAGS_GLOBAL)
+                migrate_attic_global_tags< Way_Skeleton >(callback, transaction);
+              else if (i == attic_settings().RELATION_TAGS_GLOBAL)
+                migrate_attic_global_tags< Relation_Skeleton >(callback, transaction);
+            }
           }
+          guard.commit();
         }
         delete callback;
       }
@@ -232,7 +240,12 @@ int main(int argc, char* argv[])
             migrate_current_global_tags< Way_Skeleton >(callback, transaction);
           else if (i == osm_base_settings().RELATION_TAGS_GLOBAL)
             migrate_current_global_tags< Relation_Skeleton >(callback, transaction);
-          // attic ...
+          else if (i == attic_settings().NODE_TAGS_GLOBAL)
+            migrate_attic_global_tags< Node_Skeleton >(callback, transaction);
+          else if (i == attic_settings().WAY_TAGS_GLOBAL)
+            migrate_attic_global_tags< Way_Skeleton >(callback, transaction);
+          else if (i == attic_settings().RELATION_TAGS_GLOBAL)
+            migrate_attic_global_tags< Relation_Skeleton >(callback, transaction);
         }
       }
       delete callback;

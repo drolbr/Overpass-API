@@ -160,7 +160,7 @@ public:
   virtual void migration_completed()
   { if (!db_dir.empty())
       Logger(db_dir).annotated_log("migration() finished");
-    std::cerr<<"Migration complete.\n"; }
+    std::cerr<<" Migration complete.\n"; }
 
   virtual void set_db_dir(const std::string& db_dir_) { db_dir = db_dir_; }
 

@@ -222,8 +222,7 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_regkregv(
 
   last_key = void_tag_value();
   matches = false;
-  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Flat_Iterator
-      it2(attic_tags_db.flat_begin()); !(it2 == attic_tags_db.flat_end()); ++it2)
+  for (auto it2 = attic_tags_db.flat_begin(); !(it2 == attic_tags_db.flat_end()); ++it2)
   {
     if (it2.index().key != last_key)
     {
@@ -241,8 +240,7 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_regkregv(
 
   last_key = void_tag_value();
   matches = false;
-  for (typename Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Id_Type > > >::Flat_Iterator
-      it2(attic_tags_db.flat_begin()); !(it2 == attic_tags_db.flat_end()); ++it2)
+  for (auto it2 = attic_tags_db.flat_begin(); !(it2 == attic_tags_db.flat_end()); ++it2)
   {
     if (it2.index().key != last_key)
     {
