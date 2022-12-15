@@ -117,24 +117,30 @@ void calc_split_idxs(
       cur_block = 0;
       min_sum_size = forced_it->first;
       ++forced_it;
-      next_limit = (forced_it->first - min_sum_size)/
-      (forced_it->second - cur_block) + min_sum_size;
+      if (cur_block < forced_it->second)
+        next_limit = std::min((forced_it->first - min_sum_size)/
+            (forced_it->second - cur_block), (uint64)block_size - 8) + min_sum_size;
+      else
+        next_limit = min_sum_size + block_size - 8;
       uint j(min_split_pos.size() - 1 - vsplit.size());
       if ((vsplit.size() < min_split_pos.size()) &&
-	(min_split_pos[j] > next_limit))
-	next_limit = min_split_pos[j];
+          (min_split_pos[j] > next_limit))
+        next_limit = min_split_pos[j];
     }
     else if (sum_size > next_limit)
     {
       vsplit.push_back(i);
       ++cur_block;
       min_sum_size = sum_size - sizes[i];
-      next_limit = (forced_it->first - min_sum_size)/
-      (forced_it->second - cur_block) + min_sum_size;
+      if (cur_block < forced_it->second)
+        next_limit = std::min((forced_it->first - min_sum_size)/
+            (forced_it->second - cur_block), (uint64)block_size - 8) + min_sum_size;
+      else
+        next_limit = min_sum_size + block_size - 8;
       uint j(min_split_pos.size() - 1 - vsplit.size());
       if ((vsplit.size() < min_split_pos.size()) &&
-	(min_split_pos[j] > next_limit))
-	next_limit = min_split_pos[j];
+          (min_split_pos[j] > next_limit))
+        next_limit = min_split_pos[j];
     }
   }
 
@@ -214,8 +220,7 @@ void create_from_scratch(
   Void_Pointer< uint8 > buffer(block_size);
 
   // compute the distribution over different blocks
-  for (typename std::set< Index >::const_iterator fit(file_it.lower_bound());
-      fit != file_it.upper_bound(); ++fit)
+  for (auto fit = file_it.lower_bound(); fit != file_it.upper_bound(); ++fit)
   {
     auto it = to_insert.find(*fit);
 
@@ -238,11 +243,10 @@ void create_from_scratch(
   calc_split_idxs(split, block_size, vsizes, file_it.lower_bound(), file_it.upper_bound());
 
   // really write data
-  typename std::vector< Index >::const_iterator split_it(split.begin());
+  auto split_it = split.begin();
   uint8* pos(buffer.ptr + 4);
-  typename std::set< Index >::const_iterator upper_bound(file_it.upper_bound());
-  for (typename std::set< Index >::const_iterator fit(file_it.lower_bound());
-      fit != upper_bound; ++fit)
+  auto upper_bound = file_it.upper_bound();
+  for (auto fit = file_it.lower_bound(); fit != upper_bound; ++fit)
   {
     auto it = to_insert.find(*fit);
 

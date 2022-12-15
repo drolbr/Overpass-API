@@ -204,7 +204,7 @@ int main(int argc, char* args[])
       else if (file_idx->get_file_format_version() <= 7560)
       {
         Block_Backend< Tag_Index_Global_Until756, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >
-            db(transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL_756));
+            db(transaction.data_index(attic_settings().NODE_TAGS_GLOBAL_756));
         for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
         {
           std::cout<<std::hex<<it.object().idx.val()<<'\t'
@@ -492,7 +492,7 @@ int main(int argc, char* args[])
       else if (file_idx->get_file_format_version() <= 7560)
       {
         Block_Backend< Tag_Index_Global_Until756, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > >
-            db(transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL_756));
+            db(transaction.data_index(attic_settings().WAY_TAGS_GLOBAL_756));
         for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
         {
           std::cout<<std::hex<<it.object().idx.val()<<'\t'
@@ -704,7 +704,7 @@ int main(int argc, char* args[])
       else if (file_idx->get_file_format_version() <= 7560)
       {
         Block_Backend< Tag_Index_Global_Until756, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > >
-            db(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL_756));
+            db(transaction.data_index(attic_settings().RELATION_TAGS_GLOBAL_756));
         for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
         {
           std::cout<<std::hex<<it.object().idx.val()<<'\t'
