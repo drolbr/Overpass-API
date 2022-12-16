@@ -661,9 +661,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Node_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().NODE_TAGS_LOCAL);
     callback->tags_local_finished();
-    update_attic_global_tags< Node_Skeleton >(std::map< Tag_Index_Global,
-                    std::set< Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > >(),
-                    new_attic_global_tags, *transaction);
+    update_attic_global_tags< Node_Skeleton >({}, std::move(new_attic_global_tags), *transaction);
     callback->tags_global_finished();
 
     // Write changelog

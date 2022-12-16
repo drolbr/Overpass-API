@@ -1287,9 +1287,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     // Update tags
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().RELATION_TAGS_LOCAL);
-    update_attic_global_tags< Relation_Skeleton >(std::map< Tag_Index_Global,
-                        std::set< Attic < Tag_Object_Global< Relation_Skeleton::Id_Type > > > >(),
-                    new_attic_global_tags, *transaction);
+    update_attic_global_tags< Relation_Skeleton >({}, std::move(new_attic_global_tags), *transaction);
 
     // Write changelog
     update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,

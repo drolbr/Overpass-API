@@ -94,140 +94,6 @@ inline uint calc_tag_split_level(uint64 cnt)
 }
 
 
-inline void reorganize_tag_split_level(
-    uint old_level, uint new_level, const std::string& key, const std::string& value)
-{
-  // ...
-}
-
-
-template< typename Skeleton >
-void update_current_global_tags(
-    const std::map< Tag_Index_Global,
-        std::set< Tag_Object_Global< typename Skeleton::Id_Type > > >& attic_objects,
-    const std::map< Tag_Index_Global,
-        std::set< Tag_Object_Global< typename Skeleton::Id_Type > > >& new_objects,
-    Transaction& transaction)
-{
-  std::map< std::string, std::vector< Frequent_Value_Entry > > frequent;
-  {
-    Block_Backend< String_Index, Frequent_Value_Entry >
-        db(transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()));
-    for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
-      frequent[it.index().key].push_back(it.object());
-  }
-  for (auto& i : frequent)
-    std::sort(i.second.begin(), i.second.end());
-
-  auto it_attic = attic_objects.begin();
-  auto it_new = new_objects.begin();
-  for (const auto& i : frequent)
-  {
-    while (it_new != new_objects.end() && it_new->first.key < i.first)
-      ++it_new;
-    if (it_new != new_objects.end() && it_new->first.key == i.first)
-    {
-      for (const auto& j : i.second)
-      {
-        while (it_new != new_objects.end() && it_new->first.key == i.first && it_new->first.value < j.value)
-          ++it_new;
-        if (it_new != new_objects.end() && it_new->first.key == i.first && it_new->first.value == j.value)
-        {
-          // adjust new_objects
-        }
-      }
-    }
-
-    while (it_attic != attic_objects.end() && it_attic->first.key < i.first)
-      ++it_attic;
-    if (it_attic != attic_objects.end() && it_attic->first.key == i.first)
-    {
-      for (const auto& j : i.second)
-      {
-        while (it_attic != attic_objects.end() && it_attic->first.key == i.first && it_attic->first.value < j.value)
-          ++it_attic;
-        if (it_attic != attic_objects.end() && it_attic->first.key == i.first && it_attic->first.value == j.value)
-        {
-          // adjust attic_objects
-        }
-      }
-    }
-  }
-  
-  std::map< Tag_Index_Global, Delta_Count > cnt;
-  {
-    Block_Backend< Tag_Index_Global, Tag_Object_Global< typename Skeleton::Id_Type > >
-        db(transaction.data_index(current_global_tags_file_properties< Skeleton >()));
-    db.update(attic_objects, new_objects, &cnt);
-  }
-
-  std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_delete;
-  std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_insert;
-  
-  auto it_cnt = cnt.begin();
-  for (auto& i : frequent)
-  {
-    while (it_cnt != cnt.end() && it_cnt->first.key < i.first)
-    {
-      uint level = calc_tag_split_level(it_cnt->second.after);
-      if (level > 0)
-      {
-        reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
-        freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });
-      }
-      ++it_cnt;
-    }
-    if (it_cnt != cnt.end() && it_cnt->first.key == i.first)
-    {
-      for (auto& j : i.second)
-      {
-        while (it_cnt != cnt.end() && it_cnt->first.value < j.value)
-        {
-          uint level = calc_tag_split_level(it_cnt->second.after);
-          if (level > 0)
-          {
-            reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
-            freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });
-          }
-          ++it_cnt;
-        }
-        uint64 kv_cnt = j.count;
-        while (it_cnt != cnt.end() && it_cnt->first.key == i.first && it_cnt->first.value == j.value)
-        {
-          kv_cnt += it_cnt->second.after;
-          kv_cnt -= it_cnt->second.before;
-          ++it_cnt;
-        }
-        if (kv_cnt != j.count)
-        {
-          uint level = calc_tag_split_level(kv_cnt);
-          if (level != j.level)
-            reorganize_tag_split_level(j.level, level, i.first, j.value);
-          freq_to_delete[{ i.first }].insert({ j.value, (uint64)j.count, level });
-          freq_to_insert[{ i.first }].insert({ j.value, (uint64)kv_cnt, level });        
-        }
-      }
-    }
-  }
-  while (it_cnt != cnt.end())
-  {
-    uint level = calc_tag_split_level(it_cnt->second.after);
-    if (level > 0)
-    {
-      reorganize_tag_split_level(0, level, it_cnt->first.key, it_cnt->first.value);
-      freq_to_insert[{ it_cnt->first.key }].insert({ it_cnt->first.value, (uint64)it_cnt->second.after, level });
-    }
-    ++it_cnt;
-  }
-
-  {
-    Block_Backend< String_Index, Frequent_Value_Entry >
-        db(transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()));
-    db.update(freq_to_delete, freq_to_insert);
-  }
-}
-
-
 template< typename Ref_Entry >
 void rebuild_db_to_insert(
     std::map< Tag_Index_Global_KVI, std::set< Ref_Entry > >& db_to_insert,
@@ -250,26 +116,216 @@ void rebuild_db_to_insert(
 }
 
 
-template< typename Skeleton >
-void update_attic_global_tags(
-    const std::map< Tag_Index_Global,
-        std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >& attic_objects,
-    const std::map< Tag_Index_Global,
-        std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >& new_objects,
-    Transaction& transaction)
+template< typename Ref_Entry >
+void adapt_data_to_actual_idx(
+    std::map< Tag_Index_Global_KVI, std::set< Ref_Entry > >& obj_to_adapt,
+    const std::map< std::string, std::vector< Frequent_Value_Entry > >& frequent)
 {
-  std::map< Tag_Index_Global, Delta_Count > cnt;
-  Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< typename Skeleton::Id_Type > > >
-      db(transaction.data_index(attic_global_tags_file_properties< Skeleton >()));
-  db.update(attic_objects, new_objects, &cnt);
-  std::cerr<<"DEBUG_22b05c\n"
-      <<attic_global_tags_file_properties< Skeleton >()->get_file_name_trunk()<<'\n';
-  for (auto& i : cnt)
+  auto it = obj_to_adapt.begin();
+  for (const auto& i : frequent)
   {
-    if (i.second.after > 1000)
-      std::cerr<<i.second.after<<'\t'<<i.first.key<<'\t'<<i.first.value<<'\n';
+    while (it != obj_to_adapt.end() && it->first.key < i.first)
+      ++it;
+    if (it != obj_to_adapt.end() && it->first.key == i.first)
+    {
+      for (const auto& j : i.second)
+      {
+        while (it != obj_to_adapt.end() && it->first.key == i.first && it->first.value < j.value)
+          ++it;
+        if (it != obj_to_adapt.end() && it->first.key == i.first && it->first.value == j.value)
+          rebuild_db_to_insert(obj_to_adapt, i.first, j.value, j.level);
+      }
+    }
   }
 }
+
+
+template< typename Ref_Entry >
+inline void reorganize_tag_split_level(
+    File_Blocks_Index_Base* tags_file, uint target_level, const std::string& key, const std::string& value)
+{
+  Ranges< Tag_Index_Global > ranges{ Tag_Index_Global{ key, value }, Tag_Index_Global{ key, value + (char)0 } };
+  
+  std::map< Tag_Index_Global, std::set< Ref_Entry > > obj_to_delete;
+  {
+    Block_Backend< Tag_Index_Global, Ref_Entry > db(tags_file);
+    for (auto it = db.range_begin(ranges); !(it == db.range_end()); ++it)
+      obj_to_delete[it.index()].insert(it.object());
+  }
+  
+  std::map< Tag_Index_Global, std::set< Ref_Entry > > obj_to_insert;
+  for (auto it = obj_to_delete.begin(); it != obj_to_delete.end(); ++it)
+  {
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      obj_to_insert[Tag_Index_Global_KVI(key, value, it2->idx.val() & (0xffffffff<<(32-target_level)))]
+          .insert(*it2);
+  }
+  
+  Block_Backend< Tag_Index_Global, Ref_Entry > db(tags_file);
+  db.update(obj_to_delete, obj_to_insert);
+}
+
+
+template< typename Ref_Entry >
+struct Freq_Tags_Updater
+{
+  Freq_Tags_Updater(File_Blocks_Index_Base* tags_file_, File_Blocks_Index_Base* freq_file_)
+    : tags_file(tags_file_), freq_file(freq_file_) {}
+  
+  void reorganize_tags_if_necessary(const std::pair< Tag_Index_Global, Delta_Count >& tag_cnt)
+  {
+    uint level = calc_tag_split_level(tag_cnt.second.after);
+    if (level > 0)
+    {
+      reorganize_tag_split_level< Ref_Entry>(tags_file, level, tag_cnt.first.key, tag_cnt.first.value);
+      freq_to_insert[{ tag_cnt.first.key }].insert({ tag_cnt.first.value, (uint64)tag_cnt.second.after, level });
+    }
+  }
+
+  void reorganize_tags_if_necessary(
+      const std::string& key, const Frequent_Value_Entry& entry, uint64 kv_cnt)
+  {
+    uint level = calc_tag_split_level(kv_cnt);
+    if (level != entry.level)
+      reorganize_tag_split_level< Ref_Entry>(tags_file, level, key, entry.value);
+    freq_to_delete[{ key }].insert({ entry.value, (uint64)entry.count, level });
+    freq_to_insert[{ key }].insert({ entry.value, (uint64)kv_cnt, level });        
+  }
+  
+  void write_to_file()
+  {
+    Block_Backend< String_Index, Frequent_Value_Entry > db(freq_file);
+    db.update(freq_to_delete, freq_to_insert);
+  }
+
+  ~Freq_Tags_Updater()
+  {
+    if (freq_file)
+      write_to_file();
+  }
+
+  File_Blocks_Index_Base* tags_file;
+  File_Blocks_Index_Base* freq_file;
+  std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_delete;
+  std::map< String_Index, std::set< Frequent_Value_Entry > > freq_to_insert;
+};
+
+
+template< typename Ref_Entry >
+void update_global_tags(
+    File_Blocks_Index_Base* tags_file, File_Blocks_Index_Base* freq_file,
+    std::map< Tag_Index_Global, std::set< Ref_Entry > >& obj_to_delete,
+    std::map< Tag_Index_Global, std::set< Ref_Entry > >& obj_to_insert)
+{
+  std::map< std::string, std::vector< Frequent_Value_Entry > > frequent;
+  {
+    Block_Backend< String_Index, Frequent_Value_Entry > db(freq_file);
+    for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+      frequent[it.index().key].push_back(it.object());
+  }
+  for (auto& i : frequent)
+    std::sort(i.second.begin(), i.second.end());
+
+  adapt_data_to_actual_idx(obj_to_delete, frequent);
+  adapt_data_to_actual_idx(obj_to_insert, frequent);
+  
+  std::map< Tag_Index_Global, Delta_Count > cnt;
+  {
+    Block_Backend< Tag_Index_Global, Ref_Entry > db(tags_file);
+    db.update(obj_to_delete, obj_to_insert, &cnt);
+  }
+
+  Freq_Tags_Updater< Ref_Entry > freq_upd{ tags_file, freq_file };
+  auto it_cnt = cnt.begin();
+  for (auto& i : frequent)
+  {
+    while (it_cnt != cnt.end() && it_cnt->first.key < i.first)
+      freq_upd.reorganize_tags_if_necessary(*it_cnt++);
+
+    if (it_cnt != cnt.end() && it_cnt->first.key == i.first)
+    {
+      for (auto& j : i.second)
+      {
+        while (it_cnt != cnt.end() && it_cnt->first.value < j.value)
+          freq_upd.reorganize_tags_if_necessary(*it_cnt++);
+
+        uint64 kv_cnt = j.count;
+        while (it_cnt != cnt.end() && it_cnt->first.key == i.first && it_cnt->first.value == j.value)
+        {
+          kv_cnt += it_cnt->second.after;
+          kv_cnt -= it_cnt->second.before;
+          ++it_cnt;
+        }
+        if (kv_cnt != j.count)
+          freq_upd.reorganize_tags_if_necessary(i.first, j, kv_cnt);
+      }
+    }
+  }
+  while (it_cnt != cnt.end())
+    freq_upd.reorganize_tags_if_necessary(*it_cnt++);
+  
+  freq_upd.write_to_file();
+}
+
+
+template< typename Skeleton >
+void update_current_global_tags(
+    std::map< Tag_Index_Global, std::set< Tag_Object_Global< typename Skeleton::Id_Type > > >& obj_to_delete,
+    std::map< Tag_Index_Global, std::set< Tag_Object_Global< typename Skeleton::Id_Type > > >& obj_to_insert,
+    Transaction& transaction)
+{
+  update_global_tags(
+      transaction.data_index(current_global_tags_file_properties< Skeleton >()),
+      transaction.data_index(current_global_tag_frequency_file_properties< Skeleton >()),
+      obj_to_delete, obj_to_insert);
+}
+
+
+template< typename Skeleton >
+void update_attic_global_tags(
+    std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >&& obj_to_delete,
+    std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >&& obj_to_insert,
+    Transaction& transaction)
+{
+  update_global_tags(
+      transaction.data_index(attic_global_tags_file_properties< Skeleton >()),
+      transaction.data_index(attic_global_tag_frequency_file_properties< Skeleton >()),
+      obj_to_delete, obj_to_insert);
+}
+
+
+template< typename Ref_Entry, typename Target_Idx >
+struct Migrate_Loop_Flush
+{
+  void flush_if_large(uint64 per_kv, std::map< Tag_Index_Global_KVI, std::set< Ref_Entry > >& db_to_insert)
+  {
+    total += per_kv;
+    if (total >= THRESHOLD_24)
+    {
+      callback->migration_flush();
+      into_db.update({}, db_to_insert);
+      db_to_insert.clear();
+      total = 0;
+    }    
+  }
+  
+  void flush_single_kv(std::map< Tag_Index_Global_KVI, std::set< Ref_Entry > >& db_to_insert)
+  {
+    callback->migration_flush_single_kv();
+    into_db.update({}, db_to_insert);
+    db_to_insert.clear();
+  }
+  
+  void flush_the_rest(std::map< Tag_Index_Global_KVI, std::set< Ref_Entry > >& db_to_insert)
+  {
+    callback->migration_flush();
+    into_db.update({}, db_to_insert);
+  }
+  
+  Block_Backend< Target_Idx, Ref_Entry >& into_db;
+  uint64 total;
+  Osm_Backend_Callback* callback;
+};
 
 
 template< typename Ref_Entry, typename Src_Idx, typename Target_Idx >
@@ -286,7 +342,7 @@ void migrate_loop(
   // - total number of objects after a couple of relatively small kvs
   // - number of objects alone for a sufficently large kv
   // On top of this, we need to rebuild the index for the affected kv if a kv passes its size threshold.
-  uint64 total = 0;
+  Migrate_Loop_Flush< Ref_Entry, Target_Idx > flush{ into_db, 0, callback };
   uint64 per_kv = 0;
   uint64 level_threshold = THRESHOLD_8;
   uint level = 0;
@@ -297,19 +353,10 @@ void migrate_loop(
     {
       if (level > 0)
         freq_to_insert[{ to_it->first.key }].insert({ to_it->first.value, per_kv, level });
+
+      flush.flush_if_large(per_kv, db_to_insert);
       
-      total += per_kv;
-      if (total >= THRESHOLD_24)
-      {
-        callback->migration_flush();
-        into_db.update({}, db_to_insert);
-        db_to_insert.clear();
-        total = 0;
-      }
-      
-      to_it = db_to_insert.insert(std::make_pair(
-          Tag_Index_Global_KVI(from_it.index().key, from_it.index().value),
-          std::set< Ref_Entry >())).first;
+      to_it = db_to_insert.insert({ Tag_Index_Global_KVI(from_it.index().key, from_it.index().value), {} }).first;
       level_threshold = THRESHOLD_8;
       level = 0;
       per_kv = 0;
@@ -324,14 +371,10 @@ void migrate_loop(
       }
       if (level == 24)
       {
-        callback->migration_flush_single_kv();
-        into_db.update({}, db_to_insert);
-        db_to_insert.clear();
-        level_threshold += THRESHOLD_24;
+        flush.flush_single_kv(db_to_insert);
         
-        to_it = db_to_insert.insert(std::make_pair(
-            Tag_Index_Global_KVI(from_it.index().key, from_it.index().value),
-            std::set< Ref_Entry >())).first;
+        to_it = db_to_insert.insert({ Tag_Index_Global_KVI(from_it.index().key, from_it.index().value), {} }).first;
+        level_threshold += THRESHOLD_24;
       }
     }
 
@@ -344,8 +387,10 @@ void migrate_loop(
     ++per_kv;
     ++from_it;
   }
-  callback->migration_flush();
-  into_db.update({}, db_to_insert);
+  if (to_it != db_to_insert.end() && level > 0)
+    freq_to_insert[{ to_it->first.key }].insert({ to_it->first.value, per_kv, level });
+
+  flush.flush_the_rest(db_to_insert);
 }
 
 
