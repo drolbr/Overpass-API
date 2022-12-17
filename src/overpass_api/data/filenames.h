@@ -275,13 +275,13 @@ File_Properties* attic_global_tag_frequency_file_properties()
 }
 
 template< > inline File_Properties* attic_global_tag_frequency_file_properties< Node_Skeleton >()
-{ return osm_base_settings().NODE_FREQUENT_TAGS; }
+{ return attic_settings().NODE_FREQUENT_TAGS; }
 
 template< > inline File_Properties* attic_global_tag_frequency_file_properties< Way_Skeleton >()
-{ return osm_base_settings().WAY_FREQUENT_TAGS; }
+{ return attic_settings().WAY_FREQUENT_TAGS; }
 
 template< > inline File_Properties* attic_global_tag_frequency_file_properties< Relation_Skeleton >()
-{ return osm_base_settings().RELATION_FREQUENT_TAGS; }
+{ return attic_settings().RELATION_FREQUENT_TAGS; }
 
 
 
