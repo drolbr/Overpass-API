@@ -186,7 +186,7 @@ struct Freq_Tags_Updater
       const std::string& key, const Frequent_Value_Entry& entry, uint64 kv_cnt)
   {
     uint level = calc_tag_split_level(kv_cnt);
-    if (level != entry.level)
+    if (entry.level < level)
       reorganize_tag_split_level< Ref_Entry>(tags_file, level, key, entry.value);
     freq_to_delete[{ key }].insert({ entry.value, (uint64)entry.count, level });
     freq_to_insert[{ key }].insert({ entry.value, (uint64)kv_cnt, level });        
@@ -246,7 +246,7 @@ void update_global_tags(
     {
       for (auto& j : i.second)
       {
-        while (it_cnt != cnt.end() && it_cnt->first.value < j.value)
+        while (it_cnt != cnt.end() && it_cnt->first.key == i.first && it_cnt->first.value < j.value)
           freq_upd.reorganize_tags_if_necessary(*it_cnt++);
 
         uint64 kv_cnt = j.count;

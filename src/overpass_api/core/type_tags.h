@@ -438,20 +438,20 @@ struct Tag_Index_Global_KVI
       && !memcmp(lhs, rhs, *(uint16*)lhs + *(((uint16*)lhs)+2) + 8); }
   bool less(void* rhs) const
   {
-    int keycmp = strnncmp(&key[0], ((const char*)rhs)+4, key.size(), *((uint16*)rhs));
+    int keycmp = strnncmp(&key[0], ((const char*)rhs)+8, key.size(), *((uint16*)rhs));
     if (keycmp)
       return keycmp < 0;
-    int valcmp = strnncmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1));
+    int valcmp = strnncmp(&value[0], ((const char*)rhs) + 8 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1));
     if (valcmp)
       return valcmp < 0;
     return idx < *(uint32*)((int8*)rhs + 4);
   }
   bool leq(void* rhs) const
   {
-    int keycmp = strnncmp(&key[0], ((const char*)rhs)+4, key.size(), *((uint16*)rhs));
+    int keycmp = strnncmp(&key[0], ((const char*)rhs)+8, key.size(), *((uint16*)rhs));
     if (keycmp)
       return keycmp < 0;
-    int valcmp = strnncmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1));
+    int valcmp = strnncmp(&value[0], ((const char*)rhs) + 8 + *(uint16*)rhs, value.size(), *(((uint16*)rhs)+1));
     if (valcmp)
       return valcmp < 0;
     return idx <= *(uint32*)((int8*)rhs + 4);
@@ -459,8 +459,8 @@ struct Tag_Index_Global_KVI
   bool equal(void* rhs) const
   {
     return key.size() == *(uint16*)rhs && value.size() == *((uint16*)rhs + 1) && idx == *(uint32*)((int8*)rhs + 4)
-      && !memcmp(&key[0], ((const char*)rhs) + 4, *((uint16*)rhs))
-      && !memcmp(&value[0], ((const char*)rhs) + 4 + *(uint16*)rhs, *((uint16*)rhs + 1));
+      && !memcmp(&key[0], ((const char*)rhs) + 8, *((uint16*)rhs))
+      && !memcmp(&value[0], ((const char*)rhs) + 8 + *(uint16*)rhs, *((uint16*)rhs + 1));
   }
 
   uint32 size_of() const
