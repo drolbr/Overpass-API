@@ -520,9 +520,10 @@ struct Block_Backend
 
   const Range_Iterator& range_end() const { return *range_end_it; }
 
+  template< typename Container >
   void update(
       const std::map< TIndex, std::set< TObject > >& to_delete,
-      const std::map< TIndex, std::set< TObject > >&   to_insert,
+      const std::map< TIndex, Container >& to_insert,
       std::map< TIndex, Delta_Count >* obj_count = nullptr);
 
   uint read_count() const { return file_blocks.read_count(); }

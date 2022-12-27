@@ -305,31 +305,48 @@ void create_from_scratch(
 }
 
 
-template< class TIndex, class TObject >
+template< typename Object >
+class Object_Predicate
+{
+public:
+  Object_Predicate(const std::set< Object >& data_) : data(&data_) {}
+  
+  bool match(const Object& obj) const
+  { return data->find(obj) != data->end(); }
+  
+  typedef Object Base_Object;
+  
+private:
+  const std::set< Object >* data;
+};
+
+
+template< typename Index, typename Object_Predicate, typename Container >
 struct Index_Collection
 {
-  Index_Collection(uint8* source_begin_, uint8* source_end_,
-		   const typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it_,
-		   const typename std::map< TIndex, std::set< TObject > >::const_iterator& insert_it_)
+  Index_Collection(
+      uint8* source_begin_, uint8* source_end_,
+      const typename std::map< Index, Object_Predicate >::const_iterator& delete_it_,
+      const typename std::map< Index, Container >::const_iterator& insert_it_)
       : source_begin(source_begin_), source_end(source_end_),
         delete_it(delete_it_), insert_it(insert_it_) {}
 
   uint8* source_begin;
   uint8* source_end;
-  typename std::map< TIndex, std::set< TObject > >::const_iterator delete_it;
-  typename std::map< TIndex, std::set< TObject > >::const_iterator insert_it;
+  typename std::map< Index, Object_Predicate >::const_iterator delete_it;
+  typename std::map< Index, Container >::const_iterator insert_it;
 };
 
 
-template< typename Index, typename Object, typename File_Blocks, typename Iterator >
+template< typename Index, typename Object_Predicate, typename Container, typename File_Blocks, typename Iterator >
 void update_group(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
-    const std::map< Index, std::set< Object > >& to_delete,
-    const std::map< Index, std::set< Object > >& to_insert,
+    const std::map< Index, Object_Predicate >& to_delete,
+    const std::map< Index, Container >& to_insert,
     const std::set< Index >& relevant_idxs,
     std::map< Index, Delta_Count >* obj_count)
 {
-  std::map< Index, Index_Collection< Index, Object > > index_values;
+  std::map< Index, Index_Collection< Index, Object_Predicate, Container > > index_values;
   std::map< Index, uint32 > sizes;
   std::vector< Index > split;
   std::vector< uint32 > vsizes;
@@ -344,7 +361,7 @@ void update_group(
   uint8* source_end(source.ptr + *(uint32*)source.ptr);
   while (pos < source_end)
   {
-    index_values.insert(std::make_pair(Index(pos + 4), Index_Collection< Index, Object >
+    index_values.insert(std::make_pair(Index(pos + 4), Index_Collection< Index, Object_Predicate, Container >
         (pos, source.ptr + *(uint32*)pos, to_delete.end(), to_insert.end())));
     pos = source.ptr + *(uint32*)pos;
   }
@@ -354,12 +371,11 @@ void update_group(
     to_delete_end = to_delete.lower_bound(*(file_it.upper_bound()));
   for (auto it = to_delete_begin; it != to_delete_end; ++it)
   {
-    typename std::map< Index, Index_Collection< Index, Object > >::iterator
-        ic_it(index_values.find(it->first));
+    auto ic_it = index_values.find(it->first);
     if (ic_it == index_values.end())
     {
       index_values.insert(std::make_pair(it->first,
-	  Index_Collection< Index, Object >(0, 0, it, to_insert.end())));
+	  Index_Collection< Index, Object_Predicate, Container >(0, 0, it, to_insert.end())));
     }
     else
       ic_it->second.delete_it = it;
@@ -371,12 +387,11 @@ void update_group(
     to_insert_end = to_insert.lower_bound(*(file_it.upper_bound()));
   for (auto it = to_insert_begin; it != to_insert_end; ++it)
   {
-    typename std::map< Index, Index_Collection< Index, Object > >::iterator
-        ic_it(index_values.find(it->first));
+    auto ic_it = index_values.find(it->first);
     if (ic_it == index_values.end())
     {
       index_values.insert(std::make_pair(it->first,
-          Index_Collection< Index, Object >(0, 0, to_delete.end(), it)));
+          Index_Collection< Index, Object_Predicate, Container >(0, 0, to_delete.end(), it)));
     }
     else
       ic_it->second.insert_it = it;
@@ -384,8 +399,7 @@ void update_group(
 
   // compute the distribution over different blocks
   // and log all objects that will be deleted
-  for (typename std::map< Index, Index_Collection< Index, Object > >::const_iterator
-      it(index_values.begin()); it != index_values.end(); ++it)
+  for (auto it = index_values.begin(); it != index_values.end(); ++it)
   {
     uint32 current_size = 0;
     Delta_Count count;
@@ -397,9 +411,8 @@ void update_group(
       while (pos < it->second.source_end)
       {
         ++count.before;
-        Object obj(pos);
-        if ((it->second.delete_it == to_delete.end()) ||
-          (it->second.delete_it->second.find(obj) == it->second.delete_it->second.end()))
+        typename Object_Predicate::Base_Object obj(pos);
+        if (it->second.delete_it == to_delete.end() || !it->second.delete_it->second.match(obj))
         {
           current_size += obj.size_of();
           ++count.after;
@@ -410,8 +423,7 @@ void update_group(
         current_size += Index::size_of((it->second.source_begin) + 4) + 4;
     }
 
-    if ((it->second.insert_it != to_insert.end()) &&
-      (!(it->second.insert_it->second.empty())))
+    if (it->second.insert_it != to_insert.end() && !(it->second.insert_it->second.empty()))
     {
       // only add nonempty indices
       if (current_size == 0)
@@ -429,16 +441,14 @@ void update_group(
   }
 
   std::set< Index > index_values_set;
-  for (typename std::map< Index, Index_Collection< Index, Object > >::const_iterator
-      it(index_values.begin()); it != index_values.end(); ++it)
+  for (auto it = index_values.begin(); it != index_values.end(); ++it)
     index_values_set.insert(it->first);
   calc_split_idxs(split, block_size, vsizes, index_values_set.begin(), index_values_set.end());
 
   // really write data
   typename std::vector< Index >::const_iterator split_it(split.begin());
   pos = (dest.ptr + 4);
-  for (typename std::map< Index, Index_Collection< Index, Object > >::const_iterator
-    it(index_values.begin()); it != index_values.end(); ++it)
+  for (auto it = index_values.begin(); it != index_values.end(); ++it)
   {
     if ((split_it != split.end()) && (it->first == *split_it))
     {
@@ -463,9 +473,8 @@ void update_group(
 	spos = spos + Index::size_of((it->second.source_begin) + 4);
 	while (spos < it->second.source_end)
 	{
-	  Object obj(spos);
-	  if ((it->second.delete_it == to_delete.end()) ||
-	    (it->second.delete_it->second.find(obj) == it->second.delete_it->second.end()))
+	  typename Object_Predicate::Base_Object obj(spos);
+	  if (it->second.delete_it == to_delete.end() || !it->second.delete_it->second.match(obj))
 	  {
 	    memcpy(pos, spos, obj.size_of());
 	    pos = pos + obj.size_of();
@@ -494,23 +503,21 @@ void update_group(
       // can never overflow - we have read only one block
       if (it->second.source_begin != 0)
       {
-	uint8* spos(it->second.source_begin + 4);
-	spos = spos + Index::size_of((it->second.source_begin) + 4);
-	while (spos < it->second.source_end)
-	{
-	  Object obj(spos);
-	  if ((it->second.delete_it == to_delete.end()) ||
-	    (it->second.delete_it->second.find(obj) == it->second.delete_it->second.end()))
-	  {
-	    memcpy(pos, spos, obj.size_of());
-	    pos = pos + obj.size_of();
-	  }
-	  spos = spos + obj.size_of();
-	}
+        uint8* spos(it->second.source_begin + 4);
+        spos = spos + Index::size_of((it->second.source_begin) + 4);
+        while (spos < it->second.source_end)
+        {
+          typename Object_Predicate::Base_Object obj(spos);
+          if (it->second.delete_it == to_delete.end() || !it->second.delete_it->second.match(obj))
+          {
+            memcpy(pos, spos, obj.size_of());
+            pos = pos + obj.size_of();
+          }
+          spos = spos + obj.size_of();
+        }
       }
 
-      if ((it->second.insert_it != to_insert.end()) &&
-	(!(it->second.insert_it->second.empty())))
+      if (it->second.insert_it != to_insert.end() && !it->second.insert_it->second.empty())
       {
         for (auto it2 = it->second.insert_it->second.begin(); it2 != it->second.insert_it->second.end(); ++it2)
           flush_if_necessary_and_write_obj(
@@ -518,8 +525,8 @@ void update_group(
       }
 
       if ((uint32)(pos - dest.ptr) == it->first.size_of() + 8)
-	// the block is in fact empty
-	pos = dest.ptr + 4;
+        // the block is in fact empty
+        pos = dest.ptr + 4;
 
       *(uint32*)(dest.ptr+4) = pos - dest.ptr;
     }
@@ -582,10 +589,10 @@ bool read_block_or_blocks(
 }
 
 
-template< typename Object >
+template< typename Object_Predicate >
 Delta_Count skip_deleted_objects(
     uint64* source_start_ptr, uint64* dest_start_ptr,
-    const std::set< Object >& objs_to_delete, uint32 idx_size)
+    const Object_Predicate& objs_to_delete, uint32 idx_size)
 {
   Delta_Count count;
   
@@ -596,10 +603,10 @@ Delta_Count skip_deleted_objects(
 
   while (src_obj_offset < src_size)
   {
-    Object obj(((uint8*)source_start_ptr) + src_obj_offset);
+    typename Object_Predicate::Base_Object obj(((uint8*)source_start_ptr) + src_obj_offset);
     uint32 obj_size = obj.size_of();
     
-    if (objs_to_delete.find(obj) == objs_to_delete.end())
+    if (!objs_to_delete.match(obj))
     {
       memcpy(
           ((uint8*)dest_start_ptr) + dest_obj_offset, ((uint8*)source_start_ptr) + src_obj_offset, obj_size);
@@ -640,10 +647,10 @@ uint64 append_insertables(
 }
 
 
-template< typename Index, typename Container, typename File_Blocks, typename Iterator >
+template< typename Index, typename Del_Container, typename Ins_Container, typename File_Blocks, typename Iterator >
 void update_segments(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
-    const std::map< Index, Container >& to_delete, const std::map< Index, Container >& to_insert,
+    const std::map< Index, Del_Container >& to_delete, const std::map< Index, Ins_Container >& to_insert,
     std::map< Index, Delta_Count >* obj_count)
 {
   file_it.start_segments_mode();
@@ -670,8 +677,8 @@ void update_segments(
     if (oversized)
     {
       ++file_it;
-      decltype(*(insert_it->second.begin())) obj(((uint8*)source.ptr) + 8 + idx_size);
-      if (delete_it != to_delete.end() && delete_it->second.find(obj) != delete_it->second.end())
+      typename Del_Container::Base_Object obj(((uint8*)source.ptr) + 8 + idx_size);
+      if (delete_it != to_delete.end() && delete_it->second.match(obj))
         file_blocks.erase_blocks(delta_it, file_it);
       else
         ++count.after;
@@ -726,10 +733,11 @@ void update_segments(
 }
 
 
-template< class Index, class Object, class TIterator >
-void Block_Backend< Index, Object, TIterator >::update(
+template< typename Index, typename Object, typename Iterator >
+template< typename Container >
+void Block_Backend< Index, Object, Iterator >::update(
     const std::map< Index, std::set< Object > >& to_delete,
-    const std::map< Index, std::set< Object > >& to_insert,
+    const std::map< Index, Container >& to_insert,
     std::map< Index, Delta_Count >* obj_count)
 {
   std::set< Index > relevant_idxs;
@@ -740,15 +748,19 @@ void Block_Backend< Index, Object, TIterator >::update(
 
   typename File_Blocks_::Write_Iterator file_it
       = file_blocks.write_begin(relevant_idxs.begin(), relevant_idxs.end(), true);
+      
+  std::map< Index, Object_Predicate< Object > > to_delete_;
+  for (const auto& i : to_delete)
+    to_delete_.insert(std::make_pair(i.first, Object_Predicate< Object >(i.second)));
 
   while (file_it.lower_bound() != relevant_idxs.end())
   {
     if (file_it.block_type() == File_Block_Index_Entry< Index >::EMPTY)
       create_from_scratch(file_blocks, file_it, block_size, data_filename, to_insert, obj_count);
     else if (file_it.block_type() == File_Block_Index_Entry< Index >::GROUP)
-      update_group(file_blocks, file_it, block_size, data_filename, to_delete, to_insert, relevant_idxs, obj_count);
+      update_group(file_blocks, file_it, block_size, data_filename, to_delete_, to_insert, relevant_idxs, obj_count);
     else //if (file_it.block_type() == File_Block_Index_Entry< Index >::SEGMENT)
-      update_segments(file_blocks, file_it, block_size, data_filename, to_delete, to_insert, obj_count);
+      update_segments(file_blocks, file_it, block_size, data_filename, to_delete_, to_insert, obj_count);
   }
 }
 
