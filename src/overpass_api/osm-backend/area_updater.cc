@@ -84,7 +84,7 @@ void Area_Updater::update_area_ids
     (std::map< Uint31_Index, std::set< Area_Skeleton > >& locations_to_delete,
      std::map< Uint31_Index, std::set< Area_Block > >& blocks_to_delete)
 {
-  std::set< Uint31_Index > blocks_req;
+  std::vector< Uint31_Index > blocks_req;
 
   // process the areas themselves
   Block_Backend< Uint31_Index, Area_Skeleton > area_locations_db
@@ -95,12 +95,13 @@ void Area_Updater::update_area_ids
   {
     if (ids_to_modify.find(it.object().id) != ids_to_modify.end())
     {
-      for (std::vector< uint32 >::const_iterator it2(it.object().used_indices.begin());
-          it2 != it.object().used_indices.end(); ++it2)
-        blocks_req.insert(*it2);
+      for (auto it2 = it.object().used_indices.begin(); it2 != it.object().used_indices.end(); ++it2)
+        blocks_req.push_back(*it2);
       locations_to_delete[it.index().val()].insert(it.object());
     }
   }
+  std::sort(blocks_req.begin(), blocks_req.end());
+  blocks_req.erase(std::unique(blocks_req.begin(), blocks_req.end()), blocks_req.end());
 
   Block_Backend< Uint31_Index, Area_Block > area_blocks_db
       (transaction->data_index(area_settings().AREA_BLOCKS));

@@ -458,9 +458,8 @@ std::map< Uint31_Index, std::set< Way_Skeleton > > get_implicitly_moved_skeleton
 
   std::map< Uint31_Index, std::set< Way_Skeleton > > result;
 
-  Block_Backend< Uint31_Index, Way_Skeleton > db(transaction.data_index(&file_properties));
-  for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  Block_Backend< Uint31_Index, Way_Skeleton, std::set< Uint31_Index >::const_iterator > db(transaction.data_index(&file_properties));
+  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
   {
     if (binary_search(known_way_ids.begin(), known_way_ids.end(), it.object().id))
       continue;

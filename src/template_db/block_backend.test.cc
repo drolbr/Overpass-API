@@ -377,9 +377,9 @@ void read_test(unsigned int step)
     read_loop(db_backend, fit);
     std::cout<<"... all blocks read.\n";
 
-    std::set< IntIndex > index_list;
+    std::vector< IntIndex > index_list;
     for (unsigned int i(0); i < 100; i += 9)
-      index_list.insert(&i);
+      index_list.push_back(&i);
     std::cout<<"Reading blocks with indices {0, 9, ..., 99} ...\n";
     Block_Backend< IntIndex, IntObject >::Discrete_Iterator
 	it(db_backend.discrete_begin(index_list.begin(), index_list.end()));
@@ -388,7 +388,7 @@ void read_test(unsigned int step)
 
     index_list.clear();
     for (unsigned int i(0); i < 10; ++i)
-      index_list.insert(&i);
+      index_list.push_back(&i);
     std::cout<<"Reading blocks with indices {0, 1, ..., 9} ...\n";
     it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
@@ -404,7 +404,7 @@ void read_test(unsigned int step)
 
     index_list.clear();
     for (unsigned int i(90); i < 100; ++i)
-      index_list.insert(&i);
+      index_list.push_back(&i);
     std::cout<<"Reading blocks with indices {90, 91, ..., 99} ...\n";
     it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);
@@ -420,7 +420,7 @@ void read_test(unsigned int step)
 
     index_list.clear();
     uint32 foo(50);
-    index_list.insert(&foo);
+    index_list.push_back(&foo);
     std::cout<<"Reading blocks with index 50 ...\n";
     it = db_backend.discrete_begin(index_list.begin(), index_list.end());
     read_loop(db_backend, it);

@@ -434,14 +434,14 @@ std::pair< std::vector< Index >, std::vector< Index > > get_indexes
   {
     Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
         (attic_skeleton_file_properties< Skeleton >()));
-    std::set< typename Skeleton::Id_Type > idx_list_ids;
+    std::vector< typename Skeleton::Id_Type > idx_list_ids;
     for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
         it = ids.begin(); it != ids.end(); ++it)
     {
       if (attic_random.get(it->val()).val() == 0)
         ;
       else if (attic_random.get(it->val()) == 0xff)
-        idx_list_ids.insert(it->val());
+        idx_list_ids.push_back(it->val());
       else
         result.second.push_back(attic_random.get(it->val()));
     }

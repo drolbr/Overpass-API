@@ -155,17 +155,17 @@ std::map< Index, std::set< Element_Skeleton > > get_existing_skeletons
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  std::set< Index > req;
-  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >::const_iterator
-      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(Index(it->second.val()));
+  std::vector< Index > req;
+  for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+    req.push_back(Index(it->second.val()));
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
 
   std::map< Index, std::set< Element_Skeleton > > result;
   Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
 
   Block_Backend< Index, Element_Skeleton > db(transaction.data_index(&file_properties));
-  for (typename Block_Backend< Index, Element_Skeleton >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
   {
     if (binary_search(ids_with_position.begin(), ids_with_position.end(),
         std::make_pair(it.object().id, 0), comp))
@@ -184,15 +184,17 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
      Transaction& transaction, const File_Properties& skel_file_properties,
      const File_Properties& undelete_file_properties)
 {
-  std::set< Index > req;
+  std::vector< Index > req;
   for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(Index(it->second.val()));
+    req.push_back(Index(it->second.val()));
 
   for (auto it = existing_idx_lists.begin(); it != existing_idx_lists.end(); ++it)
   {
     for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      req.insert(*it2);
+      req.push_back(*it2);
   }
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
 
   std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > > result;
   Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
@@ -241,9 +243,11 @@ std::map< Index, std::set< Element_Skeleton > > get_existing_meta
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  std::set< Index > req;
+  std::vector< Index > req;
   for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(it->second);
+    req.push_back(it->second);
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
 
   std::map< Index, std::set< Element_Skeleton > > result;
   Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
@@ -518,7 +522,7 @@ std::map< Id_Type, std::set< Index > > get_existing_idx_lists
 {
   std::map< Id_Type, std::set< Index > > result;
 
-  std::set< Id_Type > req;
+  std::vector< Id_Type > req;
   typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
       it_pos = ids_with_position.begin();
   for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
@@ -526,12 +530,14 @@ std::map< Id_Type, std::set< Index > > get_existing_idx_lists
     if (it_pos != ids_with_position.end() && *it == it_pos->first)
     {
       if (it_pos->second.val() == 0xff)
-        req.insert(*it);
+        req.push_back(*it);
       else
         result[*it].insert(Index(it_pos->second.val()));
       ++it_pos;
     }
   }
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
 
   Block_Backend< Id_Type, Index > db(transaction.data_index(&file_properties));
   for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)

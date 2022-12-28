@@ -570,9 +570,9 @@ void Area_Query_Statement::collect_nodes
      const std::set< Uint31_Index >& req, bool add_border,
      Resource_Manager& rman)
 {
-  Block_Backend< Uint31_Index, Area_Block > area_blocks_db
+  Block_Backend< Uint31_Index, Area_Block, std::set< Uint31_Index >::const_iterator > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
-  Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
+  Block_Backend< Uint31_Index, Area_Block, std::set< Uint31_Index >::const_iterator >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
 
   typename std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
@@ -832,9 +832,9 @@ void Area_Query_Statement::collect_ways
        const std::set< Uint31_Index >& req, bool add_border,
        const Statement& query, Resource_Manager& rman)
 {
-  Block_Backend< Uint31_Index, Area_Block > area_blocks_db
+  Block_Backend< Uint31_Index, Area_Block, std::set< Uint31_Index >::const_iterator > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
-  Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
+  Block_Backend< Uint31_Index, Area_Block, std::set< Uint31_Index >::const_iterator >::Discrete_Iterator
       area_it(area_blocks_db.discrete_begin(req.begin(), req.end()));
 
   std::map< Way::Id_Type, bool > ways_inside;

@@ -26,8 +26,8 @@ template< typename Index >
 void calc_split_idxs(
     std::vector< Index >& split,
     uint32 block_size, const std::vector< uint32 >& sizes,
-    typename std::set< Index >::const_iterator it,
-    const typename std::set< Index >::const_iterator& end)
+    typename std::vector< Index >::const_iterator it,
+    const typename std::vector< Index >::const_iterator& end)
 {
   std::vector< uint32 > vsplit;
   std::vector< uint64 > min_split_pos;
@@ -343,11 +343,10 @@ void update_group(
     File_Blocks& file_blocks, Iterator& file_it, uint32 block_size, const std::string& data_filename,
     const std::map< Index, Object_Predicate >& to_delete,
     const std::map< Index, Container >& to_insert,
-    const std::set< Index >& relevant_idxs,
+    const std::vector< Index >& relevant_idxs,
     std::map< Index, Delta_Count >* obj_count)
 {
   std::map< Index, Index_Collection< Index, Object_Predicate, Container > > index_values;
-  std::map< Index, uint32 > sizes;
   std::vector< Index > split;
   std::vector< uint32 > vsizes;
   Void_Pointer< uint8 > source(block_size);
@@ -397,6 +396,7 @@ void update_group(
       ic_it->second.insert_it = it;
   }
 
+  vsizes.reserve(index_values.size());
   // compute the distribution over different blocks
   // and log all objects that will be deleted
   for (auto it = index_values.begin(); it != index_values.end(); ++it)
@@ -436,19 +436,20 @@ void update_group(
     if (obj_count)
       (*obj_count)[it->first] += count;
     
-    sizes[it->first] += current_size;
     vsizes.push_back(current_size);
   }
 
-  std::set< Index > index_values_set;
+  std::vector< Index > index_values_set;
+  index_values_set.reserve(index_values.size());
   for (auto it = index_values.begin(); it != index_values.end(); ++it)
-    index_values_set.insert(it->first);
+    index_values_set.push_back(it->first);
   calc_split_idxs(split, block_size, vsizes, index_values_set.begin(), index_values_set.end());
 
   // really write data
   typename std::vector< Index >::const_iterator split_it(split.begin());
   pos = (dest.ptr + 4);
-  for (auto it = index_values.begin(); it != index_values.end(); ++it)
+  auto vit = vsizes.begin();
+  for (auto it = index_values.begin(); it != index_values.end(); ++it, ++vit)
   {
     if ((split_it != split.end()) && (it->first == *split_it))
     {
@@ -459,9 +460,9 @@ void update_group(
       pos = dest.ptr + 4;
     }
 
-    if (sizes[it->first] == 0)
+    if (*vit == 0)
       continue;
-    else if (sizes[it->first] < block_size - 4)
+    else if (*vit < block_size - 4)
     {
       uint8* current_pos(pos);
       it->first.to_data(pos + 4);
@@ -740,11 +741,18 @@ void Block_Backend< Index, Object, Iterator >::update(
     const std::map< Index, Container >& to_insert,
     std::map< Index, Delta_Count >* obj_count)
 {
-  std::set< Index > relevant_idxs;
-  for (auto it = to_delete.begin(); it != to_delete.end(); ++it)
-    relevant_idxs.insert(it->first);
-  for (auto it = to_insert.begin(); it != to_insert.end(); ++it)
-    relevant_idxs.insert(it->first);
+  std::vector< Index > relevant_idxs;
+  auto iit = to_insert.begin();
+  for (auto dit = to_delete.begin(); dit != to_delete.end(); ++dit)
+  {
+    while (iit != to_insert.end() && iit->first < dit->first)
+      relevant_idxs.push_back((iit++)->first);
+    if (iit != to_insert.end() && iit->first == dit->first)
+      ++iit;
+    relevant_idxs.push_back(dit->first);
+  }
+  while (iit != to_insert.end())
+    relevant_idxs.push_back((iit++)->first);
 
   typename File_Blocks_::Write_Iterator file_it
       = file_blocks.write_begin(relevant_idxs.begin(), relevant_idxs.end(), true);

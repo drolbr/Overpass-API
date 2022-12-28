@@ -496,7 +496,7 @@ struct Delta_Count
 };
 
 
-template< class TIndex, class TObject, class TIterator = typename std::set< TIndex >::const_iterator >
+template< class TIndex, class TObject, class TIterator = typename std::vector< TIndex >::const_iterator >
 struct Block_Backend
 {
   typedef Block_Backend_Flat_Iterator< TIndex, TObject, TIterator > Flat_Iterator;

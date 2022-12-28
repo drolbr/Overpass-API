@@ -283,10 +283,9 @@ void calc_ranges
    const std::set< Uint32_Index >& user_ids, Transaction& transaction)
 {
 
-  Block_Backend< Uint32_Index, Uint31_Index > user_db
+  Block_Backend< Uint32_Index, Uint31_Index, std::set< Uint32_Index >::const_iterator > user_db
       (transaction.data_index(meta_settings().USER_INDICES));
-  for (Block_Backend< Uint32_Index, Uint31_Index >::Discrete_Iterator
-      user_it = user_db.discrete_begin(user_ids.begin(), user_ids.end());
+  for (auto user_it = user_db.discrete_begin(user_ids.begin(), user_ids.end());
       !(user_it == user_db.discrete_end()); ++user_it)
   {
     if ((user_it.object().val() & 0x80000000) == 0)
