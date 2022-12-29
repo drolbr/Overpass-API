@@ -344,7 +344,7 @@ struct Tag_Index_Global_Until756
   Tag_Index_Global_Until756(const std::string& key_, const std::string& value_) : key(key_), value(value_) {}
 
   static bool equal(void* lhs, void* rhs)
-  { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, *(uint16*)lhs + *(((uint16*)lhs)+2) + 4); }
+  { return *(uint32*)lhs == *(uint32*)rhs && !memcmp(lhs, rhs, *(uint16*)lhs + *((uint16*)lhs + 1) + 4); }
   bool less(void* rhs) const
   {
     int keycmp = strnncmp(&key[0], ((const char*)rhs)+4, key.size(), *((uint16*)rhs));
@@ -435,7 +435,7 @@ struct Tag_Index_Global_KVI
 
   static bool equal(void* lhs, void* rhs)
   { return *(uint32*)lhs == *(uint32*)rhs
-      && !memcmp(lhs, rhs, *(uint16*)lhs + *(((uint16*)lhs)+2) + 8); }
+      && !memcmp(lhs, rhs, *(uint16*)lhs + *((uint16*)lhs + 1) + 8); }
   bool less(void* rhs) const
   {
     int keycmp = strnncmp(&key[0], ((const char*)rhs)+8, key.size(), *((uint16*)rhs));
