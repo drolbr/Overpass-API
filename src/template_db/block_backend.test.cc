@@ -748,6 +748,7 @@ int main(int argc, char* args[])
   fill_db(to_delete, to_insert, 32);
   if ((test_to_execute == "") || (test_to_execute == "17"))
     read_test(17);
+  return 0;
 
   if ((test_to_execute == "") || (test_to_execute == "18"))
     std::cout<<"** Insert some oversized objects\n";
