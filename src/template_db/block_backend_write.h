@@ -465,8 +465,23 @@ void force_flush_group(
       file_it = file_blocks.insert_block(file_it, (uint64*)dest);
       build_dest_block(to_write, split, until, source, dest);
     }
-    else //TODO: can still overflow in bad corner cases
+    else
     {
+      while (total_size >= (block_size - 4)*2)
+      {
+        uint32 split = from;
+        uint32 partial_size = 0;
+        while (split < until && partial_size <= (block_size - 4)*2/3)
+          partial_size += to_write[split++].size;
+        if (partial_size > block_size - 4)
+          partial_size -= to_write[--split].size;
+        
+        build_dest_block(to_write, from, split, source, dest);
+        file_it = file_blocks.insert_block(file_it, (uint64*)dest);
+        from = split;
+        total_size -= partial_size;
+      }
+
       uint32 split = from;
       uint32 partial_size = 0;
       while (split < until && partial_size*3 <= total_size)
@@ -500,7 +515,7 @@ void force_flush_group(
 template< typename Cont_Entry, typename File_Blocks, typename Iterator >
 void flush_segment(
     const Idx_Block_To_Write< Cont_Entry >& to_write, const uint8* source, uint8* dest,
-    uint32 block_size, File_Blocks& file_blocks, Iterator& file_it)
+    uint32 block_size, File_Blocks& file_blocks, Iterator& file_it, const std::string& data_filename)
 {
   uint8* dest_pos = dest + 8;
   
@@ -551,7 +566,34 @@ void flush_segment(
   file_it = file_blocks.insert_block(file_it, (uint64*)dest);
 
   if (oversized_found)
-    ;//TODO: oversized
+  {
+    auto idx_size = to_write.to_insert->first.size_of();
+
+    for (auto it = to_write.to_insert->second.begin(); it != to_write.to_insert->second.end(); ++it)
+    {
+      auto obj_size = it->size_of();
+      if (obj_size + idx_size + 8 >= block_size)
+      {
+        if (obj_size > 64*1024*1024)
+            throw File_Error(0, data_filename, "Block_Backend: an item's size exceeds limit of 64 MiB.");
+
+        uint buf_scale = (idx_size + obj_size + 7)/block_size + 1;
+        Void64_Pointer< uint64 > large_buf(buf_scale * block_size);
+        *(uint32*)large_buf.ptr = block_size;
+        *(((uint32*)large_buf.ptr)+1) = idx_size + obj_size + 8;
+        memcpy(large_buf.ptr+1, dest+8, idx_size);
+        it->to_data(((uint8*)large_buf.ptr) + 8 + idx_size);
+
+        for (uint i = 0; i+1 < buf_scale; ++i)
+          file_it = file_blocks.insert_block(
+              file_it, large_buf.ptr + i*block_size/8, block_size, to_write.to_insert->first);
+
+        file_it = file_blocks.insert_block(
+            file_it, large_buf.ptr + (buf_scale-1)*block_size/8, idx_size + obj_size + 8 - block_size*(buf_scale-1),
+            to_write.to_insert->first);
+      }
+    }   
+  }
 }
 
 
@@ -621,7 +663,7 @@ void update_group(
           block_size, file_blocks, file_it);
       file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
 
-      flush_segment(to_write.back(), source.ptr, dest.ptr, block_size, file_blocks, file_it);
+      flush_segment(to_write.back(), source.ptr, dest.ptr, block_size, file_blocks, file_it, data_filename);
       
       to_write.clear();
       cur_from = 0;

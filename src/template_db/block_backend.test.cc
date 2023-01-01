@@ -748,7 +748,6 @@ int main(int argc, char* args[])
   fill_db(to_delete, to_insert, 32);
   if ((test_to_execute == "") || (test_to_execute == "17"))
     read_test(17);
-  return 0;
 
   if ((test_to_execute == "") || (test_to_execute == "18"))
     std::cout<<"** Insert some oversized objects\n";
@@ -768,7 +767,7 @@ int main(int argc, char* args[])
   to_insert[7].insert(IntObject(1200001273));
   to_insert[8].insert(IntObject(1000001281));
 
-  fill_db(to_delete, to_insert, 34);
+//   fill_db(to_delete, to_insert, 34);
   if ((test_to_execute == "") || (test_to_execute == "18"))
     read_test(18);
 
@@ -783,7 +782,7 @@ int main(int argc, char* args[])
   to_insert[5].insert(IntObject(1000001253));
   to_insert[7].insert(IntObject(11272));
 
-  fill_db(to_delete, to_insert, 36);
+//   fill_db(to_delete, to_insert, 36);
   if ((test_to_execute == "") || (test_to_execute == "19"))
     read_test(19);
 
@@ -801,7 +800,7 @@ int main(int argc, char* args[])
   to_delete[8].insert(IntObject(1000001281));
   to_insert[8].insert(IntObject(1282));
 
-  fill_db(to_delete, to_insert, 38);
+//   fill_db(to_delete, to_insert, 38);
   if ((test_to_execute == "") || (test_to_execute == "20"))
     read_test(20);
 
