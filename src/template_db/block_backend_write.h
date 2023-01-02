@@ -482,29 +482,42 @@ void force_flush_group(
         total_size -= partial_size;
       }
 
-      uint32 split = from;
-      uint32 partial_size = 0;
-      while (split < until && partial_size*3 <= total_size)
-        partial_size += to_write[split++].size;
-      if (partial_size > block_size - 4)
-        partial_size -= to_write[--split].size;
+      uint32 split_r = from;
+      uint32 partial_size_l = 0;
+      while (split_r < until && partial_size_l*2 <= total_size)
+        partial_size_l += to_write[split_r++].size;
+      uint32 split_l = split_r - 1;
+      uint32 partial_size_r = total_size - partial_size_l;
+      partial_size_l -= to_write[split_l].size;
       
-      build_dest_block(to_write, from, split, source, dest);
+      while (2*partial_size_l + partial_size_r > total_size
+          || partial_size_r + 2*partial_size_l > total_size)
+      {
+        if (split_l > 0 && (split_r == until || partial_size_r < partial_size_l))
+        {
+          partial_size_l -= to_write[--split_l].size;
+          if (total_size > block_size - 4 + partial_size_l + partial_size_r)
+          {
+            ++split_l;
+            break;
+          }
+        }
+        else
+        {
+          partial_size_r -= to_write[split_r++].size;
+          if (total_size > block_size - 4 + partial_size_l + partial_size_r)
+          {
+            --split_r;
+            break;
+          }
+        }
+      }
+      
+      build_dest_block(to_write, from, split_l, source, dest);
       file_it = file_blocks.insert_block(file_it, (uint64*)dest);
-
-      from = split;
-      total_size -= partial_size;
-      partial_size = 0;
-      
-      while (split < until && partial_size*2 <= total_size)
-        partial_size += to_write[split++].size;
-      if (partial_size > block_size - 4 ||
-          (split > 0 && partial_size - to_write[split-1].size > total_size - partial_size))
-        partial_size -= to_write[--split].size;
-      
-      build_dest_block(to_write, from, split, source, dest);
+      build_dest_block(to_write, split_l, split_r, source, dest);
       file_it = file_blocks.insert_block(file_it, (uint64*)dest);
-      build_dest_block(to_write, split, until, source, dest);
+      build_dest_block(to_write, split_r, until, source, dest);
     }
   }
 }
@@ -533,6 +546,7 @@ void flush_segment(
     dest_pos += to_write.to_insert->first.size_of(); 
   }
   
+  bool fit_found = false;
   bool oversized_found = false;
   if (to_write.to_insert)
   {
@@ -542,18 +556,20 @@ void flush_segment(
     while (it != to_write.to_insert->second.end())
     {
       auto obj_size = it->size_of();
-      if ((uint32)(dest_pos - dest) + obj_size > block_size)
-      {
-        *(uint32*)dest = (uint32)(dest_pos - dest);
-        *(uint32*)(dest + 4) = (uint32)(dest_pos - dest);
-        file_it = file_blocks.insert_block(file_it, (uint64*)dest);
-        
-        dest_pos = dest + idx_size + 8;
-      }
       if (obj_size < block_size - 8 - idx_size)
       {
+        if ((uint32)(dest_pos - dest) + obj_size > block_size)
+        {
+          *(uint32*)dest = (uint32)(dest_pos - dest);
+          *(uint32*)(dest + 4) = (uint32)(dest_pos - dest);
+          file_it = file_blocks.insert_block(file_it, (uint64*)dest);
+          
+          dest_pos = dest + idx_size + 8;
+        }
+
         it->to_data((void*)dest_pos);
         dest_pos += obj_size;
+        fit_found = true;
       }
       else
         oversized_found = true;
@@ -561,9 +577,12 @@ void flush_segment(
     }    
   }
   
-  *(uint32*)dest = (uint32)(dest_pos - dest);
-  *(uint32*)(dest + 4) = (uint32)(dest_pos - dest);
-  file_it = file_blocks.insert_block(file_it, (uint64*)dest);
+  if (!to_write.existing.empty() || fit_found)
+  {
+    *(uint32*)dest = (uint32)(dest_pos - dest);
+    *(uint32*)(dest + 4) = (uint32)(dest_pos - dest);
+    file_it = file_blocks.insert_block(file_it, (uint64*)dest);
+  }
 
   if (oversized_found)
   {
@@ -583,7 +602,7 @@ void flush_segment(
         *(((uint32*)large_buf.ptr)+1) = idx_size + obj_size + 8;
         memcpy(large_buf.ptr+1, dest+8, idx_size);
         it->to_data(((uint8*)large_buf.ptr) + 8 + idx_size);
-
+        
         for (uint i = 0; i+1 < buf_scale; ++i)
           file_it = file_blocks.insert_block(
               file_it, large_buf.ptr + i*block_size/8, block_size, to_write.to_insert->first);
@@ -635,11 +654,15 @@ void update_group(
           del_it != to_delete.end() && del_it->first.equal(src_pos + 4) ? &del_it->second : nullptr);
       if (obj_count && del_it != to_delete.end() && del_it->first.equal(src_pos + 4))
         (*obj_count)[del_it->first] = info.count;
-      to_write.push_back({ std::move(info.existing), info.size });
+      if (info.count.after > 0)
+      {
+        to_write.push_back({ std::move(info.existing), info.size });
+        total_size += to_write.back().size;
+      }
       src_pos = source.ptr + *(uint32*)src_pos;
-      total_size += to_write.back().size;
     }
 
+    bool entry_created = false;
     if (src_pos < source_end && it->first.equal(src_pos + 4))
     {
       while (del_it != to_delete.end() && del_it->first.less(src_pos + 4))
@@ -650,39 +673,52 @@ void update_group(
       info.count.after += it->second.size();
       if (obj_count)
         (*obj_count)[it->first] = info.count;
-      to_write.push_back({ std::move(info.existing), info.size, *it });
+      if (info.count.after > 0)
+      {
+        to_write.push_back({ std::move(info.existing), info.size, *it });
+        entry_created = true;
+      }
       src_pos = source.ptr + *(uint32*)src_pos;
     }
-    else
+    else if (!it->second.empty())
+    {
       to_write.push_back({ *it });
+      entry_created = true;
+    }
     
-    if (to_write.back().size >= block_size - 4)
+    if (entry_created)
     {
-      force_flush_group(
-          to_write, cur_from, to_write.size()-1, source.ptr, dest.ptr, total_size,
-          block_size, file_blocks, file_it);
-      file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
+      if (to_write.back().size >= block_size - 4)
+      {
+        if (cur_from + 1 < to_write.size())
+        {
+          force_flush_group(
+              to_write, cur_from, to_write.size()-1, source.ptr, dest.ptr, total_size,
+              block_size, file_blocks, file_it);
+          file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
+        }
 
-      flush_segment(to_write.back(), source.ptr, dest.ptr, block_size, file_blocks, file_it, data_filename);
-      
-      to_write.clear();
-      cur_from = 0;
-      total_size = 0;
-    }
-    else if (to_write.size() - cur_from > 1
-        && to_write.back().size + to_write[to_write.size()-2].size > block_size - 4)
-    {
-      force_flush_group(
-          to_write, cur_from, to_write.size()-1, source.ptr, dest.ptr, total_size,
-          block_size, file_blocks, file_it);
-      file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
+        flush_segment(to_write.back(), source.ptr, dest.ptr, block_size, file_blocks, file_it, data_filename);
+        
+        to_write.clear();
+        cur_from = 0;
+        total_size = 0;
+      }
+      else if (to_write.size() - cur_from > 1
+          && to_write.back().size + to_write[to_write.size()-2].size > block_size - 4)
+      {
+        force_flush_group(
+            to_write, cur_from, to_write.size()-1, source.ptr, dest.ptr, total_size,
+            block_size, file_blocks, file_it);
+        file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
 
-      to_write.erase(to_write.begin(), to_write.end()-1);
-      cur_from = 0;
-      total_size = to_write.back().size;
+        to_write.erase(to_write.begin(), to_write.end()-1);
+        cur_from = 0;
+        total_size = to_write.back().size;
+      }
+      else
+        total_size += to_write.back().size;
     }
-    else
-      total_size += to_write.back().size;
 
     while (total_size >= (block_size - 4)*2)
     {
@@ -698,7 +734,7 @@ void update_group(
       cur_from = j;
       total_size -= partial_size;
     }
-    
+
     if (block_size < cur_from * 8)
     {
       to_write.erase(to_write.begin(), to_write.begin() + cur_from);
@@ -714,9 +750,12 @@ void update_group(
         del_it != to_delete.end() && del_it->first.equal(src_pos + 4) ? &del_it->second : nullptr);
     if (obj_count && del_it != to_delete.end() && del_it->first.equal(src_pos + 4))
       (*obj_count)[del_it->first] = info.count;
-    to_write.push_back({ std::move(info.existing), info.size });
+    if (info.count.after > 0)
+    {
+      to_write.push_back({ std::move(info.existing), info.size });
+      total_size += to_write.back().size;
+    }
     src_pos = source.ptr + *(uint32*)src_pos;
-    total_size += to_write.back().size;
   }
 
   if (total_size > 0)
