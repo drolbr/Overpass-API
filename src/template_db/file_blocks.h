@@ -1002,7 +1002,7 @@ void File_Blocks< TIndex, TIterator >::write_block(uint64* buf, uint32 payload_s
   }
 
   pos = allocate_block(block_count);
-
+  
   data_file.seek(((int64)pos)*block_size, "File_Blocks::write_block::1");
   data_file.write((uint8*)payload, block_size * block_count, "File_Blocks::write_block::2");
 }

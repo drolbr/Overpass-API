@@ -350,6 +350,9 @@ const uint8* binary_seek(const uint8* begin, const uint8* end, const Index& targ
 template< typename Index >
 void File_Blocks_Index_Iterator< Index >::seek(const Index& target)
 {
+  delete idx;
+  idx = 0;
+
   if (ptr == end || target.less((void*)(ptr+12)))
     return;
   if (Index::const_size() && ((end - ptr) > 32*(Index::const_size() + 12))

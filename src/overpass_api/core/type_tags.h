@@ -70,14 +70,14 @@ struct String_Index
   }
 
   static bool equal(void* lhs, void* rhs)
-  { return *(uint16*)lhs == *(uint16*)rhs && !memcmp(lhs, rhs, *(uint16*)lhs + 2); }
+  { return *(uint16*)lhs == *(uint16*)rhs && !memcmp(lhs, rhs, *(uint16*)lhs); }
   bool less(void* rhs) const
   {
     return strnncmp(&key[0], ((const char*)rhs)+2, key.size(), *((uint16*)rhs)) < 0;
   }
   bool leq(void* rhs) const
   {
-    return strnncmp(&key[0], ((const char*)rhs)+7, key.size(), *((uint16*)rhs)) <= 0;
+    return strnncmp(&key[0], ((const char*)rhs)+2, key.size(), *((uint16*)rhs)) <= 0;
   }
   bool equal(void* rhs) const
   {

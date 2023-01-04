@@ -398,13 +398,16 @@ struct Idx_Block_To_Write
 template< typename Cont_Entry >
 void build_dest_block(
     const std::vector< Idx_Block_To_Write< Cont_Entry > >& to_write, uint32 from, uint32 until,
-    const uint8* source, uint8* dest)
+    const uint8* source, uint8* dest, uint32 block_size, const std::string& data_filename)
 {
   uint32 total_size = 4;
   for (uint32 i = from; i < until; ++i)
     total_size += to_write[i].size;
   *(uint32*)dest = total_size;
   dest += 4;
+
+  if (total_size > block_size)
+    throw File_Error(0, data_filename, "build_dest_block: total_size bigger than block_size");
   
   total_size = 4;
   for (uint32 i = from; i < until; ++i)
@@ -445,79 +448,71 @@ template< typename Cont_Entry, typename File_Blocks, typename Iterator >
 void force_flush_group(
     const std::vector< Idx_Block_To_Write< Cont_Entry > >& to_write, uint32 from, uint32 until,
     const uint8* source, uint8* dest, uint32 total_size,
-    uint32 block_size, File_Blocks& file_blocks, Iterator& file_it)
+    uint32 block_size, File_Blocks& file_blocks, Iterator& file_it, const std::string& data_filename)
 {
   if (total_size < block_size - 4)
-    build_dest_block(to_write, from, until, source, dest);
+    build_dest_block(to_write, from, until, source, dest, block_size, data_filename);
   else
   {
+    while (total_size >= (block_size - 4)*2)
+    {
+      uint32 split = from;
+      uint32 partial_size = 0;
+      while (split < until && partial_size <= (block_size - 4)*2/3)
+        partial_size += to_write[split++].size;
+      if (partial_size > block_size - 4)
+        partial_size -= to_write[--split].size;
+      
+      build_dest_block(to_write, from, split, source, dest, block_size, data_filename);
+      file_it = file_blocks.insert_block(file_it, (uint64*)dest);
+      from = split;
+      total_size -= partial_size;
+    }
+
     uint32 split = from;
     uint32 partial_size = 0;
     while (split < until && partial_size*2 <= total_size)
       partial_size += to_write[split++].size;
-    if (partial_size > block_size - 4 ||
-        (split > 0 && partial_size - to_write[split-1].size > total_size - partial_size))
-      partial_size -= to_write[--split].size;
     
-    if (partial_size <= block_size - 4 && total_size - partial_size <= block_size - 4)
+    bool two_blocks = false;
+    if (2*partial_size < total_size + to_write[split-1].size)
     {
-      build_dest_block(to_write, from, split, source, dest);
-      file_it = file_blocks.insert_block(file_it, (uint64*)dest);
-      build_dest_block(to_write, split, until, source, dest);
+      if (partial_size <= block_size - 4)
+        two_blocks = true;
     }
     else
     {
-      while (total_size >= (block_size - 4)*2)
+      if (total_size - partial_size + to_write[split-1].size <= block_size - 4)
       {
-        uint32 split = from;
-        uint32 partial_size = 0;
-        while (split < until && partial_size <= (block_size - 4)*2/3)
-          partial_size += to_write[split++].size;
-        if (partial_size > block_size - 4)
-          partial_size -= to_write[--split].size;
-        
-        build_dest_block(to_write, from, split, source, dest);
-        file_it = file_blocks.insert_block(file_it, (uint64*)dest);
-        from = split;
-        total_size -= partial_size;
+        --split;
+        partial_size -= to_write[split].size;
+        two_blocks = true;
       }
+    }
+    
+    if (two_blocks)
+    {
+      build_dest_block(to_write, from, split, source, dest, block_size, data_filename);
+      file_it = file_blocks.insert_block(file_it, (uint64*)dest);
+      build_dest_block(to_write, split, until, source, dest, block_size, data_filename);
+    }
+    else
+    {
+      uint32 partial_size_l = partial_size - to_write[split-1].size;
+      uint32 split_l = split-1;
+      while (from+1 < split_l && partial_size_l - to_write[split_l-1].size > total_size*2/3)
+        partial_size_l -= to_write[--split_l].size;
 
-      uint32 split_r = from;
-      uint32 partial_size_l = 0;
-      while (split_r < until && partial_size_l*2 <= total_size)
-        partial_size_l += to_write[split_r++].size;
-      uint32 split_l = split_r - 1;
-      uint32 partial_size_r = total_size - partial_size_l;
-      partial_size_l -= to_write[split_l].size;
+      uint32 partial_size_r = total_size - partial_size;
+      uint32 split_r = split;
+      while (split_r+1 < until && partial_size_r - to_write[split_r].size > total_size*2/3)
+        partial_size_r -= to_write[split_r++].size;
       
-      while (2*partial_size_l + partial_size_r > total_size
-          || partial_size_r + 2*partial_size_l > total_size)
-      {
-        if (split_l > 0 && (split_r == until || partial_size_r < partial_size_l))
-        {
-          partial_size_l -= to_write[--split_l].size;
-          if (total_size > block_size - 4 + partial_size_l + partial_size_r)
-          {
-            ++split_l;
-            break;
-          }
-        }
-        else
-        {
-          partial_size_r -= to_write[split_r++].size;
-          if (total_size > block_size - 4 + partial_size_l + partial_size_r)
-          {
-            --split_r;
-            break;
-          }
-        }
-      }
-      
-      build_dest_block(to_write, from, split_l, source, dest);
+      build_dest_block(to_write, from, split_l, source, dest, block_size, data_filename);
       file_it = file_blocks.insert_block(file_it, (uint64*)dest);
-      build_dest_block(to_write, split_l, split_r, source, dest);
+      build_dest_block(to_write, split_l, split_r, source, dest, block_size, data_filename);
       file_it = file_blocks.insert_block(file_it, (uint64*)dest);
-      build_dest_block(to_write, split_r, until, source, dest);
+      build_dest_block(to_write, split_r, until, source, dest, block_size, data_filename);
     }
   }
 }
@@ -556,7 +551,7 @@ void flush_segment(
     while (it != to_write.to_insert->second.end())
     {
       auto obj_size = it->size_of();
-      if (obj_size < block_size - 8 - idx_size)
+      if (obj_size + idx_size + 8 < block_size)
       {
         if ((uint32)(dest_pos - dest) + obj_size > block_size)
         {
@@ -694,7 +689,7 @@ void update_group(
         {
           force_flush_group(
               to_write, cur_from, to_write.size()-1, source.ptr, dest.ptr, total_size,
-              block_size, file_blocks, file_it);
+              block_size, file_blocks, file_it, data_filename);
           file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
         }
 
@@ -709,7 +704,7 @@ void update_group(
       {
         force_flush_group(
             to_write, cur_from, to_write.size()-1, source.ptr, dest.ptr, total_size,
-            block_size, file_blocks, file_it);
+            block_size, file_blocks, file_it, data_filename);
         file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
 
         to_write.erase(to_write.begin(), to_write.end()-1);
@@ -729,7 +724,7 @@ void update_group(
       if (partial_size > block_size - 4)
         partial_size -= to_write[--j].size;
       
-      build_dest_block(to_write, cur_from, j, source.ptr, dest.ptr);
+      build_dest_block(to_write, cur_from, j, source.ptr, dest.ptr, block_size, data_filename);
       file_it = file_blocks.insert_block(file_it, (uint64*)dest.ptr);
       cur_from = j;
       total_size -= partial_size;
@@ -762,7 +757,7 @@ void update_group(
   {
     force_flush_group(
         to_write, cur_from, to_write.size(), source.ptr, dest.ptr, total_size,
-        block_size, file_blocks, file_it);
+        block_size, file_blocks, file_it, data_filename);
     file_it = file_blocks.replace_block(file_it, (uint64*)dest.ptr);
     ++file_it;
   }
