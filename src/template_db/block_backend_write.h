@@ -24,144 +24,6 @@
 #include <type_traits>
 
 
-template< typename Index >
-void calc_split_idxs(
-    std::vector< Index >& split,
-    uint32 block_size, const std::vector< uint32 >& sizes,
-    typename std::vector< Index >::const_iterator it,
-    const typename std::vector< Index >::const_iterator& end)
-{
-  std::vector< uint32 > vsplit;
-  std::vector< uint64 > min_split_pos;
-
-  // calc total size
-  uint64 total_size(0);
-  for (uint i(0); i < sizes.size(); ++i)
-    total_size += sizes[i];
-
-  // calc minimal splitting points
-  uint64 cur_size(0), sum_size(0);
-  if (sizes.size() > 0)
-    cur_size = sizes[sizes.size() - 1];
-  for (int i(sizes.size()-2); i >= 0; --i)
-  {
-    cur_size += sizes[i];
-    if (cur_size <= block_size-4)
-      continue;
-    sum_size += cur_size - sizes[i];
-    min_split_pos.push_back(total_size - sum_size);
-    cur_size = sizes[i];
-  }
-
-  std::vector< uint64 > oversize_splits;
-  // find oversized blocks and force splits there
-  sum_size = 0;
-  if (sizes.size() > 0)
-    sum_size = sizes[0];
-  bool split_after((sizes.size() > 0) && (sizes[0] > block_size - 4));
-  for (uint i(1); i < sizes.size(); ++i)
-  {
-    if (sizes[i] > block_size - 4)
-    {
-      oversize_splits.push_back(sum_size);
-      split_after = true;
-    }
-    else if (split_after)
-    {
-      oversize_splits.push_back(sum_size);
-      split_after = false;
-    }
-    sum_size += sizes[i];
-  }
-  oversize_splits.push_back(sum_size);
-
-  std::vector< std::pair< uint64, uint32 > > forced_splits;
-  // find splitting points where the average is below the minimum
-  // - here needs the fitting to be corrected
-  sum_size = 0;
-  int min_split_i(min_split_pos.size());
-  for (std::vector< uint64 >::const_iterator oit(oversize_splits.begin());
-  oit != oversize_splits.end(); ++oit)
-  {
-    int block_count(1);
-    while ((min_split_i - block_count >= 0) &&
-      (min_split_pos[min_split_i - block_count] < *oit))
-      ++block_count;
-    // correct the fitting if necessary
-    uint32 used_blocks(0);
-    for (int j(1); j < block_count; ++j)
-    {
-      if ((*oit - sum_size)*j/block_count + sum_size
-	<= min_split_pos[min_split_i - j])
-      {
-	forced_splits.push_back
-	  (std::make_pair(min_split_pos[min_split_i - j], j - used_blocks));
-	used_blocks = j;
-      }
-    }
-    forced_splits.push_back(std::make_pair(*oit, block_count - used_blocks));
-    min_split_i = min_split_i - block_count;
-    sum_size = *oit;
-  }
-
-  std::vector< std::pair< uint64, uint32 > >::const_iterator forced_it(forced_splits.begin());
-  // calculate the real splitting positions
-  sum_size = 0;
-  uint64 min_sum_size(0);
-  uint32 cur_block(0);
-  uint64 next_limit(forced_it->first/forced_it->second);
-  for (uint i(0); i < sizes.size(); ++i)
-  {
-    sum_size += sizes[i];
-    if (sum_size > forced_it->first)
-    {
-      vsplit.push_back(i);
-      cur_block = 0;
-      min_sum_size = forced_it->first;
-      ++forced_it;
-      if (cur_block < forced_it->second)
-        next_limit = std::min((forced_it->first - min_sum_size)/
-            (forced_it->second - cur_block), (uint64)block_size - 8) + min_sum_size;
-      else
-        next_limit = min_sum_size + block_size - 8;
-      uint j(min_split_pos.size() - 1 - vsplit.size());
-      if ((vsplit.size() < min_split_pos.size()) &&
-          (min_split_pos[j] > next_limit))
-        next_limit = min_split_pos[j];
-    }
-    else if (sum_size > next_limit)
-    {
-      vsplit.push_back(i);
-      ++cur_block;
-      min_sum_size = sum_size - sizes[i];
-      if (cur_block < forced_it->second)
-        next_limit = std::min((forced_it->first - min_sum_size)/
-            (forced_it->second - cur_block), (uint64)block_size - 8) + min_sum_size;
-      else
-        next_limit = min_sum_size + block_size - 8;
-      uint j(min_split_pos.size() - 1 - vsplit.size());
-      if ((vsplit.size() < min_split_pos.size()) &&
-          (min_split_pos[j] > next_limit))
-        next_limit = min_split_pos[j];
-    }
-  }
-
-  // This converts the result in a more convienient form
-  uint i(0), j(0);
-  while ((j < vsplit.size()) && (it != end))
-  {
-    if (vsplit[j] == i)
-    {
-      split.push_back(*it);
-      ++j;
-    }
-
-    ++i;
-    ++it;
-  }
-}
-
-
 template< typename Index, typename Object, typename File_Blocks, typename Iterator >
 void flush_if_necessary_and_write_obj(
     uint64* start_ptr, uint8*& insert_ptr, File_Blocks& file_blocks, Iterator& file_it,
@@ -291,7 +153,7 @@ void build_dest_block(
     total_size += to_write[i].size;
     *(uint32*)dest = total_size;
     dest += 4;
-    if (!to_write[i].existing.empty())
+    if (source && !to_write[i].existing.empty())
     {
       // if not empty then the first entry is the index, thus catered for
       for (const auto& j : to_write[i].existing)
@@ -402,7 +264,7 @@ void flush_segment(
 {
   uint8* dest_pos = dest + 8;
   
-  if (!to_write.existing.empty())
+  if (source && !to_write.existing.empty())
   {
     for (const auto& j : to_write.existing)
     {
@@ -507,94 +369,84 @@ private:
 template< typename Index, typename Container, typename File_Blocks >
 void create_from_scratch(
     File_Handler< Index, File_Blocks >& file_handler,
-    const std::map< Index, Container >& to_insert, std::map< Index, Delta_Count >* obj_count)
+    const std::map< Index, Container >& to_insert,
+    const std::vector< Index >& relevant_idxs,
+    std::map< Index, Delta_Count >* obj_count)
 {
-  std::map< Index, uint32 > sizes;
-  std::vector< Index > split;
-  std::vector< uint32 > vsizes;
-  Void_Pointer< uint8 > buffer(file_handler.block_size);
+  Void_Pointer< uint8 > dest(file_handler.block_size);
 
-  // compute the distribution over different blocks
-  for (auto fit = file_handler.file_it.lower_bound(); fit != file_handler.file_it.upper_bound(); ++fit)
+  std::vector< Idx_Block_To_Write< typename std::remove_reference< decltype(*to_insert.begin()) >::type > > to_write;
+  
+  auto to_insert_begin = to_insert.lower_bound(*(file_handler.file_it.lower_bound()));
+  auto to_insert_end = to_insert.end();
+  if (file_handler.file_it.upper_bound() != relevant_idxs.end())
+    to_insert_end = to_insert.lower_bound(*(file_handler.file_it.upper_bound()));
+
+  uint32 total_size = 0;
+  uint32 cur_from = 0;
+  for (auto it = to_insert_begin; it != to_insert_end; ++it)
   {
-    auto it = to_insert.find(*fit);
-
-    uint32 current_size = 4;
-    if ((it == to_insert.end()) || (it->second.empty()))
-      current_size = 0;
-    else
+    if (!it->second.empty())
     {
-      // only add nonempty indices
-      current_size += fit->size_of();
-      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-        current_size += it2->size_of();
-      if (obj_count)
-        (*obj_count)[it->first].after += it->second.size();
-    }
+      to_write.push_back({ *it });
 
-    sizes[*fit] += current_size;
-    vsizes.push_back(current_size);
-  }
-  calc_split_idxs(split, file_handler.block_size, vsizes, file_handler.file_it.lower_bound(), file_handler.file_it.upper_bound());
-
-  // really write data
-  auto split_it = split.begin();
-  uint8* pos(buffer.ptr + 4);
-  auto upper_bound = file_handler.file_it.upper_bound();
-  for (auto fit = file_handler.file_it.lower_bound(); fit != upper_bound; ++fit)
-  {
-    auto it = to_insert.find(*fit);
-
-    if ((split_it != split.end()) && (*fit == *split_it))
-    {
-      if (pos > buffer.ptr + 4)
+      if (to_write.back().size >= file_handler.block_size - 4)
       {
-        *(uint32*)buffer.ptr = pos - buffer.ptr;
-        file_handler.insert_block((uint64*)buffer.ptr);
-        pos = buffer.ptr + 4;
-      }
-      ++split_it;
-    }
-
-    if (sizes[*fit] == 0)
-      continue;
-    else if (sizes[*fit] < file_handler.block_size - 4)
-    {
-      uint8* current_pos(pos);
-      fit->to_data(pos + 4);
-      pos = pos + fit->size_of() + 4;
-      if (it != to_insert.end())
-      {
-        for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+        if (cur_from + 1 < to_write.size())
         {
-          it2->to_data(pos);
-          pos = pos + it2->size_of();
+          force_flush_group(
+              to_write, cur_from, to_write.size()-1, nullptr, dest.ptr, total_size, file_handler);
+          file_handler.insert_block((uint64*)dest.ptr);
         }
-      }
-      *(uint32*)current_pos = pos - buffer.ptr;
-    }
-    else
-    {
-      fit->to_data(pos + 4);
-      pos = pos + fit->size_of() + 4;
 
-      if (it != to_insert.end())
+        flush_segment(to_write.back(), nullptr, dest.ptr, file_handler);
+        
+        to_write.clear();
+        cur_from = 0;
+        total_size = 0;
+      }
+      else if (to_write.size() - cur_from > 1
+          && to_write.back().size + to_write[to_write.size()-2].size > file_handler.block_size - 4)
       {
-        for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-          flush_if_necessary_and_write_obj(
-              (uint64*)buffer.ptr, pos, file_handler.file_blocks, file_handler.file_it, *fit, *it2, file_handler.block_size, file_handler.data_filename);
-      }
+        force_flush_group(
+            to_write, cur_from, to_write.size()-1, nullptr, dest.ptr, total_size, file_handler);
+        file_handler.insert_block((uint64*)dest.ptr);
 
-      if (pos - buffer.ptr > fit->size_of() + 8)
-        *(uint32*)(buffer.ptr+4) = pos - buffer.ptr;
+        to_write.erase(to_write.begin(), to_write.end()-1);
+        cur_from = 0;
+        total_size = to_write.back().size;
+      }
       else
-        pos = buffer.ptr + 4;
+        total_size += to_write.back().size;
+    }
+
+    while (total_size >= (file_handler.block_size - 4)*2)
+    {
+      uint32 j = cur_from;
+      uint32 partial_size = 0;
+      while (j < to_write.size() && partial_size <= (file_handler.block_size - 4)*2/3)
+        partial_size += to_write[j++].size;
+      if (partial_size > file_handler.block_size - 4)
+        partial_size -= to_write[--j].size;
+      
+      build_dest_block(to_write, cur_from, j, nullptr, dest.ptr, file_handler);
+      file_handler.insert_block((uint64*)dest.ptr);
+      cur_from = j;
+      total_size -= partial_size;
+    }
+
+    if (file_handler.block_size < cur_from * 8)
+    {
+      to_write.erase(to_write.begin(), to_write.begin() + cur_from);
+      cur_from = 0;
     }
   }
-  if (pos > buffer.ptr + 4)
+
+  if (total_size > 0)
   {
-    *(uint32*)buffer.ptr = pos - buffer.ptr;
-    file_handler.insert_block((uint64*)buffer.ptr);
+    force_flush_group(
+        to_write, cur_from, to_write.size(), nullptr, dest.ptr, total_size, file_handler);
+    file_handler.insert_block((uint64*)dest.ptr);
   }
   ++file_handler.file_it;
 }
@@ -1024,7 +876,7 @@ void Block_Backend< Index, Object, Iterator >::update(
   while (handler.file_it.lower_bound() != relevant_idxs.end())
   {
     if (handler.file_it.block_type() == File_Block_Index_Entry< Index >::EMPTY)
-      create_from_scratch(handler, to_insert, obj_count);
+      create_from_scratch(handler, to_insert, relevant_idxs, obj_count);
     else if (handler.file_it.block_type() == File_Block_Index_Entry< Index >::GROUP)
       update_group(handler, to_delete_, to_insert, relevant_idxs, obj_count);
     else //if (file_it.block_type() == File_Block_Index_Entry< Index >::SEGMENT)
