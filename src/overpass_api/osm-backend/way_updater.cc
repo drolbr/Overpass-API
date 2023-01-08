@@ -883,10 +883,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   new_current_local_tags< Way::Index, Way_Skeleton, Way_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
-  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > attic_global_tags;
-  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > new_global_tags;
-  new_current_global_tags< Way_Skeleton::Id_Type >
-      (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
 
   add_deleted_skeletons(attic_skeletons, new_positions);
   callback->compute_finished();
@@ -916,8 +912,14 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   callback->tags_local_finished();
 
   // Update global tags
-  update_current_global_tags< Way_Skeleton >(attic_global_tags, new_global_tags, *transaction);
-  callback->tags_global_finished();
+  {
+    std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > attic_global_tags;
+    std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > new_global_tags;
+    new_current_global_tags< Way_Skeleton::Id_Type >
+        (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
+    update_current_global_tags< Way_Skeleton >(attic_global_tags, new_global_tags, *transaction);
+    callback->tags_global_finished();
+  }
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 

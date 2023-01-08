@@ -526,10 +526,6 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   std::map< Tag_Index_Local, std::set< Node_Skeleton::Id_Type > > new_local_tags;
   new_current_local_tags< Node::Index, Node_Skeleton, Node_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
-  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > attic_global_tags;
-  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > new_global_tags;
-  new_current_global_tags< Node_Skeleton::Id_Type >
-      (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
   callback->compute_finished();
 
   // Compute idx positions of new nodes
@@ -568,12 +564,14 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
   callback->tags_local_finished();
 
   // Update global tags
-//   std::cout<<"DEBUG node_updater del\n";
-//   for (const auto& i : attic_global_tags)
-//     for (const auto& j : i.second)
-//       std::cout<<"DEBUG node_updater del "<<std::dec<<j.id.val()<<' '<<i.first.key<<' '<<i.first.value<<'\n';
-  update_current_global_tags< Node_Skeleton >(attic_global_tags, new_global_tags, *transaction);
-  callback->tags_global_finished();
+  {
+    std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > attic_global_tags;
+    std::map< Tag_Index_Global, std::set< Tag_Object_Global< Node_Skeleton::Id_Type > > > new_global_tags;
+    new_current_global_tags< Node_Skeleton::Id_Type >
+        (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
+    update_current_global_tags< Node_Skeleton >(attic_global_tags, new_global_tags, *transaction);
+    callback->tags_global_finished();
+  }
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 

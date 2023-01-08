@@ -351,10 +351,10 @@ void flush_segment(
 
 
 template< typename Object >
-class Object_Predicate
+class Object_Set_Predicate
 {
 public:
-  Object_Predicate(const std::set< Object >& data_) : data(&data_) {}
+  Object_Set_Predicate(const std::set< Object >& data_) : data(&data_) {}
   
   bool match(const Object& obj) const
   { return data->find(obj) != data->end(); }
@@ -869,9 +869,9 @@ void Block_Backend< Index, Object, Iterator >::update(
 
   File_Handler< Index, File_Blocks_ > handler(file_blocks, relevant_idxs, block_size, data_filename);
       
-  std::map< Index, Object_Predicate< Object > > to_delete_;
+  std::map< Index, Object_Set_Predicate< Object > > to_delete_;
   for (const auto& i : to_delete)
-    to_delete_.insert(std::make_pair(i.first, Object_Predicate< Object >(i.second)));
+    to_delete_.insert(std::make_pair(i.first, Object_Set_Predicate< Object >(i.second)));
 
   while (handler.file_it.lower_bound() != relevant_idxs.end())
   {

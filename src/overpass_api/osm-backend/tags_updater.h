@@ -286,4 +286,32 @@ void update_tags_local
 }
 
 
+/* Constructs the global tags from the local tags. */
+template< typename Id_Type >
+void new_current_global_tags
+    (const std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
+     const std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags,
+     std::map< Tag_Index_Global, std::set< Tag_Object_Global< Id_Type > > >& attic_global_tags,
+     std::map< Tag_Index_Global, std::set< Tag_Object_Global< Id_Type > > >& new_global_tags)
+{
+  for (typename std::map< Tag_Index_Local, std::set< Id_Type > >::const_iterator
+      it_idx = attic_local_tags.begin(); it_idx != attic_local_tags.end(); ++it_idx)
+  {
+    std::set< Tag_Object_Global< Id_Type > >& handle(attic_global_tags[Tag_Index_Global(it_idx->first)]);
+    for (typename std::set< Id_Type >::const_iterator it = it_idx->second.begin();
+         it != it_idx->second.end(); ++it)
+      handle.insert(Tag_Object_Global< Id_Type >(*it, it_idx->first.index));
+  }
+
+  for (typename std::map< Tag_Index_Local, std::set< Id_Type > >::const_iterator
+      it_idx = new_local_tags.begin(); it_idx != new_local_tags.end(); ++it_idx)
+  {
+    std::set< Tag_Object_Global< Id_Type > >& handle(new_global_tags[Tag_Index_Global(it_idx->first)]);
+    for (typename std::set< Id_Type >::const_iterator it = it_idx->second.begin();
+         it != it_idx->second.end(); ++it)
+      handle.insert(Tag_Object_Global< Id_Type >(*it, it_idx->first.index));
+  }
+}
+
+
 #endif
