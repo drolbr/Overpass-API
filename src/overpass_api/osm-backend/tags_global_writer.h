@@ -237,7 +237,7 @@ template< typename Ref_Entry >
 void update_global_tags(
     File_Blocks_Index_Base* tags_file, File_Blocks_Index_Base* freq_file,
     std::map< Tag_Index_Global, std::set< Ref_Entry > >& obj_to_delete,
-    std::map< Tag_Index_Global, std::set< Ref_Entry > >& obj_to_insert)
+    std::map< Tag_Index_Global, std::vector< Ref_Entry > >& obj_to_insert)
 {
   std::map< std::string, std::vector< Frequent_Value_Entry > > frequent;
   {
@@ -293,7 +293,7 @@ void update_global_tags(
 template< typename Skeleton >
 void update_current_global_tags(
     std::map< Tag_Index_Global, std::set< Tag_Object_Global< typename Skeleton::Id_Type > > >& obj_to_delete,
-    std::map< Tag_Index_Global, std::set< Tag_Object_Global< typename Skeleton::Id_Type > > >& obj_to_insert,
+    std::map< Tag_Index_Global, std::vector< Tag_Object_Global< typename Skeleton::Id_Type > > >& obj_to_insert,
     Transaction& transaction)
 {
   update_global_tags(
@@ -306,7 +306,7 @@ void update_current_global_tags(
 template< typename Skeleton >
 void update_attic_global_tags(
     std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >&& obj_to_delete,
-    std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >&& obj_to_insert,
+    std::map< Tag_Index_Global, std::vector< Attic< Tag_Object_Global< typename Skeleton::Id_Type > > > >&& obj_to_insert,
     Transaction& transaction)
 {
   update_global_tags(

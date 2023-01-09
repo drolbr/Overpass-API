@@ -914,7 +914,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   // Update global tags
   {
     std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > attic_global_tags;
-    std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > new_global_tags;
+    std::map< Tag_Index_Global, std::vector< Tag_Object_Global< Way_Skeleton::Id_Type > > > new_global_tags;
     new_current_global_tags< Way_Skeleton::Id_Type >
         (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
     update_current_global_tags< Way_Skeleton >(attic_global_tags, new_global_tags, *transaction);
@@ -973,8 +973,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
         = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
             compute_tags_by_id_and_time(new_data, attic_local_tags),
                                        existing_map_positions, existing_idx_lists);
-    std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
-        new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
 
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > changelog
@@ -1019,8 +1017,13 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Way_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().WAY_TAGS_LOCAL);
     callback->tags_local_finished();
-    update_attic_global_tags< Way_Skeleton >({}, std::move(new_attic_global_tags), *transaction);
-    callback->tags_global_finished();
+    
+    {
+      std::map< Tag_Index_Global, std::vector< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
+          new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
+      update_attic_global_tags< Way_Skeleton >({}, std::move(new_attic_global_tags), *transaction);
+      callback->tags_global_finished();
+    }
 
     // Write changelog
     update_elements(std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > >(), changelog,

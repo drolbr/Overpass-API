@@ -1187,7 +1187,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
   // Update global tags
   {
     std::map< Tag_Index_Global, std::set< Tag_Object_Global< Relation_Skeleton::Id_Type > > > attic_global_tags;
-    std::map< Tag_Index_Global, std::set< Tag_Object_Global< Relation_Skeleton::Id_Type > > > new_global_tags;
+    std::map< Tag_Index_Global, std::vector< Tag_Object_Global< Relation_Skeleton::Id_Type > > > new_global_tags;
     new_current_global_tags< Relation_Skeleton::Id_Type >
         (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
     update_current_global_tags< Relation_Skeleton >(attic_global_tags, new_global_tags, *transaction);
@@ -1248,8 +1248,6 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
         = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
             compute_tags_by_id_and_time(new_data, attic_local_tags),
                                        existing_map_positions, existing_idx_lists);
-    std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > > >
-        new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
 
     // Compute changelog
     std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > changelog
@@ -1288,7 +1286,11 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     // Update tags
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Relation_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().RELATION_TAGS_LOCAL);
-    update_attic_global_tags< Relation_Skeleton >({}, std::move(new_attic_global_tags), *transaction);
+    {
+      std::map< Tag_Index_Global, std::vector< Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > > >
+          new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
+      update_attic_global_tags< Relation_Skeleton >({}, std::move(new_attic_global_tags), *transaction);
+    }
 
     // Write changelog
     update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,

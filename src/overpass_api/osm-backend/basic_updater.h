@@ -544,49 +544,6 @@ std::vector< std::pair< Id_Type, Uint31_Index > > strip_single_idxs
 }
 
 
-/* Constructs the global tags from the local tags. */
-template< typename Id_Type >
-std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Id_Type > > > > compute_attic_global_tags
-    (const std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >& new_attic_local_tags)
-{
-  std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Id_Type > > > > result;
-
-  for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
-      it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
-  {
-    if (it_idx->first.value == void_tag_value())
-    {
-      std::set< Attic< Tag_Object_Global< Id_Type > > >& handle(result[Tag_Index_Global(it_idx->first)]);
-      for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
-           it != it_idx->second.end(); ++it)
-        handle.insert(Attic< Tag_Object_Global< Id_Type > >(
-            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
-    }
-  }
-
-  for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
-      it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
-  {
-    if (it_idx->first.value != void_tag_value())
-    {
-      std::set< Attic< Tag_Object_Global< Id_Type > > >& handle(result[Tag_Index_Global(it_idx->first)]);
-      std::set< Attic< Tag_Object_Global< Id_Type > > >& void_handle
-          (result[Tag_Index_Global(it_idx->first.key, void_tag_value())]);
-      for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
-           it != it_idx->second.end(); ++it)
-      {
-        handle.insert(Attic< Tag_Object_Global< Id_Type > >(
-            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
-        void_handle.erase(Attic< Tag_Object_Global< Id_Type > >(
-            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
-      }
-    }
-  }
-
-  return result;
-}
-
-
 inline std::map< Node_Skeleton::Id_Type, Quad_Coord > dictionary_from_skeletons
     (const std::map< Uint32_Index, std::set< Node_Skeleton > >& new_node_skeletons)
 {
