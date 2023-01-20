@@ -209,9 +209,11 @@ struct Freq_Tags_Updater
   {
     uint level = calc_tag_split_level(kv_cnt);
     if (entry.level < level)
+    {
       reorganize_tag_split_level< Ref_Entry>(tags_file, level, key, entry.value);
-    freq_to_delete[{ key }].insert({ entry.value, (uint64)entry.count, level });
-    freq_to_insert[{ key }].push_back({ entry.value, (uint64)kv_cnt, level });        
+      freq_to_delete[{ key }].insert({ entry.value, (uint64)entry.count, level });
+      freq_to_insert[{ key }].push_back({ entry.value, (uint64)kv_cnt, level });
+    }
   }
   
   void write_to_file()
