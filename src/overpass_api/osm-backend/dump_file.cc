@@ -101,7 +101,7 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
       }
     }
     else if (std::string("--node-tags-global") == args[2])
@@ -192,7 +192,7 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -265,10 +265,9 @@ int main(int argc, char* args[])
           (transaction.data_index(osm_base_settings().WAYS));
       if (index_used)
       {
-	std::set< Uint31_Index > req;
-	req.insert(index);
-        for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+	std::vector< Uint31_Index > req;
+	req.push_back(index);
+        for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
         {
           std::cout<<std::hex<<it.index().val()<<'\t'
               <<std::dec<<it.object().id.val()<<'\n';
@@ -276,8 +275,7 @@ int main(int argc, char* args[])
       }
       else
       {
-        for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
-             it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
         {
           std::cout<<std::hex<<it.index().val()<<'\t'
               <<std::dec<<it.object().id.val()<<'\n';
@@ -314,7 +312,7 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
       }
     }
     else if (std::string("--way-tags-global") == args[2])
@@ -377,10 +375,9 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAYS));
       if (index_used)
       {
-	std::set< Uint31_Index > req;
-	req.insert(index);
-        for (Block_Backend< Uint31_Index, Attic< Way_Skeleton > >::Discrete_Iterator
-             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+	std::vector< Uint31_Index > req;
+	req.push_back(index);
+        for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
         {
           std::cout<<std::hex<<it.index().val()<<'\t'
               <<std::dec<<it.object().id.val()<<'\t'
@@ -404,10 +401,9 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAYS));
       if (index_used)
       {
-	std::set< Uint31_Index > req;
-	req.insert(index);
-        for (Block_Backend< Uint31_Index, Attic< Way_Delta > >::Discrete_Iterator
-             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+	std::vector< Uint31_Index > req;
+	req.push_back(index);
+        for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
         {
           std::cout<<std::hex<<it.index().val()<<'\t'
               <<std::dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
@@ -439,10 +435,9 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAY_IDX_LIST));
       if (index_used)
       {
-	std::set< Way::Id_Type > req;
-	req.insert(index);
-        for (Block_Backend< Way::Id_Type, Uint31_Index >::Discrete_Iterator
-             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+	std::vector< Way::Id_Type > req;
+	req.push_back(index);
+        for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
         {
           std::cout<<std::dec<<it.index().val()<<'\t'
               <<std::hex<<it.object().val()<<'\n';
@@ -480,7 +475,7 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
@@ -588,7 +583,7 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
       }
     }
     else if (std::string("--rel-tags-global") == args[2])
@@ -692,7 +687,7 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
