@@ -701,8 +701,43 @@ void Query_Statement::filter_by_tags
 }
 
 
+template< typename Conditions, typename Tags, typename Single_Match >
+bool matches_all_conditions(const Conditions& conds, const Tags& tags, const Single_Match& lambda)
+{
+  for (auto it_c = conds.begin(); it_c != conds.end(); ++it_c)
+  {
+    auto it_tags = tags.begin();
+    for (; it_tags != tags.end(); ++it_tags)
+    {
+      if (lambda(*it_c, *it_tags))
+        break;
+    }
+    if (it_tags == tags.end())
+      return false;
+  }
+  return true;
+}
+
+
+template< typename Conditions, typename Tags, typename Single_Match >
+bool matches_some_conditions(const Conditions& conds, const Tags& tags, const Single_Match& lambda)
+{
+  for (auto it_c = conds.begin(); it_c != conds.end(); ++it_c)
+  {
+    for (auto it_tags = tags.begin(); it_tags != tags.end(); ++it_tags)
+    {
+      if (lambda(*it_c, *it_tags))
+        return true;
+    }
+  }
+  return false;
+}
+
+
 void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derived_Structure > >& items)
 {
+  typedef std::pair< std::string, std::string > Tag_Pair;
+  
   for (std::map< Uint31_Index, std::vector< Derived_Structure > >::iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
   {
@@ -710,82 +745,22 @@ void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derive
     for (std::vector< Derived_Structure >::const_iterator it_elem = it_idx->second.begin();
         it_elem != it_idx->second.end(); ++it_elem)
     {
-      std::vector< std::pair< std::string, std::string > >::const_iterator it_kv = key_values.begin();
-      for (; it_kv != key_values.end(); ++it_kv)
-      {
-        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
-        for (; it_tag != it_elem->tags.end(); ++it_tag)
-        {
-          if (it_tag->first == it_kv->first && it_tag->second == it_kv->second)
-            break;
-        }
-        if (it_tag == it_elem->tags.end())
-          break;
-      }
-      if (it_kv != key_values.end())
-        continue;
-
-      std::vector< std::string >::const_iterator it_k = keys.begin();
-      for (; it_k != keys.end(); ++it_k)
-      {
-        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
-        for (; it_tag != it_elem->tags.end(); ++it_tag)
-        {
-          if (it_tag->first == *it_k)
-            break;
-        }
-        if (it_tag == it_elem->tags.end())
-          break;
-      }
-      if (it_k != keys.end())
-        continue;
-
-      std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator it_kr = key_regexes.begin();
-      for (; it_kr != key_regexes.end(); ++it_kr)
-      {
-        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
-        for (; it_tag != it_elem->tags.end(); ++it_tag)
-        {
-          if (it_tag->first == it_kr->first && it_kr->second->matches(it_tag->second))
-            break;
-        }
-        if (it_tag == it_elem->tags.end())
-          break;
-      }
-      if (it_kr != key_regexes.end())
-        continue;
-
-      std::vector< std::pair< std::string, std::string > >::const_iterator it_nkv = key_nvalues.begin();
-      for (; it_nkv != key_nvalues.end(); ++it_nkv)
-      {
-        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
-        for (; it_tag != it_elem->tags.end(); ++it_tag)
-        {
-          if (it_tag->first == it_nkv->first && it_tag->second == it_nkv->second)
-            break;
-        }
-        if (it_tag != it_elem->tags.end())
-          break;
-      }
-      if (it_nkv != key_nvalues.end())
-        continue;
-
-      std::vector< std::pair< std::string, Regular_Expression* > >::const_iterator it_nkr = key_nregexes.begin();
-      for (; it_nkr != key_nregexes.end(); ++it_nkr)
-      {
-        std::vector< std::pair< std::string, std::string > >::const_iterator it_tag = it_elem->tags.begin();
-        for (; it_tag != it_elem->tags.end(); ++it_tag)
-        {
-          if (it_tag->first == it_nkr->first && it_nkr->second->matches(it_tag->second))
-            break;
-        }
-        if (it_tag != it_elem->tags.end())
-          break;
-      }
-      if (it_nkr != key_nregexes.end())
-        continue;
-
-      result.push_back(*it_elem);
+      if (matches_all_conditions(key_values, it_elem->tags,
+          [](const std::pair< std::string, std::string >& cond, const Tag_Pair& tag)
+              { return tag.first == cond.first && tag.second == cond.second; })
+          && matches_all_conditions(keys, it_elem->tags,
+          [](const std::string& cond, const Tag_Pair& tag)
+              { return tag.first == cond; })
+          && matches_all_conditions(key_regexes, it_elem->tags,
+          [](const std::pair< std::string, Regular_Expression* >& cond, const Tag_Pair& tag)
+              { return tag.first == cond.first && cond.second->matches(tag.second); })
+          && !matches_some_conditions(key_nvalues, it_elem->tags,
+          [](const std::pair< std::string, std::string >& cond, const Tag_Pair& tag)
+              { return tag.first == cond.first && cond.second == tag.second; })
+          && !matches_some_conditions(key_nregexes, it_elem->tags,
+          [](const std::pair< std::string, Regular_Expression* >& cond, const Tag_Pair& tag)
+              { return tag.first == cond.first && cond.second->matches(tag.second); }))
+        result.push_back(*it_elem);
     }
     result.swap(it_idx->second);
   }
