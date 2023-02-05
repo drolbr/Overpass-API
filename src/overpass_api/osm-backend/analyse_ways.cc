@@ -204,6 +204,17 @@ void collect_nd_events(
 }
 
 
+void implicit_event(
+    Uint31_Index cur_idx, Way_Skeleton::Id_Type id, uint64_t before, uint64_t timestamp, uint64_t after)
+{
+  std::cout<<std::hex<<"0x"<<cur_idx.val()
+      <<'\t'<<std::dec<<id.val()
+      <<'\t'<<Timestamp(before).str()
+      <<'\t'<<Timestamp(timestamp).str()
+      <<'\t'<<Timestamp(after).str()<<'\n';
+}
+
+
 int main(int argc, char* args[])
 {
   if (argc < 2)
@@ -227,6 +238,25 @@ int main(int argc, char* args[])
       for (Block_Backend< Way_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
             it(db.flat_begin()); !(it == db.flat_end()); ++it)
         multiidx_ways[it.object()].push_back(it.index());
+      std::cerr<<" done.\n";
+    }
+    {
+      std::cerr<<"Read current and attic way idx file ";
+      Random_File< Way_Skeleton::Id_Type, Uint31_Index > current(transaction.random_index(osm_base_settings().WAYS));
+      Random_File< Way_Skeleton::Id_Type, Uint31_Index > attic(transaction.random_index(attic_settings().WAYS));
+
+      for (uint i = 0; i < 1200*1000*1000; ++i)
+      {
+        if (i % (4*1024*1024) == 0)
+          std::cerr<<'.';
+        Uint31_Index cur_idx = current.get(Way_Skeleton::Id_Type(i));
+        Uint31_Index attic_idx = attic.get(Way_Skeleton::Id_Type(i));
+        if (!(cur_idx == attic_idx) && cur_idx.val() != 0 && attic_idx.val() != 0)
+        {
+          multiidx_ways[cur_idx].push_back(Way_Skeleton::Id_Type(i));
+          multiidx_ways[attic_idx].push_back(Way_Skeleton::Id_Type(i));
+        }
+      }
       std::cerr<<" done.\n";
     }
     {
@@ -435,8 +465,6 @@ int main(int argc, char* args[])
             ++d_it;
           }
           uint lifespan = 0;
-          uint time_after_version = 0;
-          uint time_before_version = 0;
           if (Way_Skeleton::Id_Type(meta[i]) == Way_Skeleton::Id_Type(meta[i+1]))
           {
             lifespan = calc_delta(meta[i].timestamp, meta[i+1].timestamp);
@@ -444,9 +472,7 @@ int main(int argc, char* args[])
                 && d_it->timestamp < meta[i+1].timestamp)
             {
               ++implicit_cnt;
-              time_after_version = calc_delta(meta[i].timestamp, d_it->timestamp);
-              if (time_before_version == 0)
-                time_before_version = calc_delta(d_it->timestamp, meta[i+1].timestamp);
+              implicit_event(cur_idx, meta[i], meta[i].timestamp, d_it->timestamp, meta[i+1].timestamp);
               ++d_it;
             }
             if (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
@@ -459,16 +485,10 @@ int main(int argc, char* args[])
             while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i]))
             {
               ++implicit_cnt;
-              time_after_version = calc_delta(meta[i].timestamp, d_it->timestamp);
-              if (time_before_version == 0)
-                time_before_version = calc_delta(d_it->timestamp, cur_date.timestamp);
+              implicit_event(cur_idx, meta[i], meta[i].timestamp, d_it->timestamp, cur_date.timestamp);
               ++d_it;
             }
           }
-          if (time_after_version > 0)
-            ++implicit_after_version[std::min((uint64_t)time_after_version, implicit_after_version.size()-1)];
-          if (time_before_version > 0)
-            ++implicit_before_version[std::min((uint64_t)time_before_version, implicit_before_version.size()-1)];
         }
         if (!meta.empty())
         {
@@ -485,20 +505,12 @@ int main(int argc, char* args[])
             ++d_it;
           }
           uint lifespan = calc_delta(meta.back().timestamp, cur_date.timestamp);
-          uint time_after_version = 0;
-          uint time_before_version = 0;
           while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta.back()))
           {
             ++implicit_cnt;
-            time_after_version = calc_delta(meta.back().timestamp, d_it->timestamp);
-            if (time_before_version == 0)
-              time_before_version = calc_delta(d_it->timestamp, cur_date.timestamp);
+            implicit_event(cur_idx, meta.back(), meta.back().timestamp, d_it->timestamp, cur_date.timestamp);
             ++d_it;
           }
-          if (time_after_version > 0)
-            ++implicit_after_version[std::min((uint64_t)time_after_version, implicit_after_version.size()-1)];
-          if (time_before_version > 0)
-            ++implicit_before_version[std::min((uint64_t)time_before_version, implicit_before_version.size()-1)];
         }
         while (d_it != delta.end())
         {
@@ -531,3 +543,4 @@ int main(int argc, char* args[])
 
   return 0;
 }
+  

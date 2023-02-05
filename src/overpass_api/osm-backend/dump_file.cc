@@ -51,14 +51,14 @@ int main(int argc, char* args[])
   {
     index_used = true;
     std::string index_s(args[3]);
-    if (index_s.size() >= 10 && index_s.substr(8, 2) == "0x")
+    if (index_s.size() >= 2 && index_s.substr(0, 2) == "0x")
     {
-      std::istringstream in(&args[3][10]);
+      std::istringstream in(&args[3][2]);
       in>>std::hex>>index_int;
     }
     else
     {
-      std::istringstream in(&args[3][8]);
+      std::istringstream in(&args[3][0]);
       in>>index_int;
     }
   }
@@ -287,7 +287,7 @@ int main(int argc, char* args[])
       if (index_used)
       {
         Random_File< Way_Skeleton::Id_Type, Uint31_Index > random(transaction.random_index(osm_base_settings().WAYS));
-	std::cout<<"0x"<<std::hex<<random.get(index.val()).val()<<'\n';
+        std::cout<<std::dec<<index.val()<<"\t0x"<<std::hex<<random.get(index).val()<<'\n';
       }
     }
     else if (std::string("--ways-meta") == args[2])
@@ -426,7 +426,7 @@ int main(int argc, char* args[])
       if (index_used)
       {
         Random_File< Way_Skeleton::Id_Type, Uint31_Index > random(transaction.random_index(attic_settings().WAYS));
-	std::cout<<"0x"<<std::hex<<random.get(index.val()).val()<<'\n';
+        std::cout<<std::dec<<index.val()<<"\t0x"<<std::hex<<random.get(index).val()<<'\n';
       }
     }
     else if (std::string("--attic-ways-idxs") == args[2])
