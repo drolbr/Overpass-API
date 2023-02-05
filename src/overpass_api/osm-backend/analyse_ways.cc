@@ -20,6 +20,7 @@
 
 #include "../core/settings.h"
 #include "../core/datatypes.h"
+#include "../data/collect_items.h"
 #include "../../template_db/block_backend.h"
 #include "../../template_db/transaction.h"
 
@@ -46,6 +47,160 @@ uint64_t calc_delta(uint64_t lhs, uint64_t rhs)
     + (60 + Timestamp::minute(rhs) - Timestamp::minute(lhs))*60
     + (24 + Timestamp::hour(rhs) - Timestamp::hour(lhs))*3600
     + full_days*86400 - (24*3600 + 60*60 + 60);
+}
+
+
+struct Id_Set_Predicate
+{
+  Id_Set_Predicate(const std::vector< Way_Skeleton::Id_Type >* ids_) : ids(ids_) {}
+
+  bool match(const Way_Skeleton& obj) const
+  { return !ids || std::find(ids->begin(), ids->end(), obj.id) == ids->end(); }
+  bool match(const Attic< Way_Skeleton >& obj) const
+  { return !ids || std::find(ids->begin(), ids->end(), obj.id) == ids->end(); }
+  
+private:
+  const std::vector< Way_Skeleton::Id_Type >* ids;
+};
+
+
+template < class Index, class Object, class Attic_Iterator, class Current_Iterator, class Predicate >
+void reconstruct_items(
+    Current_Iterator& current_it, Current_Iterator current_end,
+    Attic_Iterator& attic_it, Attic_Iterator attic_end, Index& idx,
+    const Predicate& predicate,
+    std::vector< Object >& result, std::vector< Attic< Object > >& attic_result)
+{
+  std::vector< Object > skels;
+  std::vector< Attic< typename Object::Delta > > deltas;
+
+  while (!(current_it == current_end) && current_it.index() < idx)
+    ++current_it;
+  while (!(current_it == current_end) && current_it.index() == idx)
+  {
+    skels.push_back(current_it.object());
+    ++current_it;
+  }
+
+  while (!(attic_it == attic_end) && attic_it.index() < idx)
+    ++attic_it;
+  while (!(attic_it == attic_end) && attic_it.index() == idx)
+  {
+    deltas.push_back(attic_it.object());
+    ++attic_it;
+  }
+
+  std::vector< const Attic< typename Object::Delta >* > delta_refs;
+  delta_refs.reserve(deltas.size());
+  for (typename std::vector< Attic< typename Object::Delta > >::const_iterator it = deltas.begin();
+      it != deltas.end(); ++it)
+    delta_refs.push_back(&*it);
+
+  std::sort(skels.begin(), skels.end());
+  std::sort(delta_refs.begin(), delta_refs.end(), Delta_Ref_Comparator< Attic< typename Object::Delta > >());
+
+  std::vector< Attic< Object > > attics;
+  typename std::vector< Object >::const_iterator skels_it = skels.begin();
+  Object reference;
+  for (typename std::vector< const Attic< typename Object::Delta >* >::const_iterator it = delta_refs.begin();
+        it != delta_refs.end(); ++it)
+  {
+    if (!(reference.id == (*it)->id))
+    {
+      while (skels_it != skels.end() && skels_it->id < (*it)->id)
+        ++skels_it;
+      if (skels_it != skels.end() && skels_it->id == (*it)->id)
+        reference = *skels_it;
+      else
+        reference = Object();
+    }
+    try
+    {
+      Attic< Object > attic_obj = Attic< Object >((*it)->expand(reference), (*it)->timestamp);
+      if (attic_obj.id.val() != 0)
+      {
+        reference = attic_obj;
+        attics.push_back(attic_obj);
+      }
+      else
+      {
+        // Relation_Delta without a reference of the same index
+        std::cerr<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
+            <<Timestamp((*it)->timestamp).str()<<".\n";
+        exit(0);
+      }
+    }
+    catch (const std::exception& e)
+    {
+      std::cerr<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
+          <<Timestamp((*it)->timestamp).str()<<": "<<e.what()<<'\n';
+      exit(0);
+    }
+  }
+
+  for (typename std::vector< Attic< Object > >::const_iterator it = attics.begin(); it != attics.end(); ++it)
+  {
+    if (predicate.match(*it))
+      attic_result.push_back(*it);
+  }
+
+  for (typename std::vector< Object >::const_iterator it = skels.begin(); it != skels.end(); ++it)
+  {
+    if (predicate.match(*it))
+      result.push_back(*it);
+  }
+}
+
+
+struct Node_Timestamp_Hash
+{
+  Node_Timestamp_Hash() : data(0x10000) {}
+  
+  void push(Attic< Node_Skeleton::Id_Type > obj)
+  { data[obj.val() & 0xffff].push_back(obj); }
+  const std::vector< Attic< Node_Skeleton::Id_Type > >& candidates(Node_Skeleton::Id_Type ref) const
+  { return data[ref.val() & 0xffff]; }
+  
+private:
+  std::vector< std::vector< Attic< Node_Skeleton::Id_Type > > > data;
+};
+
+
+void collect_nd_events(
+    uint64_t timestamp, const Attic< Way_Skeleton >& obj, const Node_Timestamp_Hash& hash,
+    std::vector< Attic< Way_Skeleton::Id_Type > >& delta)
+{
+  auto old_size = delta.size();
+  for (auto i : obj.nds)
+  {
+    auto candidates = hash.candidates(i);
+    for (auto j : candidates)
+    {
+      if (i == j && timestamp < j.timestamp && j.timestamp < obj.timestamp)
+        delta.push_back({ obj.id, j.timestamp });
+    }
+  }
+  std::sort(delta.begin()+old_size, delta.end());
+  delta.erase(std::unique(delta.begin()+old_size, delta.end()), delta.end());
+}
+
+
+void collect_nd_events(
+    uint64_t timestamp, Way_Skeleton& obj, const Node_Timestamp_Hash& hash,
+    std::vector< Attic< Way_Skeleton::Id_Type > >& delta)
+{
+  auto old_size = delta.size();
+  for (auto i : obj.nds)
+  {
+    auto candidates = hash.candidates(i);
+    for (auto j : candidates)
+    {
+      if (i == j && timestamp < j.timestamp)
+        delta.push_back({ obj.id, j.timestamp });
+    }
+  }
+  std::sort(delta.begin()+old_size, delta.end());
+  delta.erase(std::unique(delta.begin()+old_size, delta.end()), delta.end());
 }
 
 
@@ -83,12 +238,20 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAYS_META));
       auto attic_meta_it = attic_meta_db.flat_begin();
 
+      Block_Backend< Uint31_Index, Way_Skeleton > skel_db
+          (transaction.data_index(osm_base_settings().WAYS));
+      auto skel_it = skel_db.flat_begin();
+
       Block_Backend< Uint31_Index, Attic< Way_Delta > > delta_db
           (transaction.data_index(attic_settings().WAYS));
       auto delta_it = delta_db.flat_begin();
+
+      Block_Backend< Uint31_Index, Attic< Way::Id_Type > > undel_db
+          (transaction.data_index(attic_settings().WAYS_UNDELETED));
+      auto undel_db_it = undel_db.flat_begin();
       
-      std::vector< std::pair< uint32_t, uint32_t > > short_lifespan_stat(86400 * 365, { 0, 0 });
-      std::map< uint64_t, std::pair< uint32_t, uint32_t > > long_lifespan_stat;
+      std::vector< uint32_t > implicit_after_version(366*86400, 0);
+      std::vector< uint32_t > implicit_before_version(366*86400, 0);
       
       uint64_t idx_cnt = 0;
       uint64_t meta_cnt = 0;
@@ -102,9 +265,9 @@ int main(int argc, char* args[])
         
         auto multiidx_it = multiidx_ways.find(cur_idx);
         
-        if (++idx_cnt % 65536 == 0)
+        if (++idx_cnt % 16384 == 0)
           std::cerr<<" 0x"<<std::hex<<cur_idx.val();
-        if (idx_cnt % 1048576 == 0)
+        if (idx_cnt % 262144 == 0)
           std::cerr<<'\n';
         
         std::vector< Attic< Way_Skeleton::Id_Type > > meta;
@@ -131,9 +294,9 @@ int main(int argc, char* args[])
         meta_cnt += meta.size();
         std::sort(meta.begin(), meta.end());
         
+        std::vector< Attic< Way_Skeleton::Id_Type > > delta;
         if (Way::indicates_geometry(cur_idx))
         {
-          std::vector< Attic< Way_Skeleton::Id_Type > > delta;
           while (!(delta_it == delta_db.flat_end()) && delta_it.index() < cur_idx)
           {
             //std::cout<<"DEBUG d 0x"<<std::hex<<delta_it.index().val()<<" 0x"<<cur_idx.val()<<'\n';
@@ -149,145 +312,216 @@ int main(int argc, char* args[])
             ++delta_it;
           }
           std::sort(delta.begin(), delta.end());
+        }
+        else
+        {
+          Block_Backend< Uint32_Index, Attic< Node_Skeleton > > attic_node_db
+              (transaction.data_index(attic_settings().NODES));
+
+          Node_Timestamp_Hash hash;
+          auto node_idxs = calc_children(Ranges< Uint31_Index >(cur_idx, inc(cur_idx)));
+          for (auto it = attic_node_db.range_begin(node_idxs); !(it == attic_node_db.range_end()); ++it)
+            hash.push({ it.object().id, it.object().timestamp });
+
+          Uint31_Index cur_idx_ = cur_idx;
+          std::vector< Way_Skeleton > skels;
+          std::vector< Attic< Way_Skeleton > > attics;
+          reconstruct_items(
+              skel_it, skel_db.flat_end(), delta_it, delta_db.flat_end(), cur_idx_,
+              Id_Set_Predicate(multiidx_it == multiidx_ways.end() ? nullptr : &multiidx_it->second),
+              skels, attics);
+          std::sort(attics.begin(), attics.end());
+          std::sort(skels.begin(), skels.end());
           
-          auto d_it = delta.begin();
-          for (uint64_t i = 0; i+1 < meta.size(); ++i)
+          std::vector< Attic< Way_Skeleton::Id_Type > > undel;
+          while (!(undel_db_it == undel_db.flat_end()) && undel_db_it.index() < cur_idx)
+            ++undel_db_it;
+          while (!(undel_db_it == undel_db.flat_end()) && undel_db_it.index() == cur_idx)
           {
-            while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) < Way_Skeleton::Id_Type(meta[i]))
+            if (multiidx_it == multiidx_ways.end() ||
+                std::find(multiidx_it->second.begin(), multiidx_it->second.end(),
+                    Way_Skeleton::Id_Type(undel_db_it.object()))
+                == multiidx_it->second.end())
+              undel.push_back(undel_db_it.object());
+            ++undel_db_it;
+          }
+          std::sort(undel.begin(), undel.end());
+          auto undel_it = undel.begin();
+          
+          auto skel_it = skels.begin();
+          
+          for (const auto& i : attics)
+            delta.push_back(Attic< Way_Skeleton::Id_Type >(i.id, i.timestamp));
+          
+          for (uint64_t i = 0; i < attics.size(); ++i)
+          {
+            while (skel_it != skels.end() && skel_it->id < attics[i].id)
             {
-              std::cout<<"DEBUG e 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<' '<<meta[i].val()<<'\n';
-              ++d_it;
+              while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) < skel_it->id)
+                ++undel_it;
+
+              if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == skel_it->id)
+                collect_nd_events(undel_it->timestamp, *skel_it, hash, delta);
+              else
+                collect_nd_events(0, *skel_it, hash, delta);
+              ++skel_it;
             }
-            uint lifespan = 0;
-            bool detached_implicit = false;
-            if (Way_Skeleton::Id_Type(meta[i]) == Way_Skeleton::Id_Type(meta[i+1]))
+            
+            while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) < attics[i].id)
+              ++undel_it;
+            if (i > 0 && attics[i-1].id == attics[i].id)
             {
-              lifespan = calc_delta(meta[i].timestamp, meta[i+1].timestamp);
-              while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
-                  && d_it->timestamp < meta[i+1].timestamp)
-              {
-                ++implicit_cnt;
-                if (calc_delta(meta[i].timestamp, d_it->timestamp) > 300
-                    && calc_delta(d_it->timestamp, meta[i+1].timestamp) > 300)
-                  detached_implicit = true;
-//                 std::cout<<"DEBUG f 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<' '
-//                     <<Timestamp(meta[i].timestamp).str()<<' '<<Timestamp(d_it->timestamp).str()<<' '
-//                     <<Timestamp(meta[i+1].timestamp).str()<<'\n';
-                ++d_it;
-              }
-              if (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
-                  && d_it->timestamp == meta[i+1].timestamp)
-                ++d_it;
-            }
-            else
-            {
-              lifespan = calc_delta(meta[i].timestamp, cur_date.timestamp);
-              while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i]))
-              {
-                ++implicit_cnt;
-                if (calc_delta(meta[i].timestamp, d_it->timestamp) > 300
-                    && calc_delta(d_it->timestamp, cur_date.timestamp) > 300)
-                  detached_implicit = true;
-//                 std::cout<<"DEBUG g 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<' '
-//                     <<Timestamp(meta[i].timestamp).str()<<' '<<Timestamp(d_it->timestamp).str()<<'\n';
-                ++d_it;
-              }
-            }
-            if (lifespan < short_lifespan_stat.size())
-            {
-              ++short_lifespan_stat[lifespan].first;
-              if (detached_implicit)
-                ++short_lifespan_stat[lifespan].second;
+              while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == attics[i].id
+                  && undel_it->timestamp < attics[i-1].timestamp)
+                ++undel_it;
+              
+              if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == attics[i].id
+                  && undel_it->timestamp < attics[i].timestamp)
+                collect_nd_events(undel_it->timestamp, attics[i], hash, delta);
+              else
+                collect_nd_events(attics[i-1].timestamp, attics[i], hash, delta);
             }
             else
             {
-              ++long_lifespan_stat[lifespan].first;
-              if (detached_implicit)
-                ++long_lifespan_stat[lifespan].second;
+              if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == attics[i].id
+                  && undel_it->timestamp < attics[i].timestamp)
+                collect_nd_events(undel_it->timestamp, attics[i], hash, delta);
+              else
+                collect_nd_events(0, attics[i], hash, delta);
+              
+              if (skel_it != skels.end() && skel_it->id == attics[i].id)
+              {
+                while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == skel_it->id
+                    && undel_it->timestamp < attics[i].timestamp)
+                  ++undel_it;
+                
+                if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == skel_it->id)
+                  collect_nd_events(undel_it->timestamp, *skel_it, hash, delta);
+                else
+                  collect_nd_events(attics[i].timestamp, *skel_it, hash, delta);
+                ++skel_it;
+              }
             }
           }
-          if (!meta.empty())
+          while (skel_it != skels.end())
           {
-            uint lifespan = calc_delta(meta.back().timestamp, cur_date.timestamp);
-            bool detached_implicit = false;
-            while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta.back()))
-            {
-              ++implicit_cnt;
-              if (calc_delta(meta.back().timestamp, d_it->timestamp) > 300
-                  && calc_delta(d_it->timestamp, cur_date.timestamp) > 300)
-                detached_implicit = true;
-//               std::cout<<"DEBUG h 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<' '
-//                   <<Timestamp(meta.back().timestamp).str()<<' '<<Timestamp(d_it->timestamp).str()<<'\n';
-              ++d_it;
-            }
-            if (lifespan < short_lifespan_stat.size())
-            {
-              ++short_lifespan_stat[lifespan].first;
-              if (detached_implicit)
-                ++short_lifespan_stat[lifespan].second;
-            }
+            while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) < skel_it->id)
+              ++undel_it;
+
+            if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == skel_it->id)
+              collect_nd_events(undel_it->timestamp, *skel_it, hash, delta);
             else
-            {
-              ++long_lifespan_stat[lifespan].first;
-              if (detached_implicit)
-                ++long_lifespan_stat[lifespan].second;
-            }
+              collect_nd_events(0, *skel_it, hash, delta);
+            ++skel_it;
           }
-          while (d_it != delta.end())
+          
+          std::sort(delta.begin(), delta.end());
+          delta.erase(std::unique(delta.begin(), delta.end()), delta.end());
+        }
+          
+        auto d_it = delta.begin();
+        for (uint64_t i = 0; i+1 < meta.size(); ++i)
+        {
+          while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) < Way_Skeleton::Id_Type(meta[i]))
           {
-            //std::cout<<"DEBUG i 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<'\n';
+            std::cout<<"DEBUG e 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<' '<<meta[i].val()<<'\n';
             ++d_it;
           }
+          while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
+              && d_it->timestamp <= meta[i].timestamp)
+          {
+//             std::cout<<"DEBUG f 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<meta[i].val()
+//                 <<' '<<Timestamp(d_it->timestamp).str()<<'\n';
+            ++d_it;
+          }
+          uint lifespan = 0;
+          uint time_after_version = 0;
+          uint time_before_version = 0;
+          if (Way_Skeleton::Id_Type(meta[i]) == Way_Skeleton::Id_Type(meta[i+1]))
+          {
+            lifespan = calc_delta(meta[i].timestamp, meta[i+1].timestamp);
+            while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
+                && d_it->timestamp < meta[i+1].timestamp)
+            {
+              ++implicit_cnt;
+              time_after_version = calc_delta(meta[i].timestamp, d_it->timestamp);
+              if (time_before_version == 0)
+                time_before_version = calc_delta(d_it->timestamp, meta[i+1].timestamp);
+              ++d_it;
+            }
+            if (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
+                && d_it->timestamp == meta[i+1].timestamp)
+              ++d_it;
+          }
+          else
+          {
+            lifespan = calc_delta(meta[i].timestamp, cur_date.timestamp);
+            while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i]))
+            {
+              ++implicit_cnt;
+              time_after_version = calc_delta(meta[i].timestamp, d_it->timestamp);
+              if (time_before_version == 0)
+                time_before_version = calc_delta(d_it->timestamp, cur_date.timestamp);
+              ++d_it;
+            }
+          }
+          if (time_after_version > 0)
+            ++implicit_after_version[std::min((uint64_t)time_after_version, implicit_after_version.size()-1)];
+          if (time_before_version > 0)
+            ++implicit_before_version[std::min((uint64_t)time_before_version, implicit_before_version.size()-1)];
         }
-        
-//         for (uint64_t i = 0; i+1 < meta.size(); ++i)
-//         {
-//           uint lifespan = 0;
-//           if (Way_Skeleton::Id_Type(meta[i]) == Way_Skeleton::Id_Type(meta[i+1]))
-//           {
-//             lifespan = calc_delta(meta[i].timestamp, meta[i+1].timestamp);
-//             if (lifespan > 1000000000)
-//               std::cout<<"DEBUG a 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<meta[i].val()<<' '<<lifespan<<' '<<meta[i].timestamp<<' '<<meta[i+1].timestamp<<'\n';
-//           }
-//           else
-//           {
-//             lifespan = calc_delta(meta[i].timestamp, cur_date.timestamp);
-//             if (lifespan > 1000000000)
-//               std::cout<<"DEBUG b 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<meta[i].val()<<' '<<lifespan<<' '<<meta[i].timestamp<<' '<<cur_date.timestamp<<'\n';
-//           }
-//           if (lifespan < short_lifespan_stat.size())
-//             ++short_lifespan_stat[lifespan];
-//           else
-//             ++long_lifespan_stat[lifespan];
-//         }
-//         if (!meta.empty())
-//         {
-//           uint lifespan = calc_delta(meta.back().timestamp, cur_date.timestamp);
-//           if (lifespan > 1000000000)
-//             std::cout<<"DEBUG c 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<meta.back().val()<<' '<<lifespan<<' '<<meta.back().timestamp<<' '<<cur_date.timestamp<<'\n';
-//           if (lifespan < short_lifespan_stat.size())
-//             ++short_lifespan_stat[lifespan];
-//           else
-//             ++long_lifespan_stat[lifespan];
-//         }
+        if (!meta.empty())
+        {
+          while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) < Way_Skeleton::Id_Type(meta.back()))
+          {
+            std::cout<<"DEBUG g 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<' '<<meta.back().val()<<'\n';
+            ++d_it;
+          }
+          while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta.back())
+              && d_it->timestamp <= meta.back().timestamp)
+          {
+//             std::cout<<"DEBUG h 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<meta.back().val()
+//                 <<' '<<Timestamp(d_it->timestamp).str()<<'\n';
+            ++d_it;
+          }
+          uint lifespan = calc_delta(meta.back().timestamp, cur_date.timestamp);
+          uint time_after_version = 0;
+          uint time_before_version = 0;
+          while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta.back()))
+          {
+            ++implicit_cnt;
+            time_after_version = calc_delta(meta.back().timestamp, d_it->timestamp);
+            if (time_before_version == 0)
+              time_before_version = calc_delta(d_it->timestamp, cur_date.timestamp);
+            ++d_it;
+          }
+          if (time_after_version > 0)
+            ++implicit_after_version[std::min((uint64_t)time_after_version, implicit_after_version.size()-1)];
+          if (time_before_version > 0)
+            ++implicit_before_version[std::min((uint64_t)time_before_version, implicit_before_version.size()-1)];
+        }
+        while (d_it != delta.end())
+        {
+          //std::cout<<"DEBUG i 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<'\n';
+          ++d_it;
+        }
       }
       std::cerr<<"\n... "<<std::dec<<idx_cnt<<" indices and "<<meta_cnt<<" metas processed, "
-          <<implicit_cnt<<" implicit versions found.\n";
+          <<implicit_cnt<<" implicit versions found.\n";      
+    
+      uint32_t partial_sum = 0;
+      for (uint64_t i = 0; i < implicit_after_version.size(); ++i)
+      {
+        partial_sum += implicit_after_version[i];
+        std::cout<<"after\t"<<i<<'\t'<<implicit_after_version[i]<<'\t'<<partial_sum<<'\n';
+      }
       
-      std::pair< uint32_t, uint32_t > partial_sum{ 0, 0 };
-      for (uint64_t i = 0; i < short_lifespan_stat.size(); ++i)
+      partial_sum = 0;
+      for (uint64_t i = 0; i < implicit_before_version.size(); ++i)
       {
-        partial_sum.first += short_lifespan_stat[i].first;
-        partial_sum.second += short_lifespan_stat[i].second;
-        if (short_lifespan_stat[i].first > 0)
-          std::cout<<i<<'\t'<<short_lifespan_stat[i].first<<'\t'<<short_lifespan_stat[i].second<<'\t'<<partial_sum.first<<'\t'<<partial_sum.second<<'\n';
-      }
-      for (auto i : long_lifespan_stat)
-      {
-        partial_sum.first += i.second.first;
-        partial_sum.second += i.second.second;
-        std::cout<<i.first<<'\t'<<i.second.first<<'\t'<<i.second.second<<'\t'<<partial_sum.first<<'\t'<<partial_sum.second<<'\n';
-      }
+        partial_sum += implicit_before_version[i];
+        std::cout<<"before\t"<<i<<'\t'<<implicit_before_version[i]<<'\t'<<partial_sum<<'\n';
+      }    
     }
   }
   catch (File_Error e)
