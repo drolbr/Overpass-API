@@ -108,7 +108,22 @@ void filter_elems(const std::vector< uint64 > & ids,
 }
 
 
+template< typename Id_Type >
+std::vector< Id_Type > filtered_assign(const std::vector< uint64 >& arg)
+{
+  std::vector< Id_Type > result;
+  result.reserve(arg.size());
+  for (auto i : arg)
+  {
+    if (i <= (uint64)Id_Type::max().val())
+      result.push_back(Id_Type(static_cast< decltype(result.front().val()) >(i)));
+  }
+  return result;
+}
+
+
 //-----------------------------------------------------------------------------
+
 
 class Id_Query_Constraint : public Query_Constraint
 {
@@ -139,45 +154,35 @@ class Id_Query_Constraint : public Query_Constraint
 
 bool Id_Query_Constraint::get_node_ids(Resource_Manager& rman, std::vector< Node_Skeleton::Id_Type >& ids)
 {
-  ids.clear();
-  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-
+  ids = filtered_assign< Node_Skeleton::Id_Type >(stmt->get_refs());
   return true;
 }
 
 
 bool Id_Query_Constraint::get_way_ids(Resource_Manager& rman, std::vector< Way_Skeleton::Id_Type >& ids)
 {
-  ids.clear();
-  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-
+  ids = filtered_assign< Way_Skeleton::Id_Type >(stmt->get_refs());
   return true;
 }
 
 
 bool Id_Query_Constraint::get_relation_ids(Resource_Manager& rman, std::vector< Relation_Skeleton::Id_Type >& ids)
 {
-  ids.clear();
-  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-
+  ids = filtered_assign< Relation_Skeleton::Id_Type >(stmt->get_refs());
   return true;
 }
 
 
 bool Id_Query_Constraint::get_area_ids(Resource_Manager& rman, std::vector< Area_Skeleton::Id_Type >& ids)
 {
-  ids.clear();
-  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-
+  ids = filtered_assign< Area_Skeleton::Id_Type >(stmt->get_refs());
   return true;
 }
 
 
 bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
 {
-  std::vector< Node_Skeleton::Id_Type > ids;
-  ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
-
+  std::vector< Node_Skeleton::Id_Type > ids = filtered_assign< Node_Skeleton::Id_Type >(stmt->get_refs());
   std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
 
   ranges = Ranges< Uint32_Index >();
@@ -195,16 +200,14 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Inde
   ranges = Ranges< Uint31_Index >();
 
   {
-    std::vector< Way_Skeleton::Id_Type > ids;
-    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+    std::vector< Way_Skeleton::Id_Type > ids = filtered_assign< Way_Skeleton::Id_Type >(stmt->get_refs());
     get_indexes_< Uint31_Index, Way_Skeleton >(ids, rman).swap(req);
     for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
       ranges.push_back(*it, inc(*it));
   }
 
   {
-    std::vector< Relation_Skeleton::Id_Type > ids;
-    ids.assign(stmt->get_refs().begin(), stmt->get_refs().end());
+    std::vector< Relation_Skeleton::Id_Type > ids = filtered_assign< Relation_Skeleton::Id_Type >(stmt->get_refs());
     get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman).swap(req);
     for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
       ranges.push_back(*it, inc(*it));
@@ -382,8 +385,7 @@ void get_elements(const std::vector< uint64 >& refs, Statement* stmt, Resource_M
     std::map< Index, std::vector< Skeleton > >& current_result,
     std::map< Index, std::vector< Attic< Skeleton > > >& attic_result)
 {
-  std::vector< typename Skeleton::Id_Type > ids;
-  ids.assign(refs.begin(), refs.end());
+  std::vector< typename Skeleton::Id_Type > ids = filtered_assign< typename Skeleton::Id_Type >(refs);
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
 
   if (rman.get_desired_timestamp() == NOW)
@@ -418,12 +420,14 @@ void Id_Query_Statement::execute(Resource_Manager& rman)
   rman.health_check(*this);
 }
 
+
 Id_Query_Statement::~Id_Query_Statement()
 {
   for (std::vector< Query_Constraint* >::const_iterator it = constraints.begin();
       it != constraints.end(); ++it)
     delete *it;
 }
+
 
 Query_Constraint* Id_Query_Statement::get_query_constraint()
 {
