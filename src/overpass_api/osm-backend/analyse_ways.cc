@@ -50,9 +50,23 @@ uint64_t calc_delta(uint64_t lhs, uint64_t rhs)
 }
 
 
-struct Id_Set_Predicate
+struct Id_In_Set_Predicate
 {
-  Id_Set_Predicate(const std::vector< Way_Skeleton::Id_Type >* ids_) : ids(ids_) {}
+  Id_In_Set_Predicate(const std::vector< Way_Skeleton::Id_Type >* ids_) : ids(ids_) {}
+
+  bool match(const Way_Skeleton& obj) const
+  { return ids && std::find(ids->begin(), ids->end(), obj.id) != ids->end(); }
+  bool match(const Attic< Way_Skeleton >& obj) const
+  { return ids && std::find(ids->begin(), ids->end(), obj.id) != ids->end(); }
+  
+private:
+  const std::vector< Way_Skeleton::Id_Type >* ids;
+};
+
+
+struct Id_Not_In_Set_Predicate
+{
+  Id_Not_In_Set_Predicate(const std::vector< Way_Skeleton::Id_Type >* ids_) : ids(ids_) {}
 
   bool match(const Way_Skeleton& obj) const
   { return !ids || std::find(ids->begin(), ids->end(), obj.id) == ids->end(); }
@@ -275,6 +289,264 @@ int main(int argc, char* args[])
       Block_Backend< Uint31_Index, Attic< Way_Delta > > delta_db
           (transaction.data_index(attic_settings().WAYS));
       auto delta_it = delta_db.flat_begin();
+ 
+      Block_Backend< Uint31_Index, Attic< Way::Id_Type > > undel_db
+          (transaction.data_index(attic_settings().WAYS_UNDELETED));
+      auto undel_db_it = undel_db.flat_begin();
+      
+      uint64_t idx_cnt = 0;
+      std::vector< Attic< Way_Skeleton::Id_Type > > meta;
+      std::vector< Attic< Way_Skeleton::Id_Type > > delta;
+      while (!(cur_meta_it == cur_meta_db.flat_end()) || !(attic_meta_it == attic_meta_db.flat_end()))
+      {
+        Uint31_Index cur_idx = (
+            cur_meta_it == cur_meta_db.flat_end() || 
+                (!(attic_meta_it == attic_meta_db.flat_end()) && attic_meta_it.index() < cur_meta_it.index()) ?
+          attic_meta_it.index() : cur_meta_it.index());
+        
+        auto multiidx_it = multiidx_ways.find(cur_idx);
+        
+        if (++idx_cnt % 16384 == 0)
+          std::cerr<<" 0x"<<std::hex<<cur_idx.val();
+        if (idx_cnt % 262144 == 0)
+          std::cerr<<'\n';
+        
+        while (!(cur_meta_it == cur_meta_db.flat_end()) && cur_meta_it.index() == cur_idx)
+        {
+          if (multiidx_it != multiidx_ways.end() &&
+              std::find(multiidx_it->second.begin(), multiidx_it->second.end(), cur_meta_it.object().ref)
+              != multiidx_it->second.end())
+            meta.push_back(Attic< Way_Skeleton::Id_Type >(
+                cur_meta_it.object().ref, cur_meta_it.object().timestamp));
+          ++cur_meta_it;
+        }
+        
+        //std::vector< Attic< Way_Skeleton::Id_Type > > attic_meta;
+        while (!(attic_meta_it == attic_meta_db.flat_end()) && attic_meta_it.index() == cur_idx)
+        {
+          if (multiidx_it != multiidx_ways.end() &&
+              std::find(multiidx_it->second.begin(), multiidx_it->second.end(), attic_meta_it.object().ref)
+              != multiidx_it->second.end())
+            meta.push_back(Attic< Way_Skeleton::Id_Type >(
+              attic_meta_it.object().ref, attic_meta_it.object().timestamp));
+          ++attic_meta_it;
+        }
+        
+        if (Way::indicates_geometry(cur_idx))
+        {
+          while (!(delta_it == delta_db.flat_end()) && delta_it.index() < cur_idx)
+            ++delta_it;
+          while (!(delta_it == delta_db.flat_end()) && delta_it.index() == cur_idx)
+          {
+            if (multiidx_it != multiidx_ways.end() &&
+                std::find(multiidx_it->second.begin(), multiidx_it->second.end(), delta_it.object().id)
+                != multiidx_it->second.end())
+              delta.push_back(Attic< Way_Skeleton::Id_Type >(
+                delta_it.object().id, delta_it.object().timestamp));
+            ++delta_it;
+          }
+        }
+        else
+        {
+          Block_Backend< Uint32_Index, Attic< Node_Skeleton > > attic_node_db
+              (transaction.data_index(attic_settings().NODES));
+
+          Node_Timestamp_Hash hash;
+          auto node_idxs = calc_children(Ranges< Uint31_Index >(cur_idx, inc(cur_idx)));
+          for (auto it = attic_node_db.range_begin(node_idxs); !(it == attic_node_db.range_end()); ++it)
+            hash.push({ it.object().id, it.object().timestamp });
+
+          Uint31_Index cur_idx_ = cur_idx;
+          std::vector< Way_Skeleton > skels;
+          std::vector< Attic< Way_Skeleton > > attics;
+          reconstruct_items(
+              skel_it, skel_db.flat_end(), delta_it, delta_db.flat_end(), cur_idx_,
+              Id_Not_In_Set_Predicate(multiidx_it == multiidx_ways.end() ? nullptr : &multiidx_it->second),
+              skels, attics);
+          std::sort(attics.begin(), attics.end());
+          std::sort(skels.begin(), skels.end());
+          
+          std::vector< Attic< Way_Skeleton::Id_Type > > undel;
+          while (!(undel_db_it == undel_db.flat_end()) && undel_db_it.index() < cur_idx)
+            ++undel_db_it;
+          while (!(undel_db_it == undel_db.flat_end()) && undel_db_it.index() == cur_idx)
+          {
+            if (multiidx_it == multiidx_ways.end() ||
+                std::find(multiidx_it->second.begin(), multiidx_it->second.end(),
+                    Way_Skeleton::Id_Type(undel_db_it.object()))
+                == multiidx_it->second.end())
+              undel.push_back(undel_db_it.object());
+            ++undel_db_it;
+          }
+          std::sort(undel.begin(), undel.end());
+          auto undel_it = undel.begin();
+          
+          auto skel_it = skels.begin();
+          
+          for (const auto& i : attics)
+            delta.push_back(Attic< Way_Skeleton::Id_Type >(i.id, i.timestamp));
+          
+          for (uint64_t i = 0; i < attics.size(); ++i)
+          {
+            while (skel_it != skels.end() && skel_it->id < attics[i].id)
+            {
+              while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) < skel_it->id)
+                ++undel_it;
+
+              if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == skel_it->id)
+                collect_nd_events(undel_it->timestamp, *skel_it, hash, delta);
+              else
+                collect_nd_events(0, *skel_it, hash, delta);
+              ++skel_it;
+            }
+            
+            while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) < attics[i].id)
+              ++undel_it;
+            if (i > 0 && attics[i-1].id == attics[i].id)
+            {
+              while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == attics[i].id
+                  && undel_it->timestamp < attics[i-1].timestamp)
+                ++undel_it;
+              
+              if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == attics[i].id
+                  && undel_it->timestamp < attics[i].timestamp)
+                collect_nd_events(undel_it->timestamp, attics[i], hash, delta);
+              else
+                collect_nd_events(attics[i-1].timestamp, attics[i], hash, delta);
+            }
+            else
+            {
+              if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == attics[i].id
+                  && undel_it->timestamp < attics[i].timestamp)
+                collect_nd_events(undel_it->timestamp, attics[i], hash, delta);
+              else
+                collect_nd_events(0, attics[i], hash, delta);
+              
+              if (skel_it != skels.end() && skel_it->id == attics[i].id)
+              {
+                while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == skel_it->id
+                    && undel_it->timestamp < attics[i].timestamp)
+                  ++undel_it;
+                
+                if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == skel_it->id)
+                  collect_nd_events(undel_it->timestamp, *skel_it, hash, delta);
+                else
+                  collect_nd_events(attics[i].timestamp, *skel_it, hash, delta);
+                ++skel_it;
+              }
+            }
+          }
+          while (skel_it != skels.end())
+          {
+            while (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) < skel_it->id)
+              ++undel_it;
+
+            if (undel_it != undel.end() && Way_Skeleton::Id_Type(*undel_it) == skel_it->id)
+              collect_nd_events(undel_it->timestamp, *skel_it, hash, delta);
+            else
+              collect_nd_events(0, *skel_it, hash, delta);
+            ++skel_it;
+          }
+        }
+      }
+
+      std::cerr<<"\nDEBUG: "<<std::dec<<meta.size()<<" multiidx metas before sorting.\n";
+      
+      std::sort(meta.begin(), meta.end());
+      meta.erase(std::unique(meta.begin(), meta.end()), meta.end());
+      
+      std::cerr<<"DEBUG: "<<std::dec<<meta.size()<<" multiidx metas after sorting.\n";
+
+      std::cerr<<"DEBUG: "<<std::dec<<delta.size()<<" multiidx deltas before sorting.\n";
+      
+      std::sort(delta.begin(), delta.end());
+      delta.erase(std::unique(delta.begin(), delta.end()), delta.end());
+      
+      std::cerr<<"DEBUG: "<<std::dec<<delta.size()<<" multiidx deltas after sorting.\n";
+
+      auto d_it = delta.begin();
+      for (uint64_t i = 0; i+1 < meta.size(); ++i)
+      {
+        while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) < Way_Skeleton::Id_Type(meta[i]))
+        {
+          std::cout<<"DEBUG j 0x0 "<<std::dec<<d_it->val()<<' '<<meta[i].val()<<'\n';
+          ++d_it;
+        }
+        while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
+            && d_it->timestamp <= meta[i].timestamp)
+        {
+//             std::cout<<"DEBUG f 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<meta[i].val()
+//                 <<' '<<Timestamp(d_it->timestamp).str()<<'\n';
+          ++d_it;
+        }
+        uint lifespan = 0;
+        if (Way_Skeleton::Id_Type(meta[i]) == Way_Skeleton::Id_Type(meta[i+1]))
+        {
+          lifespan = calc_delta(meta[i].timestamp, meta[i+1].timestamp);
+          while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
+              && d_it->timestamp < meta[i+1].timestamp)
+          {
+            implicit_event(Uint31_Index(0xffu), meta[i], meta[i].timestamp, d_it->timestamp, meta[i+1].timestamp);
+            ++d_it;
+          }
+          if (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i])
+              && d_it->timestamp == meta[i+1].timestamp)
+            ++d_it;
+        }
+        else
+        {
+          lifespan = calc_delta(meta[i].timestamp, cur_date.timestamp);
+          while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta[i]))
+          {
+            implicit_event(Uint31_Index(0xffu), meta[i], meta[i].timestamp, d_it->timestamp, cur_date.timestamp);
+            ++d_it;
+          }
+        }
+      }
+      if (!meta.empty())
+      {
+        while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) < Way_Skeleton::Id_Type(meta.back()))
+        {
+          std::cout<<"DEBUG k 0x0 "<<std::dec<<d_it->val()<<' '<<meta.back().val()<<'\n';
+          ++d_it;
+        }
+        while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta.back())
+            && d_it->timestamp <= meta.back().timestamp)
+        {
+//             std::cout<<"DEBUG h 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<meta.back().val()
+//                 <<' '<<Timestamp(d_it->timestamp).str()<<'\n';
+          ++d_it;
+        }
+        uint lifespan = calc_delta(meta.back().timestamp, cur_date.timestamp);
+        while (d_it != delta.end() && Way_Skeleton::Id_Type(*d_it) == Way_Skeleton::Id_Type(meta.back()))
+        {
+          implicit_event(Uint31_Index(0xffu), meta.back(), meta.back().timestamp, d_it->timestamp, cur_date.timestamp);
+          ++d_it;
+        }
+      }
+      while (d_it != delta.end())
+      {
+        //std::cout<<"DEBUG i 0x"<<std::hex<<cur_idx.val()<<' '<<std::dec<<d_it->val()<<'\n';
+        ++d_it;
+      }
+    }
+    return 0;
+    {
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > cur_meta_db
+          (transaction.data_index(meta_settings().WAYS_META));      
+      auto cur_meta_it = cur_meta_db.flat_begin();
+      
+      Block_Backend< Uint31_Index, OSM_Element_Metadata_Skeleton< Way_Skeleton::Id_Type > > attic_meta_db
+          (transaction.data_index(attic_settings().WAYS_META));
+      auto attic_meta_it = attic_meta_db.flat_begin();
+
+      Block_Backend< Uint31_Index, Way_Skeleton > skel_db
+          (transaction.data_index(osm_base_settings().WAYS));
+      auto skel_it = skel_db.flat_begin();
+
+      Block_Backend< Uint31_Index, Attic< Way_Delta > > delta_db
+          (transaction.data_index(attic_settings().WAYS));
+      auto delta_it = delta_db.flat_begin();
 
       Block_Backend< Uint31_Index, Attic< Way::Id_Type > > undel_db
           (transaction.data_index(attic_settings().WAYS_UNDELETED));
@@ -328,10 +600,7 @@ int main(int argc, char* args[])
         if (Way::indicates_geometry(cur_idx))
         {
           while (!(delta_it == delta_db.flat_end()) && delta_it.index() < cur_idx)
-          {
-            //std::cout<<"DEBUG d 0x"<<std::hex<<delta_it.index().val()<<" 0x"<<cur_idx.val()<<'\n';
             ++delta_it;
-          }
           while (!(delta_it == delta_db.flat_end()) && delta_it.index() == cur_idx)
           {
             if (multiidx_it == multiidx_ways.end() ||
@@ -358,7 +627,7 @@ int main(int argc, char* args[])
           std::vector< Attic< Way_Skeleton > > attics;
           reconstruct_items(
               skel_it, skel_db.flat_end(), delta_it, delta_db.flat_end(), cur_idx_,
-              Id_Set_Predicate(multiidx_it == multiidx_ways.end() ? nullptr : &multiidx_it->second),
+              Id_Not_In_Set_Predicate(multiidx_it == multiidx_ways.end() ? nullptr : &multiidx_it->second),
               skels, attics);
           std::sort(attics.begin(), attics.end());
           std::sort(skels.begin(), skels.end());
@@ -521,19 +790,19 @@ int main(int argc, char* args[])
       std::cerr<<"\n... "<<std::dec<<idx_cnt<<" indices and "<<meta_cnt<<" metas processed, "
           <<implicit_cnt<<" implicit versions found.\n";      
     
-      uint32_t partial_sum = 0;
-      for (uint64_t i = 0; i < implicit_after_version.size(); ++i)
-      {
-        partial_sum += implicit_after_version[i];
-        std::cout<<"after\t"<<i<<'\t'<<implicit_after_version[i]<<'\t'<<partial_sum<<'\n';
-      }
-      
-      partial_sum = 0;
-      for (uint64_t i = 0; i < implicit_before_version.size(); ++i)
-      {
-        partial_sum += implicit_before_version[i];
-        std::cout<<"before\t"<<i<<'\t'<<implicit_before_version[i]<<'\t'<<partial_sum<<'\n';
-      }    
+//       uint32_t partial_sum = 0;
+//       for (uint64_t i = 0; i < implicit_after_version.size(); ++i)
+//       {
+//         partial_sum += implicit_after_version[i];
+//         std::cout<<"after\t"<<i<<'\t'<<implicit_after_version[i]<<'\t'<<partial_sum<<'\n';
+//       }
+//       
+//       partial_sum = 0;
+//       for (uint64_t i = 0; i < implicit_before_version.size(); ++i)
+//       {
+//         partial_sum += implicit_before_version[i];
+//         std::cout<<"before\t"<<i<<'\t'<<implicit_before_version[i]<<'\t'<<partial_sum<<'\n';
+//       }    
     }
   }
   catch (File_Error e)
@@ -543,4 +812,3 @@ int main(int argc, char* args[])
 
   return 0;
 }
-  
