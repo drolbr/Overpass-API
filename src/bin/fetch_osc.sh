@@ -38,6 +38,21 @@ if [[ ! -d $LOCAL_DIR ]];
 };
 fi
 
+EXEC_DIR="$(dirname $0)/"
+if [[ ! "${EXEC_DIR:0:1}" == "/" ]]; then
+{
+  EXEC_DIR="$(pwd)/$EXEC_DIR"
+}; fi
+
+DB_DIR="$($EXEC_DIR/dispatcher --show-dir)"
+if [[ "$REPLICATE_ID" == "auto" ]]; then
+  if [[ ! -s "$DB_DIR/replicate_id" ]]; then
+    echo "$DB_DIR/replicate_id does not exist and start set to auto"
+    exit 1
+  fi
+  REPLICATE_ID=$(($(cat $DB_DIR/replicate_id) + 0))
+fi
+
 # $1 - remote source
 # $2 - local destination
 fetch_file()
