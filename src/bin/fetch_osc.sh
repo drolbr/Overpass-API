@@ -50,7 +50,7 @@ if [[ "$REPLICATE_ID" == "auto" ]]; then
     echo "$DB_DIR/replicate_id does not exist and start set to auto"
     exit 1
   fi
-  REPLICATE_ID=$(($(cat $DB_DIR/replicate_id) + 0))
+  REPLICATE_ID=$(($(cat "$DB_DIR/replicate_id") + 0))
 fi
 
 # $1 - remote source

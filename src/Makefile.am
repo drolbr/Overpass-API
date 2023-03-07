@@ -350,6 +350,10 @@ EXTRA_DIST = \
   html/no_frills.html\
   html/public_transport.html\
   html/query_form.html\
+  munin/osm_db_lag\
+  munin/osm_db_request_count\
+  munin/osm_mem_status\
+  munin/osm_timeout_status\
   rules/areas.osm3s\
   rules/areas_delta.osm3s
 
