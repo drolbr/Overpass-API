@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([OverpassAPI], [0.7.59.3], [roland@olbricht.nrw])
+AC_INIT([OverpassAPI], [0.7.59.4], [roland@olbricht.nrw])
 AC_CONFIG_SRCDIR([template_db/file_blocks.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
