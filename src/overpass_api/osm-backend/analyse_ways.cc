@@ -361,7 +361,7 @@ int main(int argc, char* args[])
           std::vector< Attic< Way_Skeleton > > attics;
           reconstruct_items(
               skel_it, skel_db.flat_end(), delta_it, delta_db.flat_end(), cur_idx_,
-              Id_Not_In_Set_Predicate(multiidx_it == multiidx_ways.end() ? nullptr : &multiidx_it->second),
+              Id_In_Set_Predicate(multiidx_it == multiidx_ways.end() ? nullptr : &multiidx_it->second),
               skels, attics);
           std::sort(attics.begin(), attics.end());
           std::sort(skels.begin(), skels.end());
@@ -371,10 +371,10 @@ int main(int argc, char* args[])
             ++undel_db_it;
           while (!(undel_db_it == undel_db.flat_end()) && undel_db_it.index() == cur_idx)
           {
-            if (multiidx_it == multiidx_ways.end() ||
+            if (multiidx_it != multiidx_ways.end() &&
                 std::find(multiidx_it->second.begin(), multiidx_it->second.end(),
                     Way_Skeleton::Id_Type(undel_db_it.object()))
-                == multiidx_it->second.end())
+                != multiidx_it->second.end())
               undel.push_back(undel_db_it.object());
             ++undel_db_it;
           }
