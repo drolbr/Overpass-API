@@ -397,23 +397,21 @@ std::map< Tag_Index_Local, std::set< Attic< Node_Skeleton::Id_Type > > >
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the std::set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
-std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > compute_changelog(
+std::map< Timestamp, std::vector< Change_Entry< Node_Skeleton::Id_Type > > > compute_changelog(
     const Data_By_Id< Node_Skeleton >& new_data,
     const std::vector< std::pair< Node_Skeleton::Id_Type, Node::Index > >& existing_map_positions,
     const std::map< Node::Index, std::set< Node_Skeleton > >& attic_skeletons)
 {
-  std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > result;
+  std::map< Timestamp, std::vector< Change_Entry< Node_Skeleton::Id_Type > > > result;
 
-  std::vector< Data_By_Id< Node_Skeleton >::Entry >::const_iterator next_it
-      = new_data.data.begin();
+  auto next_it = new_data.data.begin();
   Node_Skeleton::Id_Type last_id = Node_Skeleton::Id_Type(0ull);
-  for (std::vector< Data_By_Id< Node_Skeleton >::Entry >::const_iterator
-      it = new_data.data.begin(); it != new_data.data.end(); ++it)
+  for (auto it = new_data.data.begin(); it != new_data.data.end(); ++it)
   {
     ++next_it;
     if (next_it != new_data.data.end() && it->elem.id == next_it->elem.id)
       // A later version exists also in new_data.
-      result[next_it->meta.timestamp].insert(
+      result[next_it->meta.timestamp].push_back(
           Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, it->idx, next_it->idx));
 
     if (last_id == it->elem.id)
@@ -425,7 +423,7 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
     if (!idx)
     {
       // No old data exists.
-      result[it->meta.timestamp].insert(
+      result[it->meta.timestamp].push_back(
           Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, 0u, it->idx));
       continue;
     }
@@ -441,7 +439,7 @@ std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > comput
       // Something has gone wrong. Skip this object.
       continue;
 
-    result[it->meta.timestamp].insert(
+    result[it->meta.timestamp].push_back(
         Change_Entry< Node_Skeleton::Id_Type >(it->elem.id, Uint31_Index(idx->val()), it->idx));
   }
 
@@ -621,7 +619,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 	    existing_map_positions, existing_attic_map_positions, attic_local_tags);
 
     // Compute changelog
-    std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > > changelog
+    std::map< Timestamp, std::vector< Change_Entry< Node_Skeleton::Id_Type > > > changelog
         = compute_changelog(new_data, existing_map_positions, attic_skeletons);
     callback->compute_attic_finished();
 
@@ -666,8 +664,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
     }
 
     // Write changelog
-    update_elements(std::map< Timestamp, std::set< Change_Entry< Node_Skeleton::Id_Type > > >(), changelog,
-                    *transaction, *attic_settings().NODE_CHANGELOG);
+    update_elements({}, changelog, *transaction, *attic_settings().NODE_CHANGELOG);
     callback->changelog_finished();
   }
 

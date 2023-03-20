@@ -249,14 +249,20 @@ int main(int argc, char* args[])
     }
     else if (std::string("--node-changelog") == args[2])
     {
-      Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().NODE_CHANGELOG));
-      for (Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto db_idx = transaction.data_index(attic_settings().NODE_CHANGELOG);
+      if (db_idx->get_file_format_version() <= 7561)
       {
-        std::cout<<std::dec<<it.index().timestamp<<'\t'
-            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<std::dec<<it.object().elem_id.val()<<'\n';
+        Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > > db(db_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'
+              <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+              <<std::dec<<it.object().elem_id.val()<<'\n';
+      }
+      else
+      {
+        Block_Backend< Timestamp, Node_Skeleton::Id_Type > db(db_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'<<std::dec<<it.object().val()<<'\n';
       }
     }
     else if (std::string("--ways") == args[2])
@@ -532,14 +538,21 @@ int main(int argc, char* args[])
     }
     else if (std::string("--way-changelog") == args[2])
     {
-      Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().WAY_CHANGELOG));
-      for (Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto db_idx = transaction.data_index(attic_settings().WAY_CHANGELOG);
+      if (db_idx->get_file_format_version() <= 7561)
       {
-        std::cout<<std::dec<<it.index().timestamp<<'\t'
-            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<std::dec<<it.object().elem_id.val()<<'\n';
+        Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > > db(db_idx);
+        for (Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > >::Flat_Iterator
+            it(db.flat_begin()); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'
+              <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+              <<std::dec<<it.object().elem_id.val()<<'\n';
+      }
+      else
+      {
+        Block_Backend< Timestamp, Way_Skeleton::Id_Type > db(db_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'<<std::dec<<it.object().val()<<'\n';
       }
     }
     else if (std::string("--rels") == args[2])
@@ -732,14 +745,21 @@ int main(int argc, char* args[])
     }
     else if (std::string("--rel-changelog") == args[2])
     {
-      Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().RELATION_CHANGELOG));
-      for (Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto db_idx = transaction.data_index(attic_settings().RELATION_CHANGELOG);
+      if (db_idx->get_file_format_version() <= 7561)
       {
-        std::cout<<std::dec<<it.index().timestamp<<'\t'
-            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<std::dec<<it.object().elem_id.val()<<'\n';
+        Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > > db(db_idx);
+        for (Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > >::Flat_Iterator
+            it(db.flat_begin()); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'
+              <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+              <<std::dec<<it.object().elem_id.val()<<'\n';
+      }
+      else
+      {
+        Block_Backend< Timestamp, Relation_Skeleton::Id_Type > db(db_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'<<std::dec<<it.object().val()<<'\n';
       }
     }
     else if (std::string("--user") == args[2])

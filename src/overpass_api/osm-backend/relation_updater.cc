@@ -692,7 +692,7 @@ void add_intermediate_changelog_entries
      const std::map< Way_Skeleton::Id_Type,
          std::vector< std::pair< Uint31_Index, Attic< Way_Skeleton::Id_Type > > > >& ways_by_id,
      bool add_last_version, Uint31_Index attic_idx, Uint31_Index new_idx,
-     std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >& result)
+     std::map< Timestamp, std::vector< Change_Entry< Relation_Skeleton::Id_Type > > >& result)
 {
   std::vector< uint64 > relevant_timestamps;
   for (std::vector< Relation_Entry >::const_iterator mit = skeleton.members.begin();
@@ -758,13 +758,13 @@ void add_intermediate_changelog_entries
   for (std::vector< uint64 >::const_iterator it = relevant_timestamps.begin();
        it != relevant_timestamps.end(); ++it)
   {
-    result[Timestamp(*it)].insert(
+    result[Timestamp(*it)].push_back(
         Change_Entry< Relation_Skeleton::Id_Type >(skeleton.id, idxs[i], idxs[i+1]));
     ++i;
   }
 
   if (add_last_version)
-    result[Timestamp(new_timestamp)].insert(
+    result[Timestamp(new_timestamp)].push_back(
         Change_Entry< Relation_Skeleton::Id_Type >(skeleton.id, idx, new_idx));
 }
 
@@ -951,7 +951,7 @@ void compute_new_attic_skeletons
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the std::set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
-std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > compute_changelog(
+std::map< Timestamp, std::vector< Change_Entry< Relation_Skeleton::Id_Type > > > compute_changelog(
     const Data_By_Id< Relation_Skeleton >& new_data,
     const std::map< Uint31_Index, std::set< Relation_Skeleton > >& implicitly_moved_skeletons,
     const std::vector< std::pair< Relation_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
@@ -962,7 +962,7 @@ std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > co
     const std::map< Way_Skeleton::Id_Type, Uint31_Index >& new_way_idx_by_id,
     const std::map< Uint31_Index, std::set< Attic< Way_Delta > > >& new_attic_way_skeletons)
 {
-  std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > result;
+  std::map< Timestamp, std::vector< Change_Entry< Relation_Skeleton::Id_Type > > > result;
 
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
@@ -1016,7 +1016,7 @@ std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > co
     if (!idx)
     {
       // No old data exists.
-      result[it->meta.timestamp].insert(
+      result[it->meta.timestamp].push_back(
           Change_Entry< Relation_Skeleton::Id_Type >(it->elem.id, 0u, next_idx));
       continue;
     }
@@ -1250,7 +1250,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
                                        existing_map_positions, existing_idx_lists);
 
     // Compute changelog
-    std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > > changelog
+    std::map< Timestamp, std::vector< Change_Entry< Relation_Skeleton::Id_Type > > > changelog
         = compute_changelog(new_data, implicitly_moved_skeletons,
                             existing_map_positions, existing_attic_map_positions, attic_skeletons,
                             new_node_idx_by_id, new_attic_node_skeletons,
@@ -1293,8 +1293,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     }
 
     // Write changelog
-    update_elements(std::map< Timestamp, std::set< Change_Entry< Relation_Skeleton::Id_Type > > >(), changelog,
-                    *transaction, *attic_settings().RELATION_CHANGELOG);
+    update_elements({}, changelog, *transaction, *attic_settings().RELATION_CHANGELOG);
 
     flush_roles();
   }
