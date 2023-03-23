@@ -78,11 +78,11 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
   callback->migration_started(changelog_file_properties< Skeleton >()->get_file_name_trunk());
 
   Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > >
-      from_db(transaction.data_index(current_global_tags_file_properties_756< Skeleton >()));
+      from_db(transaction.data_index(changelog_file_properties< Skeleton >()));
 
   Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
   Block_Backend< Timestamp, typename Skeleton::Id_Type >
-      into_db(into_transaction.data_index(current_global_tags_file_properties< Skeleton >()));
+      into_db(into_transaction.data_index(changelog_file_properties< Skeleton >()));
   
   std::map< Timestamp, std::vector< typename Skeleton::Id_Type > > db_to_insert;
   uint64_t elem_cnt = 0;
