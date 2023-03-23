@@ -84,7 +84,27 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
   Block_Backend< Timestamp, typename Skeleton::Id_Type >
       into_db(into_transaction.data_index(current_global_tags_file_properties< Skeleton >()));
   
-  //...
+  std::map< Timestamp, std::vector< typename Skeleton::Id_Type > > db_to_insert;
+  uint64_t elem_cnt = 0;
+  for (auto from_it = from_db.flat_begin(); !(from_it == from_db.flat_end()); ++from_it)
+  {
+    db_to_insert[from_it.index()].push_back(from_it.object().elem_id);
+    
+    if (++elem_cnt >= 256*1024*1024)
+    {
+      callback->migration_flush();
+      for (auto& i : db_to_insert)
+        std::sort(i.second.begin(), i.second.end());
+      into_db.update({}, db_to_insert);
+      db_to_insert.clear();
+      elem_cnt = 0;
+    }
+  }
+
+  callback->migration_flush();
+  for (auto& i : db_to_insert)
+    std::sort(i.second.begin(), i.second.end());
+  into_db.update({}, db_to_insert);
   
   callback->migration_completed();
 }
