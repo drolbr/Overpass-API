@@ -21,6 +21,9 @@
 #include "../../template_db/dispatcher.h"
 #include "../../template_db/dispatcher_client.h"
 
+#include <sys/time.h>
+#include <sys/resource.h>
+
 #include <cstring>
 #include <iostream>
 #include <sstream>
@@ -440,6 +443,14 @@ int main(int argc, char* argv[])
 
   try
   {
+    rlimit max_open_files;
+    int result = getrlimit(RLIMIT_NOFILE, &max_open_files);
+    if (result == -1)
+    {
+      std::cerr<<"getrlimit(RLIMIT_NOFILE, ..) failed: "<<errno<<' '<<strerror(errno)<<'\n';
+      return errno;
+    }
+    
     Logger logger(db_dir);
     Default_Dispatcher_Logger disp_logger(logger);
     if (max_allowed_space <= 0)
@@ -447,14 +458,14 @@ int main(int argc, char* argv[])
     if (max_allowed_time_units <= 0)
       max_allowed_time_units = areas ? area_settings().total_available_time_units
           : osm_base_settings().total_available_time_units;
-    Dispatcher dispatcher
-        (areas ? area_settings().shared_name : osm_base_settings().shared_name,
-         "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
-	 areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
-	 areas ? area_settings().purge_timeout : osm_base_settings().purge_timeout,
-	 max_allowed_space,
-	 max_allowed_time_units,
-	 files_to_manage, &disp_logger);
+    Dispatcher dispatcher(
+        areas ? area_settings().shared_name : osm_base_settings().shared_name,
+        "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
+        areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
+        max_open_files.rlim_cur > 256 ? max_open_files.rlim_cur - 64 : max_open_files.rlim_cur*3/4,
+        areas ? area_settings().purge_timeout : osm_base_settings().purge_timeout,
+        max_allowed_space, max_allowed_time_units,
+        files_to_manage, &disp_logger);
 
     if (rate_limit > -1)
       dispatcher.set_rate_limit(rate_limit);

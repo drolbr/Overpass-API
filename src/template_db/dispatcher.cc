@@ -37,12 +37,10 @@
 #include <vector>
 
 
-Dispatcher_Socket::Dispatcher_Socket
-    (const std::string& dispatcher_share_name,
-     const std::string& shadow_name_,
-     const std::string& db_dir_,
-     uint max_num_reading_processes)
-  : socket("", max_num_reading_processes)
+Dispatcher_Socket::Dispatcher_Socket(
+    const std::string& dispatcher_share_name, const std::string& db_dir_,
+    uint max_num_reading_processes, uint max_num_socket_clients)
+  : socket("", max_num_reading_processes), open_socket_limit(max_num_socket_clients)
 {
   signal(SIGPIPE, SIG_IGN);
 
@@ -65,22 +63,20 @@ Dispatcher_Socket::~Dispatcher_Socket()
 
 void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid)
 {
-  struct sockaddr_un sockaddr_un_dummy;
-  uint sockaddr_un_dummy_size = sizeof(sockaddr_un_dummy);
-  int socket_fd = accept(socket.descriptor(), (sockaddr*)&sockaddr_un_dummy,
-			 (socklen_t*)&sockaddr_un_dummy_size);
-  if (socket_fd == -1)
+  if (started_connections.size() + connection_per_pid.base_map().size() < open_socket_limit)
   {
-    if (errno != EAGAIN && errno != EWOULDBLOCK)
-      throw File_Error
-	    (errno, "(socket)", "Dispatcher_Server::6");
-  }
-  else
-  {
-    if (fcntl(socket_fd, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
-      throw File_Error
-	    (errno, "(socket)", "Dispatcher_Server::7");
-    started_connections.push_back(socket_fd);
+    int socket_fd = accept(socket.descriptor(), NULL, NULL);
+    if (socket_fd == -1)
+    {
+      if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EMFILE)
+        throw File_Error(errno, "(socket)", "Dispatcher_Server::6");
+    }
+    else
+    {
+      if (fcntl(socket_fd, F_SETFL, O_RDWR|O_NONBLOCK) == -1)
+        throw File_Error(errno, "(socket)", "Dispatcher_Server::7");
+      started_connections.push_back(socket_fd);
+    }
   }
 
   // associate to a new connection the pid of the sender
@@ -369,17 +365,14 @@ void Global_Resource_Planner::purge(Connection_Per_Pid_Map& connection_per_pid)
 }
 
 
-Dispatcher::Dispatcher
-    (std::string dispatcher_share_name_,
-     std::string index_share_name,
-     std::string shadow_name_,
-     std::string db_dir_,
-     uint max_num_reading_processes_, uint purge_timeout_,
-     uint64 total_available_space_,
-     uint64 total_available_time_units_,
-     const std::vector< File_Properties* >& controlled_files_,
-     Dispatcher_Logger* logger_)
-    : socket(dispatcher_share_name_, shadow_name_, db_dir_, max_num_reading_processes_),
+Dispatcher::Dispatcher(
+    std::string dispatcher_share_name_,
+    std::string index_share_name, std::string shadow_name_, std::string db_dir_,
+    uint max_num_reading_processes_, uint max_num_socket_clients, uint purge_timeout_,
+    uint64 total_available_space_, uint64 total_available_time_units_,
+    const std::vector< File_Properties* >& controlled_files_,
+    Dispatcher_Logger* logger_)
+    : socket(dispatcher_share_name_, db_dir_, max_num_reading_processes_, max_num_socket_clients),
       transaction_insulator(db_dir_, controlled_files_),
       shadow_name(shadow_name_),
       dispatcher_share_name(dispatcher_share_name_),

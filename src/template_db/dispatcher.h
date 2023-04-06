@@ -145,10 +145,9 @@ private:
 class Dispatcher_Socket
 {
 public:
-  Dispatcher_Socket(const std::string& dispatcher_share_name,
-		    const std::string& shadow_name_,
-		    const std::string& db_dir_,
-		    uint max_num_reading_processes_);
+  Dispatcher_Socket(
+      const std::string& dispatcher_share_name, const std::string& db_dir_,
+      uint max_num_reading_processes_, uint max_num_socket_clients);
   ~Dispatcher_Socket();
 
   void look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid);
@@ -158,6 +157,7 @@ private:
   Unix_Socket socket;
   std::string socket_name;
   std::vector< int > started_connections;
+  uint open_socket_limit;
 };
 
 
@@ -202,9 +202,8 @@ class Dispatcher
 	       std::string index_share_name,
 	       std::string shadow_name,
 	       std::string db_dir,
-	       uint max_num_reading_processes, uint purge_timeout,
-	       uint64 total_available_space,
-	       uint64 total_available_time_units,
+	       uint max_num_reading_processes, uint max_num_socket_clients, uint purge_timeout,
+	       uint64 total_available_space, uint64 total_available_time_units,
 	       const std::vector< File_Properties* >& controlled_files,
 	       Dispatcher_Logger* logger = 0);
 
