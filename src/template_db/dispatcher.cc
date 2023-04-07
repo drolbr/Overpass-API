@@ -580,7 +580,7 @@ void Dispatcher::migrate_commit(pid_t pid)
   if (!get_lock_for_idx_change(pid))
     return;
   if (logger)
-    logger->write_commit(pid);
+    logger->migrate_commit(pid);
   try
   {
     Raw_File shadow_file(shadow_name + ".next", O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
