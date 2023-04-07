@@ -147,6 +147,35 @@ void Dispatcher_Client::write_start()
 }
 
 
+void Dispatcher_Client::migrate_start()
+{
+  pid_t pid = getpid();
+
+  send_message(Dispatcher::MIGRATE_START, "Dispatcher_Client::migrate_start::socket");
+
+  while (true)
+  {
+    if (ack_arrived())
+    {
+      if (file_exists(shadow_name + ".lock"))
+      {
+        try
+        {
+          pid_t locked_pid = 0;
+          std::ifstream lock((shadow_name + ".lock").c_str());
+          lock>>locked_pid;
+          if (locked_pid == pid)
+            return;
+        }
+        catch (...) {}
+      }
+      send_message(Dispatcher::MIGRATE_START, "Dispatcher_Client::migrate_start::socket");
+    }
+    millisleep(500);
+  }
+}
+
+
 void Dispatcher_Client::write_rollback()
 {
   pid_t pid = getpid();
@@ -161,17 +190,49 @@ void Dispatcher_Client::write_rollback()
       {
         try
         {
-	  pid_t locked_pid;
-	  std::ifstream lock((shadow_name + ".lock").c_str());
-	  lock>>locked_pid;
-	  if (locked_pid != pid)
-	    return;
+          pid_t locked_pid = 0;
+          std::ifstream lock((shadow_name + ".lock").c_str());
+          lock>>locked_pid;
+          if (locked_pid != pid)
+            return;
         }
         catch (...) {}
       }
       else
         return;
       send_message(Dispatcher::WRITE_ROLLBACK, "Dispatcher_Client::write_rollback::socket");
+    }
+
+    millisleep(500);
+  }
+}
+
+
+void Dispatcher_Client::migrate_rollback()
+{
+  pid_t pid = getpid();
+
+  send_message(Dispatcher::MIGRATE_ROLLBACK, "Dispatcher_Client::migrate_rollback::socket");
+
+  while (true)
+  {
+    if (ack_arrived())
+    {
+      if (file_exists(shadow_name + ".lock"))
+      {
+        try
+        {
+          pid_t locked_pid = 0;
+          std::ifstream lock((shadow_name + ".lock").c_str());
+          lock>>locked_pid;
+          if (locked_pid != pid)
+            return;
+        }
+        catch (...) {}
+      }
+      else
+        return;
+      send_message(Dispatcher::MIGRATE_ROLLBACK, "Dispatcher_Client::migrate_rollback::socket");
     }
 
     millisleep(500);
@@ -194,11 +255,11 @@ void Dispatcher_Client::write_commit()
       {
         try
         {
-	  pid_t locked_pid;
-	  std::ifstream lock((shadow_name + ".lock").c_str());
-	  lock>>locked_pid;
-	  if (locked_pid != pid)
-	    return;
+          pid_t locked_pid = 0;
+          std::ifstream lock((shadow_name + ".lock").c_str());
+          lock>>locked_pid;
+          if (locked_pid != pid)
+            return;
         }
         catch (...) {}
       }
@@ -207,6 +268,39 @@ void Dispatcher_Client::write_commit()
     }
 
     send_message(Dispatcher::WRITE_COMMIT, "Dispatcher_Client::write_commit::socket");
+    millisleep(200);
+  }
+}
+
+
+void Dispatcher_Client::migrate_commit()
+{
+  pid_t pid = getpid();
+
+  send_message(Dispatcher::MIGRATE_COMMIT, "Dispatcher_Client::migrate_commit::socket");
+  millisleep(200);
+
+  while (true)
+  {
+    if (ack_arrived())
+    {
+      if (file_exists(shadow_name + ".lock"))
+      {
+        try
+        {
+          pid_t locked_pid = 0;
+          std::ifstream lock((shadow_name + ".lock").c_str());
+          lock>>locked_pid;
+          if (locked_pid != pid)
+            return;
+        }
+        catch (...) {}
+      }
+      else
+        return;
+    }
+
+    send_message(Dispatcher::MIGRATE_COMMIT, "Dispatcher_Client::migrate_commit::socket");
     millisleep(200);
   }
 }

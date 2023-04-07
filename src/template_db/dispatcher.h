@@ -33,10 +33,14 @@ struct Dispatcher_Logger
 {
   typedef uint pid_t;
 
-  virtual void write_start(pid_t pid, const std::vector< pid_t >& registered) = 0;
+  virtual void write_start(pid_t pid, const std::vector< ::pid_t >& registered) = 0;
   virtual void write_rollback(pid_t pid) = 0;
   virtual void write_pending(pid_t pid, const std::set< pid_t >& reading) = 0;
   virtual void write_commit(pid_t pid) = 0;
+  virtual void migrate_start(pid_t pid, const std::vector< ::pid_t >& registered) = 0;
+  virtual void migrate_rollback(pid_t pid) = 0;
+  virtual void migrate_commit(pid_t pid) = 0;
+
   virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
       = 0;
   virtual void read_idx_finished(pid_t pid) = 0;
@@ -190,6 +194,9 @@ class Dispatcher
     static const uint32 WRITE_START = 101;
     static const uint32 WRITE_ROLLBACK = 102;
     static const uint32 WRITE_COMMIT = 103;
+    static const uint32 MIGRATE_START = 111;
+    static const uint32 MIGRATE_ROLLBACK = 112;
+    static const uint32 MIGRATE_COMMIT = 113;
     static const uint32 REQUEST_READ_AND_IDX = 201;
     static const uint32 READ_IDX_FINISHED = 202;
     static const uint32 READ_FINISHED = 203;
@@ -222,16 +229,30 @@ class Dispatcher
 
     /** Copies the shadow files onto the main index files. A lock prevents
         that incomplete copies after a crash may leave the database in an
-	unstable state. Removes the mutex for the write process. */
+        unstable state. Removes the mutex for the write process. */
     void write_commit(pid_t pid);
+
+    /** Allocates a write lock if possible. Returns without doing anything
+        otherwise. */
+    void migrate_start(pid_t pid);
+
+    /** Removes the mutex for the write process and the migrated data and index files
+        without changing any mainline index file. */
+    void migrate_rollback(pid_t pid);
+
+    /** Replaces the data and index files with the migrated files
+        in all cases where those files exist. A lock prevents
+        that incomplete copies after a crash may leave the database in an
+        unstable state. Removes the mutex for the write process. */
+    void migrate_commit(pid_t pid);
 
     /** Read operations: --------------------------------------------------- */
 
     /** Request the index for a read operation and registers the reading process.
         Reading the index files should be taking a quick copy, because if any process
-	is in this state, write_commits are blocked. */
-    void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space,
-			      uint32 client_token);
+        is in this state, write_commits are blocked. */
+    void request_read_and_idx(
+        pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space, uint32 client_token);
 
     /** Changes the registered state from reading the index to reading the
         database. Can be safely called multiple times for the same process. */
@@ -275,6 +296,7 @@ class Dispatcher
     uint32 requests_finished_counter;
     Global_Resource_Planner global_resource_planner;
 
+    bool get_lock_for_idx_change(pid_t pid);
     uint64 total_claimed_space() const;
     uint64 total_claimed_time_units() const;
 };

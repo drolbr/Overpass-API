@@ -50,13 +50,15 @@ public:
   Transaction_Insulator(const std::string& db_dir, const std::vector< File_Properties* >& controlled_files_);
   void request_read_and_idx(pid_t pid);
   void read_finished(pid_t pid);
-  std::set< pid_t > registered_pids() const;
+  std::vector< ::pid_t > registered_pids() const;
 
   void copy_shadows_to_mains();
   void copy_mains_to_shadows();
   void remove_shadows();
+  void remove_migrated();
   void set_current_footprints();
   void write_index_of_empty_blocks();
+  void move_migrated_files_in_place();
 
   const std::string& db_dir() const { return db_dir_; }
 

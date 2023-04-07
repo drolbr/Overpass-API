@@ -156,7 +156,7 @@ Dispatcher_Write_Guard::Dispatcher_Write_Guard(Dispatcher_Client* dispatcher_cli
   if (dispatcher_client)
   {
     logger->annotated_log("migrate_start() start");
-    dispatcher_client->write_start();
+    dispatcher_client->migrate_start();
     logger->annotated_log("migrate_start() end");
   }
 }
@@ -167,7 +167,7 @@ void Dispatcher_Write_Guard::commit()
   if (dispatcher_client)
   {
     logger->annotated_log("migrate_commit() start");
-    dispatcher_client->write_commit();
+    dispatcher_client->migrate_commit();
     logger->annotated_log("migrate_commit() end");
   }
   dispatcher_client = 0;
@@ -179,7 +179,7 @@ Dispatcher_Write_Guard::~Dispatcher_Write_Guard()
   if (dispatcher_client)
   {
     logger->annotated_log("write_rollback() start");
-    dispatcher_client->write_rollback();
+    dispatcher_client->migrate_rollback();
     logger->annotated_log("write_rollback() end");
   }
 }

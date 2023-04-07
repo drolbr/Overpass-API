@@ -51,14 +51,17 @@ class Dispatcher_Client
 
     /** Allocates a write lock. Waits if necessary. */
     void write_start();
+    void migrate_start();
 
     /** Aborts an active writing operation. Results are undefined if it is
         called outside a writing operation. */
     void write_rollback();
+    void migrate_rollback();
 
     /** Commits an active writing operation. Results are undefined if it is
         called outside a writing operation. */
     void write_commit();
+    void migrate_commit();
 
     /** Read operations: --------------------------------------------------- */
 

@@ -30,6 +30,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -435,7 +436,13 @@ Dispatcher::Dispatcher
     transaction_insulator.copy_shadows_to_mains();
     remove(shadow_name.c_str());
   }
+  else if (file_exists(shadow_name + ".next"))
+  {
+    transaction_insulator.move_migrated_files_in_place();
+    remove((shadow_name + ".next").c_str());
+  }
   transaction_insulator.remove_shadows();
+  transaction_insulator.remove_migrated();
   remove((shadow_name + ".lock").c_str());
   transaction_insulator.set_current_footprints();
 }
@@ -445,6 +452,30 @@ Dispatcher::~Dispatcher()
 {
   munmap((void*)dispatcher_shm_ptr, SHM_SIZE + transaction_insulator.db_dir().size() + shadow_name.size());
   shm_unlink(dispatcher_share_name.c_str());
+}
+
+void try_write_pid_to_lockfile(const std::string& shadow_name, pid_t pid)
+{
+  try
+  {
+    std::ofstream lock((shadow_name + ".lock").c_str());
+    lock<<pid;
+  }
+  catch (...) {}
+}
+
+
+void confirm_lockfile_or_show_error(const File_Error& e, const std::string& shadow_name, pid_t pid)
+{
+  if ((e.error_number == EEXIST) && (e.filename == (shadow_name + ".lock")))
+  {
+    pid_t locked_pid;
+    std::ifstream lock((shadow_name + ".lock").c_str());
+    lock>>locked_pid;
+    if (locked_pid == pid)
+      return;
+  }
+  std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
 }
 
 
@@ -458,33 +489,33 @@ void Dispatcher::write_start(pid_t pid)
     transaction_insulator.copy_mains_to_shadows();
     transaction_insulator.write_index_of_empty_blocks();
     if (logger)
-    {
-      std::set< ::pid_t > registered = transaction_insulator.registered_pids();
-      std::vector< Dispatcher_Logger::pid_t > registered_v;
-      registered_v.assign(registered.begin(), registered.end());
-      logger->write_start(pid, registered_v);
-    }
+      logger->write_start(pid, transaction_insulator.registered_pids());
   }
   catch (File_Error e)
   {
-    if ((e.error_number == EEXIST) && (e.filename == (shadow_name + ".lock")))
-    {
-      pid_t locked_pid;
-      std::ifstream lock((shadow_name + ".lock").c_str());
-      lock>>locked_pid;
-      if (locked_pid == pid)
-	return;
-    }
-    std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
+    confirm_lockfile_or_show_error(e, shadow_name, pid);
     return;
   }
+  try_write_pid_to_lockfile(shadow_name, pid);
+}
 
+
+void Dispatcher::migrate_start(pid_t pid)
+{
+  // Lock the writing lock file for the client.
   try
   {
-    std::ofstream lock((shadow_name + ".lock").c_str());
-    lock<<pid;
+    Raw_File shadow_file(shadow_name + ".lock", O_RDWR|O_CREAT|O_EXCL, S_666, "write_start:1");
+
+    if (logger)
+      logger->migrate_start(pid, transaction_insulator.registered_pids());
   }
-  catch (...) {}
+  catch (File_Error e)
+  {
+    confirm_lockfile_or_show_error(e, shadow_name, pid);
+    return;
+  }
+  try_write_pid_to_lockfile(shadow_name, pid);
 }
 
 
@@ -497,23 +528,38 @@ void Dispatcher::write_rollback(pid_t pid)
 }
 
 
-void Dispatcher::write_commit(pid_t pid)
+void Dispatcher::migrate_rollback(pid_t pid)
+{
+  if (logger)
+    logger->write_rollback(pid);
+  transaction_insulator.remove_migrated();
+  remove((shadow_name + ".lock").c_str());
+}
+
+
+bool Dispatcher::get_lock_for_idx_change(pid_t pid)
 {
   if (!processes_reading_idx.empty())
   {
     pending_commit = true;
     if (logger)
       logger->write_pending(pid, processes_reading_idx);
-    return;
+    return false;
   }
   pending_commit = false;
+  return true;
+}
 
+
+void Dispatcher::write_commit(pid_t pid)
+{
+  if (!get_lock_for_idx_change(pid))
+    return;
   if (logger)
     logger->write_commit(pid);
   try
   {
     Raw_File shadow_file(shadow_name, O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
-
     transaction_insulator.copy_shadows_to_mains();
   }
   catch (File_Error e)
@@ -524,6 +570,30 @@ void Dispatcher::write_commit(pid_t pid)
 
   remove(shadow_name.c_str());
   transaction_insulator.remove_shadows();
+  remove((shadow_name + ".lock").c_str());
+  transaction_insulator.set_current_footprints();
+}
+
+
+void Dispatcher::migrate_commit(pid_t pid)
+{
+  if (!get_lock_for_idx_change(pid))
+    return;
+  if (logger)
+    logger->write_commit(pid);
+  try
+  {
+    Raw_File shadow_file(shadow_name + ".next", O_RDWR|O_CREAT|O_EXCL, S_666, "write_commit:1");
+    transaction_insulator.move_migrated_files_in_place();
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
+    return;
+  }
+
+  remove((shadow_name + ".next").c_str());
+  transaction_insulator.remove_migrated();
   remove((shadow_name + ".lock").c_str());
   transaction_insulator.set_current_footprints();
 }
@@ -632,22 +702,29 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	if (command == TERMINATE)
 	  break;
       }
-      else if (command == WRITE_START || command == WRITE_ROLLBACK || command == WRITE_COMMIT)
+      else if (command == WRITE_START || command == WRITE_COMMIT
+          || command == MIGRATE_START || command == MIGRATE_COMMIT)
       {
-	if (command == WRITE_START)
-	{
-	  global_resource_planner.purge(connection_per_pid);
-	  write_start(client_pid);
-	}
-	else if (command == WRITE_COMMIT)
-	{
-	  global_resource_planner.purge(connection_per_pid);
-	  write_commit(client_pid);
-	}
-	else if (command == WRITE_ROLLBACK)
-	  write_rollback(client_pid);
+        global_resource_planner.purge(connection_per_pid);
+        if (command == WRITE_START)
+          write_start(client_pid);
+        else if (command == WRITE_COMMIT)
+          write_commit(client_pid);
+        else if (command == MIGRATE_START)
+          migrate_start(client_pid);
+        else
+          migrate_commit(client_pid);
 
-	connection_per_pid.get(client_pid)->send_result(command);
+        connection_per_pid.get(client_pid)->send_result(command);
+      }
+      else if (command == WRITE_ROLLBACK || command == MIGRATE_ROLLBACK)
+      {
+        if (command == WRITE_ROLLBACK)
+          write_rollback(client_pid);
+        else
+          migrate_rollback(client_pid);
+
+        connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == HANGUP || command == READ_FINISHED)
       {
@@ -828,34 +905,31 @@ void Dispatcher::output_status()
         <<"Counter of started requests: "<<requests_started_counter<<'\n'
         <<"Counter of finished requests: "<<requests_finished_counter<<'\n';
 
-    std::set< ::pid_t > collected_pids = transaction_insulator.registered_pids();
+    auto collected_pids = transaction_insulator.registered_pids();
 
-    for (std::vector< Reader_Entry >::const_iterator it = global_resource_planner.get_active().begin();
-	 it != global_resource_planner.get_active().end(); ++it)
+    for (const auto& i : global_resource_planner.get_active())
     {
-      if (processes_reading_idx.find(it->client_pid) != processes_reading_idx.end())
-	status<<REQUEST_READ_AND_IDX;
+      if (processes_reading_idx.find(i.client_pid) != processes_reading_idx.end())
+        status<<REQUEST_READ_AND_IDX;
       else
-	status<<READ_IDX_FINISHED;
-      status<<' '<<it->client_pid<<' '<<it->client_token<<' '
-          <<it->max_space<<' '<<it->max_time<<' '<<it->start_time<<'\n';
+        status<<READ_IDX_FINISHED;
+      status<<' '<<i.client_pid<<' '<<i.client_token<<' '
+          <<i.max_space<<' '<<i.max_time<<' '<<i.start_time<<'\n';
 
-      collected_pids.insert(it->client_pid);
+      collected_pids.push_back(i.client_pid);
     }
+    std::sort(collected_pids.begin(), collected_pids.end());
+    collected_pids.erase(std::unique(collected_pids.begin(), collected_pids.end()), collected_pids.end());
 
-    for (std::map< pid_t, Blocking_Client_Socket* >::const_iterator it = connection_per_pid.base_map().begin();
-	 it != connection_per_pid.base_map().end(); ++it)
+    for (auto i : connection_per_pid.base_map())
     {
-      if (processes_reading_idx.find(it->first) == processes_reading_idx.end()
-	  && collected_pids.find(it->first) == collected_pids.end())
-	status<<"pending\t"<<it->first<<'\n';
+      if (processes_reading_idx.find(i.first) == processes_reading_idx.end()
+          && std::binary_search(collected_pids.begin(), collected_pids.end(), i.first))
+        status<<"pending\t"<<i.first<<'\n';
     }
 
-    for (std::vector< Quota_Entry >::const_iterator it = global_resource_planner.get_afterwards().begin();
-	 it != global_resource_planner.get_afterwards().end(); ++it)
-    {
-      status<<"quota\t"<<it->client_token<<' '<<it->expiration_time<<'\n';
-    }
+    for (const auto& i : global_resource_planner.get_afterwards())
+      status<<"quota\t"<<i.client_token<<' '<<i.expiration_time<<'\n';
   }
   catch (...) {}
 }
