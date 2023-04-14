@@ -6,7 +6,7 @@ Reading all blocks ...
 Index 3: 1100001232 
 Index 4: 1240 
 Index 5: 1000001252 1000001253 
-Index 7: 1000001271 1100001272 11272 
+Index 7: 1100001272 11272 1000001271 
 Index 8: 1282 
 ... all blocks read.
 Reading blocks with indices {0, 9, ..., 99} ...
@@ -16,14 +16,14 @@ Reading blocks with indices {0, 1, ..., 9} ...
 Index 3: 1100001232 
 Index 4: 1240 
 Index 5: 1000001252 1000001253 
-Index 7: 1000001271 1100001272 11272 
+Index 7: 1100001272 11272 1000001271 
 Index 8: 1282 
 ... all blocks read.
 Reading blocks with indices [0, 10[ ...
 Index 3: 1100001232 
 Index 4: 1240 
 Index 5: 1000001252 1000001253 
-Index 7: 1000001271 1100001272 11272 
+Index 7: 1100001272 11272 1000001271 
 Index 8: 1282 
 ... all blocks read.
 Reading blocks with indices {90, 91, ..., 99} ...
@@ -42,7 +42,7 @@ Reading blocks with indices [0,10[\cup [50, 51[\cup [90, 100[ ...
 Index 3: 1100001232 
 Index 4: 1240 
 Index 5: 1000001252 1000001253 
-Index 7: 1000001271 1100001272 11272 
+Index 7: 1100001272 11272 1000001271 
 Index 8: 1282 
 ... all blocks read.
 Reading blocks with indices \emptyset ...

@@ -155,17 +155,17 @@ std::map< Index, std::set< Element_Skeleton > > get_existing_skeletons
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  std::set< Index > req;
-  for (typename std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >::const_iterator
-      it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(Index(it->second.val()));
+  std::vector< Index > req;
+  for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
+    req.push_back(Index(it->second.val()));
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
 
   std::map< Index, std::set< Element_Skeleton > > result;
   Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
 
   Block_Backend< Index, Element_Skeleton > db(transaction.data_index(&file_properties));
-  for (typename Block_Backend< Index, Element_Skeleton >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
   {
     if (binary_search(ids_with_position.begin(), ids_with_position.end(),
         std::make_pair(it.object().id, 0), comp))
@@ -184,15 +184,17 @@ std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_S
      Transaction& transaction, const File_Properties& skel_file_properties,
      const File_Properties& undelete_file_properties)
 {
-  std::set< Index > req;
+  std::vector< Index > req;
   for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(Index(it->second.val()));
+    req.push_back(Index(it->second.val()));
 
   for (auto it = existing_idx_lists.begin(); it != existing_idx_lists.end(); ++it)
   {
     for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      req.insert(*it2);
+      req.push_back(*it2);
   }
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
 
   std::map< typename Element_Skeleton::Id_Type, std::pair< Index, Attic< Element_Skeleton_Delta > > > result;
   Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
@@ -241,9 +243,11 @@ std::map< Index, std::set< Element_Skeleton > > get_existing_meta
     (const std::vector< std::pair< typename Element_Skeleton::Id_Type, Index > >& ids_with_position,
      Transaction& transaction, const File_Properties& file_properties)
 {
-  std::set< Index > req;
+  std::vector< Index > req;
   for (auto it = ids_with_position.begin(); it != ids_with_position.end(); ++it)
-    req.insert(it->second);
+    req.push_back(it->second);
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
 
   std::map< Index, std::set< Element_Skeleton > > result;
   Idx_Agnostic_Compare< Index, typename Element_Skeleton::Id_Type > comp;
@@ -440,34 +444,6 @@ void new_current_local_tags
 }
 
 
-/* Constructs the global tags from the local tags. */
-template< typename Id_Type >
-void new_current_global_tags
-    (const std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
-     const std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags,
-     std::map< Tag_Index_Global, std::set< Tag_Object_Global< Id_Type > > >& attic_global_tags,
-     std::map< Tag_Index_Global, std::set< Tag_Object_Global< Id_Type > > >& new_global_tags)
-{
-  for (typename std::map< Tag_Index_Local, std::set< Id_Type > >::const_iterator
-      it_idx = attic_local_tags.begin(); it_idx != attic_local_tags.end(); ++it_idx)
-  {
-    std::set< Tag_Object_Global< Id_Type > >& handle(attic_global_tags[Tag_Index_Global(it_idx->first)]);
-    for (typename std::set< Id_Type >::const_iterator it = it_idx->second.begin();
-         it != it_idx->second.end(); ++it)
-      handle.insert(Tag_Object_Global< Id_Type >(*it, it_idx->first.index));
-  }
-
-  for (typename std::map< Tag_Index_Local, std::set< Id_Type > >::const_iterator
-      it_idx = new_local_tags.begin(); it_idx != new_local_tags.end(); ++it_idx)
-  {
-    std::set< Tag_Object_Global< Id_Type > >& handle(new_global_tags[Tag_Index_Global(it_idx->first)]);
-    for (typename std::set< Id_Type >::const_iterator it = it_idx->second.begin();
-         it != it_idx->second.end(); ++it)
-      handle.insert(Tag_Object_Global< Id_Type >(*it, it_idx->first.index));
-  }
-}
-
-
 template< typename Element_Skeleton >
 std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > > new_idx_positions
     (const Data_By_Id< Element_Skeleton >& new_data)
@@ -510,6 +486,17 @@ void update_elements
 }
 
 
+template< typename Index, typename Object >
+void update_elements
+    (const std::map< Index, std::set< Object > >& attic_objects,
+     const std::map< Index, std::vector< Object > >& new_objects,
+     Transaction& transaction, const File_Properties& file_properties)
+{
+  Block_Backend< Index, Object > db(transaction.data_index(&file_properties));
+  db.update(attic_objects, new_objects);
+}
+
+
 template< typename Index, typename Id_Type >
 std::map< Id_Type, std::set< Index > > get_existing_idx_lists
     (const std::vector< Id_Type >& ids,
@@ -518,7 +505,7 @@ std::map< Id_Type, std::set< Index > > get_existing_idx_lists
 {
   std::map< Id_Type, std::set< Index > > result;
 
-  std::set< Id_Type > req;
+  std::vector< Id_Type > req;
   typename std::vector< std::pair< Id_Type, Uint31_Index > >::const_iterator
       it_pos = ids_with_position.begin();
   for (typename std::vector< Id_Type >::const_iterator it = ids.begin(); it != ids.end(); ++it)
@@ -526,12 +513,14 @@ std::map< Id_Type, std::set< Index > > get_existing_idx_lists
     if (it_pos != ids_with_position.end() && *it == it_pos->first)
     {
       if (it_pos->second.val() == 0xff)
-        req.insert(*it);
+        req.push_back(*it);
       else
         result[*it].insert(Index(it_pos->second.val()));
       ++it_pos;
     }
   }
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
 
   Block_Backend< Id_Type, Index > db(transaction.data_index(&file_properties));
   for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
@@ -560,49 +549,6 @@ std::vector< std::pair< Id_Type, Uint31_Index > > strip_single_idxs
   {
     if (it->second.val() != 0xff)
       idx_list.erase(it->first);
-  }
-
-  return result;
-}
-
-
-/* Constructs the global tags from the local tags. */
-template< typename Id_Type >
-std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Id_Type > > > > compute_attic_global_tags
-    (const std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >& new_attic_local_tags)
-{
-  std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Id_Type > > > > result;
-
-  for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
-      it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
-  {
-    if (it_idx->first.value == void_tag_value())
-    {
-      std::set< Attic< Tag_Object_Global< Id_Type > > >& handle(result[Tag_Index_Global(it_idx->first)]);
-      for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
-           it != it_idx->second.end(); ++it)
-        handle.insert(Attic< Tag_Object_Global< Id_Type > >(
-            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
-    }
-  }
-
-  for (typename std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >::const_iterator
-      it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
-  {
-    if (it_idx->first.value != void_tag_value())
-    {
-      std::set< Attic< Tag_Object_Global< Id_Type > > >& handle(result[Tag_Index_Global(it_idx->first)]);
-      std::set< Attic< Tag_Object_Global< Id_Type > > >& void_handle
-          (result[Tag_Index_Global(it_idx->first.key, void_tag_value())]);
-      for (typename std::set< Attic< Id_Type > >::const_iterator it = it_idx->second.begin();
-           it != it_idx->second.end(); ++it)
-      {
-        handle.insert(Attic< Tag_Object_Global< Id_Type > >(
-            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
-        void_handle.erase(Attic< Tag_Object_Global< Id_Type > >(
-            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
-      }
-    }
   }
 
   return result;

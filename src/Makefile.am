@@ -1,5 +1,5 @@
 
-bin_mandatory = bin/osm3s_query bin/dispatcher bin/update_database bin/update_from_dir
+bin_mandatory = bin/osm3s_query bin/dispatcher bin/migrate_database bin/update_database bin/update_from_dir
 bin_script_mandatory = \
   bin/apply_osc_to_db.sh\
   bin/download_clone.sh\
@@ -174,6 +174,8 @@ libsettings_la_LIBADD =
 osm_updater_cc = overpass_api/osm-backend/meta_updater.cc overpass_api/osm-backend/basic_updater.cc overpass_api/osm-backend/node_updater.cc overpass_api/osm-backend/way_updater.cc overpass_api/osm-backend/relation_updater.cc overpass_api/osm-backend/osm_updater.cc overpass_api/core/four_field_index.cc overpass_api/core/geometry.cc expat/escape_xml.cc
 
 
+bin_migrate_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/migrate_database.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
+bin_migrate_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
 bin_update_database_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_database.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
 bin_update_database_LDADD = libdata.la libdispatcher.la libexpatwrapper.la liboutput.la libsettings.la @COMPRESS_LIBS@
 bin_update_from_dir_SOURCES = ${osm_updater_cc} overpass_api/osm-backend/update_from_dir.cc template_db/types.cc template_db/zlib_wrapper.cc template_db/lz4_wrapper.cc
@@ -244,6 +246,7 @@ nobase_dist_HEADERS = \
   overpass_api/data/relation_geometry_store.h\
   overpass_api/data/set_comparison.h\
   overpass_api/data/tag_store.h\
+  overpass_api/data/tags_global_reader.h\
   overpass_api/data/tilewise_geometry.h\
   overpass_api/data/user_data_cache.h\
   overpass_api/data/utils.h\
@@ -269,6 +272,7 @@ nobase_dist_HEADERS = \
   overpass_api/osm-backend/node_updater.h\
   overpass_api/osm-backend/osm_updater.h\
   overpass_api/osm-backend/relation_updater.h\
+  overpass_api/osm-backend/tags_global_writer.h\
   overpass_api/osm-backend/tags_updater.h\
   overpass_api/osm-backend/way_updater.h\
   overpass_api/output_formats/output_csv.h\

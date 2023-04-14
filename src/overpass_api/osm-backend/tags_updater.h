@@ -286,4 +286,73 @@ void update_tags_local
 }
 
 
+/* Constructs the global tags from the local tags. */
+template< typename Id_Type >
+void new_current_global_tags
+    (const std::map< Tag_Index_Local, std::set< Id_Type > >& attic_local_tags,
+     const std::map< Tag_Index_Local, std::set< Id_Type > >& new_local_tags,
+     std::map< Tag_Index_Global, std::set< Tag_Object_Global< Id_Type > > >& attic_global_tags,
+     std::map< Tag_Index_Global, std::vector< Tag_Object_Global< Id_Type > > >& new_global_tags)
+{
+  for (typename std::map< Tag_Index_Local, std::set< Id_Type > >::const_iterator
+      it_idx = attic_local_tags.begin(); it_idx != attic_local_tags.end(); ++it_idx)
+  {
+    std::set< Tag_Object_Global< Id_Type > >& handle(attic_global_tags[Tag_Index_Global(it_idx->first)]);
+    for (typename std::set< Id_Type >::const_iterator it = it_idx->second.begin();
+         it != it_idx->second.end(); ++it)
+      handle.insert(Tag_Object_Global< Id_Type >(*it, it_idx->first.index));
+  }
+
+  for (auto it_idx = new_local_tags.begin(); it_idx != new_local_tags.end(); ++it_idx)
+  {
+    std::vector< Tag_Object_Global< Id_Type > >& handle(new_global_tags[Tag_Index_Global(it_idx->first)]);
+    for (auto it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+      handle.push_back(Tag_Object_Global< Id_Type >(*it, it_idx->first.index));
+  }
+}
+
+
+/* Constructs the global tags from the local tags. */
+template< typename Id_Type >
+std::map< Tag_Index_Global, std::vector< Attic< Tag_Object_Global< Id_Type > > > > compute_attic_global_tags
+    (const std::map< Tag_Index_Local, std::set< Attic< Id_Type > > >& new_attic_local_tags)
+{
+  std::map< Tag_Index_Global, std::vector< Attic< Tag_Object_Global< Id_Type > > > > result;
+  std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Id_Type > > > > void_result;
+
+  for (auto it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
+  {
+    if (it_idx->first.value == void_tag_value())
+    {
+      std::set< Attic< Tag_Object_Global< Id_Type > > >& handle(void_result[Tag_Index_Global(it_idx->first)]);
+      for (auto it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+        handle.insert(Attic< Tag_Object_Global< Id_Type > >(
+            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
+    }
+  }
+
+  for (auto it_idx = new_attic_local_tags.begin(); it_idx != new_attic_local_tags.end(); ++it_idx)
+  {
+    if (it_idx->first.value != void_tag_value())
+    {
+      std::vector< Attic< Tag_Object_Global< Id_Type > > >& handle(result[Tag_Index_Global(it_idx->first)]);
+      std::set< Attic< Tag_Object_Global< Id_Type > > >& void_handle
+          (void_result[Tag_Index_Global(it_idx->first.key, void_tag_value())]);
+      for (auto it = it_idx->second.begin(); it != it_idx->second.end(); ++it)
+      {
+        handle.push_back(Attic< Tag_Object_Global< Id_Type > >(
+            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
+        void_handle.erase(Attic< Tag_Object_Global< Id_Type > >(
+            Tag_Object_Global< Id_Type >(*it, it_idx->first.index), it->timestamp));
+      }
+    }
+  }
+  
+  for (const auto& i : void_result)
+    result[i.first].assign(i.second.begin(), i.second.end());
+
+  return result;
+}
+
+
 #endif

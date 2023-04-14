@@ -253,9 +253,9 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   std::map< Uint31_Index, std::vector< std::pair< double, double > > >::const_iterator coord_block_it = coord_per_req.begin();
   Uint31_Index last_idx = req.empty() ? Uint31_Index(0u) : *req.begin();
 
-  Block_Backend< Uint31_Index, Area_Block > area_blocks_db
+  Block_Backend< Uint31_Index, Area_Block, std::set< Uint31_Index >::const_iterator > area_blocks_db
       (rman.get_area_transaction()->data_index(area_settings().AREA_BLOCKS));
-  for (Block_Backend< Uint31_Index, Area_Block >::Discrete_Iterator
+  for (Block_Backend< Uint31_Index, Area_Block, std::set< Uint31_Index >::const_iterator >::Discrete_Iterator
       it(area_blocks_db.discrete_begin(req.begin(), req.end()));
       !(it == area_blocks_db.discrete_end()); ++it)
   {

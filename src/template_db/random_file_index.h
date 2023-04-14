@@ -150,7 +150,7 @@ inline Random_File_Index::Random_File_Index
     source_file.read(index_buf.ptr, index_size, "Random_File:14");
 
     bool read_old_format = (file_name_extension == ".legacy" ||
-      (index_size > 0 && *(int32*)index_buf.ptr != FILE_FORMAT_VERSION && *(int32*)index_buf.ptr != 7512));
+      (index_size > 0 && *(int32*)index_buf.ptr < 7512));
       // We support this way the old format although it has no version marker.
 
     if (!read_old_format && index_size > 0)

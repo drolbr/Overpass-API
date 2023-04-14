@@ -32,9 +32,9 @@
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
 #include "meta_updater.h"
+#include "tags_global_writer.h"
 #include "tags_updater.h"
 #include "way_updater.h"
-
 
 
 Way_Updater::Way_Updater(Transaction& transaction_, Database_Meta_State::Mode meta_)
@@ -206,7 +206,7 @@ void add_intermediate_changelog_entries
      const std::map< Node_Skeleton::Id_Type,
          std::vector< std::pair< Node::Index, Attic< Node_Skeleton > > > >& nodes_by_id,
      bool add_last_version, Uint31_Index attic_idx, Uint31_Index new_idx,
-     std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > >& result)
+     std::map< Timestamp, std::vector< Way_Skeleton::Id_Type > >& result)
 {
   std::vector< uint64 > relevant_timestamps;
   for (std::vector< Node_Skeleton::Id_Type >::const_iterator it = skeleton.nds.begin();
@@ -249,18 +249,12 @@ void add_intermediate_changelog_entries
     compute_idx_and_geometry(idx, last_skeleton, new_timestamp, nodes_by_id);
   idxs.push_back(idx);
 
-  int i = 0;
   for (std::vector< uint64 >::const_iterator it = relevant_timestamps.begin();
        it != relevant_timestamps.end(); ++it)
-  {
-    result[Timestamp(*it)].insert(
-        Change_Entry< Way_Skeleton::Id_Type >(skeleton.id, idxs[i], idxs[i+1]));
-    ++i;
-  }
+    result[Timestamp(*it)].push_back(skeleton.id);
 
   if (add_last_version)
-    result[Timestamp(new_timestamp)].insert(
-        Change_Entry< Way_Skeleton::Id_Type >(skeleton.id, idx, new_idx));
+    result[Timestamp(new_timestamp)].push_back(skeleton.id);
 }
 
 
@@ -458,9 +452,8 @@ std::map< Uint31_Index, std::set< Way_Skeleton > > get_implicitly_moved_skeleton
 
   std::map< Uint31_Index, std::set< Way_Skeleton > > result;
 
-  Block_Backend< Uint31_Index, Way_Skeleton > db(transaction.data_index(&file_properties));
-  for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  Block_Backend< Uint31_Index, Way_Skeleton, std::set< Uint31_Index >::const_iterator > db(transaction.data_index(&file_properties));
+  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
   {
     if (binary_search(known_way_ids.begin(), known_way_ids.end(), it.object().id))
       continue;
@@ -691,7 +684,7 @@ void new_implicit_skeletons
 /* Compares the new data and the already existing skeletons to determine those that have
  * moved. This information is used to prepare the std::set of elements to store to attic.
  * We use that in attic_skeletons can only appear elements with ids that exist also in new_data. */
-std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute_changelog(
+std::map< Timestamp, std::vector< Way_Skeleton::Id_Type > > compute_changelog(
     const Data_By_Id< Way_Skeleton >& new_data,
     const std::map< Uint31_Index, std::set< Way_Skeleton > >& implicitly_moved_skeletons,
     const std::vector< std::pair< Way_Skeleton::Id_Type, Uint31_Index > >& existing_map_positions,
@@ -700,7 +693,7 @@ std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute
     const std::map< Node_Skeleton::Id_Type, Quad_Coord >& new_node_idx_by_id,
     const std::map< Node::Index, std::set< Attic< Node_Skeleton > > >& new_attic_node_skeletons)
 {
-  std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > result;
+  std::map< Timestamp, std::vector< Way_Skeleton::Id_Type > > result;
 
   // Fill nodes_by_id from attic nodes as well as the current nodes in new_node_idx_by_id
   std::map< Node_Skeleton::Id_Type,
@@ -748,8 +741,7 @@ std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > compute
     if (!idx)
     {
       // No old data exists.
-      result[it->meta.timestamp].insert(
-          Change_Entry< Way_Skeleton::Id_Type >(it->elem.id, 0u, next_idx));
+      result[it->meta.timestamp].push_back(it->elem.id);
       continue;
     }
 
@@ -884,10 +876,6 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   new_current_local_tags< Way::Index, Way_Skeleton, Way_Skeleton::Id_Type >
       (new_data, existing_map_positions, existing_local_tags, attic_local_tags, new_local_tags);
   new_implicit_local_tags(implicitly_moved_local_tags, new_positions, attic_local_tags, new_local_tags);
-  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > attic_global_tags;
-  std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > new_global_tags;
-  new_current_global_tags< Way_Skeleton::Id_Type >
-      (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
 
   add_deleted_skeletons(attic_skeletons, new_positions);
   callback->compute_finished();
@@ -917,8 +905,14 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
   callback->tags_local_finished();
 
   // Update global tags
-  update_elements(attic_global_tags, new_global_tags, *transaction, *osm_base_settings().WAY_TAGS_GLOBAL);
-  callback->tags_global_finished();
+  {
+    std::map< Tag_Index_Global, std::set< Tag_Object_Global< Way_Skeleton::Id_Type > > > attic_global_tags;
+    std::map< Tag_Index_Global, std::vector< Tag_Object_Global< Way_Skeleton::Id_Type > > > new_global_tags;
+    new_current_global_tags< Way_Skeleton::Id_Type >
+        (attic_local_tags, new_local_tags, attic_global_tags, new_global_tags);
+    update_current_global_tags< Way_Skeleton >(attic_global_tags, new_global_tags, *transaction);
+    callback->tags_global_finished();
+  }
 
   std::map< uint32, std::vector< uint32 > > idxs_by_id;
 
@@ -972,11 +966,9 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
         = compute_new_attic_local_tags(new_attic_idx_by_id_and_time,
             compute_tags_by_id_and_time(new_data, attic_local_tags),
                                        existing_map_positions, existing_idx_lists);
-    std::map< Tag_Index_Global, std::set< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
-        new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
 
     // Compute changelog
-    std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > > changelog
+    std::map< Timestamp, std::vector< Way_Skeleton::Id_Type > > changelog
         = compute_changelog(new_data, implicitly_moved_skeletons,
                             existing_map_positions, existing_attic_map_positions, attic_skeletons,
                             new_node_idx_by_id, new_attic_node_skeletons);
@@ -1018,14 +1010,16 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Way_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().WAY_TAGS_LOCAL);
     callback->tags_local_finished();
-    update_elements(std::map< Tag_Index_Global,
-                        std::set< Attic < Tag_Object_Global< Way_Skeleton::Id_Type > > > >(),
-                    new_attic_global_tags, *transaction, *attic_settings().WAY_TAGS_GLOBAL);
-    callback->tags_global_finished();
+    
+    {
+      std::map< Tag_Index_Global, std::vector< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
+          new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);
+      update_attic_global_tags< Way_Skeleton >({}, std::move(new_attic_global_tags), *transaction);
+      callback->tags_global_finished();
+    }
 
     // Write changelog
-    update_elements(std::map< Timestamp, std::set< Change_Entry< Way_Skeleton::Id_Type > > >(), changelog,
-                    *transaction, *attic_settings().WAY_CHANGELOG);
+    update_elements({}, changelog, *transaction, *attic_settings().WAY_CHANGELOG);
     callback->changelog_finished();
   }
 

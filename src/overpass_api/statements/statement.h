@@ -34,6 +34,20 @@
 
 typedef enum { ids_required, ids_useful, prefer_ranges } Query_Filter_Strategy;
 
+typedef enum { nothing, /*ids_collected,*/ ranges_collected, data_collected } Answer_State;
+
+
+template< typename Id >
+struct Id_Constraint
+{
+  Id_Constraint() : invert(true) {}
+  bool empty() const { return !invert && ids.empty(); }
+  void restrict_to(const std::vector< Id >& ids);
+  
+  std::vector< Id > ids;
+  bool invert;
+};
+
 
 class Query_Constraint
 {

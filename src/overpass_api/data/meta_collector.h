@@ -60,10 +60,10 @@ public:
 private:
   std::set< Index > used_indices;
   Ranges< Index > used_ranges;
-  Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >* meta_db;
-  typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+  Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::set< Index >::const_iterator >* meta_db;
+  typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::set< Index >::const_iterator >
       ::Discrete_Iterator* db_it;
-  typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+  typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::set< Index >::const_iterator >
       ::Range_Iterator* range_it;
   Index* current_index;
   Index* last_index;
@@ -112,7 +112,7 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
     return;
 
   generate_index_query(used_indices, items);
-  meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+  meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::set< Index >::const_iterator >
       (transaction.data_index(meta_file_prop));
 
   reset();
@@ -128,7 +128,7 @@ Meta_Collector< Index, Id_Type >::Meta_Collector
   if (!meta_file_prop)
     return;
 
-  meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+  meta_db = new Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::set< Index >::const_iterator >
       (transaction.data_index(meta_file_prop));
 
   reset();
@@ -155,7 +155,7 @@ void Meta_Collector< Index, Id_Type >::reset()
     if (!used_indices.empty())
       last_index = new Index(*used_indices.begin());
 
-    db_it = new typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type > >
+    db_it = new typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< Id_Type >, typename std::set< Index >::const_iterator >
         ::Discrete_Iterator(meta_db->discrete_begin(used_indices.begin(), used_indices.end()));
 
     if (!(*db_it == meta_db->discrete_end()))

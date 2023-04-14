@@ -52,17 +52,17 @@ void collect_elems(Resource_Manager& rman, const File_Properties& prop,
 		   const std::vector< typename TObject::Id_Type >& ids,
 		   std::map< TIndex, std::vector< TObject > >& elems)
 {
-  std::set< TIndex > req;
+  std::vector< TIndex > req;
   {
     Random_File< typename TObject::Id_Type, TIndex > random(rman.get_transaction()->random_index(&prop));
     for (typename std::vector< typename TObject::Id_Type >::const_iterator
         it = ids.begin(); it != ids.end(); ++it)
-      req.insert(random.get(it->val()));
+      req.push_back(random.get(it->val()));
   }
+  std::sort(req.begin(), req.end());
+  req.erase(std::unique(req.begin(), req.end()), req.end());
   Block_Backend< TIndex, TObject > elems_db(rman.get_transaction()->data_index(&prop));
-  for (typename Block_Backend< TIndex, TObject >::Discrete_Iterator
-      it(elems_db.discrete_begin(req.begin(), req.end()));
-      !(it == elems_db.discrete_end()); ++it)
+  for (auto it = elems_db.discrete_begin(req.begin(), req.end()); !(it == elems_db.discrete_end()); ++it)
   {
     if (binary_search(ids.begin(), ids.end(), it.object().id))
       elems[it.index()].push_back(it.object());

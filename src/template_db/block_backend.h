@@ -480,31 +480,23 @@ struct Block_Backend_Range_Iterator
 //-----------------------------------------------------------------------------
 
 
-template< class TIndex, class TObject >
-struct Index_Collection
+struct Delta_Count
 {
-  Index_Collection(uint8* source_begin_, uint8* source_end_,
-		   const typename std::map< TIndex, std::set< TObject > >::const_iterator& delete_it_,
-		   const typename std::map< TIndex, std::set< TObject > >::const_iterator& insert_it_)
-      : source_begin(source_begin_), source_end(source_end_),
-        delete_it(delete_it_), insert_it(insert_it_) {}
-
-  uint8* source_begin;
-  uint8* source_end;
-  typename std::map< TIndex, std::set< TObject > >::const_iterator delete_it;
-  typename std::map< TIndex, std::set< TObject > >::const_iterator insert_it;
+  Delta_Count() : before(0), after(0) {}
+  
+  Delta_Count& operator+=(Delta_Count rhs)
+  {
+    before += rhs.before;
+    after += rhs.after;
+    return *this;
+  }
+  
+  uint64 before;
+  uint64 after;
 };
 
 
-template< class TIndex, class TObject >
-struct Empty_Update_Logger
-{
-public:
-  void deletion(const TIndex&, const TObject&) {}
-};
-
-
-template< class TIndex, class TObject, class TIterator = typename std::set< TIndex >::const_iterator >
+template< class TIndex, class TObject, class TIterator = typename std::vector< TIndex >::const_iterator >
 struct Block_Backend
 {
   typedef Block_Backend_Flat_Iterator< TIndex, TObject, TIterator > Flat_Iterator;
@@ -528,19 +520,11 @@ struct Block_Backend
 
   const Range_Iterator& range_end() const { return *range_end_it; }
 
-  template< class Update_Logger >
-  void update
-      (const std::map< TIndex, std::set< TObject > >& to_delete,
-        const std::map< TIndex, std::set< TObject > >& to_insert,
-        Update_Logger& update_logger);
-
-  void update
-      (const std::map< TIndex, std::set< TObject > >& to_delete,
-        const std::map< TIndex, std::set< TObject > >& to_insert)
-  {
-    Empty_Update_Logger< TIndex, TObject> empty_logger;
-    update< Empty_Update_Logger< TIndex, TObject> >(to_delete, to_insert, empty_logger);
-  }
+  template< typename Container >
+  void update(
+      const std::map< TIndex, std::set< TObject > >& to_delete,
+      const std::map< TIndex, Container >& to_insert,
+      std::map< TIndex, Delta_Count >* obj_count = nullptr);
 
   uint read_count() const { return file_blocks.read_count(); }
   void reset_read_count() const { file_blocks.reset_read_count(); }

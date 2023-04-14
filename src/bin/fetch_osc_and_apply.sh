@@ -116,6 +116,11 @@ if [[ $START == "auto" ]]; then
   START=$(($(cat $DB_DIR/replicate_id) + 0))
 }; fi
 
+if [[ $(./migrate_database) ]]; then
+{
+  ./migrate_database --migrate
+}; fi
+
 while [[ true ]]; do
 {
   echo "$(date -u '+%F %T'): updating from $START" >>$DB_DIR/fetch_osc_and_apply.log
@@ -130,7 +135,7 @@ while [[ true ]]; do
   collect_minute_diffs $MAX_AVAILABLE_REPLICATE_ID $TEMP_SOURCE_DIR $TEMP_TARGET_DIR
 
   if [[ $TARGET -gt $START ]]; then
-  {
+  {  
     echo "$(date -u '+%F %T'): updating to $TARGET" >>$DB_DIR/fetch_osc_and_apply.log
 
     update_state

@@ -26,12 +26,13 @@
 #include <list>
 #include <sstream>
 
-#include "../../expat/expat_justparse_interface.h"
+#include "../../expat/escape_json.h"
 #include "../../template_db/random_file.h"
 #include "../../template_db/transaction.h"
 #include "../core/settings.h"
 #include "../frontend/output.h"
 #include "node_updater.h"
+#include "tags_global_writer.h"
 
 
 int main(int argc, char* args[])
@@ -100,19 +101,44 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
       }
     }
     else if (std::string("--node-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > > db
-          (transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Node_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+        Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< Node_Skeleton::Id_Type > >
+            db(transaction.data_index(osm_base_settings().NODE_TAGS_GLOBAL_756));
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< Node_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
+        }
+      }
+    }
+    else if (std::string("--node-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(osm_base_settings().NODE_FREQUENT_TAGS));
+      for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+      {
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.object().value)<<'\n';
       }
     }
     else if (std::string("--node-keys") == args[2])
@@ -130,7 +156,7 @@ int main(int argc, char* args[])
       for (Block_Backend< Node_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
         std::cout<<std::dec<<it.index().val()<<'\t'
-            <<std::hex<<it.object().val()<<'\n';
+            <<"0x"<<std::hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-nodes") == args[2])
     {
@@ -166,21 +192,47 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
     else if (std::string("--attic-node-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > db
-          (transaction.data_index(attic_settings().NODE_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >
-               ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(attic_settings().NODE_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Tag_Index_Global_Until756, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > >
+            db(transaction.data_index(attic_settings().NODE_TAGS_GLOBAL_756));
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
+              <<Timestamp(it.object().timestamp).str()<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Attic< Tag_Object_Global< Node_Skeleton::Id_Type > > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
+              <<Timestamp(it.object().timestamp).str()<<'\n';
+        }
+      }
+    }
+    else if (std::string("--attic-node-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(attic_settings().NODE_FREQUENT_TAGS));
+      for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+      {
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.object().value)<<'\n';
       }
     }
     else if (std::string("--nodes-undelete") == args[2])
@@ -197,14 +249,20 @@ int main(int argc, char* args[])
     }
     else if (std::string("--node-changelog") == args[2])
     {
-      Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().NODE_CHANGELOG));
-      for (Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto db_idx = transaction.data_index(attic_settings().NODE_CHANGELOG);
+      if (db_idx->get_file_format_version() <= 7561)
       {
-        std::cout<<std::dec<<it.index().timestamp<<'\t'
-            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<std::dec<<it.object().elem_id.val()<<'\n';
+        Block_Backend< Timestamp, Change_Entry< Node_Skeleton::Id_Type > > db(db_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'
+              <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+              <<std::dec<<it.object().elem_id.val()<<'\n';
+      }
+      else
+      {
+        Block_Backend< Timestamp, Node_Skeleton::Id_Type > db(db_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'<<std::dec<<it.object().val()<<'\n';
       }
     }
     else if (std::string("--ways") == args[2])
@@ -213,10 +271,9 @@ int main(int argc, char* args[])
           (transaction.data_index(osm_base_settings().WAYS));
       if (index_used)
       {
-	std::set< Uint31_Index > req;
-	req.insert(index);
-        for (Block_Backend< Uint31_Index, Way_Skeleton >::Discrete_Iterator
-             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+	std::vector< Uint31_Index > req;
+	req.push_back(index);
+        for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
         {
           std::cout<<std::hex<<it.index().val()<<'\t'
               <<std::dec<<it.object().id.val()<<'\n';
@@ -224,8 +281,7 @@ int main(int argc, char* args[])
       }
       else
       {
-        for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
-             it(db.flat_begin()); !(it == db.flat_end()); ++it)
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
         {
           std::cout<<std::hex<<it.index().val()<<'\t'
               <<std::dec<<it.object().id.val()<<'\n';
@@ -262,19 +318,44 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
       }
     }
     else if (std::string("--way-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > > db
-          (transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Way_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+        Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< Way_Skeleton::Id_Type > >
+            db(transaction.data_index(osm_base_settings().WAY_TAGS_GLOBAL_756));
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< Way_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
+        }
+      }
+    }
+    else if (std::string("--way-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(osm_base_settings().WAY_FREQUENT_TAGS));
+      for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+      {
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.object().value)<<'\n';
       }
     }
     else if (std::string("--way-keys") == args[2])
@@ -291,7 +372,7 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAY_IDX_LIST));
       for (Block_Backend< Way_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
-        std::cout<<"0x"<<std::dec<<it.index().val()<<'\t'
+        std::cout<<std::dec<<it.index().val()<<'\t'
             <<"0x"<<std::hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-ways") == args[2])
@@ -300,10 +381,9 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAYS));
       if (index_used)
       {
-	std::set< Uint31_Index > req;
-	req.insert(index);
-        for (Block_Backend< Uint31_Index, Attic< Way_Skeleton > >::Discrete_Iterator
-             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+	std::vector< Uint31_Index > req;
+	req.push_back(index);
+        for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
         {
           std::cout<<std::hex<<it.index().val()<<'\t'
               <<std::dec<<it.object().id.val()<<'\t'
@@ -327,10 +407,9 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAYS));
       if (index_used)
       {
-	std::set< Uint31_Index > req;
-	req.insert(index);
-        for (Block_Backend< Uint31_Index, Attic< Way_Delta > >::Discrete_Iterator
-             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+	std::vector< Uint31_Index > req;
+	req.push_back(index);
+        for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
         {
           std::cout<<std::hex<<it.index().val()<<'\t'
               <<std::dec<<it.object().id.val()<<'\t'<<it.object().full<<'\t'
@@ -362,10 +441,9 @@ int main(int argc, char* args[])
           (transaction.data_index(attic_settings().WAY_IDX_LIST));
       if (index_used)
       {
-	std::set< Way::Id_Type > req;
-	req.insert(index);
-        for (Block_Backend< Way::Id_Type, Uint31_Index >::Discrete_Iterator
-             it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+	std::vector< Way::Id_Type > req;
+	req.push_back(index);
+        for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
         {
           std::cout<<std::dec<<it.index().val()<<'\t'
               <<std::hex<<it.object().val()<<'\n';
@@ -403,21 +481,47 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
     else if (std::string("--attic-way-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > db
-          (transaction.data_index(attic_settings().WAY_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > >
-               ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(attic_settings().WAY_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Tag_Index_Global_Until756, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > >
+            db(transaction.data_index(attic_settings().WAY_TAGS_GLOBAL_756));
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
+              <<Timestamp(it.object().timestamp).str()<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
+              <<Timestamp(it.object().timestamp).str()<<'\n';
+        }
+      }
+    }
+    else if (std::string("--attic-way-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(attic_settings().WAY_FREQUENT_TAGS));
+      for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+      {
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.object().value)<<'\n';
       }
     }
     else if (std::string("--ways-undelete") == args[2])
@@ -434,14 +538,21 @@ int main(int argc, char* args[])
     }
     else if (std::string("--way-changelog") == args[2])
     {
-      Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().WAY_CHANGELOG));
-      for (Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto db_idx = transaction.data_index(attic_settings().WAY_CHANGELOG);
+      if (db_idx->get_file_format_version() <= 7561)
       {
-        std::cout<<std::dec<<it.index().timestamp<<'\t'
-            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<std::dec<<it.object().elem_id.val()<<'\n';
+        Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > > db(db_idx);
+        for (Block_Backend< Timestamp, Change_Entry< Way_Skeleton::Id_Type > >::Flat_Iterator
+            it(db.flat_begin()); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'
+              <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+              <<std::dec<<it.object().elem_id.val()<<'\n';
+      }
+      else
+      {
+        Block_Backend< Timestamp, Way_Skeleton::Id_Type > db(db_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'<<std::dec<<it.object().val()<<'\n';
       }
     }
     else if (std::string("--rels") == args[2])
@@ -485,19 +596,45 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
       }
     }
     else if (std::string("--rel-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > > db
-          (transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Tag_Object_Global< Relation_Skeleton::Id_Type > >::Flat_Iterator
+      auto file_idx = transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
+      {
+        Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< Relation_Skeleton::Id_Type > >
+            db(transaction.data_index(osm_base_settings().RELATION_TAGS_GLOBAL_756));
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< Relation_Skeleton::Id_Type > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\n';
+        }
+      }
+    }
+    else if (std::string("--rel-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(osm_base_settings().RELATION_FREQUENT_TAGS));
+      for (Block_Backend< String_Index, Frequent_Value_Entry >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\n';
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.object().value)<<'\n';
       }
     }
     else if (std::string("--rel-keys") == args[2])
@@ -515,7 +652,7 @@ int main(int argc, char* args[])
       for (Block_Backend< Relation_Skeleton::Id_Type, Uint31_Index >::Flat_Iterator
            it(db.flat_begin()); !(it == db.flat_end()); ++it)
         std::cout<<std::dec<<it.index().val()<<'\t'
-            <<std::hex<<it.object().val()<<'\n';
+            <<"0x"<<std::hex<<it.object().val()<<'\n';
     }
     else if (std::string("--attic-rels") == args[2])
     {
@@ -563,33 +700,66 @@ int main(int argc, char* args[])
       {
         std::cout<<std::hex<<it.index().index<<'\t'
             <<std::dec<<it.object().val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
             <<it.object().timestamp<<'\n';
       }
     }
     else if (std::string("--attic-rel-tags-global") == args[2])
     {
-      Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > > db
-          (transaction.data_index(attic_settings().RELATION_TAGS_GLOBAL));
-      for (Block_Backend< Tag_Index_Global, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > >
-               ::Flat_Iterator it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto file_idx = transaction.data_index(attic_settings().RELATION_TAGS_GLOBAL);
+      if (!file_idx)
+        std::cerr<<"Error: No data index\n";
+      else if (file_idx->get_file_format_version() <= 7560)
       {
-        std::cout<<std::hex<<it.object().idx.val()<<'\t'
-            <<std::dec<<it.object().id.val()<<'\t'
-            <<it.index().key<<'\t'<<it.index().value<<'\t'
-            <<it.object().timestamp<<'\n';
+        Block_Backend< Tag_Index_Global_Until756, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > >
+            db(transaction.data_index(attic_settings().RELATION_TAGS_GLOBAL_756));
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
+              <<Timestamp(it.object().timestamp).str()<<'\n';
+        }
+      }
+      else
+      {
+        Block_Backend< Tag_Index_Global_KVI, Attic< Tag_Object_Global< Relation_Skeleton::Id_Type > > > db(file_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+        {
+          std::cout<<std::hex<<it.index().idx<<'\t'<<it.object().idx.val()<<'\t'
+              <<std::dec<<it.object().id.val()<<'\t'
+              <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.index().value)<<'\t'
+              <<Timestamp(it.object().timestamp).str()<<'\n';
+        }
+      }
+    }
+    else if (std::string("--attic-rel-frequent-tags") == args[2])
+    {
+      Block_Backend< String_Index, Frequent_Value_Entry > db
+          (transaction.data_index(attic_settings().RELATION_FREQUENT_TAGS));
+      for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+      {
+        std::cout<<std::dec<<it.object().count<<'\t'<<it.object().level<<'\t'
+            <<escape_cstr(it.index().key)<<'\t'<<escape_cstr(it.object().value)<<'\n';
       }
     }
     else if (std::string("--rel-changelog") == args[2])
     {
-      Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > > db
-          (transaction.data_index(attic_settings().RELATION_CHANGELOG));
-      for (Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > >::Flat_Iterator
-           it(db.flat_begin()); !(it == db.flat_end()); ++it)
+      auto db_idx = transaction.data_index(attic_settings().RELATION_CHANGELOG);
+      if (db_idx->get_file_format_version() <= 7561)
       {
-        std::cout<<std::dec<<it.index().timestamp<<'\t'
-            <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
-            <<std::dec<<it.object().elem_id.val()<<'\n';
+        Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > > db(db_idx);
+        for (Block_Backend< Timestamp, Change_Entry< Relation_Skeleton::Id_Type > >::Flat_Iterator
+            it(db.flat_begin()); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'
+              <<std::hex<<it.object().old_idx.val()<<'\t'<<it.object().new_idx.val()<<'\t'
+              <<std::dec<<it.object().elem_id.val()<<'\n';
+      }
+      else
+      {
+        Block_Backend< Timestamp, Relation_Skeleton::Id_Type > db(db_idx);
+        for (auto it = db.flat_begin(); !(it == db.flat_end()); ++it)
+          std::cout<<std::dec<<it.index().timestamp<<'\t'<<std::dec<<it.object().val()<<'\n';
       }
     }
     else if (std::string("--user") == args[2])

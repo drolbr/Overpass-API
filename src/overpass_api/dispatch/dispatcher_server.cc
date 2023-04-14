@@ -34,10 +34,13 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
 {
   Default_Dispatcher_Logger(Logger& logger_) : logger(&logger_) {}
 
-  virtual void write_start(pid_t pid, const std::vector< pid_t >& registered);
+  virtual void write_start(pid_t pid, const std::vector< ::pid_t >& registered);
   virtual void write_rollback(pid_t pid);
   virtual void write_pending(pid_t pid, const std::set< pid_t >& reading);
   virtual void write_commit(pid_t pid);
+  virtual void migrate_start(pid_t pid, const std::vector< ::pid_t >& registered);
+  virtual void migrate_rollback(pid_t pid);
+  virtual void migrate_commit(pid_t pid);
   virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
   virtual void read_idx_finished(pid_t pid);
   virtual void prolongate(pid_t pid);
@@ -52,15 +55,17 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
     Logger* logger;
 };
 
-void Default_Dispatcher_Logger::write_start(pid_t pid, const std::vector< pid_t >& registered)
+
+void Default_Dispatcher_Logger::write_start(pid_t pid, const std::vector< ::pid_t >& registered)
 {
   std::ostringstream out;
   out<<"write_start of process "<<pid<<". Considered as reading:";
-  for (std::vector< pid_t >::const_iterator it = registered.begin(); it != registered.end(); ++it)
-    out<<' '<<*it;
+  for (auto i : registered)
+    out<<' '<<i;
   out<<'.';
   logger->annotated_log(out.str());
 }
+
 
 void Default_Dispatcher_Logger::write_rollback(pid_t pid)
 {
@@ -69,15 +74,17 @@ void Default_Dispatcher_Logger::write_rollback(pid_t pid)
   logger->annotated_log(out.str());
 }
 
+
 void Default_Dispatcher_Logger::write_pending(pid_t pid, const std::set< pid_t >& registered)
 {
   std::ostringstream out;
   out<<"write_pending of process "<<pid<<". Considered as reading:";
-  for (std::set< pid_t >::const_iterator it = registered.begin(); it != registered.end(); ++it)
-    out<<' '<<*it;
+  for (auto i : registered)
+    out<<' '<<i;
   out<<'.';
   logger->annotated_log(out.str());
 }
+
 
 void Default_Dispatcher_Logger::write_commit(pid_t pid)
 {
@@ -85,6 +92,34 @@ void Default_Dispatcher_Logger::write_commit(pid_t pid)
   out<<"write_commit of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
+
+
+void Default_Dispatcher_Logger::migrate_start(pid_t pid, const std::vector< ::pid_t >& registered)
+{
+  std::ostringstream out;
+  out<<"migrate_start of process "<<pid<<". Considered as reading:";
+  for (auto i : registered)
+    out<<' '<<i;
+  out<<'.';
+  logger->annotated_log(out.str());
+}
+
+
+void Default_Dispatcher_Logger::migrate_rollback(pid_t pid)
+{
+  std::ostringstream out;
+  out<<"migrate_rollback of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+
+void Default_Dispatcher_Logger::migrate_commit(pid_t pid)
+{
+  std::ostringstream out;
+  out<<"migrate_commit of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
 
 void Default_Dispatcher_Logger::request_read_and_idx
     (pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space)
@@ -95,12 +130,14 @@ void Default_Dispatcher_Logger::request_read_and_idx
   logger->annotated_log(out.str());
 }
 
+
 void Default_Dispatcher_Logger::read_idx_finished(pid_t pid)
 {
   std::ostringstream out;
   out<<"read_idx_finished "<<pid<<'.';
   logger->annotated_log(out.str());
 }
+
 
 void Default_Dispatcher_Logger::prolongate(pid_t pid)
 {
@@ -109,12 +146,14 @@ void Default_Dispatcher_Logger::prolongate(pid_t pid)
   logger->annotated_log(out.str());
 }
 
+
 void Default_Dispatcher_Logger::idle_counter(uint32 idle_count)
 {
   std::ostringstream out;
   out<<"waited idle for "<<idle_count<<" cycles.";
   logger->annotated_log(out.str());
 }
+
 
 void Default_Dispatcher_Logger::query_my_status(pid_t pid)
 {
@@ -123,12 +162,14 @@ void Default_Dispatcher_Logger::query_my_status(pid_t pid)
   logger->annotated_log(out.str());
 }
 
+
 void Default_Dispatcher_Logger::read_finished(pid_t pid)
 {
   std::ostringstream out;
   out<<"read_finished of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
+
 
 void Default_Dispatcher_Logger::read_aborted(pid_t pid)
 {
@@ -137,12 +178,14 @@ void Default_Dispatcher_Logger::read_aborted(pid_t pid)
   logger->annotated_log(out.str());
 }
 
+
 void Default_Dispatcher_Logger::hangup(pid_t pid)
 {
   std::ostringstream out;
   out<<"hangup of process "<<pid<<'.';
   logger->annotated_log(out.str());
 }
+
 
 void Default_Dispatcher_Logger::purge(pid_t pid)
 {

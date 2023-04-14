@@ -30,6 +30,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -114,17 +115,16 @@ void Transaction_Insulator::read_finished(pid_t pid)
 
 void Transaction_Insulator::copy_shadows_to_mains()
 {
-  for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
-      it != controlled_files.end(); ++it)
+  for (auto it = controlled_files.begin(); it != controlled_files.end(); ++it)
   {
-      copy_file(db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-                + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
-		db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-		+ (*it)->get_index_suffix());
-      copy_file(db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-                + (*it)->get_index_suffix() + (*it)->get_shadow_suffix(),
-		db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-		+ (*it)->get_index_suffix());
+    copy_file(
+        db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix() + (*it)->get_index_suffix()
+        + (*it)->get_shadow_suffix(),
+        db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix() + (*it)->get_index_suffix());
+    copy_file(
+        db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix() + (*it)->get_index_suffix()
+        + (*it)->get_shadow_suffix(),
+        db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix() + (*it)->get_index_suffix());
   }
 }
 
@@ -134,16 +134,41 @@ void Transaction_Insulator::copy_mains_to_shadows()
   for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
       it != controlled_files.end(); ++it)
   {
-      copy_file(db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-                + (*it)->get_index_suffix(),
-		db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix()
-		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
-      copy_file(db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-                + (*it)->get_index_suffix(),
-		db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
-		+ (*it)->get_index_suffix() + (*it)->get_shadow_suffix());
+    copy_file(
+        db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix() + (*it)->get_index_suffix(),
+        db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix() + (*it)->get_index_suffix()
+            + (*it)->get_shadow_suffix());
+    copy_file(
+        db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix() + (*it)->get_index_suffix(),
+        db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix() + (*it)->get_index_suffix()
+            + (*it)->get_shadow_suffix());
   }
 }
+
+
+void Transaction_Insulator::move_migrated_files_in_place()
+{
+  for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
+      it != controlled_files.end(); ++it)
+  {
+    std::string src_base = db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_data_suffix(); 
+    std::string dest_base = db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix(); 
+    if (file_exists(src_base + (*it)->get_index_suffix()))
+    {
+      force_link_file(src_base, dest_base);
+      force_link_file(src_base + (*it)->get_index_suffix(), dest_base + (*it)->get_index_suffix());
+    }
+
+    src_base = db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_id_suffix(); 
+    dest_base = db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix(); 
+    if (file_exists(src_base + (*it)->get_index_suffix()))
+    {
+      force_link_file(src_base, dest_base);
+      force_link_file(src_base + (*it)->get_index_suffix(), dest_base + (*it)->get_index_suffix());
+    }
+  }
+}
+
 
 
 void Transaction_Insulator::remove_shadows()
@@ -159,6 +184,21 @@ void Transaction_Insulator::remove_shadows()
             + (*it)->get_shadow_suffix()).c_str());
     remove((db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix()
             + (*it)->get_shadow_suffix()).c_str());
+  }
+}
+
+
+void Transaction_Insulator::remove_migrated()
+{
+  for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
+      it != controlled_files.end(); ++it)
+  {
+    remove((db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_data_suffix()).c_str());
+    remove((db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_data_suffix()
+            + (*it)->get_index_suffix()).c_str());
+    remove((db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_id_suffix()).c_str());
+    remove((db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_id_suffix()
+            + (*it)->get_index_suffix()).c_str());
   }
 }
 
@@ -193,27 +233,27 @@ void Transaction_Insulator::set_current_footprints()
 }
 
 
-std::set< pid_t > Transaction_Insulator::registered_pids() const
+std::vector< ::pid_t > Transaction_Insulator::registered_pids() const
 {
-  std::set< pid_t > registered;
+  std::vector< ::pid_t > registered;
 
   for (std::vector< Idx_Footprints >::const_iterator it(data_footprints.begin());
       it != data_footprints.end(); ++it)
   {
     std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
-    for (std::vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
-        it != registered_processes.end(); ++it)
-      registered.insert(*it);
+    for (auto pid : registered_processes)
+      registered.push_back(pid);
   }
   for (std::vector< Idx_Footprints >::const_iterator it(map_footprints.begin());
       it != map_footprints.end(); ++it)
   {
     std::vector< Idx_Footprints::pid_t > registered_processes = it->registered_processes();
-    for (std::vector< Idx_Footprints::pid_t >::const_iterator it = registered_processes.begin();
-        it != registered_processes.end(); ++it)
-      registered.insert(*it);
+    for (auto pid : registered_processes)
+      registered.push_back(pid);
   }
 
+  std::sort(registered.begin(), registered.end());
+  registered.erase(std::unique(registered.begin(), registered.end()), registered.end());
   return registered;
 }
 

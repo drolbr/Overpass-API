@@ -106,12 +106,24 @@ std::vector< typename Skeleton::Id_Type > collect_changed_elements
   std::vector< typename Skeleton::Id_Type > ids;
 
   Ranges< Timestamp > ranges{ Timestamp(since), Timestamp(until) };
-  Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > > changelog_db
-      (rman.get_transaction()->data_index(changelog_file_properties< Skeleton >()));
-  for (auto it = changelog_db.range_begin(ranges); !it.is_end(); ++it)
+  auto changelog_db_idx = rman.get_transaction()->data_index(changelog_file_properties< Skeleton >());
+  if (changelog_db_idx->get_file_format_version() <= 7561)
   {
-    if (relevant(it.object().elem_id))
-      ids.push_back(it.object().elem_id);
+    Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > > changelog_db(changelog_db_idx);
+    for (auto it = changelog_db.range_begin(ranges); !it.is_end(); ++it)
+    {
+      if (relevant(it.object().elem_id))
+        ids.push_back(it.object().elem_id);
+    }
+  }
+  else
+  {
+    Block_Backend< Timestamp, typename Skeleton::Id_Type > changelog_db(changelog_db_idx);
+    for (auto it = changelog_db.range_begin(ranges); !it.is_end(); ++it)
+    {
+      if (relevant(it.object()))
+        ids.push_back(it.object());
+    }
   }
 
   std::sort(ids.begin(), ids.end());

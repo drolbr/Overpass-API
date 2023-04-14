@@ -378,6 +378,8 @@ class Area_Usage_Listener
 class Osm_Backend_Callback
 {
 public:
+  virtual ~Osm_Backend_Callback() {}
+  
   virtual void update_started() = 0;
   virtual void attic_update_started() = 0;
   virtual void compute_started() = 0;
@@ -407,7 +409,13 @@ public:
   virtual void relation_elapsed(Relation::Id_Type id) = 0;
   virtual void relations_finished() = 0;
   virtual void parser_succeeded() = 0;
-  
+
+  virtual void migration_started(const std::string& filename) = 0;
+  virtual void migration_flush() = 0;
+  virtual void migration_flush_single_kv() = 0;
+  virtual void migration_write_frequent() = 0;
+  virtual void migration_completed() = 0;
+
   virtual void set_db_dir(const std::string& db_dir) = 0;
 };
 
