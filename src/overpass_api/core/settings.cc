@@ -101,7 +101,7 @@ Basic_Settings::Basic_Settings()
   base_directory("./"),
   logfile_name("transactions.log"),
   shared_name_base("/osm3s_v0.7.58"),
-  version("0.7.59.5"),
+  version("0.7.60"),
   source_hash("b201bb38561ec4864bcac3d82eefc01c81e547e5"),
 #ifdef HAVE_LZ4
   compression_method(File_Blocks_Index_Base::LZ4_COMPRESSION),
