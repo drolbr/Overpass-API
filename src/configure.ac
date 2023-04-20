@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([OverpassAPI], [0.7.60], [roland@olbricht.nrw])
+AC_INIT([OverpassAPI], [0.7.60.1], [roland@olbricht.nrw])
 AC_CONFIG_SRCDIR([template_db/file_blocks.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -73,7 +73,7 @@ fi
 
 AC_SUBST(COMPRESS_LIBS, ["$COMPRESS_LIBS"])
 
-AC_CONFIG_FILES([Makefile test-bin/Makefile])
-#AC_CONFIG_FILES([Makefile])
+#AC_CONFIG_FILES([Makefile test-bin/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 AC_SYS_LARGEFILE
