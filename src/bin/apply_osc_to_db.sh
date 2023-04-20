@@ -128,10 +128,7 @@ if [[ $START == "auto" ]]; then
   START=$(($(cat $DB_DIR/replicate_id) + 0))
 }; fi
 
-if [[ $(./migrate_database) ]]; then
-{
-  ./migrate_database --migrate
-}; fi
+./migrate_database --migrate
 
 while [[ true ]]; do
 {

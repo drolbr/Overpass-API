@@ -212,7 +212,7 @@ bin_bbox_brim_query_LDADD = libexpatwrapper.la
 bin_translate_xapi_SOURCES = expat/translate_xapi.cc expat/escape_xml.cc
 bin_translate_xapi_LDADD = 
 
-distdir = osm-3s_v0.7.60.1
+distdir = osm-3s_v0.7.60.2
 
 nobase_dist_HEADERS = \
   expat/escape_json.h\
@@ -362,8 +362,8 @@ EXTRA_DIST = \
   rules/areas_delta.osm3s
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-#SUBDIRS = test-bin
-SUBDIRS =
+SUBDIRS = test-bin
+#SUBDIRS =
 
 AM_CXXFLAGS = -std=c++11
 
