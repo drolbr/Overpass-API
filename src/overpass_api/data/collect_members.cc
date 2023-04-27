@@ -1080,16 +1080,19 @@ void collect_ways
   if (!invert_ids)
     collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
         And_Predicate< Way_Skeleton,
-	    Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
-	    (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)), result);
+            Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
+            (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)), result);
+  else if (ids.empty())
+    collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
+        Get_Parent_Ways_Predicate(children_ids, pos), result);
   else
     collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
         And_Predicate< Way_Skeleton,
-	    Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >,
-	    Get_Parent_Ways_Predicate >
-	    (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
-	      (Id_Predicate< Way_Skeleton >(ids)),
-	     Get_Parent_Ways_Predicate(children_ids, pos)), result);
+            Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >,
+            Get_Parent_Ways_Predicate >
+            (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
+              (Id_Predicate< Way_Skeleton >(ids)),
+              Get_Parent_Ways_Predicate(children_ids, pos)), result);
 }
 
 
@@ -1155,6 +1158,9 @@ void collect_ways
             Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
             (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)),
         result, attic_result);
+  else if (ids.empty())
+    collect_items_discrete_by_timestamp(&stmt, rman, req,
+        Get_Parent_Ways_Predicate(children_ids, pos), result, attic_result);
   else
     collect_items_discrete_by_timestamp(&stmt, rman, req,
         And_Predicate< Way_Skeleton,
