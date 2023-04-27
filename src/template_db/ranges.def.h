@@ -27,6 +27,11 @@
 template< typename Index >
 Ranges< Index > Ranges< Index >::intersect(const Ranges< Index >& rhs) const
 {
+  if (rhs.is_global())
+    return *this;
+  else if (this->is_global())
+    return rhs;
+  
   Ranges< Index > result;
   auto it_a = data.begin();
   auto it_b = rhs.data.begin();

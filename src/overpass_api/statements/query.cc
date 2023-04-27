@@ -1070,11 +1070,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end(); ++it)
-      {
-        Ranges< Uint32_Index > i_ranges;
-        if ((*it)->get_ranges(rman, i_ranges))
-          node_ranges.intersect(i_ranges).swap(node_ranges);
-      }
+        node_ranges.intersect((*it)->get_node_ranges(rman)).swap(node_ranges);
+
       if (!range_vec_32.empty())
         intersect_ranges(node_ranges, range_vec_32).swap(node_ranges);
     }
@@ -1082,11 +1079,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end(); ++it)
-      {
-        Ranges< Uint31_Index > i_ranges;
-        if ((*it)->get_way_ranges(rman, i_ranges))
-          way_ranges.intersect(i_ranges).swap(way_ranges);
-      }
+        way_ranges.intersect((*it)->get_way_ranges(rman)).swap(way_ranges);
+
       if (!way_range_vec_31.empty())
         intersect_ranges(way_ranges, way_range_vec_31).swap(way_ranges);
     }
@@ -1094,11 +1088,8 @@ void Query_Statement::execute(Resource_Manager& rman)
     {
       for (std::vector< Query_Constraint* >::iterator it = constraints.begin();
           it != constraints.end(); ++it)
-      {
-        Ranges< Uint31_Index > i_ranges;
-        if ((*it)->get_relation_ranges(rman, i_ranges))
-          rel_ranges.intersect(i_ranges).swap(rel_ranges);
-      }      
+        rel_ranges.intersect((*it)->get_relation_ranges(rman)).swap(rel_ranges);
+
       if (!relation_range_vec_31.empty())
         intersect_ranges(rel_ranges, relation_range_vec_31).swap(rel_ranges);
     }
