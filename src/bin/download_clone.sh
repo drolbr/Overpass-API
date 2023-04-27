@@ -57,9 +57,9 @@ if [[ -n $2  ]]; then process_param $2; fi
 if [[ -n $3  ]]; then process_param $3; fi
 
 FILES_BASE="\
-nodes.bin nodes.map node_tags_local.bin node_tags_global.bin node_keys.bin \
-ways.bin ways.map way_tags_local.bin way_tags_global.bin way_keys.bin \
-relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin relation_keys.bin"
+nodes.bin nodes.map node_tags_local.bin node_tags_global.bin node_frequent_tags.bin node_keys.bin \
+ways.bin ways.map way_tags_local.bin way_tags_global.bin way_frequent_tags.bin way_keys.bin \
+relations.bin relations.map relation_roles.bin relation_tags_local.bin relation_tags_global.bin relation_frequent_tags.bin relation_keys.bin"
 
 FILES_META="\
 nodes_meta.bin \
@@ -69,11 +69,11 @@ user_data.bin user_indices.bin"
 
 FILES_ATTIC="\
 nodes_attic.bin nodes_attic.map node_attic_indexes.bin nodes_attic_undeleted.bin nodes_meta_attic.bin \
-node_changelog.bin node_tags_local_attic.bin node_tags_global_attic.bin \
+node_changelog.bin node_tags_local_attic.bin node_tags_global_attic.bin node_frequent_tags_attic.bin \
 ways_attic.bin ways_attic.map way_attic_indexes.bin ways_attic_undeleted.bin ways_meta_attic.bin \
-way_changelog.bin way_tags_local_attic.bin way_tags_global_attic.bin \
+way_changelog.bin way_tags_local_attic.bin way_tags_global_attic.bin way_frequent_tags_attic.bin \
 relations_attic.bin relations_attic.map relation_attic_indexes.bin relations_attic_undeleted.bin relations_meta_attic.bin \
-relation_changelog.bin relation_tags_local_attic.bin relation_tags_global_attic.bin"
+relation_changelog.bin relation_tags_local_attic.bin relation_tags_global_attic.bin relation_frequent_tags_attic.bin"
 
 # $1 - remote source
 # $2 - local destination

@@ -101,8 +101,8 @@ Basic_Settings::Basic_Settings()
   base_directory("./"),
   logfile_name("transactions.log"),
   shared_name_base("/osm3s_v0.7.58"),
-  version("0.7.59.2"),
-  source_hash("b8d6090f5560f366ed7d5545033a80c6c194a21d"),
+  version("0.7.60"),
+  source_hash("e4cf9f7aa6b79ebad3236facee3ea78a19d109b0"),
 #ifdef HAVE_LZ4
   compression_method(File_Blocks_Index_Base::LZ4_COMPRESSION),
 #else
@@ -201,7 +201,7 @@ Area_Settings::Area_Settings()
   AREA_TAGS_LOCAL(new OSM_File_Properties< Tag_Index_Local >
       ("area_tags_local", 256*1024, 0)),
   AREA_TAGS_GLOBAL(new OSM_File_Properties< Tag_Index_Global >
-      ("area_tags_global", 512*1024, 0)),
+      ("area_tags_global", 512*1024, 0, 7561)),
 
   shared_name(basic_settings().shared_name_base + "_areas"),
   max_num_processes(5),

@@ -212,7 +212,7 @@ bin_bbox_brim_query_LDADD = libexpatwrapper.la
 bin_translate_xapi_SOURCES = expat/translate_xapi.cc expat/escape_xml.cc
 bin_translate_xapi_LDADD = 
 
-distdir = osm-3s_v0.7.59.2
+distdir = osm-3s_v0.7.60
 
 nobase_dist_HEADERS = \
   expat/escape_json.h\
@@ -354,6 +354,10 @@ EXTRA_DIST = \
   html/no_frills.html\
   html/public_transport.html\
   html/query_form.html\
+  munin/osm_db_lag\
+  munin/osm_db_request_count\
+  munin/osm_mem_status\
+  munin/osm_timeout_status\
   rules/areas.osm3s\
   rules/areas_delta.osm3s
 

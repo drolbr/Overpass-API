@@ -215,6 +215,9 @@ struct Uint64
   }
 
   uint64 val() const { return value; }
+  
+  static Uint64 min() { return Uint64(0ull); }
+  static Uint64 max() { return Uint64(0xffffffffffffffffull); }
 
   protected:
     uint64 value;
