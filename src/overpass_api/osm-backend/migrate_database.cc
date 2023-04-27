@@ -47,7 +47,7 @@ void File_Format_Version_Checker::check(
   constexpr auto current_version = File_Blocks_Index_Structure_Params::FILE_FORMAT_VERSION;
   
   auto idx = transaction.data_index(&file_properties);
-  if (idx->get_file_format_version() < min_acceptable)
+  if (idx && !idx->empty() && idx->get_file_format_version() < min_acceptable)
   {
     std::cerr<<"Migrate "<<file_properties.get_file_name_trunk()
         <<" from "<<idx->get_file_format_version()<<" to "<<current_version<<'\n';
