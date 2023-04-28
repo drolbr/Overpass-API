@@ -1022,33 +1022,33 @@ void keep_matching_skeletons
 }
 
 
-void collect_ways(
+Timeless< Uint31_Index, Way_Skeleton > collect_ways(
     const Statement& query, Resource_Manager& rman,
     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
     const Ranges< Uint31_Index >& ranges,
     const std::vector< Way::Id_Type >& ids, bool invert_ids,
-    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     uint32* role_id)
 {
+  Timeless< Uint31_Index, Way_Skeleton > result;
   if (rman.get_desired_timestamp() == NOW)
-    ways = relation_way_members(&query, rman, rels, ranges, ids, invert_ids, role_id);
+    result.current = relation_way_members(&query, rman, rels, ranges, ids, invert_ids, role_id);
   else
     swap_components(relation_way_members
-        (&query, rman, rels, attic_rels, ranges, ids, invert_ids, role_id), ways, attic_ways);
+        (&query, rman, rels, attic_rels, ranges, ids, invert_ids, role_id), result.current, result.attic);
+  return result;
 }
 
 
-void collect_ways
+Timeless< Uint31_Index, Way_Skeleton > collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
      const std::vector< int >* pos,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
-     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result,
      const std::vector< Way::Id_Type >& ids, bool invert_ids)
 {
+  Timeless< Uint31_Index, Way_Skeleton > result;
+
   if (rman.get_desired_timestamp() == NOW)
   {
     std::vector< Uint64 > children_ids = extract_children_ids< Uint32_Index, Node_Skeleton, Uint64 >(nodes);
@@ -1060,10 +1060,10 @@ void collect_ways
       collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
           And_Predicate< Way_Skeleton,
               Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
-              (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)), result);
+              (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)), result.current);
     else if (ids.empty())
       collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
-          Get_Parent_Ways_Predicate(children_ids, pos), result);
+          Get_Parent_Ways_Predicate(children_ids, pos), result.current);
     else
       collect_items_discrete(&stmt, rman, *osm_base_settings().WAYS, req,
           And_Predicate< Way_Skeleton,
@@ -1071,7 +1071,7 @@ void collect_ways
               Get_Parent_Ways_Predicate >
               (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
                 (Id_Predicate< Way_Skeleton >(ids)),
-                Get_Parent_Ways_Predicate(children_ids, pos)), result);
+                Get_Parent_Ways_Predicate(children_ids, pos)), result.current);
   }
   else
   {
@@ -1097,10 +1097,10 @@ void collect_ways
           And_Predicate< Way_Skeleton,
               Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
               (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)),
-          result, attic_result);
+          result.current, result.attic);
     else if (ids.empty())
       collect_items_discrete_by_timestamp(&stmt, rman, req,
-          Get_Parent_Ways_Predicate(children_ids, pos), result, attic_result);
+          Get_Parent_Ways_Predicate(children_ids, pos), result.current, result.attic);
     else
       collect_items_discrete_by_timestamp(&stmt, rman, req,
           And_Predicate< Way_Skeleton,
@@ -1109,8 +1109,10 @@ void collect_ways
               (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
                 (Id_Predicate< Way_Skeleton >(ids)),
               Get_Parent_Ways_Predicate(children_ids, pos)),
-          result, attic_result);
+          result.current, result.attic);
   }
+  
+  return result;
 }
 
 

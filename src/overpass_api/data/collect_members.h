@@ -33,6 +33,37 @@ class Resource_Manager;
 class Statement;
 
 
+template< typename Index, typename Object >
+struct Timeless
+{
+  Timeless& swap(
+      std::map< Index, std::vector< Object > >& rhs_current,
+      std::map< Index, std::vector< Attic< Object > > >& rhs_attic)
+  {
+    current.swap(rhs_current);
+    attic.swap(rhs_attic);
+    return *this;
+  }
+  
+  Timeless& sort()
+  {
+    sort_second(current);
+    sort_second(attic);
+    return *this;
+  }
+  
+  Timeless& set_union(const Timeless< Index, Object >& rhs)
+  {
+    indexed_set_union(current, rhs.current);
+    indexed_set_union(attic, rhs.attic);
+    return *this;
+  }
+
+  std::map< Index, std::vector< Object > > current;
+  std::map< Index, std::vector< Attic< Object > > > attic;
+};
+
+
 std::map< Uint31_Index, std::vector< Relation_Skeleton > > relation_relation_members
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
@@ -1144,24 +1175,20 @@ std::set< Uint31_Index > extract_parent_indices(const std::map< TIndex, std::vec
 }
 
 
-void collect_ways(
+Timeless< Uint31_Index, Way_Skeleton > collect_ways(
     const Statement& query, Resource_Manager& rman,
     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
     const Ranges< Uint31_Index >& ranges,
     const std::vector< Way::Id_Type >& ids, bool invert_ids,
-    std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     uint32* role_id = 0);
 
 
-void collect_ways
+Timeless< Uint31_Index, Way_Skeleton > collect_ways
     (const Statement& stmt, Resource_Manager& rman,
      const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
      const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
      const std::vector< int >* pos,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >& result,
-     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_result,
      const std::vector< Way::Id_Type >& ids, bool invert_ids);
 
 

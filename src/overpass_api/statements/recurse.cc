@@ -203,37 +203,6 @@ Statement* Recurse_Statement::Criterion_Maker_2::create_criterion(const Token_No
 //-----------------------------------------------------------------------------
 
 
-template< typename Index, typename Object >
-struct Timeless
-{
-  Timeless& swap(
-      std::map< Index, std::vector< Object > >& rhs_current,
-      std::map< Index, std::vector< Attic< Object > > >& rhs_attic)
-  {
-    current.swap(rhs_current);
-    attic.swap(rhs_attic);
-    return *this;
-  }
-  
-  Timeless& sort()
-  {
-    sort_second(current);
-    sort_second(attic);
-    return *this;
-  }
-  
-  Timeless& set_union(const Timeless< Index, Object >& rhs)
-  {
-    indexed_set_union(current, rhs.current);
-    indexed_set_union(attic, rhs.attic);
-    return *this;
-  }
-
-  std::map< Index, std::vector< Object > > current;
-  std::map< Index, std::vector< Attic< Object > > > attic;
-};
-
-
 template< class TSourceIndex, class TSourceObject >
 Timeless< Uint31_Index, Relation_Skeleton > collect_relations
     (const Statement& stmt, Resource_Manager& rman,
@@ -931,8 +900,8 @@ bool Recurse_Constraint::get_data
         || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_WAY)
         || (stmt->get_type() == RECURSE_RELATION_NW && type == QUERY_WAY)
         || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_WAY))
-      collect_ways(query, rman, input->relations, input->attic_relations,
-                    ranges, ids, invert_ids, into.ways, into.attic_ways, &role_id);
+      collect_ways(query, rman, input->relations, input->attic_relations, ranges, ids, invert_ids, &role_id)
+          .swap(into.ways, into.attic_ways);
     else if (stmt->get_type() == RECURSE_RELATION_RELATION
         || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
         || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_RELATION)
@@ -956,8 +925,8 @@ bool Recurse_Constraint::get_data
           || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_NW && type == QUERY_WAY)
           || (stmt->get_type() == RECURSE_RELATION_WR && type == QUERY_WAY))
-    collect_ways(query, rman, input->relations, input->attic_relations,
-                  ranges, ids, invert_ids, into.ways, into.attic_ways);
+    collect_ways(query, rman, input->relations, input->attic_relations, ranges, ids, invert_ids)
+        .swap(into.ways, into.attic_ways);
   else if (stmt->get_type() == RECURSE_RELATION_RELATION
         || (stmt->get_type() == RECURSE_RELATION_NWR && type == QUERY_RELATION)
         || (stmt->get_type() == RECURSE_RELATION_NR && type == QUERY_RELATION)
@@ -969,8 +938,8 @@ bool Recurse_Constraint::get_data
   {
     if (type != QUERY_WAY)
       return true;
-    collect_ways(query, rman, input->relations, input->attic_relations,
-                  ranges, ids, invert_ids, into.ways, into.attic_ways);
+    collect_ways(query, rman, input->relations, input->attic_relations, ranges, ids, invert_ids)
+        .swap(into.ways, into.attic_ways);
   }
   else if (stmt->get_type() == RECURSE_DOWN_REL)
   {
@@ -980,7 +949,7 @@ bool Recurse_Constraint::get_data
     {
       relations_loop(query, rman, input->relations, rel_rels.current);
       if (type == QUERY_WAY)
-        collect_ways(query, rman, rel_rels.current, {}, ranges, ids, invert_ids, into.ways, into.attic_ways);
+        collect_ways(query, rman, rel_rels.current, {}, ranges, ids, invert_ids).swap(into.ways, into.attic_ways);
       else
       {
         if (!ids.empty())
@@ -1002,8 +971,8 @@ bool Recurse_Constraint::get_data
                      input->relations, input->attic_relations,
                      rel_rels.current, rel_rels.attic);
       if (type == QUERY_WAY)
-        collect_ways(query, rman, rel_rels.current, rel_rels.attic,
-                     ranges, ids, invert_ids, into.ways, into.attic_ways);
+        collect_ways(query, rman, rel_rels.current, rel_rels.attic, ranges, ids, invert_ids)
+            .swap(into.ways, into.attic_ways);
       else
       {
         if (!ids.empty())
@@ -1030,9 +999,8 @@ bool Recurse_Constraint::get_data
     }
   }
   else if (stmt->get_type() == RECURSE_NODE_WAY)
-    collect_ways(
-        query, rman, input->nodes, input->attic_nodes, stmt->get_pos(), into.ways, into.attic_ways,
-        ids, invert_ids);
+    collect_ways(query, rman, input->nodes, input->attic_nodes, stmt->get_pos(), ids, invert_ids)
+        .swap(into.ways, into.attic_ways);
   else if (stmt->get_type() == RECURSE_NODE_RELATION)
     collect_relations(query, rman, input->nodes, input->attic_nodes, Relation_Entry::NODE, ids, invert_ids)
         .swap(into.relations, into.attic_relations);
@@ -1045,18 +1013,14 @@ bool Recurse_Constraint::get_data
   else if (stmt->get_type() == RECURSE_UP)
   {
     if (type == QUERY_WAY)
-      collect_ways(
-            query, rman, input->nodes, input->attic_nodes, 0, into.ways, into.attic_ways, ids, invert_ids);
+      collect_ways(query, rman, input->nodes, input->attic_nodes, 0, ids, invert_ids)
+          .swap(into.ways, into.attic_ways);
     else
     {
       auto rel_ways = Timeless< Uint31_Index, Way_Skeleton >{ input->ways, input->attic_ways };
       rel_ways.sort();
-      {
-        auto node_ways = Timeless< Uint31_Index, Way_Skeleton >();
-        collect_ways(
-            query, rman, input->nodes, input->attic_nodes, 0, node_ways.current, node_ways.attic, {}, true);
-        rel_ways.set_union(node_ways.sort());
-      }
+      rel_ways.set_union(collect_ways(query, rman, input->nodes, input->attic_nodes, 0, {}, true).sort());
+
       auto result =
           collect_relations(query, rman, rel_ways.current, rel_ways.attic, Relation_Entry::WAY, ids, invert_ids);
       result.sort();
@@ -1069,18 +1033,14 @@ bool Recurse_Constraint::get_data
   else if (stmt->get_type() == RECURSE_UP_REL)
   {
     if (type == QUERY_WAY)
-      collect_ways(
-          query, rman, input->nodes, input->attic_nodes, 0, into.ways, into.attic_ways, ids, invert_ids);
+      collect_ways(query, rman, input->nodes, input->attic_nodes, 0, ids, invert_ids)
+          .swap(into.ways, into.attic_ways);
     else
     {
       auto rel_ways = Timeless< Uint31_Index, Way_Skeleton >{ input->ways, input->attic_ways };
       rel_ways.sort();
-      {
-        auto node_ways = Timeless< Uint31_Index, Way_Skeleton >();
-        collect_ways(
-            query, rman, input->nodes, input->attic_nodes, 0, node_ways.current, node_ways.attic, {}, true);
-        rel_ways.set_union(node_ways.sort());
-      }
+      rel_ways.set_union(collect_ways(query, rman, input->nodes, input->attic_nodes, 0, {}, true).sort());
+
       auto rel_rels = Timeless< Uint31_Index, Relation_Skeleton >{ input->relations, input->attic_relations };
       rel_rels.sort();
       rel_rels.set_union(collect_relations(
@@ -1363,15 +1323,15 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
   if (stmt->get_type() == RECURSE_DOWN)
   {
+    std::vector< Node::Id_Type > rel_ids
+        = relation_node_member_ids(rman, input->relations, input->attic_relations);
+    Timeless< Uint31_Index, Way_Skeleton > intermediate_ways =
+        collect_ways(query, rman, input->relations, input->attic_relations,
+            Ranges< Uint31_Index >::global(), std::vector< Way::Id_Type >{}, true);
+
     if (rman.get_desired_timestamp() == NOW)
     {
-      std::vector< Node::Id_Type > rel_ids
-          = relation_node_member_ids(rman, input->relations);
-      std::map< Uint31_Index, std::vector< Way_Skeleton > > intermediate_ways;
-      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > intermediate_attic_ways;
-      collect_ways(query, rman, input->relations, {}, Ranges< Uint31_Index >::global(),
-	  std::vector< Way::Id_Type >{}, true, intermediate_ways, intermediate_attic_ways);
-      std::vector< Node::Id_Type > way_ids = way_nd_ids(intermediate_ways, 0);
+      std::vector< Node::Id_Type > way_ids = way_nd_ids(intermediate_ways.current, 0);
       rman.health_check(*stmt);
 
       std::vector< Node::Id_Type > ids;
@@ -1384,14 +1344,7 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     }
     else
     {
-      std::vector< Node::Id_Type > rel_ids
-          = relation_node_member_ids(rman, input->relations, input->attic_relations);
-      std::map< Uint31_Index, std::vector< Way_Skeleton > > intermediate_ways;
-      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > intermediate_attic_ways;
-      collect_ways(query, rman, input->relations, input->attic_relations,
-          Ranges< Uint31_Index >::global(), std::vector< Way::Id_Type >{}, true,
-          intermediate_ways, intermediate_attic_ways);
-      std::vector< Node::Id_Type > way_ids = way_nd_ids(intermediate_ways, intermediate_attic_ways, 0);
+      std::vector< Node::Id_Type > way_ids = way_nd_ids(intermediate_ways.current, intermediate_ways.attic, 0);
       rman.health_check(*stmt);
 
       std::vector< Node::Id_Type > ids;
@@ -1417,11 +1370,10 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
       relations_loop(query, rman, input->relations, rel_rels);
       std::vector< Node::Id_Type > rel_ids
           = relation_node_member_ids(rman, rel_rels);
-      std::map< Uint31_Index, std::vector< Way_Skeleton > > intermediate_ways;
-      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > intermediate_attic_ways;
-      collect_ways(query, rman, rel_rels, {}, Ranges< Uint31_Index >::global(),
-		   std::vector< Way::Id_Type >{}, true, intermediate_ways, intermediate_attic_ways);
-      std::vector< Node::Id_Type > way_ids = way_nd_ids(intermediate_ways, 0);
+      Timeless< Uint31_Index, Way_Skeleton > intermediate_ways =
+          collect_ways(query, rman, rel_rels, {},
+              Ranges< Uint31_Index >::global(), std::vector< Way::Id_Type >{}, true);
+      std::vector< Node::Id_Type > way_ids = way_nd_ids(intermediate_ways.current, 0);
       rman.health_check(*stmt);
 
       std::vector< Node::Id_Type > ids;
@@ -1441,12 +1393,10 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
       std::vector< Node::Id_Type > rel_node_ids
           = relation_node_member_ids(rman, rel_rels, attic_rel_rels);
-      std::map< Uint31_Index, std::vector< Way_Skeleton > > intermediate_ways;
-      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > intermediate_attic_ways;
-      collect_ways(query, rman, rel_rels, attic_rel_rels,
-          Ranges< Uint31_Index >::global(), std::vector< Way::Id_Type >{}, true,
-          intermediate_ways, intermediate_attic_ways);
-      std::vector< Node::Id_Type > way_node_ids = way_nd_ids(intermediate_ways, intermediate_attic_ways, 0);
+      Timeless< Uint31_Index, Way_Skeleton > intermediate_ways =
+          collect_ways(query, rman, rel_rels, attic_rel_rels,
+              Ranges< Uint31_Index >::global(), std::vector< Way::Id_Type >{}, true);
+      std::vector< Node::Id_Type > way_node_ids = way_nd_ids(intermediate_ways.current, intermediate_ways.attic, 0);
       rman.health_check(*stmt);
 
       std::vector< Node::Id_Type > ids;
@@ -1467,19 +1417,14 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   }
   else if (stmt->get_type() == RECURSE_UP && !into.relations.empty())
   {
-    std::map< Uint31_Index, std::vector< Way_Skeleton > > rel_ways = input->ways;
-    std::map< Uint31_Index, std::vector< Way_Skeleton > > node_ways;
-    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_node_ways;
+    auto rel_ways = Timeless< Uint31_Index, Way_Skeleton >{ input->ways, input->attic_ways };
+    rel_ways.sort();
+    rel_ways.set_union(collect_ways(query, rman, input->nodes, input->attic_nodes, 0, {}, true).sort());
     
     if (rman.get_desired_timestamp() == NOW)
     {
-      collect_ways(query, rman, input->nodes, {}, 0, node_ways, attic_node_ways, {}, true);
-      sort_second(rel_ways);
-      sort_second(node_ways);
-      indexed_set_union(rel_ways, node_ways);
-
       std::vector< Relation_Entry::Ref_Type > node_ids = extract_children_ids< Uint32_Index, Node_Skeleton, Relation_Entry::Ref_Type >(input->nodes);
-      std::vector< Relation_Entry::Ref_Type > way_ids = extract_children_ids< Uint31_Index, Way_Skeleton, Relation_Entry::Ref_Type >(rel_ways);
+      std::vector< Relation_Entry::Ref_Type > way_ids = extract_children_ids< Uint31_Index, Way_Skeleton, Relation_Entry::Ref_Type >(rel_ways.current);
 
       filter_items(
           Or_Predicate< Relation_Skeleton, Get_Parent_Rels_Predicate, Get_Parent_Rels_Predicate >
@@ -1488,15 +1433,6 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
     }
     else
     {
-      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_rel_ways = input->attic_ways;
-      collect_ways(query, rman, input->nodes, input->attic_nodes, 0, node_ways, attic_node_ways, {}, true);
-      sort_second(rel_ways);
-      sort_second(node_ways);
-      indexed_set_union(rel_ways, node_ways);
-      sort_second(attic_rel_ways);
-      sort_second(attic_node_ways);
-      indexed_set_union(attic_rel_ways, attic_node_ways);
-
       std::vector< Relation_Entry::Ref_Type > current_node_ids =
           extract_children_ids< Uint32_Index, Node_Skeleton, Relation_Entry::Ref_Type >(input->nodes);
       std::vector< Relation_Entry::Ref_Type > attic_node_ids =
@@ -1507,9 +1443,9 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
                      std::back_inserter(node_ids));
 
       std::vector< Relation_Entry::Ref_Type > current_way_ids =
-          extract_children_ids< Uint31_Index, Way_Skeleton, Relation_Entry::Ref_Type >(rel_ways);
+          extract_children_ids< Uint31_Index, Way_Skeleton, Relation_Entry::Ref_Type >(rel_ways.current);
       std::vector< Relation_Entry::Ref_Type > attic_way_ids =
-          extract_children_ids< Uint31_Index, Attic< Way_Skeleton >, Relation_Entry::Ref_Type >(attic_rel_ways);
+          extract_children_ids< Uint31_Index, Attic< Way_Skeleton >, Relation_Entry::Ref_Type >(rel_ways.attic);
       std::vector< Relation_Entry::Ref_Type > way_ids;
       std::set_union(current_way_ids.begin(), current_way_ids.end(),
                      attic_way_ids.begin(), attic_way_ids.end(),
@@ -1527,23 +1463,14 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   }
   else if (stmt->get_type() == RECURSE_UP_REL && !into.relations.empty())
   {
-    std::map< Uint31_Index, std::vector< Way_Skeleton > > rel_ways = input->ways;
-    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_rel_ways = input->attic_ways;
-    sort_second(rel_ways);
-    sort_second(attic_rel_ways);
-    {
-      std::map< Uint31_Index, std::vector< Way_Skeleton > > node_ways;
-      std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_node_ways;    
-      collect_ways(query, rman, input->nodes, input->attic_nodes, 0, node_ways, attic_node_ways, {}, true);
-      sort_second(node_ways);
-      sort_second(attic_node_ways);
-      indexed_set_union(rel_ways, node_ways);
-      indexed_set_union(attic_rel_ways, attic_node_ways);
-    }
+    auto rel_ways = Timeless< Uint31_Index, Way_Skeleton >{ input->ways, input->attic_ways };
+    rel_ways.sort();
+    rel_ways.set_union(collect_ways(query, rman, input->nodes, input->attic_nodes, 0, {}, true).sort());
+
     auto rel_rels = Timeless< Uint31_Index, Relation_Skeleton >{ input->relations, input->attic_relations };
     rel_rels.sort();
     rel_rels.set_union(
-        collect_relations(query, rman, rel_ways, attic_rel_ways, Relation_Entry::WAY, {}, true).sort());
+        collect_relations(query, rman, rel_ways.current, rel_ways.attic, Relation_Entry::WAY, {}, true).sort());
     rel_rels.set_union(
         collect_relations(query, rman, input->nodes, input->attic_nodes, Relation_Entry::NODE, {}, true).sort());
 
@@ -1975,8 +1902,8 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   else if (type == RECURSE_NODE_WAY || type == RECURSE_NODE_RELATION || type == RECURSE_NODE_WR)
   {
     if (type == RECURSE_NODE_WAY || type == RECURSE_NODE_WR)
-      collect_ways(
-          *this, rman, input_set->nodes, input_set->attic_nodes, get_pos(), into.ways, into.attic_ways, {}, true);
+      collect_ways(*this, rman, input_set->nodes, input_set->attic_nodes, get_pos(), {}, true)
+          .swap(into.ways, into.attic_ways);
     if (type == RECURSE_NODE_RELATION || type == RECURSE_NODE_WR)
       collect_relations(*this, rman, input_set->nodes, input_set->attic_nodes, Relation_Entry::NODE, {}, true)
           .swap(into.relations, into.attic_relations);
@@ -1986,18 +1913,14 @@ void Recurse_Statement::execute(Resource_Manager& rman)
         .swap(into.relations, into.attic_relations);
   else if (type == RECURSE_UP)
   {
-    std::map< Uint31_Index, std::vector< Way_Skeleton > > rel_ways = input_set->ways;
-    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_rel_ways = input_set->attic_ways;
-    collect_ways(*this, rman, input_set->nodes, input_set->attic_nodes, 0, into.ways, into.attic_ways, {}, true);
+    auto rel_ways = Timeless< Uint31_Index, Way_Skeleton >{ input_set->ways, input_set->attic_ways};
+    rel_ways.sort();
+    auto node_ways = collect_ways(*this, rman, input_set->nodes, input_set->attic_nodes, 0, {}, true);
+    node_ways.sort();
+    rel_ways.set_union(node_ways);
+    node_ways.swap(into.ways, into.attic_ways);
 
-    sort_second(rel_ways);
-    sort_second(into.ways);
-    indexed_set_union(rel_ways, into.ways);
-    sort_second(attic_rel_ways);
-    sort_second(into.attic_ways);
-    indexed_set_union(attic_rel_ways, into.attic_ways);
-
-    collect_relations(*this, rman, rel_ways, attic_rel_ways, Relation_Entry::WAY, {}, true)
+    collect_relations(*this, rman, rel_ways.current, rel_ways.attic, Relation_Entry::WAY, {}, true)
         .swap(into.relations, into.attic_relations);
     sort_second(into.relations);
     sort_second(into.attic_relations);
@@ -2010,21 +1933,17 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   }
   else if (type == RECURSE_UP_REL)
   {
-    std::map< Uint31_Index, std::vector< Way_Skeleton > > rel_ways = input_set->ways;
-    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_rel_ways = input_set->attic_ways;
-    collect_ways(*this, rman,
-                  input_set->nodes, input_set->attic_nodes, 0, into.ways, into.attic_ways, {}, true);
-    sort_second(rel_ways);
-    sort_second(into.ways);
-    indexed_set_union(rel_ways, into.ways);
-    sort_second(attic_rel_ways);
-    sort_second(into.attic_ways);
-    indexed_set_union(attic_rel_ways, into.attic_ways);
+    auto rel_ways = Timeless< Uint31_Index, Way_Skeleton >{ input_set->ways, input_set->attic_ways};
+    rel_ways.sort();
+    auto node_ways = collect_ways(*this, rman, input_set->nodes, input_set->attic_nodes, 0, {}, true);
+    node_ways.sort();
+    rel_ways.set_union(node_ways);
+    node_ways.swap(into.ways, into.attic_ways);
 
     auto rel_rels = Timeless< Uint31_Index, Relation_Skeleton >{ input_set->relations, input_set->attic_relations };
     rel_rels.sort();
     rel_rels.set_union(
-        collect_relations(*this, rman, rel_ways, attic_rel_ways, Relation_Entry::WAY, {}, true).sort());
+        collect_relations(*this, rman, rel_ways.current, rel_ways.attic, Relation_Entry::WAY, {}, true).sort());
     rel_rels.set_union(
         collect_relations(*this, rman, input_set->nodes, input_set->attic_nodes, Relation_Entry::NODE, {}, true)
         .sort());
