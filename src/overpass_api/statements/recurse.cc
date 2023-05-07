@@ -892,58 +892,28 @@ bool Recurse_Constraint::get_data
   else if (stmt->get_type() == RECURSE_DOWN_REL)
   {
     Timeless< Uint31_Index, Relation_Skeleton > rel_rels;
-
     if (rman.get_desired_timestamp() == NOW)
-    {
       relations_loop(query, rman, input->relations, rel_rels.current);
-      if (type == QUERY_WAY)
-        collect_ways(query, rman, rel_rels.current, {}, ranges, ids, invert_ids).swap(into.ways, into.attic_ways);
-      else
-      {
-        if (!ids.empty())
-        {
-	  if (!invert_ids)
-	    filter_items
-	        (Id_Predicate< Relation_Skeleton >(ids), rel_rels.current);
-	  else
-	    filter_items
-	        (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
-	        (Id_Predicate< Relation_Skeleton >(ids)), rel_rels.current);
-        }
-        into.relations.swap(rel_rels.current);
-      }
-    }
+    else
+      relations_loop(query, rman, input->relations, input->attic_relations, rel_rels.current, rel_rels.attic);
+
+    if (type == QUERY_WAY)
+      collect_ways(query, rman, rel_rels.current, rel_rels.attic, ranges, ids, invert_ids)
+          .swap(into.ways, into.attic_ways);
     else
     {
-      relations_loop(query, rman,
-                     input->relations, input->attic_relations,
-                     rel_rels.current, rel_rels.attic);
-      if (type == QUERY_WAY)
-        collect_ways(query, rman, rel_rels.current, rel_rels.attic, ranges, ids, invert_ids)
-            .swap(into.ways, into.attic_ways);
-      else
+      if (!ids.empty())
       {
-        if (!ids.empty())
-        {
-          if (!invert_ids)
-          {
-            filter_items(Id_Predicate< Relation_Skeleton >(ids), rel_rels.current);
-            filter_items(Id_Predicate< Relation_Skeleton >(ids), rel_rels.attic);
-          }
-          else
-          {
-            filter_items
-                (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
-                (Id_Predicate< Relation_Skeleton >(ids)), rel_rels.current);
-            filter_items
-                (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
-                (Id_Predicate< Relation_Skeleton >(ids)), rel_rels.attic);
-          }
-        }
-        rel_rels.swap(into.relations, into.attic_relations);
-
-        keep_matching_skeletons(into.relations, into.attic_relations, rman.get_desired_timestamp());
+        if (!invert_ids)
+          rel_rels.filter_items(Id_Predicate< Relation_Skeleton >(ids));
+        else
+          rel_rels.filter_items(
+              Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >(
+                  Id_Predicate< Relation_Skeleton >(ids)));
       }
+      if (rman.get_desired_timestamp() != NOW)
+        keep_matching_skeletons(rel_rels.current, rel_rels.attic, rman.get_desired_timestamp());
+      rel_rels.swap(into.relations, into.attic_relations);
     }
   }
   else if (stmt->get_type() == RECURSE_NODE_WAY)
@@ -996,42 +966,22 @@ bool Recurse_Constraint::get_data
       rel_rels.set_union(collect_relations(
           query, rman, input->nodes, input->attic_nodes, Relation_Entry::NODE, {}, true).sort());
 
+      Timeless< Uint31_Index, Relation_Skeleton > result;
       if (rman.get_desired_timestamp() == NOW)
-      {
-        relations_up_loop(query, rman, rel_rels.current, into.relations);
-
-        if (!ids.empty())
-        {
-	  if (!invert_ids)
-	    filter_items(Id_Predicate< Relation_Skeleton >(ids), into.relations);
-	  else
-	    filter_items
-	        (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
-	        (Id_Predicate< Relation_Skeleton >(ids)), into.relations);
-        }
-      }
+        relations_up_loop(query, rman, rel_rels.current, result.current);
       else
-      {
-        relations_up_loop(query, rman, rel_rels.current, rel_rels.attic, into.relations, into.attic_relations);
+        relations_up_loop(query, rman, rel_rels.current, rel_rels.attic, result.current, result.attic);
 
-        if (!ids.empty())
-        {
-          if (!invert_ids)
-          {
-            filter_items(Id_Predicate< Relation_Skeleton >(ids), into.relations);
-            filter_items(Id_Predicate< Relation_Skeleton >(ids), into.attic_relations);
-          }
-          else
-          {
-            filter_items
-                (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
-                (Id_Predicate< Relation_Skeleton >(ids)), into.relations);
-            filter_items
-                (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
-                (Id_Predicate< Relation_Skeleton >(ids)), into.attic_relations);
-          }
-        }
+      if (!ids.empty())
+      {
+        if (!invert_ids)
+          result.filter_items(Id_Predicate< Relation_Skeleton >(ids));
+        else
+          result.filter_items(
+              Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >(
+                  Id_Predicate< Relation_Skeleton >(ids)));
       }
+      result.swap(into.relations, into.attic_relations);
     }
   }
   else

@@ -58,6 +58,14 @@ struct Timeless
     indexed_set_union(attic, rhs.attic);
     return *this;
   }
+  
+  template< typename Predicate >
+  Timeless& filter_items(const Predicate& predicate)
+  {
+    ::filter_items(predicate, current);
+    ::filter_items(predicate, attic);
+    return *this;
+  }
 
   std::map< Index, std::vector< Object > > current;
   std::map< Index, std::vector< Attic< Object > > > attic;
