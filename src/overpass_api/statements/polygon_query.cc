@@ -115,13 +115,13 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   // Retrieve all ways referred by the relations.
   Ranges< Uint31_Index > way_ranges;
   get_ranges(rman, way_ranges);
-  std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
-      = relation_way_members(&query, rman, into.relations, way_ranges, {}, true);
+  Timeless< Uint31_Index, Way_Skeleton > way_members_
+      = relation_way_members(&query, rman, into.relations, {}, way_ranges, {}, true);
 
-  polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, query, rman), false, query, rman);
+  polygon->collect_ways(way_members_.current, Way_Geometry_Store(way_members_.current, query, rman), false, query, rman);
 
   filter_relations_expensive(order_by_id(node_members, Order_By_Node_Id()),
-			     order_by_id(way_members_, Order_By_Way_Id()),
+			     order_by_id(way_members_.current, Order_By_Way_Id()),
 			     into.relations);
 
   //Process ways

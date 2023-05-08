@@ -216,13 +216,13 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
         = order_by_id(node_members, Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
-    std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
-        = relation_way_members(&query, rman, into.relations, get_ranges_31(), {}, true);
+    Timeless< Uint31_Index, Way_Skeleton > way_members_
+        = relation_way_members(&query, rman, into.relations, {}, get_ranges_31(), {}, true);
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
-        = order_by_id(way_members_, Order_By_Way_Id());
+        = order_by_id(way_members_.current, Order_By_Way_Id());
 
     filter_relations_expensive(*this, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_, query, rman), into.relations);
+        Way_Geometry_Store(way_members_.current, query, rman), into.relations);
   }
 
   if (with_attic)

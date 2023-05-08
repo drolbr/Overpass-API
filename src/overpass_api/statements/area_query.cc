@@ -315,21 +315,21 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   // Retrieve all ways referred by the relations.
   Ranges< Uint31_Index > way_ranges;
   get_ranges(rman, way_ranges);
-  std::map< Uint31_Index, std::vector< Way_Skeleton > > way_members_
-      = relation_way_members(&query, rman, into.relations, way_ranges, {}, true);
+  Timeless< Uint31_Index, Way_Skeleton > way_members_
+      = relation_way_members(&query, rman, into.relations, {}, way_ranges, {}, true);
 
   // Filter for those ways that are in one of the areas
   {
     std::map< Uint31_Index, std::vector< Way_Skeleton > > ways_in_wr_areas
-        = ways_contained_in(input, query, rman, way_members_);
-    indexed_set_difference(way_members_, ways_in_wr_areas);
-    area->collect_ways(Way_Geometry_Store(way_members_, query, rman),
-        way_members_, area_blocks_req, false, query, rman);
-    indexed_set_union(way_members_, ways_in_wr_areas);
+        = ways_contained_in(input, query, rman, way_members_.current);
+    indexed_set_difference(way_members_.current, ways_in_wr_areas);
+    area->collect_ways(Way_Geometry_Store(way_members_.current, query, rman),
+        way_members_.current, area_blocks_req, false, query, rman);
+    indexed_set_union(way_members_.current, ways_in_wr_areas);
   }
 
   filter_relations_expensive(order_by_id(node_members, Order_By_Node_Id()),
-			     order_by_id(way_members_, Order_By_Way_Id()),
+			     order_by_id(way_members_.current, Order_By_Way_Id()),
 			     into.relations);
 
   //Process nodes
