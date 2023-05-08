@@ -330,10 +330,10 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     Ranges< Uint32_Index > node_ranges;
     get_ranges(rman, node_ranges);
 
-    std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-        = relation_node_members(&query, rman, into.relations, node_ranges, {}, true);
+    Timeless< Uint32_Index, Node_Skeleton > node_members
+        = relation_node_members(&query, rman, into.relations, {}, node_ranges, {}, true);
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
-        = order_by_id(node_members, Order_By_Node_Id());
+        = order_by_id(node_members.current, Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     Ranges< Uint31_Index > way_ranges;
@@ -844,7 +844,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   add_ways(input.ways, Way_Geometry_Store(input.ways, query, rman));
 
   // Retrieve all node and way members referred by the relations.
-  add_nodes(relation_node_members(&query, rman, input.relations, Ranges< Uint32_Index >::global(), {}, true));
+  add_nodes(relation_node_members(&query, rman, input.relations, {}, Ranges< Uint32_Index >::global(), {}, true).current);
 
   // Retrieve all ways referred by the relations.
   Timeless< Uint31_Index, Way_Skeleton > way_members

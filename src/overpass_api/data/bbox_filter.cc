@@ -210,10 +210,10 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
     //Process relations
 
     // Retrieve all nodes referred by the relations.
-    std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-        = relation_node_members(&query, rman, into.relations, get_ranges_32(), {}, true);
+    Timeless< Uint32_Index, Node_Skeleton > node_members
+        = relation_node_members(&query, rman, into.relations, {}, get_ranges_32(), {}, true);
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
-        = order_by_id(node_members, Order_By_Node_Id());
+        = order_by_id(node_members.current, Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     Timeless< Uint31_Index, Way_Skeleton > way_members_

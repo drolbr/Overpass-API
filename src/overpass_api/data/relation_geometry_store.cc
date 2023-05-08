@@ -43,12 +43,12 @@ Relation_Geometry_Store::Relation_Geometry_Store
       ? get_ranges_32(south_, north_, west_, east_) : Ranges< Uint32_Index >::global());
 
   // Retrieve all nodes referred by the relations.
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-      = relation_node_members(&query, rman, relations, node_ranges, {}, true);
+  Timeless< Uint32_Index, Node_Skeleton > node_members
+      = relation_node_members(&query, rman, relations, {}, node_ranges, {}, true);
 
   // Order node ids by id.
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.begin();
-      it != node_members.end(); ++it)
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.current.begin();
+      it != node_members.current.end(); ++it)
   {
     for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
@@ -94,22 +94,19 @@ Relation_Geometry_Store::Relation_Geometry_Store
       ? get_ranges_32(south_, north_, west_, east_) : Ranges< Uint32_Index >::global());
 
   // Retrieve all nodes referred by the relations.
-  std::pair< std::map< Uint32_Index, std::vector< Node_Skeleton > >,
-      std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > > nodes_by_idx
-      = relation_node_members(&query, rman,
-          std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
-          node_ranges, {}, true);
+  auto nodes_by_idx
+      = relation_node_members(&query, rman, {}, relations, node_ranges, {}, true);
 
   // Order node ids by id.
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.first.begin();
-      it != nodes_by_idx.first.end(); ++it)
+  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.current.begin();
+      it != nodes_by_idx.current.end(); ++it)
   {
     for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)
       nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
   }
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::iterator it = nodes_by_idx.second.begin();
-      it != nodes_by_idx.second.end(); ++it)
+  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::iterator it = nodes_by_idx.attic.begin();
+      it != nodes_by_idx.attic.end(); ++it)
   {
     for (std::vector< Attic< Node_Skeleton > >::const_iterator iit = it->second.begin();
         iit != it->second.end(); ++iit)

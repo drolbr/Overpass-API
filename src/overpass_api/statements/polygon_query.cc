@@ -106,11 +106,11 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   // Retrieve all nodes referred by the relations.
   Ranges< Uint32_Index > node_ranges;
   get_ranges(rman, node_ranges);
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-      = relation_node_members(&query, rman, into.relations, node_ranges, {}, true);
+  Timeless< Uint32_Index, Node_Skeleton > node_members
+      = relation_node_members(&query, rman, into.relations, {}, node_ranges, {}, true);
 
   // filter for those nodes that are in one of the areas
-  polygon->collect_nodes(node_members, false);
+  polygon->collect_nodes(node_members.current, false);
 
   // Retrieve all ways referred by the relations.
   Ranges< Uint31_Index > way_ranges;
@@ -120,7 +120,7 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
   polygon->collect_ways(way_members_.current, Way_Geometry_Store(way_members_.current, query, rman), false, query, rman);
 
-  filter_relations_expensive(order_by_id(node_members, Order_By_Node_Id()),
+  filter_relations_expensive(order_by_id(node_members.current, Order_By_Node_Id()),
 			     order_by_id(way_members_.current, Order_By_Way_Id()),
 			     into.relations);
 

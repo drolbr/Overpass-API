@@ -300,16 +300,16 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   // Retrieve all nodes referred by the relations.
   Ranges< Uint32_Index > node_ranges;
   get_ranges(rman, node_ranges);
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > node_members
-      = relation_node_members(&query, rman, into.relations, node_ranges, {}, true);
+  Timeless< Uint32_Index, Node_Skeleton > node_members
+      = relation_node_members(&query, rman, into.relations, {}, node_ranges, {}, true);
 
   // filter for those nodes that are in one of the areas
   {
     std::map< Uint32_Index, std::vector< Node_Skeleton > > nodes_in_wr_areas
-        = nodes_contained_in(input, false, query, rman, node_members);
-    indexed_set_difference(node_members, nodes_in_wr_areas);
-    area->collect_nodes(node_members, area_blocks_req, false, rman);
-    indexed_set_union(node_members, nodes_in_wr_areas);
+        = nodes_contained_in(input, false, query, rman, node_members.current);
+    indexed_set_difference(node_members.current, nodes_in_wr_areas);
+    area->collect_nodes(node_members.current, area_blocks_req, false, rman);
+    indexed_set_union(node_members.current, nodes_in_wr_areas);
   } 
 
   // Retrieve all ways referred by the relations.
@@ -328,7 +328,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     indexed_set_union(way_members_.current, ways_in_wr_areas);
   }
 
-  filter_relations_expensive(order_by_id(node_members, Order_By_Node_Id()),
+  filter_relations_expensive(order_by_id(node_members.current, Order_By_Node_Id()),
 			     order_by_id(way_members_.current, Order_By_Way_Id()),
 			     into.relations);
 
