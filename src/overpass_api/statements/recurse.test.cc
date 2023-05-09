@@ -28,42 +28,22 @@
 
 Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uint64 id)
 {
-  std::ostringstream buf("");
-  buf<<id;
-  std::string id_ = buf.str();
   Parsed_Query global_settings;
-
-  const char* attributes[5];
-  attributes[0] = "type";
-  attributes[1] = type.c_str();
-  attributes[2] = "ref";
-  attributes[3] = id_.c_str();
-  attributes[4] = 0;
-
-  Id_Query_Statement stmt(1, convert_c_pairs(attributes), global_settings);
-  stmt.execute(rman);
-
+  Id_Query_Statement(1, { {"type", type}, {"ref", std::to_string(id)} }, global_settings).execute(rman);
   return rman;
 }
 
 Resource_Manager& perform_multi_id_query(Resource_Manager& rman, std::string type, const std::vector< uint64 >& ids)
 {
-  Parsed_Query global_settings;
-
   std::map< std::string, std::string > attributes;
   attributes["type"] = type;
   if (!ids.empty())
-    attributes["ref"] = to_string(ids[0]);
+    attributes["ref"] = std::to_string(ids[0]);
   for (uint i = 1; i < ids.size(); ++i)
-  {
-    std::ostringstream out;
-    out<<"ref_"<<i;
-    attributes[out.str()] = to_string(ids[i]);
-  }
+    attributes["ref_" + std::to_string(i)] = std::to_string(ids[i]);
 
-  Id_Query_Statement stmt(1, attributes, global_settings);
-  stmt.execute(rman);
-
+  Parsed_Query global_settings;
+  Id_Query_Statement(1, attributes, global_settings).execute(rman);
   return rman;
 }
 
@@ -103,22 +83,11 @@ int main(int argc, char* args[])
 	  total.ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
       }
       total_rman.swap_set("_", total);
-      {
-	const char* attributes[] = { "type", "way-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "way-node" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "2"))
   {
@@ -135,29 +104,17 @@ int main(int argc, char* args[])
       total_rman.swap_set("_", total);
       {
 	Resource_Manager rman(transaction, &global_settings);
-	way_id_offset = pattern_size*(pattern_size/2-1);
-	perform_id_query(rman, "way", way_id_offset + 1);
+	perform_id_query(rman, "way", pattern_size*(pattern_size/2-1) + 1);
         const Set* default_ = rman.get_set("_");
 	if (default_ && !default_->ways.empty())
 	  total.ways[default_->ways.begin()->first].push_back(default_->ways.begin()->second.front());
       }
       total_rman.swap_set("_", total);
-      {
-	const char* attributes[] = { "type", "way-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "way-node" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "3"))
   {
@@ -167,22 +124,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", 1 + global_node_offset);
-      {
-	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
+
+      Recurse_Statement(2, { { "type", "node-way" } }, global_settings).execute(rman);
+      Print_Statement(3, {}, global_settings).execute(rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
@@ -192,22 +138,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", pattern_size*pattern_size + pattern_size*3/2 + 2 + global_node_offset);
-      {
-	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
+
+      Recurse_Statement(2, { { "type", "node-way" } }, global_settings).execute(rman);
+      Print_Statement(3, {}, global_settings).execute(rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "5"))
   {
@@ -239,22 +174,11 @@ int main(int argc, char* args[])
         }
       }
       total_rman.swap_set("_", total);
-      {
-	const char* attributes[] = { "type", "node-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "node-way" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "6"))
   {
@@ -275,22 +199,11 @@ int main(int argc, char* args[])
 	  total.relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
       }
       total_rman.swap_set("_", total);
-      {
-	const char* attributes[] = { "type", "relation-node", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "relation-node" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "7"))
   {
@@ -300,22 +213,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", 2 + global_node_offset);
-      {
-	const char* attributes[] = { "type", "node-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
+
+      Recurse_Statement(2, { { "type", "node-relation" } }, global_settings).execute(rman);
+      Print_Statement(3, {}, global_settings).execute(rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "8"))
   {
@@ -325,22 +227,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 8);
-      {
-	const char* attributes[] = { "type", "relation-way", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "relation-way" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "9"))
   {
@@ -350,22 +241,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "way", 1);
-      {
-	const char* attributes[] = { "type", "way-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(rman);
-      }
+
+      Recurse_Statement(2, { { "type", "way-relation" } }, global_settings).execute(rman);
+      Print_Statement(3, {}, global_settings).execute(rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "10"))
   {
@@ -375,22 +255,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 10);
-      {
-	const char* attributes[] = { "type", "relation-relation", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "relation-relation" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "11"))
   {
@@ -400,22 +269,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 2);
-      {
-	const char* attributes[] = { "type", "relation-backwards", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "relation-backwards" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "12"))
   {
@@ -425,22 +283,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
-      {
-	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "down" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "13"))
   {
@@ -450,22 +297,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 6);
-      {
-	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "down" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "14"))
   {
@@ -475,22 +311,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
-      {
-	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2,  { { "type", "down-rel" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "15"))
   {
@@ -500,22 +325,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 10);
-      {
-	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "down-rel" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "16"))
   {
@@ -525,22 +339,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", pattern_size + 2 + global_node_offset);
-      {
-	const char* attributes[] = { "type", "up", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "up" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "17"))
   {
@@ -550,22 +353,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
-      {
-	const char* attributes[] = { "type", "up", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "up" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "18"))
   {
@@ -575,22 +367,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", 2 + global_node_offset);
-      {
-	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "up-rel" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "19"))
   {
@@ -600,22 +381,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 2);
-      {
-	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "up-rel" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "20"))
   {
@@ -626,21 +396,11 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
       {
-	const char* attributes[] = { "type", "up-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
+      Recurse_Statement(2, { { "type", "up-rel" } }, global_settings).execute(total_rman);
       }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "21"))
   {
@@ -650,22 +410,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
-      {
-	const char* attributes[] = { "type", "down", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "down" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "22"))
   {
@@ -675,22 +424,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
-      {
-	const char* attributes[] = { "type", "down-rel", 0 };
-	Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
-      {
-	const char* attributes[] = { 0 };
-	Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-	stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "down-rel" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "23"))
   {
@@ -701,22 +439,10 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
 
-      {
-        const char* attributes[] = { "type", "relation-node", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
-      {
-        const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
+      Recurse_Statement(2, { { "type", "relation-node" }, { "role", "one" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "24"))
   {
@@ -737,22 +463,11 @@ int main(int argc, char* args[])
           total.nodes[default_->nodes.begin()->first].push_back(default_->nodes.begin()->second.front());
       }
       total_rman.swap_set("_", total);
-      {
-        const char* attributes[] = { "type", "node-relation", "role", "zero", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
-      {
-        const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "node-relation" }, { "role", "zero" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "25"))
   {
@@ -762,22 +477,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 7);
-      {
-        const char* attributes[] = { "type", "relation-way", "role", "two", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
-      {
-        const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "relation-way" }, { "role", "two" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "26"))
   {
@@ -787,22 +491,11 @@ int main(int argc, char* args[])
       Nonsynced_Transaction transaction(false, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
-      {
-        const char* attributes[] = { "type", "way-relation", "role", "two", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
-      {
-        const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { { "type", "way-relation" }, { "role", "two" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "27"))
   {
@@ -813,22 +506,10 @@ int main(int argc, char* args[])
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
 
-      {
-        const char* attributes[] = { "type", "relation-relation", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
-      {
-        const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
+      Recurse_Statement(2, { {"type", "relation-relation"}, {"role", "one"} }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
   if ((test_to_execute == "") || (test_to_execute == "28"))
   {
@@ -849,22 +530,11 @@ int main(int argc, char* args[])
           total.relations[default_->relations.begin()->first].push_back(default_->relations.begin()->second.front());
       }
       total_rman.swap_set("_", total);
-      {
-        const char* attributes[] = { "type", "relation-backwards", "role", "one", 0 };
-        Recurse_Statement stmt(2, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
-      {
-        const char* attributes[] = { 0 };
-        Print_Statement stmt(3, convert_c_pairs(attributes), global_settings);
-        stmt.execute(total_rman);
-      }
+
+      Recurse_Statement(2, { {"type", "relation-backwards"}, {"role", "one"} }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
     }
-    catch (File_Error e)
-    {
-      std::cerr<<"File error caught: "
-      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
-    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
 
   std::cout<<"</osm>\n";
