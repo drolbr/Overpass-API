@@ -536,6 +536,124 @@ int main(int argc, char* args[])
     }
     catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
   }
+  if ((test_to_execute == "") || (test_to_execute == "29"))
+  {
+    try
+    {
+      // Recurse way-count
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction, &global_settings);
+      perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
+
+      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "1" }, { "upper", "4" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
+    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "30"))
+  {
+    try
+    {
+      // Recurse way-count
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction, &global_settings);
+      perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
+
+      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "2" }, { "upper", "2" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
+    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "31"))
+  {
+    try
+    {
+      // Recurse way-count
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction, &global_settings);
+      perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
+
+      Recurse_Statement(2, { { "type", "way-count" }, { "lower", "4" }, { "upper", "4" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
+    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "32"))
+  {
+    try
+    {
+      // Recurse way-count
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction, &global_settings);
+      perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
+
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "1" }, { "upper", "4" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
+    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "33"))
+  {
+    try
+    {
+      // Recurse way-count
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction, &global_settings);
+      perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
+
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "2" }, { "upper", "2" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
+    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "34"))
+  {
+    try
+    {
+      // Recurse way-count
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction, &global_settings);
+      perform_multi_id_query(total_rman, "way",
+          { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,
+            pattern_size/2*(pattern_size-1), pattern_size/2*(pattern_size-1)+1 });
+
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "1" }, { "upper", "1" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
+    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "35"))
+  {
+    try
+    {
+      // Recurse way-count
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction, &global_settings);
+      perform_multi_id_query(total_rman, "way",
+          { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,
+            pattern_size/2*(pattern_size-1), pattern_size/2*(pattern_size-1)+1 });
+
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "2" }, { "upper", "2" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
+    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
+  }
+  if ((test_to_execute == "") || (test_to_execute == "36"))
+  {
+    try
+    {
+      // Recurse way-count
+      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Resource_Manager total_rman(transaction, &global_settings);
+      perform_multi_id_query(total_rman, "way",
+          { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,
+            pattern_size/2*(pattern_size-1), pattern_size/2*(pattern_size-1)+1 });
+
+      Recurse_Statement(2, { { "type", "way-link" }, { "lower", "3" }, { "upper", "65536" } }, global_settings).execute(total_rman);
+      Print_Statement(3, {}, global_settings).execute(total_rman);
+    }
+    catch (File_Error e) { std::cerr<<"File error caught: "<<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n'; }
+  }
 
   std::cout<<"</osm>\n";
   return 0;

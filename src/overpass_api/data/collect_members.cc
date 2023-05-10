@@ -22,45 +22,61 @@
 
 //-----------------------------------------------------------------------------
 
-
-std::vector< Node::Id_Type > way_nd_ids(
-    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
-    const std::vector< int >* pos)
+template< typename Container >
+void way_nd_ids_pos(
+    const Container& ways, const std::vector< int >& pos, std::vector< Node::Id_Type >& ids)
 {
-  std::vector< Node::Id_Type > ids;
-  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator
-      it(ways.begin()); it != ways.end(); ++it)
+  for (const auto& i : ways)
   {
-    for (std::vector< Way_Skeleton >::const_iterator it2(it->second.begin());
-        it2 != it->second.end(); ++it2)
+    for (const auto& j : i.second)
     {
-      if (pos)
+      auto it3 = pos.begin();
+      while (it3 != pos.end() && *it3 < 0)
       {
-        std::vector< int >::const_iterator it3 = pos->begin();
-        for (; it3 != pos->end() && *it3 < 0; ++it3)
-        {
-          if (*it3 + (int)it2->nds.size() >= 0)
-            ids.push_back(it2->nds[*it3 + it2->nds.size()]);
-        }
-        for (; it3 != pos->end(); ++it3)
-        {
-          if (*it3 > 0 && *it3 < (int)it2->nds.size()+1)
-            ids.push_back(it2->nds[*it3-1]);
-        }
+        if (*it3 + (int)j.nds.size() >= 0)
+          ids.push_back(j.nds[*it3 + j.nds.size()]);
+        ++it3;
       }
-      else
+      while (it3 != pos.end() && *it3 == 0)
+        ++it3;
+      while(it3 != pos.end())
       {
-        for (std::vector< Node::Id_Type >::const_iterator it3 = it2->nds.begin();
-            it3 != it2->nds.end(); ++it3)
-          ids.push_back(*it3);
+        if (*it3 < (int)j.nds.size()+1)
+          ids.push_back(j.nds[*it3-1]);
+        ++it3;
       }
     }
   }
+}
 
-  std::sort(ids.begin(), ids.end());
-  ids.erase(unique(ids.begin(), ids.end()), ids.end());
 
-  return ids;
+template< typename Container >
+void way_nd_ids_plain(const Container& ways, std::vector< Node::Id_Type >& ids)
+{
+  for (const auto& i : ways)
+  {
+    for (const auto& j : i.second)
+    {
+      for (auto k : j.nds)
+        ids.push_back(k);
+    }
+  }
+}
+
+
+template< typename Container >
+void way_nd_firstlast(const Container& ways, std::vector< Node::Id_Type >& ids)
+{
+  for (const auto& i : ways)
+  {
+    for (const auto& j : i.second)
+    {
+      if (j.nds.empty())
+        continue;
+      ids.push_back(j.nds.front());
+      ids.push_back(j.nds.back());
+    }
+  }
 }
 
 
@@ -69,42 +85,96 @@ std::vector< Node::Id_Type > way_nd_ids(
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     const std::vector< int >* pos)
 {
-  std::vector< Node::Id_Type > ids = way_nd_ids(ways, pos);
+  std::vector< Node::Id_Type > ids;
+  if (pos)
+    way_nd_ids_pos(ways, *pos, ids);
+  else
+    way_nd_ids_plain(ways, ids);
 
-  if (attic_ways.empty())
-    return ids;
-
-  for (std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator
-      it = attic_ways.begin(); it != attic_ways.end(); ++it)
+  if (!attic_ways.empty())
   {
-    for (std::vector< Attic< Way_Skeleton > >::const_iterator it2 = it->second.begin();
-        it2 != it->second.end(); ++it2)
-    {
-      if (pos)
-      {
-        std::vector< int >::const_iterator it3 = pos->begin();
-        for (; it3 != pos->end() && *it3 < 0; ++it3)
-        {
-          if (*it3 + (int)it2->nds.size() >= 0)
-            ids.push_back(it2->nds[*it3 + it2->nds.size()]);
-        }
-        for (; it3 != pos->end(); ++it3)
-        {
-          if (*it3 > 0 && *it3 < (int)it2->nds.size()+1)
-            ids.push_back(it2->nds[*it3-1]);
-        }
-      }
-      else
-      {
-        for (std::vector< Node::Id_Type >::const_iterator it3 = it2->nds.begin();
-            it3 != it2->nds.end(); ++it3)
-          ids.push_back(*it3);
-      }
-    }
+    if (pos)
+      way_nd_ids_pos(attic_ways, *pos, ids);
+    else
+      way_nd_ids_plain(attic_ways, ids);
   }
 
   std::sort(ids.begin(), ids.end());
-  ids.erase(unique(ids.begin(), ids.end()), ids.end());
+  ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+
+  return ids;
+}
+
+
+std::vector< Node::Id_Type > way_cnt_nd_ids(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+    unsigned int lower_limit, unsigned int upper_limit)
+{
+  std::vector< Node::Id_Type > ids;
+  way_nd_ids_plain(ways, ids);
+  if (!attic_ways.empty())
+    way_nd_ids_plain(attic_ways, ids);
+
+  std::sort(ids.begin(), ids.end());
+
+  decltype(ids.size()) lower = 0;
+  decltype(ids.size()) upper = 0;
+  decltype(ids.size()) target = 0;
+  while (lower < ids.size())
+  {
+    while (upper < ids.size() && ids[lower] == ids[upper])
+      ++upper;
+    if (lower_limit <= upper - lower && upper - lower <= upper_limit)
+      ids[target++] = ids[lower];
+    lower = upper;
+  }
+  ids.resize(target);
+
+  return ids;
+}
+
+
+std::vector< Node::Id_Type > way_link_nd_ids(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+    unsigned int lower_limit, unsigned int upper_limit)
+{
+  std::vector< Node::Id_Type > ids;
+  way_nd_ids_plain(ways, ids);
+  if (!attic_ways.empty())
+    way_nd_ids_plain(attic_ways, ids);
+
+  std::sort(ids.begin(), ids.end());
+
+  std::vector< Node::Id_Type > fl_ids;
+  way_nd_firstlast(ways, fl_ids);
+  if (!attic_ways.empty())
+    way_nd_firstlast(attic_ways, fl_ids);
+
+  std::sort(fl_ids.begin(), fl_ids.end());
+
+  decltype(ids.size()) lower = 0;
+  decltype(ids.size()) upper = 0;
+  decltype(fl_ids.size()) fl_lower = 0;
+  decltype(fl_ids.size()) fl_upper = 0;
+  decltype(ids.size()) target = 0;
+  while (lower < ids.size())
+  {
+    while (upper < ids.size() && ids[lower] == ids[upper])
+      ++upper;
+    while (fl_lower < fl_ids.size() && fl_ids[fl_lower] < ids[lower])
+      ++fl_lower;
+    fl_upper = fl_lower;
+    while (fl_upper < fl_ids.size() && fl_ids[fl_upper] == ids[lower])
+      ++fl_upper;
+    if (lower_limit <= 2*(upper - lower) + fl_lower - fl_upper
+        && 2*(upper - lower) + fl_lower - fl_upper <= upper_limit)
+      ids[target++] = ids[lower];
+    lower = upper;
+    fl_lower = fl_upper;
+  }
+  ids.resize(target);
 
   return ids;
 }
@@ -721,6 +791,50 @@ Timeless< Uint32_Index, Node_Skeleton > way_members(
     const std::vector< Node::Id_Type >& node_ids, bool invert_ids)
 {
   std::vector< Node::Id_Type > intersect_ids = way_nd_ids(ways, attic_ways, pos);
+  if (stmt)
+    rman.health_check(*stmt);
+  sieve_first_arg(intersect_ids, node_ids, invert_ids);
+
+  Timeless< Uint32_Index, Node_Skeleton > result;
+  auto node_pair = paired_items_range(stmt, rman, intersect_ids,
+      node_ranges ? *node_ranges : 
+          way_nd_indices(stmt, rman, ways.begin(), ways.end(), attic_ways.begin(), attic_ways.end()));
+  result.swap(node_pair.first, node_pair.second);
+  return result;
+}
+
+
+Timeless< Uint32_Index, Node_Skeleton > way_cnt_members(
+    const Statement* stmt, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+    unsigned int lower_limit, unsigned int upper_limit,
+    const Ranges< Uint32_Index >* node_ranges,
+    const std::vector< Node::Id_Type >& node_ids, bool invert_ids)
+{
+  std::vector< Node::Id_Type > intersect_ids = way_cnt_nd_ids(ways, attic_ways, lower_limit, upper_limit);
+  if (stmt)
+    rman.health_check(*stmt);
+  sieve_first_arg(intersect_ids, node_ids, invert_ids);
+
+  Timeless< Uint32_Index, Node_Skeleton > result;
+  auto node_pair = paired_items_range(stmt, rman, intersect_ids,
+      node_ranges ? *node_ranges : 
+          way_nd_indices(stmt, rman, ways.begin(), ways.end(), attic_ways.begin(), attic_ways.end()));
+  result.swap(node_pair.first, node_pair.second);
+  return result;
+}
+
+
+Timeless< Uint32_Index, Node_Skeleton > way_link_members(
+    const Statement* stmt, Resource_Manager& rman,
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
+    unsigned int lower_limit, unsigned int upper_limit,
+    const Ranges< Uint32_Index >* node_ranges,
+    const std::vector< Node::Id_Type >& node_ids, bool invert_ids)
+{
+  std::vector< Node::Id_Type > intersect_ids = way_link_nd_ids(ways, attic_ways, lower_limit, upper_limit);
   if (stmt)
     rman.health_check(*stmt);
   sieve_first_arg(intersect_ids, node_ids, invert_ids);

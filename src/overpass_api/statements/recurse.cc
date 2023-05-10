@@ -41,14 +41,16 @@ const unsigned int RECURSE_RELATION_NW = 6;
 const unsigned int RECURSE_RELATION_WR = 7;
 const unsigned int RECURSE_RELATION_NR = 8;
 const unsigned int RECURSE_WAY_NODE = 9;
-const unsigned int RECURSE_WAY_RELATION = 10;
-const unsigned int RECURSE_NODE_RELATION = 11;
-const unsigned int RECURSE_NODE_WAY = 12;
-const unsigned int RECURSE_NODE_WR = 13;
-const unsigned int RECURSE_DOWN = 14;
-const unsigned int RECURSE_DOWN_REL = 15;
-const unsigned int RECURSE_UP = 16;
-const unsigned int RECURSE_UP_REL = 17;
+const unsigned int RECURSE_WAY_LINK = 10;
+const unsigned int RECURSE_WAY_COUNT = 11;
+const unsigned int RECURSE_WAY_RELATION = 12;
+const unsigned int RECURSE_NODE_RELATION = 13;
+const unsigned int RECURSE_NODE_WAY = 14;
+const unsigned int RECURSE_NODE_WR = 15;
+const unsigned int RECURSE_DOWN = 16;
+const unsigned int RECURSE_DOWN_REL = 17;
+const unsigned int RECURSE_UP = 18;
+const unsigned int RECURSE_UP_REL = 19;
 
 
 Recurse_Statement::Statement_Maker Recurse_Statement::statement_maker;
@@ -65,6 +67,7 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
 
   std::string from = "_";
   std::vector< std::string > roles;
+  std::string lower, upper;
   bool role_found = false;
 
   while (tree_it->token == "," && tree_it->rhs && tree_it->lhs)
@@ -76,7 +79,17 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
   if (tree_it->token == ":" && tree_it->rhs)
   {
     role_found = true;
-    roles.push_back(decode_json(tree_it.rhs()->token, error_output));
+    if (tree_it.rhs()->token == "-")
+    {
+      if (tree_it.rhs()->lhs)
+        lower = tree_it.rhs().lhs()->token;
+      if (tree_it.rhs()->rhs)
+        upper = tree_it.rhs().rhs()->token;
+    }
+    else if (!tree_it.rhs()->lhs && !tree_it.rhs()->rhs)
+      roles.push_back(decode_json(tree_it.rhs()->token, error_output));
+    else
+      error_output->add_parse_error("Simple role token expected, structured syntax tree found.", line_nr);
     tree_it = tree_it.lhs();
   }
 
@@ -108,28 +121,42 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
     else if (result_type == "nr")
       attributes["type"] = "relation-nr";
     else if (error_output)
-      error_output->add_parse_error("A recursion from type 'r' produces nodes, ways, or relations.", line_nr);
+      error_output->add_parse_error("A recursion of type 'r' produces nodes, ways, or relations.", line_nr);
   }
   else if (type == "w")
   {
     if (result_type == "node")
       attributes["type"] = "way-node";
     else if (error_output)
-      error_output->add_parse_error("A recursion from type 'w' produces nodes.", line_nr);
+      error_output->add_parse_error("A recursion of type 'w' produces nodes.", line_nr);
+  }
+  else if (type == "way_link")
+  {
+    if (result_type == "node")
+      attributes["type"] = "way-link";
+    else if (error_output)
+      error_output->add_parse_error("A recursion of type 'way_link' produces nodes.", line_nr);
+  }
+  else if (type == "way_cnt")
+  {
+    if (result_type == "node")
+      attributes["type"] = "way-count";
+    else if (error_output)
+      error_output->add_parse_error("A recursion of type 'way_cnt' produces nodes.", line_nr);
   }
   else if (type == "br")
   {
     if (result_type == "relation")
       attributes["type"] = "relation-backwards";
     else if (error_output)
-      error_output->add_parse_error("A recursion from type 'br' produces relations.", line_nr);
+      error_output->add_parse_error("A recursion of type 'br' produces relations.", line_nr);
   }
   else if (type == "bw")
   {
     if (result_type == "relation")
       attributes["type"] = "way-relation";
     else if (error_output)
-      error_output->add_parse_error("A recursion from type 'bw' produces relations.", line_nr);
+      error_output->add_parse_error("A recursion of type 'bw' produces relations.", line_nr);
   }
   else if (type == "bn")
   {
@@ -140,7 +167,7 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
     else if (result_type == "wr")
       attributes["type"] = "node-wr";
     else if (error_output)
-      error_output->add_parse_error("A recursion from type 'bn' produces ways or relations.", line_nr);
+      error_output->add_parse_error("A recursion of type 'bn' produces ways or relations.", line_nr);
   }
   else
     return 0;
@@ -157,6 +184,24 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
       attributes["pos"] = roles[0];
       for (uint i = 1; i < roles.size(); ++i)
         attributes["pos"] += "," + roles[i];
+    }
+    else if (type == "way_cnt" || result_type == "way_link")
+    {
+      if (role_found)
+      {
+        if (roles.empty())
+        {
+          attributes["lower"] = lower;
+          attributes["upper"] = upper;
+        }
+        else
+        {
+          attributes["lower"] = roles.back();
+          attributes["upper"] = roles.back();
+        }
+      }
+      else if (error_output)
+        error_output->add_parse_error("A recursion of type 'way_cnt' or 'way_link' must have a parameter.", line_nr);
     }
     else if (error_output)
       error_output->add_parse_error("A recursion of type '" + type + "' cannot have restrictions.", line_nr);
@@ -600,7 +645,8 @@ Ranges< Uint32_Index > Recurse_Constraint::get_node_ranges(Resource_Manager& rma
     return relation_node_member_indices< Relation_Skeleton >(
         stmt, rman, input->relations.begin(), input->relations.end(),
         input->attic_relations.begin(), input->attic_relations.end());
-  else if (stmt->get_type() == RECURSE_WAY_NODE)
+  else if (stmt->get_type() == RECURSE_WAY_NODE || stmt->get_type() == RECURSE_WAY_LINK
+      || stmt->get_type() == RECURSE_WAY_COUNT)
     return way_nd_indices(stmt, rman, input->ways.begin(), input->ways.end(),
         input->attic_ways.begin(), input->attic_ways.end());
 
@@ -672,6 +718,16 @@ bool Recurse_Constraint::get_data
   else if (stmt->get_type() == RECURSE_WAY_NODE)
     way_members(
         &query, rman, input->ways, input->attic_ways, stmt->get_pos(), ranges.is_global() ? 0 : &ranges, ids, invert_ids)
+        .swap(into.nodes, into.attic_nodes);
+  else if (stmt->get_type() == RECURSE_WAY_COUNT)
+    way_cnt_members(
+        &query, rman, input->ways, input->attic_ways, stmt->get_lower(), stmt->get_upper(),
+        ranges.is_global() ? 0 : &ranges, ids, invert_ids)
+        .swap(into.nodes, into.attic_nodes);
+  else if (stmt->get_type() == RECURSE_WAY_LINK)
+    way_link_members(
+        &query, rman, input->ways, input->attic_ways, stmt->get_lower(), stmt->get_upper(),
+        ranges.is_global() ? 0 : &ranges, ids, invert_ids)
         .swap(into.nodes, into.attic_nodes);
   else if (stmt->get_type() == RECURSE_DOWN)
     recurse_down_nodes(query, rman, ranges, ids, invert_ids, {input->relations, input->attic_relations})
@@ -915,6 +971,16 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
       ids = way_nd_ids(input->ways, input->attic_ways, stmt->get_pos());
       rman.health_check(*stmt);
     }
+    else if (stmt->get_type() == RECURSE_WAY_COUNT)
+    {
+      ids = way_cnt_nd_ids(input->ways, input->attic_ways, stmt->get_lower(), stmt->get_upper());
+      rman.health_check(*stmt);
+    }
+    else if (stmt->get_type() == RECURSE_WAY_LINK)
+    {
+      ids = way_link_nd_ids(input->ways, input->attic_ways, stmt->get_lower(), stmt->get_upper());
+      rman.health_check(*stmt);
+    }
     else if (stmt->get_type() == RECURSE_RELATION_NODE || stmt->get_type() == RECURSE_RELATION_NWR
         || stmt->get_type() == RECURSE_RELATION_NW || stmt->get_type() == RECURSE_RELATION_NR)
     {
@@ -1069,16 +1135,18 @@ void Recurse_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
 Recurse_Statement::Recurse_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_), restrict_to_role(false)
+    : Output_Statement(line_number_), restrict_to_role(false), lower(1), upper(0)
 {
   std::map< std::string, std::string > attributes;
 
   attributes["from"] = "_";
   attributes["into"] = "_";
   attributes["pos"] = "";
-  attributes["type"] = "";
+  attributes["lower"] = "";
+  attributes["upper"] = "";
   attributes["role"] = "";
   attributes["role-restricted"] = "no";
+  attributes["type"] = "";
 
   eval_attributes_array(get_name(), attributes, input_attributes);
 
@@ -1103,6 +1171,10 @@ Recurse_Statement::Recurse_Statement
     type = RECURSE_RELATION_NR;
   else if (attributes["type"] == "way-node")
     type = RECURSE_WAY_NODE;
+  else if (attributes["type"] == "way-link")
+    type = RECURSE_WAY_LINK;
+  else if (attributes["type"] == "way-count")
+    type = RECURSE_WAY_COUNT;
   else if (attributes["type"] == "down")
     type = RECURSE_DOWN;
   else if (attributes["type"] == "down-rel")
@@ -1177,6 +1249,20 @@ Recurse_Statement::Recurse_Statement
 
     std::sort(pos.begin(), pos.end());
   }
+  
+  if (!attributes["lower"].empty() || !attributes["upper"].empty())
+  {
+    int64_t lower_i = atoll(attributes["lower"].c_str());
+    int64_t upper_i = atoll(attributes["upper"].c_str());
+    if (lower_i <= 0)
+      add_static_error("lower must be an integer greater or equal 1");
+    if (attributes["upper"].empty())
+      upper_i = std::numeric_limits< unsigned int >::max();
+    else if (upper_i < lower_i)
+      add_static_error("upper must be an integer greater or equal lower");
+    lower = lower_i;
+    upper = upper_i;
+  }
 }
 
 
@@ -1187,7 +1273,8 @@ std::string Recurse_Statement::to_target_type(int type)
     return "relation";
   else if (type == RECURSE_RELATION_WAY || type == RECURSE_NODE_WAY)
     return "way";
-  else if (type == RECURSE_RELATION_NODE || type == RECURSE_WAY_NODE)
+  else if (type == RECURSE_RELATION_NODE || type == RECURSE_WAY_NODE
+      || type == RECURSE_WAY_LINK || type == RECURSE_WAY_COUNT)
     return "node";
   else if (type == RECURSE_RELATION_NWR)
     return "nwr";
@@ -1222,6 +1309,10 @@ std::string Recurse_Statement::to_xml_representation(int type)
     return "relation-nr";
   else if (type == RECURSE_WAY_NODE)
     return "way-node";
+  else if (type == RECURSE_WAY_LINK)
+    return "way-link";
+  else if (type == RECURSE_WAY_COUNT)
+    return "way-count";
   else if (type == RECURSE_WAY_RELATION)
     return "way-relation";
   else if (type == RECURSE_NODE_RELATION)
@@ -1254,6 +1345,10 @@ std::string Recurse_Statement::to_ql_representation(int type)
     return "r";
   else if (type == RECURSE_WAY_NODE)
     return "w";
+  else if (type == RECURSE_WAY_LINK)
+    return "way_link";
+  else if (type == RECURSE_WAY_COUNT)
+    return "way_cnt";
   else if (type == RECURSE_WAY_RELATION)
     return "bw";
   else if (type == RECURSE_NODE_RELATION || type == RECURSE_NODE_WAY || type == RECURSE_NODE_WR)
@@ -1357,6 +1452,12 @@ void Recurse_Statement::execute(Resource_Manager& rman)
   }
   else if (type == RECURSE_WAY_NODE)
     way_members(this, rman, input_set->ways, input_set->attic_ways, get_pos(), 0, {}, true)
+        .swap(into.nodes, into.attic_nodes);
+  else if (type == RECURSE_WAY_COUNT)
+    way_cnt_members(this, rman, input_set->ways, input_set->attic_ways, lower, upper, 0, {}, true)
+        .swap(into.nodes, into.attic_nodes);
+  else if (type == RECURSE_WAY_LINK)
+    way_link_members(this, rman, input_set->ways, input_set->attic_ways, lower, upper, 0, {}, true)
         .swap(into.nodes, into.attic_nodes);
   else if (type == RECURSE_DOWN)
     add_nw_member_objects(rman, this, *input_set, into);

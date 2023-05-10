@@ -997,6 +997,49 @@ void perform_query_with_recurse
 }
 
 
+void perform_recurse_cnt_link(
+    std::string recurse_type, bool bypass_get_data, int pattern_size, std::string db_dir)
+{
+  try
+  {
+    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Parsed_Query global_settings;
+    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    Resource_Manager rman(transaction, &global_settings);
+
+    Id_Query_Statement(1, { {"type", "way"}, {"ref", std::to_string(pattern_size*(pattern_size/2-1)+1)},
+          {"ref_1", std::to_string(pattern_size/2*(pattern_size-1))} }, global_settings).execute(rman);
+    if (bypass_get_data)
+      Bbox_Query_Statement(2, { {"s", "51.5"}, {"w", "7.5"}, {"n", std::to_string(51.5 + 2./pattern_size)},
+              {"e", std::to_string(7.5 + 2./pattern_size)}, {"into", "nn"} }, global_settings).execute(rman);
+
+    {
+      SProxy< Query_Statement > stmt1;
+      stmt1("type", "node");
+      
+      SProxy< Item_Statement > stmt2;
+      if (bypass_get_data)
+        stmt1.stmt().add_statement(&stmt2("from", "nn").stmt(), "");
+      
+      SProxy< Recurse_Statement > stmt3;
+      stmt1.stmt().add_statement(&stmt3("type", recurse_type)("lower", "2")("upper", "2").stmt(), "");
+      
+      SProxy< Bbox_Query_Statement > stmt4;
+      if (!bypass_get_data)
+        stmt1.stmt().add_statement(&stmt4("s", "50")("w", "6")("n", "52")("e", "9").stmt(), "");
+
+      stmt1.stmt().execute(rman);
+    }
+    perform_print(rman);
+  }
+  catch (File_Error e)
+  {
+    std::cerr<<"File error caught: "
+    <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+  }
+}
+
+
 void perform_query_with_role_recurse
     (std::string recurse_type, std::string role, std::string key1, std::string value1,
      int pattern_size, uint64 global_node_offset, std::string db_dir)
@@ -1859,6 +1902,14 @@ int main(int argc, char* args[])
     perform_query_with_two_ids_query("wr", global_node_offset, args[3]);
   if ((test_to_execute == "") || (test_to_execute == "174"))
     perform_query_with_two_ids_query("nr", global_node_offset, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "175"))
+    perform_recurse_cnt_link("way-count", false, pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "176"))
+    perform_recurse_cnt_link("way-count", true, pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "177"))
+    perform_recurse_cnt_link("way-link", false, pattern_size, args[3]);
+  if ((test_to_execute == "") || (test_to_execute == "178"))
+    perform_recurse_cnt_link("way-link", true, pattern_size, args[3]);
 
   std::cout<<"</osm>\n";
   return 0;
