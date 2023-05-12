@@ -67,6 +67,13 @@ expat_wrapper_text_handler(void *data, const XML_Char *s, int len)
     working_text_handler(data, s, len);
 }
 
+
+namespace
+{
+  XML_Parser current_parser = 0;
+};
+
+
 void parse(FILE* in,
 	   void (*start)(const char*, const char**),
 	   void (*end)(const char*),
@@ -81,6 +88,7 @@ void parse(FILE* in,
     fprintf(stderr, "Couldn't allocate memory for parser\n");
     exit(-1);
   }
+  current_parser = p;
 
   XML_SetElementHandler(p, expat_wrapper_start, expat_wrapper_end);
 
@@ -109,4 +117,11 @@ void parse(FILE* in,
   }
 
   XML_ParserFree(p);
+  current_parser = 0;
+}
+
+
+XML_Parser get_current_parser()
+{
+  return current_parser;
 }

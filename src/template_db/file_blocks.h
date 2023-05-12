@@ -815,6 +815,9 @@ template< typename File_Block_Entry >
 uint64* File_Blocks< TIndex, TIterator >::read_block_
     (const File_Block_Entry& block, uint64* buffer_, bool check_idx) const
 {
+  if (sigterm_status())
+    throw File_Error(0, "-", "SIGTERM received");
+  
   if (compression_method == File_Blocks_Index_Base::NO_COMPRESSION)
   {
     data_file.seek((int64)(block.pos()) * block_size, "File_Blocks::read_block::1");
@@ -985,6 +988,9 @@ uint32 File_Blocks< TIndex, TIterator >::allocate_block(uint32 data_size)
 template< typename TIndex, typename TIterator >
 void File_Blocks< TIndex, TIterator >::write_block(uint64* buf, uint32 payload_size, uint32& block_count, uint32& pos)
 {
+  if (sigterm_status())
+    throw File_Error(0, "-", "SIGTERM received");
+
   void* payload = buf;
   if (compression_method == File_Blocks_Index_Base::ZLIB_COMPRESSION)
   {

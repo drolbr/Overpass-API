@@ -69,6 +69,19 @@ int& global_read_counter()
 }
 
 
+bool& sigterm_status()
+{
+  static bool status = false;
+  return status;
+}
+
+
+void sigterm(int)
+{
+  sigterm_status() = true;
+}
+
+
 void millisleep(uint32 milliseconds)
 {
   struct timeval timeout_;

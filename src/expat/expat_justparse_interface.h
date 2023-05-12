@@ -142,4 +142,6 @@ void parse(FILE* in,
 	   void (*end)(const char*),
            void (*text_handler)(void *data, const XML_Char *s, int len) = 0);
 
+XML_Parser get_current_parser();
+
 #endif

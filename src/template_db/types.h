@@ -359,6 +359,9 @@ inline void zero_padding(uint8* from, uint32 bytes)
 
 int& global_read_counter();
 
+bool& sigterm_status();
+void sigterm(int);
+
 
 void millisleep(uint32 milliseconds);
 

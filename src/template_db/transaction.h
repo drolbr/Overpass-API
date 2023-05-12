@@ -21,6 +21,8 @@
 
 #include "random_file.h"
 
+#include <signal.h>
+
 #include <map>
 #include <vector>
 
@@ -65,6 +67,7 @@ inline Nonsynced_Transaction::Nonsynced_Transaction
   : writeable(writeable_), use_shadow(use_shadow_),
     file_name_extension(file_name_extension_), db_dir(db_dir_)
 {
+  signal(SIGTERM, sigterm);
   if (!db_dir.empty() && db_dir[db_dir.size()-1] != '/')
     db_dir += "/";
 }

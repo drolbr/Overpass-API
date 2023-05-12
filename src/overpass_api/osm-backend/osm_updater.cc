@@ -339,6 +339,9 @@ namespace
 
 void node_start(const char *el, const char **attr)
 {
+  if (sigterm_status())
+    XML_StopParser(get_current_parser(), XML_FALSE);
+
   if (!strcmp(el, "tag"))
     tag_start(attr);
   else if (!strcmp(el, "node"))
@@ -358,6 +361,9 @@ void node_end(const char *el)
 
 void way_start(const char *el, const char **attr)
 {
+  if (sigterm_status())
+    XML_StopParser(get_current_parser(), XML_FALSE);
+
   if (!strcmp(el, "tag"))
     tag_start(attr);
   else if (!strcmp(el, "nd"))
@@ -379,6 +385,9 @@ void way_end(const char *el)
 
 void relation_start(const char *el, const char **attr)
 {
+  if (sigterm_status())
+    XML_StopParser(get_current_parser(), XML_FALSE);
+
   if (!strcmp(el, "tag"))
     tag_start(attr);
   else if (!strcmp(el, "member"))
@@ -400,6 +409,9 @@ void relation_end(const char *el)
 
 void start(const char *el, const char **attr)
 {
+  if (sigterm_status())
+    XML_StopParser(get_current_parser(), XML_FALSE);
+
   if (!strcmp(el, "tag"))
     tag_start(attr);
   else if (!strcmp(el, "nd"))
@@ -558,6 +570,8 @@ Osm_Updater::Osm_Updater
   callback = callback_;
   if (meta)
     ::meta = new OSM_Element_Metadata();
+
+  signal(SIGTERM, sigterm);
 }
 
 void Osm_Updater::flush()
