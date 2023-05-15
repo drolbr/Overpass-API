@@ -35,7 +35,7 @@ LATEST_DIR=$(cat "$CLONE_BASE_DIR"/latest_dir)
 for I in "$CLONE_BASE_DIR"/????-??-??; do
 {
   BASEDATE=$(basename $I)
-  if [[ $BASEDATE < $(date -d@$YESTERDAY '+%F') && $BASEDATE != $(basedir $LATEST_DIR) ]]; then
+  if [[ $BASEDATE < $(date -d@$YESTERDAY '+%F') && $BASEDATE != $(basename $LATEST_DIR) ]]; then
   {
     echo "drop $I"
     rm -Rf $I
