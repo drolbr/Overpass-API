@@ -374,16 +374,18 @@ Dispatcher::Dispatcher(
     const std::vector< File_Properties* >& controlled_files_,
     Dispatcher_Logger* logger_)
     : socket(dispatcher_share_name_, db_dir_, max_num_reading_processes_, max_num_socket_clients),
-      transaction_insulator(db_dir_, controlled_files_),
+      transaction_insulator(db_dir_, controlled_files_), writing_process(0),
       shadow_name(shadow_name_),
       dispatcher_share_name(dispatcher_share_name_),
       logger(logger_),
       pending_commit(false),
+      terminate_countdown(TERMINATE_COUNTDOWN_START),
       requests_started_counter(0),
       requests_finished_counter(0),
       global_resource_planner(total_available_time_units_, total_available_space_, 0)
 {
   signal(SIGPIPE, SIG_IGN);
+  signal(SIGTERM, sigterm);
 
   if (shadow_name.substr(0, 1) != "/")
     shadow_name = getcwd() + shadow_name_;
@@ -489,6 +491,7 @@ void Dispatcher::write_start(pid_t pid)
     confirm_lockfile_or_show_error(e, shadow_name, pid);
     return;
   }
+  writing_process = pid;
   try_write_pid_to_lockfile(shadow_name, pid);
 }
 
@@ -508,6 +511,7 @@ void Dispatcher::migrate_start(pid_t pid)
     confirm_lockfile_or_show_error(e, shadow_name, pid);
     return;
   }
+  writing_process = pid;
   try_write_pid_to_lockfile(shadow_name, pid);
 }
 
@@ -518,6 +522,7 @@ void Dispatcher::write_rollback(pid_t pid)
     logger->write_rollback(pid);
   transaction_insulator.remove_shadows();
   remove((shadow_name + ".lock").c_str());
+  writing_process = 0;
 }
 
 
@@ -527,6 +532,7 @@ void Dispatcher::migrate_rollback(pid_t pid)
     logger->write_rollback(pid);
   transaction_insulator.remove_migrated();
   remove((shadow_name + ".lock").c_str());
+  writing_process = 0;
 }
 
 
@@ -565,6 +571,7 @@ void Dispatcher::write_commit(pid_t pid)
   transaction_insulator.remove_shadows();
   remove((shadow_name + ".lock").c_str());
   transaction_insulator.set_current_footprints();
+  writing_process = 0;
 }
 
 
@@ -589,6 +596,7 @@ void Dispatcher::migrate_commit(pid_t pid)
   transaction_insulator.remove_migrated();
   remove((shadow_name + ".lock").c_str());
   transaction_insulator.set_current_footprints();
+  writing_process = 0;
 }
 
 
@@ -663,11 +671,12 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
     uint32 command = 0;
     uint32 client_pid = 0;
-    connection_per_pid.poll_command_round_robin(command, client_pid);
-//     if (pending_commit)
-//       std::cout<<"poll "<<command<<' '<<client_pid<<'\n';
+    if (sigterm_status())
+      command = TERMINATE;
+    else
+      connection_per_pid.poll_command_round_robin(command, client_pid);
 
-    if (command == 0)
+    if (command == 0 && terminate_countdown == TERMINATE_COUNTDOWN_START)
     {
       ++counter;
       ++idle_counter;
@@ -684,16 +693,44 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
     try
     {
-      if (command == TERMINATE || command == OUTPUT_STATUS)
+      if (terminate_countdown < TERMINATE_COUNTDOWN_START)
+      {
+          if (logger)
+            logger->terminate_triggered(terminate_countdown, writing_process);
+        if (--terminate_countdown == 0 || writing_process == 0)
+          break;
+        
+        if (command == WRITE_ROLLBACK)
+        {
+          write_rollback(client_pid);
+          connection_per_pid.get(client_pid)->send_result(command);
+        }
+        else if (command == MIGRATE_ROLLBACK)
+        {
+          migrate_rollback(client_pid);
+          connection_per_pid.get(client_pid)->send_result(command);
+        }
+        millisleep(10);
+      }
+      else if (command == TERMINATE || command == OUTPUT_STATUS)
       {
 	if (command == OUTPUT_STATUS)
 	  output_status();
 
-	connection_per_pid.get(client_pid)->send_result(command);
-	connection_per_pid.set(client_pid, 0);
+        if (client_pid)
+        {
+          connection_per_pid.get(client_pid)->send_result(command);
+          connection_per_pid.set(client_pid, 0);
+        }
 
 	if (command == TERMINATE)
-	  break;
+        {
+          if (logger)
+            logger->terminate_triggered(terminate_countdown, writing_process);
+          if (writing_process)
+            kill(writing_process, SIGTERM);
+	  --terminate_countdown;
+        }
       }
       else if (command == WRITE_START || command == WRITE_COMMIT
           || command == MIGRATE_START || command == MIGRATE_COMMIT)

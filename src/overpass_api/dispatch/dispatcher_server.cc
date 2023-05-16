@@ -34,6 +34,7 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
 {
   Default_Dispatcher_Logger(Logger& logger_) : logger(&logger_) {}
 
+  virtual void terminate_triggered(int32 countdown, pid_t writing_process);
   virtual void write_start(pid_t pid, const std::vector< ::pid_t >& registered);
   virtual void write_rollback(pid_t pid);
   virtual void write_pending(pid_t pid, const std::set< pid_t >& reading);
@@ -55,6 +56,13 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
     Logger* logger;
 };
 
+
+void Default_Dispatcher_Logger::terminate_triggered(int32 countdown, pid_t writing_process)
+{
+  std::ostringstream out;
+  out<<"Shutdown triggered. Waiting "<<countdown<<" cycles for writing process "<<writing_process<<'.';
+  logger->annotated_log(out.str());
+}
 
 void Default_Dispatcher_Logger::write_start(pid_t pid, const std::vector< ::pid_t >& registered)
 {

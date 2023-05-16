@@ -33,6 +33,8 @@ struct Dispatcher_Logger
 {
   typedef uint pid_t;
 
+  virtual void terminate_triggered(int32 countdown, pid_t writing_process) = 0;
+
   virtual void write_start(pid_t pid, const std::vector< ::pid_t >& registered) = 0;
   virtual void write_rollback(pid_t pid) = 0;
   virtual void write_pending(pid_t pid, const std::set< pid_t >& reading) = 0;
@@ -174,6 +176,8 @@ class Dispatcher
     static const int OFFSET_BACK = 20;
     static const int OFFSET_DB_1 = OFFSET_BACK+12;
     static const int OFFSET_DB_2 = OFFSET_DB_1+(256+4);
+    
+    static const int32 TERMINATE_COUNTDOWN_START = 100;
 
     static const uint32 TERMINATE = 1;
     static const uint32 OUTPUT_STATUS = 2;
@@ -284,6 +288,7 @@ class Dispatcher
     Connection_Per_Pid_Map connection_per_pid;
     Transaction_Insulator transaction_insulator;
     std::set< pid_t > processes_reading_idx;
+    pid_t writing_process;
     std::string shadow_name;
     std::string dispatcher_share_name;
     int dispatcher_shm_fd;
@@ -291,6 +296,7 @@ class Dispatcher
     Dispatcher_Logger* logger;
     std::set< pid_t > disconnected;
     bool pending_commit;
+    int32 terminate_countdown;
     uint32 requests_started_counter;
     uint32 requests_finished_counter;
     Global_Resource_Planner global_resource_planner;
