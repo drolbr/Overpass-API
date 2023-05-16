@@ -185,7 +185,7 @@ Statement* Recurse_Statement::Criterion_Maker_1::create_criterion(const Token_No
       for (uint i = 1; i < roles.size(); ++i)
         attributes["pos"] += "," + roles[i];
     }
-    else if (type == "way_cnt" || result_type == "way_link")
+    else if (type == "way_cnt" || type == "way_link")
     {
       if (role_found)
       {
