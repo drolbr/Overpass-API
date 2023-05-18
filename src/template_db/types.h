@@ -359,7 +359,8 @@ inline void zero_padding(uint8* from, uint32 bytes)
 
 int& global_read_counter();
 
-bool& sigterm_status();
+enum Signal_Status { absent = 0, received, processed };
+Signal_Status& sigterm_status();
 void sigterm(int);
 
 

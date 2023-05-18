@@ -69,16 +69,16 @@ int& global_read_counter()
 }
 
 
-bool& sigterm_status()
+Signal_Status& sigterm_status()
 {
-  static bool status = false;
+  static Signal_Status status = Signal_Status::absent;
   return status;
 }
 
 
 void sigterm(int)
 {
-  sigterm_status() = true;
+  sigterm_status() = Signal_Status::received;
 }
 
 

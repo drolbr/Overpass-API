@@ -184,6 +184,8 @@ int main(int argc, char* argv[])
   catch (const File_Error& e)
   {
     report_file_error(e);
+    if (sigterm_status())
+      return SIGTERM;
     return -1;
   }
 

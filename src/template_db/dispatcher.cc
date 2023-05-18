@@ -671,7 +671,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
     uint32 command = 0;
     uint32 client_pid = 0;
-    if (sigterm_status())
+    if (sigterm_status() == Signal_Status::received)
       command = TERMINATE;
     else
       connection_per_pid.poll_command_round_robin(command, client_pid);
@@ -695,10 +695,12 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     {
       if (terminate_countdown < TERMINATE_COUNTDOWN_START)
       {
-          if (logger)
-            logger->terminate_triggered(terminate_countdown, writing_process);
-        if (--terminate_countdown == 0 || writing_process == 0)
+        if (!terminate_countdown || !writing_process)
+        {
+          logger->terminate_triggered(terminate_countdown, writing_process);
           break;
+        }
+        --terminate_countdown;
         
         if (command == WRITE_ROLLBACK)
         {
@@ -725,11 +727,12 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
 	if (command == TERMINATE)
         {
+          --terminate_countdown;
           if (logger)
             logger->terminate_triggered(terminate_countdown, writing_process);
           if (writing_process)
             kill(writing_process, SIGTERM);
-	  --terminate_countdown;
+          sigterm_status() = Signal_Status::processed;
         }
       }
       else if (command == WRITE_START || command == WRITE_COMMIT
