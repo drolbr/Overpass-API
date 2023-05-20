@@ -89,6 +89,10 @@ apply_minute_diffs()
 {
   ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
   EXITCODE=$?
+  if [[ $EXITCODE -eq 15 ]]; then  # SIGTERM
+    echo "$(date -u '+%F %T'): update_from_dir terminated" >>$DB_DIR/apply_osc_to_db.log
+    exit $EXITCODE
+  fi
   while [[ $EXITCODE -ne 0 ]];
   do
   {

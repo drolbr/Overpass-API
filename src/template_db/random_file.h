@@ -117,6 +117,9 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
   if ((pos == cache_pos) && (cache_pos != index->npos))
     return;
 
+  if (sigterm_status() && pos != index->npos)
+    throw File_Error(0, "-", "SIGTERM received");
+
   if (pos != index->npos && pos >= 256*1024*1024/Value::max_size_of())
     throw File_Error(0, index->get_map_file_name(), "Random_File: id too large for map file");
 
