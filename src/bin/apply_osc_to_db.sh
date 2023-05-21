@@ -87,7 +87,9 @@ collect_minute_diffs()
 
 apply_minute_diffs()
 {
-  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
+  ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0 &
+  CHILD_PID=$!
+  wait "$CHILD_PID"
   EXITCODE=$?
   if [[ $EXITCODE -eq 15 ]]; then  # SIGTERM
     echo "$(date -u '+%F %T'): update_from_dir terminated" >>$DB_DIR/apply_osc_to_db.log
@@ -97,8 +99,14 @@ apply_minute_diffs()
   do
   {
     sleep 60
-    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0
+    ./update_from_dir --osc-dir=$1 --version=$DATA_VERSION $META --flush-size=0 &
+    CHILD_PID=$!
+    wait "$CHILD_PID"
     EXITCODE=$?
+    if [[ $EXITCODE -eq 15 ]]; then  # SIGTERM
+      echo "$(date -u '+%F %T'): update_from_dir terminated" >>$DB_DIR/apply_osc_to_db.log
+      exit $EXITCODE
+    fi
   };
   done
   DIFF_COUNT=$(($DIFF_COUNT + 1))
@@ -118,6 +126,16 @@ update_state()
 };
 
 
+shutdown()
+{
+  if [[ $CHILD_PID -ge 1 ]]; then
+    kill $CHILD_PID
+  fi
+  rm -fR $TEMP_DIR
+  exit 15
+};
+
+
 echo >>$DB_DIR/apply_osc_to_db.log
 
 mkdir -p $DB_DIR/augmented_diffs/
@@ -132,7 +150,11 @@ if [[ $START == "auto" ]]; then
   START=$(($(cat $DB_DIR/replicate_id) + 0))
 }; fi
 
-./migrate_database --migrate
+trap shutdown SIGTERM
+
+./migrate_database --migrate &
+CHILD_PID=$!
+wait "$CHILD_PID"
 
 while [[ true ]]; do
 {
