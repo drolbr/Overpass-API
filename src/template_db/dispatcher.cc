@@ -367,13 +367,15 @@ void Global_Resource_Planner::purge(Connection_Per_Pid_Map& connection_per_pid)
 
 
 Dispatcher::Dispatcher(
-    std::string dispatcher_share_name_,
-    std::string index_share_name, std::string shadow_name_, std::string db_dir_,
+    const std::string& dispatcher_share_name_,
+    const std::string& index_share_name, const std::string& shadow_name_,
+    const std::string& db_dir_, const std::string& socket_dir,
     uint max_num_reading_processes_, uint max_num_socket_clients, uint purge_timeout_,
     uint64 total_available_space_, uint64 total_available_time_units_,
     const std::vector< File_Properties* >& controlled_files_,
     Dispatcher_Logger* logger_)
-    : socket(dispatcher_share_name_, db_dir_, max_num_reading_processes_, max_num_socket_clients),
+    : socket(dispatcher_share_name_, socket_dir.empty() ? db_dir_ : socket_dir,
+          max_num_reading_processes_, max_num_socket_clients),
       transaction_insulator(db_dir_, controlled_files_), writing_process(0),
       shadow_name(shadow_name_),
       dispatcher_share_name(dispatcher_share_name_),

@@ -209,14 +209,14 @@ class Dispatcher
     /** Opens a shared memory for dispatcher communication. Furthermore,
       * detects whether idx or idy are valid, clears to idx if necessary,
       * and loads them into the shared memory idx_share_name. */
-    Dispatcher(std::string dispatcher_share_name,
-	       std::string index_share_name,
-	       std::string shadow_name,
-	       std::string db_dir,
-	       uint max_num_reading_processes, uint max_num_socket_clients, uint purge_timeout,
-	       uint64 total_available_space, uint64 total_available_time_units,
-	       const std::vector< File_Properties* >& controlled_files,
-	       Dispatcher_Logger* logger = 0);
+    Dispatcher(
+      const std::string& dispatcher_share_name_,
+      const std::string& index_share_name, const std::string& shadow_name_,
+      const std::string& db_dir_, const std::string& socket_dir,
+      uint max_num_reading_processes, uint max_num_socket_clients, uint purge_timeout,
+      uint64 total_available_space, uint64 total_available_time_units,
+      const std::vector< File_Properties* >& controlled_files,
+      Dispatcher_Logger* logger = 0);
 
     ~Dispatcher();
 

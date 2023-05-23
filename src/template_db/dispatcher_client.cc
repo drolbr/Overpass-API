@@ -77,7 +77,8 @@ Dispatcher_Client::Dispatcher_Client(const std::string& dispatcher_share_name_)
     db_dir += '/';
 
   // initialize the socket for the client
-  socket.open(db_dir + dispatcher_share_name_);
+  char* socket_dir_env = getenv("OVERPASS_SOCKET_DIR");
+  socket.open((socket_dir_env ? std::string(socket_dir_env) : db_dir) + dispatcher_share_name_);
   std::string socket_name = db_dir + dispatcher_share_name_;
 
   pid_t pid = getpid();

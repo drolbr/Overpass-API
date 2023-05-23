@@ -232,6 +232,7 @@ int main(int argc, char* argv[])
 {
   // read command line arguments
   std::string db_dir;
+  std::string socket_dir;
   bool osm_base(false), areas(false), meta(false), attic(false),
       terminate(false), status(false), show_dir(false);
   uint32 purge_id = 0;
@@ -247,8 +248,14 @@ int main(int argc, char* argv[])
     if (!(strncmp(argv[argpos], "--db-dir=", 9)))
     {
       db_dir = ((std::string)argv[argpos]).substr(9);
-      if ((db_dir.size() > 0) && (db_dir[db_dir.size()-1] != '/'))
+      if (!db_dir.empty() && (db_dir[db_dir.size()-1] != '/'))
 	db_dir += '/';
+    }
+    else if (!(strncmp(argv[argpos], "--socket-dir=", 13)))
+    {
+      socket_dir = ((std::string)argv[argpos]).substr(13);
+      if (!socket_dir.empty() && (socket_dir[socket_dir.size()-1] != '/'))
+	socket_dir += '/';
     }
     else if (std::string("--osm-base") == argv[argpos])
       osm_base = true;
@@ -511,7 +518,7 @@ int main(int argc, char* argv[])
           : osm_base_settings().total_available_time_units;
     Dispatcher dispatcher(
         areas ? area_settings().shared_name : osm_base_settings().shared_name,
-        "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir,
+        "", db_dir + (areas ? "areas_shadow" : "osm_base_shadow"), db_dir, socket_dir,
         areas ? area_settings().max_num_processes : osm_base_settings().max_num_processes,
         max_open_files.rlim_cur > 256 ? max_open_files.rlim_cur - 64 : max_open_files.rlim_cur*3/4,
         areas ? area_settings().purge_timeout : osm_base_settings().purge_timeout,
