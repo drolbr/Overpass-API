@@ -24,17 +24,18 @@ if [[ -z $1  ]]; then
 }; fi
 
 BASE_URL="$1"
-EXEC_DIR="`dirname $0`/"
-DB_DIR="`$EXEC_DIR/dispatcher --show-dir`"
+EXEC_DIR="$(dirname $0)/"
+DB_DIR=$($EXEC_DIR/dispatcher --show-dir)
 CLONE_BASE_DIR="/var/www/clone"
-CLONE_DIR="$CLONE_BASE_DIR/`date '+%F'`"
+CLONE_DIR="$CLONE_BASE_DIR/$(date '+%F')"
 
 # drop diffs that are older than one day
+YESTERDAY=$(($(date '+%s') - 86400))
+LATEST_DIR=$(cat "$CLONE_BASE_DIR"/latest_dir)
 for I in "$CLONE_BASE_DIR"/????-??-??; do
 {
-  BASEDATE=`basename $I`
-  YESTERDAY=$((`date '+%s'` - 86400))
-  if [[ $BASEDATE < `date -d@$YESTERDAY '+%F'` ]]; then
+  BASEDATE=$(basename $I)
+  if [[ $BASEDATE < $(date -d@$YESTERDAY '+%F') && $BASEDATE != $(basename $LATEST_DIR) ]]; then
   {
     echo "drop $I"
     rm -Rf $I
