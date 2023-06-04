@@ -33,7 +33,8 @@ struct Basic_Settings
   std::string SHADOW_SUFFIX;
 
   std::string base_directory;
-  std::string logfile_name;
+  std::string db_logfile_name;
+  std::string client_logfile_name;
   std::string shared_name_base;
 
   std::string version;
@@ -184,7 +185,7 @@ void show_mem_status();
 class Logger
 {
   public:
-    Logger(const std::string& db_dir);
+    Logger(const std::string& db_dir, const std::string& filename = "");
     void annotated_log(const std::string& message);
     void raw_log(const std::string& message);
 

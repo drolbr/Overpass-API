@@ -362,8 +362,8 @@ EXTRA_DIST = \
   rules/areas_delta.osm3s
 
 # Put test-bin here and test-bin/Makefile in configure.ac to activate test-bin
-#SUBDIRS = test-bin
-SUBDIRS =
+SUBDIRS = test-bin
+#SUBDIRS =
 
 AM_CXXFLAGS = -std=c++11
 

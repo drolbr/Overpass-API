@@ -99,8 +99,9 @@ Basic_Settings::Basic_Settings()
   SHADOW_SUFFIX(".shadow"),
 
   base_directory("./"),
-  logfile_name("transactions.log"),
-  shared_name_base("/osm3s_v0.7.58"),
+  db_logfile_name("database.log"),
+  client_logfile_name("transactions.log"),
+  shared_name_base("/osm3s"),
   version("0.7.60.6"),
   source_hash("e2dc3e5b4b9ebbc314b210b8fdeb4a9f960a2b84"),
 #ifdef HAVE_LZ4
@@ -354,8 +355,8 @@ void show_mem_status()
 
 //-----------------------------------------------------------------------------
 
-Logger::Logger(const std::string& db_dir)
-  : logfile_full_name(db_dir + basic_settings().logfile_name) {}
+Logger::Logger(const std::string& db_dir, const std::string& filename)
+  : logfile_full_name(db_dir + (filename.empty() ? basic_settings().db_logfile_name : filename)) {}
 
 void Logger::annotated_log(const std::string& message)
 {
@@ -379,7 +380,7 @@ void Logger::raw_log(const std::string& message)
 
 const std::string& get_logfile_name()
 {
-  return basic_settings().logfile_name;
+  return basic_settings().db_logfile_name;
 }
 
 

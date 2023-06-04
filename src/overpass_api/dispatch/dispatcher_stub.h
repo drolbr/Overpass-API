@@ -44,39 +44,40 @@ struct Exit_Error {};
 
 class Dispatcher_Stub : public Watchdog_Callback
 {
-  public:
-    // Opens the connection to the database, sets db_dir accordingly
-    // and registers the process. error_output_ must remain valid over the
-    // entire lifetime of this object.
-    Dispatcher_Stub(
-        std::string db_dir_, Error_Output* error_output_, std::string xml_raw, int area_level,
-        uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings_);
+public:
+  // Opens the connection to the database, sets db_dir accordingly
+  // and registers the process. error_output_ must remain valid over the
+  // entire lifetime of this object.
+  Dispatcher_Stub(
+      std::string db_dir_, Error_Output* error_output_, std::string xml_raw, int area_level,
+      uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings_);
 
-    // Called once per minute from the resource manager
-    virtual void ping() const;
+  // Called once per minute from the resource manager
+  virtual void ping() const;
 
-    ~Dispatcher_Stub();
+  ~Dispatcher_Stub();
 
-    std::string get_db_dir() { return (db_dir == "" ? dispatcher_client->get_db_dir() : db_dir); }
-    std::string get_timestamp() { return timestamp; }
-    std::string get_area_timestamp() { return area_timestamp; }
-    Resource_Manager& resource_manager() { return *rman; }
-    bool all_meta_empty() const;
-    bool is_meta_file(const std::string& filename) const;
-    bool all_attic_empty() const;
-    bool is_attic_file(const std::string& filename) const;
+  std::string get_db_dir() { return (db_dir == "" ? dispatcher_client->get_db_dir() : db_dir); }
+  std::string get_timestamp() { return timestamp; }
+  std::string get_area_timestamp() { return area_timestamp; }
+  Resource_Manager& resource_manager() { return *rman; }
+  bool all_meta_empty() const;
+  bool is_meta_file(const std::string& filename) const;
+  bool all_attic_empty() const;
+  bool is_attic_file(const std::string& filename) const;
 
-  private:
-    std::string db_dir, timestamp, area_timestamp;
+private:
+  std::string db_dir, timestamp, area_timestamp;
 
-    Error_Output* error_output;
-    Dispatcher_Client* dispatcher_client;
-    Dispatcher_Client* area_dispatcher_client;
-    Nonsynced_Transaction* transaction;
-    Nonsynced_Transaction* area_transaction;
-    Resource_Manager* rman;
+  Error_Output* error_output;
+  Dispatcher_Client* dispatcher_client;
+  Dispatcher_Client* area_dispatcher_client;
+  Nonsynced_Transaction* transaction;
+  Nonsynced_Transaction* area_transaction;
+  Resource_Manager* rman;
 
-    uint32 client_token;
+  uint32 client_token;
+  std::string client_identifier;
 };
 
 
