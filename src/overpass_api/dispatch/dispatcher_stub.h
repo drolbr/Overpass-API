@@ -49,7 +49,7 @@ public:
   // and registers the process. error_output_ must remain valid over the
   // entire lifetime of this object.
   Dispatcher_Stub(
-      std::string db_dir_, Error_Output* error_output_, std::string xml_raw, int area_level,
+      std::string db_dir_, Error_Output* error_output_, const std::string& xml_raw, int area_level,
       uint32 max_allowed_time, uint64 max_allowed_space, Parsed_Query& global_settings_);
 
   // Called once per minute from the resource manager
@@ -76,6 +76,8 @@ private:
   Nonsynced_Transaction* area_transaction;
   Resource_Manager* rman;
 
+  uint64_t full_hash;
+  uint64_t anon_hash;
   uint32 client_token;
   std::string client_identifier;
 };

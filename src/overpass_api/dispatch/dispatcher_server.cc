@@ -492,6 +492,11 @@ int main(int argc, char* argv[])
     log.annotated_log("Dispatcher version " + basic_settings().version + " "
         + basic_settings().source_hash + " just started.");
   }
+  {
+    Logger log(db_dir, basic_settings().client_logfile_name);
+    log.annotated_log("Dispatcher version " + basic_settings().version + " "
+        + basic_settings().source_hash + " just started.");
+  }
   int chmod_res = chmod((db_dir + basic_settings().db_logfile_name).c_str(), S_666);
   chmod_res |= chmod((db_dir + basic_settings().client_logfile_name).c_str(), S_666);
   if (chmod_res)
