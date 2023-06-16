@@ -695,6 +695,17 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	logger->idle_counter(idle_counter);
       idle_counter = 0;
     }
+    
+    if (command == REQUEST_READ_AND_IDX && !connection_per_pid.get(client_pid)->set_num_expected_arguments(4))
+      continue;
+    if (command == PURGE && !connection_per_pid.get(client_pid)->set_num_expected_arguments(1))
+      continue;
+    if (command == QUERY_BY_TOKEN && !connection_per_pid.get(client_pid)->set_num_expected_arguments(1))
+      continue;
+    if (command == QUERY_MY_STATUS && !connection_per_pid.get(client_pid)->set_num_expected_arguments(1))
+      continue;
+    if (command == SET_GLOBAL_LIMITS && !connection_per_pid.get(client_pid)->set_num_expected_arguments(5))
+      continue;
 
     try
     {

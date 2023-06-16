@@ -80,6 +80,7 @@ uint32 Blocking_Client_Socket::get_command()
 
   int bytes_read = recv(
       socket_descriptor, ((uint8_t*)&buffer[0])+bytes_in_buffer, buffer.size()*sizeof(uint32) - bytes_in_buffer, 0);
+  //std::cerr<<"get_command "<<bytes_in_buffer<<' '<<bytes_read<<' '<<buffer[0]<<'\n';
   if (bytes_read == -1)
     return 0;
   else if (bytes_read == 0)
@@ -98,33 +99,11 @@ uint32 Blocking_Client_Socket::get_command()
 
 std::vector< uint32 > Blocking_Client_Socket::get_arguments(int num_arguments)
 {
-  if (state == disconnected || state == waiting)
+  //std::cerr<<"get_arguments "<<bytes_in_buffer<<' '<<bytes_expected<<' '<<buffer[0]<<'\n';
+  if (state == disconnected || state == waiting || bytes_in_buffer < bytes_expected
+      || bytes_expected != 4*num_arguments + 4)
     return {};
 
-  bytes_expected = 4*num_arguments + 4;
-  counter = 100;
-
-  while (bytes_expected <= bytes_in_buffer)
-  {
-    int bytes_read = recv(
-        socket_descriptor, ((uint8_t*)&buffer[0])+bytes_in_buffer, buffer.size()*sizeof(uint32) - bytes_in_buffer, 0);
-    if (bytes_read > 0)
-      bytes_in_buffer += bytes_read;
-    else if (bytes_read == 0)
-    {
-      if (--counter <= 100)
-      {
-        state = disconnected;
-        break;
-      }
-      millisleep(1);
-    }
-    else
-      break;
-  }
-  if (bytes_in_buffer < bytes_expected)
-    return {};
-  
   return { buffer.begin()+1, buffer.begin()+(num_arguments+1) };
 }
 
@@ -147,10 +126,11 @@ void Blocking_Client_Socket::clear_state()
     return;
 
   // remove any pending data. The connection should be clear at the end of the command.
-  uint32 dummy;
-  int bytes_read = recv(socket_descriptor, &dummy, sizeof(uint32), 0);
+  int bytes_read = recv(socket_descriptor, &buffer[0], buffer.size()*sizeof(uint32), 0);
+  //std::cerr<<"clear_state A "<<bytes_in_buffer<<' '<<bytes_read<<' '<<buffer[0]<<'\n';
   while (bytes_read > 0)
-    bytes_read = recv(socket_descriptor, &dummy, sizeof(uint32), 0);
+    bytes_read = recv(socket_descriptor, &buffer[0], buffer.size()*sizeof(uint32), 0);
+  //std::cerr<<"clear_state B "<<bytes_in_buffer<<' '<<bytes_read<<' '<<buffer[0]<<'\n';
 
   if (bytes_read == 0)
   {
