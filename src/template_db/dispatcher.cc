@@ -669,16 +669,19 @@ void Dispatcher::standby_loop(uint64 milliseconds)
   uint32 idle_counter = 0;
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
+    if (sigterm_status() == Signal_Status::received)
+    {
+      sigterm_status() = Signal_Status::processed;
+      break;
+    }
+
     socket.look_for_a_new_connection(connection_per_pid);
 
     uint32 command = 0;
     uint32 client_pid = 0;
-    if (sigterm_status() == Signal_Status::received)
-      command = TERMINATE;
-    else
-      connection_per_pid.poll_command_round_robin(command, client_pid);
+    connection_per_pid.poll_command_round_robin(command, client_pid);
 
-    if (command == 0 && terminate_countdown == TERMINATE_COUNTDOWN_START)
+    if (command == 0)
     {
       ++counter;
       ++idle_counter;
@@ -695,47 +698,18 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
     try
     {
-      if (terminate_countdown < TERMINATE_COUNTDOWN_START)
+      if (command == TERMINATE)
       {
-        if (!terminate_countdown || !writing_process)
-        {
-          logger->terminate_triggered(terminate_countdown, writing_process);
-          break;
-        }
-        --terminate_countdown;
-        
-        if (command == WRITE_ROLLBACK)
-        {
-          write_rollback(client_pid);
-          connection_per_pid.get(client_pid)->send_result(command);
-        }
-        else if (command == MIGRATE_ROLLBACK)
-        {
-          migrate_rollback(client_pid);
-          connection_per_pid.get(client_pid)->send_result(command);
-        }
-        millisleep(10);
+        connection_per_pid.get(client_pid)->send_result(command);
+        connection_per_pid.set(client_pid, 0);
+        break;
       }
-      else if (command == TERMINATE || command == OUTPUT_STATUS)
+      else if (command == OUTPUT_STATUS)
       {
-	if (command == OUTPUT_STATUS)
-	  output_status();
+        output_status();
 
-        if (client_pid)
-        {
-          connection_per_pid.get(client_pid)->send_result(command);
-          connection_per_pid.set(client_pid, 0);
-        }
-
-	if (command == TERMINATE)
-        {
-          --terminate_countdown;
-          if (logger)
-            logger->terminate_triggered(terminate_countdown, writing_process);
-          if (writing_process)
-            kill(writing_process, SIGTERM);
-          sigterm_status() = Signal_Status::processed;
-        }
+        connection_per_pid.get(client_pid)->send_result(command);
+        connection_per_pid.set(client_pid, 0);
       }
       else if (command == WRITE_START || command == WRITE_COMMIT
           || command == MIGRATE_START || command == MIGRATE_COMMIT)
@@ -761,22 +735,21 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
         connection_per_pid.get(client_pid)->send_result(command);
       }
-      else if (command == HANGUP || command == READ_FINISHED)
+      else if (command == HANGUP)
       {
-	if (command == HANGUP)
-        {
-          if (processes_reading_idx.find(client_pid) != processes_reading_idx.end()
-              || global_resource_planner.is_active(client_pid))
-            read_aborted(client_pid);
-          else
-            hangup(client_pid);
-        }
-	else if (command == READ_FINISHED)
-	{
-	  read_finished(client_pid);
-	  connection_per_pid.get(client_pid)->send_result(command);
-	}
-	connection_per_pid.set(client_pid, 0);
+        if (processes_reading_idx.find(client_pid) != processes_reading_idx.end()
+            || global_resource_planner.is_active(client_pid))
+          read_aborted(client_pid);
+        else
+          hangup(client_pid);
+
+        connection_per_pid.set(client_pid, 0);
+      }
+      else if (command == READ_FINISHED)
+      {
+        read_finished(client_pid);
+        connection_per_pid.get(client_pid)->send_result(command);
+        connection_per_pid.set(client_pid, 0);
       }
       else if (command == READ_IDX_FINISHED)
       {
@@ -787,20 +760,15 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       else if (command == REQUEST_READ_AND_IDX)
       {
 	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(4);
-	if (arguments.size() < 4)
+	if (arguments.size() < 4 || pending_commit)
 	{
 	  connection_per_pid.get(client_pid)->send_result(0);
 	  continue;
 	}
+
 	uint32 max_allowed_time = arguments[0];
 	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
 	uint32 client_token = arguments[3];
-
-	if (pending_commit)
-	{
-	  connection_per_pid.get(client_pid)->send_result(0);
-	  continue;
-	}
 
 	command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
 	if (command == REQUEST_READ_AND_IDX)
@@ -919,6 +887,55 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       *(uint32*)dispatcher_shm_ptr = 0;
     }
   }
+
+  if (milliseconds == 0 || counter < milliseconds/100)
+  {
+    if (logger)
+      logger->terminate_triggered(terminate_countdown, writing_process);
+    if (writing_process)
+      kill(writing_process, SIGTERM);
+
+    if (idle_counter > 0 && logger)
+      logger->idle_counter(idle_counter);
+  }
+
+  while (writing_process && terminate_countdown &&
+      (milliseconds == 0 || counter < milliseconds/100))
+  {
+    uint32 command = 0;
+    uint32 client_pid = 0;
+    connection_per_pid.poll_command_round_robin(command, client_pid);
+    
+    try
+    {
+      if (command == WRITE_ROLLBACK)
+      {
+        write_rollback(client_pid);
+        connection_per_pid.get(client_pid)->send_result(command);
+      }
+      else if (command == MIGRATE_ROLLBACK)
+      {
+        migrate_rollback(client_pid);
+        connection_per_pid.get(client_pid)->send_result(command);
+      }
+      millisleep(10);
+    }
+    catch (File_Error e)
+    {
+      std::cerr<<"File_Error "<<e.error_number<<' '<<strerror(e.error_number)<<' '<<e.filename<<' '<<e.origin<<'\n';
+
+      counter += 30;
+      millisleep(3000);
+
+      // Set command state to zero.
+      *(uint32*)dispatcher_shm_ptr = 0;
+    }
+
+    --terminate_countdown;
+  }
+  
+  if (logger && (milliseconds == 0 || counter < milliseconds/100))
+    logger->terminate_triggered(terminate_countdown, writing_process);
 }
 
 
