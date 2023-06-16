@@ -34,6 +34,7 @@ struct Blocking_Client_Socket
   Blocking_Client_Socket(int socket_descriptor_);
   uint32 get_command();
   std::vector< uint32 > get_arguments(int num_arguments);
+  bool set_num_expected_arguments(int num_arguments);
   void clear_state();
   void send_data(uint32 result);
   void send_result(uint32 result);
@@ -41,7 +42,10 @@ struct Blocking_Client_Socket
 private:
   int socket_descriptor;
   enum { waiting, processing_command, disconnected } state;
-  uint32 last_command;
+  std::vector< uint32 > buffer;
+  int bytes_in_buffer;
+  int bytes_expected;
+  int counter;
 };
 
 
@@ -49,17 +53,23 @@ class Connection_Per_Pid_Map
 {
 public:
   typedef uint pid_t;
+  typedef std::map< pid_t, Blocking_Client_Socket* >::const_iterator const_iterator;
 
   Connection_Per_Pid_Map() : last_pid(0) {}
+  ~Connection_Per_Pid_Map();
 
   Blocking_Client_Socket* get(pid_t pid);
-  void set(pid_t pid, Blocking_Client_Socket* socket);
-  const std::map< pid_t, Blocking_Client_Socket* >& base_map() const { return connection_per_pid; }
+  void insert(pid_t pid, int socket_fd);
+  void erase(pid_t pid);
+
+  std::map< pid_t, Blocking_Client_Socket* >::size_type size() const { return data.size(); }
+  const_iterator begin() const { return data.begin(); }
+  const_iterator end() const { return data.end(); }
 
   void poll_command_round_robin(uint32& command, uint32& client_pid);
 
 private:
-  std::map< pid_t, Blocking_Client_Socket* > connection_per_pid;
+  std::map< pid_t, Blocking_Client_Socket* > data;
   uint32 last_pid;
 };
 

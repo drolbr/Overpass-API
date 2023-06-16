@@ -64,7 +64,7 @@ Dispatcher_Socket::~Dispatcher_Socket()
 
 void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connection_per_pid)
 {
-  if (started_connections.size() + connection_per_pid.base_map().size() < open_socket_limit)
+  if (started_connections.size() + connection_per_pid.size() < open_socket_limit)
   {
     int socket_fd = accept(socket.descriptor(), NULL, NULL);
     if (socket_fd == -1)
@@ -91,7 +91,7 @@ void Dispatcher_Socket::look_for_a_new_connection(Connection_Per_Pid_Map& connec
     else
     {
       if (bytes_read != 0)
-	connection_per_pid.set(pid, new Blocking_Client_Socket(*it));
+	connection_per_pid.insert(pid, *it);
       else
 	close(*it);
 
@@ -701,7 +701,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       if (command == TERMINATE)
       {
         connection_per_pid.get(client_pid)->send_result(command);
-        connection_per_pid.set(client_pid, 0);
+        connection_per_pid.erase(client_pid);
         break;
       }
       else if (command == OUTPUT_STATUS)
@@ -709,7 +709,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         output_status();
 
         connection_per_pid.get(client_pid)->send_result(command);
-        connection_per_pid.set(client_pid, 0);
+        connection_per_pid.erase(client_pid);
       }
       else if (command == WRITE_START || command == WRITE_COMMIT
           || command == MIGRATE_START || command == MIGRATE_COMMIT)
@@ -743,13 +743,13 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         else
           hangup(client_pid);
 
-        connection_per_pid.set(client_pid, 0);
+        connection_per_pid.erase(client_pid);
       }
       else if (command == READ_FINISHED)
       {
         read_finished(client_pid);
         connection_per_pid.get(client_pid)->send_result(command);
-        connection_per_pid.set(client_pid, 0);
+        connection_per_pid.erase(client_pid);
       }
       else if (command == READ_IDX_FINISHED)
       {
@@ -787,7 +787,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         if (connection_per_pid.get(target_pid) != 0)
         {
 	  connection_per_pid.get(target_pid)->send_result(READ_FINISHED);
-	  connection_per_pid.set(target_pid, 0);
+	  connection_per_pid.erase(target_pid);
         }
 
 	connection_per_pid.get(client_pid)->send_result(command);
@@ -946,7 +946,7 @@ void Dispatcher::output_status()
     std::ofstream status((shadow_name + ".status").c_str());
 
     status<<"Number of not yet opened connections: "<<socket.num_started_connections()<<'\n'
-        <<"Number of connected clients: "<<connection_per_pid.base_map().size()<<'\n'
+        <<"Number of connected clients: "<<connection_per_pid.size()<<'\n'
         <<"Rate limit: "<<global_resource_planner.get_rate_limit()<<'\n'
         <<"Total available space: "<<global_resource_planner.get_total_available_space()<<'\n'
         <<"Total claimed space: "<<global_resource_planner.get_total_claimed_space()<<'\n'
@@ -973,7 +973,7 @@ void Dispatcher::output_status()
     std::sort(collected_pids.begin(), collected_pids.end());
     collected_pids.erase(std::unique(collected_pids.begin(), collected_pids.end()), collected_pids.end());
 
-    for (auto i : connection_per_pid.base_map())
+    for (auto i : connection_per_pid)
     {
       if (processes_reading_idx.find(i.first) == processes_reading_idx.end()
           && std::binary_search(collected_pids.begin(), collected_pids.end(), i.first))
