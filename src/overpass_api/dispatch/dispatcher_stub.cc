@@ -20,6 +20,7 @@
 #include "../frontend/hash_request.h"
 #include "../frontend/user_interface.h"
 #include "../statements/statement_dump.h"
+#include "../../expat/escape_json.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -109,7 +110,7 @@ Dispatcher_Stub::Dispatcher_Stub
     dispatcher_client = new Dispatcher_Client(osm_base_settings().shared_name);
     Logger db_logger(dispatcher_client->get_db_dir());
     Logger client_logger(dispatcher_client->get_db_dir(), basic_settings().client_logfile_name);
-    client_logger.annotated_log('\n' + xml_raw);
+    client_logger.annotated_log("requesting " + escape_cstr(xml_raw));
     try
     {
       db_logger.annotated_log("request_read_and_idx() start");
