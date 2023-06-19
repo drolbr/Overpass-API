@@ -696,17 +696,6 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       idle_counter = 0;
     }
     
-    if (command == REQUEST_READ_AND_IDX && !connection_per_pid.get(client_pid)->set_num_expected_arguments(4))
-      continue;
-    if (command == PURGE && !connection_per_pid.get(client_pid)->set_num_expected_arguments(1))
-      continue;
-    if (command == QUERY_BY_TOKEN && !connection_per_pid.get(client_pid)->set_num_expected_arguments(1))
-      continue;
-    if (command == QUERY_MY_STATUS && !connection_per_pid.get(client_pid)->set_num_expected_arguments(1))
-      continue;
-    if (command == SET_GLOBAL_LIMITS && !connection_per_pid.get(client_pid)->set_num_expected_arguments(5))
-      continue;
-
     try
     {
       if (command == TERMINATE)
@@ -773,7 +762,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(4);
 	if (arguments.size() < 4 || pending_commit)
 	{
-	  connection_per_pid.get(client_pid)->send_result(0);
+	  connection_per_pid.get(client_pid)->send_result(PROTOCOL_INVALID);
 	  continue;
 	}
 
@@ -791,7 +780,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
 	if (arguments.size() < 1)
+        {
+          connection_per_pid.get(client_pid)->clear_state();
 	  continue;
+        }
 	uint32 target_pid = arguments[0];
 
 	read_aborted(target_pid);
@@ -807,7 +799,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(1);
 	if (arguments.size() < 1)
+        {
+          connection_per_pid.get(client_pid)->clear_state();
 	  continue;
+        }
 	uint32 target_token = arguments[0];
 
 	pid_t target_pid = 0;
@@ -869,7 +864,10 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       {
 	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(5);
 	if (arguments.size() < 5)
+        {
+          connection_per_pid.get(client_pid)->clear_state();
 	  continue;
+        }
 
 	uint64 new_total_available_space = (((uint64)arguments[1])<<32 | arguments[0]);
 	uint64 new_total_available_time_units = (((uint64)arguments[3])<<32 | arguments[2]);

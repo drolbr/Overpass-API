@@ -328,8 +328,10 @@ void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max
   }
   if (ack == Dispatcher::RATE_LIMITED)
     throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::rate_limited");
-  else
+  else if (ack == Dispatcher::QUERY_REJECTED)
     throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::timeout");
+  else
+    throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::protocol_error");
 }
 
 

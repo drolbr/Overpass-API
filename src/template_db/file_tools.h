@@ -33,8 +33,7 @@ struct Blocking_Client_Socket
 {
   Blocking_Client_Socket(int socket_descriptor_);
   uint32 get_command();
-  std::vector< uint32 > get_arguments(int num_arguments);
-  bool set_num_expected_arguments(int num_arguments);
+  std::vector< uint32 > get_arguments(int num_arguments); // the number of arguments is defined by the opcode
   void clear_state();
   void send_data(uint32 result);
   void send_result(uint32 result);

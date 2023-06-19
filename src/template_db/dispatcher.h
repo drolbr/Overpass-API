@@ -179,32 +179,33 @@ class Dispatcher
     
     static const int32 TERMINATE_COUNTDOWN_START = 500;
 
-    static const uint32 TERMINATE = 1;
-    static const uint32 OUTPUT_STATUS = 2;
-    static const uint32 HANGUP = 3;
-    static const uint32 PURGE = 4;
-    static const uint32 SET_GLOBAL_LIMITS = 5;
+    static const uint32 TERMINATE = 0x100;
+    static const uint32 OUTPUT_STATUS = 0x200;
+    static const uint32 HANGUP = 0x300;
+    static const uint32 PURGE = 0x401;
+    static const uint32 SET_GLOBAL_LIMITS = 0x505;
 
-    static const uint32 QUERY_MY_STATUS = 15;
-    static const uint32 REGISTER_PID = 16;
-    static const uint32 SET_LIMITS = 17;
-    static const uint32 PING = 18;
-    static const uint32 UNREGISTER_PID = 19;
-    static const uint32 QUERY_BY_TOKEN = 20;
+    static const uint32 QUERY_MY_STATUS = 0x1101;
+    static const uint32 REGISTER_PID = 0x1200;
+    static const uint32 SET_LIMITS = 0x1300;
+    static const uint32 PING = 0x1400;
+    static const uint32 UNREGISTER_PID = 0x1500;
+    static const uint32 QUERY_BY_TOKEN = 0x1601;
 
-    static const uint32 RATE_LIMITED = 31;
-    static const uint32 QUERY_REJECTED = 32;
+    static const uint32 PROTOCOL_INVALID = 0x1f100;
+    static const uint32 RATE_LIMITED = 0x1f200;
+    static const uint32 QUERY_REJECTED = 0x1f300;
 
-    static const uint32 WRITE_START = 101;
-    static const uint32 WRITE_ROLLBACK = 102;
-    static const uint32 WRITE_COMMIT = 103;
-    static const uint32 MIGRATE_START = 111;
-    static const uint32 MIGRATE_ROLLBACK = 112;
-    static const uint32 MIGRATE_COMMIT = 113;
-    static const uint32 REQUEST_READ_AND_IDX = 201;
-    static const uint32 READ_IDX_FINISHED = 202;
-    static const uint32 READ_FINISHED = 203;
-    static const uint32 READ_ABORTED = 204;
+    static const uint32 WRITE_START = 0x10100;
+    static const uint32 WRITE_ROLLBACK = 0x10200;
+    static const uint32 WRITE_COMMIT = 0x10300;
+    static const uint32 MIGRATE_START = 0x11100;
+    static const uint32 MIGRATE_ROLLBACK = 0x11200;
+    static const uint32 MIGRATE_COMMIT = 0x11300;
+    static const uint32 REQUEST_READ_AND_IDX = 0x20104;
+    static const uint32 READ_IDX_FINISHED = 0x20200;
+    static const uint32 READ_FINISHED = 0x20300;
+    static const uint32 READ_ABORTED = 0x20400;
 
     /** Opens a shared memory for dispatcher communication. Furthermore,
       * detects whether idx or idy are valid, clears to idx if necessary,
