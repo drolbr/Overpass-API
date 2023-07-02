@@ -114,7 +114,7 @@ Dispatcher_Stub::Dispatcher_Stub
     try
     {
       db_logger.annotated_log("request_read_and_idx() start");
-      dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space, client_token);
+      dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space, client_token, full_hash);
       db_logger.annotated_log("request_read_and_idx() end");
     }
     catch (const File_Error& e)
@@ -171,7 +171,7 @@ Dispatcher_Stub::Dispatcher_Stub
 	try
 	{
           db_logger.annotated_log("request_read_and_idx() area start");
-	  area_dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space, client_token);
+	  area_dispatcher_client->request_read_and_idx(max_allowed_time, max_allowed_space, client_token, full_hash);
           db_logger.annotated_log("request_read_and_idx() area end");
         }
 	catch (const File_Error& e)

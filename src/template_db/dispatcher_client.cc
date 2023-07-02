@@ -307,8 +307,8 @@ void Dispatcher_Client::migrate_commit()
 }
 
 
-void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
-					     uint32 client_token)
+void Dispatcher_Client::request_read_and_idx(
+    uint32 max_allowed_time, uint64 max_allowed_space, uint32 client_token, uint64 request_full_hash)
 {
   uint counter = 0;
   uint32 ack = 0;
@@ -319,6 +319,7 @@ void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max
     send_message(max_allowed_time, "Dispatcher_Client::request_read_and_idx::socket::2");
     send_message(max_allowed_space, "Dispatcher_Client::request_read_and_idx::socket::3");
     send_message(client_token, "Dispatcher_Client::request_read_and_idx::socket::4");
+    send_message(request_full_hash, "Dispatcher_Client::request_read_and_idx::socket::5");
 
     ack = ack_arrived();
     if (ack == Dispatcher::REQUEST_READ_AND_IDX)
@@ -330,6 +331,8 @@ void Dispatcher_Client::request_read_and_idx(uint32 max_allowed_time, uint64 max
     throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::rate_limited");
   else if (ack == Dispatcher::QUERY_REJECTED)
     throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::timeout");
+  else if (ack == Dispatcher::DUPLICATE_QUERY)
+    throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::duplicate_query");
   else
     throw File_Error(0, dispatcher_share_name, "Dispatcher_Client::request_read_and_idx::protocol_error");
 }

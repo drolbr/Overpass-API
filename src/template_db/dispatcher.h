@@ -169,142 +169,143 @@ private:
 
 class Dispatcher
 {
-  public:
-    typedef uint pid_t;
+public:
+  typedef uint pid_t;
 
-    static const int SHM_SIZE = 3*sizeof(uint32) + 2*sizeof(uint32);//20+12+2*(256+4);
-    static const int OFFSET_BACK = 20;
-    static const int OFFSET_DB_1 = OFFSET_BACK+12;
-    static const int OFFSET_DB_2 = OFFSET_DB_1+(256+4);
-    
-    static const int32 TERMINATE_COUNTDOWN_START = 500;
+  static const int SHM_SIZE = 3*sizeof(uint32) + 2*sizeof(uint32);//20+12+2*(256+4);
+  static const int OFFSET_BACK = 20;
+  static const int OFFSET_DB_1 = OFFSET_BACK+12;
+  static const int OFFSET_DB_2 = OFFSET_DB_1+(256+4);
+  
+  static const int32 TERMINATE_COUNTDOWN_START = 500;
 
-    static const uint32 TERMINATE = 0x100;
-    static const uint32 OUTPUT_STATUS = 0x200;
-    static const uint32 HANGUP = 0x300;
-    static const uint32 PURGE = 0x401;
-    static const uint32 SET_GLOBAL_LIMITS = 0x505;
+  static const uint32 TERMINATE = 0x100;
+  static const uint32 OUTPUT_STATUS = 0x200;
+  static const uint32 HANGUP = 0x300;
+  static const uint32 PURGE = 0x401;
+  static const uint32 SET_GLOBAL_LIMITS = 0x505;
 
-    static const uint32 QUERY_MY_STATUS = 0x1101;
-    static const uint32 REGISTER_PID = 0x1200;
-    static const uint32 SET_LIMITS = 0x1300;
-    static const uint32 PING = 0x1400;
-    static const uint32 UNREGISTER_PID = 0x1500;
-    static const uint32 QUERY_BY_TOKEN = 0x1601;
+  static const uint32 QUERY_MY_STATUS = 0x1101;
+  static const uint32 REGISTER_PID = 0x1200;
+  static const uint32 SET_LIMITS = 0x1300;
+  static const uint32 PING = 0x1400;
+  static const uint32 UNREGISTER_PID = 0x1500;
+  static const uint32 QUERY_BY_TOKEN = 0x1601;
 
-    static const uint32 PROTOCOL_INVALID = 0x1f100;
-    static const uint32 RATE_LIMITED = 0x1f200;
-    static const uint32 QUERY_REJECTED = 0x1f300;
+  static const uint32 PROTOCOL_INVALID = 0x1f100;
+  static const uint32 RATE_LIMITED = 0x1f200;
+  static const uint32 DUPLICATE_QUERY = 0x1f300;
+  static const uint32 QUERY_REJECTED = 0x1f800;
 
-    static const uint32 WRITE_START = 0x10100;
-    static const uint32 WRITE_ROLLBACK = 0x10200;
-    static const uint32 WRITE_COMMIT = 0x10300;
-    static const uint32 MIGRATE_START = 0x11100;
-    static const uint32 MIGRATE_ROLLBACK = 0x11200;
-    static const uint32 MIGRATE_COMMIT = 0x11300;
-    static const uint32 REQUEST_READ_AND_IDX = 0x20104;
-    static const uint32 READ_IDX_FINISHED = 0x20200;
-    static const uint32 READ_FINISHED = 0x20300;
-    static const uint32 READ_ABORTED = 0x20400;
+  static const uint32 WRITE_START = 0x10100;
+  static const uint32 WRITE_ROLLBACK = 0x10200;
+  static const uint32 WRITE_COMMIT = 0x10300;
+  static const uint32 MIGRATE_START = 0x11100;
+  static const uint32 MIGRATE_ROLLBACK = 0x11200;
+  static const uint32 MIGRATE_COMMIT = 0x11300;
+  static const uint32 REQUEST_READ_AND_IDX = 0x20106;
+  static const uint32 READ_IDX_FINISHED = 0x20200;
+  static const uint32 READ_FINISHED = 0x20300;
+  static const uint32 READ_ABORTED = 0x20400;
 
-    /** Opens a shared memory for dispatcher communication. Furthermore,
-      * detects whether idx or idy are valid, clears to idx if necessary,
-      * and loads them into the shared memory idx_share_name. */
-    Dispatcher(
-      const std::string& dispatcher_share_name_,
-      const std::string& index_share_name, const std::string& shadow_name_,
-      const std::string& db_dir_, const std::string& socket_dir,
-      uint max_num_reading_processes, uint max_num_socket_clients, uint purge_timeout,
-      uint64 total_available_space, uint64 total_available_time_units,
-      const std::vector< File_Properties* >& controlled_files,
-      Dispatcher_Logger* logger = 0);
+  /** Opens a shared memory for dispatcher communication. Furthermore,
+    * detects whether idx or idy are valid, clears to idx if necessary,
+    * and loads them into the shared memory idx_share_name. */
+  Dispatcher(
+    const std::string& dispatcher_share_name_,
+    const std::string& index_share_name, const std::string& shadow_name_,
+    const std::string& db_dir_, const std::string& socket_dir,
+    uint max_num_reading_processes, uint max_num_socket_clients, uint purge_timeout,
+    uint64 total_available_space, uint64 total_available_time_units,
+    const std::vector< File_Properties* >& controlled_files,
+    Dispatcher_Logger* logger = 0);
 
-    ~Dispatcher();
+  ~Dispatcher();
 
-    /** Write operations: -------------------------------------------------- */
+  /** Write operations: -------------------------------------------------- */
 
-    /** Allocates a write lock if possible. Returns without doing anything
-        otherwise. */
-    void write_start(pid_t pid);
+  /** Allocates a write lock if possible. Returns without doing anything
+      otherwise. */
+  void write_start(pid_t pid);
 
-    /** Removes the mutex for the write process without changing any
-        index file. */
-    void write_rollback(pid_t pid);
+  /** Removes the mutex for the write process without changing any
+      index file. */
+  void write_rollback(pid_t pid);
 
-    /** Copies the shadow files onto the main index files. A lock prevents
-        that incomplete copies after a crash may leave the database in an
-        unstable state. Removes the mutex for the write process. */
-    void write_commit(pid_t pid);
+  /** Copies the shadow files onto the main index files. A lock prevents
+      that incomplete copies after a crash may leave the database in an
+      unstable state. Removes the mutex for the write process. */
+  void write_commit(pid_t pid);
 
-    /** Allocates a write lock if possible. Returns without doing anything
-        otherwise. */
-    void migrate_start(pid_t pid);
+  /** Allocates a write lock if possible. Returns without doing anything
+      otherwise. */
+  void migrate_start(pid_t pid);
 
-    /** Removes the mutex for the write process and the migrated data and index files
-        without changing any mainline index file. */
-    void migrate_rollback(pid_t pid);
+  /** Removes the mutex for the write process and the migrated data and index files
+      without changing any mainline index file. */
+  void migrate_rollback(pid_t pid);
 
-    /** Replaces the data and index files with the migrated files
-        in all cases where those files exist. A lock prevents
-        that incomplete copies after a crash may leave the database in an
-        unstable state. Removes the mutex for the write process. */
-    void migrate_commit(pid_t pid);
+  /** Replaces the data and index files with the migrated files
+      in all cases where those files exist. A lock prevents
+      that incomplete copies after a crash may leave the database in an
+      unstable state. Removes the mutex for the write process. */
+  void migrate_commit(pid_t pid);
 
-    /** Read operations: --------------------------------------------------- */
+  /** Read operations: --------------------------------------------------- */
 
-    /** Request the index for a read operation and registers the reading process.
-        Reading the index files should be taking a quick copy, because if any process
-        is in this state, write_commits are blocked. */
-    void request_read_and_idx(
-        pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space, uint32 client_token);
+  /** Request the index for a read operation and registers the reading process.
+      Reading the index files should be taking a quick copy, because if any process
+      is in this state, write_commits are blocked. */
+  void request_read_and_idx(
+      pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space, uint32 client_token);
 
-    /** Changes the registered state from reading the index to reading the
-        database. Can be safely called multiple times for the same process. */
-    void read_idx_finished(pid_t pid);
+  /** Changes the registered state from reading the index to reading the
+      database. Can be safely called multiple times for the same process. */
+  void read_idx_finished(pid_t pid);
 
-    /** Unregisters a reading process on its request. */
-    void read_finished(pid_t pid);
+  /** Unregisters a reading process on its request. */
+  void read_finished(pid_t pid);
 
-    /** Unregisters a reading process for other reasons. */
-    void read_aborted(pid_t pid);
+  /** Unregisters a reading process for other reasons. */
+  void read_aborted(pid_t pid);
 
-    /** Unregisters a non-reading process. */
-    void hangup(pid_t pid);
+  /** Unregisters a non-reading process. */
+  void hangup(pid_t pid);
 
-    /** Other operations: -------------------------------------------------- */
+  /** Other operations: -------------------------------------------------- */
 
-    /** Waits for input for the given amount of time. If milliseconds if zero,
-        it remains in standby forever. */
-    void standby_loop(uint64 milliseconds);
+  /** Waits for input for the given amount of time. If milliseconds if zero,
+      it remains in standby forever. */
+  void standby_loop(uint64 milliseconds);
 
-    /** Outputs the status of the processes registered with the dispatcher
-        into shadow_name.status. */
-    void output_status();
+  /** Outputs the status of the processes registered with the dispatcher
+      into shadow_name.status. */
+  void output_status();
 
-    /** Set the limit of simultaneous queries from a single IP address. */
-    void set_rate_limit(uint rate_limit) { global_resource_planner.set_rate_limit(rate_limit); }
+  /** Set the limit of simultaneous queries from a single IP address. */
+  void set_rate_limit(uint rate_limit) { global_resource_planner.set_rate_limit(rate_limit); }
 
-  private:
-    Dispatcher_Socket socket;
-    Connection_Per_Pid_Map connection_per_pid;
-    Transaction_Insulator transaction_insulator;
-    std::set< pid_t > processes_reading_idx;
-    pid_t writing_process;
-    std::string shadow_name;
-    std::string dispatcher_share_name;
-    int dispatcher_shm_fd;
-    volatile uint8* dispatcher_shm_ptr;
-    Dispatcher_Logger* logger;
-    std::set< pid_t > disconnected;
-    bool pending_commit;
-    int32 terminate_countdown;
-    uint32 requests_started_counter;
-    uint32 requests_finished_counter;
-    Global_Resource_Planner global_resource_planner;
+private:
+  Dispatcher_Socket socket;
+  Connection_Per_Pid_Map connection_per_pid;
+  Transaction_Insulator transaction_insulator;
+  std::set< pid_t > processes_reading_idx;
+  pid_t writing_process;
+  std::string shadow_name;
+  std::string dispatcher_share_name;
+  int dispatcher_shm_fd;
+  volatile uint8* dispatcher_shm_ptr;
+  Dispatcher_Logger* logger;
+  std::set< pid_t > disconnected;
+  bool pending_commit;
+  int32 terminate_countdown;
+  uint32 requests_started_counter;
+  uint32 requests_finished_counter;
+  Global_Resource_Planner global_resource_planner;
 
-    bool get_lock_for_idx_change(pid_t pid);
-    uint64 total_claimed_space() const;
-    uint64 total_claimed_time_units() const;
+  bool get_lock_for_idx_change(pid_t pid);
+  uint64 total_claimed_space() const;
+  uint64 total_claimed_time_units() const;
 };
 
 

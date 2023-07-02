@@ -366,6 +366,80 @@ void Global_Resource_Planner::purge(Connection_Per_Pid_Map& connection_per_pid)
 }
 
 
+struct Hash_of_Running_Request
+{
+  uint64_t hash;
+  time_t expires;
+};
+
+
+struct Running_Requests_Hashtable
+{
+  Running_Requests_Hashtable() : data(65536) {}
+  uint64_t size() const
+  {
+    uint64_t sum = 0;
+    for (const auto& i : data)
+      sum += i.capacity();
+    return sum;
+  }
+  
+  bool probe(const Hash_of_Running_Request& arg);
+
+private:
+  std::vector< std::vector< Hash_of_Running_Request > > data;
+};
+
+
+bool Running_Requests_Hashtable::probe(const Hash_of_Running_Request& arg)
+{
+  auto& bucket = data[(arg.hash ^ (arg.hash>>16)) & 0xffff];
+  time_t now = time(0);
+  uint num_hits = 0;
+  uint num_expired = 0;
+  for (auto& i : bucket)
+  {
+    num_expired += (i.expires < now);
+    num_hits += (i.hash == arg.hash && now <= i.expires);
+  }
+  
+  if (bucket.size() + 4 < 2*num_expired)
+  {
+    for (decltype(bucket.size()) i = 0; i < bucket.size(); ++i)
+    {
+      if (bucket[i].expires < now)
+      {
+        bucket[i] = bucket.back();
+        bucket.pop_back();
+      }
+    }
+  }
+
+  if (num_hits >= 2)
+  {
+    for (auto& i : bucket)
+    {
+      if (i.hash == arg.hash)
+        i.expires = std::max(i.expires, now + 900);
+    }
+    return false;
+  }
+
+  if (num_expired > 0)
+  {
+    for (auto& i : bucket)
+    {
+      if (i.expires < now)
+        i = arg;
+    }
+  }
+  else
+    bucket.push_back(arg);
+  
+  return true;
+}
+
+
 Dispatcher::Dispatcher(
     const std::string& dispatcher_share_name_,
     const std::string& index_share_name, const std::string& shadow_name_,
@@ -667,6 +741,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 {
   uint32 counter = 0;
   uint32 idle_counter = 0;
+  Running_Requests_Hashtable hashtable_full_request;
+  
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
     if (sigterm_status() == Signal_Status::received)
@@ -759,22 +835,28 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == REQUEST_READ_AND_IDX)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(4);
-	if (arguments.size() < 4 || pending_commit)
-	{
-	  connection_per_pid.get(client_pid)->send_result(PROTOCOL_INVALID);
-	  continue;
-	}
+        std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(6);
+        if (arguments.size() < 4 || pending_commit)
+        {
+          connection_per_pid.get(client_pid)->send_result(PROTOCOL_INVALID);
+          continue;
+        }
 
-	uint32 max_allowed_time = arguments[0];
-	uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
-	uint32 client_token = arguments[3];
+        uint32 max_allowed_time = arguments[0];
+        uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
+        uint32 client_token = arguments[3];
+        uint64 request_full_hash = (((uint64)arguments[5])<<32 | arguments[4]);
+        
+        if (hashtable_full_request.probe({ request_full_hash, time(0) + max_allowed_time }))
+        {
+          command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
+          if (command == REQUEST_READ_AND_IDX)
+            request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
+        }
+        else
+          command = DUPLICATE_QUERY;
 
-	command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
-	if (command == REQUEST_READ_AND_IDX)
-	  request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
-
-	connection_per_pid.get(client_pid)->send_result(command);
+        connection_per_pid.get(client_pid)->send_result(command);
       }
       else if (command == PURGE)
       {

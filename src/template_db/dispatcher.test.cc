@@ -1275,7 +1275,7 @@ int main(int argc, char* args[])
       test_file.set_basedir(dispatcher_client.get_db_dir());
 
       sync_log("Try request_read().\n");
-      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0);
+      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0, 0);
       sync_log("request_read() returned.\n");
 
       {
@@ -1359,7 +1359,7 @@ int main(int argc, char* args[])
       test_file.set_basedir(dispatcher_client.get_db_dir());
 
       sync_log("Try request_read().\n");
-      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0);
+      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0, 0);
       sync_log("request_read() done.\n");
 
       Nonsynced_Transaction transaction
@@ -1466,7 +1466,7 @@ int main(int argc, char* args[])
       test_file.set_basedir(dispatcher_client.get_db_dir());
 
       sync_log("Try request_read().\n");
-      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0);
+      dispatcher_client.request_read_and_idx(24*60, 1024*1024, 0, 0);
       sync_log("request_read() done.\n");
 
       Nonsynced_Transaction transaction

@@ -68,8 +68,8 @@ class Dispatcher_Client
     /** Request the index for a read operation and registers the reading process.
     Reading the index files should be taking a quick copy, because if any process
     is in this state, write_commits are blocked. */
-    void request_read_and_idx(uint32 max_allowed_time, uint64 max_allowed_space,
-			      uint32 client_token);
+    void request_read_and_idx(
+        uint32 max_allowed_time, uint64 max_allowed_space, uint32 client_token, uint64 request_full_hash);
 
     /** Changes the registered state from reading the index to reading the
     database. Can be safely called multiple times for the same process. */

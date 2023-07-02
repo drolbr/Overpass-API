@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
       try
       {
         logger.annotated_log("migrate_request_read_and_idx() start");
-        dispatcher_client.request_read_and_idx(1, 1, 0);
+        dispatcher_client.request_read_and_idx(1, 1, 0, 0);
         logger.annotated_log("migrate_request_read_and_idx() end");
 
         check_all_files(ver_checker, Nonsynced_Transaction(false, false, dispatcher_client.get_db_dir(), ""));
