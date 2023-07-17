@@ -239,7 +239,8 @@ int main(int argc, char* argv[])
   bool query_token = false;
   uint64 max_allowed_space = 0;
   uint64 max_allowed_time_units = 0;
-  int rate_limit = -1;
+  int32_t rate_limit = -1;
+  int32_t bit_limits = 0;
   std::string server_name;
 
   int argpos(1);
@@ -281,6 +282,9 @@ int main(int argc, char* argv[])
       max_allowed_time_units = atoll(((std::string)argv[argpos]).substr(7).c_str());
     else if (!(strncmp(argv[argpos], "--rate-limit=", 13)))
       rate_limit = atoll(((std::string)argv[argpos]).substr(13).c_str());
+    else if (!(strncmp(argv[argpos], "--allow-duplicate-queries=", 26)))
+      bit_limits = ((bit_limits & 0xfffffffc) | 0x2 |
+          ((std::string)argv[argpos]).substr(26) == "yes");
     else if (!(strncmp(argv[argpos], "--server-name=", 14)))
       server_name = ((std::string)argv[argpos]).substr(14);
     else
@@ -301,6 +305,7 @@ int main(int argc, char* argv[])
       "  --space=number: Set the memory limit for the total of all running processes to this value in bytes.\n"
       "  --time=number: Set the time unit  limit for the total of all running processes to this value in bytes.\n"
       "  --rate-limit=number: Set the maximum allowed number of concurrent accesses from a single IP.\n"
+      "  --allow-duplicate-queries=(yes|no): Set whether the dispatcher shall block duplicate queries.\n"
       "  --server-name: Set the server name used in status and error messages.\n";
 
       return 0;
@@ -405,13 +410,13 @@ int main(int argc, char* argv[])
     }
     return 0;
   }
-  else if (db_dir == "" && (max_allowed_space > 0 || max_allowed_time_units > 0 || rate_limit > -1))
+  else if (db_dir == "" && (max_allowed_space > 0 || max_allowed_time_units > 0 || rate_limit > -1 || bit_limits))
   {
     try
     {
       Dispatcher_Client client
           (areas ? area_settings().shared_name : osm_base_settings().shared_name);
-      client.set_global_limits(max_allowed_space, max_allowed_time_units, rate_limit);
+      client.set_global_limits(max_allowed_space, max_allowed_time_units, rate_limit, bit_limits);
     }
     catch (File_Error e)
     {

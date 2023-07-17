@@ -157,7 +157,7 @@ echo "data=[out:json];(node(1);way(1);rel(1););out body;" >input/interpreter_23/
 echo "data=[out:custom];out;" >input/interpreter_24/stdin.log
 echo "data=[out:custom];node(1);out;&redirect=no" >input/interpreter_25/stdin.log
 echo "data=[out:custom];(node(1);node($(($DATA_SIZE * 3 + 3))););out;" >input/interpreter_26/stdin.log
-echo "data=[out:custom];way(1);out geom;&redirect=no" >input/interpreter_27/stdin.log
+echo "data=[out:custom][timeout:10];way(1);out geom;&redirect=no" >input/interpreter_27/stdin.log
 echo "data=[out:custom];(way(1);way(2););out geom;" >input/interpreter_28/stdin.log
 echo "data=[out:custom];rel(1);out;&redirect=no" >input/interpreter_29/stdin.log
 echo "data=[out:custom];(rel(1);rel(9););out geom;" >input/interpreter_30/stdin.log
@@ -170,9 +170,9 @@ echo "data=[out:custom];(node(1);way(1);rel(1););out skel;" >input/interpreter_3
 echo "data=[out:custom];(node(1);way(1);rel(1););out body;" >input/interpreter_37/stdin.log
 
 echo "data=[out:json];node(1);out;&jsonp=foo" >input/interpreter_38/stdin.log
-echo "data=[out:custom];way(1);out geom;" >input/interpreter_39/stdin.log
-echo "data=[out:custom];way(1);out geom;&url=https://www.openstreetmap.org/?{{{type}}}={{{id}}}" >input/interpreter_40/stdin.log
-echo "data=[out:custom];way(1);out geom;&url=https%3A%2F%2Fwww%2Eopenstreetmap%2Eorg%2F%3F%7B%7B%7Btype%7D%7D%7D%3D%7B%7B%7Bid%7D%7D%7D" >input/interpreter_41/stdin.log
+echo "data=[out:custom][timeout:11];way(1);out geom;" >input/interpreter_39/stdin.log
+echo "data=[out:custom][timeout:11];way(1);out geom;&url=https://www.openstreetmap.org/?{{{type}}}={{{id}}}" >input/interpreter_40/stdin.log
+echo "data=[out:custom][timeout:12];way(1);out geom;&url=https%3A%2F%2Fwww%2Eopenstreetmap%2Eorg%2F%3F%7B%7B%7Btype%7D%7D%7D%3D%7B%7B%7Bid%7D%7D%7D" >input/interpreter_41/stdin.log
 echo "data=[out:custom];node(1);out;&redirect=no&template=base.wiki" >input/interpreter_42/stdin.log
 echo "data=[out:custom];(node(1);way(1);rel(1););out geom;&template=base%2Ewiki" >input/interpreter_43/stdin.log
 echo "data=[out:custom];(node(1);node($(($DATA_SIZE * 3 + 3)));way(1);way(2);rel(1);rel(9););out geom;&template=base.wiki" >input/interpreter_44/stdin.log

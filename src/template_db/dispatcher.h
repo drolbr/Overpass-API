@@ -92,12 +92,15 @@ struct Pending_Client
 class Global_Resource_Planner
 {
 public:
-  Global_Resource_Planner(uint32 global_available_time_, uint64 global_available_space_, uint32 rate_limit_)
-      : global_used_time(0), global_available_time(global_available_time_),
-        global_used_space(0), global_available_space(global_available_space_),
-        rate_limit(rate_limit_), recent_average_used_time(15), recent_average_used_space(15),
-        last_update_time(0), last_used_time(0), last_used_space(0), last_counted(0),
-        average_used_time(0), average_used_space(0) {}
+  Global_Resource_Planner(
+      uint32 global_available_time_, uint64 global_available_space_,
+      uint32 rate_limit_, bool allow_duplicate_queries_)
+    : global_used_time(0), global_available_time(global_available_time_),
+      global_used_space(0), global_available_space(global_available_space_),
+      rate_limit(rate_limit_), allow_duplicate_queries(allow_duplicate_queries_),
+      recent_average_used_time(15), recent_average_used_space(15),
+      last_update_time(0), last_used_time(0), last_used_space(0), last_counted(0),
+      average_used_time(0), average_used_space(0) {}
 
   // Returns true if the process is acceptable in terms of server load and quotas
   // In this case it is registered as running
@@ -112,6 +115,7 @@ public:
   void set_total_available_time(uint32 global_available_time_) { global_available_time = global_available_time_; }
   void set_total_available_space(uint64 global_available_space_) { global_available_space = global_available_space_; }
   void set_rate_limit(uint rate_limit_) { rate_limit = rate_limit_; }
+  void set_allow_duplicate_queries(bool allow_duplicate_queries_) { allow_duplicate_queries = allow_duplicate_queries_; }
 
   const std::vector< Reader_Entry >& get_active() const { return active; }
   bool is_active(pid_t client_pid) const;
@@ -121,6 +125,7 @@ public:
   uint64 get_total_claimed_space() const { return global_used_space; }
   uint64 get_total_available_space() const { return global_available_space; }
   uint32 get_rate_limit() const { return rate_limit; }
+  bool get_allow_duplicate_queries() const { return allow_duplicate_queries; }
   uint32 get_average_claimed_time() const { return average_used_time; }
   uint64 get_average_claimed_space() const { return average_used_space; }
 
@@ -133,6 +138,7 @@ private:
   uint64 global_used_space;
   uint64 global_available_space;
   uint32 rate_limit;
+  bool allow_duplicate_queries;
 
   std::vector< uint32 > recent_average_used_time;
   std::vector< uint64 > recent_average_used_space;
@@ -183,7 +189,7 @@ public:
   static const uint32 OUTPUT_STATUS = 0x200;
   static const uint32 HANGUP = 0x300;
   static const uint32 PURGE = 0x401;
-  static const uint32 SET_GLOBAL_LIMITS = 0x505;
+  static const uint32 SET_GLOBAL_LIMITS = 0x506;
 
   static const uint32 QUERY_MY_STATUS = 0x1101;
   static const uint32 REGISTER_PID = 0x1200;
@@ -301,6 +307,9 @@ private:
   int32 terminate_countdown;
   uint32 requests_started_counter;
   uint32 requests_finished_counter;
+  uint32 requests_load_rejected;
+  uint32 requests_rate_limited;
+  uint32 requests_as_duplicate_rejected;
   Global_Resource_Planner global_resource_planner;
 
   bool get_lock_for_idx_change(pid_t pid);

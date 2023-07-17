@@ -9,3 +9,6 @@ Total claimed time units: 0
 Average claimed time units: 0
 Counter of started requests: 1
 Counter of finished requests: 0
+Counter of load shedded requests: 0
+Counter of rate limited requests: 0
+Counter of as duplicate rejected requests: 0

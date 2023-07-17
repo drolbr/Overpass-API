@@ -423,8 +423,8 @@ Client_Status Dispatcher_Client::query_my_status(uint32 token)
 }
 
 
-void Dispatcher_Client::set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units,
-                                          int rate_limit)
+void Dispatcher_Client::set_global_limits(
+    uint64 max_allowed_space, uint64 max_allowed_time_units, int32_t rate_limit, int32_t bit_limits)
 {
   while (true)
   {
@@ -432,6 +432,7 @@ void Dispatcher_Client::set_global_limits(uint64 max_allowed_space, uint64 max_a
     send_message(max_allowed_space, "Dispatcher_Client::set_global_limits::2");
     send_message(max_allowed_time_units, "Dispatcher_Client::set_global_limits::3");
     send_message(rate_limit, "Dispatcher_Client::set_global_limits::4");
+    send_message(bit_limits, "Dispatcher_Client::set_global_limits::5");
 
     if (ack_arrived())
       return;

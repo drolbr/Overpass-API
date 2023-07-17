@@ -458,7 +458,10 @@ Dispatcher::Dispatcher(
       terminate_countdown(TERMINATE_COUNTDOWN_START),
       requests_started_counter(0),
       requests_finished_counter(0),
-      global_resource_planner(total_available_time_units_, total_available_space_, 0)
+      requests_load_rejected(0),
+      requests_rate_limited(0),
+      requests_as_duplicate_rejected(0),
+      global_resource_planner(total_available_time_units_, total_available_space_, 0, false)
 {
   signal(SIGPIPE, SIG_IGN);
   signal(SIGTERM, sigterm);
@@ -847,14 +850,22 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         uint32 client_token = arguments[3];
         uint64 request_full_hash = (((uint64)arguments[5])<<32 | arguments[4]);
         
-        if (hashtable_full_request.probe({ request_full_hash, time(0) + max_allowed_time }))
+        if (global_resource_planner.get_allow_duplicate_queries() ||
+            hashtable_full_request.probe({ request_full_hash, time(0) + max_allowed_time }))
         {
           command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
           if (command == REQUEST_READ_AND_IDX)
             request_read_and_idx(client_pid, max_allowed_time, max_allowed_space, client_token);
+          else if (command == QUERY_REJECTED)
+            ++requests_load_rejected;
+          else if (command == RATE_LIMITED)
+            ++requests_rate_limited;
         }
         else
+        {
           command = DUPLICATE_QUERY;
+          ++requests_as_duplicate_rejected;
+        }
 
         connection_per_pid.get(client_pid)->send_result(command);
       }
@@ -944,8 +955,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       }
       else if (command == SET_GLOBAL_LIMITS)
       {
-	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(5);
-	if (arguments.size() < 5)
+	std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(6);
+	if (arguments.size() < 6)
         {
           connection_per_pid.get(client_pid)->clear_state();
 	  continue;
@@ -953,7 +964,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
 	uint64 new_total_available_space = (((uint64)arguments[1])<<32 | arguments[0]);
 	uint64 new_total_available_time_units = (((uint64)arguments[3])<<32 | arguments[2]);
-        int rate_limit_ = arguments[4];
+        int32_t rate_limit_ = arguments[4];
+        int32_t bit_limits = arguments[5];
 
 	if (new_total_available_space > 0)
 	  global_resource_planner.set_total_available_space(new_total_available_space);
@@ -961,6 +973,8 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	  global_resource_planner.set_total_available_time(new_total_available_time_units);
         if (rate_limit_ > -1)
           global_resource_planner.set_rate_limit(rate_limit_);
+        if (bit_limits & 0x2)
+          global_resource_planner.set_allow_duplicate_queries(bit_limits & 0x1);
 
 	connection_per_pid.get(client_pid)->send_result(command);
       }
@@ -1046,7 +1060,10 @@ void Dispatcher::output_status()
         <<"Total claimed time units: "<<global_resource_planner.get_total_claimed_time()<<'\n'
         <<"Average claimed time units: "<<global_resource_planner.get_average_claimed_time()<<'\n'
         <<"Counter of started requests: "<<requests_started_counter<<'\n'
-        <<"Counter of finished requests: "<<requests_finished_counter<<'\n';
+        <<"Counter of finished requests: "<<requests_finished_counter<<'\n'
+        <<"Counter of load shedded requests: "<<requests_load_rejected<<'\n'
+        <<"Counter of rate limited requests: "<<requests_rate_limited<<'\n'
+        <<"Counter of as duplicate rejected requests: "<<requests_as_duplicate_rejected<<'\n';
 
     auto collected_pids = transaction_insulator.registered_pids();
 

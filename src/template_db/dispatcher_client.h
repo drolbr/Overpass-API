@@ -94,7 +94,8 @@ class Dispatcher_Client
 
     Client_Status query_my_status(uint32 token);
 
-    void set_global_limits(uint64 max_allowed_space, uint64 max_allowed_time_units, int rate_limit);
+    void set_global_limits(
+        uint64 max_allowed_space, uint64 max_allowed_time_units, int32_t rate_limit, int32_t bit_limits);
 
     /** Called regularly to tell the dispatcher that this process is still alive */
     void ping();
