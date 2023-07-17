@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
       rate_limit = atoll(((std::string)argv[argpos]).substr(13).c_str());
     else if (!(strncmp(argv[argpos], "--allow-duplicate-queries=", 26)))
       bit_limits = ((bit_limits & 0xfffffffc) | 0x2 |
-          ((std::string)argv[argpos]).substr(26) == "yes");
+          (((std::string)argv[argpos]).substr(26) == "yes" ? 0x1 : 0));
     else if (!(strncmp(argv[argpos], "--server-name=", 14)))
       server_name = ((std::string)argv[argpos]).substr(14);
     else
