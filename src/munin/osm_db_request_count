@@ -14,12 +14,20 @@ if [[ "$1" = "config" ]]; then
   echo "overpass_request_completed.type COUNTER"
   echo "overpass_request_completed.cdef overpass_request_completed,60,*"
   echo "overpass_request_completed.max 10000"
+  echo "overpass_request_shedded.label shedded"
+  echo "overpass_request_shedded.type COUNTER"
+  echo "overpass_request_shedded.cdef overpass_request_shedded,60,*"
+  echo "overpass_request_shedded.max 10000"
+  echo "overpass_request_rate_limited.label rate_limited"
+  echo "overpass_request_rate_limited.type COUNTER"
+  echo "overpass_request_rate_limited.cdef overpass_request_rate_limited,60,*"
+  echo "overpass_request_rate_limited.max 10000"
+  echo "overpass_request_duplicate.label duplicate"
+  echo "overpass_request_duplicate.type COUNTER"
+  echo "overpass_request_duplicate.cdef overpass_request_duplicate,60,*"
+  echo "overpass_request_duplicate.max 10000"
   exit 0
 }; fi
 
-STARTED=`/OVERPASS_EXEC_DIR/bin/dispatcher --osm-base --status | grep -E '^Counter of started' | awk '{ print $5; }'` # adapt directory
-echo "overpass_request_started.value $STARTED"
-
-COMPLETED=`/OVERPASS_EXEC_DIR/bin/dispatcher --osm-base --status | grep -E '^Counter of finished' | awk '{ print $5; }'` # adapt directory
-echo "overpass_request_completed.value $COMPLETED"
-
+/OVERPASS_EXEC_DIR/bin/dispatcher --osm-base --status | grep -E '^Counter' | \
+awk '{ if ($3 == "started") print "overpass_request_started.value "$5; else if ($3 == "finished") print "overpass_request_completed.value "$5; else if ($3 == "load") print "overpass_request_shedded.value "$6; else if ($3 == "rate") print "overpass_request_rate_limited.value "$6; else if ($4 == "duplicate") print "overpass_request_duplicate.value "$7; }'

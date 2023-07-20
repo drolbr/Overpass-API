@@ -10,7 +10,6 @@ if [[ "$1" = "config" ]]; then
   exit 0
 }; fi
 
-GRANTED=`/opt/osm-3s/v0.7.54/bin/dispatcher --osm-base --status | grep -E "^Average claimed time units:" | awk '{ print $5; }'`
+GRANTED=$(/OVERPASS_EXEC_DIR/bin/dispatcher --osm-base --status | grep -E "^Average claimed time units:" | awk '{ print $5; }')
 
 echo "osm_timeout_status.value $GRANTED"
-

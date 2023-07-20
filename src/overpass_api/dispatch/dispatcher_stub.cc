@@ -120,10 +120,13 @@ Dispatcher_Stub::Dispatcher_Stub
     catch (const File_Error& e)
     {
       std::ostringstream out;
-      out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
       if (e.origin == "Dispatcher_Client::request_read_and_idx::rate_limited"
-          || e.origin == "Dispatcher_Client::request_read_and_idx::timeout")
-	out<<' '<<std::hex<<anon_hash<<' '<<full_hash<<' '<<std::dec<<client_token<<' '<<client_identifier;
+          || e.origin == "Dispatcher_Client::request_read_and_idx::timeout"
+          || e.origin == "Dispatcher_Client::request_read_and_idx::duplicate_query")
+        out<<e.origin.substr(41)<<' '
+            <<std::hex<<anon_hash<<' '<<full_hash<<' '<<std::dec<<client_token<<' '<<client_identifier;
+      else
+        out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
       client_logger.annotated_log(out.str());
       throw;
     }
@@ -177,10 +180,13 @@ Dispatcher_Stub::Dispatcher_Stub
 	catch (const File_Error& e)
 	{
 	  std::ostringstream out;
-	  out<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
           if (e.origin == "Dispatcher_Client::request_read_and_idx::rate_limited"
-              || e.origin == "Dispatcher_Client::request_read_and_idx::timeout")
-            out<<' '<<std::hex<<anon_hash<<' '<<full_hash<<' '<<std::dec<<client_token<<' '<<client_identifier;
+              || e.origin == "Dispatcher_Client::request_read_and_idx::timeout"
+              || e.origin == "Dispatcher_Client::request_read_and_idx::duplicate_query")
+            out<<"Area::"<<e.origin.substr(41)<<' '
+                <<std::hex<<anon_hash<<' '<<full_hash<<' '<<std::dec<<client_token<<' '<<client_identifier;
+          else
+            out<<"Area::"<<e.origin<<' '<<e.filename<<' '<<e.error_number<<' '<<strerror(e.error_number);
 	  client_logger.annotated_log(out.str());
 	  throw;
 	}

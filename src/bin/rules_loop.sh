@@ -18,19 +18,15 @@
 # along with Overpass_API. If not, see <https://www.gnu.org/licenses/>.
 
 if [[ -z $1  ]]; then
-{
   echo Usage: $0 database_dir
   exit 0
-};
 fi
 
-DB_DIR="`pwd`/$1"
+DB_DIR="$(pwd)/$1"
 
-EXEC_DIR="`dirname $0`/"
+EXEC_DIR="$(dirname $0)/"
 if [[ ! ${EXEC_DIR:0:1} == "/" ]]; then
-{
-  EXEC_DIR="`pwd`/$EXEC_DIR"
-};
+  EXEC_DIR="$(pwd)/$EXEC_DIR"
 fi
 
 pushd "$EXEC_DIR"
