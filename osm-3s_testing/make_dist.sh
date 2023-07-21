@@ -28,6 +28,7 @@ pushd ../build
 make dist
 if [[ -n $DEVUSER ]]; then
   scp "osm-3s_v$VERSION.tar.gz" ${DEVUSER}@dev.overpass-api.de:/var/www/html/releases/
+  ssh ${DEVUSER}@dev.overpass-api.de ln -sf /var/www/html/releases/"osm-3s_v$VERSION.tar.gz" /var/www/html/releases/osm-3s_latest.tar.gz
 fi
 popd
 
