@@ -370,6 +370,7 @@ struct Hash_of_Running_Request
 {
   uint64_t hash;
   time_t expires;
+  uint32_t client_pid;
 };
 
 
@@ -400,30 +401,30 @@ bool Running_Requests_Hashtable::probe(const Hash_of_Running_Request& arg)
   for (auto& i : bucket)
   {
     num_expired += (i.expires < now);
-    num_hits += (i.hash == arg.hash && now <= i.expires);
+    if (i.hash == arg.hash && now <= i.expires)
+    {
+      ++num_hits;
+      if (arg.client_pid == i.client_pid)
+        return true;
+    }
   }
   
   if (bucket.size() + 4 < 2*num_expired)
   {
-    for (decltype(bucket.size()) i = 0; i < bucket.size(); ++i)
+    for (decltype(bucket.size()) i = 0; i < bucket.size(); )
     {
       if (bucket[i].expires < now)
       {
         bucket[i] = bucket.back();
         bucket.pop_back();
       }
+      else 
+        ++i;
     }
   }
 
-  if (num_hits >= 2)
-  {
-    for (auto& i : bucket)
-    {
-      if (i.hash == arg.hash)
-        i.expires = std::max(i.expires, now + 900);
-    }
+  if (num_hits >= 3)
     return false;
-  }
 
   if (num_expired > 0)
   {
@@ -851,7 +852,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         uint64 request_full_hash = (((uint64)arguments[5])<<32 | arguments[4]);
         
         if (global_resource_planner.get_allow_duplicate_queries() ||
-            hashtable_full_request.probe({ request_full_hash, time(0) + max_allowed_time }))
+            hashtable_full_request.probe({ request_full_hash, time(0) + max_allowed_time, client_pid }))
         {
           command = global_resource_planner.probe(client_pid, client_token, max_allowed_time, max_allowed_space);
           if (command == REQUEST_READ_AND_IDX)
