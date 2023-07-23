@@ -65,6 +65,23 @@ void way_nd_ids_plain(const Container& ways, std::vector< Node::Id_Type >& ids)
 
 
 template< typename Container >
+void way_nd_ids_once(const Container& ways, std::vector< Node::Id_Type >& ids)
+{
+  for (const auto& i : ways)
+  {
+    for (const auto& j : i.second)
+    {
+      auto size = ids.size();
+      for (auto k : j.nds)
+        ids.push_back(k);
+      std::sort(ids.begin()+size, ids.end());
+      ids.erase(std::unique(ids.begin()+size, ids.end()), ids.end());
+    }
+  }
+}
+
+
+template< typename Container >
 void way_nd_firstlast(const Container& ways, std::vector< Node::Id_Type >& ids)
 {
   for (const auto& i : ways)
@@ -112,9 +129,9 @@ std::vector< Node::Id_Type > way_cnt_nd_ids(
     unsigned int lower_limit, unsigned int upper_limit)
 {
   std::vector< Node::Id_Type > ids;
-  way_nd_ids_plain(ways, ids);
+  way_nd_ids_once(ways, ids);
   if (!attic_ways.empty())
-    way_nd_ids_plain(attic_ways, ids);
+    way_nd_ids_once(attic_ways, ids);
 
   std::sort(ids.begin(), ids.end());
 
