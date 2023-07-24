@@ -114,7 +114,7 @@ for I in $FILES_BASE; do
   echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
   echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
 }; done
-aria2c -x 16 -i ${TEMP_FILE}
+aria2c -d "${CLONE_DIR}" -x 16 -i ${TEMP_FILE}
 
 rm -f "${TEMP_FILE}}"
 if [[ $META == "yes" || $META == "attic" ]]; then
@@ -124,6 +124,7 @@ if [[ $META == "yes" || $META == "attic" ]]; then
     echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
     echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
   }; done
+  aria2c -d "${CLONE_DIR}" -x 16 -i ${TEMP_FILE}
 }; fi
 
 rm -f "${TEMP_FILE}}"
@@ -134,6 +135,7 @@ if [[ $META == "attic" ]]; then
     echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
     echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
   }; done
+  aria2c -d "${CLONE_DIR}" -x 16 -i ${TEMP_FILE}
 }; fi
 rm -f "${TEMP_FILE}}"
 
