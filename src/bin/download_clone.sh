@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API. If not, see <https://www.gnu.org/licenses/>.
 
+set -euxo pipefail
+
 CLONE_DIR="$1"
 REMOTE_DIR=
 SOURCE=
