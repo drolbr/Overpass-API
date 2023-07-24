@@ -34,26 +34,27 @@ struct Default_Dispatcher_Logger : public Dispatcher_Logger
 {
   Default_Dispatcher_Logger(Logger& logger_) : logger(&logger_) {}
 
-  virtual void terminate_triggered(int32 countdown, pid_t writing_process);
-  virtual void write_start(pid_t pid, const std::vector< ::pid_t >& registered);
-  virtual void write_rollback(pid_t pid);
-  virtual void write_pending(pid_t pid, const std::set< pid_t >& reading);
-  virtual void write_commit(pid_t pid);
-  virtual void migrate_start(pid_t pid, const std::vector< ::pid_t >& registered);
-  virtual void migrate_rollback(pid_t pid);
-  virtual void migrate_commit(pid_t pid);
-  virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space);
-  virtual void read_idx_finished(pid_t pid);
-  virtual void prolongate(pid_t pid);
-  virtual void idle_counter(uint32 idle_count);
-  virtual void read_finished(pid_t pid);
-  virtual void query_my_status(pid_t pid);
-  virtual void read_aborted(pid_t pid);
-  virtual void hangup(pid_t pid);
-  virtual void purge(pid_t pid);
+  virtual void terminate_triggered(int32 countdown, pid_t writing_process) override;
+  virtual void write_start(pid_t pid, const std::vector< ::pid_t >& registered) override;
+  virtual void write_rollback(pid_t pid) override;
+  virtual void write_pending(pid_t pid, const std::set< pid_t >& reading) override;
+  virtual void write_commit(pid_t pid) override;
+  virtual void migrate_start(pid_t pid, const std::vector< ::pid_t >& registered) override;
+  virtual void migrate_rollback(pid_t pid) override;
+  virtual void migrate_commit(pid_t pid) override;
+  virtual void request_read_and_idx(pid_t pid, uint32 max_allowed_time, uint64 max_allowed_space) override;
+  virtual void read_idx_finished(pid_t pid) override;
+  virtual void prolongate(pid_t pid) override;
+  virtual void idle_counter(uint32 idle_count) override;
+  virtual void read_finished(pid_t pid) override;
+  virtual void query_my_status(pid_t pid) override;
+  virtual void read_aborted(pid_t pid) override;
+  virtual void hangup(pid_t pid) override;
+  virtual void purge(pid_t pid) override;
+  virtual void arguments_mismatch(pid_t pid, uint num_expected, uint num_provided) override;
 
-  private:
-    Logger* logger;
+private:
+  Logger* logger;
 };
 
 
@@ -199,6 +200,14 @@ void Default_Dispatcher_Logger::purge(pid_t pid)
 {
   std::ostringstream out;
   out<<"purge of process "<<pid<<'.';
+  logger->annotated_log(out.str());
+}
+
+
+void Default_Dispatcher_Logger::arguments_mismatch(pid_t pid, uint num_expected, uint num_provided)
+{
+  std::ostringstream out;
+  out<<"too few arguments from "<<pid<<": expected "<<num_expected<<" but got "<<num_provided;
   logger->annotated_log(out.str());
 }
 
@@ -538,7 +547,9 @@ int main(int argc, char* argv[])
 
     if (rate_limit > -1)
       dispatcher.set_rate_limit(rate_limit);
-    
+    if (bit_limits & 0x2)
+      dispatcher.set_allow_duplicate_queries(bit_limits & 0x1);
+          
     if (!server_name.empty())
     {
       try

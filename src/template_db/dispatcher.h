@@ -53,6 +53,7 @@ struct Dispatcher_Logger
   virtual void read_aborted(pid_t pid) = 0;
   virtual void hangup(pid_t pid) = 0;
   virtual void purge(pid_t pid) = 0;
+  virtual void arguments_mismatch(pid_t pid, uint num_expected, uint num_provided) = 0;
 };
 
 
@@ -290,6 +291,9 @@ public:
 
   /** Set the limit of simultaneous queries from a single IP address. */
   void set_rate_limit(uint rate_limit) { global_resource_planner.set_rate_limit(rate_limit); }
+
+  void set_allow_duplicate_queries(bool allow_duplicate_queries)
+  { global_resource_planner.set_allow_duplicate_queries(allow_duplicate_queries); }
 
 private:
   Dispatcher_Socket socket;

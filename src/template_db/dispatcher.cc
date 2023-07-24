@@ -840,9 +840,16 @@ void Dispatcher::standby_loop(uint64 milliseconds)
       else if (command == REQUEST_READ_AND_IDX)
       {
         std::vector< uint32 > arguments = connection_per_pid.get(client_pid)->get_arguments(6);
-        if (arguments.size() < 4 || pending_commit)
+        if (arguments.size() < 6)
         {
+          if (logger)
+            logger->arguments_mismatch(client_pid, 6, arguments.size());
           connection_per_pid.get(client_pid)->send_result(PROTOCOL_INVALID);
+          continue;
+        }
+        if (pending_commit)
+        {
+          connection_per_pid.get(client_pid)->send_result(0);
           continue;
         }
 
