@@ -104,7 +104,7 @@ parallel_download ()
 mkdir -p "${CLONE_DIR}"
 fetch_file "${SOURCE}/trigger_clone" "${CLONE_DIR}/base-url"
 
-REMOTE_DIR=$(cat <"${CLONE_DIR}/base-url")
+REMOTE_DIR=$(cat < "${CLONE_DIR}/base-url")
 #echo "Triggered generation of a recent clone"
 #sleep 30
 
