@@ -23,6 +23,7 @@ REMOTE_DIR=
 SOURCE=
 DONE=
 META=
+TEMP_FILE=/tmp/ovepass_files_list
 
 if [[ -z $1 ]]; then
 {
@@ -97,15 +98,6 @@ retry_fetch_file()
   }; done
 };
 
-download_file()
-{
-  echo
-  echo "Fetching $1"
-  retry_fetch_file "$REMOTE_DIR/$1" "$CLONE_DIR/$1"
-  echo "Fetching $1.idx"
-  retry_fetch_file "$REMOTE_DIR/$1.idx" "$CLONE_DIR/$1.idx"
-}
-
 mkdir -p "$CLONE_DIR"
 fetch_file "$SOURCE/trigger_clone" "$CLONE_DIR/base-url"
 
@@ -115,25 +107,34 @@ REMOTE_DIR=$(cat <"$CLONE_DIR/base-url")
 
 retry_fetch_file "$REMOTE_DIR/replicate_id" "$CLONE_DIR/replicate_id"
 
+rm -f "${TEMP_FILE}}"
+touch "${TEMP_FILE}"
 for I in $FILES_BASE; do
 {
-  download_file $I
+  echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
+  echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
 }; done
+aria2c -x 16 -i ${TEMP_FILE}
 
+rm -f "${TEMP_FILE}}"
 if [[ $META == "yes" || $META == "attic" ]]; then
 {
   for I in $FILES_META; do
   {
-    download_file $I
+    echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
+    echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
   }; done
 }; fi
 
+rm -f "${TEMP_FILE}}"
 if [[ $META == "attic" ]]; then
 {
   for I in $FILES_ATTIC; do
   {
-    download_file $I
+    echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
+    echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
   }; done
 }; fi
+rm -f "${TEMP_FILE}}"
 
 echo " database ready."
