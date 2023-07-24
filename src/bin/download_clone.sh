@@ -17,11 +17,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Overpass_API. If not, see <https://www.gnu.org/licenses/>.
 
-EXEC_DIR="`pwd`/../"
 CLONE_DIR="$1"
 REMOTE_DIR=
 SOURCE=
-DONE=
 META=
 TEMP_FILE=/tmp/ovepass_files_list
 
@@ -53,9 +51,9 @@ process_param()
   fi
 };
 
-if [[ -n $1  ]]; then process_param $1; fi
-if [[ -n $2  ]]; then process_param $2; fi
-if [[ -n $3  ]]; then process_param $3; fi
+if [[ -n ${1} ]]; then process_param "${1}"; fi
+if [[ -n ${2} ]]; then process_param "${2}"; fi
+if [[ -n ${3} ]]; then process_param "${3}"; fi
 
 FILES_BASE="\
 nodes.bin nodes.map node_tags_local.bin node_tags_global.bin node_frequent_tags.bin node_keys.bin \
@@ -80,62 +78,67 @@ relation_changelog.bin relation_tags_local_attic.bin relation_tags_global_attic.
 # $2 - local destination
 fetch_file()
 {
-  wget -c -O "$2" "$1"
+  wget -c -O "${2}" "${1}"
 };
 
 retry_fetch_file()
 {
   DEADLINE=$(($(date '+%s') + 86400))
-  rm -f "$2"
-  fetch_file "$1" "$2"
-  until [[ -s "$2" ]]; do {
-    if [[ $(date '+%s') -ge $DEADLINE ]]; then
-      echo "File $1 unavailable. Aborting."
+  rm -f "${2}"
+  fetch_file "${1}" "${2}"
+  until [[ -s "${2}" ]]; do {
+    if [[ $(date '+%s' || true) -ge ${DEADLINE} ]]; then
+      echo "File ${1} unavailable. Aborting."
       exit 1
     fi
     sleep 15
-    fetch_file "$1" "$2"
+    fetch_file "${1}" "${2}"
   }; done
 };
 
-mkdir -p "$CLONE_DIR"
-fetch_file "$SOURCE/trigger_clone" "$CLONE_DIR/base-url"
+parallel_download ()
+{
+  aria2c -d "${CLONE_DIR}" -j 16 -R -x 16 -i "${TEMP_FILE}"
+};
 
-REMOTE_DIR=$(cat <"$CLONE_DIR/base-url")
+mkdir -p "${CLONE_DIR}"
+fetch_file "${SOURCE}/trigger_clone" "${CLONE_DIR}/base-url"
+
+REMOTE_DIR=$(cat <"${CLONE_DIR}/base-url")
 #echo "Triggered generation of a recent clone"
 #sleep 30
 
-retry_fetch_file "$REMOTE_DIR/replicate_id" "$CLONE_DIR/replicate_id"
+retry_fetch_file "${REMOTE_DIR}/replicate_id" "${CLONE_DIR}/replicate_id"
 
 rm -f "${TEMP_FILE}}"
 touch "${TEMP_FILE}"
-for I in $FILES_BASE; do
+for I in ${FILES_BASE}; do
 {
-  echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
-  echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
+  echo "${REMOTE_DIR}/${I}" >> "${TEMP_FILE}"
+  echo "${REMOTE_DIR}/${I}.idx" >> "${TEMP_FILE}"
 }; done
-aria2c -d "${CLONE_DIR}" -x 16 -i ${TEMP_FILE}
+parallel_download
 
 rm -f "${TEMP_FILE}}"
-if [[ $META == "yes" || $META == "attic" ]]; then
+if [[ ${META} == "yes" || ${META} == "attic" ]]; then
 {
-  for I in $FILES_META; do
+  for I in ${FILES_META}; do
   {
-    echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
-    echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
+    echo "${REMOTE_DIR}/${I}" >> "${TEMP_FILE}"
+    echo "${REMOTE_DIR}/${I}.idx" >> "${TEMP_FILE}"
   }; done
-  aria2c -d "${CLONE_DIR}" -x 16 -i ${TEMP_FILE}
+  parallel_download
 }; fi
 
 rm -f "${TEMP_FILE}}"
-if [[ $META == "attic" ]]; then
+if [[ ${META} == "attic" ]]; then
 {
-  for I in $FILES_ATTIC; do
+  for I in ${FILES_ATTIC}; do
   {
-    echo "${REMOTE_DIR}/${I}" >> ${TEMP_FILE}
-    echo "${REMOTE_DIR}/${I}.idx" >> ${TEMP_FILE}
+    echo "${REMOTE_DIR}/${I}" >> "${TEMP_FILE}"
+    echo "${REMOTE_DIR}/${I}.idx" >> "${TEMP_FILE}"
   }; done
-  aria2c -d "${CLONE_DIR}" -x 16 -i ${TEMP_FILE}
+  parallel_download
 }; fi
 rm -f "${TEMP_FILE}}"
 
