@@ -323,36 +323,36 @@
     <tag k="foo_1203" v="bar"/>
   </node>
     
-  <node id="1301" lat="10.0" lon="3.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+  <node id="1301" lat="10.0" lon="3.01" version="1" timestamp="2013-07-01T09:01:11" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1301"/>
     <tag k="foo_1301" v="bar"/>
   </node>
-  <node id="1302" lat="10.0" lon="3.02" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo">
+  <node id="1302" lat="10.0" lon="3.02" version="1" timestamp="2013-07-01T09:01:12" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1302"/>
     <tag k="foo_1302" v="bar"/>
   </node>
-  <node id="1303" lat="10.0" lon="3.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo">
+  <node id="1303" lat="10.0" lon="3.03" version="1" timestamp="2013-07-01T09:01:13" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1303"/>
     <tag k="foo_1303" v="bar"/>
   </node>
-  <node id="1304" lat="10.0" lon="3.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+  <node id="1304" lat="10.0" lon="3.04" version="1" timestamp="2013-07-01T09:01:14" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1304"/>
     <tag k="foo_1304" v="bar"/>
   </node>
     
-  <node id="1401" lat="10.0" lon="4.01" version="1" timestamp="2013-07-01T09:01:11" changeset="496" uid="42" user="foo">
+  <node id="1401" lat="10.0" lon="4.01" version="1" timestamp="2013-07-01T09:01:11" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </node>
-  <node id="1402" lat="10.0" lon="4.02" version="1" timestamp="2013-07-01T09:01:12" changeset="496" uid="42" user="foo">
+  <node id="1402" lat="10.0" lon="4.02" version="1" timestamp="2013-07-01T09:01:12" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
   </node>
-  <node id="1403" lat="10.0" lon="4.03" version="1" timestamp="2013-07-01T09:01:13" changeset="496" uid="42" user="foo">
+  <node id="1403" lat="10.0" lon="4.03" version="1" timestamp="2013-07-01T09:01:13" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </node>
-  <node id="1404" lat="10.0" lon="4.04" version="1" timestamp="2013-07-01T09:01:14" changeset="496" uid="42" user="foo">
+  <node id="1404" lat="10.0" lon="4.04" version="1" timestamp="2013-07-01T09:01:14" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1404"/>
     <tag k="foo_1404" v="bar"/>
   </node>

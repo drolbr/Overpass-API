@@ -60,11 +60,10 @@ void user_filter_map
   Meta_Collector< TIndex, typename TObject::Id_Type > meta_collector
       (modify, *rman.get_transaction(), file_properties);
 
-  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = modify.begin();
-      it != modify.end(); ++it)
+  for (auto it = modify.begin(); it != modify.end(); ++it)
   {
     std::vector< TObject > local_into;
-    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
+    for (auto iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
       const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
@@ -91,11 +90,10 @@ void user_filter_map_attic
   Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
       (modify, *rman.get_transaction(), attic_file_properties);
 
-  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = modify.begin();
-      it != modify.end(); ++it)
+  for (auto it = modify.begin(); it != modify.end(); ++it)
   {
     std::vector< TObject > local_into;
-    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
+    for (auto iit = it->second.begin();
         iit != it->second.end(); ++iit)
     {
       const OSM_Element_Metadata_Skeleton< typename TObject::Id_Type >* meta_skel
@@ -110,25 +108,105 @@ void user_filter_map_attic
 }
 
 
+template< typename Data_Pair, typename Meta_Collector >
+void filter_items_indexwise(
+    Data_Pair& pair, const std::set< Uint32_Index >& user_ids,
+    Meta_Collector& current_meta_collector, Meta_Collector& attic_meta_collector)
+{
+  decltype(pair.second) local_into;
+  for (auto iit = pair.second.begin(); iit != pair.second.end(); ++iit)
+  {
+    const auto* cur_skel = current_meta_collector.get(pair.first, iit->id);
+    if ((cur_skel) && (user_ids.find(cur_skel->user_id) != user_ids.end()))
+      local_into.push_back(*iit);
+    else
+    {
+      const auto* att_skel = attic_meta_collector.get(pair.first, iit->id, NOW);
+      while (att_skel)
+      {
+        att_skel = attic_meta_collector.get(pair.first, iit->id, att_skel->timestamp - 1);
+        if ((att_skel) && (user_ids.find(att_skel->user_id) != user_ids.end()))
+        {
+          local_into.push_back(*iit);
+          break;
+        }
+      }
+    }
+  }
+  pair.second.swap(local_into);
+}
+
+
+template< typename TIndex, typename TObject >
+void user_filter_map_touched
+    (std::map< TIndex, std::vector< TObject > >& current,
+     std::map< TIndex, std::vector< Attic< TObject > > >& attic,
+     Resource_Manager& rman, const std::set< Uint32_Index >& user_ids,
+     File_Properties* current_file_properties, File_Properties* attic_file_properties)
+{
+  if (current.empty() && attic.empty())
+    return;
+
+  Ranges< TIndex > unified_ranges;
+  for (const auto& i : current)
+    unified_ranges.push_back(i.first, inc(i.first));
+  for (const auto& i : attic)
+    unified_ranges.push_back(i.first, inc(i.first));
+  unified_ranges.sort();
+  Meta_Collector< TIndex, typename TObject::Id_Type > current_meta_collector
+      (unified_ranges, *rman.get_transaction(), current_file_properties);
+  Meta_Collector< TIndex, typename TObject::Id_Type > attic_meta_collector
+      (unified_ranges, *rman.get_transaction(), attic_file_properties);
+
+  auto att_it = attic.begin();
+  for (auto cur_it = current.begin(); cur_it != current.end(); ++cur_it)
+  {
+    while (att_it != attic.end() && !(cur_it->first < att_it->first))
+    {
+      filter_items_indexwise(*att_it, user_ids, current_meta_collector, attic_meta_collector);
+      ++att_it;
+    }
+    filter_items_indexwise(*cur_it, user_ids, current_meta_collector, attic_meta_collector);
+  }
+  while (att_it != attic.end())
+  {
+    filter_items_indexwise(*att_it, user_ids, current_meta_collector, attic_meta_collector);
+    ++att_it;
+  }
+}
+
+
 void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
   std::set< Uint32_Index > user_ids = user->get_ids(*rman.get_transaction());
 
-  user_filter_map(into.nodes, rman, user_ids, meta_settings().NODES_META);
-  user_filter_map(into.ways, rman, user_ids, meta_settings().WAYS_META);
-  user_filter_map(into.relations, rman, user_ids, meta_settings().RELATIONS_META);
+  if (user->get_criterion() == User_Statement::last)
+  {
+    user_filter_map(into.nodes, rman, user_ids, meta_settings().NODES_META);
+    user_filter_map(into.ways, rman, user_ids, meta_settings().WAYS_META);
+    user_filter_map(into.relations, rman, user_ids, meta_settings().RELATIONS_META);
 
-  if (!into.attic_nodes.empty())
-    user_filter_map_attic(into.attic_nodes, rman, user_ids,
-			  meta_settings().NODES_META, attic_settings().NODES_META);
+    if (!into.attic_nodes.empty())
+      user_filter_map_attic(
+          into.attic_nodes, rman, user_ids, meta_settings().NODES_META, attic_settings().NODES_META);
 
-  if (!into.attic_ways.empty())
-    user_filter_map_attic(into.attic_ways, rman, user_ids,
-			  meta_settings().WAYS_META, attic_settings().WAYS_META);
+    if (!into.attic_ways.empty())
+      user_filter_map_attic(
+          into.attic_ways, rman, user_ids, meta_settings().WAYS_META, attic_settings().WAYS_META);
 
-  if (!into.attic_relations.empty())
-    user_filter_map_attic(into.attic_relations, rman, user_ids,
-			  meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
+    if (!into.attic_relations.empty())
+      user_filter_map_attic(
+          into.attic_relations, rman, user_ids, meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
+  }
+  else
+  {
+    user_filter_map_touched(
+        into.nodes, into.attic_nodes, rman, user_ids, meta_settings().NODES_META, attic_settings().NODES_META);
+    user_filter_map_touched(
+        into.ways, into.attic_ways, rman, user_ids, meta_settings().WAYS_META, attic_settings().WAYS_META);
+    user_filter_map_touched(
+        into.relations, into.attic_relations, rman, user_ids, meta_settings().RELATIONS_META, attic_settings().RELATIONS_META);
+  }
 
   into.areas.clear();
 }
@@ -164,14 +242,20 @@ Statement* User_Statement::Criterion_Maker::create_criterion(const Token_Node_Pt
   attributes["type"] = result_type;
 
   std::string prefix;
-  if (tree_it->lhs && tree_it.lhs()->token == "user")
+  if (tree_it->lhs)
   {
-    for (std::vector< std::string >::iterator it = users.begin(); it != users.end(); ++it)
-      *it = decode_json(*it, error_output);
-    prefix = "name";
+    if (tree_it.lhs()->token == "uid_touched" || tree_it.lhs()->token == "user_touched")
+      attributes["criterion"] = "touched";
+
+    if (tree_it.lhs()->token == "user" || tree_it.lhs()->token == "user_touched")
+    {
+      for (std::vector< std::string >::iterator it = users.begin(); it != users.end(); ++it)
+        *it = decode_json(*it, error_output);
+      prefix = "name";
+    }
+    else
+      prefix = "uid";
   }
-  else
-    prefix = "uid";
 
   std::vector< std::string >::const_iterator it = users.begin();
   if (it != users.end())
@@ -189,7 +273,7 @@ Statement* User_Statement::Criterion_Maker::create_criterion(const Token_Node_Pt
 
 User_Statement::User_Statement
     (int line_number_, const std::map< std::string, std::string >& input_attributes, Parsed_Query& global_settings)
-    : Output_Statement(line_number_), bbox_limitation(&global_settings.get_global_bbox_limitation())
+    : Output_Statement(line_number_), bbox_limitation(&global_settings.get_global_bbox_limitation()), criterion(last)
 {
   std::map< std::string, std::string > attributes;
 
@@ -197,6 +281,7 @@ User_Statement::User_Statement
   attributes["uid"] = "";
   attributes["name"] = "";
   attributes["type"] = "";
+  attributes["criterion"] = "last";
 
   for (std::map<std::string, std::string>::const_iterator it = input_attributes.begin();
       it != input_attributes.end(); ++it)
@@ -235,11 +320,12 @@ User_Statement::User_Statement
   }
 
   if (!(user_ids.empty() ^ user_names.empty()))
-  {
-    std::ostringstream temp;
-    temp<<"Exactly one of the two attributes \"name\" and \"uid\" must be set.";
-    add_static_error(temp.str());
-  }
+    add_static_error("Exactly one of the two attributes \"name\" and \"uid\" must be set.");
+
+  if (attributes["criterion"] == "touched")
+    criterion = touched;
+  else if (attributes["criterion"] != "last")
+    add_static_error("Atttribute \"criterion\" must have the value \"last\" or \"touched\".");
 
   result_type = attributes["type"];
 }
