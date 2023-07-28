@@ -66,6 +66,8 @@ struct Timeless
     ::filter_items(predicate, attic);
     return *this;
   }
+  
+  Timeless& filter_by_id(const std::vector< typename Object::Id_Type >& ids);
 
   std::map< Index, std::vector< Object > > current;
   std::map< Index, std::vector< Attic< Object > > > attic;
@@ -1197,5 +1199,35 @@ void filter_elems_for_closed_ways(std::map< Index, std::vector< Object > >& arg)
     into.swap(it1->second);
   }
 }
+
+
+template< typename Index, typename Object >
+Timeless< Index, Object >& Timeless< Index, Object >::filter_by_id(
+    const std::vector< typename Object::Id_Type >& ids)
+{
+  for (auto& i : current)
+  {
+    std::vector< Object > into;
+    for (const auto& j : i.second)
+    {
+      if (std::binary_search(ids.begin(), ids.end(), j.id))
+        into.push_back(j);
+    }
+    into.swap(i.second);
+  }
+  for (auto& i : attic)
+  {
+    std::vector< Attic< Object > > into;
+    for (const auto& j : i.second)
+    {
+      if (std::binary_search(ids.begin(), ids.end(), j.id))
+        into.push_back(j);
+    }
+    into.swap(i.second);
+  }
+  
+  return *this;
+}
+
 
 #endif
