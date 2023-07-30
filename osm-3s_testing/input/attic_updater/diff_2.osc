@@ -656,28 +656,28 @@
 </modify>
 
 <create>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12" changeset="497" uid="43" user="bar">
     <nd ref="15021"/>
     <nd ref="15022"/>
     <nd ref="15023"/>
     <tag k="foo" v="bar_1502"/>
     <tag k="foo_1502" v="bar"/>
   </way>
-  <way id="1503" version="3" timestamp="2013-07-01T09:03:13" changeset="496" uid="42" user="foo">
+  <way id="1503" version="3" timestamp="2013-07-01T09:03:13" changeset="497" uid="43" user="bar">
     <nd ref="15031"/>
     <nd ref="15032"/>
     <nd ref="15034"/>
     <tag k="foo" v="bar_1503"/>
     <tag k="foo_1503" v="bar"/>
   </way>
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14" changeset="497" uid="43" user="bar">
     <nd ref="15041"/>
     <nd ref="15042"/>
     <nd ref="15044"/>
     <tag k="foo" v="bar_1504"/>
     <tag k="foo_1504" v="bar"/>
   </way>
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15" changeset="497" uid="43" user="bar">
     <nd ref="15051"/>
     <nd ref="15052"/>
     <nd ref="15054"/>

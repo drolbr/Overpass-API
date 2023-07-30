@@ -873,7 +873,7 @@
   </way>
 </old>
 <new>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0200000" maxlat="10.0020000" maxlon="5.0200000"/>
     <nd ref="15021" lat="10.0000000" lon="5.0200000"/>
     <nd ref="15022" lat="10.0010000" lon="5.0200000"/>
@@ -895,7 +895,7 @@
   </way>
 </old>
 <new>
-  <way id="1503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="1503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0300000" maxlat="10.0030000" maxlon="5.0300000"/>
     <nd ref="15031" lat="10.0000000" lon="5.0300000"/>
     <nd ref="15032" lat="10.0010000" lon="5.0300000"/>
@@ -917,7 +917,7 @@
   </way>
 </old>
 <new>
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0400000" maxlat="10.0030000" maxlon="15.0400000"/>
     <nd ref="15041" lat="10.0000000" lon="5.0400000"/>
     <nd ref="15042" lat="10.0010000" lon="5.0400000"/>
@@ -939,7 +939,7 @@
   </way>
 </old>
 <new>
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
     <nd ref="15051" lat="10.0000000" lon="5.0500000"/>
     <nd ref="15052" lat="10.0010000" lon="5.0500000"/>
@@ -1073,7 +1073,7 @@
   </way>
 </action>
 <action type="create">
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0400000" maxlat="10.0030000" maxlon="15.0400000"/>
     <nd ref="15041" lat="10.0000000" lon="5.0400000"/>
     <nd ref="15042" lat="10.0010000" lon="5.0400000"/>
@@ -1083,7 +1083,7 @@
   </way>
 </action>
 <action type="create">
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
     <nd ref="15051" lat="10.0000000" lon="5.0500000"/>
     <nd ref="15052" lat="10.0010000" lon="5.0500000"/>
@@ -1849,7 +1849,7 @@
   </way>
 </old>
 <new>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0200000" maxlat="10.0020000" maxlon="5.0200000"/>
     <nd ref="15021"/>
     <nd ref="15022"/>
@@ -1871,7 +1871,7 @@
   </way>
 </old>
 <new>
-  <way id="1503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="1503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0300000" maxlat="10.0030000" maxlon="5.0300000"/>
     <nd ref="15031"/>
     <nd ref="15032"/>
@@ -1893,7 +1893,7 @@
   </way>
 </old>
 <new>
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0400000" maxlat="10.0030000" maxlon="15.0400000"/>
     <nd ref="15041"/>
     <nd ref="15042"/>
@@ -1915,7 +1915,7 @@
   </way>
 </old>
 <new>
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
     <nd ref="15051"/>
     <nd ref="15052"/>
@@ -2049,7 +2049,7 @@
   </way>
 </action>
 <action type="create">
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0400000" maxlat="10.0030000" maxlon="15.0400000"/>
     <nd ref="15041"/>
     <nd ref="15042"/>
@@ -2059,7 +2059,7 @@
   </way>
 </action>
 <action type="create">
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
     <nd ref="15051"/>
     <nd ref="15052"/>
@@ -2825,7 +2825,7 @@
   </way>
 </old>
 <new>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="497" uid="43" user="bar">
     <center lat="10.0010000" lon="5.0200000"/>
     <nd ref="15021"/>
     <nd ref="15022"/>
@@ -2847,7 +2847,7 @@
   </way>
 </old>
 <new>
-  <way id="1503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="1503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="497" uid="43" user="bar">
     <center lat="10.0015000" lon="5.0300000"/>
     <nd ref="15031"/>
     <nd ref="15032"/>
@@ -2869,7 +2869,7 @@
   </way>
 </old>
 <new>
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <center lat="10.0015000" lon="10.0400000"/>
     <nd ref="15041"/>
     <nd ref="15042"/>
@@ -2891,7 +2891,7 @@
   </way>
 </old>
 <new>
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <center lat="10.0010000" lon="10.0500000"/>
     <nd ref="15051"/>
     <nd ref="15052"/>
@@ -3025,7 +3025,7 @@
   </way>
 </action>
 <action type="create">
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <center lat="10.0015000" lon="10.0400000"/>
     <nd ref="15041"/>
     <nd ref="15042"/>
@@ -3035,7 +3035,7 @@
   </way>
 </action>
 <action type="create">
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <center lat="10.0010000" lon="10.0500000"/>
     <nd ref="15051"/>
     <nd ref="15052"/>
@@ -3753,7 +3753,7 @@
   </way>
 </old>
 <new>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="497" uid="43" user="bar">
     <nd ref="15021"/>
     <nd ref="15022"/>
     <nd ref="15023"/>
@@ -3773,7 +3773,7 @@
   </way>
 </old>
 <new>
-  <way id="1503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="496" uid="42" user="foo">
+  <way id="1503" version="3" timestamp="2013-07-01T09:03:13Z" changeset="497" uid="43" user="bar">
     <nd ref="15031"/>
     <nd ref="15032"/>
     <nd ref="15034"/>
@@ -3793,7 +3793,7 @@
   </way>
 </old>
 <new>
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <nd ref="15041"/>
     <nd ref="15042"/>
     <nd ref="15044"/>
@@ -3813,7 +3813,7 @@
   </way>
 </old>
 <new>
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <nd ref="15051"/>
     <nd ref="15052"/>
     <nd ref="15054"/>
@@ -3935,7 +3935,7 @@
   </way>
 </action>
 <action type="create">
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <nd ref="15041"/>
     <nd ref="15042"/>
     <nd ref="15044"/>
@@ -3944,7 +3944,7 @@
   </way>
 </action>
 <action type="create">
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <nd ref="15051"/>
     <nd ref="15052"/>
     <nd ref="15054"/>
@@ -8388,7 +8388,7 @@
   </way>
 </old>
 <new>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0200000" maxlat="10.0020000" maxlon="5.0200000"/>
     <nd ref="15021" lat="10.0000000" lon="5.0200000"/>
     <nd ref="15022" lat="10.0010000" lon="5.0200000"/>
@@ -8552,7 +8552,7 @@
   </way>
 </old>
 <new>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0200000" maxlat="10.0020000" maxlon="5.0200000"/>
     <nd ref="15021" lat="10.0000000" lon="5.0200000"/>
     <nd ref="15022" lat="10.0010000" lon="5.0200000"/>
@@ -9037,7 +9037,7 @@
   </way>
 </old>
 <new>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="497" uid="43" user="bar">
     <nd ref="15021"/>
     <nd ref="15022"/>
     <nd ref="15023"/>
@@ -9329,7 +9329,7 @@
   </way>
 </old>
 <new>
-  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="496" uid="42" user="foo">
+  <way id="1502" version="3" timestamp="2013-07-01T09:03:12Z" changeset="497" uid="43" user="bar">
     <nd ref="15021"/>
     <nd ref="15022"/>
     <nd ref="15023"/>
