@@ -22,6 +22,7 @@
 #include "../core/datatypes.h"
 #include "../statements/statement.h"
 #include "abstract_processing.h"
+#include "collect_items.h"
 #include "filenames.h"
 
 #include <map>
@@ -110,7 +111,7 @@ Timeless< Uint32_Index, Node_Skeleton > way_members(
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     const std::vector< int >* pos,
-    const Ranges< Uint32_Index >* node_ranges,
+    const Ranges< Uint32_Index >& node_ranges,
     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false);
 
 Timeless< Uint32_Index, Node_Skeleton > way_cnt_members(
@@ -118,7 +119,7 @@ Timeless< Uint32_Index, Node_Skeleton > way_cnt_members(
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     unsigned int lower_limit, unsigned int upper_limit,
-    const Ranges< Uint32_Index >* node_ranges,
+    const Ranges< Uint32_Index >& node_ranges,
     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false);
 
 Timeless< Uint32_Index, Node_Skeleton > way_link_members(
@@ -126,18 +127,11 @@ Timeless< Uint32_Index, Node_Skeleton > way_link_members(
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     unsigned int lower_limit, unsigned int upper_limit,
-    const Ranges< Uint32_Index >* node_ranges,
+    const Ranges< Uint32_Index >& node_ranges,
     const std::vector< Node::Id_Type >& node_ids, bool invert_ids = false);
 
 template< typename Relation_Skeleton >
 std::vector< Node::Id_Type > relation_node_member_ids
-    (Resource_Manager& rman,
-     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-     const uint32* role_id = 0);
-
-template< typename Relation_Skeleton >
-std::vector< Way::Id_Type > relation_way_member_ids
     (Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
@@ -345,10 +339,7 @@ void filter_attic_elements
 
     Block_Backend< Index, Attic< typename Skeleton::Id_Type >, typename std::vector< Index >::const_iterator >
         undeleted_db(rman.get_transaction()->data_index(attic_undeleted_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, Attic< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = undeleted_db.discrete_begin(idx_set.begin(), idx_set.end());
+    for (auto it = undeleted_db.discrete_begin(idx_set.begin(), idx_set.end());
         !(it == undeleted_db.discrete_end()); ++it)
     {
       if (it.object().timestamp <= timestamp)
@@ -576,12 +567,11 @@ std::vector< Node::Id_Type > relation_node_member_ids
 }
 
 
-template< typename Relation_Skeleton >
-std::vector< Way::Id_Type > relation_way_member_ids
+inline std::vector< Way::Id_Type > relation_way_member_ids
     (Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-     const uint32* role_id)
+     const uint32* role_id = 0)
 {
   std::vector< Way::Id_Type > ids;
   if (role_id)
@@ -627,19 +617,15 @@ void keep_matching_skeletons
   
   std::map< typename Skeleton::Id_Type, uint64 > timestamp_by_id;
 
-  for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
-       it != current.end(); ++it)
+  for (auto it = current.begin(); it != current.end(); ++it)
   {
-    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       timestamp_by_id[it2->id] = NOW;
   }
 
-  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
-       it != attic.end(); ++it)
+  for (auto it = attic.begin(); it != attic.end(); ++it)
   {
-    for (typename std::vector< Attic<Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       uint64& stored_timestamp = timestamp_by_id[it2->id];
       if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
@@ -647,12 +633,10 @@ void keep_matching_skeletons
     }
   }
 
-  for (typename std::map< Index, std::vector< Skeleton > >::iterator it = current.begin();
-       it != current.end(); ++it)
+  for (auto it = current.begin(); it != current.end(); ++it)
   {
     std::vector< Skeleton > local_into;
-    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (timestamp_by_id[it2->id] == NOW)
         local_into.push_back(*it2);
@@ -660,12 +644,10 @@ void keep_matching_skeletons
     local_into.swap(it->second);
   }
 
-  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::iterator it = attic.begin();
-       it != attic.end(); ++it)
+  for (auto it = attic.begin(); it != attic.end(); ++it)
   {
     std::vector< Attic< Skeleton > > local_into;
-    for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (timestamp_by_id[it2->id] == it2->timestamp)
         local_into.push_back(*it2);
@@ -686,15 +668,13 @@ void keep_matching_skeletons
 
   result.clear();
 
-  for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
-       it != current.end(); ++it)
+  for (auto it = current.begin(); it != current.end(); ++it)
   {
-    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       timestamp_by_id[it2->id] = NOW;
   }
 
-  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
-       it != attic.end(); ++it)
+  for (auto it = attic.begin(); it != attic.end(); ++it)
   {
     for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
          it2 != it->second.end(); ++it2)
@@ -705,21 +685,18 @@ void keep_matching_skeletons
     }
   }
 
-  for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current.begin();
-       it != current.end(); ++it)
+  for (auto it = current.begin(); it != current.end(); ++it)
   {
-    for (typename std::vector< Skeleton >::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (timestamp_by_id[it2->id] == NOW)
         result[it->first].push_back(Attic< Skeleton >(*it2, NOW));
     }
   }
 
-  for (typename std::map< Index, std::vector< Attic< Skeleton > > >::const_iterator it = attic.begin();
-       it != attic.end(); ++it)
+  for (auto it = attic.begin(); it != attic.end(); ++it)
   {
-    for (typename std::vector< Attic< Skeleton > >::const_iterator it2 = it->second.begin();
-         it2 != it->second.end(); ++it2)
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
     {
       if (timestamp_by_id[it2->id] == it2->timestamp)
         result[it->first].push_back(Attic< Skeleton >(*it2, it2->timestamp));
@@ -864,59 +841,18 @@ Ranges< Uint31_Index > collect_way_req(
 template< typename Relation_Skeleton >
 Ranges< Uint31_Index > relation_way_member_indices
     (const Statement* stmt, Resource_Manager& rman,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
+     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& current_rels,
+     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels)
 {
   std::vector< Uint31_Index > parents;
   std::vector< Uint31_Index > children_idxs;
 
-  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-      it = rels_begin; it != rels_end; ++it)
+  for (auto it = current_rels.begin(); it != current_rels.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
     {
       // Treat relations with really large indices: get the ways indexes explicitly
-      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
-      {
-	for (std::vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
-	    it3 != it2->way_idxs.end(); ++it3)
-	  children_idxs.push_back(*it3);
-      }
-    }
-    else
-      parents.push_back(it->first);
-  }
-  if (stmt)
-    rman.health_check(*stmt);
-  std::sort(children_idxs.begin(), children_idxs.end());
-  children_idxs.erase(std::unique(children_idxs.begin(), children_idxs.end()), children_idxs.end());
-
-  return collect_way_req(parents, children_idxs);
-}
-
-
-template< typename Relation_Skeleton >
-Ranges< Uint31_Index > relation_way_member_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
-     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-         attic_rels_begin,
-     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-         attic_rels_end)
-{
-  std::vector< Uint31_Index > parents;
-  std::vector< Uint31_Index > children_idxs;
-
-  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-      it = rels_begin; it != rels_end; ++it)
-  {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
-    {
-      // Treat relations with really large indices: get the ways indexes explicitly
-      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
+      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       {
         for (std::vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
             it3 != it2->way_idxs.end(); ++it3)
@@ -926,14 +862,12 @@ Ranges< Uint31_Index > relation_way_member_indices
     else
       parents.push_back(it->first);
   }
-  for (typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-      it = attic_rels_begin; it != attic_rels_end; ++it)
+  for (auto it = attic_rels.begin(); it != attic_rels.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
     {
       // Treat relations with really large indices: get the ways indexes explicitly
-      for (typename std::vector< Attic< Relation_Skeleton > >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
+      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       {
         for (std::vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
             it3 != it2->way_idxs.end(); ++it3)
@@ -970,58 +904,19 @@ Ranges< Uint32_Index > collect_node_req
     (const Statement* stmt, Resource_Manager& rman, const std::vector< uint32 >& parents);
 
 
-template< typename Relation_Skeleton >
-Ranges< Uint32_Index > relation_node_member_indices
+inline Ranges< Uint32_Index > relation_node_member_indices
     (const Statement* stmt, Resource_Manager& rman,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end)
+     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& current_rels,
+     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels)
 {
   std::vector< uint32 > parents;
 
-  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-      it = rels_begin; it != rels_end; ++it)
+  for (auto it = current_rels.begin(); it != current_rels.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
     {
       // Treat relations with really large indices: get the node indexes from the segement indexes
-      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
-      {
-	for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
-	    it3 != it2->node_idxs.end(); ++it3)
-	  parents.push_back(it3->val());
-      }
-    }
-    else
-      parents.push_back(it->first.val());
-  }
-  if (stmt)
-    rman.health_check(*stmt);
-
-  return collect_node_req(stmt, rman, parents);
-}
-
-
-template< typename Relation_Skeleton >
-Ranges< Uint32_Index > relation_node_member_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
-     typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
-     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-         attic_rels_begin,
-     typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-         attic_rels_end)
-{
-  std::vector< uint32 > parents;
-
-  for (typename std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator
-      it = rels_begin; it != rels_end; ++it)
-  {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
-    {
-      // Treat relations with really large indices: get the node indexes from the segement indexes
-      for (typename std::vector< Relation_Skeleton >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
+      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       {
         for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
             it3 != it2->node_idxs.end(); ++it3)
@@ -1031,14 +926,12 @@ Ranges< Uint32_Index > relation_node_member_indices
     else
       parents.push_back(it->first.val());
   }
-  for (typename std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator
-      it = attic_rels_begin; it != attic_rels_end; ++it)
+  for (auto it = attic_rels.begin(); it != attic_rels.end(); ++it)
   {
     if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
     {
       // Treat relations with really large indices: get the node indexes from the segement indexes
-      for (typename std::vector< Attic< Relation_Skeleton > >::const_iterator it2 = it->second.begin();
-          it2 != it->second.end(); ++it2)
+      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
       {
         for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
             it3 != it2->node_idxs.end(); ++it3)

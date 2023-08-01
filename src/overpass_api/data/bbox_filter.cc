@@ -198,7 +198,7 @@ void filter_relations_expensive(const Bbox_Filter& filter,
 }
 
 
-void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& into, bool with_attic) const
+void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& into) const
 {
   if (!bbox.valid())
     return;
@@ -225,7 +225,7 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
         Way_Geometry_Store(way_members_.current, query, rman), into.relations);
   }
 
-  if (with_attic)
+  if (rman.get_desired_timestamp() != NOW)
   {
     //Process attic ways
     filter_ways_expensive(*this, Way_Geometry_Store(into.attic_ways, query, rman), into.attic_ways);

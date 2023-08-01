@@ -21,7 +21,6 @@
 
 #include "../core/datatypes.h"
 #include "../statements/statement.h"
-#include "collect_items.h"
 #include "filenames.h"
 
 

@@ -86,7 +86,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 
 void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
-  filter_.filter(query, rman, into, rman.get_desired_timestamp() != NOW);
+  filter_.filter(query, rman, into);
 }
 
 //-----------------------------------------------------------------------------
