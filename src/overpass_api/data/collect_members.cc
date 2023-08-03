@@ -659,7 +659,7 @@ std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_memb
   std::map< Uint31_Index, std::vector< Way_Skeleton > > current;
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic;
 
-  collect_items_range_by_timestamp(stmt, rman, way_ranges.intersect(
+  collect_items_range(stmt, rman, way_ranges.intersect(
       relation_way_member_indices< Attic< Relation_Skeleton > >(stmt, rman, relations, {})),
       Id_Predicate< Way_Skeleton >(intersect_ids), current, attic);
 
@@ -721,7 +721,7 @@ std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_me
   // Retrieve all nodes referred by the ways.
   std::map< Uint32_Index, std::vector< Node_Skeleton > > current;
   std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic;
-  collect_items_range_by_timestamp(stmt, rman, node_ranges,
+  collect_items_range(stmt, rman, node_ranges,
       Id_Predicate< Node_Skeleton >(intersect_ids), current, attic);
   keep_matching_skeletons(result, current, attic, rman.get_desired_timestamp());
 

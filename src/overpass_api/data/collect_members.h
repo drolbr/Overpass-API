@@ -208,10 +208,7 @@ void get_elements_by_id_from_db_generic(
     const Predicate& pred, const Ranges< Index >& ranges,
     const Statement& query, Resource_Manager& rman)
 {
-  if (rman.get_desired_timestamp() == NOW)
-    collect_items_range(&query, rman, ranges, pred, elements);
-  else
-    collect_items_range_by_timestamp(&query, rman, ranges, pred, elements, attic_elements);
+  collect_items_range(&query, rman, ranges, pred, elements, attic_elements);
 }
 
 
