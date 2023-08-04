@@ -80,8 +80,9 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members
   if (req.empty())
     return result;
 
+  Request_Context context(stmt, rman);
   std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic;
-  collect_items_range(stmt, rman, req,
+  collect_items_range(context, req,
       Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), result, attic);
 
   return result;
@@ -117,7 +118,8 @@ Way_Geometry_Store::Way_Geometry_Store
   if (req.empty())
     return;
 
-  collect_items_range(&query, rman, req,
+  Request_Context context(&query, rman);
+  collect_items_range(context, req,
       Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current, attic);
 
   keep_matching_skeletons(nodes, current, attic, rman.get_desired_timestamp());

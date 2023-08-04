@@ -154,11 +154,12 @@ void Query_Statement::get_elements_by_id_from_db
      const std::vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
      Resource_Manager& rman, File_Properties& file_prop)
 {
+  Request_Context context(this, rman);
   if (!invert_ids)
-    collect_items_flat(*this, rman, file_prop,
+    collect_items_flat(context, file_prop,
 			Id_Predicate< Area_Skeleton >(ids), elements);
   else
-    collect_items_flat(*this, rman, file_prop,
+    collect_items_flat(context, file_prop,
 			Not_Predicate< Area_Skeleton, Id_Predicate< Area_Skeleton > >
 			(Id_Predicate< Area_Skeleton >(ids)), elements);
 }

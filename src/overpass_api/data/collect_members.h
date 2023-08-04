@@ -208,7 +208,8 @@ void get_elements_by_id_from_db_generic(
     const Predicate& pred, const Ranges< Index >& ranges,
     const Statement& query, Resource_Manager& rman)
 {
-  collect_items_range(&query, rman, ranges, pred, elements, attic_elements);
+  Request_Context context(&query, rman);
+  collect_items_range(context, ranges, pred, elements, attic_elements);
 }
 
 
@@ -285,9 +286,8 @@ bool get_elements_by_id_from_db_generic(
 {
   if (ranges.empty())
     return false;
-  return rman.get_desired_timestamp() == NOW
-      ? collect_items_range(&query, rman, ranges, pred, cur_idx, elements)
-      : collect_items_range_by_timestamp(&query, rman, ranges, pred, cur_idx, elements, attic_elements);
+  Request_Context context(&query, rman);
+  return collect_items_range(context, ranges, pred, cur_idx, elements, attic_elements);
 }
 
 

@@ -342,15 +342,12 @@ std::vector< typename Skeleton::Id_Type > find_still_existing_skeletons
   std::vector< typename Skeleton::Id_Type > found_ids;
   std::map< Index, std::vector< Skeleton > > current_result;
   std::map< Index, std::vector< Attic< Skeleton > > > attic_result;
-  if (timestamp == NOW)
-    collect_items_discrete(0, rman, *current_skeleton_file_properties< Skeleton >(), req,
-        Id_Predicate< Skeleton >(searched_ids), current_result);
-  else
-  {
-    collect_items_discrete_by_timestamp(0, rman, req,
-        Id_Predicate< Skeleton >(searched_ids), timestamp, current_result, attic_result);
-    filter_attic_elements(rman, timestamp, current_result, attic_result);
-  }
+  
+  Request_Context context(0, rman);
+  collect_items_discrete(context, req,
+      Id_Predicate< Skeleton >(searched_ids), timestamp, current_result, attic_result);
+  filter_attic_elements(rman, timestamp, current_result, attic_result);
+
   for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current_result.begin();
        it != current_result.end(); ++it)
   {

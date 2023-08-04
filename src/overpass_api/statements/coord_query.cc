@@ -339,12 +339,8 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   std::set< Uint31_Index > way_idxs = calc_parents(node_idxs);
   std::map< Uint31_Index, std::vector< Way_Skeleton > > current_candidates;
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_candidates;
-  if (rman.get_desired_timestamp() == NOW)
-    collect_items_discrete(
-        this, rman, *osm_base_settings().WAYS, way_idxs, Closedness_Predicate(), current_candidates);
-  else
-    collect_items_discrete_by_timestamp(
-        this, rman, way_idxs, Closedness_Predicate(), current_candidates, attic_candidates);
+  Request_Context context(this, rman);
+  collect_items_discrete(context, way_idxs, Closedness_Predicate(), current_candidates, attic_candidates);
   
   if (lat != 100.0)
   {
