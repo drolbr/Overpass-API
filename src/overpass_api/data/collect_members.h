@@ -201,42 +201,6 @@ void filter_relations_by_ranges(
 //-----------------------------------------------------------------------------
 
 
-template < typename Index, typename Object, typename Predicate >
-void get_elements_by_id_from_db_generic(
-    std::map< Index, std::vector< Object > >& elements,
-    std::map< Index, std::vector< Attic< Object > > >& attic_elements,
-    const Predicate& pred, const Ranges< Index >& ranges,
-    const Statement& query, Resource_Manager& rman)
-{
-  Request_Context context(&query, rman);
-  collect_items_range(context, ranges, pred, elements, attic_elements);
-}
-
-
-template < typename TIndex, typename TObject >
-void get_elements_by_id_from_db
-    (std::map< TIndex, std::vector< TObject > >& elements,
-     std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
-     const std::vector< typename TObject::Id_Type >& ids, bool invert_ids,
-     const Statement& query, Resource_Manager& rman)
-{
-  elements.clear();
-  attic_elements.clear();
-  if (invert_ids)
-  {
-    if (rman.get_desired_timestamp() == NOW)
-      collect_items_flat(query, rman, *current_skeleton_file_properties< TObject >(),
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-          elements);
-    else
-      collect_items_flat_by_timestamp(query, rman,
-          Not_Predicate< TObject, Id_Predicate< TObject > >(Id_Predicate< TObject >(ids)),
-          elements, attic_elements);
-  }
-  // otherwise the result is always empty
-}
-
-
 template < typename TIndex, typename TObject >
 void get_elements_from_db
     (std::map< TIndex, std::vector< TObject > >& elements,
@@ -246,8 +210,8 @@ void get_elements_from_db
 {
   elements.clear();
   attic_elements.clear();
-  get_elements_by_id_from_db_generic(
-      elements, attic_elements, Trivial_Predicate< TObject >(), ranges, query, rman);
+  Request_Context context(&query, rman);
+  collect_items_range(context, ranges, Trivial_Predicate< TObject >(), elements, attic_elements);
 }
 
 
@@ -1063,12 +1027,12 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways(
     uint32* role_id = 0);
 
 
-Timeless< Uint31_Index, Way_Skeleton > collect_ways
-    (const Statement& stmt, Resource_Manager& rman,
-     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
-     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
-     const std::vector< int >* pos,
-     const std::vector< Way::Id_Type >& ids, bool invert_ids);
+Timeless< Uint31_Index, Way_Skeleton > collect_ways(
+    const Statement& stmt, Resource_Manager& rman,
+    const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+    const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+    const std::vector< int >* pos,
+    const std::vector< Way::Id_Type >& ids, bool invert_ids);
 
 
 void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into,

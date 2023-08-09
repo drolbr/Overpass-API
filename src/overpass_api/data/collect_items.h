@@ -388,9 +388,7 @@ void collect_items_discrete(Transaction& transaction,
 {
   Block_Backend< Index, Object, typename Container::const_iterator > db
       (transaction.data_index(&file_properties));
-  for (typename Block_Backend< Index, Object, typename Container
-      ::const_iterator >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
   {
     if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
@@ -475,15 +473,16 @@ bool collect_items_range(Request_Context& context,
     std::map< Index, std::vector< Object > >& result,
     std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
+  Ranges< Index > shortened = ranges.skip_start(cur_idx);
+  Block_Backend< Index, Object > current_db(
+      context.data_index(current_skeleton_file_properties< Object >()));
+      
   if (context.get_desired_timestamp() == NOW)
   {
     uint32 count = 0;
     bool too_much_data = false;
-    Block_Backend< Index, Object > db
-        (context.data_index(current_skeleton_file_properties< Object >()));
 
-    Ranges< Index > shortened = ranges.skip_start(cur_idx);
-    for (auto it = db.range_begin(shortened); !(it == db.range_end()); ++it)
+    for (auto it = current_db.range_begin(shortened); !(it == current_db.range_end()); ++it)
     {
       if (too_much_data && !(cur_idx == it.index()))
       {
@@ -504,11 +503,8 @@ bool collect_items_range(Request_Context& context,
   }
   else
   {
-    Ranges< Index > shortened = ranges.skip_start(cur_idx);
-    Block_Backend< Index, Object > current_db
-        (context.data_index(current_skeleton_file_properties< Object >()));
-    Block_Backend< Index, Attic< typename Object::Delta > > attic_db
-        (context.data_index(attic_skeleton_file_properties< Object >()));
+    Block_Backend< Index, Attic< typename Object::Delta > > attic_db(
+        context.data_index(attic_skeleton_file_properties< Object >()));
 
     return collect_items_by_timestamp(context.get_health_guard(),
         current_db.range_begin(shortened), current_db.range_end(),
