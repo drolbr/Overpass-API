@@ -249,7 +249,7 @@ void Area_Updater::update_area_tags_local
 	index.key = it2->first;
 	index.value = it2->second;
 	db_to_insert[index].insert(rit->first.id);
-	db_to_delete[index];
+	db_to_delete[index].insert(rit->first.id);
       }
       ++rit;
     }
@@ -293,7 +293,7 @@ void Area_Updater::update_area_tags_global
 	index.key = it2->first;
 	index.value = it2->second;
 	db_to_insert[index].insert(rit->first.id);
-	db_to_delete[index];
+	db_to_delete[index].insert(rit->first.id);
       }
       ++rit;
     }
