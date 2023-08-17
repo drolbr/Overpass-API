@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>

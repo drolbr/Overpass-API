@@ -82,7 +82,7 @@ namespace
   constexpr uint64 THRESHOLD_8 = 8*1024;
   constexpr uint64 THRESHOLD_16 = 512*1024;
   constexpr uint64 THRESHOLD_24 = 32*1024*1024;
-};
+}
 
 
 inline uint calc_tag_split_level(uint64 cnt)

@@ -243,7 +243,7 @@ inline const std::string& void_tag_value()
 {
   static std::string void_value = " ";
   if (void_value == " ")
-    void_value[0] = 0xff;
+    void_value[0] = '\xff';
   return void_value;
 }
 

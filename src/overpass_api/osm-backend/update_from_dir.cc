@@ -79,7 +79,8 @@ void process_source_files(const std::string& source_dir,
       throw File_Error(errno, (source_dir + *it), "update_from_dir:1");
     ++it;
   }
-};
+}
+
 
 int main(int argc, char* argv[])
 {

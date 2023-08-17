@@ -126,7 +126,8 @@ string default_color(string ref)
   result[5] = hex((color & 0x0000f0)/0x10);
   result[6] = hex(color & 0x00000f);
   return result;
-};
+}
+
 
 struct StopFeature
 {

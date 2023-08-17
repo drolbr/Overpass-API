@@ -40,7 +40,7 @@ struct Watchdog_Callback
 namespace Diff_Action
 {
   enum _ { positive, collect_lhs, collect_rhs_no_del, collect_rhs_with_del, show_old, show_new };
-};
+}
 
 
 class Runtime_Stack_Frame

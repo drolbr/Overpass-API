@@ -108,7 +108,6 @@ Ranges< Index > Ranges< Index >::skip_start(Index lower_bound) const
 }
 
 
-#include <iostream>
 template< typename Index >
 void Ranges< Index >::sort()
 {

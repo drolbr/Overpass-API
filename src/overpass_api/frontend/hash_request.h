@@ -19,8 +19,9 @@
 #ifndef DE__OSM3S___OVERPASS_API__FRONTEND__HASH_REQUEST_H
 #define DE__OSM3S___OVERPASS_API__FRONTEND__HASH_REQUEST_H
 
-
+#include <cstdint>
 #include <string>
+
 
 std::string sanitize_string(const std::string& input, bool anonymize);
 

@@ -71,7 +71,7 @@ expat_wrapper_text_handler(void *data, const XML_Char *s, int len)
 namespace
 {
   XML_Parser current_parser = 0;
-};
+}
 
 
 void parse(FILE* in,

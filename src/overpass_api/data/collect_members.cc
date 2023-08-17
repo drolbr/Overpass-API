@@ -20,6 +20,8 @@
 #include "collect_members.h"
 #include "utils.h"
 
+#include <cstdint>
+
 //-----------------------------------------------------------------------------
 
 template< typename Container >
