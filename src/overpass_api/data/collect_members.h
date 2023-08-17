@@ -137,11 +137,10 @@ std::vector< Node::Id_Type > relation_node_member_ids
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
      const uint32* role_id = 0);
 
-std::vector< Relation::Id_Type > relation_relation_member_ids
-    (Resource_Manager& rman,
-     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
-     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
-     const uint32* role_id = 0);
+std::vector< Relation::Id_Type > relation_relation_member_ids(
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
+    const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
+    const uint32* role_id = 0);
 
 std::vector< Node::Id_Type > way_nd_ids(
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
@@ -847,94 +846,22 @@ Ranges< Uint31_Index > relation_way_member_indices
 }
 
 
-Ranges< Uint31_Index > relation_relation_member_indices
-    (const Statement& stmt, Resource_Manager& rman,
-     std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
-     std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end);
+Ranges< Uint32_Index > calc_node_children_ranges(const std::vector< uint32 >& way_rel_idxs);
 
 
-Ranges< Uint31_Index > relation_relation_member_indices
-    (const Statement& stmt, Resource_Manager& rman,
-     std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_begin,
-     std::map< Uint31_Index, std::vector< Relation_Skeleton > >::const_iterator rels_end,
-     std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator attic_rels_begin,
-     std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >::const_iterator attic_rels_end);
+Ranges< Uint32_Index > relation_node_member_indices(
+    const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& current_rels,
+    const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels);
 
 
-Ranges< Uint32_Index > collect_node_req
-    (const Statement* stmt, Resource_Manager& rman, const std::vector< uint32 >& parents);
+Ranges< Uint32_Index > way_nd_indices(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways);
 
 
-inline Ranges< Uint32_Index > relation_node_member_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& current_rels,
-     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels)
-{
-  std::vector< uint32 > parents;
-
-  for (auto it = current_rels.begin(); it != current_rels.end(); ++it)
-  {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
-    {
-      // Treat relations with really large indices: get the node indexes from the segement indexes
-      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      {
-        for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
-            it3 != it2->node_idxs.end(); ++it3)
-          parents.push_back(it3->val());
-      }
-    }
-    else
-      parents.push_back(it->first.val());
-  }
-  for (auto it = attic_rels.begin(); it != attic_rels.end(); ++it)
-  {
-    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
-    {
-      // Treat relations with really large indices: get the node indexes from the segement indexes
-      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      {
-        for (std::vector< Uint31_Index >::const_iterator it3 = it2->node_idxs.begin();
-            it3 != it2->node_idxs.end(); ++it3)
-          parents.push_back(it3->val());
-      }
-    }
-    else
-      parents.push_back(it->first.val());
-  }
-  if (stmt)
-    rman.health_check(*stmt);
-
-  return collect_node_req(stmt, rman, parents);
-}
-
-
-Ranges< Uint32_Index > way_nd_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end);
-
-
-Ranges< Uint32_Index > way_nd_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
-     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_begin,
-     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end);
-
-
-Ranges< Uint32_Index > way_covered_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end);
-
-
-Ranges< Uint32_Index > way_covered_indices
-    (const Statement* stmt, Resource_Manager& rman,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_begin,
-     std::map< Uint31_Index, std::vector< Way_Skeleton > >::const_iterator ways_end,
-     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_begin,
-     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >::const_iterator attic_ways_end);
+Ranges< Uint32_Index > way_covered_indices(
+    const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
+    const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways);
 
 
 struct Order_By_Node_Id

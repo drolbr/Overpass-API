@@ -859,7 +859,7 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
     // Retrieve all node and way members referred by the relations.
     add_nodes(relation_node_members(
         &query, rman, input.attic_relations,
-        relation_node_member_indices(&query, rman, {}, input.attic_relations)));
+        relation_node_member_indices({}, input.attic_relations)));
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members

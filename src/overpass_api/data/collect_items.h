@@ -84,6 +84,8 @@ public:
   uint64 get_desired_timestamp() const { return rman.get_desired_timestamp(); }
   File_Blocks_Index_Base* data_index(const File_Properties* file_properties)
   { return rman.get_transaction()->data_index(file_properties); }
+  Random_File_Index* random_index(const File_Properties* file_properties)
+  { return rman.get_transaction()->random_index(file_properties); }
   
 private:
   const Statement* stmt;

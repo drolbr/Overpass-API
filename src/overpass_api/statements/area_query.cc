@@ -77,12 +77,7 @@ bool Area_Constraint::get_ranges
       return true;
 
     area->get_ranges(input->ways, input->areas, area_blocks_req, rman);
-
-    if (rman.get_desired_timestamp() == NOW)
-      ranges = way_covered_indices(area, rman, input->ways.begin(), input->ways.end());
-    else
-      ranges = way_covered_indices(area, rman, input->ways.begin(), input->ways.end(),
-          input->attic_ways.begin(), input->attic_ways.end());
+    ranges = way_covered_indices(input->ways, input->attic_ways);
   }
   else
   {

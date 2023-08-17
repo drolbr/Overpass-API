@@ -570,11 +570,10 @@ Ranges< Uint32_Index > Recurse_Constraint::get_node_ranges(Resource_Manager& rma
 
   if (stmt->get_type() == RECURSE_RELATION_NODE || stmt->get_type() == RECURSE_RELATION_NWR
       || stmt->get_type() == RECURSE_RELATION_NW || stmt->get_type() == RECURSE_RELATION_NR)
-    return relation_node_member_indices(stmt, rman, input->relations, input->attic_relations);
+    return relation_node_member_indices(input->relations, input->attic_relations);
   else if (stmt->get_type() == RECURSE_WAY_NODE || stmt->get_type() == RECURSE_WAY_LINK
       || stmt->get_type() == RECURSE_WAY_COUNT)
-    return way_nd_indices(stmt, rman, input->ways.begin(), input->ways.end(),
-        input->attic_ways.begin(), input->attic_ways.end());
+    return way_nd_indices(input->ways, input->attic_ways);
 
   return Ranges< Uint32_Index >::global();
 }
@@ -860,7 +859,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
         || stmt->get_type() == RECURSE_RELATION_WR || stmt->get_type() == RECURSE_RELATION_NR)
       Timeless< Uint31_Index, Relation_Skeleton >{}.swap(into.relations, into.attic_relations)
           .filter_items(Id_Predicate< Relation_Skeleton >(
-              relation_relation_member_ids(rman, input->relations, input->attic_relations, &role_id)))
+              relation_relation_member_ids(input->relations, input->attic_relations, &role_id)))
           .swap(into.relations, into.attic_relations);
     else if (stmt->get_type() == RECURSE_NODE_RELATION)
       Timeless< Uint31_Index, Relation_Skeleton >{}.swap(into.relations, into.attic_relations)
@@ -931,7 +930,7 @@ void Recurse_Constraint::filter(Resource_Manager& rman, Set& into)
       || stmt->get_type() == RECURSE_RELATION_WR || stmt->get_type() == RECURSE_RELATION_NR)
     Timeless< Uint31_Index, Relation_Skeleton >{}.swap(into.relations, into.attic_relations)
         .filter_items(Id_Predicate< Relation_Skeleton >(
-            relation_relation_member_ids(rman, input->relations, input->attic_relations)))
+            relation_relation_member_ids(input->relations, input->attic_relations)))
         .swap(into.relations, into.attic_relations);
   else if (stmt->get_type() == RECURSE_NODE_RELATION)
     Timeless< Uint31_Index, Relation_Skeleton >{}.swap(into.relations, into.attic_relations)

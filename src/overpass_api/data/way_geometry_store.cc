@@ -42,7 +42,7 @@ Ranges< Uint32_Index > small_way_nd_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, parents);
+  return calc_node_children_ranges(parents);
 }
 
 
