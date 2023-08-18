@@ -325,13 +325,14 @@ NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Se
 {
   // Collect all objects required for context
 
+  Request_Context context(&stmt, rman);
   if (bbox)
   {
     Bbox_Filter filter(*bbox);
-    add_nw_member_objects(rman, &stmt, input_set, relevant_nwrs, &filter.get_ranges_32(), &filter.get_ranges_31());
+    add_nw_member_objects(context, input_set, relevant_nwrs, &filter.get_ranges_32(), &filter.get_ranges_31());
   }
   else
-    add_nw_member_objects(rman, &stmt, input_set, relevant_nwrs);
+    add_nw_member_objects(context, input_set, relevant_nwrs);
 
   Set extra_ways;
   if (rman.get_desired_timestamp() == NOW)

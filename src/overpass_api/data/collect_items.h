@@ -338,6 +338,47 @@ bool collect_items_by_timestamp(Health_Guard&& health_guard,
 }
 
 
+template< typename Index, typename Object >
+struct Timeless
+{
+  Timeless& swap(
+      std::map< Index, std::vector< Object > >& rhs_current,
+      std::map< Index, std::vector< Attic< Object > > >& rhs_attic)
+  {
+    current.swap(rhs_current);
+    attic.swap(rhs_attic);
+    return *this;
+  }
+  
+  Timeless& sort()
+  {
+    sort_second(current);
+    sort_second(attic);
+    return *this;
+  }
+  
+  Timeless& set_union(const Timeless< Index, Object >& rhs)
+  {
+    indexed_set_union(current, rhs.current);
+    indexed_set_union(attic, rhs.attic);
+    return *this;
+  }
+  
+  template< typename Predicate >
+  Timeless& filter_items(const Predicate& predicate)
+  {
+    ::filter_items(predicate, current);
+    ::filter_items(predicate, attic);
+    return *this;
+  }
+  
+  Timeless& filter_by_id(const std::vector< typename Object::Id_Type >& ids);
+
+  std::map< Index, std::vector< Object > > current;
+  std::map< Index, std::vector< Attic< Object > > > attic;
+};
+
+
 template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
 bool collect_items_by_timestamp(Health_Guard&& health_guard,
                    Current_Iterator current_begin, Current_Iterator current_end,
@@ -438,14 +479,13 @@ void collect_items_discrete(Request_Context& context,
 }
 
 
-template < class Index, class Object, class Predicate >
-void collect_items_range(Request_Context& context,
-    const Ranges< Index >& ranges, const Predicate& predicate,
-    std::map< Index, std::vector< Object > >& result,
-    std::map< Index, std::vector< Attic< Object > > >& attic_result)
+template< typename Index, typename Object, typename Predicate >
+Timeless< Index, Object > collect_items_range(Request_Context& context,
+    const Ranges< Index >& ranges, const Predicate& predicate)
 {
-  if (ranges.empty())
-    return;
+  Timeless< Index, Object > result;
+  if (ranges.empty() || !predicate.possible())
+    return result;
 
   Block_Backend< Index, Object > current_db
       (context.data_index(current_skeleton_file_properties< Object >()));
@@ -454,7 +494,7 @@ void collect_items_range(Request_Context& context,
     for (auto it = current_db.range_begin(ranges); !(it == current_db.range_end()); ++it)
     {
       if (predicate.match(it.handle()))
-        result[it.index()].push_back(it.object());
+        result.current[it.index()].push_back(it.object());
     }
   }
   else
@@ -464,8 +504,9 @@ void collect_items_range(Request_Context& context,
     collect_items_by_timestamp(context.get_health_guard(),
         current_db.range_begin(ranges), current_db.range_end(),
         attic_db.range_begin(ranges), attic_db.range_end(),
-        predicate, (Index*)0, context.get_desired_timestamp(), result, attic_result);
+        predicate, (Index*)0, context.get_desired_timestamp(), result.current, result.attic);
   }
+  return result;
 }
 
 

@@ -29,55 +29,56 @@
 template < class Object, class TPredicateA, class TPredicateB >
 class And_Predicate
 {
-  public:
-    And_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
-        : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
-    bool match(const Object& obj) const { return (predicate_a.match(obj) && predicate_b.match(obj)); }
-    bool match(const Handle< Object >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
-    bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
+public:
+  And_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
+      : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
+  bool match(const Object& obj) const { return (predicate_a.match(obj) && predicate_b.match(obj)); }
+  bool match(const Handle< Object >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
+  bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
 
-  private:
-    TPredicateA predicate_a;
-    TPredicateB predicate_b;
+private:
+  TPredicateA predicate_a;
+  TPredicateB predicate_b;
 };
 
 template < class Object, class TPredicateA, class TPredicateB >
 class Or_Predicate
 {
-  public:
-    Or_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
-        : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
-    bool match(const Object& obj) const { return (predicate_a.match(obj) || predicate_b.match(obj)); }
-    bool match(const Handle< Object >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
-    bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
+public:
+  Or_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
+      : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
+  bool match(const Object& obj) const { return (predicate_a.match(obj) || predicate_b.match(obj)); }
+  bool match(const Handle< Object >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
+  bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
 
-  private:
-    TPredicateA predicate_a;
-    TPredicateB predicate_b;
+private:
+  TPredicateA predicate_a;
+  TPredicateB predicate_b;
 };
 
 template < class Object, class TPredicateA >
 class Not_Predicate
 {
-  public:
-    Not_Predicate(const TPredicateA& predicate_a_)
-        : predicate_a(predicate_a_) {}
-    bool match(const Object& obj) const { return (!predicate_a.match(obj)); }
-    bool match(const Handle< Object >& h) const { return (!predicate_a.match(h)); }
-    bool match(const Handle< Attic< Object > >& h) const { return (!predicate_a.match(h)); }
+public:
+  Not_Predicate(const TPredicateA& predicate_a_)
+      : predicate_a(predicate_a_) {}
+  bool match(const Object& obj) const { return (!predicate_a.match(obj)); }
+  bool match(const Handle< Object >& h) const { return (!predicate_a.match(h)); }
+  bool match(const Handle< Attic< Object > >& h) const { return (!predicate_a.match(h)); }
 
-  private:
-    TPredicateA predicate_a;
+private:
+  TPredicateA predicate_a;
 };
 
 template < class Object >
 class Trivial_Predicate
 {
-  public:
-    Trivial_Predicate() {}
-    bool match(const Object& obj) const { return true; }
-    bool match(const Handle< Object >& h) const { return true; }
-    bool match(const Handle< Attic< Object > >& h) const { return true; }
+public:
+  Trivial_Predicate() {}
+  bool match(const Object& obj) const { return true; }
+  bool match(const Handle< Object >& h) const { return true; }
+  bool match(const Handle< Attic< Object > >& h) const { return true; }
+  bool possible() const { return true; }
 };
 
 //-----------------------------------------------------------------------------
@@ -85,15 +86,16 @@ class Trivial_Predicate
 template < class Object >
 class Id_Predicate
 {
-  public:
-    Id_Predicate(const std::vector< typename Object::Id_Type >& ids_)
-      : ids(ids_) {}
-    bool match(const Object& obj) const { return std::binary_search(ids.begin(), ids.end(), obj.id); }
-    bool match(const Handle< Object >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
-    bool match(const Handle< Attic< Object > >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
+public:
+  Id_Predicate(const std::vector< typename Object::Id_Type >& ids_)
+    : ids(ids_) {}
+  bool match(const Object& obj) const { return std::binary_search(ids.begin(), ids.end(), obj.id); }
+  bool match(const Handle< Object >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
+  bool match(const Handle< Attic< Object > >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
+  bool possible() const { return !ids.empty(); }
 
-  private:
-    const std::vector< typename Object::Id_Type >& ids;
+private:
+  const std::vector< typename Object::Id_Type >& ids;
 };
 
 //-----------------------------------------------------------------------------

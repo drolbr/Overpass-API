@@ -322,6 +322,51 @@ Ranges< Uint32_Index > relation_node_member_indices(
 }
 
 
+Ranges< Uint31_Index > relation_way_member_indices
+    (const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& current_rels,
+     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels)
+{
+  std::vector< Uint31_Index > parents;
+  std::vector< Uint31_Index > children_idxs;
+
+  for (auto it = current_rels.begin(); it != current_rels.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+    {
+      // Treat relations with really large indices: get the ways indexes explicitly
+      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      {
+        for (std::vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
+            it3 != it2->way_idxs.end(); ++it3)
+          children_idxs.push_back(*it3);
+      }
+    }
+    else
+      parents.push_back(it->first);
+  }
+  for (auto it = attic_rels.begin(); it != attic_rels.end(); ++it)
+  {
+    if ((it->first.val() & 0x80000000) && ((it->first.val() & 0x3) == 0))
+    {
+      // Treat relations with really large indices: get the ways indexes explicitly
+      for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      {
+        for (std::vector< Uint31_Index >::const_iterator it3 = it2->way_idxs.begin();
+            it3 != it2->way_idxs.end(); ++it3)
+          children_idxs.push_back(*it3);
+      }
+    }
+    else
+      parents.push_back(it->first);
+  }
+
+  std::sort(children_idxs.begin(), children_idxs.end());
+  children_idxs.erase(std::unique(children_idxs.begin(), children_idxs.end()), children_idxs.end());
+
+  return collect_way_req(parents, children_idxs);
+}
+
+
 Ranges< Uint31_Index > uint31_to_ranges(const std::vector< Uint31_Index >& arg)
 {
   Ranges< Uint31_Index > result;
@@ -563,150 +608,107 @@ void sieve_first_arg(
 
 
 Timeless< Uint31_Index, Relation_Skeleton > relation_relation_members
-    (const Statement& stmt, Resource_Manager& rman,
+    (Request_Context& context,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& parents,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_parents,
      const Ranges< Uint31_Index >& children_ranges,
      const std::vector< Relation::Id_Type >& children_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Relation::Id_Type > intersect_ids =
-      relation_relation_member_ids(parents, attic_parents, role_id);
-  rman.health_check(stmt);
+  std::vector< Relation::Id_Type > intersect_ids = relation_relation_member_ids(parents, attic_parents, role_id);
+  context.get_health_guard().check();
   sieve_first_arg(intersect_ids, children_ids, invert_ids);
 
-  Timeless< Uint31_Index, Relation_Skeleton > result;
-  if (intersect_ids.empty())
-    return result;
-
-  Request_Context context(&stmt, rman);
-  if (!children_ranges.is_global())
-    collect_items_range(context, children_ranges,
-        Id_Predicate< Relation_Skeleton >(intersect_ids), result.current, result.attic);      
-  else
-    collect_items_range(context, relation_relation_member_indices(context, parents, attic_parents),
-        Id_Predicate< Relation_Skeleton >(intersect_ids), result.current, result.attic);
-
-  return result;
+  return collect_items_range< Uint31_Index, Relation_Skeleton >(context,
+      children_ranges.is_global()
+      ? relation_relation_member_indices(context, parents, attic_parents) : children_ranges,
+      Id_Predicate< Relation_Skeleton >(intersect_ids));
 }
 
 
 Timeless< Uint31_Index, Way_Skeleton > relation_way_members
-    (const Statement* stmt, Resource_Manager& rman,
+    (Request_Context& context,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
      const Ranges< Uint31_Index >& way_ranges,
      const std::vector< Way::Id_Type >& way_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids(rman, relations, attic_relations, role_id);
-  if (stmt)
-    rman.health_check(*stmt);
+  std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids(relations, attic_relations, role_id);
+  context.get_health_guard().check();
   sieve_first_arg(intersect_ids, way_ids, invert_ids);
 
-  Timeless< Uint31_Index, Way_Skeleton > result;
-  if (intersect_ids.empty())
-    return result;
-
-  Request_Context context(stmt, rman);
-  collect_items_range(context, way_ranges.intersect(
-      relation_way_member_indices< Relation_Skeleton >(stmt, rman, relations, attic_relations)),
-      Id_Predicate< Way_Skeleton >(intersect_ids), result.current, result.attic);
-
-  return result;
+  return collect_items_range< Uint31_Index, Way_Skeleton >(context, way_ranges.intersect(
+      relation_way_member_indices(relations, attic_relations)),
+      Id_Predicate< Way_Skeleton >(intersect_ids));
 }
 
 
 std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > relation_way_members
-    (const Statement* stmt, Resource_Manager& rman,
+    (Request_Context& context,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
      const Ranges< Uint31_Index >& way_ranges)
 {
-  std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids(rman, {}, relations);
-  if (stmt)
-    rman.health_check(*stmt);
+  std::vector< Way::Id_Type > intersect_ids = relation_way_member_ids({}, relations);
+  context.get_health_guard().check();
+
+  auto timeless = collect_items_range< Uint31_Index, Way_Skeleton >(context, way_ranges.intersect(
+      relation_way_member_indices({}, relations)),
+      Id_Predicate< Way_Skeleton >(intersect_ids));
 
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > result;
-  if (intersect_ids.empty())
-    return result;
-
-  // Retrieve all ways referred by the ways.
-  std::map< Uint31_Index, std::vector< Way_Skeleton > > current;
-  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic;
-
-  Request_Context context(stmt, rman);
-  collect_items_range(context, way_ranges.intersect(
-      relation_way_member_indices< Attic< Relation_Skeleton > >(stmt, rman, relations, {})),
-      Id_Predicate< Way_Skeleton >(intersect_ids), current, attic);
-
-  keep_matching_skeletons(result, current, attic, rman.get_desired_timestamp());
-
+  keep_matching_skeletons(result, timeless.current, timeless.attic, context.get_desired_timestamp());
   return result;
 }
 
 
 Timeless< Uint32_Index, Node_Skeleton > paired_items_range(
-    const Statement* stmt, Resource_Manager& rman,
-    const std::vector< Node::Id_Type >& target_ids,
-    const Ranges< Uint32_Index >& ranges)
+    Request_Context& context,
+    const std::vector< Node::Id_Type >& target_ids, const Ranges< Uint32_Index >& ranges)
 {
-  Timeless< Uint32_Index, Node_Skeleton > result;
-  if (target_ids.empty())
-    return result;
-
-  Request_Context context(stmt, rman);
-  collect_items_range(
-      context, ranges, Id_Predicate< Node_Skeleton >(target_ids),
-      result.current, result.attic);
-  keep_matching_skeletons(result.current, result.attic, rman.get_desired_timestamp());
+  auto result = collect_items_range< Uint32_Index, Node_Skeleton >(
+      context, ranges, Id_Predicate< Node_Skeleton >(target_ids));
+  keep_matching_skeletons(result.current, result.attic, context.get_desired_timestamp());
 
   return result;
 }
 
 
 Timeless< Uint32_Index, Node_Skeleton > relation_node_members
-    (const Statement* stmt, Resource_Manager& rman,
+    (Request_Context& context,
      const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_relations,
      const Ranges< Uint32_Index >& node_ranges,
      const std::vector< Node::Id_Type >& node_ids, bool invert_ids, const uint32* role_id)
 {
-  std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(rman, relations, attic_relations, role_id);
-  if (stmt)
-    rman.health_check(*stmt);
+  std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(relations, attic_relations, role_id);
+  context.get_health_guard().check();
   sieve_first_arg(intersect_ids, node_ids, invert_ids);
 
   return paired_items_range(
-      stmt, rman, intersect_ids, node_ranges.intersect(
+      context, intersect_ids, node_ranges.intersect(
           relation_node_member_indices(relations, attic_relations)));
 }
 
 
 std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > relation_node_members
-    (const Statement* stmt, Resource_Manager& rman,
+    (Request_Context& context,
      const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& relations,
      const Ranges< Uint32_Index >& node_ranges)
 {
-  std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(rman, relations, {});
-  if (stmt)
-    rman.health_check(*stmt);
-
-  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > result;
-  if (intersect_ids.empty())
-    return result;
+  std::vector< Node::Id_Type > intersect_ids = relation_node_member_ids(relations, {});
+  context.get_health_guard().check();
 
   // Retrieve all nodes referred by the ways.
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > current;
-  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic;
-  Request_Context context(stmt, rman);
-  collect_items_range(context, node_ranges,
-      Id_Predicate< Node_Skeleton >(intersect_ids), current, attic);
-  keep_matching_skeletons(result, current, attic, rman.get_desired_timestamp());
+  auto timeless = collect_items_range< Uint32_Index, Node_Skeleton >(
+      context, node_ranges, Id_Predicate< Node_Skeleton >(intersect_ids));
 
+  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > result;
+  keep_matching_skeletons(result, timeless.current, timeless.attic, context.get_desired_timestamp());
   return result;
 }
 
 
 Timeless< Uint32_Index, Node_Skeleton > way_members(
-    const Statement* stmt, Resource_Manager& rman,
+    Request_Context& context,
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     const std::vector< int >* pos,
@@ -714,17 +716,16 @@ Timeless< Uint32_Index, Node_Skeleton > way_members(
     const std::vector< Node::Id_Type >& node_ids, bool invert_ids)
 {
   std::vector< Node::Id_Type > intersect_ids = way_nd_ids(ways, attic_ways, pos);
-  if (stmt)
-    rman.health_check(*stmt);
+  context.get_health_guard().check();
   sieve_first_arg(intersect_ids, node_ids, invert_ids);
 
-  return paired_items_range(stmt, rman, intersect_ids,
+  return paired_items_range(context, intersect_ids,
       !node_ranges.is_global() ? node_ranges : way_nd_indices(ways, attic_ways));
 }
 
 
 Timeless< Uint32_Index, Node_Skeleton > way_cnt_members(
-    const Statement* stmt, Resource_Manager& rman,
+    Request_Context& context,
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     unsigned int lower_limit, unsigned int upper_limit,
@@ -732,17 +733,16 @@ Timeless< Uint32_Index, Node_Skeleton > way_cnt_members(
     const std::vector< Node::Id_Type >& node_ids, bool invert_ids)
 {
   std::vector< Node::Id_Type > intersect_ids = way_cnt_nd_ids(ways, attic_ways, lower_limit, upper_limit);
-  if (stmt)
-    rman.health_check(*stmt);
+  context.get_health_guard().check();
   sieve_first_arg(intersect_ids, node_ids, invert_ids);
 
-  return paired_items_range(stmt, rman, intersect_ids,
+  return paired_items_range(context, intersect_ids,
       !node_ranges.is_global() ? node_ranges : way_nd_indices(ways, attic_ways));
 }
 
 
 Timeless< Uint32_Index, Node_Skeleton > way_link_members(
-    const Statement* stmt, Resource_Manager& rman,
+    Request_Context& context,
     const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways,
     const std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > >& attic_ways,
     unsigned int lower_limit, unsigned int upper_limit,
@@ -750,11 +750,10 @@ Timeless< Uint32_Index, Node_Skeleton > way_link_members(
     const std::vector< Node::Id_Type >& node_ids, bool invert_ids)
 {
   std::vector< Node::Id_Type > intersect_ids = way_link_nd_ids(ways, attic_ways, lower_limit, upper_limit);
-  if (stmt)
-    rman.health_check(*stmt);
+  context.get_health_guard().check();
   sieve_first_arg(intersect_ids, node_ids, invert_ids);
 
-  return paired_items_range(stmt, rman, intersect_ids,
+  return paired_items_range(context, intersect_ids,
       !node_ranges.is_global() ? node_ranges : way_nd_indices(ways, attic_ways));
 }
 
@@ -1002,7 +1001,8 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways(
     const std::vector< Way::Id_Type >& ids, bool invert_ids,
     uint32* role_id)
 {
-  return relation_way_members(&query, rman, rels, attic_rels, ranges, ids, invert_ids, role_id);
+  Request_Context context(&query, rman);
+  return relation_way_members(context, rels, attic_rels, ranges, ids, invert_ids, role_id);
 }
 
 
@@ -1017,24 +1017,19 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways
   std::vector< Uint64 > children_ids;
   std::set< Uint31_Index > req;
 
-  if (rman.get_desired_timestamp() == NOW)
+  Request_Context context(&stmt, rman);
+  if (context.get_desired_timestamp() == NOW)
   {
     extract_ids(nodes).swap(children_ids);
-    rman.health_check(stmt);
     extract_parent_indices(nodes).swap(req);
-    rman.health_check(stmt);
   }
   else
   {
     std::vector< Uint64 > current_ids = extract_ids(nodes);
-    rman.health_check(stmt);
     extract_parent_indices(nodes).swap(req);
-    rman.health_check(stmt);
 
     std::vector< Uint64 > attic_ids = extract_ids(attic_nodes);
-    rman.health_check(stmt);
     std::set< Uint31_Index > attic_req = extract_parent_indices(attic_nodes);
-    rman.health_check(stmt);
 
     std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
                   std::back_inserter(children_ids));
@@ -1042,7 +1037,6 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways
       req.insert(*it);
   }
     
-  Request_Context context(&stmt, rman);
   if (!invert_ids)
     collect_items_discrete(context, req,
         And_Predicate< Way_Skeleton,
@@ -1066,25 +1060,23 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways
 }
 
 
-void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const Set& input_set, Set& into,
+void add_nw_member_objects(Request_Context& context, const Set& input_set, Set& into,
     const Ranges< Uint32_Index >* ranges_32_, const Ranges< Uint31_Index >* ranges_31_)
 {
   Ranges< Uint32_Index > ranges_32(ranges_32_ ? *ranges_32_ : Ranges< Uint32_Index >::global());
   Ranges< Uint31_Index > ranges_31(ranges_31_ ? *ranges_31_ : Ranges< Uint31_Index >::global());
   Timeless< Uint32_Index, Node_Skeleton > rel_nodes
-      = relation_node_members(stmt, rman, input_set.relations, input_set.attic_relations, ranges_32, {}, true);
+      = relation_node_members(context, input_set.relations, input_set.attic_relations, ranges_32, {}, true);
 
-  if (rman.get_desired_timestamp() == NOW)
+  if (context.get_desired_timestamp() == NOW)
   {
-    relation_way_members(stmt, rman, input_set.relations, {}, ranges_31, {}, true)
+    relation_way_members(context, input_set.relations, {}, ranges_31, {}, true)
         .swap(into.ways, into.attic_ways);
     std::map< Uint31_Index, std::vector< Way_Skeleton > > source_ways = input_set.ways;
     sort_second(source_ways);
     sort_second(into.ways);
     indexed_set_union(source_ways, into.ways);
-    way_members(
-        stmt, rman, source_ways, {},
-        0, Ranges< Uint32_Index >::global(), {}, true)
+    way_members(context, source_ways, {}, 0, Ranges< Uint32_Index >::global(), {}, true)
         .swap(into.nodes, into.attic_nodes);
     sort_second(into.nodes);
     sort_second(rel_nodes.current);
@@ -1095,7 +1087,7 @@ void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const 
     rel_nodes.swap(into.nodes, into.attic_nodes);
 
     Timeless< Uint31_Index, Way_Skeleton > all_ways
-        = relation_way_members(stmt, rman, input_set.relations, input_set.attic_relations, ranges_31, {}, true);
+        = relation_way_members(context, input_set.relations, input_set.attic_relations, ranges_31, {}, true);
     into.ways = all_ways.current;
     into.attic_ways = all_ways.attic;
     all_ways.sort();
@@ -1108,12 +1100,12 @@ void add_nw_member_objects(Resource_Manager& rman, const Statement* stmt, const 
     indexed_set_union(all_ways.attic, source_attic_ways);
 
     Timeless< Uint32_Index, Node_Skeleton > more_nodes
-        = way_members(stmt, rman, all_ways.current, all_ways.attic, 0, Ranges< Uint32_Index >::global(), {}, true);
+        = way_members(context, all_ways.current, all_ways.attic, 0, Ranges< Uint32_Index >::global(), {}, true);
     more_nodes.sort();
     sort_second(into.nodes);
     sort_second(into.attic_nodes);
     indexed_set_union(into.nodes, more_nodes.current);
     indexed_set_union(into.attic_nodes, more_nodes.attic);
-    keep_matching_skeletons(into.nodes, into.attic_nodes, rman.get_desired_timestamp());
+    keep_matching_skeletons(into.nodes, into.attic_nodes, context.get_desired_timestamp());
   }
 }
