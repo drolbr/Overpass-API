@@ -488,8 +488,8 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     Ranges< Uint32_Index > ranges;
     constraint.get_ranges(rman, ranges);
-    get_elements_from_db< Uint32_Index, Node_Skeleton >(
-        into.nodes, into.attic_nodes, ranges, *this, rman);
+    get_elements_from_db< Uint32_Index, Node_Skeleton >(ranges, *this, rman)
+        .swap(into.nodes, into.attic_nodes);
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
   }
 
@@ -497,8 +497,8 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     Ranges< Uint31_Index > ranges;
     constraint.get_ranges(rman, ranges);
-    get_elements_from_db< Uint31_Index, Way_Skeleton >(
-        into.ways, into.attic_ways, ranges, *this, rman);
+    get_elements_from_db< Uint31_Index, Way_Skeleton >(ranges, *this, rman)
+        .swap(into.ways, into.attic_ways);
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.ways, into.attic_ways);
   }
 
@@ -506,8 +506,8 @@ void User_Statement::execute(Resource_Manager& rman)
   {
     Ranges< Uint31_Index > ranges;
     constraint.get_ranges(rman, ranges);
-    get_elements_from_db< Uint31_Index, Relation_Skeleton >(
-        into.relations, into.attic_relations, ranges, *this, rman);
+    get_elements_from_db< Uint31_Index, Relation_Skeleton >(ranges, *this, rman)
+        .swap(into.relations, into.attic_relations);
     filter_attic_elements(rman, rman.get_desired_timestamp(), into.relations, into.attic_relations);
   }
 

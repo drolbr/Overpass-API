@@ -337,13 +337,13 @@ NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Se
   Set extra_ways;
   if (rman.get_desired_timestamp() == NOW)
   {
-    collect_ways(stmt, rman, relevant_nwrs.nodes, {}, 0, {}, true).swap(extra_ways.ways, extra_ways.attic_ways);
+    collect_ways(context, relevant_nwrs.nodes, {}, 0, {}, true).swap(extra_ways.ways, extra_ways.attic_ways);
     sort_second(extra_ways.ways);
     indexed_set_union(relevant_nwrs.ways, extra_ways.ways);
   }
   else
   {
-    collect_ways(stmt, rman, relevant_nwrs.nodes, relevant_nwrs.attic_nodes, 0,
+    collect_ways(context, relevant_nwrs.nodes, relevant_nwrs.attic_nodes, 0,
                  {}, true).swap(extra_ways.ways, extra_ways.attic_ways);
     indexed_set_union(relevant_nwrs.attic_ways, extra_ways.attic_ways);
     indexed_set_union(relevant_nwrs.ways, extra_ways.ways);

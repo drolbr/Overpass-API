@@ -994,30 +994,28 @@ void keep_matching_skeletons
 
 
 Timeless< Uint31_Index, Way_Skeleton > collect_ways(
-    const Statement& query, Resource_Manager& rman,
+    Request_Context& context,
     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
     const Ranges< Uint31_Index >& ranges,
     const std::vector< Way::Id_Type >& ids, bool invert_ids,
     uint32* role_id)
 {
-  Request_Context context(&query, rman);
   return relation_way_members(context, rels, attic_rels, ranges, ids, invert_ids, role_id);
 }
 
 
-Timeless< Uint31_Index, Way_Skeleton > collect_ways
-    (const Statement& stmt, Resource_Manager& rman,
-     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
-     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
-     const std::vector< int >* pos,
-     const std::vector< Way::Id_Type >& ids, bool invert_ids)
+Timeless< Uint31_Index, Way_Skeleton > collect_ways(
+    Request_Context& context,
+    const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
+    const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
+    const std::vector< int >* pos,
+    const std::vector< Way::Id_Type >& ids, bool invert_ids)
 {
   Timeless< Uint31_Index, Way_Skeleton > result;
   std::vector< Uint64 > children_ids;
   std::set< Uint31_Index > req;
 
-  Request_Context context(&stmt, rman);
   if (context.get_desired_timestamp() == NOW)
   {
     extract_ids(nodes).swap(children_ids);

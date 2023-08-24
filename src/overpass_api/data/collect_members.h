@@ -158,16 +158,12 @@ void filter_relations_by_ranges(
 //-----------------------------------------------------------------------------
 
 
-template < typename TIndex, typename TObject >
-void get_elements_from_db
-    (std::map< TIndex, std::vector< TObject > >& elements,
-     std::map< TIndex, std::vector< Attic< TObject > > >& attic_elements,
-     const Ranges< TIndex >& ranges,
-     const Statement& query, Resource_Manager& rman)
+template < typename Index, typename Skeleton >
+Timeless< Index, Skeleton > get_elements_from_db(
+    const Ranges< Index >& ranges, const Statement& query, Resource_Manager& rman)
 {
   Request_Context context(&query, rman);
-  collect_items_range< TIndex, TObject >(context, ranges, Trivial_Predicate< TObject >())
-      .swap(elements, attic_elements);
+  return collect_items_range< Index, Skeleton >(context, ranges, Trivial_Predicate< Skeleton >());
 }
 
 
@@ -323,14 +319,10 @@ void filter_attic_elements
             typename std::vector< Index >::const_iterator >
         attic_meta_db(rman.get_transaction()->data_index
           (attic_meta_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+    for (auto it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
         !(it == attic_meta_db.discrete_end()); ++it)
     {
-      typename std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >::iterator
-          tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
+      auto tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
       if (tit != timestamp_by_id_by_idx[it.index()].end())
       {
         if (timestamp < it.object().timestamp)
@@ -346,14 +338,10 @@ void filter_attic_elements
         meta_db(rman.get_transaction()->data_index
           (current_meta_file_properties< Skeleton >()));
 
-    for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-            typename std::vector< Index >::const_iterator >
-        ::Discrete_Iterator
-        it = meta_db.discrete_begin(idx_set.begin(), idx_set.end());
+    for (auto it = meta_db.discrete_begin(idx_set.begin(), idx_set.end());
         !(it == meta_db.discrete_end()); ++it)
     {
-      typename std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >::iterator
-          tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
+      auto tit = timestamp_by_id_by_idx[it.index()].find(it.object().ref);
       if (tit != timestamp_by_id_by_idx[it.index()].end())
       {
         if (timestamp < it.object().timestamp)
@@ -743,11 +731,6 @@ void filter_relations_expensive(const std::vector< std::pair< Uint32_Index, cons
 }
 
 
-std::vector< Uint31_Index > collect_way_req
-    (const Statement* stmt, Resource_Manager& rman,
-     const std::vector< uint32 >& parents,
-     const std::vector< uint32 >& map_ids,
-     const std::vector< Uint31_Index >& children_idxs);
 Ranges< Uint31_Index > collect_way_req(
     const std::vector< Uint31_Index >& parents,
     const std::vector< Uint31_Index >& children_idxs);
@@ -858,7 +841,7 @@ std::set< Uint31_Index > extract_parent_indices(const std::map< TIndex, std::vec
 
 
 Timeless< Uint31_Index, Way_Skeleton > collect_ways(
-    const Statement& query, Resource_Manager& rman,
+    Request_Context& context,
     const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& rels,
     const std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > >& attic_rels,
     const Ranges< Uint31_Index >& ranges,
@@ -867,7 +850,7 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways(
 
 
 Timeless< Uint31_Index, Way_Skeleton > collect_ways(
-    const Statement& stmt, Resource_Manager& rman,
+    Request_Context& context,
     const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes,
     const std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >& attic_nodes,
     const std::vector< int >* pos,

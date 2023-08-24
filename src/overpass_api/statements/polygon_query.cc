@@ -548,8 +548,8 @@ void Polygon_Query_Statement::execute(Resource_Manager& rman)
   Polygon_Constraint constraint(*this);
   Ranges< Uint32_Index > ranges;
   constraint.get_ranges(rman, ranges);
-  get_elements_from_db< Uint32_Index, Node_Skeleton >(
-      into.nodes, into.attic_nodes, ranges, *this, rman);
+  get_elements_from_db< Uint32_Index, Node_Skeleton >(ranges, *this, rman)
+      .swap(into.nodes, into.attic_nodes);
   constraint.filter(rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
