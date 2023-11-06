@@ -89,7 +89,14 @@
   ]
 }
 </pre>
-<p>The payload is contained between the brackets after <em>elements</em>. Each element is contained in a pair of curly braces, and two elements are separate by a comma. The <em>date</em> is constructed in the same way as for the <a href="#xml.date">XML format</a>.</p>
+<p>The payload is contained between the brackets after <em>elements</em>. Each element is contained in a pair of curly braces, and two elements are separate by a comma.</p>
+
+<p>As with XML, if a query involves areas a second timestamp is included, here as another property of the <em>osm3s</em> object with key <em>timestamp_areas_base</em>:</p>
+<pre>
+&quot;timestamp_areas_base&quot;: &quot;<em>date</em>&quot;,
+</pre>
+
+<p>The <em>date</em> value of both timestamp properties are constructed in the same way as for the <a href="#xml.date">XML format</a>.</p>
 
 <p>We discuss the <em>node</em> representation (and <a href="#json.way">further down</a> the representations of
 <em>way</em>s and <em>relation</em>s) by examples:</p>
