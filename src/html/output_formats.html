@@ -26,7 +26,7 @@
 
 <p>The format generally follows the <a href="https://wiki.openstreetmap.org/wiki/XML">description in the wiki</a>. It doesn't contain a <em>bounds</em> tag, and it may contain certain additional tags. Anyway, in all cases <a href="https://www.w3.org/TR/REC-xml/">well-formed XML</a> is returned.</p>
 
-<p>A response (<a href="api/interpreter?data=out;">an example</a>) from Overpass API has always the following header and footer:</p>
+<p>A response (<a href="//overpass-api.de/api/interpreter?data=out;">an example</a>) from Overpass API has always the following header and footer:</p>
 <pre>
 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
 &lt;osm version=&quot;0.6&quot; generator=&quot;Overpass API&quot;&gt;
@@ -70,10 +70,10 @@
 
 <p>To get a response in format JSON, start the request with a <em>[out:json]</em> directive, for example:</p>
 <pre>
-<a href="api/interpreter?data=[out:json];out;">/api/interpreter?data=<strong>[out:json];</strong>out;</a>
+<a href="//overpass-api.de/api/interpreter?data=[out:json];out;">/api/interpreter?data=<strong>[out:json];</strong>out;</a>
 </pre>
 
-<p>A response (<a href="api/interpreter?data=[out:json];out;">an example</a>) from Overpass API always has the following header and footer:</p>
+<p>A response (<a href="//overpass-api.de/api/interpreter?data=[out:json];out;">an example</a>) from Overpass API always has the following header and footer:</p>
 <pre>
 {
   &quot;version&quot;: 0.6,
@@ -194,19 +194,19 @@
 
 <p>The simplest variant is the redirect with potential disambiguation page. We give two examples:</p>
 <ul>
-<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=&quot;A 555&quot;][network=BAB];out;</a> (at the moment without disambiguation page).</li>
-<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;</a> (with disambiguation page).</li>
+<li><a href="//overpass-api.de/api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=&quot;A 555&quot;][network=BAB];out;</a> (at the moment without disambiguation page).</li>
+<li><a href="//overpass-api.de/api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;</a> (with disambiguation page).</li>
 </ul>
 <p>In the first example, no disambiguation is necessary because the search criteria describe an unique object. In the second example, three objects exist and do so for good reason. Thus, a disambiguation page is necessary and therefore displayed.</p>
 
 <p>If you want always a disambiguation page, you can add the directive <em>redirect=no</em> to the end. This forces a disambiguation page to be displayed:</p>
 <ul>
-<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B&amp;redirect=no">/api/interpreter?data=[out:custom];rel[ref=&quot;A 555&quot;][network=BAB];out;<strong>&amp;redirect=no</strong></a> (at the moment without disambiguation page).</li>
+<li><a href="//overpass-api.de/api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B&amp;redirect=no">/api/interpreter?data=[out:custom];rel[ref=&quot;A 555&quot;][network=BAB];out;<strong>&amp;redirect=no</strong></a> (at the moment without disambiguation page).</li>
 </ul>
 
 <p>You can of course also change the destination URL. Add <em>url=</em>something to the end. For example, we replace the element view on the main database by a full map view in the above query:</p>
 <ul>
-<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B&amp;url=https://www.openstreetmap.org/?{{{type}}}={{{id}}}">/api/interpreter?data=[out:custom];rel[ref=&quot;A 555&quot;][network=BAB];out;<strong>&amp;url=https://www.openstreetmap.org/?{{{type}}}={{{id}}}</strong></a> (at the moment without disambiguation page).</li>
+<li><a href="//overpass-api.de/api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%22A%20555%22%5D%5B%22network%22%3D%22BAB%22%5D%3Bout%3B&amp;url=https://www.openstreetmap.org/?{{{type}}}={{{id}}}">/api/interpreter?data=[out:custom];rel[ref=&quot;A 555&quot;][network=BAB];out;<strong>&amp;url=https://www.openstreetmap.org/?{{{type}}}={{{id}}}</strong></a> (at the moment without disambiguation page).</li>
 </ul>
 <p>Note that the URL usually depends on the id and the type of the found results. To customize this, you can add the placeholders <em>{{{type}}}</em> and <em>{{{id}}}</em> anywhere in the URL; these will be replaced by the proper type (<em>node</em>, <em>way</em> or <em>relation</em>) and the id of the found object.</p>
 
@@ -217,8 +217,8 @@
 </ul>
 <p>By default, <em>default.wiki</em> is used as template. To select another template, for example the just introduced <em>base.wiki</em>, use the <em>template=</em>something directive. Please compare:</p>
 <ul>
-<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B&amp;template=default.wiki">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;<strong>&amp;template=default.wiki</strong></a> (same as without template parameter).</li>
-<li><a href="api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B&amp;template=base.wiki">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;<strong>&amp;template=base.wiki</strong></a> (use the basic layout instead).</li>
+<li><a href="//overpass-api.de/api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B&amp;template=default.wiki">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;<strong>&amp;template=default.wiki</strong></a> (same as without template parameter).</li>
+<li><a href="//overpass-api.de/api/interpreter?data=%5Bout%3Acustom%5D%3Brelation%5B%22ref%22%3D%2263%22%5D%5B%22network%22%3D%22VRS%22%5D%3Bout%3B&amp;template=base.wiki">/api/interpreter?data=<strong>[out:custom];</strong>rel[ref=63][network=VRS];out;<strong>&amp;template=base.wiki</strong></a> (use the basic layout instead).</li>
 </ul>
 <p>Technically, the template is taken from the subdirectory <em>templates</em> of the database directory of the server. For the public instances, there exist also a mechanism to upload a completetly custom template from the wiki to this directory. The upload mechanism is explained on <a href="https://wiki.openstreetmap.org/Overpass_API/Permanent_ID">the Wiki employment page</a>. The syntax of the template page is explained in the following:</p>
 
