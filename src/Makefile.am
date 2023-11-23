@@ -268,6 +268,7 @@ nobase_dist_HEADERS = \
   overpass_api/osm-backend/area_updater.h\
   overpass_api/osm-backend/basic_updater.h\
   overpass_api/osm-backend/clone_database.h\
+  overpass_api/osm-backend/map_file_replicator.h\
   overpass_api/osm-backend/meta_updater.h\
   overpass_api/osm-backend/node_updater.h\
   overpass_api/osm-backend/osm_updater.h\

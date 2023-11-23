@@ -31,6 +31,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
