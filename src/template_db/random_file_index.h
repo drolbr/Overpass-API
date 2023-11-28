@@ -110,14 +110,14 @@ inline Random_File_Index::Random_File_Index
      const std::string& db_dir, const std::string& file_name_extension, int compression_method_) :
     npos(std::numeric_limits< uint32 >::max()),
     index_file_name(db_dir + file_prop.get_file_name_trunk()
-        + file_prop.get_id_suffix()
+        + file_name_extension + file_prop.get_id_suffix()
         + file_prop.get_index_suffix()
 	+ (use_shadow ? file_prop.get_shadow_suffix() : "")),
     empty_index_file_name(writeable ? db_dir + file_prop.get_file_name_trunk()
         + file_prop.get_id_suffix()
         + file_prop.get_shadow_suffix() : ""),
     map_file_name(db_dir + file_prop.get_file_name_trunk()
-        + file_prop.get_id_suffix()),
+        + file_name_extension + file_prop.get_id_suffix()),
     file_name_extension_(file_name_extension),
     void_blocks_initialized(false),
     block_size_(file_prop.get_map_block_size()),
