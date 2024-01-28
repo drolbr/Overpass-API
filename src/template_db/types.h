@@ -91,6 +91,10 @@ struct File_Blocks_Index_Base
 };
 
 
+enum class Access_Mode
+{ readonly, writeable, truncate };
+
+
 struct File_Properties
 {
   virtual const std::string& get_file_name_trunk() const = 0;
@@ -110,14 +114,10 @@ struct File_Properties
 
   // The returned object is of type File_Blocks_Index< .. >*
   // and goes into the ownership of the caller.
-  virtual File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  virtual File_Blocks_Index_Base* new_data_index(
+      Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const = 0;
 };
-
-
-enum class Access_Mode
-{ readonly, writeable, truncate };
 
 
 /** Simple RAII class to keep a file descriptor. */

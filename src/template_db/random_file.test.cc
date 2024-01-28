@@ -154,8 +154,8 @@ struct Test_File : File_Properties
     return IntIndex::max_size_of();
   }
 
-  File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  File_Blocks_Index_Base* new_data_index(
+      Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
     throw std::string();

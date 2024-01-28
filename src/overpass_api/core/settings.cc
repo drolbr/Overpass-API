@@ -71,13 +71,13 @@ struct OSM_File_Properties : public File_Properties
     return TVal::max_size_of();
   }
 
-  File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  File_Blocks_Index_Base* new_data_index(
+      Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    if (writeable)
+    if (access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate)
       return new Writeable_File_Blocks_Index< TVal >
-          (*this, use_shadow, db_dir, file_name_extension);
+          (*this, access_mode, use_shadow, db_dir, file_name_extension);
     return new Readonly_File_Blocks_Index< TVal >
         (*this, use_shadow, db_dir, file_name_extension);
   }

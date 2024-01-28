@@ -59,7 +59,7 @@ struct File_Blocks_Index_File
 public:
   File_Blocks_Index_File(
       const File_Properties& file_prop, const std::string& db_dir,
-      bool use_shadow, const std::string& file_name_extension);
+      Access_Mode access_mode, bool use_shadow, const std::string& file_name_extension);
   const uint8* header() const { return buf.ptr; }
   const uint8* begin() const { return buf.ptr ? buf.ptr + 8 : 0; }
   const uint8* end() const { return buf.ptr + size_; }
@@ -234,7 +234,7 @@ struct Writeable_File_Blocks_Index : public File_Blocks_Index_Base
 {
 public:
   Writeable_File_Blocks_Index(
-      const File_Properties& file_prop, bool use_shadow,
+      const File_Properties& file_prop, Access_Mode access_mode, bool use_shadow,
       const std::string& db_dir, const std::string& file_name_extension,
       int compression_method_ = USE_DEFAULT);
   virtual ~Writeable_File_Blocks_Index();
@@ -389,7 +389,7 @@ void File_Blocks_Index_Iterator< Index >::seek(const Index& target)
 
 inline File_Blocks_Index_File::File_Blocks_Index_File(
     const File_Properties& file_prop, const std::string& db_dir,
-    bool use_shadow, const std::string& file_name_extension)
+    Access_Mode access_mode, bool use_shadow, const std::string& file_name_extension)
     : file_name(db_dir + file_prop.get_file_name_trunk()
         + file_name_extension + file_prop.get_data_suffix()
         + file_prop.get_index_suffix()
@@ -398,12 +398,20 @@ inline File_Blocks_Index_File::File_Blocks_Index_File(
 {
   try
   {
-    Raw_File source_file(file_name, O_RDONLY, S_666, "File_Blocks_Index::File_Blocks_Index::3");
+    if (access_mode == Access_Mode::truncate)
+    {
+      Raw_File(file_name, O_WRONLY|O_TRUNC, S_666, "File_Blocks_Index_File::File_Blocks_Index_File::1");
+      buf.resize(0);
+    }
+    else
+    {
+      Raw_File source_file(file_name, O_RDONLY, S_666, "File_Blocks_Index_File::File_Blocks_Index_File::2");
 
-    // read index file
-    size_ = source_file.size("File_Blocks_Index::File_Blocks_Index::4");
-    buf.resize(size_);
-    source_file.read(buf.ptr, size_, "File_Blocks_Index::File_Blocks_Index::5");
+      // read index file
+      size_ = source_file.size("File_Blocks_Index_File::File_Blocks_Index_File::3");
+      buf.resize(size_);
+      source_file.read(buf.ptr, size_, "File_Blocks_Index_File::File_Blocks_Index_File::4");
+    }
   }
   catch (File_Error e)
   {
@@ -493,10 +501,10 @@ Readonly_File_Blocks_Index< Index >::Readonly_File_Blocks_Index(
 
 template< class Index >
 Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
-    (const File_Properties& file_prop, bool use_shadow,
+    (const File_Properties& file_prop, Access_Mode access_mode, bool use_shadow,
      const std::string& db_dir, const std::string& file_name_extension,
      int compression_method_) :
-     idx_file(file_prop, db_dir, use_shadow, file_name_extension), idx_file_buf_valid(true),
+     idx_file(file_prop, db_dir, access_mode, use_shadow, file_name_extension), idx_file_buf_valid(true),
      empty_index_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()
          + file_prop.get_shadow_suffix()),

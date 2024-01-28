@@ -100,9 +100,7 @@ inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
   if (it != data_files.end())
     return it->second;
 
-  File_Blocks_Index_Base* data_index = fp->new_data_index(
-      access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate,
-      use_shadow, db_dir, file_name_extension);
+  File_Blocks_Index_Base* data_index = fp->new_data_index(access_mode, use_shadow, db_dir, file_name_extension);
   if (data_index != 0)
     data_files[fp] = data_index;
   return data_index;

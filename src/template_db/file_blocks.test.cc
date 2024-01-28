@@ -180,13 +180,13 @@ struct Test_File : File_Properties
     return 0;
   }
 
-  File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  File_Blocks_Index_Base* new_data_index(
+      Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    if (writeable)
+    if (access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate)
       return new Writeable_File_Blocks_Index< IntIndex >
-          (*this, use_shadow, db_dir, file_name_extension);
+          (*this, access_mode, use_shadow, db_dir, file_name_extension);
     return new Readonly_File_Blocks_Index< IntIndex >
         (*this, use_shadow, db_dir, file_name_extension);
   }
@@ -274,13 +274,13 @@ struct Variable_Block_Test_File : File_Properties
     return 0;
   }
 
-  File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  File_Blocks_Index_Base* new_data_index(
+      Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    if (writeable)
+    if (access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate)
       return new Writeable_File_Blocks_Index< IntIndex >
-          (*this, use_shadow, db_dir, file_name_extension);
+          (*this, access_mode, use_shadow, db_dir, file_name_extension);
     return new Readonly_File_Blocks_Index< IntIndex >
         (*this, use_shadow, db_dir, file_name_extension);
   }
@@ -372,13 +372,13 @@ struct Compressed_Test_File : File_Properties
     return 0;
   }
 
-  File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  File_Blocks_Index_Base* new_data_index(
+      Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    if (writeable)
+    if (access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate)
       return new Writeable_File_Blocks_Index< IntIndex >
-          (*this, use_shadow, db_dir, file_name_extension);
+          (*this, access_mode, use_shadow, db_dir, file_name_extension);
     return new Readonly_File_Blocks_Index< IntIndex >
         (*this, use_shadow, db_dir, file_name_extension);
   }
