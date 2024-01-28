@@ -626,7 +626,7 @@ int main(int argc, char* argv[])
 
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     if (dump)
     {
       dump_nodes(transaction, db_dir, 10000000000, attic);

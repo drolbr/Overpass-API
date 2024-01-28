@@ -107,7 +107,7 @@ int main(int argc, char* args[])
   {
     if ((test_to_execute == "") || (test_to_execute == "1"))
     {
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
 
@@ -117,7 +117,7 @@ int main(int argc, char* args[])
     }
     if ((test_to_execute == "") || (test_to_execute == "2"))
     {
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "_", pattern_size, global_node_offset, transaction);
 
@@ -126,7 +126,7 @@ int main(int argc, char* args[])
     }
     if ((test_to_execute == "") || (test_to_execute == "3"))
     {
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
 
@@ -136,7 +136,7 @@ int main(int argc, char* args[])
     }
     if ((test_to_execute == "") || (test_to_execute == "4"))
     {
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       fill_loop_set(rman, "A", pattern_size, global_node_offset, transaction);
 

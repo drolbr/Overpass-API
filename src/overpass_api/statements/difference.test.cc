@@ -59,7 +59,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[2], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
 	Resource_Manager rman(transaction, &global_settings);
 
 	const char* attributes[] = { 0 };
@@ -95,7 +95,7 @@ int main(int argc, char* args[])
     try
     {
       {
-        Nonsynced_Transaction transaction(false, false, args[2], "");
+        Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { 0 };
@@ -131,7 +131,7 @@ int main(int argc, char* args[])
     try
     {
       {
-        Nonsynced_Transaction transaction(false, false, args[2], "");
+        Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { 0 };
@@ -167,7 +167,7 @@ int main(int argc, char* args[])
     try
     {
       {
-        Nonsynced_Transaction transaction(false, false, args[2], "");
+        Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { 0 };
@@ -189,7 +189,7 @@ int main(int argc, char* args[])
         }
       }
       {
-        Nonsynced_Transaction transaction(false, false, args[2], "");
+        Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { 0 };
@@ -223,7 +223,7 @@ int main(int argc, char* args[])
     try
     {
       {
-        Nonsynced_Transaction transaction(false, false, args[2], "");
+        Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes[] = { "into", "A", 0 };
@@ -257,7 +257,7 @@ int main(int argc, char* args[])
     try
     {
       {
-        Nonsynced_Transaction transaction(false, false, args[2], "");
+        Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
         Resource_Manager rman(transaction, &global_settings);
 
         const char* attributes0[] = { "type", "way", "ref", "1", 0 };

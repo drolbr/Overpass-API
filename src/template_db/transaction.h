@@ -40,9 +40,8 @@ class Transaction
 class Nonsynced_Transaction : public Transaction
 {
   public:
-    Nonsynced_Transaction
-        (bool writeable, bool use_shadow,
-	 const std::string& db_dir, const std::string& file_name_extension);
+    Nonsynced_Transaction(
+        Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension);
     virtual ~Nonsynced_Transaction();
 
     File_Blocks_Index_Base* data_index(const File_Properties*);
@@ -56,15 +55,16 @@ class Nonsynced_Transaction : public Transaction
       data_files;
     std::map< const File_Properties*, Random_File_Index* >
       random_files;
-    bool writeable, use_shadow;
+    Access_Mode access_mode;
+    bool use_shadow;
     std::string file_name_extension, db_dir;
 };
 
 
-inline Nonsynced_Transaction::Nonsynced_Transaction
-    (bool writeable_, bool use_shadow_,
-     const std::string& db_dir_, const std::string& file_name_extension_)
-  : writeable(writeable_), use_shadow(use_shadow_),
+inline Nonsynced_Transaction::Nonsynced_Transaction(
+    Access_Mode access_mode_, bool use_shadow_,
+    const std::string& db_dir_, const std::string& file_name_extension_)
+  : access_mode(access_mode_), use_shadow(use_shadow_),
     file_name_extension(file_name_extension_), db_dir(db_dir_)
 {
   signal(SIGTERM, sigterm);
@@ -100,8 +100,9 @@ inline File_Blocks_Index_Base* Nonsynced_Transaction::data_index
   if (it != data_files.end())
     return it->second;
 
-  File_Blocks_Index_Base* data_index = fp->new_data_index
-      (writeable, use_shadow, db_dir, file_name_extension);
+  File_Blocks_Index_Base* data_index = fp->new_data_index(
+      access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate,
+      use_shadow, db_dir, file_name_extension);
   if (data_index != 0)
     data_files[fp] = data_index;
   return data_index;
@@ -115,7 +116,7 @@ inline Random_File_Index* Nonsynced_Transaction::random_index(const File_Propert
   if (it != random_files.end())
     return it->second;
 
-  random_files[fp] = new Random_File_Index(*fp, writeable, use_shadow, db_dir, file_name_extension);
+  random_files[fp] = new Random_File_Index(*fp, access_mode, use_shadow, db_dir, file_name_extension);
   return random_files[fp];
 }
 

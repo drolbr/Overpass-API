@@ -509,8 +509,7 @@ Osm_Updater::Osm_Updater(Osm_Backend_Callback* callback_, const std::string& dat
   logger.annotated_log("write_start() start version='" + data_version_ + '\'');
   dispatcher_client->write_start();
   logger.annotated_log("write_start() end");
-  transaction = new Nonsynced_Transaction
-      (true, true, dispatcher_client->get_db_dir(), "");
+  transaction = new Nonsynced_Transaction(Access_Mode::writeable, true, dispatcher_client->get_db_dir(), "");
   {
     std::ofstream version((dispatcher_client->get_db_dir()
         + "osm_base_version.shadow").c_str());

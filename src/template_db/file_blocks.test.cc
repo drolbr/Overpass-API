@@ -541,7 +541,7 @@ void read_test()
   try
   {
     std::cout<<"Read test\n";
-    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -662,7 +662,7 @@ void variable_block_read_test()
   try
   {
     std::cout<<"Compressed Read test\n";
-    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -698,7 +698,7 @@ void compressed_read_test()
   try
   {
     std::cout<<"Compressed Read test\n";
-    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, BASE_DIRECTORY, "");
     Compressed_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -811,7 +811,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for a file with one entry - part 1\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -838,7 +838,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for a file with one entry - part 2\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -865,7 +865,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for a file with three entries\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -897,7 +897,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test insertion everywhere\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -951,7 +951,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test to replace blocks\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1001,7 +1001,7 @@ int main(int argc, char* args[])
     std::cout<<"** Delete blocks in between\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1032,7 +1032,7 @@ int main(int argc, char* args[])
     std::cout<<"** Delete blocks at the begin and the end\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1061,7 +1061,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test insertion again\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1099,7 +1099,7 @@ int main(int argc, char* args[])
     std::cout<<"** Delete everything\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1130,7 +1130,7 @@ int main(int argc, char* args[])
     std::cout<<"** Insert two series of segments\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1167,7 +1167,7 @@ int main(int argc, char* args[])
     std::cout<<"** Replace by other series of segments\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1235,7 +1235,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test deleting file content\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1262,7 +1262,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test one isolated oversized object\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1295,7 +1295,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test one isolated oversized object plus one ordinary object\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1327,7 +1327,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test one ordinary object plus one isolated oversized object\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1360,7 +1360,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test deleting file content\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1441,7 +1441,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for a compressed file with one entry - part 1\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1470,7 +1470,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for a compressed file with multiple small entries\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1557,7 +1557,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for a compressed file with multiple deletions\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1593,7 +1593,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for the gap filling strategy - part 1\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1629,7 +1629,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for the gap filling strategy - part 2\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1665,7 +1665,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for the gap filling strategy - part 3\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1702,7 +1702,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for the gap filling strategy - part 4\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1740,7 +1740,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for the gap filling strategy - part 5\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1777,7 +1777,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for the gap filling strategy - part 6\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1815,7 +1815,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for the gap filling strategy - with replace block\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Variable_Block_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));
@@ -1880,7 +1880,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for a compressed file with some entries\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Compressed_Test_File tf;
     File_Blocks< IntIndex, IntIterator > blocks
         (transaction.data_index(&tf));

@@ -311,7 +311,7 @@ int main(int argc, char* args[])
       delete tags_source_out;
     }
 
-    Nonsynced_Transaction transaction(false, false, "./", "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, "./", "");
 
     // prepare check update_members - load roles
     std::map< uint32, std::string > roles;

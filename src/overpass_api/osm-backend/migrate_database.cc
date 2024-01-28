@@ -80,7 +80,7 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
   Block_Backend< Timestamp, Change_Entry< typename Skeleton::Id_Type > >
       from_db(transaction.data_index(changelog_file_properties< Skeleton >()));
 
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Nonsynced_Transaction into_transaction(Access_Mode::writeable, false, transaction.get_db_dir(), ".next");
   Block_Backend< Timestamp, typename Skeleton::Id_Type >
       into_db(into_transaction.data_index(changelog_file_properties< Skeleton >()));
   
@@ -245,7 +245,8 @@ int main(int argc, char* argv[])
         dispatcher_client.request_read_and_idx(1, 1, 0, 0);
         logger.annotated_log("migrate_request_read_and_idx() end");
 
-        check_all_files(ver_checker, Nonsynced_Transaction(false, false, dispatcher_client.get_db_dir(), ""));
+        check_all_files(ver_checker, Nonsynced_Transaction(
+            Access_Mode::readonly, false, dispatcher_client.get_db_dir(), ""));
 
         logger.annotated_log("migrate_read_idx_finished() start");
         dispatcher_client.read_idx_finished();
@@ -258,7 +259,8 @@ int main(int argc, char* argv[])
         {
           Dispatcher_Write_Guard guard(&dispatcher_client, logger);
           migrate_listed_files(
-            ver_checker, Nonsynced_Transaction(true, false, dispatcher_client.get_db_dir(), ""), callback);
+            ver_checker, Nonsynced_Transaction(
+                Access_Mode::writeable, false, dispatcher_client.get_db_dir(), ""), callback);
           guard.commit();
         }
         delete callback;
@@ -276,10 +278,12 @@ int main(int argc, char* argv[])
       Osm_Backend_Callback* callback = get_verbatim_callback();
       callback->set_db_dir(db_dir);
 
-      check_all_files(ver_checker, Nonsynced_Transaction(false, false, db_dir, ""));
+      check_all_files(ver_checker, Nonsynced_Transaction(
+          Access_Mode::readonly, false, db_dir, ""));
 
       if (migrate && !ver_checker.files_to_update.empty())
-        migrate_listed_files(ver_checker, Nonsynced_Transaction(true, false, db_dir, ""), callback);
+        migrate_listed_files(
+            ver_checker, Nonsynced_Transaction(Access_Mode::writeable, false, db_dir, ""), callback);
 
       delete callback;
     }

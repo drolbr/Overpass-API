@@ -783,7 +783,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     cpu_stopwatch->start_cpu_timer(2);
 
   if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
+    transaction = new Nonsynced_Transaction(Access_Mode::writeable, false, db_dir, "");
 
   // Prepare collecting all data of existing skeletons
   std::stable_sort(new_data.data.begin(), new_data.data.end());
@@ -1126,8 +1126,8 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
 
 void Way_Updater::merge_files(const std::vector< std::string >& froms, std::string into)
 {
-  Transaction_Collection from_transactions(false, false, db_dir, froms);
-  Nonsynced_Transaction into_transaction(true, false, db_dir, into);
+  Transaction_Collection from_transactions(Access_Mode::readonly, false, db_dir, froms);
+  Nonsynced_Transaction into_transaction(Access_Mode::writeable, false, db_dir, into);
   ::merge_files< Uint31_Index, Way_Skeleton >
       (from_transactions, into_transaction, *osm_base_settings().WAYS);
   ::merge_files< Tag_Index_Local, Way::Id_Type >

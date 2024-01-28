@@ -32,7 +32,7 @@ void replicate_current_map_file(Osm_Backend_Callback* callback, Transaction& tra
   Block_Backend< Index, Skeleton >
       from_db(transaction.data_index(current_skeleton_file_properties< Skeleton >()));
 
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
   Random_File< typename Skeleton::Id_Type, Index >
       into_random(into_transaction.random_index(current_skeleton_file_properties< Skeleton >()));
 
@@ -48,7 +48,7 @@ void replicate_attic_map_file(Osm_Backend_Callback* callback, Transaction& trans
       from_db(transaction.data_index(attic_skeleton_file_properties< Skeleton >()));
 
   std::map< typename Skeleton::Id_Type, std::set< Index > > idx_lists;
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
   {
     Random_File< typename Skeleton::Id_Type, Index >
         into_random(into_transaction.random_index(attic_skeleton_file_properties< Skeleton >()));
@@ -85,7 +85,7 @@ void compare_current_map_files(Transaction& transaction, typename Skeleton::Id_T
   Random_File< typename Skeleton::Id_Type, Index >
       from_random(transaction.random_index(current_skeleton_file_properties< Skeleton >()));
 
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Nonsynced_Transaction into_transaction(Access_Mode::readonly, false, transaction.get_db_dir(), ".next");
   Random_File< typename Skeleton::Id_Type, Index >
       into_random(into_transaction.random_index(current_skeleton_file_properties< Skeleton >()));
 
@@ -119,7 +119,7 @@ void compare_attic_map_files(Transaction& transaction, typename Skeleton::Id_Typ
   Random_File< typename Skeleton::Id_Type, Index >
       from_random(transaction.random_index(attic_skeleton_file_properties< Skeleton >()));
 
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Nonsynced_Transaction into_transaction(Access_Mode::readonly, false, transaction.get_db_dir(), ".next");
   Random_File< typename Skeleton::Id_Type, Index >
       into_random(into_transaction.random_index(attic_skeleton_file_properties< Skeleton >()));
 
@@ -153,7 +153,7 @@ void compare_idx_lists(Transaction& transaction)
   Block_Backend< typename Skeleton::Id_Type, Index > from_db(
       transaction.data_index(attic_idx_list_properties< Skeleton >()));
 
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Nonsynced_Transaction into_transaction(Access_Mode::readonly, false, transaction.get_db_dir(), ".next");
   Block_Backend< typename Skeleton::Id_Type, Index > into_db(
       into_transaction.data_index(attic_idx_list_properties< Skeleton >()));
 

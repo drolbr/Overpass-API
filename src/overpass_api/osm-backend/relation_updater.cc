@@ -50,7 +50,7 @@ Relation_Updater::Relation_Updater(std::string db_dir_, Database_Meta_State::Mod
 void Relation_Updater::load_roles()
 {
   if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
+    transaction = new Nonsynced_Transaction(Access_Mode::writeable, false, db_dir, "");
 
   Block_Backend< Uint32_Index, String_Object > roles_db
       (transaction->data_index(osm_base_settings().RELATION_ROLES));
@@ -1056,7 +1056,7 @@ void Relation_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu
     cpu_stopwatch->start_cpu_timer(3);
 
   if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
+    transaction = new Nonsynced_Transaction(Access_Mode::writeable, false, db_dir, "");
 
   // Prepare collecting all data of existing skeletons
   std::stable_sort(new_data.data.begin(), new_data.data.end());

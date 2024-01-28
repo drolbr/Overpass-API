@@ -60,7 +60,7 @@ int main(int argc, char* args[])
   uint pattern_size = 0;
   pattern_size = atoi(args[2]);
 
-  Nonsynced_Transaction transaction(false, false, args[3], "");
+  Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

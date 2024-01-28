@@ -116,6 +116,10 @@ struct File_Properties
 };
 
 
+enum class Access_Mode
+{ readonly, writeable, truncate };
+
+
 /** Simple RAII class to keep a file descriptor. */
 class Raw_File
 {

@@ -219,7 +219,7 @@ int main(int argc, char* args[])
       delete tags_source_out;
     }
 
-    Nonsynced_Transaction transaction(false, false, "./", "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, "./", "");
 
     // check update_members - compare both files for the result
     Block_Backend< Uint31_Index, Way_Skeleton > ways_db

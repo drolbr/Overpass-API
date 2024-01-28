@@ -58,7 +58,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[2], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
 	Resource_Manager rman(transaction, &global_settings);
 
 	const char* attributes[] = { 0 };
@@ -101,7 +101,7 @@ int main(int argc, char* args[])
     // Test whether union handles properly unsorted, but non-unique content.
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
 
       const char* attributes[] = { 0 };
@@ -135,7 +135,7 @@ int main(int argc, char* args[])
     // Test whether all relevant statements declare properly their output sets.
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
 
       const char* attributes[] = { "into", "A", 0 };
@@ -177,7 +177,7 @@ int main(int argc, char* args[])
     // Test whether union doesn't affect other sets - part 1
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       {
 	const char* attributes[] = { "type", "way", "ref", "1", "into", "A", 0 };
@@ -219,7 +219,7 @@ int main(int argc, char* args[])
     // Test whether union doesn't affect other sets - part 2
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       {
 	const char* attributes[] = { "type", "way", "ref", "1", "into", "A", 0 };
@@ -261,7 +261,7 @@ int main(int argc, char* args[])
     // Test whether union doesn't affect other sets - part 3
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       {
 	const char* attributes[] = { "type", "way", "ref", "1", "into", "A", 0 };

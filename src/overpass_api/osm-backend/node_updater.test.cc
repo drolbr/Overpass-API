@@ -172,7 +172,7 @@ int main(int argc, char* args[])
     std::cout<<'('<<id_idxs.size()<<" nodes checked, "
 	<<false_count<<" are inconsistent)\n";*/
 
-    Nonsynced_Transaction transaction(false, false, "./", "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, "./", "");
 
     // check update_coords - compare both files for the result
     Block_Backend< Uint32_Index, Node_Skeleton > nodes_db

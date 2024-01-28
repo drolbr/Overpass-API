@@ -70,7 +70,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
     }
     else
     {
-      Nonsynced_Transaction into_transaction(true, false, dest_db_dir, "");
+      Nonsynced_Transaction into_transaction(Access_Mode::writeable, false, dest_db_dir, "");
       std::map< TIndex, std::set< TObject > > db_to_insert;
 
       Block_Backend< TIndex, TObject > from_db(transaction.data_index(&src_file_prop));      
@@ -120,7 +120,8 @@ void clone_map_file(const File_Properties& file_prop, Transaction& transaction, 
     Random_File_Index& src_idx = *transaction.random_index(&file_prop);
     Random_File< Key, TIndex > src_file(&src_idx);
 
-    Random_File_Index dest_idx(file_prop, true, false, dest_db_dir, "", clone_settings.map_compression_method);
+    Random_File_Index dest_idx(
+        file_prop, Access_Mode::truncate, false, dest_db_dir, "", clone_settings.map_compression_method);
     Random_File< Key, TIndex > dest_file(&dest_idx);
 
     for (std::vector< uint32 >::size_type i = 0; i < src_idx.get_blocks().size(); ++i)

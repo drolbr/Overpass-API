@@ -1674,7 +1674,7 @@ int main(int argc, char* args[])
 
   try
   {
-    Nonsynced_Transaction transaction(false, false, args[3], "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
 

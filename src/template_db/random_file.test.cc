@@ -178,7 +178,7 @@ void read_test()
       std::cout<<*it;
     std::cout<<'\n';
 
-    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, BASE_DIRECTORY, "");
     Test_File tf;
     Random_File< IntIndex, IntIndex > id_file(transaction.random_index(&tf));
 
@@ -231,7 +231,7 @@ int main(int argc, char* args[])
     std::cout<<"** Test the behaviour for a file with two entries - part 1\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     {
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
@@ -253,7 +253,7 @@ int main(int argc, char* args[])
     std::cout<<"** Add at the end\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
 
@@ -272,7 +272,7 @@ int main(int argc, char* args[])
     std::cout<<"** Overwrite an existing block\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
 
@@ -291,7 +291,7 @@ int main(int argc, char* args[])
     std::cout<<"** Write a second block\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
 
@@ -310,7 +310,7 @@ int main(int argc, char* args[])
     std::cout<<"** Write several blocks at once.\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
 
@@ -331,7 +331,7 @@ int main(int argc, char* args[])
     std::cout<<"** Leave a gap.\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
 
@@ -350,7 +350,7 @@ int main(int argc, char* args[])
     std::cout<<"** Fill the gap.\n";
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
 
