@@ -3,29 +3,29 @@
   <!-- Test case overview: see init.osm -->
 
 <delete>
-  <node id="1502" version="4" timestamp="2013-07-01T09:04:12" changeset="496" uid="42" user="foo"/>
-  <node id="1503" version="4" timestamp="2013-07-01T09:04:13" changeset="496" uid="42" user="foo"/>
-  <node id="1504" version="4" timestamp="2013-07-01T09:04:14" changeset="496" uid="42" user="foo"/>
-  <node id="1505" version="4" timestamp="2013-07-01T09:04:15" changeset="496" uid="42" user="foo"/>
+  <node id="1502" version="4" timestamp="2013-07-01T09:04:12Z" changeset="496" uid="42" user="foo"/>
+  <node id="1503" version="4" timestamp="2013-07-01T09:04:13Z" changeset="496" uid="42" user="foo"/>
+  <node id="1504" version="4" timestamp="2013-07-01T09:04:14Z" changeset="496" uid="42" user="foo"/>
+  <node id="1505" version="4" timestamp="2013-07-01T09:04:15Z" changeset="496" uid="42" user="foo"/>
 </delete>
 <create>
-  <node id="1505" lat="20.0" lon="15.05" version="5" timestamp="2013-07-01T09:04:25" changeset="496" uid="42" user="foo">
+  <node id="1505" lat="20.0" lon="15.05" version="5" timestamp="2013-07-01T09:04:25Z" changeset="496" uid="42" user="foo">
     <tag k="foo" v="bar_1505"/>
     <tag k="foo_1505" v="bar"/>
   </node>
 </create>
 <delete>
-  <node id="1505" version="6" timestamp="2013-07-01T09:04:35" changeset="496" uid="42" user="foo"/>
+  <node id="1505" version="6" timestamp="2013-07-01T09:04:35Z" changeset="496" uid="42" user="foo"/>
 </delete>
 
 <delete>
-  <way id="1502" version="4" timestamp="2013-07-01T09:04:12" changeset="496" uid="42" user="foo"/>
-  <way id="1503" version="4" timestamp="2013-07-01T09:04:13" changeset="496" uid="42" user="foo"/>
-  <way id="1504" version="4" timestamp="2013-07-01T09:04:14" changeset="496" uid="42" user="foo"/>
-  <way id="1505" version="4" timestamp="2013-07-01T09:04:15" changeset="496" uid="42" user="foo"/>
+  <way id="1502" version="4" timestamp="2013-07-01T09:04:12Z" changeset="496" uid="42" user="foo"/>
+  <way id="1503" version="4" timestamp="2013-07-01T09:04:13Z" changeset="496" uid="42" user="foo"/>
+  <way id="1504" version="4" timestamp="2013-07-01T09:04:14Z" changeset="496" uid="42" user="foo"/>
+  <way id="1505" version="4" timestamp="2013-07-01T09:04:15Z" changeset="496" uid="42" user="foo"/>
 </delete>
 <create>
-  <way id="1505" version="5" timestamp="2013-07-01T09:04:25" changeset="496" uid="42" user="foo">
+  <way id="1505" version="5" timestamp="2013-07-01T09:04:25Z" changeset="496" uid="42" user="foo">
     <nd ref="15051"/>
     <nd ref="15052"/>
     <nd ref="15055"/>
@@ -34,17 +34,17 @@
   </way>
 </create>
 <delete>
-  <way id="1505" version="6" timestamp="2013-07-01T09:04:35" changeset="496" uid="42" user="foo"/>
+  <way id="1505" version="6" timestamp="2013-07-01T09:04:35Z" changeset="496" uid="42" user="foo"/>
 </delete>
 <modify>
-  <way id="1911" version="4" timestamp="2013-07-01T09:04:11" changeset="496" uid="42" user="foo">
+  <way id="1911" version="4" timestamp="2013-07-01T09:04:11Z" changeset="496" uid="42" user="foo">
     <nd ref="19113"/>
     <nd ref="19114"/>
     <nd ref="19111"/>
     <tag k="foo" v="bar_1911"/>
     <tag k="foo_1911" v="bar"/>
   </way>
-  <way id="1912" version="3" timestamp="2013-07-01T09:04:11" changeset="496" uid="42" user="foo">
+  <way id="1912" version="3" timestamp="2013-07-01T09:04:11Z" changeset="496" uid="42" user="foo">
     <nd ref="19122"/>
     <nd ref="19123"/>
     <nd ref="19124"/>
@@ -55,13 +55,13 @@
 </modify>
 
 <delete>
-  <relation id="1502" version="4" timestamp="2013-07-01T09:04:12" changeset="496" uid="42" user="foo"/>
-  <relation id="1503" version="4" timestamp="2013-07-01T09:04:13" changeset="496" uid="42" user="foo"/>
-  <relation id="1504" version="4" timestamp="2013-07-01T09:04:14" changeset="496" uid="42" user="foo"/>
-  <relation id="1505" version="4" timestamp="2013-07-01T09:04:15" changeset="496" uid="42" user="foo"/>
+  <relation id="1502" version="4" timestamp="2013-07-01T09:04:12Z" changeset="496" uid="42" user="foo"/>
+  <relation id="1503" version="4" timestamp="2013-07-01T09:04:13Z" changeset="496" uid="42" user="foo"/>
+  <relation id="1504" version="4" timestamp="2013-07-01T09:04:14Z" changeset="496" uid="42" user="foo"/>
+  <relation id="1505" version="4" timestamp="2013-07-01T09:04:15Z" changeset="496" uid="42" user="foo"/>
 </delete>
 <create>
-  <relation id="1505" version="5" timestamp="2013-07-01T09:04:25" changeset="496" uid="42" user="foo">
+  <relation id="1505" version="5" timestamp="2013-07-01T09:04:25Z" changeset="496" uid="42" user="foo">
     <member type="node" ref="150510" role=""/>
     <member type="node" ref="150540" role=""/>
     <tag k="foo" v="bar_1505"/>
@@ -69,7 +69,7 @@
   </relation>
 </create>
 <delete>
-  <relation id="1505" version="6" timestamp="2013-07-01T09:04:35" changeset="496" uid="42" user="foo"/>
+  <relation id="1505" version="6" timestamp="2013-07-01T09:04:35Z" changeset="496" uid="42" user="foo"/>
 </delete>
 
 </osm>

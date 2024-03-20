@@ -89,7 +89,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[3], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
 
         fill_set_with_all_types(rman, global_node_offset, global_settings, "a");
@@ -119,7 +119,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[3], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
 
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
@@ -149,7 +149,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[3], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
 
         fill_set_with_all_types(rman, global_node_offset, global_settings, "a");
@@ -185,7 +185,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[3], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
 
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
@@ -221,7 +221,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[3], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
 
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
@@ -271,7 +271,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[3], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
 
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");
@@ -311,7 +311,7 @@ int main(int argc, char* args[])
     try
     {
       {
-	Nonsynced_Transaction transaction(false, false, args[3], "");
+	Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 	Resource_Manager rman(transaction, &global_settings);
 
         fill_set_with_all_types(rman, global_node_offset, global_settings, "_");

@@ -20,6 +20,7 @@
 #define DE__OSM3S___OVERPASS_API__DATA__COLLECT_ITEMS_H
 
 #include "../dispatch/resource_manager.h"
+#include "abstract_processing.h"
 #include "filenames.h"
 
 #include <exception>
@@ -59,8 +60,41 @@ void reconstruct_items(
 class Statement;
 
 
+class Health_Guard
+{
+public:
+  Health_Guard(const Statement* stmt_, Resource_Manager& rman_) : stmt(stmt_), rman(rman_) {}
+  
+  void log_and_display_error(const std::string& message) const { rman.log_and_display_error(message); }
+  bool check(uint32 extra_time = 0, uint64 extra_space = 0)
+  { return (stmt) && rman.health_check(*stmt, extra_time, extra_space); }
+  
+private:
+  const Statement* stmt;
+  Resource_Manager& rman;
+};
+
+
+class Request_Context
+{
+public:
+  Request_Context(const Statement* stmt_, Resource_Manager& rman_) : stmt(stmt_), rman(rman_) {}
+  
+  Health_Guard get_health_guard() { return Health_Guard(stmt, rman); }
+  uint64 get_desired_timestamp() const { return rman.get_desired_timestamp(); }
+  File_Blocks_Index_Base* data_index(const File_Properties* file_properties)
+  { return rman.get_transaction()->data_index(file_properties); }
+  Random_File_Index* random_index(const File_Properties* file_properties)
+  { return rman.get_transaction()->random_index(file_properties); }
+  
+private:
+  const Statement* stmt;
+  Resource_Manager& rman;
+};
+
+
 template < class Index, class Object, class Attic_Iterator, class Current_Iterator, class Predicate >
-void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
+void reconstruct_items(Health_Guard& health_guard,
     Current_Iterator& current_it, Current_Iterator current_end,
     Attic_Iterator& attic_it, Attic_Iterator attic_end, Index& idx,
     const Predicate& predicate,
@@ -134,7 +168,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
         std::ostringstream out;
         out<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
             <<Timestamp((*it)->timestamp).str()<<".";
-        rman.log_and_display_error(out.str());
+        health_guard.log_and_display_error(out.str());
       }
     }
     catch (const std::exception& e)
@@ -142,7 +176,7 @@ void reconstruct_items(const Statement* stmt, Resource_Manager& rman,
       std::ostringstream out;
       out<<name_of_type< Object >()<<" "<<(*it)->id.val()<<" cannot be expanded at timestamp "
           <<Timestamp((*it)->timestamp).str()<<": "<<e.what();
-      rman.log_and_display_error(out.str());
+      health_guard.log_and_display_error(out.str());
     }
   }
 
@@ -195,7 +229,8 @@ void filter_items_by_timestamp(
 
 template< typename Object >
 void check_for_duplicated_objects(
-    const std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id, Resource_Manager& rman)
+    const std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id,
+    Health_Guard& health_guard)
 {
   // Debug-Feature. Can be disabled once no further bugs appear
   for (typename std::vector< std::pair< typename Object::Id_Type, uint64 > >::size_type i = 0;
@@ -207,14 +242,14 @@ void check_for_duplicated_objects(
       std::ostringstream out;
       out<<name_of_type< Object >()<<" "<<timestamp_by_id[i].first.val()
           <<" appears multiple times at timestamp "<<Timestamp(timestamp_by_id[i].second).str();
-      rman.log_and_display_error(out.str());
+      health_guard.log_and_display_error(out.str());
     }
   }
 }
 
 
 template < class Index, class Object, class Current_Iterator, class Attic_Iterator, class Predicate >
-bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+bool collect_items_by_timestamp(Health_Guard&& health_guard,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
                    const Predicate& predicate, Index* cur_idx, uint64 timestamp,
@@ -230,11 +265,8 @@ bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     if (++count >= 128*1024)
     {
       count = 0;
-      if (stmt)
-      {
-        rman.health_check(*stmt, 0, eval_map(result));
-        rman.health_check(*stmt, 0, eval_map(attic_result));
-      }
+      health_guard.check(eval_map(result));
+      health_guard.check(eval_map(attic_result));
     }
     Index index =
         (attic_begin == attic_end ||
@@ -256,14 +288,14 @@ bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     filter_items_by_timestamp(timestamp_by_id, result[index]);
     filter_items_by_timestamp(timestamp_by_id, attic_result[index]);
 
-    check_for_duplicated_objects< Object >(timestamp_by_id, rman);
+    //check_for_duplicated_objects< Object >(timestamp_by_id, rman);
   }
   return false;
 }
 
 
 template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
-bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+bool collect_items_by_timestamp(Health_Guard&& health_guard,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
                    const Predicate& predicate, Index* cur_idx, uint64 timestamp,
@@ -279,11 +311,8 @@ bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     if (++count >= 128*1024)
     {
       count = 0;
-      if (stmt)
-      {
-        rman.health_check(*stmt, 0, eval_map(result));
-        rman.health_check(*stmt, 0, eval_map(attic_result));
-      }
+      health_guard.check(0, eval_map(result));
+      health_guard.check(0, eval_map(attic_result));
     }
     Index index =
         (attic_begin == attic_end ||
@@ -295,7 +324,7 @@ bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
       return true;
     }
 
-    reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end, index,
+    reconstruct_items(health_guard, current_begin, current_end, attic_begin, attic_end, index,
                       predicate, result[index], attic_result[index], timestamp_by_id, timestamp);
 
     std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
@@ -303,14 +332,55 @@ bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     filter_items_by_timestamp(timestamp_by_id, result[index]);
     filter_items_by_timestamp(timestamp_by_id, attic_result[index]);
 
-    check_for_duplicated_objects< Relation_Skeleton >(timestamp_by_id, rman);
+    //check_for_duplicated_objects< Relation_Skeleton >(timestamp_by_id, rman);
   }
   return false;
 }
 
 
+template< typename Index, typename Object >
+struct Timeless
+{
+  Timeless& swap(
+      std::map< Index, std::vector< Object > >& rhs_current,
+      std::map< Index, std::vector< Attic< Object > > >& rhs_attic)
+  {
+    current.swap(rhs_current);
+    attic.swap(rhs_attic);
+    return *this;
+  }
+  
+  Timeless& sort()
+  {
+    sort_second(current);
+    sort_second(attic);
+    return *this;
+  }
+  
+  Timeless& set_union(const Timeless< Index, Object >& rhs)
+  {
+    indexed_set_union(current, rhs.current);
+    indexed_set_union(attic, rhs.attic);
+    return *this;
+  }
+  
+  template< typename Predicate >
+  Timeless& filter_items(const Predicate& predicate)
+  {
+    ::filter_items(predicate, current);
+    ::filter_items(predicate, attic);
+    return *this;
+  }
+  
+  Timeless& filter_by_id(const std::vector< typename Object::Id_Type >& ids);
+
+  std::map< Index, std::vector< Object > > current;
+  std::map< Index, std::vector< Attic< Object > > > attic;
+};
+
+
 template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
-bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+bool collect_items_by_timestamp(Health_Guard&& health_guard,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
                    const Predicate& predicate, Index* cur_idx, uint64 timestamp,
@@ -326,11 +396,8 @@ bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     if (++count >= 128*1024)
     {
       count = 0;
-      if (stmt)
-      {
-        rman.health_check(*stmt, 0, eval_map(result));
-        rman.health_check(*stmt, 0, eval_map(attic_result));
-      }
+      health_guard.check(0, eval_map(result));
+      health_guard.check(0, eval_map(attic_result));
     }
     Index index =
         (attic_begin == attic_end ||
@@ -342,7 +409,7 @@ bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
       return true;
     }
 
-    reconstruct_items(stmt, rman, current_begin, current_end, attic_begin, attic_end, index,
+    reconstruct_items(health_guard, current_begin, current_end, attic_begin, attic_end, index,
                       predicate, result[index], attic_result[index], timestamp_by_id, timestamp);
 
     std::sort(timestamp_by_id.begin(), timestamp_by_id.end());
@@ -350,34 +417,9 @@ bool collect_items_by_timestamp(const Statement* stmt, Resource_Manager& rman,
     filter_items_by_timestamp(timestamp_by_id, result[index]);
     filter_items_by_timestamp(timestamp_by_id, attic_result[index]);
 
-    check_for_duplicated_objects< Way_Skeleton >(timestamp_by_id, rman);
+    //check_for_duplicated_objects< Way_Skeleton >(timestamp_by_id, rman);
   }
   return false;
-}
-
-
-template < class Index, class Object, class Container, class Predicate >
-void collect_items_discrete(const Statement* stmt, Resource_Manager& rman,
-		   File_Properties& file_properties,
-		   const Container& req, const Predicate& predicate,
-		   std::map< Index, std::vector< Object > >& result)
-{
-  uint32 count = 0;
-  Block_Backend< Index, Object, typename Container::const_iterator > db
-      (rman.get_transaction()->data_index(&file_properties));
-  for (typename Block_Backend< Index, Object, typename Container
-      ::const_iterator >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
-  {
-    if (++count >= 256*1024)
-    {
-      count = 0;
-      if (stmt)
-        rman.health_check(*stmt, 0, eval_map(result));
-    }
-    if (predicate.match(it.handle()))
-      result[it.index()].push_back(it.object());
-  }
 }
 
 
@@ -389,9 +431,7 @@ void collect_items_discrete(Transaction& transaction,
 {
   Block_Backend< Index, Object, typename Container::const_iterator > db
       (transaction.data_index(&file_properties));
-  for (typename Block_Backend< Index, Object, typename Container
-      ::const_iterator >::Discrete_Iterator
-      it(db.discrete_begin(req.begin(), req.end())); !(it == db.discrete_end()); ++it)
+  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
   {
     if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
@@ -399,142 +439,139 @@ void collect_items_discrete(Transaction& transaction,
 }
 
 
+// Used by Set_Comparison
 template < class Index, class Object, class Container, class Predicate >
-void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager& rman,
-                   const Container& req, const Predicate& predicate,
-                   std::map< Index, std::vector< Object > >& result,
-                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
-{
-  Block_Backend< Index, Object, typename Container::const_iterator > current_db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-  Block_Backend< Index, Attic< typename Object::Delta >, typename Container::const_iterator > attic_db
-      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
-  collect_items_by_timestamp(stmt, rman,
-      current_db.discrete_begin(req.begin(), req.end()), current_db.discrete_end(),
-      attic_db.discrete_begin(req.begin(), req.end()), attic_db.discrete_end(),
-      predicate, (Index*)0, rman.get_desired_timestamp(), result, attic_result);
-}
-
-
-template < class Index, class Object, class Container, class Predicate >
-void collect_items_discrete_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+void collect_items_discrete(Request_Context& context,
                    const Container& req, const Predicate& predicate, uint64 timestamp,
                    std::map< Index, std::vector< Object > >& result,
                    std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
-  Block_Backend< Index, Object, typename Container::const_iterator > current_db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-  Block_Backend< Index, Attic< typename Object::Delta >, typename Container::const_iterator > attic_db
-      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
-  collect_items_by_timestamp(stmt, rman,
-      current_db.discrete_begin(req.begin(), req.end()), current_db.discrete_end(),
-      attic_db.discrete_begin(req.begin(), req.end()), attic_db.discrete_end(),
-      predicate, (Index*)0, timestamp, result, attic_result);
-}
-
-
-template < class Index, class Object, class Predicate >
-bool collect_items_range(const Statement* stmt, Resource_Manager& rman,
-    const Ranges< Index >& ranges, const Predicate& predicate, Index& cur_idx,
-    std::map< Index, std::vector< Object > >& result)
-{
-  uint32 count = 0;
-  bool too_much_data = false;
-  Block_Backend< Index, Object > db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-
-  Ranges< Index > shortened = ranges.skip_start(cur_idx);
-  for (auto it = db.range_begin(shortened); !(it == db.range_end()); ++it)
+  Block_Backend< Index, Object, typename Container::const_iterator > current_db(
+      context.data_index(current_skeleton_file_properties< Object >()));
+  if (timestamp == NOW)
   {
-    if (too_much_data && !(cur_idx == it.index()))
+    for (auto it = current_db.discrete_begin(req.begin(), req.end()); !(it == current_db.discrete_end()); ++it)
     {
-      cur_idx = it.index();
-      return true;
+      if (predicate.match(it.handle()))
+        result[it.index()].push_back(it.object());
     }
-    if (++count >= 256*1024 && stmt)
-    {
-      count = 0;
-      too_much_data = rman.health_check(*stmt, 0, eval_map(result));
-      cur_idx = it.index();
-    }
-    if (predicate.match(it.handle()))
-      result[it.index()].push_back(it.object());
   }
-
-  return false;
-}
-
-
-template < class Index, class Object, class Predicate >
-void collect_items_range(const Statement* stmt, Resource_Manager& rman,
-    const Ranges< Index >& ranges, const Predicate& predicate,
-    std::map< Index, std::vector< Object > >& result)
-{
-  if (ranges.empty())
-    return;
-
-  Block_Backend< Index, Object > db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-  for (auto it = db.range_begin(ranges); !(it == db.range_end()); ++it)
+  else
   {
-    if (predicate.match(it.handle()))
-      result[it.index()].push_back(it.object());
+    Block_Backend< Index, Attic< typename Object::Delta >, typename Container::const_iterator > attic_db(
+        context.data_index(attic_skeleton_file_properties< Object >()));
+
+    collect_items_by_timestamp(context.get_health_guard(),
+        current_db.discrete_begin(req.begin(), req.end()), current_db.discrete_end(),
+        attic_db.discrete_begin(req.begin(), req.end()), attic_db.discrete_end(),
+        predicate, (Index*)0, timestamp, result, attic_result);
   }
 }
 
 
+template < class Index, class Object, class Container, class Predicate >
+void collect_items_discrete(Request_Context& context,
+                   const Container& req, const Predicate& predicate,
+                   std::map< Index, std::vector< Object > >& result,
+                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
+{
+  collect_items_discrete(context, req, predicate, context.get_desired_timestamp(), result, attic_result);
+}
+
+
+template< typename Index, typename Object, typename Predicate >
+Timeless< Index, Object > collect_items_range(Request_Context& context,
+    const Ranges< Index >& ranges, const Predicate& predicate)
+{
+  Timeless< Index, Object > result;
+  if (ranges.empty() || !predicate.possible())
+    return result;
+
+  Block_Backend< Index, Object > current_db
+      (context.data_index(current_skeleton_file_properties< Object >()));
+  if (context.get_desired_timestamp() == NOW)
+  {
+    for (auto it = current_db.range_begin(ranges); !(it == current_db.range_end()); ++it)
+    {
+      if (predicate.match(it.handle()))
+        result.current[it.index()].push_back(it.object());
+    }
+  }
+  else
+  {
+    Block_Backend< Index, Attic< typename Object::Delta > > attic_db
+        (context.data_index(attic_skeleton_file_properties< Object >()));
+    collect_items_by_timestamp(context.get_health_guard(),
+        current_db.range_begin(ranges), current_db.range_end(),
+        attic_db.range_begin(ranges), attic_db.range_end(),
+        predicate, (Index*)0, context.get_desired_timestamp(), result.current, result.attic);
+  }
+  return result;
+}
+
+
 template < class Index, class Object, class Predicate >
-bool collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
+bool collect_items_range(Request_Context& context,
     const Ranges< Index >& ranges, const Predicate& predicate, Index& cur_idx,
     std::map< Index, std::vector< Object > >& result,
     std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Ranges< Index > shortened = ranges.skip_start(cur_idx);
-  Block_Backend< Index, Object > current_db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-  Block_Backend< Index, Attic< typename Object::Delta > > attic_db
-      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
-  return collect_items_by_timestamp(stmt, rman,
-      current_db.range_begin(shortened), current_db.range_end(),
-      attic_db.range_begin(shortened), attic_db.range_end(),
-      predicate, &cur_idx, rman.get_desired_timestamp(), result, attic_result);
+  Block_Backend< Index, Object > current_db(
+      context.data_index(current_skeleton_file_properties< Object >()));
+      
+  if (context.get_desired_timestamp() == NOW)
+  {
+    uint32 count = 0;
+    bool too_much_data = false;
+
+    for (auto it = current_db.range_begin(shortened); !(it == current_db.range_end()); ++it)
+    {
+      if (too_much_data && !(cur_idx == it.index()))
+      {
+        cur_idx = it.index();
+        return true;
+      }
+      if (++count >= 256*1024)
+      {
+        count = 0;
+        too_much_data = context.get_health_guard().check(0, eval_map(result));
+        cur_idx = it.index();
+      }
+      if (predicate.match(it.handle()))
+        result[it.index()].push_back(it.object());
+    }
+
+    return false;
+  }
+  else
+  {
+    Block_Backend< Index, Attic< typename Object::Delta > > attic_db(
+        context.data_index(attic_skeleton_file_properties< Object >()));
+
+    return collect_items_by_timestamp(context.get_health_guard(),
+        current_db.range_begin(shortened), current_db.range_end(),
+        attic_db.range_begin(shortened), attic_db.range_end(),
+        predicate, &cur_idx, context.get_desired_timestamp(), result, attic_result);
+  }
 }
 
 
+// Current called olny for areas and only from Query_Statement.
 template < class Index, class Object, class Predicate >
-void collect_items_range_by_timestamp(const Statement* stmt, Resource_Manager& rman,
-    const Ranges< Index >& ranges, const Predicate& predicate,
-    std::map< Index, std::vector< Object > >& result,
-    std::map< Index, std::vector< Attic< Object > > >& attic_result)
-{
-  if (ranges.empty())
-    return;
-  Block_Backend< Index, Object > current_db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-  Block_Backend< Index, Attic< typename Object::Delta > > attic_db
-      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
-  collect_items_by_timestamp(stmt, rman,
-      current_db.range_begin(ranges), current_db.range_end(),
-      attic_db.range_begin(ranges), attic_db.range_end(),
-      predicate, (Index*)0, rman.get_desired_timestamp(), result, attic_result);
-}
-
-
-template < class Index, class Object, class Predicate >
-void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
+void collect_items_flat(Request_Context& context,
 		   File_Properties& file_properties, const Predicate& predicate,
 		   std::map< Index, std::vector< Object > >& result)
 {
   uint32 count = 0;
-  Block_Backend< Index, Object > db
-      (rman.get_transaction()->data_index(&file_properties));
+  Block_Backend< Index, Object > db(context.data_index(&file_properties));
   for (typename Block_Backend< Index, Object >::Flat_Iterator
       it(db.flat_begin()); !(it == db.flat_end()); ++it)
   {
     if (++count >= 256*1024)
     {
       count = 0;
-      rman.health_check(stmt, 0, eval_map(result));
+      context.get_health_guard().check(0, eval_map(result));
     }
     if (predicate.match(it.handle()))
       result[it.index()].push_back(it.object());
@@ -543,19 +580,38 @@ void collect_items_flat(const Statement& stmt, Resource_Manager& rman,
 
 
 template < class Index, class Object, class Predicate >
-void collect_items_flat_by_timestamp(const Statement& stmt, Resource_Manager& rman,
-                   const Predicate& predicate,
-                   std::map< Index, std::vector< Object > >& result,
-                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
+void collect_items_flat(
+    Request_Context& context, const Predicate& predicate,
+    std::map< Index, std::vector< Object > >& result,
+    std::map< Index, std::vector< Attic< Object > > >& attic_result)
 {
   Block_Backend< Index, Object > current_db
-      (rman.get_transaction()->data_index(current_skeleton_file_properties< Object >()));
-  Block_Backend< Index, Attic< typename Object::Delta > > attic_db
-      (rman.get_transaction()->data_index(attic_skeleton_file_properties< Object >()));
-  collect_items_by_timestamp(&stmt, rman,
-      current_db.flat_begin(), current_db.flat_end(),
-      attic_db.flat_begin(), attic_db.flat_end(),
-      predicate, (Index*)0, rman.get_desired_timestamp(), result, attic_result);
+      (context.data_index(current_skeleton_file_properties< Object >()));
+
+  if (context.get_desired_timestamp() == NOW)
+  {
+    uint32 count = 0;
+    for (auto it = current_db.flat_begin(); !(it == current_db.flat_end()); ++it)
+    {
+      if (++count >= 256*1024)
+      {
+        count = 0;
+        context.get_health_guard().check(0, eval_map(result));
+      }
+      if (predicate.match(it.handle()))
+        result[it.index()].push_back(it.object());
+    }
+  }
+  else
+  {
+    Block_Backend< Index, Attic< typename Object::Delta > > attic_db
+        (context.data_index(attic_skeleton_file_properties< Object >()));
+
+    collect_items_by_timestamp(context.get_health_guard(),
+        current_db.flat_begin(), current_db.flat_end(),
+        attic_db.flat_begin(), attic_db.flat_end(),
+        predicate, (Index*)0, context.get_desired_timestamp(), result, attic_result);
+  }
 }
 
 

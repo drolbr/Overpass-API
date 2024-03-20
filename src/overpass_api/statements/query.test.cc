@@ -78,7 +78,7 @@ void perform_query(std::string type, std::string key, std::string value, std::st
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -130,7 +130,7 @@ void perform_query
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -214,7 +214,7 @@ void perform_query
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -283,7 +283,7 @@ void perform_regex_query
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -328,7 +328,7 @@ void perform_key_regex_query
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -402,7 +402,7 @@ void perform_query_with_around
 
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -530,7 +530,7 @@ void perform_query_with_around
 
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -592,7 +592,7 @@ void perform_query_with_bbox
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -650,7 +650,7 @@ void perform_filter_with_bbox
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -691,7 +691,7 @@ void perform_filter_with_key
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -727,7 +727,7 @@ void perform_filter_from_previous_element
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -820,7 +820,7 @@ void perform_multi_query_with_bbox
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -895,7 +895,7 @@ void perform_query_with_recurse
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -1002,7 +1002,7 @@ void perform_recurse_cnt_link(
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -1060,7 +1060,7 @@ void perform_query_with_role_recurse
 
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -1113,7 +1113,7 @@ void perform_query_with_id_query
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);
@@ -1163,7 +1163,7 @@ void perform_query_with_two_ids_query(
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
     Parsed_Query global_settings;
     global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
     Resource_Manager rman(transaction, &global_settings);

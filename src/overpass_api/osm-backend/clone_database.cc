@@ -40,7 +40,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
 
     if (block_size == dest_file_prop.get_block_size() * dest_file_prop.get_compression_factor())
     {
-      Writeable_File_Blocks_Index< TIndex > dest_idx(dest_file_prop, false, dest_db_dir, "",
+      Writeable_File_Blocks_Index< TIndex > dest_idx(dest_file_prop, Access_Mode::writeable, false, dest_db_dir, "",
           clone_settings.compression_method);
       File_Blocks< TIndex, typename std::set< TIndex >::const_iterator >
           dest_file(&dest_idx);
@@ -70,14 +70,14 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
     }
     else
     {
-      Nonsynced_Transaction into_transaction(true, false, dest_db_dir, "");
+      Nonsynced_Transaction into_transaction(Access_Mode::writeable, false, dest_db_dir, "");
       std::map< TIndex, std::set< TObject > > db_to_insert;
 
       Block_Backend< TIndex, TObject > from_db(transaction.data_index(&src_file_prop));      
       typename Block_Backend< TIndex, TObject >::Flat_Iterator it = from_db.flat_begin();
       typename std::map< TIndex, std::set< TObject > >::iterator dit = db_to_insert.begin();
 
-      Writeable_File_Blocks_Index< TIndex > dest_idx(dest_file_prop, false, dest_db_dir, "",
+      Writeable_File_Blocks_Index< TIndex > dest_idx(dest_file_prop, Access_Mode::writeable, false, dest_db_dir, "",
           clone_settings.compression_method);
       Block_Backend< TIndex, TObject > into_db(&dest_idx);
 
@@ -120,7 +120,8 @@ void clone_map_file(const File_Properties& file_prop, Transaction& transaction, 
     Random_File_Index& src_idx = *transaction.random_index(&file_prop);
     Random_File< Key, TIndex > src_file(&src_idx);
 
-    Random_File_Index dest_idx(file_prop, true, false, dest_db_dir, "", clone_settings.map_compression_method);
+    Random_File_Index dest_idx(
+        file_prop, Access_Mode::truncate, false, dest_db_dir, "", clone_settings.map_compression_method);
     Random_File< Key, TIndex > dest_file(&dest_idx);
 
     for (std::vector< uint32 >::size_type i = 0; i < src_idx.get_blocks().size(); ++i)

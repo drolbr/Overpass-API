@@ -4,7 +4,6 @@ bin_script_mandatory = \
   bin/apply_osc_to_db.sh\
   bin/download_clone.sh\
   bin/fetch_osc.sh\
-  bin/fix_system_settings.sh\
   bin/reboot.sh\
   bin/rules_delta_loop.sh\
   bin/rules_loop.sh
@@ -17,7 +16,7 @@ cgi_bin_customoutput =
 cgi_bin_script_customoutput = cgi-bin/template
 
 bin_clone =
-bin_script_clone = bin/compress_clone.sh bin/clone.sh
+bin_script_clone = bin/clone.sh
 cgi_bin_clone =
 cgi_bin_script_clone = cgi-bin/trigger_clone
 
@@ -41,7 +40,7 @@ cgi_bin_script_public_transport = cgi-bin/draw-line cgi-bin/sketch-line cgi-bin/
 bin_convenience =
 bin_script_convenience = bin/fetch_osc_and_apply.sh bin/init_osm3s.sh bin/run_osm3s_minutely.sh
 cgi_bin_convenience =
-cgi_bin_script_convenience = cgi-bin/ping cgi-bin/sitemap
+cgi_bin_script_convenience =
 
 bindir = ${prefix}/bin
 bin_PROGRAMS = \
@@ -269,6 +268,7 @@ nobase_dist_HEADERS = \
   overpass_api/osm-backend/area_updater.h\
   overpass_api/osm-backend/basic_updater.h\
   overpass_api/osm-backend/clone_database.h\
+  overpass_api/osm-backend/map_file_replicator.h\
   overpass_api/osm-backend/meta_updater.h\
   overpass_api/osm-backend/node_updater.h\
   overpass_api/osm-backend/osm_updater.h\

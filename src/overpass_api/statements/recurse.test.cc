@@ -70,7 +70,7 @@ int main(int argc, char* args[])
     try
     {
       // Collect the nodes of some small ways
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       Set total;
 
@@ -94,7 +94,7 @@ int main(int argc, char* args[])
     try
     {
       // Collect the nodes of some large ways
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
 
       uint way_id_offset = 2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2
@@ -121,7 +121,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-way: try a node without ways
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", 1 + global_node_offset);
 
@@ -135,7 +135,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-way: try a node with a long way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", pattern_size*pattern_size + pattern_size*3/2 + 2 + global_node_offset);
 
@@ -149,7 +149,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-way: try an entire bbox of nodes (without using bbox)
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       Set total;
 
@@ -185,7 +185,7 @@ int main(int argc, char* args[])
     try
     {
       // Collect the nodes of some relations
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 2);
       Set total;
@@ -210,7 +210,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-relation
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "node", 2 + global_node_offset);
 
@@ -224,7 +224,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 8);
 
@@ -238,7 +238,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-relation
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager rman(transaction, &global_settings);
       perform_id_query(rman, "way", 1);
 
@@ -252,7 +252,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 10);
 
@@ -266,7 +266,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 2);
 
@@ -280,7 +280,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
 
@@ -294,7 +294,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse down
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 6);
 
@@ -308,7 +308,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse down-rel with a recursive relation
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
 
@@ -322,7 +322,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse down-rel with a mixed relation
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 10);
 
@@ -336,7 +336,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse up
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", pattern_size + 2 + global_node_offset);
 
@@ -350,7 +350,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse up
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
 
@@ -364,7 +364,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse up-rel with a node
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", 2 + global_node_offset);
 
@@ -378,7 +378,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse up-rel with a way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 2);
 
@@ -392,7 +392,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse up-rel with a relation
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
       {
@@ -407,7 +407,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse down with a way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
 
@@ -421,7 +421,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse down-rel with a way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
 
@@ -435,7 +435,7 @@ int main(int argc, char* args[])
     try
     {
       // Collect the nodes of some relations
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
 
@@ -449,7 +449,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse node-relation
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "node", 1 + global_node_offset);
       Set total;
@@ -474,7 +474,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 7);
 
@@ -488,7 +488,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-relation
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "way", 1);
 
@@ -502,7 +502,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 9);
 
@@ -516,7 +516,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse relation-way
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_id_query(total_rman, "relation", 1);
       Set total;
@@ -541,7 +541,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-count
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
@@ -555,7 +555,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-count
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
@@ -569,7 +569,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-count
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
@@ -583,7 +583,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-count
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
@@ -597,7 +597,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-count
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way", { 1, 2, 3, pattern_size/2*(pattern_size/2-1)+1 });
 
@@ -611,7 +611,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-count
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way",
           { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,
@@ -627,7 +627,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-count
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way",
           { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,
@@ -643,7 +643,7 @@ int main(int argc, char* args[])
     try
     {
       // Recurse way-count
-      Nonsynced_Transaction transaction(false, false, args[3], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
       Resource_Manager total_rman(transaction, &global_settings);
       perform_multi_id_query(total_rman, "way",
           { pattern_size*(pattern_size/2-1)+1, pattern_size*(pattern_size/2-1)+2,

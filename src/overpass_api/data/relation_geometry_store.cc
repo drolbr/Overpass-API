@@ -38,13 +38,14 @@ Relation_Geometry_Store::Relation_Geometry_Store
     north = 0;
     south = 1;
   }
+  Request_Context context(&query, rman);
 
   Ranges< Uint32_Index > node_ranges(south <= north
       ? get_ranges_32(south_, north_, west_, east_) : Ranges< Uint32_Index >::global());
 
   // Retrieve all nodes referred by the relations.
   Timeless< Uint32_Index, Node_Skeleton > node_members
-      = relation_node_members(&query, rman, relations, {}, node_ranges, {}, true);
+      = relation_node_members(context, relations, {}, node_ranges, {}, true);
 
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.current.begin();
@@ -61,7 +62,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
 
   // Retrieve all ways referred by the relations.
   Timeless< Uint31_Index, Way_Skeleton > way_members
-      = relation_way_members(&query, rman, relations, {}, way_ranges, {}, true);
+      = relation_way_members(context, relations, {}, way_ranges, {}, true);
 
   way_geometry_store = new Way_Geometry_Store(way_members.current, query, rman);
 
@@ -89,13 +90,13 @@ Relation_Geometry_Store::Relation_Geometry_Store
     north = 0;
     south = 1;
   }
+  Request_Context context(&query, rman);
 
   Ranges< Uint32_Index > node_ranges(south <= north
       ? get_ranges_32(south_, north_, west_, east_) : Ranges< Uint32_Index >::global());
 
   // Retrieve all nodes referred by the relations.
-  auto nodes_by_idx
-      = relation_node_members(&query, rman, {}, relations, node_ranges, {}, true);
+  auto nodes_by_idx = relation_node_members(context, {}, relations, node_ranges, {}, true);
 
   // Order node ids by id.
   for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.current.begin();
@@ -119,7 +120,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
 
   // Retrieve all ways referred by the relations.
   Timeless< Uint31_Index, Way_Skeleton > ways_by_idx_pair
-      = relation_way_members(&query, rman,
+      = relation_way_members(context,
           std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
           way_ranges, {}, true);
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_by_idx;

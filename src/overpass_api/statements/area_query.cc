@@ -77,12 +77,7 @@ bool Area_Constraint::get_ranges
       return true;
 
     area->get_ranges(input->ways, input->areas, area_blocks_req, rman);
-
-    if (rman.get_desired_timestamp() == NOW)
-      ranges = way_covered_indices(area, rman, input->ways.begin(), input->ways.end());
-    else
-      ranges = way_covered_indices(area, rman, input->ways.begin(), input->ways.end(),
-          input->attic_ways.begin(), input->attic_ways.end());
+    ranges = way_covered_indices(input->ways, input->attic_ways);
   }
   else
   {
@@ -296,12 +291,13 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   }
 
   //Process relations
+  Request_Context context(&query, rman);
 
   // Retrieve all nodes referred by the relations.
   Ranges< Uint32_Index > node_ranges;
   get_ranges(rman, node_ranges);
   Timeless< Uint32_Index, Node_Skeleton > node_members
-      = relation_node_members(&query, rman, into.relations, {}, node_ranges, {}, true);
+      = relation_node_members(context, into.relations, {}, node_ranges, {}, true);
 
   // filter for those nodes that are in one of the areas
   {
@@ -316,7 +312,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   Ranges< Uint31_Index > way_ranges;
   get_ranges(rman, way_ranges);
   Timeless< Uint31_Index, Way_Skeleton > way_members_
-      = relation_way_members(&query, rman, into.relations, {}, way_ranges, {}, true);
+      = relation_way_members(context, into.relations, {}, way_ranges, {}, true);
 
   // Filter for those ways that are in one of the areas
   {
@@ -360,7 +356,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     Ranges< Uint32_Index > node_ranges;
     get_ranges(rman, node_ranges);
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(&query, rman, into.attic_relations, node_ranges);
+        = relation_node_members(context, into.attic_relations, node_ranges);
 
     // filter for those nodes that are in one of the areas
     {
@@ -375,7 +371,7 @@ void Area_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
     Ranges< Uint31_Index > way_ranges;
     get_ranges(rman, way_ranges);
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, way_ranges);
+        = relation_way_members(context, into.attic_relations, way_ranges);
 
     // Filter for those ways that are in one of the areas
     {
@@ -990,8 +986,8 @@ void Area_Query_Statement::execute(Resource_Manager& rman)
   Area_Constraint constraint(*this);
   Ranges< Uint32_Index > ranges;
   constraint.get_ranges(rman, ranges);
-  get_elements_from_db< Uint32_Index, Node_Skeleton >(
-      into.nodes, into.attic_nodes, ranges, *this, rman);
+  get_elements_from_db< Uint32_Index, Node_Skeleton >(ranges, *this, rman)
+      .swap(into.nodes, into.attic_nodes);
   constraint.filter(rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
   constraint.filter(*this, rman, into);

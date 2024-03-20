@@ -63,7 +63,7 @@ int main(int argc, char* args[])
   uint32 way_id_upper_limit = 5*pattern_size*pattern_size;
   uint32 relation_id_upper_limit = 1000;
 
-  Nonsynced_Transaction transaction(false, false, args[3], "");
+  Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
 
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

@@ -86,7 +86,7 @@ void Bbox_Constraint::filter(Resource_Manager& rman, Set& into)
 
 void Bbox_Constraint::filter(const Statement& query, Resource_Manager& rman, Set& into)
 {
-  filter_.filter(query, rman, into, rman.get_desired_timestamp() != NOW);
+  filter_.filter(query, rman, into);
 }
 
 //-----------------------------------------------------------------------------
@@ -231,8 +231,8 @@ void Bbox_Query_Statement::execute(Resource_Manager& rman)
   Bbox_Constraint constraint(*this);
   Ranges< Uint32_Index > ranges;
   constraint.get_ranges(rman, ranges);
-  get_elements_from_db< Uint32_Index, Node_Skeleton >(
-      into.nodes, into.attic_nodes, ranges, *this, rman);
+  get_elements_from_db< Uint32_Index, Node_Skeleton >(ranges, *this, rman)
+      .swap(into.nodes, into.attic_nodes);
   constraint.filter(rman, into);
   filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 

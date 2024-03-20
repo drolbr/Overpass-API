@@ -80,7 +80,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
@@ -99,7 +99,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
@@ -122,7 +122,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
@@ -142,7 +142,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
@@ -167,7 +167,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 
@@ -186,7 +186,7 @@ int main(int argc, char* args[])
   {
     try
     {
-      Nonsynced_Transaction transaction(false, false, args[2], "");
+      Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[2], "");
       Resource_Manager rman(transaction, &global_settings);
       Statement_Container stmt_cont(global_settings);
 

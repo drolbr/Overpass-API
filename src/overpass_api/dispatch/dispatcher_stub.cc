@@ -130,8 +130,7 @@ Dispatcher_Stub::Dispatcher_Stub
       client_logger.annotated_log(out.str());
       throw;
     }
-    transaction = new Nonsynced_Transaction
-        (false, false, dispatcher_client->get_db_dir(), "");
+    transaction = new Nonsynced_Transaction(Access_Mode::readonly, false, dispatcher_client->get_db_dir(), "");
 
     for (auto i : osm_base_settings().bin_idxs())
       transaction->data_index(i);
@@ -190,8 +189,8 @@ Dispatcher_Stub::Dispatcher_Stub
 	  client_logger.annotated_log(out.str());
 	  throw;
 	}
-	area_transaction = new Nonsynced_Transaction
-            (false, false, area_dispatcher_client->get_db_dir(), "");
+	area_transaction = new Nonsynced_Transaction(
+            Access_Mode::readonly, false, area_dispatcher_client->get_db_dir(), "");
 	{
 	  std::ifstream version((area_dispatcher_client->get_db_dir() +
 	      "area_version").c_str());
@@ -214,8 +213,8 @@ Dispatcher_Stub::Dispatcher_Stub
 	  db_logger.annotated_log(out.str());
 	  throw;
 	}
-	area_transaction = new Nonsynced_Transaction
-	    (true, true, area_dispatcher_client->get_db_dir(), "");
+	area_transaction = new Nonsynced_Transaction(
+	    Access_Mode::writeable, true, area_dispatcher_client->get_db_dir(), "");
 	{
 	  std::ofstream area_version((area_dispatcher_client->get_db_dir()
 	      + "area_version.shadow").c_str());
@@ -258,10 +257,11 @@ Dispatcher_Stub::Dispatcher_Stub
       throw Context_Error("File " + db_dir + osm_base_settings().shared_name + " present, "
           "which indicates a running dispatcher. Delete file if no dispatcher is running.");
 
-    transaction = new Nonsynced_Transaction(false, false, db_dir, "");
+    transaction = new Nonsynced_Transaction(Access_Mode::readonly, false, db_dir, "");
     if (area_level > 0)
     {
-      area_transaction = new Nonsynced_Transaction(area_level == 2, false, db_dir, "");
+      area_transaction = new Nonsynced_Transaction(
+          area_level == 2 ? Access_Mode::writeable : Access_Mode::readonly, false, db_dir, "");
       rman = new Resource_Manager(*transaction, global_settings, area_level == 2 ? error_output : 0,
 	  *area_transaction, this, area_level == 2 ? new Area_Updater(*area_transaction) : 0);
     }

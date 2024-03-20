@@ -39,7 +39,7 @@
 </action>
 <action type="modify">
 <old>
-  <node id="1301" lat="10.0000000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <node id="1301" lat="10.0000000" lon="3.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1301"/>
     <tag k="foo_1301" v="bar"/>
   </node>
@@ -53,7 +53,7 @@
 </action>
 <action type="modify">
 <old>
-  <node id="1302" lat="10.0000000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <node id="1302" lat="10.0000000" lon="3.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1302"/>
     <tag k="foo_1302" v="bar"/>
   </node>
@@ -67,7 +67,7 @@
 </action>
 <action type="modify">
 <old>
-  <node id="1304" lat="10.0000000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+  <node id="1304" lat="10.0000000" lon="3.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1304"/>
     <tag k="foo_1304" v="bar"/>
   </node>
@@ -81,7 +81,7 @@
 </action>
 <action type="modify">
 <old>
-  <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </node>
@@ -95,7 +95,7 @@
 </action>
 <action type="modify">
 <old>
-  <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
   </node>
@@ -109,7 +109,7 @@
 </action>
 <action type="modify">
 <old>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1404"/>
     <tag k="foo_1404" v="bar"/>
   </node>

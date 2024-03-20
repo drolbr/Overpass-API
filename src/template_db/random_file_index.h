@@ -48,7 +48,7 @@ struct Random_File_Index
 {
 public:
   Random_File_Index(const File_Properties& file_prop,
-	      bool writeable, bool use_shadow,
+	      Access_Mode access_mode, bool use_shadow,
 	      const std::string& db_dir, const std::string& file_name_extension,
               int compression_method_ = File_Blocks_Index_Base::USE_DEFAULT);
   ~Random_File_Index();
@@ -106,18 +106,18 @@ static const int VOID_BLOCK_ENTRY_SIZE = 8;
 
 inline Random_File_Index::Random_File_Index
     (const File_Properties& file_prop,
-     bool writeable, bool use_shadow,
+     Access_Mode access_mode, bool use_shadow,
      const std::string& db_dir, const std::string& file_name_extension, int compression_method_) :
     npos(std::numeric_limits< uint32 >::max()),
     index_file_name(db_dir + file_prop.get_file_name_trunk()
-        + file_prop.get_id_suffix()
+        + file_name_extension + file_prop.get_id_suffix()
         + file_prop.get_index_suffix()
 	+ (use_shadow ? file_prop.get_shadow_suffix() : "")),
-    empty_index_file_name(writeable ? db_dir + file_prop.get_file_name_trunk()
-        + file_prop.get_id_suffix()
-        + file_prop.get_shadow_suffix() : ""),
+    empty_index_file_name(access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate
+        ? db_dir + file_prop.get_file_name_trunk() + file_prop.get_id_suffix() + file_prop.get_shadow_suffix()
+        : ""),
     map_file_name(db_dir + file_prop.get_file_name_trunk()
-        + file_prop.get_id_suffix()),
+        + file_name_extension + file_prop.get_id_suffix()),
     file_name_extension_(file_name_extension),
     void_blocks_initialized(false),
     block_size_(file_prop.get_map_block_size()),
@@ -129,8 +129,13 @@ inline Random_File_Index::Random_File_Index
   uint64 file_size = 0;
   try
   {
-    Raw_File val_file(map_file_name, O_RDONLY, S_666, "Random_File:8");
-    file_size = val_file.size("Random_File:9");
+    if (access_mode == Access_Mode::truncate)
+      Raw_File(map_file_name, O_WRONLY|O_TRUNC, S_666, "Random_File:20");
+    else
+    {
+      Raw_File val_file(map_file_name, O_RDONLY, S_666, "Random_File:8");
+      file_size = val_file.size("Random_File:9");
+    }
   }
   catch (File_Error e)
   {
@@ -140,82 +145,88 @@ inline Random_File_Index::Random_File_Index
 
   try
   {
-    Raw_File source_file
-        (index_file_name, writeable ? O_RDONLY|O_CREAT : O_RDONLY, S_666,
-	 "Random_File:6");
-
-    // read index file
-    uint32 index_size = source_file.size("Random_File:10");
-    Void_Pointer< uint8 > index_buf(index_size);
-    source_file.read(index_buf.ptr, index_size, "Random_File:14");
-
-    bool read_old_format = (file_name_extension == ".legacy" ||
-      (index_size > 0 && *(int32*)index_buf.ptr < 7512));
-      // We support this way the old format although it has no version marker.
-
-    if (!read_old_format && index_size > 0)
+    if (access_mode == Access_Mode::truncate)
+      Raw_File(index_file_name, O_WRONLY|O_TRUNC, S_666, "Random_File:19");
+    else
     {
-      uint8 block_exp = *(uint8*)(index_buf.ptr + 4);
-      uint8 compression_exp = *(uint8*)(index_buf.ptr + 5);
-      uint16 guessed_compression_method = *(uint16*)(index_buf.ptr + 6);
-      uint32 guessed_compression_factor = 1u<<compression_exp;
+      Raw_File source_file(
+          index_file_name,
+          access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate ? O_RDONLY|O_CREAT : O_RDONLY,
+          S_666, "Random_File:6");
 
-      if (block_exp < 32 && compression_exp < 32 && guessed_compression_method < 3)
+      // read index file
+      uint32 index_size = source_file.size("Random_File:10");
+      Void_Pointer< uint8 > index_buf(index_size);
+      source_file.read(index_buf.ptr, index_size, "Random_File:14");
+
+      bool read_old_format = (file_name_extension == ".legacy" ||
+        (index_size > 0 && *(int32*)index_buf.ptr < 7512));
+        // We support this way the old format although it has no version marker.
+
+      if (!read_old_format && index_size > 0)
       {
-        block_count = file_size / (1ull<<block_exp);
+        uint8 block_exp = *(uint8*)(index_buf.ptr + 4);
+        uint8 compression_exp = *(uint8*)(index_buf.ptr + 5);
+        uint16 guessed_compression_method = *(uint16*)(index_buf.ptr + 6);
+        uint32 guessed_compression_factor = 1u<<compression_exp;
 
-        uint32 pos = 8;
+        if (block_exp < 32 && compression_exp < 32 && guessed_compression_method < 3)
+        {
+          block_count = file_size / (1ull<<block_exp);
+
+          uint32 pos = 8;
+          while (pos < index_size)
+          {
+            Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
+                *(uint32*)(index_buf.ptr + pos + 4));
+
+            blocks.push_back(entry);
+
+            if (entry.size > guessed_compression_factor * 2) // increased buffer size for lz4
+            {
+              read_old_format = true;
+              break;
+            }
+
+            if (entry.pos != npos && entry.pos >= block_count)
+            {
+              read_old_format = true;
+              break;
+            }
+
+            pos += 8;
+          }
+
+          if (read_old_format)
+            blocks.clear();
+          else
+          {
+            block_size_ = 1ull<<block_exp;
+            compression_factor = guessed_compression_factor;
+            compression_method = guessed_compression_method;
+          }
+        }
+        else
+          read_old_format = true;
+      }
+
+      if (read_old_format)
+      {
+        block_count = file_size/block_size_;
+
+        uint32 pos = 0;
         while (pos < index_size)
         {
           Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
-              *(uint32*)(index_buf.ptr + pos + 4));
-
+              compression_factor); //block size is always 1 in the legacy format
+          if (entry.pos != npos)
+            entry.pos *= compression_factor;
           blocks.push_back(entry);
 
-          if (entry.size > guessed_compression_factor * 2) // increased buffer size for lz4
-          {
-            read_old_format = true;
-            break;
-          }
-
           if (entry.pos != npos && entry.pos >= block_count)
-          {
-            read_old_format = true;
-            break;
-          }
-
-          pos += 8;
+            throw File_Error(0, index_file_name, "Random_File: bad pos in index file");
+          pos += 4;
         }
-
-        if (read_old_format)
-          blocks.clear();
-        else
-        {
-          block_size_ = 1ull<<block_exp;
-          compression_factor = guessed_compression_factor;
-          compression_method = guessed_compression_method;
-        }
-      }
-      else
-        read_old_format = true;
-    }
-
-    if (read_old_format)
-    {
-      block_count = file_size/block_size_;
-
-      uint32 pos = 0;
-      while (pos < index_size)
-      {
-        Random_File_Index_Entry entry(*(uint32*)(index_buf.ptr + pos),
-            compression_factor); //block size is always 1 in the legacy format
-        if (entry.pos != npos)
-          entry.pos *= compression_factor;
-        blocks.push_back(entry);
-
-        if (entry.pos != npos && entry.pos >= block_count)
-          throw File_Error(0, index_file_name, "Random_File: bad pos in index file");
-        pos += 4;
       }
     }
   }
@@ -332,7 +343,7 @@ inline Random_File_Index::~Random_File_Index()
 inline std::vector< bool > get_map_index_footprint
     (const File_Properties& file_prop, std::string db_dir, bool use_shadow = false)
 {
-  Random_File_Index index(file_prop, false, use_shadow, db_dir, "");
+  Random_File_Index index(file_prop, Access_Mode::readonly, use_shadow, db_dir, "");
 
   std::vector< bool > result(index.block_count, true);
   for (std::vector< std::pair< uint32, uint32 > >::const_iterator

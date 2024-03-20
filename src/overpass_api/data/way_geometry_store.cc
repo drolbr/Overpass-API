@@ -42,7 +42,7 @@ Ranges< Uint32_Index > small_way_nd_indices
   if (stmt)
     rman.health_check(*stmt);
 
-  return collect_node_req(stmt, rman, parents);
+  return calc_node_children_ranges(parents);
 }
 
 
@@ -75,15 +75,10 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members
     (const Statement* stmt, Resource_Manager& rman,
      const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways)
 {
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > result;
-  Ranges< Uint32_Index > req = small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end());
-  if (req.empty())
-    return result;
-
-  collect_items_range(stmt, rman, req,
-      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), result);
-
-  return result;
+  Request_Context context(stmt, rman);
+  return collect_items_range< Uint32_Index, Node_Skeleton >(context,
+      small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end()),
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways))).current;
 }
 
 
@@ -110,16 +105,12 @@ Way_Geometry_Store::Way_Geometry_Store
      const Statement& query, Resource_Manager& rman)
 {
   // Retrieve all nodes referred by the ways.
-  std::map< Uint32_Index, std::vector< Node_Skeleton > > current;
-  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic;
-  Ranges< Uint32_Index > req = small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end());
-  if (req.empty())
-    return;
+  Request_Context context(&query, rman);
+  auto timeless = collect_items_range< Uint32_Index, Node_Skeleton >(context,
+      small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)));
 
-  collect_items_range_by_timestamp(&query, rman, req,
-      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)), current, attic);
-
-  keep_matching_skeletons(nodes, current, attic, rman.get_desired_timestamp());
+  keep_matching_skeletons(nodes, timeless.current, timeless.attic, rman.get_desired_timestamp());
 }
 
 

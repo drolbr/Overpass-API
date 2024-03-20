@@ -203,7 +203,7 @@ void rename_referred_file(const std::string& db_dir, const std::string& from, co
 class Transaction_Collection
 {
   public:
-    Transaction_Collection(bool writeable, bool use_shadow,
+    Transaction_Collection(Access_Mode access_mode, bool use_shadow,
 			   const std::string& db_dir, const std::vector< std::string >& file_name_extensions);
     ~Transaction_Collection();
 

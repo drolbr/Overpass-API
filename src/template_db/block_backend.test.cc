@@ -251,13 +251,13 @@ struct Test_File : File_Properties
     return 0;
   }
 
-  File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  File_Blocks_Index_Base* new_data_index(
+      Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    if (writeable)
+    if (access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate)
       return new Writeable_File_Blocks_Index< IntIndex >
-          (*this, use_shadow, db_dir, file_name_extension);
+          (*this, access_mode, use_shadow, db_dir, file_name_extension);
     return new Readonly_File_Blocks_Index< IntIndex >
         (*this, use_shadow, db_dir, file_name_extension);
   }
@@ -274,7 +274,7 @@ void fill_db
   remove((get_file_name_trunk(0) + get_data_suffix(0)).c_str());*/
   try
   {
-    Nonsynced_Transaction transaction(true, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, false, BASE_DIRECTORY, "");
     Test_File tf;
     Block_Backend< IntIndex, IntObject > db_backend(transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
@@ -365,7 +365,7 @@ void read_test(unsigned int step)
 {
   try
   {
-    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, BASE_DIRECTORY, "");
     Test_File tf;
     Block_Backend< IntIndex, IntObject >
 	db_backend(transaction.data_index(&tf));
@@ -481,7 +481,7 @@ int main(int argc, char* args[])
       + Test_File().get_data_suffix()).c_str());
   try
   {
-    Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, false, BASE_DIRECTORY, "");
     Test_File tf;
     Block_Backend< IntIndex, IntIndex > db_backend
         (transaction.data_index(&tf));

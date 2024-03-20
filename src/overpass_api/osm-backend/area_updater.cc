@@ -57,7 +57,7 @@ void Area_Updater::add_blocks
 void Area_Updater::update()
 {
   if (!external_transaction)
-    transaction = new Nonsynced_Transaction(true, false, db_dir, "");
+    transaction = new Nonsynced_Transaction(Access_Mode::writeable, false, db_dir, "");
 
   sort(areas_to_insert.begin(), areas_to_insert.end());
 

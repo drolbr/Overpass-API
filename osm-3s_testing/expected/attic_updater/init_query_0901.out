@@ -19,9 +19,18 @@
     <tag k="test" v="contains queries"/>
   </marker>
   <marker id="6">
+    <tag k="test" v="user with bounding box"/>
+  </marker>
+  <marker id="7">
+    <tag k="test" v="touched global"/>
+  </marker>
+  <marker id="8">
+    <tag k="test" v="touched with bounding box"/>
+  </marker>
+  <marker id="9">
     <tag k="test" v="various queries"/>
   </marker>
-  <two_aggregators id="7">
+  <two_aggregators id="10">
     <tag k="first" v=""/>
     <tag k="second" v=""/>
   </two_aggregators>

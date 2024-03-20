@@ -2076,19 +2076,19 @@
   <marker id="318">
     <tag k="retro" v="2013-07-01T09:02:00Z"/>
   </marker>
-  <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="496" uid="42" user="foo">
+  <node id="1401" lat="10.0000000" lon="4.0100000" version="1" timestamp="2013-07-01T09:01:11Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1401"/>
     <tag k="foo_1401" v="bar"/>
   </node>
-  <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
   </node>
-  <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </node>
-  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="496" uid="42" user="foo">
+  <node id="1404" lat="10.0000000" lon="4.0400000" version="1" timestamp="2013-07-01T09:01:14Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1404"/>
     <tag k="foo_1404" v="bar"/>
   </node>
@@ -2287,7 +2287,7 @@
   <marker id="319">
     <tag k="retro" v="2013-07-01T09:03:00Z"/>
   </marker>
-  <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </node>
@@ -2542,7 +2542,7 @@
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </way>
-  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="496" uid="42" user="foo">
+  <way id="1504" version="3" timestamp="2013-07-01T09:03:14Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0400000" maxlat="10.0030000" maxlon="15.0400000"/>
     <nd ref="15041" lat="10.0000000" lon="5.0400000"/>
     <nd ref="15042" lat="10.0010000" lon="5.0400000"/>
@@ -2550,7 +2550,7 @@
     <tag k="foo" v="bar_1504"/>
     <tag k="foo_1504" v="bar"/>
   </way>
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
     <nd ref="15051" lat="10.0000000" lon="5.0500000"/>
     <nd ref="15052" lat="10.0010000" lon="5.0500000"/>
@@ -2988,7 +2988,7 @@
     <tag k="created" v="2013-07-01T09:01:12Z"/>
     <tag k="expired" v="2013-07-01T09:02:12Z"/>
   </timeline>
-  <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="496" uid="42" user="foo">
+  <node id="1402" lat="10.0000000" lon="4.0200000" version="1" timestamp="2013-07-01T09:01:12Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
   </node>
@@ -3048,7 +3048,7 @@
     <tag k="created" v="2013-07-01T09:03:15Z"/>
     <tag k="expired" v="2013-07-01T09:04:15Z"/>
   </timeline>
-  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="496" uid="42" user="foo">
+  <way id="1505" version="3" timestamp="2013-07-01T09:03:15Z" changeset="497" uid="43" user="bar">
     <bounds minlat="10.0000000" minlon="5.0500000" maxlat="10.0020000" maxlon="15.0500000"/>
     <nd ref="15051" lat="10.0000000" lon="5.0500000"/>
     <nd ref="15052" lat="10.0010000" lon="5.0500000"/>

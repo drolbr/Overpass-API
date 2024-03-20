@@ -203,13 +203,13 @@ struct Test_File : File_Properties
     return IntIndex::max_size_of();
   }
 
-  File_Blocks_Index_Base* new_data_index
-      (bool writeable, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
+  File_Blocks_Index_Base* new_data_index(
+      Access_Mode access_mode, bool use_shadow, const std::string& db_dir, const std::string& file_name_extension)
       const
   {
-    if (writeable)
+    if (access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate)
       return new Writeable_File_Blocks_Index< IntIndex >
-          (*this, use_shadow, db_dir, file_name_extension);
+          (*this, access_mode, use_shadow, db_dir, file_name_extension);
     return new Readonly_File_Blocks_Index< IntIndex >
         (*this, use_shadow, db_dir, file_name_extension);
   }
@@ -349,7 +349,7 @@ void map_read_test(bool use_shadow = false)
     std::cout<<*it;
     std::cout<<'\n';
 
-    Nonsynced_Transaction transaction(false, use_shadow, BASE_DIRECTORY, "");
+    Nonsynced_Transaction transaction(Access_Mode::readonly, use_shadow, BASE_DIRECTORY, "");
     Test_File tf("Test_File");
     Random_File< IntIndex, IntIndex > id_file(transaction.random_index(&tf));
 
@@ -417,7 +417,7 @@ void data_read_test(const Test_File& tf, Transaction& transaction)
 
 void data_read_test(const Test_File& tf)
 {
-  Nonsynced_Transaction transaction(false, false, BASE_DIRECTORY, "");
+  Nonsynced_Transaction transaction(Access_Mode::readonly, false, BASE_DIRECTORY, "");
   data_read_test(tf, transaction);
 }
 
@@ -429,7 +429,7 @@ void put_elem(uint32 idx, uint32 val, const Test_File& tf,
   to_insert[IntIndex(idx)].insert(IntObject(val));
   try
   {
-    Nonsynced_Transaction transaction(true, true, db_dir, "");
+    Nonsynced_Transaction transaction(Access_Mode::writeable, true, db_dir, "");
     Block_Backend< IntIndex, IntObject > db_backend
         (transaction.data_index(&tf));
     db_backend.update(to_delete, to_insert);
@@ -522,7 +522,7 @@ int main(int argc, char* args[])
         5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -552,7 +552,7 @@ int main(int argc, char* args[])
     }
     catch (...) {}
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -573,7 +573,7 @@ int main(int argc, char* args[])
         5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -595,7 +595,7 @@ int main(int argc, char* args[])
         5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -603,7 +603,7 @@ int main(int argc, char* args[])
     dispatcher.write_commit(0);
     dispatcher.write_start(481);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 2);
@@ -625,7 +625,7 @@ int main(int argc, char* args[])
         5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -633,7 +633,7 @@ int main(int argc, char* args[])
     dispatcher.write_commit(0);
     dispatcher.write_start(481);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 2);
@@ -641,7 +641,7 @@ int main(int argc, char* args[])
     dispatcher.write_commit(0);
     dispatcher.write_start(482);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 3);
@@ -723,7 +723,7 @@ int main(int argc, char* args[])
         5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -756,7 +756,7 @@ int main(int argc, char* args[])
     dispatcher.read_idx_finished(640);
     dispatcher.output_status();
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -767,7 +767,7 @@ int main(int argc, char* args[])
     dispatcher.request_read_and_idx(641, 180, 512*1024*1024, 641);
     dispatcher.read_idx_finished(641);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 2);
@@ -778,7 +778,7 @@ int main(int argc, char* args[])
     dispatcher.request_read_and_idx(642, 180, 512*1024*1024, 642);
     dispatcher.read_idx_finished(642);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 3);
@@ -834,7 +834,7 @@ int main(int argc, char* args[])
         5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -844,7 +844,7 @@ int main(int argc, char* args[])
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 2);
@@ -853,7 +853,7 @@ int main(int argc, char* args[])
     dispatcher.write_start(482);
     dispatcher.read_finished(640);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 3);
@@ -901,7 +901,7 @@ int main(int argc, char* args[])
         5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
     dispatcher.write_start(480);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 1);
@@ -911,7 +911,7 @@ int main(int argc, char* args[])
     dispatcher.read_idx_finished(640);
     dispatcher.write_start(481);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 2);
@@ -919,7 +919,7 @@ int main(int argc, char* args[])
     dispatcher.write_commit(0);
     dispatcher.write_start(482);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 3);
@@ -928,7 +928,7 @@ int main(int argc, char* args[])
     dispatcher.write_start(483);
     dispatcher.read_finished(640);
     {
-      Nonsynced_Transaction transaction(true, true, BASE_DIRECTORY, "");
+      Nonsynced_Transaction transaction(Access_Mode::writeable, true, BASE_DIRECTORY, "");
       Test_File tf("Test_File");
       Random_File< IntIndex, IntIndex > blocks(transaction.random_index(&tf));
       blocks.put(0u, 4);
@@ -1096,7 +1096,7 @@ int main(int argc, char* args[])
 
       std::cout<<"Writing successfully done.\n";
       Nonsynced_Transaction transaction
-          (false, false, dispatcher_client.get_db_dir(), "");
+          (Access_Mode::readonly, false, dispatcher_client.get_db_dir(), "");
       data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
@@ -1152,7 +1152,7 @@ int main(int argc, char* args[])
 
       std::cout<<"Writing successfully done.\n";
       Nonsynced_Transaction transaction
-          (false, false, dispatcher_client.get_db_dir(), "");
+          (Access_Mode::readonly, false, dispatcher_client.get_db_dir(), "");
       data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
@@ -1243,7 +1243,7 @@ int main(int argc, char* args[])
       std::cout<<"Second writing successfully done.\n";
 
       Nonsynced_Transaction transaction
-          (false, false, dispatcher_client.get_db_dir(), "");
+          (Access_Mode::readonly, false, dispatcher_client.get_db_dir(), "");
       data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
@@ -1327,7 +1327,7 @@ int main(int argc, char* args[])
       sync_log("write_commit() done.\n");
 
       Nonsynced_Transaction transaction
-          (false, false, dispatcher_client.get_db_dir(), "");
+          (Access_Mode::readonly, false, dispatcher_client.get_db_dir(), "");
       data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
@@ -1363,7 +1363,7 @@ int main(int argc, char* args[])
       sync_log("request_read() done.\n");
 
       Nonsynced_Transaction transaction
-          (false, false, dispatcher_client.get_db_dir(), "");
+          (Access_Mode::readonly, false, dispatcher_client.get_db_dir(), "");
       transaction.data_index(&test_file);
 
       dispatcher_client.read_idx_finished();
@@ -1434,7 +1434,7 @@ int main(int argc, char* args[])
       sync_log("write_commit() done.\n");
 
       Nonsynced_Transaction transaction
-          (false, false, dispatcher_client.get_db_dir(), "");
+          (Access_Mode::readonly, false, dispatcher_client.get_db_dir(), "");
       data_read_test(test_file, transaction);
       remove((dispatcher_client.get_db_dir() + "Test_File.bin").c_str());
       remove((dispatcher_client.get_db_dir() + "Test_File.bin.idx").c_str());
@@ -1470,7 +1470,7 @@ int main(int argc, char* args[])
       sync_log("request_read() done.\n");
 
       Nonsynced_Transaction transaction
-          (false, false, dispatcher_client.get_db_dir(), "");
+          (Access_Mode::readonly, false, dispatcher_client.get_db_dir(), "");
       transaction.data_index(&test_file);
 
       dispatcher_client.read_idx_finished();

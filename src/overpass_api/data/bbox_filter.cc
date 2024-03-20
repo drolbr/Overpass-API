@@ -198,7 +198,7 @@ void filter_relations_expensive(const Bbox_Filter& filter,
 }
 
 
-void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& into, bool with_attic) const
+void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& into) const
 {
   if (!bbox.valid())
     return;
@@ -206,18 +206,19 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
   //Process ways
   filter_ways_expensive(*this, Way_Geometry_Store(into.ways, query, rman), into.ways);
 
+  Request_Context context(&query, rman);
   {
     //Process relations
 
     // Retrieve all nodes referred by the relations.
     Timeless< Uint32_Index, Node_Skeleton > node_members
-        = relation_node_members(&query, rman, into.relations, {}, get_ranges_32(), {}, true);
+        = relation_node_members(context, into.relations, {}, get_ranges_32(), {}, true);
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
         = order_by_id(node_members.current, Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     Timeless< Uint31_Index, Way_Skeleton > way_members_
-        = relation_way_members(&query, rman, into.relations, {}, get_ranges_31(), {}, true);
+        = relation_way_members(context, into.relations, {}, get_ranges_31(), {}, true);
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
         = order_by_id(way_members_.current, Order_By_Way_Id());
 
@@ -225,7 +226,7 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
         Way_Geometry_Store(way_members_.current, query, rman), into.relations);
   }
 
-  if (with_attic)
+  if (rman.get_desired_timestamp() != NOW)
   {
     //Process attic ways
     filter_ways_expensive(*this, Way_Geometry_Store(into.attic_ways, query, rman), into.attic_ways);
@@ -234,13 +235,13 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
 
     // Retrieve all nodes referred by the relations.
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(&query, rman, into.attic_relations, get_ranges_32());
+        = relation_node_members(context, into.attic_relations, get_ranges_32());
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
         = order_attic_by_id(node_members, Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(&query, rman, into.attic_relations, get_ranges_31());
+        = relation_way_members(context, into.attic_relations, get_ranges_31());
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
         = order_attic_by_id(way_members_, Order_By_Way_Id());
 

@@ -21,7 +21,6 @@
 
 #include "../core/datatypes.h"
 #include "../statements/statement.h"
-#include "collect_items.h"
 #include "filenames.h"
 
 
@@ -30,55 +29,56 @@
 template < class Object, class TPredicateA, class TPredicateB >
 class And_Predicate
 {
-  public:
-    And_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
-        : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
-    bool match(const Object& obj) const { return (predicate_a.match(obj) && predicate_b.match(obj)); }
-    bool match(const Handle< Object >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
-    bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
+public:
+  And_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
+      : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
+  bool match(const Object& obj) const { return (predicate_a.match(obj) && predicate_b.match(obj)); }
+  bool match(const Handle< Object >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
+  bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) && predicate_b.match(h)); }
 
-  private:
-    TPredicateA predicate_a;
-    TPredicateB predicate_b;
+private:
+  TPredicateA predicate_a;
+  TPredicateB predicate_b;
 };
 
 template < class Object, class TPredicateA, class TPredicateB >
 class Or_Predicate
 {
-  public:
-    Or_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
-        : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
-    bool match(const Object& obj) const { return (predicate_a.match(obj) || predicate_b.match(obj)); }
-    bool match(const Handle< Object >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
-    bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
+public:
+  Or_Predicate(const TPredicateA& predicate_a_, const TPredicateB& predicate_b_)
+      : predicate_a(predicate_a_), predicate_b(predicate_b_) {}
+  bool match(const Object& obj) const { return (predicate_a.match(obj) || predicate_b.match(obj)); }
+  bool match(const Handle< Object >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
+  bool match(const Handle< Attic< Object > >& h) const { return (predicate_a.match(h) || predicate_b.match(h)); }
 
-  private:
-    TPredicateA predicate_a;
-    TPredicateB predicate_b;
+private:
+  TPredicateA predicate_a;
+  TPredicateB predicate_b;
 };
 
 template < class Object, class TPredicateA >
 class Not_Predicate
 {
-  public:
-    Not_Predicate(const TPredicateA& predicate_a_)
-        : predicate_a(predicate_a_) {}
-    bool match(const Object& obj) const { return (!predicate_a.match(obj)); }
-    bool match(const Handle< Object >& h) const { return (!predicate_a.match(h)); }
-    bool match(const Handle< Attic< Object > >& h) const { return (!predicate_a.match(h)); }
+public:
+  Not_Predicate(const TPredicateA& predicate_a_)
+      : predicate_a(predicate_a_) {}
+  bool match(const Object& obj) const { return (!predicate_a.match(obj)); }
+  bool match(const Handle< Object >& h) const { return (!predicate_a.match(h)); }
+  bool match(const Handle< Attic< Object > >& h) const { return (!predicate_a.match(h)); }
 
-  private:
-    TPredicateA predicate_a;
+private:
+  TPredicateA predicate_a;
 };
 
 template < class Object >
 class Trivial_Predicate
 {
-  public:
-    Trivial_Predicate() {}
-    bool match(const Object& obj) const { return true; }
-    bool match(const Handle< Object >& h) const { return true; }
-    bool match(const Handle< Attic< Object > >& h) const { return true; }
+public:
+  Trivial_Predicate() {}
+  bool match(const Object& obj) const { return true; }
+  bool match(const Handle< Object >& h) const { return true; }
+  bool match(const Handle< Attic< Object > >& h) const { return true; }
+  bool possible() const { return true; }
 };
 
 //-----------------------------------------------------------------------------
@@ -86,15 +86,16 @@ class Trivial_Predicate
 template < class Object >
 class Id_Predicate
 {
-  public:
-    Id_Predicate(const std::vector< typename Object::Id_Type >& ids_)
-      : ids(ids_) {}
-    bool match(const Object& obj) const { return std::binary_search(ids.begin(), ids.end(), obj.id); }
-    bool match(const Handle< Object >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
-    bool match(const Handle< Attic< Object > >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
+public:
+  Id_Predicate(const std::vector< typename Object::Id_Type >& ids_)
+    : ids(ids_) {}
+  bool match(const Object& obj) const { return std::binary_search(ids.begin(), ids.end(), obj.id); }
+  bool match(const Handle< Object >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
+  bool match(const Handle< Attic< Object > >& h) const { return std::binary_search(ids.begin(), ids.end(), h.id()); }
+  bool possible() const { return !ids.empty(); }
 
-  private:
-    const std::vector< typename Object::Id_Type >& ids;
+private:
+  const std::vector< typename Object::Id_Type >& ids;
 };
 
 //-----------------------------------------------------------------------------
@@ -407,58 +408,5 @@ void indexed_set_difference(std::map< TIndex, std::vector< TObject > >& result,
                    back_inserter(result[it->first]));
   }
 }
-
-//-----------------------------------------------------------------------------
-
-/* Returns for the given set of ids the set of corresponding indexes.
- * For ids where the timestamp is zero, only the current index is returned.
- * For ids where the timestamp is nonzero, all attic indexes are also returned.
- * The function requires that the ids are sorted ascending by id.
- */
-template< typename Index, typename Skeleton >
-std::pair< std::vector< Index >, std::vector< Index > > get_indexes
-    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman)
-{
-  std::pair< std::vector< Index >, std::vector< Index > > result;
-
-  Random_File< typename Skeleton::Id_Type, Index > current(rman.get_transaction()->random_index
-      (current_skeleton_file_properties< Skeleton >()));
-  for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
-      it = ids.begin(); it != ids.end(); ++it)
-    result.first.push_back(current.get(it->val()));
-
-  std::sort(result.first.begin(), result.first.end());
-  result.first.erase(std::unique(result.first.begin(), result.first.end()), result.first.end());
-
-  if (rman.get_desired_timestamp() != NOW)
-  {
-    Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
-        (attic_skeleton_file_properties< Skeleton >()));
-    std::vector< typename Skeleton::Id_Type > idx_list_ids;
-    for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
-        it = ids.begin(); it != ids.end(); ++it)
-    {
-      if (attic_random.get(it->val()).val() == 0)
-        ;
-      else if (attic_random.get(it->val()) == 0xff)
-        idx_list_ids.push_back(it->val());
-      else
-        result.second.push_back(attic_random.get(it->val()));
-    }
-
-    Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
-        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
-    for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
-        it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
-        !(it == idx_list_db.discrete_end()); ++it)
-      result.second.push_back(it.object());
-
-    std::sort(result.second.begin(), result.second.end());
-    result.second.erase(std::unique(result.second.begin(), result.second.end()), result.second.end());
-  }
-
-  return result;
-}
-
 
 #endif

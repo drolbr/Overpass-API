@@ -388,15 +388,11 @@ void get_elements(const std::vector< uint64 >& refs, Statement* stmt, Resource_M
   std::vector< typename Skeleton::Id_Type > ids = filtered_assign< typename Skeleton::Id_Type >(refs);
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
 
-  if (rman.get_desired_timestamp() == NOW)
-    collect_items_discrete(stmt, rman, *current_skeleton_file_properties< Skeleton >(), req,
-        Id_Predicate< Skeleton >(ids), current_result);
-  else
-  {
-    collect_items_discrete_by_timestamp(stmt, rman, req,
-        Id_Predicate< Skeleton >(ids), current_result, attic_result);
+  Request_Context context(stmt, rman);
+  collect_items_discrete(context, req, Id_Predicate< Skeleton >(ids), current_result, attic_result);
+
+  if (rman.get_desired_timestamp() != NOW)
     filter_attic_elements(rman, rman.get_desired_timestamp(), current_result, attic_result);
-  }
 }
 
 

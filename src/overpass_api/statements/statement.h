@@ -81,7 +81,7 @@ class Query_Constraint
       return Ranges< Uint31_Index >::global();
     }
     virtual Ranges< Uint31_Index > get_relation_ranges(Resource_Manager& rman)
-    { 
+    {
       Ranges< Uint31_Index > result;
       if (get_ranges(rman, result))
         return result;

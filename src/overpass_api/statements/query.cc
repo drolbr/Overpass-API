@@ -154,11 +154,12 @@ void Query_Statement::get_elements_by_id_from_db
      const std::vector< Area_Skeleton::Id_Type >& ids, bool invert_ids,
      Resource_Manager& rman, File_Properties& file_prop)
 {
+  Request_Context context(this, rman);
   if (!invert_ids)
-    collect_items_flat(*this, rman, file_prop,
+    collect_items_flat(context, file_prop,
 			Id_Predicate< Area_Skeleton >(ids), elements);
   else
-    collect_items_flat(*this, rman, file_prop,
+    collect_items_flat(context, file_prop,
 			Not_Predicate< Area_Skeleton, Id_Predicate< Area_Skeleton > >
 			(Id_Predicate< Area_Skeleton >(ids)), elements);
 }
@@ -1148,9 +1149,12 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         if (node_ranges.is_global())
         {
-          if (node_ids.ids.empty())
-            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-          if (!node_ids.invert)
+          if (node_ids.invert)
+          {
+            if (node_ids.ids.empty())
+              runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+          }
+          else
           {
             node_ranges = Ranges< Uint32_Index >();
             std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids.ids, rman);
@@ -1179,9 +1183,12 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         if (way_ranges.is_global())
         {
-          if (way_ids.ids.empty())
-            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
-          if (!way_ids.invert)
+          if (way_ids.invert)
+          {
+            if (way_ids.ids.empty())
+              runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
+          }
+          else
           {
             way_ranges = Ranges< Uint31_Index >();
             std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids.ids, rman);
@@ -1215,8 +1222,6 @@ void Query_Statement::execute(Resource_Manager& rman)
       {
         if (rel_ranges.is_global())
         {
-          if (relation_ids.ids.empty())
-            runtime_error("Filters too weak in query statement: specify in addition a bbox, a tag filter, or similar.");
           if (!relation_ids.invert)
           {
             rel_ranges = Ranges< Uint31_Index >();

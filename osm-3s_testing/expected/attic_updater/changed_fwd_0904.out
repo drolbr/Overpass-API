@@ -15,7 +15,7 @@
     <tag k="foo" v="bar_1302"/>
     <tag k="foo_1302" v="bar"/>
   </node>
-  <node id="1303" lat="10.0000000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <node id="1303" lat="10.0000000" lon="3.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1303"/>
     <tag k="foo_1303" v="bar"/>
   </node>
@@ -27,7 +27,7 @@
     <tag k="foo" v="bar_1402"/>
     <tag k="foo_1402" v="bar"/>
   </node>
-  <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="496" uid="42" user="foo">
+  <node id="1403" lat="10.0000000" lon="4.0300000" version="1" timestamp="2013-07-01T09:01:13Z" changeset="497" uid="43" user="bar">
     <tag k="foo" v="bar_1403"/>
     <tag k="foo_1403" v="bar"/>
   </node>

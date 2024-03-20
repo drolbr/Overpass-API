@@ -67,7 +67,7 @@ void dump_nodes(std::string db_dir)
 {
   std::vector< std::pair< uint32, Uint32_Index > > id_to_idx;
 
-  Nonsynced_Transaction transaction(false, false, db_dir, "");
+  Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
   Block_Backend< Uint32_Index, Node_Skeleton > nodes_db
       (transaction.data_index(osm_base_settings().NODES));
   for (Block_Backend< Uint32_Index, Node_Skeleton >::Flat_Iterator
@@ -113,7 +113,7 @@ void dump_ways(std::string db_dir)
 {
   std::vector< std::pair< uint32, Uint31_Index > > id_to_idx;
 
-  Nonsynced_Transaction transaction(false, false, db_dir, "");
+  Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
   Block_Backend< Uint31_Index, Way_Skeleton > ways_db
       (transaction.data_index(osm_base_settings().WAYS));
   for (Block_Backend< Uint31_Index, Way_Skeleton >::Flat_Iterator
@@ -159,7 +159,7 @@ void dump_relations(std::string db_dir)
 {
   std::vector< std::pair< uint32, Uint31_Index > > id_to_idx;
 
-  Nonsynced_Transaction transaction(false, false, db_dir, "");
+  Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
   Block_Backend< Uint31_Index, Relation_Skeleton > relations_db
       (transaction.data_index(osm_base_settings().RELATIONS));
   for (Block_Backend< Uint31_Index, Relation_Skeleton >::Flat_Iterator

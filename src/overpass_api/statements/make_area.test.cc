@@ -103,8 +103,8 @@ int main(int argc, char* args[])
   Error_Output* error_output(new Console_Output(Error_Output::ASSISTING));
   Statement::set_error_output(error_output);
 
-  Nonsynced_Transaction transaction(false, false, db_dir, "");
-  Nonsynced_Transaction area_transaction(true, false, db_dir, "");
+  Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
+  Nonsynced_Transaction area_transaction(Access_Mode::writeable, false, db_dir, "");
   Parsed_Query global_settings;
   global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
   Resource_Manager rman(transaction, global_settings, 0, area_transaction, 0, new Area_Updater(area_transaction));

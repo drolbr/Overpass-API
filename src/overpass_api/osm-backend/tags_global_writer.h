@@ -432,7 +432,7 @@ void migrate_current_global_tags(Osm_Backend_Callback* callback, Transaction& tr
   Block_Backend< Tag_Index_Global_Until756, Tag_Object_Global< typename Skeleton::Id_Type > >
       from_db(transaction.data_index(current_global_tags_file_properties_756< Skeleton >()));
 
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
   Block_Backend< Tag_Index_Global_KVI, Tag_Object_Global< typename Skeleton::Id_Type > >
       into_db(into_transaction.data_index(current_global_tags_file_properties< Skeleton >()));
 
@@ -457,7 +457,7 @@ void migrate_attic_global_tags(Osm_Backend_Callback* callback, Transaction& tran
   Block_Backend< Tag_Index_Global_Until756, Attic< Tag_Object_Global< typename Skeleton::Id_Type > > >
       from_db(transaction.data_index(attic_global_tags_file_properties_756< Skeleton >()));
 
-  Nonsynced_Transaction into_transaction(true, false, transaction.get_db_dir(), ".next");
+  Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
   Block_Backend< Tag_Index_Global_KVI, Attic< Tag_Object_Global< typename Skeleton::Id_Type > > >
       into_db(into_transaction.data_index(attic_global_tags_file_properties< Skeleton >()));
 

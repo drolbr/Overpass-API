@@ -1,4 +1,3 @@
-
 node(1101);out meta;
 node(1102);out meta;
 
@@ -610,6 +609,7 @@ node(10.99,3.0,11.01,3.07)["faa_2"~"new_vaa"]["fee_2"!~"new_vee"];out meta;
 node(12033);out ids;
 node(10.99,5.0,11.01,5.07)[changes][changes!~"^y"];out meta;
 
+
 make marker test="recurse";out;
 
 node(11011);out ids;
@@ -919,11 +919,19 @@ rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
 node(11011);out ids;
 rel(poly:"10.3 4.019 10.302 4.019 10.302 4.021 10.3 4.021");out meta;
 
-make marker test="various queries";out;
+make marker test="user with bounding box";out;
 
 node(uid:42)(10,4,10.1,4.1);out meta;
 way(uid:42)(10,4,10.1,4.1);out meta;
 rel(uid:42)(10,5,10.1,5.1);out meta;
+
+make marker test="touched global";out;
+nwr(user_touched:"bar");out meta;
+
+make marker test="touched with bounding box";out;
+nwr(user_touched:"bar")(10,4,10.1,5.5);out meta;
+
+make marker test="various queries";out;
 
 node(10,0,20,10)(newer:"2013-07-01T09:03:15Z");out meta;
 way(10,0,20,10)(newer:"2013-07-01T09:03:15Z");out meta;

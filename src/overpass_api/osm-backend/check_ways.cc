@@ -111,7 +111,7 @@ int main(int argc, char* args[])
       std::map< Uint31_Index, std::vector< Way_Skeleton > > elements;
       std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_elements;
 
-      collect_items_range_by_timestamp(0, rman, Ranges< Uint31_Index >(Uint31_Index(i), Uint31_Index(i + 0x10000)),
+      collect_items_range(0, rman, Ranges< Uint31_Index >(Uint31_Index(i), Uint31_Index(i + 0x10000)),
 	  Trivial_Predicate< Way_Skeleton >(), elements, attic_elements);
 
       std::cerr<<' '<<std::dec<<elements.size() + attic_elements.size()<<" indexes reconstructed.\n";
@@ -150,7 +150,7 @@ int main(int argc, char* args[])
       std::map< Uint31_Index, std::vector< Relation_Skeleton > > elements;
       std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic_elements;
 
-      collect_items_range_by_timestamp(0, rman, Ranges< Uint31_Index >(Uint31_Index(i), Uint31_Index(i + 0x10000)),
+      collect_items_range(0, rman, Ranges< Uint31_Index >(Uint31_Index(i), Uint31_Index(i + 0x10000)),
 	  Trivial_Predicate< Relation_Skeleton >(), elements, attic_elements);
 
       std::cerr<<' '<<std::dec<<elements.size() + attic_elements.size()<<" indexes reconstructed.\n";

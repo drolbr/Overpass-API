@@ -90,13 +90,13 @@ void process_user_data(Transaction& transaction, std::map< uint32, std::string >
 
 
 Transaction_Collection::Transaction_Collection
-    (bool writeable, bool use_shadow,
+    (Access_Mode access_mode, bool use_shadow,
      const std::string& db_dir, const std::vector< std::string >& file_name_extensions_)
      : file_name_extensions(file_name_extensions_)
 {
   for (std::vector< std::string >::const_iterator it = file_name_extensions.begin();
       it != file_name_extensions.end(); ++it)
-    transactions.push_back(new Nonsynced_Transaction(writeable, use_shadow, db_dir, *it));
+    transactions.push_back(new Nonsynced_Transaction(access_mode, use_shadow, db_dir, *it));
 }
 
 Transaction_Collection::~Transaction_Collection()
