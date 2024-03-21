@@ -98,7 +98,7 @@ class Query_Statement : public Output_Statement
       else if (type == (QUERY_NODE | QUERY_WAY | QUERY_RELATION))
         return "nwr";
       else if (type == (QUERY_NODE | QUERY_WAY))
-        return "nwr";
+        return "nw";
       else if (type == (QUERY_WAY | QUERY_RELATION))
         return "wr";
       else if (type == (QUERY_NODE | QUERY_RELATION))
