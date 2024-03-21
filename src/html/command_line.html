@@ -51,7 +51,7 @@ wget -O target.osm <strong>--post-file=query.osm</strong> &quot;https://overpass
 
 <p><strong>400 Bad Request</strong> is sent if the request has a syntax error. In this case the payload contains a HTML document describing what is wrong with the request. Please note that although the <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4">HTTP standard</a> requires such a payload, some HTTP clients, notably <em>wget</em> ignore the payload. Please try then <em>curl</em> or your favourite browser.</p>
 
-<p><strong>429 Too Many Requests</strong> is sent if you pass multiple queries from one IP. This is a fair use policy to avoid that a single user uses up all server resources. If you want to terminate the runaway query that prevents you from sending other queries, you can surf to <a href="/api/kill_my_queries">/api/kill_my_queries</a>.</p>
+<p><strong>429 Too Many Requests</strong> is sent if you pass multiple queries from one IP. This is a fair use policy to avoid that a single user uses up all server resources. If you want to terminate the runaway query that prevents you from sending other queries, you can surf to <a href="//overpass-api.de/api/kill_my_queries">/api/kill_my_queries</a>.</p>
 
 <p><strong>504 Gateway Timeout</strong> is sent if the server has already so much load that the request cannot be executed. In most cases, it is best to try again later. Please note that the server decides this based on the <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout">timeout</a> and <a href="https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#element-limit">maxsize</a> parameters of the request, so smaller values for them may also make the request acceptable.</p>
 
