@@ -162,7 +162,9 @@ std::vector< std::vector< Quad_Coord > > Relation_Geometry_Store::get_geometry
     if (it->type == Relation_Entry::NODE)
     {
       const Node* node = binary_search_for_id(nodes, it->ref);
-      if (node == 0 || !matches_bbox(node->index, node->ll_lower_))
+      if (node == 0)
+        result.push_back(std::vector< Quad_Coord >());
+      else if (!matches_bbox(node->index, node->ll_lower_))
         result.push_back(std::vector< Quad_Coord >(1, Quad_Coord(0u, 0u)));
       else
         result.push_back(std::vector< Quad_Coord >(1, Quad_Coord(node->index, node->ll_lower_)));
