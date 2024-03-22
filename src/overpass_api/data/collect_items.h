@@ -265,8 +265,8 @@ bool collect_items_by_timestamp(Health_Guard&& health_guard,
     if (++count >= 128*1024)
     {
       count = 0;
-      health_guard.check(eval_map(result));
-      health_guard.check(eval_map(attic_result));
+      health_guard.check(0, eval_map(result));
+      health_guard.check(0, eval_map(attic_result));
     }
     Index index =
         (attic_begin == attic_end ||

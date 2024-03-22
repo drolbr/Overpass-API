@@ -102,7 +102,7 @@ Basic_Settings::Basic_Settings()
   db_logfile_name("database.log"),
   client_logfile_name("transactions.log"),
   shared_name_base("/osm3s"),
-  version("0.7.62"),
+  version("0.7.62.0"),
   source_hash("7c32a7d5d2eb05d3078b2b6736d177ed7d71cd69"),
 #ifdef HAVE_LZ4
   compression_method(File_Blocks_Index_Base::LZ4_COMPRESSION),
