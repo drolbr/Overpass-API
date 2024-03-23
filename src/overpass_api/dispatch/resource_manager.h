@@ -207,20 +207,6 @@ private:
 };
 
 
-class Health_Checker
-{
-public:
-  Health_Checker(Resource_Manager& rman_, const Statement& stmt_) : rman(rman_), stmt(stmt_) {}
-
-  bool check(uint32 extra_time = 0, uint64 extra_space = 0)
-  { return rman.health_check(stmt, extra_time, extra_space); }
-
-private:
-  Resource_Manager& rman;
-  const Statement& stmt;
-};
-
-
 uint64 eval_map(const std::map< Uint32_Index, std::vector< Node_Skeleton > >& nodes);
 uint64 eval_map(const std::map< Uint31_Index, std::vector< Way_Skeleton > >& ways);
 uint64 eval_map(const std::map< Uint31_Index, std::vector< Relation_Skeleton > >& relations);
