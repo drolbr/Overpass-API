@@ -120,7 +120,7 @@ void Unix_Socket::open(const std::string& socket_name)
   else
     throw File_Error(0, socket_name, "Unix_Socket::3");
 #ifdef __APPLE__
-  local.sun_len = socket_name.size() + 1;
+  local.sun_len = socket_name.size(); //experimental change. Not testing on MacOS known.
 #endif
 
   if (max_num_reading_processes > 0)
@@ -129,7 +129,7 @@ void Unix_Socket::open(const std::string& socket_name)
         sizeof(struct sockaddr_un)) == -1)
       throw File_Error(errno, socket_name, "Unix_Socket::4");
     if (chmod(socket_name.c_str(), S_666) == -1)
-      throw File_Error(errno, socket_name, "Unix_Socket::5");
+      ; // Ignore error. If clients fail on permission problems then this cause is easy enough to find - throw File_Error(errno, socket_name, "Unix_Socket::5");
     if (listen(socket_descriptor, max_num_reading_processes) == -1)
       throw File_Error(errno, socket_name, "Unix_Socket::6");
   }
