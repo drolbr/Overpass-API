@@ -538,7 +538,7 @@ void Output_Custom::write_footer()
 {
   if (count == 0 && redirect)
   {
-    ::write_html_header(timestamp, area_timestamp, 200, false, true);
+    ::write_html_header(db_dir, timestamp, area_timestamp, 200, false, true);
     std::cout<<"<p>No results found.</p>\n";
     std::cout<<"\n</body>\n</html>\n";
   }
@@ -550,7 +550,7 @@ void Output_Custom::write_footer()
   }
   else
   {
-    ::write_html_header(timestamp, area_timestamp, 200, template_contains_js, true);
+    ::write_html_header(db_dir, timestamp, area_timestamp, 200, template_contains_js, true);
     std::cout<<process_template(header, count);
     std::cout<<'\n';
     std::cout<<output;

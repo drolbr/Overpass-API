@@ -26,12 +26,15 @@
 std::string iso_string(uint64 timestamp);
 
 
+std::string copyright_notice(const std::string& db_dir);
+
+
 typedef enum { http_get, http_post, http_head, http_options } Http_Methods;
 
 
-void write_html_header
-    (const std::string& timestamp, const std::string& area_timestamp, uint write_mime, bool write_js_init,
-     bool write_remarks);
+void write_html_header(
+    const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp,
+    uint write_mime, bool write_js_init, bool write_remarks);
 
 
 #endif

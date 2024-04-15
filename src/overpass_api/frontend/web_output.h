@@ -27,7 +27,8 @@
 
 struct Web_Output : public Error_Output
 {
-  Web_Output(uint log_level_) : http_method(http_get), has_origin(false), header_written(not_yet),
+  Web_Output(uint log_level_)
+      : http_method(http_get), has_origin(false), header_written(not_yet),
       encoding_errors(false), parse_errors(false), static_errors(false), log_level(log_level_),
       output_handler(0) {}
 
@@ -54,8 +55,8 @@ struct Web_Output : public Error_Output
 
   void enforce_header(uint write_mime);
   void write_html_header
-      (const std::string& timestamp = "", const std::string& area_timestamp = "", uint write_mime = 200,
-       bool write_js_init = false, bool write_remarks = true);
+      (const std::string& timestamp = "", const std::string& area_timestamp = "",
+       uint write_mime = 200, bool write_js_init = false, bool write_remarks = true);
   void write_payload_header
       (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp,
        bool write_mime);
@@ -74,6 +75,7 @@ private:
   bool parse_errors;
   bool static_errors;
   uint log_level;
+  std::string db_dir;
   std::string messages;
 
   Output_Handler* output_handler;

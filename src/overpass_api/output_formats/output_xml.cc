@@ -35,8 +35,7 @@ void Output_XML::write_payload_header
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<osm version=\"0.6\""
   " generator=\"Overpass API "<<basic_settings().version<<" "<<basic_settings().source_hash.substr(0, 8)<<"\">\n"
-  "<note>The data included in this document is from www.openstreetmap.org. "
-  "The data is made available under ODbL.</note>\n";
+  "<note>"<<copyright_notice(db_dir)<<"</note>\n";
   std::cout<<"<meta osm_base=\""<<timestamp<<'\"';
   if (area_timestamp != "")
     std::cout<<" areas=\""<<area_timestamp<<"\"";

@@ -43,8 +43,7 @@ void Output_JSON::write_payload_header
 	"    \"timestamp_osm_base\": \""<<timestamp<<"\",\n";
   if (area_timestamp != "")
     std::cout<<"    \"timestamp_areas_base\": \""<<area_timestamp<<"\",\n";
-  std::cout<<"    \"copyright\": \"The data included in this document is from www.openstreetmap.org."
-	" The data is made available under ODbL.\"\n"
+  std::cout<<"    \"copyright\": \""<<copyright_notice(db_dir)<<"\"\n"
         "  },\n";
   std::cout<< "  \"elements\": [\n\n";
 }

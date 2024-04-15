@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 
     Web_Output web_output(log_level);
     web_output.set_output_handler(global_settings.get_output_handler());
-    web_output.write_payload_header("", dispatcher.get_timestamp(),
+    web_output.write_payload_header(db_dir, dispatcher.get_timestamp(),
  	   area_level > 0 ? dispatcher.get_area_timestamp() : "", false);
 
     dispatcher.resource_manager().start_cpu_timer(0);

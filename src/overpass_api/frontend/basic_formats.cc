@@ -16,10 +16,12 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../template_db/types.h"
 #include "../core/datatypes.h"
 #include "basic_formats.h"
 
 
+#include <fstream>
 #include <string>
 
 
@@ -29,9 +31,28 @@ std::string iso_string(uint64 timestamp)
 }
 
 
-void write_html_header
-    (const std::string& timestamp, const std::string& area_timestamp, uint write_mime, bool write_js_init,
-     bool write_remarks)
+std::string copyright_notice(const std::string& db_dir)
+{
+  if (!db_dir.empty() && file_exists(db_dir + "copyright_notice"))
+  {
+    try
+    {
+      std::ifstream copyright_notice_f((db_dir + "copyright_notice").c_str());
+      std::string result;
+      std::getline(copyright_notice_f, result);
+      return result;
+    }
+    catch(...) {}
+  }
+  return
+      "The data included in this document is from www.openstreetmap.org. "
+      "The data is made available under ODbL.";
+}
+
+
+void write_html_header(
+    const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp,
+    uint write_mime, bool write_js_init, bool write_remarks)
 {
   if (write_mime > 0)
   {
@@ -60,9 +81,7 @@ void write_html_header
   std::cout<<(write_js_init ? "<body onload=\"init()\">\n\n" : "<body>\n\n");
   if (write_remarks)
   {
-    std::cout<<
-    "<p>The data included in this document is from www.openstreetmap.org. "
-    "The data is made available under ODbL.</p>\n";
+    std::cout<<"<p>"<<copyright_notice(db_dir)<<"</p>\n";
     if (timestamp != "")
     {
       std::cout<<"<p>Data included until: "<<timestamp;

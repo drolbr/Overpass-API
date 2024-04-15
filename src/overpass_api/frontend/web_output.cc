@@ -125,9 +125,9 @@ void Web_Output::enforce_header(uint write_mime)
 }
 
 
-void Web_Output::write_html_header
-    (const std::string& timestamp, const std::string& area_timestamp, uint write_mime, bool write_js_init,
-     bool write_remarks)
+void Web_Output::write_html_header(
+    const std::string& timestamp, const std::string& area_timestamp,
+    uint write_mime, bool write_js_init, bool write_remarks)
 {
   if (header_written != not_yet)
     return;
@@ -149,16 +149,17 @@ void Web_Output::write_html_header
       return;
     }
   }
-  ::write_html_header(timestamp, area_timestamp, write_mime, write_js_init, write_remarks);
+  ::write_html_header(db_dir, timestamp, area_timestamp, write_mime, write_js_init, write_remarks);
 }
 
 
 void Web_Output::write_payload_header
-    (const std::string& db_dir, const std::string& timestamp, const std::string& area_timestamp, bool write_mime)
+    (const std::string& db_dir_, const std::string& timestamp, const std::string& area_timestamp, bool write_mime)
 {
   if (header_written != not_yet)
     return;
   header_written = payload;
+  db_dir = db_dir_;
 
   if (write_mime)
   {
@@ -177,7 +178,7 @@ void Web_Output::write_payload_header
   }
 
   if (output_handler)
-    output_handler->write_payload_header(db_dir, timestamp, area_timestamp);
+    output_handler->write_payload_header(db_dir_, timestamp, area_timestamp);
 }
 
 
