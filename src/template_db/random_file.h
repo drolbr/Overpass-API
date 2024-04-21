@@ -150,8 +150,8 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
     // Save the found position to the index.
     if (index->get_blocks().size() <= cache_pos)
       index->get_blocks().resize(cache_pos+1, Random_File_Index_Entry(index->npos, 1));
-    Random_File_Index_Entry entry(disk_pos, data_size);
-    index->get_blocks()[cache_pos] = entry;
+    // Add old index->get_blocks()[cache_pos] to void_blocks if applicable
+    index->get_blocks()[cache_pos] = Random_File_Index_Entry(disk_pos, data_size);
 
     // Write the data at the found position.
     val_file.seek((int64)disk_pos*block_size, "Random_File:21");
