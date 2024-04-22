@@ -452,9 +452,11 @@ int main(int argc, char* args[])
   std::string test_to_execute;
   if (argc > 1)
     test_to_execute = args[1];
-
+  
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
+    shm_unlink("osm3s_share_test");
+
     try
     {
       Test_File test_file_1("Test_File_1");
@@ -481,27 +483,39 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "2"))
   {
-    Test_File test_file_1("Test_File_1");
-    Test_File test_file_2("Test_File_2");
-    Test_File test_file_3("Test_File_3");
-    Test_File test_file_4("Test_File_4");
+    shm_unlink("osm3s_share_test");
 
-    create_dummy_files(test_file_1, test_file_2, test_file_3, test_file_4, true);
+    try
     {
-      std::ofstream test_bin_out((BASE_DIRECTORY + "test-shadow").c_str());
-    }
+      Test_File test_file_1("Test_File_1");
+      Test_File test_file_2("Test_File_2");
+      Test_File test_file_3("Test_File_3");
+      Test_File test_file_4("Test_File_4");
 
-    std::vector< File_Properties* > file_properties;
-    file_properties.push_back(&test_file_1);
-    file_properties.push_back(&test_file_2);
-    file_properties.push_back(&test_file_3);
-    Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
-        BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY, "",
-        5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
+      create_dummy_files(test_file_1, test_file_2, test_file_3, test_file_4, true);
+      {
+        std::ofstream test_bin_out((BASE_DIRECTORY + "test-shadow").c_str());
+      }
+
+      std::vector< File_Properties* > file_properties;
+      file_properties.push_back(&test_file_1);
+      file_properties.push_back(&test_file_2);
+      file_properties.push_back(&test_file_3);
+      Dispatcher dispatcher("osm3s_share_test", "osm3s_index_share_test",
+          BASE_DIRECTORY + "test-shadow", BASE_DIRECTORY, "",
+          5, 500, 180, 1024*1024*1024,  1024*1024, file_properties);
+    }
+    catch (File_Error e)
+    {
+      std::cout<<"File error catched: "
+      <<e.error_number<<' '<<e.filename<<' '<<e.origin<<'\n';
+    }
   }
 
   if ((test_to_execute == "") || (test_to_execute == "3"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -513,6 +527,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "4"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -534,6 +550,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "5"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -564,6 +582,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "6"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -586,6 +606,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "7"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -616,6 +638,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "8"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -654,6 +678,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "9"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -671,6 +697,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "10"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -691,6 +719,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "11"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -714,6 +744,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "12"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -744,6 +776,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "13"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -792,6 +826,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "14"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -825,6 +861,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "15"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -866,6 +904,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "16"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -892,6 +932,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "17"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -941,6 +983,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "18"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -970,6 +1014,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "19"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -989,6 +1035,8 @@ int main(int argc, char* args[])
 
   if ((test_to_execute == "") || (test_to_execute == "20"))
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;
@@ -1006,6 +1054,8 @@ int main(int argc, char* args[])
 
   if (test_to_execute.substr(0, 6) == "server")
   {
+    shm_unlink("osm3s_share_test");
+
     Test_File test_file("Test_File");
 
     std::vector< File_Properties* > file_properties;

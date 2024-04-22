@@ -194,57 +194,7 @@ void Random_File< Key, Value >::move_cache_window(uint32 pos)
 template< typename Key, typename Value >
 uint32 Random_File< Key, Value >::allocate_block(uint32 data_size)
 {
-  uint32 result = this->index->block_count;
-
-  if (this->index->get_void_blocks().empty())
-    this->index->block_count += data_size;
-  else
-  {
-    std::vector< std::pair< uint32, uint32 > >::iterator pos_it
-    = std::lower_bound(this->index->get_void_blocks().begin(), this->index->get_void_blocks().end(),
-        std::make_pair(data_size, uint32(0)));
-
-    if (pos_it != this->index->get_void_blocks().end() && pos_it->first == data_size)
-    {
-      // We have a gap of exactly the needed size.
-      result = pos_it->second;
-      this->index->get_void_blocks().erase(pos_it);
-    }
-    else
-    {
-      pos_it = --(this->index->get_void_blocks().end());
-      uint32 last_size = pos_it->first;
-      while (pos_it != this->index->get_void_blocks().begin() && last_size > data_size)
-      {
-        --pos_it;
-        if (last_size == pos_it->first)
-        {
-          // We have a gap size that appears twice (or more often).
-          // This is a good heuristic choice.
-          result = pos_it->second;
-          pos_it->first -= data_size;
-          pos_it->second += data_size;
-          rearrange_block(this->index->get_void_blocks().begin(), pos_it, *pos_it);
-          return result;
-        }
-        last_size = pos_it->first;
-      }
-
-      pos_it = --(this->index->get_void_blocks().end());
-      if (pos_it->first >= data_size)
-      {
-        // If no really matching block exists then we choose the largest one.
-        result = pos_it->second;
-        pos_it->first -= data_size;
-        pos_it->second += data_size;
-        rearrange_block(this->index->get_void_blocks().begin(), pos_it, *pos_it);
-      }
-      else
-        this->index->block_count += data_size;
-    }
-  }
-
-  return result;
+  return index->get_void_blocks().allocate_block(data_size);
 }
 
 

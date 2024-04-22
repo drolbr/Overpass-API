@@ -20,6 +20,7 @@
 #define DE__OSM3S___TEMPLATE_DB__RANDOM_FILE_INDEX_H
 
 #include "types.h"
+#include "void_blocks.h"
 
 #include <unistd.h>
 
@@ -64,7 +65,7 @@ public:
   {
     return blocks;
   }
-  std::vector< std::pair< uint32, uint32 > >& get_void_blocks()
+  Void_Blocks& get_void_blocks()
   {
     if (!void_blocks_initialized)
       init_void_blocks();
@@ -81,7 +82,7 @@ private:
   std::string file_name_extension_;
 
   std::vector< Random_File_Index_Entry > blocks;
-  std::vector< std::pair< uint32, uint32 > > void_blocks;
+  Void_Blocks void_blocks;
   bool void_blocks_initialized;
 
   uint64 block_size_;
@@ -243,15 +244,7 @@ inline Random_File_Index::Random_File_Index
 
 inline void Random_File_Index::init_void_blocks()
 {
-  std::vector< bool > is_referred(block_count, false);
-  for (std::vector< Random_File_Index_Entry >::const_iterator it = blocks.begin(); it != blocks.end(); ++it)
-  {
-    if (it->pos != npos)
-    {
-      for (uint32 i = 0; i < it->size; ++i)
-        is_referred[it->pos + i] = true;
-    }
-  }
+  void_blocks.set_size(block_count);
 
   bool empty_index_file_used = false;
   if (empty_index_file_name != "")
@@ -262,31 +255,23 @@ inline void Random_File_Index::init_void_blocks()
       uint32 void_index_size = void_blocks_file.size("Random_File:11");
       Void_Pointer< uint8 > index_buf(void_index_size);
       void_blocks_file.read(index_buf.ptr, void_index_size, "Random_File:15");
-      for (uint32 i = 0; i < void_index_size/VOID_BLOCK_ENTRY_SIZE; ++i)
-        void_blocks.push_back(*(std::pair< uint32, uint32 >*)(index_buf.ptr + 8*i));
+      void_blocks.read_dump(index_buf.ptr, void_index_size/(sizeof(uint32_t)*2));
       empty_index_file_used = true;
     }
-    catch (File_Error e) {}
+    catch (File_Error e) {
+      empty_index_file_used = false;
+    }
   }
 
   if (!empty_index_file_used)
   {
-    // determine void_blocks
-    uint32 last_start = 0;
-    for (uint32 i(0); i < block_count; ++i)
+    for (const auto& i : blocks)
     {
-      if (is_referred[i])
-      {
-        if (last_start < i)
-          void_blocks.push_back(std::make_pair(i - last_start, last_start));
-        last_start = i+1;
-      }
+      if (i.pos != npos)
+        void_blocks.set_reserved(i.pos, i.size);
     }
-    if (last_start < block_count)
-      void_blocks.push_back(std::make_pair(block_count - last_start, last_start));
   }
 
-  std::stable_sort(void_blocks.begin(), void_blocks.end());
   void_blocks_initialized = true;
 }
 
@@ -323,17 +308,16 @@ inline Random_File_Index::~Random_File_Index()
   dest_file.write(index_buf.ptr, index_size, "Random_File:17");
 
   // Write void blocks
-  Void_Pointer< uint8 > void_index_buf(void_blocks.size() * 8);
-  std::pair< uint32, uint32 >* it_ptr = (std::pair< uint32, uint32 >*)(void_index_buf.ptr);
-  for (std::vector< std::pair< uint32, uint32 > >::const_iterator it(void_blocks.begin());
-      it != void_blocks.end(); ++it)
-    *(it_ptr++) = *it;
   try
   {
+    uint32_t buf_size = void_blocks.num_distinct_blocks() * 8;
+    Void_Pointer< uint8 > void_index_buf(buf_size);
+    void_blocks.dump_distinct_blocks(void_index_buf.ptr);
+
     Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666, "Random_File:5");
-    void_file.write(void_index_buf.ptr, void_blocks.size() * 8, "Random_File:18");
+    void_file.write(void_index_buf.ptr, buf_size, "Random_File:18");
   }
-  catch (File_Error e) {}
+  catch (...) {}
 }
 
 
@@ -343,16 +327,8 @@ inline Random_File_Index::~Random_File_Index()
 inline std::vector< bool > get_map_index_footprint
     (const File_Properties& file_prop, std::string db_dir, bool use_shadow = false)
 {
-  Random_File_Index index(file_prop, Access_Mode::readonly, use_shadow, db_dir, "");
-
-  std::vector< bool > result(index.block_count, true);
-  for (std::vector< std::pair< uint32, uint32 > >::const_iterator
-      it = index.get_void_blocks().begin(); it != index.get_void_blocks().end(); ++it)
-  {
-    for (uint32 i = 0; i < it->first; ++i)
-      result[it->second + i] = false;
-  }
-  return result;
+  Random_File_Index index(file_prop, Access_Mode::readonly, use_shadow, db_dir, "");  
+  return index.get_void_blocks().get_map_index_footprint();
 }
 
 #endif

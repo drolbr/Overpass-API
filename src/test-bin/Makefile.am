@@ -69,34 +69,35 @@ statements_cc = \
   ../overpass_api/statements/user.cc \
   ../template_db/lz4_wrapper.cc \
   ../template_db/types.cc \
+  ../template_db/void_blocks.cc \
   ../template_db/zlib_wrapper.cc
 
 output_formats_dir = ../overpass_api/output_formats
 
 testenv_cc = ${settings_cc} ../overpass_api/dispatch/resource_manager.cc ../overpass_api/frontend/console_output.cc ../overpass_api/frontend/user_interface.cc ../overpass_api/frontend/output.cc ../overpass_api/frontend/basic_formats.cc ../overpass_api/frontend/cgi-helper.cc ../overpass_api/frontend/decode_text.cc ../overpass_api/frontend/output_handler.cc ../overpass_api/frontend/tokenizer_utils.cc ../expat/map_ql_input.cc ${output_formats_dir}/output_xml.cc ${output_formats_dir}/output_xml_factory.cc
 
-file_blocks_SOURCES = ../template_db/file_blocks.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+file_blocks_SOURCES = ../template_db/file_blocks.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 file_blocks_LDADD = @COMPRESS_LIBS@
 
-block_backend_SOURCES = ../template_db/block_backend.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+block_backend_SOURCES = ../template_db/block_backend.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 block_backend_LDADD = @COMPRESS_LIBS@
 
-random_file_SOURCES = ../template_db/random_file.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+random_file_SOURCES = ../template_db/random_file.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 random_file_LDADD = @COMPRESS_LIBS@
 
-node_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/node_updater.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+node_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/node_updater.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 node_updater_LDADD = -lexpat @COMPRESS_LIBS@
-way_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/way_updater.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+way_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/way_updater.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 way_updater_LDADD = -lexpat @COMPRESS_LIBS@
-relation_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/relation_updater.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+relation_updater_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/relation_updater.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 relation_updater_LDADD = -lexpat @COMPRESS_LIBS@
 #complete_updater_SOURCES = ${expat_cc} ${settings_cc} ../overpass_api/osm-backend/complete_updater.test.cc 
 #complete_updater_LDADD = -lexpat
-diff_updater_SOURCES = ${settings_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/diff_updater.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+diff_updater_SOURCES = ${settings_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/diff_updater.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 diff_updater_LDADD = @COMPRESS_LIBS@
-compare_osm_base_maps_SOURCES = ${settings_cc} ../overpass_api/osm-backend/compare_osm_base_maps.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+compare_osm_base_maps_SOURCES = ${settings_cc} ../overpass_api/osm-backend/compare_osm_base_maps.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 compare_osm_base_maps_LDADD = @COMPRESS_LIBS@
-dump_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/dump_database.test.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+dump_database_SOURCES = ${expat_cc} ${settings_cc} ${output_cc} ../overpass_api/data/ranges.inst.cc ../overpass_api/osm-backend/area_updater.cc ../overpass_api/osm-backend/meta_updater.cc ../overpass_api/osm-backend/basic_updater.cc ../overpass_api/osm-backend/node_updater.cc ../overpass_api/osm-backend/way_updater.cc ../overpass_api/osm-backend/relation_updater.cc ../overpass_api/osm-backend/dump_database.test.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 dump_database_LDADD = -lexpat @COMPRESS_LIBS@
 consistency_check_SOURCES = ../overpass_api/dispatch/consistency_check.cc ${statements_cc} ${testenv_cc} ../overpass_api/dispatch/scripting_core.cc ../overpass_api/dispatch/dispatcher_stub.cc ../overpass_api/frontend/map_ql_parser.cc ../overpass_api/frontend/hash_request.cc ../overpass_api/statements/statement_dump.cc ../template_db/dispatcher_client.cc
 # consistency_check_SOURCES = ../overpass_api/dispatch/consistency_check.cc ${statements_cc} ../overpass_api/core/settings.cc ../overpass_api/frontend/console_output.cc ../overpass_api/dispatch/scripting_core.cc ../template_db/dispatcher.cc
@@ -105,8 +106,8 @@ consistency_check_LDADD = -lexpat @COMPRESS_LIBS@
 #example_queries_LDADD = -lexpat
 generate_test_file_SOURCES = ../overpass_api/osm-backend/generate_test_file.cc
 generate_test_file_areas_SOURCES = ../overpass_api/osm-backend/generate_test_file_areas.cc
-generate_test_file_interpreter_SOURCES = ../overpass_api/osm-backend/generate_test_file_interpreter.cc ../overpass_api/core/settings.cc
-generate_test_file_meta_SOURCES = ../overpass_api/osm-backend/generate_test_file_meta.cc ../overpass_api/core/settings.cc
+generate_test_file_interpreter_SOURCES = ../overpass_api/osm-backend/generate_test_file_interpreter.cc ../overpass_api/core/settings.cc ../template_db/void_blocks.cc
+generate_test_file_meta_SOURCES = ../overpass_api/osm-backend/generate_test_file_meta.cc ../overpass_api/core/settings.cc ../template_db/void_blocks.cc
 index_computations_SOURCES = ../overpass_api/core/index_computations.test.cc ../overpass_api/data/ranges.inst.cc
 index_computations_LDADD =
 four_field_index_SOURCES = ../overpass_api/core/four_field_index.cc ../overpass_api/core/four_field_index.test.cc
@@ -146,7 +147,7 @@ union_SOURCES = ../overpass_api/statements/union.test.cc ${statements_cc} ${test
 union_LDADD = @COMPRESS_LIBS@
 #benchmark_SOURCES = ../overpass_api/statements/benchmark.cc ${statements_cc} ${testenv_cc}
 #benchmark_LDADD = 
-test_dispatcher_SOURCES = ../template_db/dispatcher.test.cc ../template_db/dispatcher_client.cc ../template_db/dispatcher.cc ../template_db/file_tools.cc ../template_db/transaction_insulator.cc ../template_db/types.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
+test_dispatcher_SOURCES = ../template_db/dispatcher.test.cc ../template_db/dispatcher_client.cc ../template_db/dispatcher.cc ../template_db/file_tools.cc ../template_db/transaction_insulator.cc ../template_db/types.cc ../template_db/void_blocks.cc ../template_db/zlib_wrapper.cc ../template_db/lz4_wrapper.cc
 test_dispatcher_LDADD = @COMPRESS_LIBS@
 
 AM_CXXFLAGS = -std=c++11
