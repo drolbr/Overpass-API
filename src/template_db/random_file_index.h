@@ -328,7 +328,7 @@ inline std::vector< bool > get_map_index_footprint
     (const File_Properties& file_prop, std::string db_dir, bool use_shadow = false)
 {
   Random_File_Index index(file_prop, Access_Mode::readonly, use_shadow, db_dir, "");  
-  return index.get_void_blocks().get_map_index_footprint();
+  return index.get_void_blocks().get_index_footprint();
 }
 
 #endif

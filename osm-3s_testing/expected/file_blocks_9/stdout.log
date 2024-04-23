@@ -1,6 +1,6 @@
 ** Test insertion again
 Read test
-Index footprint: 111111111111
+Index footprint: 000111111111111
 Reading all blocks ...
 Real size 26 bytes, first block size 22 bytes, first index 10
 Real size 36 bytes, first block size 32 bytes, first index 20

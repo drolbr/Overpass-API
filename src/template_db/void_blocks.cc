@@ -73,7 +73,7 @@ void Void_Blocks::set_reserved(uint32_t offset, uint32_t data_size)
 }
 
 
-std::vector< bool > Void_Blocks::get_map_index_footprint() const
+std::vector< bool > Void_Blocks::get_index_footprint() const
 {
   std::vector< bool > result(used.size(), false);
   decltype(result.size()) j = 0;

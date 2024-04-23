@@ -16,7 +16,7 @@ public:
   void set_reserved(uint32_t offset, uint32_t data_size);
 
   uint32_t size() const { return used.size(); }
-  std::vector< bool > get_map_index_footprint() const;
+  std::vector< bool > get_index_footprint() const;
   uint32_t num_distinct_blocks() const;
   void dump_distinct_blocks(uint8_t* target) const;
   

@@ -206,6 +206,7 @@ struct File_Blocks_Write_Iterator
   void set_block(Writeable_File_Blocks_Index< TIndex >& index, const File_Block_Index_Entry< TIndex >& rhs)
   {
     index.drop_block_array();
+    index.get_void_blocks().release_block(block_it->pos, block_it->size);
     *block_it = rhs;
   }
   void insert_block(Writeable_File_Blocks_Index< TIndex >& index, const File_Block_Index_Entry< TIndex >& entry);
@@ -586,6 +587,7 @@ void File_Blocks_Write_Iterator< TIndex, TIterator >::erase_block(Writeable_File
   operator++();
 
   index.drop_block_array();
+  index.get_void_blocks().release_block(to_delete->pos, to_delete->size);
   if (to_delete == block_begin)
   {
     to_delete = index.erase(to_delete);
@@ -602,7 +604,10 @@ void File_Blocks_Write_Iterator< TIndex, TIterator >::erase_blocks(
 {
   index.drop_block_array();
   while (block_it != rhs.block_it)
+  {
+    index.get_void_blocks().release_block(block_it->pos, block_it->size);
     block_it = index.erase(block_it);
+  }
 }
 
 
@@ -931,57 +936,7 @@ uint64* File_Blocks< TIndex, TIterator >::read_block
 template< typename TIndex, typename TIterator >
 uint32 File_Blocks< TIndex, TIterator >::allocate_block(uint32 data_size)
 {
-  uint32 result = this->wr_idx->get_block_count();
-
-  if (this->wr_idx->get_void_blocks().empty())
-    this->wr_idx->increase_block_count(data_size);
-  else
-  {
-    std::vector< std::pair< uint32, uint32 > >::iterator pos_it
-        = std::lower_bound(this->wr_idx->get_void_blocks().begin(), this->wr_idx->get_void_blocks().end(),
-			   std::make_pair(data_size, uint32(0)));
-
-    if (pos_it != this->wr_idx->get_void_blocks().end() && pos_it->first == data_size)
-    {
-      // We have a gap of exactly the needed size.
-      result = pos_it->second;
-      this->wr_idx->get_void_blocks().erase(pos_it);
-    }
-    else
-    {
-      pos_it = --(this->wr_idx->get_void_blocks().end());
-      uint32 last_size = pos_it->first;
-      while (pos_it != this->wr_idx->get_void_blocks().begin() && last_size > data_size)
-      {
-	--pos_it;
-	if (last_size == pos_it->first)
-	{
-	  // We have a gap size that appears twice (or more often).
-	  // This is a good heuristic choice.
-	  result = pos_it->second;
-	  pos_it->first -= data_size;
-	  pos_it->second += data_size;
-	  rearrange_block(this->wr_idx->get_void_blocks().begin(), pos_it, *pos_it);
-	  return result;
-	}
-	last_size = pos_it->first;
-      }
-
-      pos_it = --(this->wr_idx->get_void_blocks().end());
-      if (pos_it->first >= data_size)
-      {
-	// If no really matching block exists then we choose the largest one.
-	result = pos_it->second;
-	pos_it->first -= data_size;
-	pos_it->second += data_size;
-	rearrange_block(this->wr_idx->get_void_blocks().begin(), pos_it, *pos_it);
-      }
-      else
-	this->wr_idx->increase_block_count(data_size);
-    }
-  }
-
-  return result;
+  return wr_idx->get_void_blocks().allocate_block(data_size);
 }
 
 

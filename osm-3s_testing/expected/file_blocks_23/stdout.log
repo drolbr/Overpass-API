@@ -1,6 +1,6 @@
 ** Test the behaviour for the gap filling strategy - part 2
 Compressed Read test
-Index footprint: 111001110011110000000011000111
+Index footprint: 1100011100111100000000110001111
 Reading all blocks ...
 Real size 103 bytes, first block size 32 bytes, first index 20, second block size 33 bytes, second index 21
 Real size 41 bytes, first block size 37 bytes, first index 25

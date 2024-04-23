@@ -20,6 +20,7 @@
 #define DE__OSM3S___TEMPLATE_DB__FILE_BLOCKS_INDEX_H
 
 #include "types.h"
+#include "void_blocks.h"
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -280,7 +281,7 @@ public:
       typename std::list< File_Block_Index_Entry< Index > >::iterator& block_it)
   { return block_list.erase(block_it); }
 
-  std::vector< std::pair< uint32, uint32 > >& get_void_blocks()
+  Void_Blocks& get_void_blocks()
   {
     if (!void_blocks_initialized)
       init_void_blocks();
@@ -298,9 +299,10 @@ private:
   std::string data_file_name;
   File_Blocks_Index_Structure_Params params;
   std::string file_name_extension_;
+  Access_Mode access_mode_;
 
   std::list< File_Block_Index_Entry< Index > > block_list;
-  std::vector< std::pair< uint32, uint32 > > void_blocks;
+  Void_Blocks void_blocks;
   bool void_blocks_initialized;
 
   void init_blocks();
@@ -403,7 +405,7 @@ inline File_Blocks_Index_File::File_Blocks_Index_File(
       Raw_File(file_name, O_WRONLY|O_TRUNC, S_666, "File_Blocks_Index_File::File_Blocks_Index_File::1");
       buf.resize(0);
     }
-    else
+    else if (file_exists(file_name))
     {
       Raw_File source_file(file_name, O_RDONLY, S_666, "File_Blocks_Index_File::File_Blocks_Index_File::2");
 
@@ -511,7 +513,7 @@ Writeable_File_Blocks_Index< Index >::Writeable_File_Blocks_Index
      data_file_name(db_dir + file_prop.get_file_name_trunk()
          + file_name_extension + file_prop.get_data_suffix()),
      params(file_prop, file_name_extension, compression_method_, idx_file, file_size_of(data_file_name)), 
-     file_name_extension_(file_name_extension), void_blocks_initialized(false)
+     file_name_extension_(file_name_extension), access_mode_(access_mode), void_blocks_initialized(false)
 {
   init_blocks();
   init_void_blocks();
@@ -546,58 +548,11 @@ void Writeable_File_Blocks_Index< Index >::init_blocks()
 }
 
 
-inline std::vector< std::pair< uint32, uint32 > > compute_void_blocks(const std::vector< bool >& is_referred)
-{
-  std::vector< std::pair< uint32, uint32 > > void_blocks;
-  // determine void_blocks
-  uint32 last_start = 0;
-  for (uint32 i = 0; i < is_referred.size(); ++i)
-  {
-    if (is_referred[i])
-    {
-      if (last_start < i)
-        void_blocks.push_back(std::make_pair(i - last_start, last_start));
-      last_start = i+1;
-    }
-  }
-  if (last_start < is_referred.size())
-    void_blocks.push_back(std::make_pair(is_referred.size() - last_start, last_start));
-
-  return void_blocks;
-}
-
-
-template< typename Iterator >
-std::vector< std::pair< uint32, uint32 > > compute_void_blocks(Iterator begin, Iterator end, uint32 block_count)
-{
-  std::vector< bool > is_referred(block_count, false);
-  for (auto it = begin; it != end; ++it)
-  {
-    for (uint32 i = 0; i < it.size(); ++i)
-      is_referred[it.pos() + i] = true;
-  }
-  
-  return compute_void_blocks(is_referred);
-}
-
-
-template< typename List >
-std::vector< std::pair< uint32, uint32 > > compute_void_blocks(const List& block_list, uint32 block_count)
-{
-  std::vector< bool > is_referred(block_count, false);
-  for (auto it = block_list.begin(); it != block_list.end(); ++it)
-  {
-    for (uint32 i = 0; i < it->size; ++i)
-      is_referred[it->pos + i] = true;
-  }
-  
-  return compute_void_blocks(is_referred);
-}
-
-
 template< class Index >
 void Writeable_File_Blocks_Index< Index >::init_void_blocks()
 {
+  void_blocks.set_size(params.block_count);
+
   bool empty_index_file_used = false;
   if (empty_index_file_name != "")
   {
@@ -606,19 +561,21 @@ void Writeable_File_Blocks_Index< Index >::init_void_blocks()
       Raw_File void_blocks_file(empty_index_file_name, O_RDONLY, S_666, "");
       uint32 void_index_size = void_blocks_file.size("File_Blocks_Index::File_Blocks_Index::6");
       Void_Pointer< uint8 > index_buf(void_index_size);
-      void_blocks_file.read(index_buf.ptr, void_index_size,
-			      "File_Blocks_Index::File_Blocks_Index::7");
-      for (uint32 i = 0; i < void_index_size/8; ++i)
-        void_blocks.push_back(*(std::pair< uint32, uint32 >*)(index_buf.ptr + 8*i));
+      void_blocks_file.read(index_buf.ptr, void_index_size, "File_Blocks_Index::File_Blocks_Index::7");
+      void_blocks.read_dump(index_buf.ptr, void_index_size/(sizeof(uint32_t)*2));
       empty_index_file_used = true;
     }
-    catch (File_Error e) {}
+    catch (File_Error e) {
+      empty_index_file_used = false;
+    }
   }
 
   if (!empty_index_file_used)
-    void_blocks = compute_void_blocks(block_list, params.block_count);
+  {
+    for (const auto& i : block_list)
+      void_blocks.set_reserved(i.pos, i.size);
+  }
 
-  std::stable_sort(void_blocks.begin(), void_blocks.end());
   void_blocks_initialized = true;
 }
 
@@ -661,6 +618,9 @@ void File_Blocks_Index_File::rebuild_index_buf(
 template< class Index >
 Writeable_File_Blocks_Index< Index >::~Writeable_File_Blocks_Index()
 {
+  if (access_mode_ == Access_Mode::readonly)
+    return;
+  
   // Keep space for file version and size information
   if (!idx_file_buf_valid)
     idx_file.rebuild_index_buf(params, block_list);
@@ -673,20 +633,16 @@ Writeable_File_Blocks_Index< Index >::~Writeable_File_Blocks_Index()
   dest_file.write((void*)idx_file.header(), idx_file.size(), "File_Blocks_Index::~File_Blocks_Index::4");
 
   // Write void blocks
-  Void_Pointer< uint8 > void_index_buf(void_blocks.size() * 8);
-  std::pair< uint32, uint32 >* it_ptr = (std::pair< uint32, uint32 >*)(void_index_buf.ptr);
-  for (std::vector< std::pair< uint32, uint32 > >::const_iterator it(void_blocks.begin());
-      it != void_blocks.end(); ++it)
-    *(it_ptr++) = *it;
-
   try
   {
-    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666,
-		       "File_Blocks_Index::~File_Blocks_Index::5");
-    void_file.write(void_index_buf.ptr, void_blocks.size() * 8,
-		    "File_Blocks_Index::~File_Blocks_Index::6");
+    uint32_t buf_size = void_blocks.num_distinct_blocks() * 8;
+    Void_Pointer< uint8 > void_index_buf(buf_size);
+    void_blocks.dump_distinct_blocks(void_index_buf.ptr);
+
+    Raw_File void_file(empty_index_file_name, O_RDWR|O_TRUNC, S_666, "File_Blocks_Index::~File_Blocks_Index::5");
+    void_file.write(void_index_buf.ptr, buf_size, "File_Blocks_Index::~File_Blocks_Index::6");
   }
-  catch (File_Error e) {}
+  catch (...) {}
 }
 
 
@@ -696,20 +652,11 @@ template< class Index >
 std::vector< bool > get_data_index_footprint(
     const File_Properties& file_prop, std::string db_dir, int32 min_version)
 {
-  Readonly_File_Blocks_Index< Index > index(file_prop, false, db_dir, "");
+  Writeable_File_Blocks_Index< Index > index(file_prop, Access_Mode::readonly, false, db_dir, "");
   if (index.get_file_format_version() < min_version)
     return {};
 
-  auto void_blocks = compute_void_blocks(index.begin(), index.end(), index.get_block_count());
-
-  std::vector< bool > result(index.get_block_count(), true);
-  for (typename std::vector< std::pair< uint32, uint32 > >::const_iterator
-      it = void_blocks.begin(); it != void_blocks.end(); ++it)
-  {
-    for (uint32 i = 0; i < it->first; ++i)
-      result[it->second + i] = false;
-  }
-  return result;
+  return index.get_void_blocks().get_index_footprint();
 }
 
 #endif
