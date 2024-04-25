@@ -293,8 +293,6 @@ private:
   template< typename File_Blocks_Iterator >
   uint64* read_block_(
       const File_Blocks_Iterator& it, uint64* buffer_, bool check_idx) const;
-  uint32 allocate_block(uint32 data_size);
-  void write_block(uint64* buf, uint32 uncompressed_size, uint32& data_size, uint32& pos);
 };
 
 
@@ -932,40 +930,38 @@ uint64* File_Blocks< TIndex, TIterator >::read_block
 }
 
 
-// Finds an appropriate block, removes it from the list of available blocks, and returns it
-template< typename TIndex, typename TIterator >
-uint32 File_Blocks< TIndex, TIterator >::allocate_block(uint32 data_size)
-{
-  return wr_idx->get_void_blocks().allocate_block(data_size);
-}
-
-
-template< typename TIndex, typename TIterator >
-void File_Blocks< TIndex, TIterator >::write_block(uint64* buf, uint32 payload_size, uint32& block_count, uint32& pos)
-{
+inline std::pair< uint64_t*, uint32_t > prepare_block_for_write(
+    uint64_t* input, uint64_t* buffer, uint32_t payload_size,
+    uint32_t block_size, uint32_t compression_factor, int compression_method)
+{  
   if (sigterm_status())
     throw File_Error(0, "-", "SIGTERM received");
 
-  void* payload = buf;
+  if (payload_size < block_size * compression_factor)
+    memset(((uint8*)input) + payload_size, 0, block_size * compression_factor - payload_size);
+
+  uint64_t* payload = input;
   if (compression_method == File_Blocks_Index_Base::ZLIB_COMPRESSION)
   {
-    payload = buffer.ptr;
-    block_count = (
-        Zlib_Deflate(1).compress(buf, payload_size, payload, block_size * compression_factor)
-        - 1) / block_size + 1;
+    payload = buffer;
+    payload_size = Zlib_Deflate(1).compress(input, payload_size, payload, block_size * compression_factor);
   }
   else if (compression_method == File_Blocks_Index_Base::LZ4_COMPRESSION)
   {
-    payload = buffer.ptr;
-    block_count = (
-        LZ4_Deflate().compress(buf, payload_size, payload, block_size * compression_factor * 2)
-        - 1) / block_size + 1;
+    payload = buffer;
+    payload_size = LZ4_Deflate().compress(input, payload_size, payload, block_size * compression_factor * 2);
   }
-
-  pos = allocate_block(block_count);
   
-  data_file.seek(((int64)pos)*block_size, "File_Blocks::write_block::1");
-  data_file.write((uint8*)payload, block_size * block_count, "File_Blocks::write_block::2");
+  // compute block_count
+  return { payload, payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1 };
+}
+
+
+inline void write_prepared_block(
+    Raw_File& data_file, std::pair< uint64_t*, uint32_t > buf_size, int64 pos_in_file, uint32_t block_size)
+{
+  data_file.seek(pos_in_file * block_size, "File_Blocks::write_block::1");
+  data_file.write(buf_size.first, block_size * buf_size.second, "File_Blocks::write_block::2");
 }
 
 
@@ -986,14 +982,14 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
   if (buf == 0)
     return it;
 
-  uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
-  uint32 pos;
-  if (payload_size < block_size * compression_factor)
-    memset(((uint8*)buf) + payload_size, 0, block_size * compression_factor - payload_size);
-  write_block(buf, payload_size, data_size, pos);
+  auto buf_size = prepare_block_for_write(
+      (uint64_t*)buf, (uint64_t*)buffer.ptr, payload_size, block_size, compression_factor, compression_method);
+
+  uint32_t pos = wr_idx->get_void_blocks().allocate_block(buf_size.second);
+  write_prepared_block(data_file, buf_size, pos, block_size);
 
   Write_Iterator return_it = it;
-  return_it.insert_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, data_size));
+  return_it.insert_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, buf_size.second));
   return_it.is_empty = it.is_empty;
   return return_it;
 }
@@ -1016,13 +1012,13 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
   if (!buf)
     return erase_block(it);
 
-  uint32 data_size = payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1;
-  if (payload_size < block_size * compression_factor)
-    memset(((uint8*)buf) + payload_size, 0, block_size * compression_factor - payload_size);
-  uint32 pos = 0;
-  write_block(buf, payload_size, data_size, pos);
+  auto buf_size = prepare_block_for_write(
+      (uint64_t*)buf, (uint64_t*)buffer.ptr, payload_size, block_size, compression_factor, compression_method);
 
-  it.set_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, data_size));
+  uint32_t pos = wr_idx->get_void_blocks().allocate_block(buf_size.second);  
+  write_prepared_block(data_file, buf_size, pos, block_size);
+
+  it.set_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, buf_size.second));
   return it;
 }
 
