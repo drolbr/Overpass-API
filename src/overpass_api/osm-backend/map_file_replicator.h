@@ -33,11 +33,44 @@ void replicate_current_map_file(Osm_Backend_Callback* callback, Transaction& tra
       from_db(transaction.data_index(current_skeleton_file_properties< Skeleton >()));
 
   Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
-  Random_File< typename Skeleton::Id_Type, Index >
-      into_random(into_transaction.random_index(current_skeleton_file_properties< Skeleton >()));
+  
+  typename Skeleton::Id_Type id_lower_limit = 0ull;
+  typename Skeleton::Id_Type flush_count = 4*1024*1024*1024ull;
+  typename Skeleton::Id_Type id_max_seen = 1ull;
+  while (id_lower_limit < id_max_seen)
+  {
+    uint64_t progress = 0;
+    std::vector< Index > idx_buf(flush_count.val(), Index{ 0u });
 
-  for (auto it = from_db.flat_begin(); !(it == from_db.flat_end()); ++it)
-    into_random.put(it.object().id, it.index().val());
+    for (auto it = from_db.flat_begin(); !(it == from_db.flat_end()); ++it)
+    {
+      id_max_seen = std::max(id_max_seen, it.object().id);
+
+      if (!(it.object().id < id_lower_limit) && it.object().id < id_lower_limit + flush_count)
+        idx_buf[it.object().id.val() - id_lower_limit.val()] = it.index();
+      
+      if (++progress % (1024*1024) == 0)
+        std::cerr<<'-';
+    }
+    {
+      Random_File< typename Skeleton::Id_Type, Index >
+          into_random(into_transaction.random_index(current_skeleton_file_properties< Skeleton >()));
+
+      auto end = std::min(
+          (decltype(id_lower_limit.val()))idx_buf.size(), id_max_seen.val() - id_lower_limit.val() + 1);
+      for (uint64_t i = 0; i < end; ++i)
+      {
+        if (idx_buf[i].val())
+          into_random.put(id_lower_limit + i, idx_buf[i]);
+      
+        if (++progress % (1024*1024) == 0)
+          std::cerr<<'=';
+      }
+    }
+    
+    std::cerr<<"\nDEBUG_current "<<id_lower_limit.val()<<' '<<flush_count.val()<<' '<<id_max_seen.val()<<'\n';
+    id_lower_limit += flush_count;
+  }
 }
 
 
@@ -47,34 +80,65 @@ void replicate_attic_map_file(Osm_Backend_Callback* callback, Transaction& trans
   Block_Backend< Index, Attic< Skeleton > >
       from_db(transaction.data_index(attic_skeleton_file_properties< Skeleton >()));
 
-  std::map< typename Skeleton::Id_Type, std::set< Index > > idx_lists;
   Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
+  
+  typename Skeleton::Id_Type id_lower_limit = 0ull;
+  typename Skeleton::Id_Type flush_count = 4*1024*1024*1024ull;
+  typename Skeleton::Id_Type id_max_seen = 1ull;
+  while (id_lower_limit < id_max_seen)
   {
-    Random_File< typename Skeleton::Id_Type, Index >
-        into_random(into_transaction.random_index(attic_skeleton_file_properties< Skeleton >()));
+    uint64_t progress = 0;
+    std::map< typename Skeleton::Id_Type, std::set< Index > > idx_lists;
+    std::vector< Index > idx_buf(flush_count.val(), Index{ 0u });
 
     for (auto it = from_db.flat_begin(); !(it == from_db.flat_end()); ++it)
     {
-      Index existing = into_random.get(it.object().id);
-      if (existing.val() == 0)
-        into_random.put(it.object().id, it.index().val());
-      else if (!(existing == it.index()))
+      id_max_seen = std::max(id_max_seen, it.object().id);
+
+      if (!(it.object().id < id_lower_limit) && it.object().id < id_lower_limit + flush_count)
       {
-        auto& list = idx_lists[it.object().id];
-        
-        if (existing.val() != 0xff)
+        Index existing = idx_buf[it.object().id.val() - id_lower_limit.val()];        
+        if (existing.val() == 0)
+          idx_buf[it.object().id.val() - id_lower_limit.val()] = it.index();
+        else if (!(existing == it.index()))
         {
-          into_random.put(it.object().id, Index(0xffu));
-          list.insert(existing);
+          auto& list = idx_lists[it.object().id];
+          
+          if (existing.val() != 0xff)
+          {
+            idx_buf[it.object().id.val() - id_lower_limit.val()] = Index(0xffu);
+            list.insert(existing);
+          }
+          list.insert(it.index());
         }
-        list.insert(it.index());
+      }
+      
+      if (++progress % (1024*1024) == 0)
+        std::cerr<<'-';
+    }
+    {
+      Random_File< typename Skeleton::Id_Type, Index >
+          into_random(into_transaction.random_index(attic_skeleton_file_properties< Skeleton >()));
+
+      auto end = std::min(
+          (decltype(id_lower_limit.val()))idx_buf.size(), id_max_seen.val() - id_lower_limit.val() + 1);
+      for (uint64_t i = 0; i < end; ++i)
+      {
+        if (idx_buf[i].val())
+          into_random.put(id_lower_limit + i, idx_buf[i]);
+      
+        if (++progress % (1024*1024) == 0)
+          std::cerr<<'=';
       }
     }
-  }
-  {
-    Block_Backend< typename Skeleton::Id_Type, Index > into_db(
-        into_transaction.data_index(attic_idx_list_properties< Skeleton >()));
-    into_db.update({}, idx_lists);
+    {
+      Block_Backend< typename Skeleton::Id_Type, Index > into_db(
+          into_transaction.data_index(attic_idx_list_properties< Skeleton >()));
+      into_db.update({}, idx_lists);
+    }
+    
+    std::cout<<"\nDEBUG_attic "<<id_lower_limit.val()<<' '<<flush_count.val()<<' '<<id_max_seen.val()<<'\n';
+    id_lower_limit += flush_count;
   }
 }
 
