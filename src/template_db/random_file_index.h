@@ -53,7 +53,7 @@ public:
 	      const std::string& db_dir, const std::string& file_name_extension,
               int compression_method_ = File_Blocks_Index_Base::USE_DEFAULT);
   ~Random_File_Index();
-  bool writeable() const { return (empty_index_file_name != ""); }
+  bool writeable() const { return access_mode != Access_Mode::readonly; }
   const std::string& file_name_extension() const { return file_name_extension_; }
 
   std::string get_map_file_name() const { return map_file_name; }
@@ -76,6 +76,7 @@ public:
   const uint32 npos;
 
 private:
+  Access_Mode access_mode;
   std::string index_file_name;
   std::string empty_index_file_name;
   std::string map_file_name;
@@ -107,15 +108,18 @@ static const int VOID_BLOCK_ENTRY_SIZE = 8;
 
 inline Random_File_Index::Random_File_Index
     (const File_Properties& file_prop,
-     Access_Mode access_mode, bool use_shadow,
+     Access_Mode access_mode_, bool use_shadow,
      const std::string& db_dir, const std::string& file_name_extension, int compression_method_) :
     npos(std::numeric_limits< uint32 >::max()),
+    access_mode(access_mode_),
     index_file_name(db_dir + file_prop.get_file_name_trunk()
         + file_name_extension + file_prop.get_id_suffix()
         + file_prop.get_index_suffix()
 	+ (use_shadow ? file_prop.get_shadow_suffix() : "")),
     empty_index_file_name(access_mode == Access_Mode::writeable || access_mode == Access_Mode::truncate
-        ? db_dir + file_prop.get_file_name_trunk() + file_prop.get_id_suffix() + file_prop.get_shadow_suffix()
+        ? db_dir + file_prop.get_file_name_trunk()
+        + file_name_extension + file_prop.get_id_suffix()
+        + file_prop.get_shadow_suffix()
         : ""),
     map_file_name(db_dir + file_prop.get_file_name_trunk()
         + file_name_extension + file_prop.get_id_suffix()),
@@ -237,7 +241,7 @@ inline Random_File_Index::Random_File_Index
       throw;
   }
 
-  if (empty_index_file_name != "")
+  if (access_mode == Access_Mode::writeable)
     init_void_blocks();
 }
 
@@ -247,7 +251,7 @@ inline void Random_File_Index::init_void_blocks()
   void_blocks.set_size(block_count);
 
   bool empty_index_file_used = false;
-  if (empty_index_file_name != "")
+  if (access_mode == Access_Mode::writeable)
   {
     try
     {
@@ -278,7 +282,7 @@ inline void Random_File_Index::init_void_blocks()
 
 inline Random_File_Index::~Random_File_Index()
 {
-  if (empty_index_file_name == "")
+  if (access_mode == Access_Mode::readonly)
     return;
 
   // Keep space for file version and size information

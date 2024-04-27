@@ -36,6 +36,9 @@ uint32_t Void_Blocks::allocate_block(uint32_t data_size)
 
 void Void_Blocks::release_block(uint32_t offset, uint32_t data_size)
 {
+  if (used.size() <= offset)
+    return;
+
   for (uint32_t i = offset; i < offset + data_size && i < used.size(); ++i)
   {
     if (i < reserved.size() && reserved[i])

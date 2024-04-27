@@ -554,20 +554,18 @@ void Writeable_File_Blocks_Index< Index >::init_void_blocks()
   void_blocks.set_size(params.block_count);
 
   bool empty_index_file_used = false;
-  if (empty_index_file_name != "")
+
+  try
   {
-    try
-    {
-      Raw_File void_blocks_file(empty_index_file_name, O_RDONLY, S_666, "");
-      uint32 void_index_size = void_blocks_file.size("File_Blocks_Index::File_Blocks_Index::6");
-      Void_Pointer< uint8 > index_buf(void_index_size);
-      void_blocks_file.read(index_buf.ptr, void_index_size, "File_Blocks_Index::File_Blocks_Index::7");
-      void_blocks.read_dump(index_buf.ptr, void_index_size/(sizeof(uint32_t)*2));
-      empty_index_file_used = true;
-    }
-    catch (File_Error e) {
-      empty_index_file_used = false;
-    }
+    Raw_File void_blocks_file(empty_index_file_name, O_RDONLY, S_666, "");
+    uint32 void_index_size = void_blocks_file.size("File_Blocks_Index::File_Blocks_Index::6");
+    Void_Pointer< uint8 > index_buf(void_index_size);
+    void_blocks_file.read(index_buf.ptr, void_index_size, "File_Blocks_Index::File_Blocks_Index::7");
+    void_blocks.read_dump(index_buf.ptr, void_index_size/(sizeof(uint32_t)*2));
+    empty_index_file_used = true;
+  }
+  catch (File_Error e) {
+    empty_index_file_used = false;
   }
 
   if (!empty_index_file_used)

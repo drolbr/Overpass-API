@@ -137,7 +137,7 @@ void replicate_attic_map_file(Osm_Backend_Callback* callback, Transaction& trans
       into_db.update({}, idx_lists);
     }
     
-    std::cout<<"\nDEBUG_attic "<<id_lower_limit.val()<<' '<<flush_count.val()<<' '<<id_max_seen.val()<<'\n';
+    std::cerr<<"\nDEBUG_attic "<<id_lower_limit.val()<<' '<<flush_count.val()<<' '<<id_max_seen.val()<<'\n';
     id_lower_limit += flush_count;
   }
 }
@@ -168,7 +168,10 @@ void compare_current_map_files(Transaction& transaction, typename Skeleton::Id_T
       num_zero += (from_idx.val() == 0);
     }
     else
-      std::cout<<std::dec<<"Id "<<i.val()<<": "<<std::hex<<from_idx.val()<<' '<<into_idx.val()<<'\n';
+      std::cout<<std::dec<<"Id "<<i.val()<<": "<<std::hex<<from_idx.val()<<' '<<into_idx.val()
+        <<' '<<std::dec<<lat(from_idx.val(), 0u)<<','<<lon(from_idx.val(), 0u)
+        <<' '<<std::dec<<lat(into_idx.val(), 0u)<<','<<lon(into_idx.val(), 0u)
+        <<'\n';
   }
   if (total == num_equal)
     std::cout<<"Compared "<<std::dec<<total<<" entries of which all are equal and "<<num_zero<<" are zero.\n";
@@ -202,7 +205,10 @@ void compare_attic_map_files(Transaction& transaction, typename Skeleton::Id_Typ
       num_zero += (from_idx.val() == 0);
     }
     else
-      std::cout<<std::dec<<"Id "<<i.val()<<": "<<std::hex<<from_idx.val()<<' '<<into_idx.val()<<'\n';
+      std::cout<<std::dec<<"Id "<<i.val()<<": "<<std::hex<<from_idx.val()<<' '<<into_idx.val()
+        <<' '<<std::dec<<lat(from_idx.val(), 0u)<<','<<lon(from_idx.val(), 0u)
+        <<' '<<std::dec<<lat(into_idx.val(), 0u)<<','<<lon(into_idx.val(), 0u)
+        <<'\n';
   }
   if (total == num_equal)
     std::cout<<"Compared "<<std::dec<<total<<" entries of which all are equal and "<<num_zero<<" are zero.\n";
@@ -232,7 +238,9 @@ void compare_idx_lists(Transaction& transaction)
     while (!(into_it == into_db.flat_end()) && into_it.index() < from_it.index())
     {
       std::cout<<"Element "<<std::dec<<into_it.index().val()<<" with value "
-          <<std::hex<<into_it.object().val()<<" is missing in existing idx_list.\n";
+          <<std::hex<<into_it.object().val()
+          <<' '<<std::dec<<lat(into_it.object().val(), 0u)<<','<<lon(into_it.object().val(), 0u)
+          <<" is missing in existing idx_list.\n";
       ++missing_from;
       ++into_it;
     }
@@ -240,7 +248,9 @@ void compare_idx_lists(Transaction& transaction)
     if (into_it == into_db.flat_end() || from_it.index() < into_it.index())
     {
       std::cout<<"Element "<<std::dec<<from_it.index().val()<<" with value "
-          <<std::hex<<from_it.object().val()<<" is missing from next.\n";
+          <<std::hex<<from_it.object().val()
+          <<' '<<std::dec<<lat(from_it.object().val(), 0u)<<','<<lon(from_it.object().val(), 0u)
+          <<" is missing from next.\n";
       ++missing_into;
     }
     else if (from_it.index() == into_it.index())
@@ -249,7 +259,9 @@ void compare_idx_lists(Transaction& transaction)
           && into_it.object() < from_it.object())
       {
         std::cout<<"Element "<<std::dec<<from_it.index().val()<<" has extra value "
-            <<std::hex<<into_it.object().val()<<" in next idx_list.\n";
+            <<std::hex<<into_it.object().val()
+            <<' '<<std::dec<<lat(into_it.object().val(), 0u)<<','<<lon(into_it.object().val(), 0u)
+            <<" in next idx_list.\n";
         ++missing_from;
         ++into_it;
       }
@@ -259,7 +271,9 @@ void compare_idx_lists(Transaction& transaction)
         if (from_it.object() < into_it.object())
         {
           std::cout<<"Element "<<std::dec<<from_it.index().val()<<" has extra value "
-              <<std::hex<<from_it.object().val()<<" in existing idx_list.\n";
+              <<std::hex<<from_it.object().val()
+              <<' '<<std::dec<<lat(from_it.object().val(), 0u)<<','<<lon(from_it.object().val(), 0u)
+              <<" in existing idx_list.\n";
           ++missing_into;
         }
         else if (from_it.object() == into_it.object())
@@ -273,7 +287,9 @@ void compare_idx_lists(Transaction& transaction)
   while (!(into_it == into_db.flat_end()))
   {
     std::cout<<"Element "<<std::dec<<into_it.index().val()<<" with value "
-        <<std::hex<<into_it.object().val()<<" is missing in existing idx_list.\n";
+        <<std::hex<<into_it.object().val()
+        <<' '<<std::dec<<lat(into_it.object().val(), 0u)<<','<<lon(into_it.object().val(), 0u)
+        <<" is missing in existing idx_list.\n";
     ++missing_from;
     ++into_it;
   }
