@@ -464,7 +464,7 @@ std::vector< std::pair< typename Element_Skeleton::Id_Type, Uint31_Index > > new
 
 template< typename Id_Type >
 void update_map_positions
-    (std::vector< std::pair< Id_Type, Uint31_Index > > new_idx_positions,
+    (const std::vector< std::pair< Id_Type, Uint31_Index > >& new_idx_positions,
      Transaction& transaction, const File_Properties& file_properties)
 {
   Random_File< Id_Type, Uint31_Index > random(transaction.random_index(&file_properties));

@@ -36,13 +36,13 @@
 struct File_Format_Version_Checker
 {
   File_Format_Version_Checker() {}
-  void check(Transaction& transaction, int min_acceptable, File_Properties& file_properties);
+  void check_up_to_date(Transaction& transaction, int min_acceptable, File_Properties& file_properties);
 
   std::vector< File_Properties* > files_to_update;
 };
 
 
-void File_Format_Version_Checker::check(
+void File_Format_Version_Checker::check_up_to_date(
     Transaction& transaction, int min_acceptable, File_Properties& file_properties)
 {
   constexpr auto current_version = File_Blocks_Index_Structure_Params::FILE_FORMAT_VERSION;
@@ -59,17 +59,17 @@ void File_Format_Version_Checker::check(
 
 void check_all_files(File_Format_Version_Checker& ver_checker, Transaction&& transaction)
 {
-  ver_checker.check(transaction, 7561, *osm_base_settings().NODE_TAGS_GLOBAL);
-  ver_checker.check(transaction, 7561, *osm_base_settings().WAY_TAGS_GLOBAL);
-  ver_checker.check(transaction, 7561, *osm_base_settings().RELATION_TAGS_GLOBAL);
+  ver_checker.check_up_to_date(transaction, 7561, *osm_base_settings().NODE_TAGS_GLOBAL);
+  ver_checker.check_up_to_date(transaction, 7561, *osm_base_settings().WAY_TAGS_GLOBAL);
+  ver_checker.check_up_to_date(transaction, 7561, *osm_base_settings().RELATION_TAGS_GLOBAL);
 
-  ver_checker.check(transaction, 7561, *attic_settings().NODE_TAGS_GLOBAL);
-  ver_checker.check(transaction, 7561, *attic_settings().WAY_TAGS_GLOBAL);
-  ver_checker.check(transaction, 7561, *attic_settings().RELATION_TAGS_GLOBAL);
+  ver_checker.check_up_to_date(transaction, 7561, *attic_settings().NODE_TAGS_GLOBAL);
+  ver_checker.check_up_to_date(transaction, 7561, *attic_settings().WAY_TAGS_GLOBAL);
+  ver_checker.check_up_to_date(transaction, 7561, *attic_settings().RELATION_TAGS_GLOBAL);
 
-  ver_checker.check(transaction, 7562, *attic_settings().NODE_CHANGELOG);
-  ver_checker.check(transaction, 7562, *attic_settings().WAY_CHANGELOG);
-  ver_checker.check(transaction, 7562, *attic_settings().RELATION_CHANGELOG);
+  ver_checker.check_up_to_date(transaction, 7562, *attic_settings().NODE_CHANGELOG);
+  ver_checker.check_up_to_date(transaction, 7562, *attic_settings().WAY_CHANGELOG);
+  ver_checker.check_up_to_date(transaction, 7562, *attic_settings().RELATION_CHANGELOG);
 }
 
 
