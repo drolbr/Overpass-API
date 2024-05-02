@@ -229,7 +229,11 @@ inline Random_File_Index::Random_File_Index
           blocks.push_back(entry);
 
           if (entry.pos != npos && entry.pos >= block_count)
-            throw File_Error(0, index_file_name, "Random_File: bad pos in index file");
+            throw File_Error(
+                0, index_file_name,
+                "Random_File: bad pos in index file; "
+                "pos " + std::to_string(entry.pos) + " into a file of only "
+                + std::to_string(block_count) + " blocks");
           pos += 4;
         }
       }

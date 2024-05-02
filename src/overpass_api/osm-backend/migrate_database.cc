@@ -19,6 +19,7 @@
 #include "../../template_db/dispatcher_client.h"
 #include "../core/settings.h"
 #include "../frontend/output.h"
+#include "map_file_replicator.h"
 #include "tags_global_writer.h"
 
 #include <stdio.h>
@@ -36,13 +37,15 @@
 struct File_Format_Version_Checker
 {
   File_Format_Version_Checker() {}
-  void check_up_to_date(Transaction& transaction, int min_acceptable, File_Properties& file_properties);
+  void check_bin_up_to_date(Transaction& transaction, int min_acceptable, File_Properties& file_properties);
+  void check_map_present(Transaction& transaction, File_Properties& file_properties);
 
-  std::vector< File_Properties* > files_to_update;
+  std::vector< File_Properties* > bin_files_to_update;
+  std::vector< File_Properties* > map_files_to_replicate;
 };
 
 
-void File_Format_Version_Checker::check_up_to_date(
+void File_Format_Version_Checker::check_bin_up_to_date(
     Transaction& transaction, int min_acceptable, File_Properties& file_properties)
 {
   constexpr auto current_version = File_Blocks_Index_Structure_Params::FILE_FORMAT_VERSION;
@@ -52,24 +55,44 @@ void File_Format_Version_Checker::check_up_to_date(
   {
     std::cerr<<"Migrate "<<file_properties.get_file_name_trunk()
         <<" from "<<idx->get_file_format_version()<<" to "<<current_version<<'\n';
-    files_to_update.push_back(&file_properties);
+    bin_files_to_update.push_back(&file_properties);
+  }
+}
+
+
+void File_Format_Version_Checker::check_map_present(
+    Transaction& transaction, File_Properties& file_properties)
+{
+  auto idx = transaction.random_index(&file_properties);
+  if (!file_exists(idx->get_map_file_name()))
+  {
+    std::cerr<<"Replicate "<<file_properties.get_file_name_trunk()<<'\n';
+    map_files_to_replicate.push_back(&file_properties);
   }
 }
 
 
 void check_all_files(File_Format_Version_Checker& ver_checker, Transaction&& transaction)
 {
-  ver_checker.check_up_to_date(transaction, 7561, *osm_base_settings().NODE_TAGS_GLOBAL);
-  ver_checker.check_up_to_date(transaction, 7561, *osm_base_settings().WAY_TAGS_GLOBAL);
-  ver_checker.check_up_to_date(transaction, 7561, *osm_base_settings().RELATION_TAGS_GLOBAL);
+  ver_checker.check_map_present(transaction, *osm_base_settings().NODES);
+  ver_checker.check_map_present(transaction, *osm_base_settings().WAYS);
+  ver_checker.check_map_present(transaction, *osm_base_settings().RELATIONS);
+  
+  ver_checker.check_map_present(transaction, *attic_settings().NODES);
+  ver_checker.check_map_present(transaction, *attic_settings().WAYS);
+  ver_checker.check_map_present(transaction, *attic_settings().RELATIONS);
+  
+  ver_checker.check_bin_up_to_date(transaction, 7561, *osm_base_settings().NODE_TAGS_GLOBAL);
+  ver_checker.check_bin_up_to_date(transaction, 7561, *osm_base_settings().WAY_TAGS_GLOBAL);
+  ver_checker.check_bin_up_to_date(transaction, 7561, *osm_base_settings().RELATION_TAGS_GLOBAL);
 
-  ver_checker.check_up_to_date(transaction, 7561, *attic_settings().NODE_TAGS_GLOBAL);
-  ver_checker.check_up_to_date(transaction, 7561, *attic_settings().WAY_TAGS_GLOBAL);
-  ver_checker.check_up_to_date(transaction, 7561, *attic_settings().RELATION_TAGS_GLOBAL);
+  ver_checker.check_bin_up_to_date(transaction, 7561, *attic_settings().NODE_TAGS_GLOBAL);
+  ver_checker.check_bin_up_to_date(transaction, 7561, *attic_settings().WAY_TAGS_GLOBAL);
+  ver_checker.check_bin_up_to_date(transaction, 7561, *attic_settings().RELATION_TAGS_GLOBAL);
 
-  ver_checker.check_up_to_date(transaction, 7562, *attic_settings().NODE_CHANGELOG);
-  ver_checker.check_up_to_date(transaction, 7562, *attic_settings().WAY_CHANGELOG);
-  ver_checker.check_up_to_date(transaction, 7562, *attic_settings().RELATION_CHANGELOG);
+  ver_checker.check_bin_up_to_date(transaction, 7562, *attic_settings().NODE_CHANGELOG);
+  ver_checker.check_bin_up_to_date(transaction, 7562, *attic_settings().WAY_CHANGELOG);
+  ver_checker.check_bin_up_to_date(transaction, 7562, *attic_settings().RELATION_CHANGELOG);
 }
 
 
@@ -112,9 +135,10 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
 
 
 void migrate_listed_files(
-    File_Format_Version_Checker& ver_checker, Transaction&& transaction, Osm_Backend_Callback* callback)
+    File_Format_Version_Checker& ver_checker, Transaction&& transaction, Osm_Backend_Callback* callback,
+    uint64_t flush_limit)
 {
-  for (auto i : ver_checker.files_to_update)
+  for (auto i : ver_checker.bin_files_to_update)
   {
     if (i == osm_base_settings().NODE_TAGS_GLOBAL)
       migrate_current_global_tags< Node_Skeleton >(callback, transaction);
@@ -134,6 +158,12 @@ void migrate_listed_files(
       migrate_changelog< Way_Skeleton >(callback, transaction);
     else if (i == attic_settings().RELATION_CHANGELOG)
       migrate_changelog< Relation_Skeleton >(callback, transaction);
+  }
+  for (auto i : ver_checker.map_files_to_replicate)
+  {
+    if (i == osm_base_settings().NODES)
+      replicate_current_map_file< Node::Index, Node_Skeleton >(callback, transaction, flush_limit);
+    //TODO
   }
 }
 
@@ -194,7 +224,7 @@ int main(int argc, char* argv[])
   Database_Meta_State meta;
   bool abort = false;
   bool migrate = false;
-  unsigned int flush_limit = 16*1024*1024;
+  uint64_t flush_limit = 16*1024*1024;
 
   int argpos(1);
   while (argpos < argc)
@@ -256,12 +286,12 @@ int main(int argc, char* argv[])
         Osm_Backend_Callback* callback = get_verbatim_callback();
         callback->set_db_dir(dispatcher_client.get_db_dir());
         
-        if (migrate && !ver_checker.files_to_update.empty())
+        if (migrate && !ver_checker.bin_files_to_update.empty())
         {
           Dispatcher_Write_Guard guard(&dispatcher_client, logger);
           migrate_listed_files(
             ver_checker, Nonsynced_Transaction(
-                Access_Mode::writeable, false, dispatcher_client.get_db_dir(), ""), callback);
+                Access_Mode::writeable, false, dispatcher_client.get_db_dir(), ""), callback, flush_limit);
           guard.commit();
         }
         delete callback;
@@ -282,9 +312,9 @@ int main(int argc, char* argv[])
       check_all_files(ver_checker, Nonsynced_Transaction(
           Access_Mode::readonly, false, db_dir, ""));
 
-      if (migrate && !ver_checker.files_to_update.empty())
+      if (migrate && !ver_checker.bin_files_to_update.empty())
         migrate_listed_files(
-            ver_checker, Nonsynced_Transaction(Access_Mode::writeable, false, db_dir, ""), callback);
+            ver_checker, Nonsynced_Transaction(Access_Mode::writeable, false, db_dir, ""), callback, flush_limit);
 
       delete callback;
     }
