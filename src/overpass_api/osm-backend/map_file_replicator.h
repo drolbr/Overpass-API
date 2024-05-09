@@ -27,7 +27,7 @@
 
 
 template< typename Index, typename Skeleton >
-typename Skeleton::Id_Type replicate_current_map_file(
+uint64_t replicate_current_map_file(
     Osm_Backend_Callback* callback, Transaction& transaction, uint64_t flush_count)
 {
   Block_Backend< Index, Skeleton >
@@ -35,25 +35,24 @@ typename Skeleton::Id_Type replicate_current_map_file(
 
   Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
   
-  typename Skeleton::Id_Type id_lower_limit = 0ull;
-  typename Skeleton::Id_Type id_max_seen = 1ull;
+  uint64_t id_lower_limit = 0;
+  uint64_t id_max_seen = 1;
   while (id_lower_limit < id_max_seen)
   {
     std::vector< Index > idx_buf(flush_count, Index{ 0u });
 
     for (auto it = from_db.flat_begin(); !(it == from_db.flat_end()); ++it)
     {
-      id_max_seen = std::max(id_max_seen, it.object().id);
+      id_max_seen = std::max(id_max_seen, (uint64_t)it.object().id.val());
 
-      if (!(it.object().id < id_lower_limit) && it.object().id < id_lower_limit + flush_count)
-        idx_buf[it.object().id.val() - id_lower_limit.val()] = it.index();
+      if (id_lower_limit <= it.object().id.val() && it.object().id.val() < id_lower_limit + flush_count)
+        idx_buf[it.object().id.val() - id_lower_limit] = it.index();
     }
     {
       Random_File< typename Skeleton::Id_Type, Index >
           into_random(into_transaction.random_index(current_skeleton_file_properties< Skeleton >()));
 
-      auto end = std::min(
-          (decltype(id_lower_limit.val()))idx_buf.size(), id_max_seen.val() - id_lower_limit.val() + 1);
+      auto end = std::min((uint64_t)idx_buf.size(), id_max_seen - id_lower_limit + 1);
       for (uint64_t i = 0; i < end; ++i)
       {
         if (idx_buf[i].val())
@@ -68,17 +67,17 @@ typename Skeleton::Id_Type replicate_current_map_file(
 }
 
 
-template< typename Index, typename Skeleton >
-typename Skeleton::Id_Type replicate_attic_map_file(
+template< typename Index, typename Skeleton, typename Delta >
+uint64_t replicate_attic_map_file(
     Osm_Backend_Callback* callback, Transaction& transaction, uint64_t flush_count)
 {
-  Block_Backend< Index, Attic< Skeleton > >
+  Block_Backend< Index, Attic< Delta > >
       from_db(transaction.data_index(attic_skeleton_file_properties< Skeleton >()));
 
   Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
   
-  typename Skeleton::Id_Type id_lower_limit = 0ull;
-  typename Skeleton::Id_Type id_max_seen = 1ull;
+  uint64_t id_lower_limit = 0;
+  uint64_t id_max_seen = 1;
   while (id_lower_limit < id_max_seen)
   {
     std::map< typename Skeleton::Id_Type, std::set< Index > > idx_lists;
@@ -86,20 +85,20 @@ typename Skeleton::Id_Type replicate_attic_map_file(
 
     for (auto it = from_db.flat_begin(); !(it == from_db.flat_end()); ++it)
     {
-      id_max_seen = std::max(id_max_seen, it.object().id);
+      id_max_seen = std::max(id_max_seen, (uint64_t)it.object().id.val());
 
-      if (!(it.object().id < id_lower_limit) && it.object().id < id_lower_limit + flush_count)
+      if (id_lower_limit <= it.object().id.val() && it.object().id < id_lower_limit + flush_count)
       {
-        Index existing = idx_buf[it.object().id.val() - id_lower_limit.val()];        
+        Index existing = idx_buf[it.object().id.val() - id_lower_limit];        
         if (existing.val() == 0)
-          idx_buf[it.object().id.val() - id_lower_limit.val()] = it.index();
+          idx_buf[it.object().id.val() - id_lower_limit] = it.index();
         else if (!(existing == it.index()))
         {
           auto& list = idx_lists[it.object().id];
           
           if (existing.val() != 0xff)
           {
-            idx_buf[it.object().id.val() - id_lower_limit.val()] = Index(0xffu);
+            idx_buf[it.object().id.val() - id_lower_limit] = Index(0xffu);
             list.insert(existing);
           }
           list.insert(it.index());
@@ -110,8 +109,7 @@ typename Skeleton::Id_Type replicate_attic_map_file(
       Random_File< typename Skeleton::Id_Type, Index >
           into_random(into_transaction.random_index(attic_skeleton_file_properties< Skeleton >()));
 
-      auto end = std::min(
-          (decltype(id_lower_limit.val()))idx_buf.size(), id_max_seen.val() - id_lower_limit.val() + 1);
+      auto end = std::min((uint64_t)idx_buf.size(), id_max_seen - id_lower_limit + 1);
       for (uint64_t i = 0; i < end; ++i)
       {
         if (idx_buf[i].val())

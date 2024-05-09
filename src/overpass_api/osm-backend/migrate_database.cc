@@ -39,6 +39,8 @@ struct File_Format_Version_Checker
   File_Format_Version_Checker() {}
   void check_bin_up_to_date(Transaction& transaction, int min_acceptable, File_Properties& file_properties);
   void check_map_present(Transaction& transaction, File_Properties& file_properties);
+  
+  bool empty() const { return bin_files_to_update.empty() && map_files_to_replicate.empty(); }
 
   std::vector< File_Properties* > bin_files_to_update;
   std::vector< File_Properties* > map_files_to_replicate;
@@ -162,8 +164,18 @@ void migrate_listed_files(
   for (auto i : ver_checker.map_files_to_replicate)
   {
     if (i == osm_base_settings().NODES)
-      replicate_current_map_file< Node::Index, Node_Skeleton >(callback, transaction, flush_limit);
-    //TODO
+      replicate_current_map_file< Node::Index, Node_Skeleton >(callback, transaction, flush_limit/4);
+    else if (i == osm_base_settings().WAYS)
+      replicate_current_map_file< Way::Index, Way_Skeleton >(callback, transaction, flush_limit/4);
+    else if (i == osm_base_settings().RELATIONS)
+      replicate_current_map_file< Relation::Index, Relation_Skeleton >(callback, transaction, flush_limit/4);
+    else if (i == attic_settings().NODES)
+      replicate_attic_map_file< Node::Index, Node_Skeleton, Node_Skeleton >(callback, transaction, flush_limit/4);
+    else if (i == attic_settings().WAYS)
+      replicate_attic_map_file< Way::Index, Way_Skeleton, Way_Delta >(callback, transaction, flush_limit/4);
+    else if (i == attic_settings().RELATIONS)
+      replicate_attic_map_file< Relation::Index, Relation_Skeleton, Relation_Delta >(
+          callback, transaction, flush_limit/4);
   }
 }
 
@@ -224,7 +236,7 @@ int main(int argc, char* argv[])
   Database_Meta_State meta;
   bool abort = false;
   bool migrate = false;
-  uint64_t flush_limit = 16*1024*1024;
+  uint64_t flush_limit = 16*1024*1024*1024;
 
   int argpos(1);
   while (argpos < argc)
@@ -286,7 +298,7 @@ int main(int argc, char* argv[])
         Osm_Backend_Callback* callback = get_verbatim_callback();
         callback->set_db_dir(dispatcher_client.get_db_dir());
         
-        if (migrate && !ver_checker.bin_files_to_update.empty())
+        if (migrate && !ver_checker.empty())
         {
           Dispatcher_Write_Guard guard(&dispatcher_client, logger);
           migrate_listed_files(
@@ -312,7 +324,7 @@ int main(int argc, char* argv[])
       check_all_files(ver_checker, Nonsynced_Transaction(
           Access_Mode::readonly, false, db_dir, ""));
 
-      if (migrate && !ver_checker.bin_files_to_update.empty())
+      if (migrate && !ver_checker.empty())
         migrate_listed_files(
             ver_checker, Nonsynced_Transaction(Access_Mode::writeable, false, db_dir, ""), callback, flush_limit);
 

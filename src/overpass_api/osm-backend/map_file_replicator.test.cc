@@ -34,7 +34,7 @@ void compare_current_map_files(Transaction& transaction, typename Skeleton::Id_T
   uint64_t total = 0;
   uint64_t num_zero = 0;
   uint64_t num_equal = 0;
-  for (decltype(maxid) i = 0ull; !(maxid < i); ++i)
+  for (uint64_t i = 0ull; i <= maxid.val(); ++i)
   {
     Index from_idx = from_random.get(i);
     Index into_idx = into_random.get(i);
@@ -46,7 +46,7 @@ void compare_current_map_files(Transaction& transaction, typename Skeleton::Id_T
       num_zero += (from_idx.val() == 0);
     }
     else
-      std::cout<<std::dec<<"Id "<<i.val()<<": "<<std::hex<<from_idx.val()<<' '<<into_idx.val()
+      std::cout<<std::dec<<"Id "<<i<<": "<<std::hex<<from_idx.val()<<' '<<into_idx.val()
         <<' '<<std::dec<<std::fixed<<std::setprecision(7)<<lat(from_idx.val(), 0u)<<','<<lon(from_idx.val(), 0u)
         <<' '<<std::dec<<std::fixed<<std::setprecision(7)<<lat(into_idx.val(), 0u)<<','<<lon(into_idx.val(), 0u)
         <<'\n';
@@ -71,7 +71,7 @@ void compare_attic_map_files(Transaction& transaction, typename Skeleton::Id_Typ
   uint64_t total = 0;
   uint64_t num_zero = 0;
   uint64_t num_equal = 0;
-  for (decltype(maxid) i = 0ull; !(maxid < i); ++i)
+  for (uint64_t i = 0ull; i <= maxid.val(); ++i)
   {
     Index from_idx = from_random.get(i);
     Index into_idx = into_random.get(i);
@@ -83,7 +83,7 @@ void compare_attic_map_files(Transaction& transaction, typename Skeleton::Id_Typ
       num_zero += (from_idx.val() == 0);
     }
     else
-      std::cout<<std::dec<<"Id "<<i.val()<<": "<<std::hex<<from_idx.val()<<' '<<into_idx.val()
+      std::cout<<std::dec<<"Id "<<i<<": "<<std::hex<<from_idx.val()<<' '<<into_idx.val()
         <<' '<<std::dec<<std::fixed<<std::setprecision(7)<<lat(from_idx.val(), 0u)<<','<<lon(from_idx.val(), 0u)
         <<' '<<std::dec<<std::fixed<<std::setprecision(7)<<lat(into_idx.val(), 0u)<<','<<lon(into_idx.val(), 0u)
         <<'\n';
@@ -222,12 +222,18 @@ int main(int argc, char* argv[])
   {
     Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
 
-    Uint64 current_max = replicate_current_map_file< Node::Index, Node_Skeleton >(nullptr, transaction, flush_limit);
-    Uint64 attic_max = replicate_attic_map_file< Node::Index, Node_Skeleton >(nullptr, transaction, flush_limit);
+    //Uint64 current_max = replicate_current_map_file< Node::Index, Node_Skeleton >(nullptr, transaction, flush_limit);
+    //Uint64 attic_max = replicate_attic_map_file< Node::Index, Node_Skeleton >(nullptr, transaction, flush_limit);
     
-    compare_current_map_files< Node::Index, Node_Skeleton >(transaction, current_max);
-    compare_attic_map_files< Node::Index, Node_Skeleton >(transaction, attic_max);
+    compare_current_map_files< Node::Index, Node_Skeleton >(transaction, 1000000/*current_max*/);
+    compare_attic_map_files< Node::Index, Node_Skeleton >(transaction, 1000000/*attic_max*/);
     compare_idx_lists< Node::Index, Node_Skeleton >(transaction);
+    compare_current_map_files< Way::Index, Way_Skeleton >(transaction, 1000000/*current_max*/);
+    compare_attic_map_files< Way::Index, Way_Skeleton >(transaction, 1000000/*attic_max*/);
+    compare_idx_lists< Way::Index, Way_Skeleton >(transaction);
+    compare_current_map_files< Relation::Index, Relation_Skeleton >(transaction, 1000000/*current_max*/);
+    compare_attic_map_files< Relation::Index, Relation_Skeleton >(transaction, 1000000/*attic_max*/);
+    compare_idx_lists< Relation::Index, Relation_Skeleton >(transaction);
   }
   catch (File_Error e)
   {

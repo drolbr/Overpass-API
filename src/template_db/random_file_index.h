@@ -229,11 +229,19 @@ inline Random_File_Index::Random_File_Index
           blocks.push_back(entry);
 
           if (entry.pos != npos && entry.pos >= block_count)
-            throw File_Error(
-                0, index_file_name,
-                "Random_File: bad pos in index file; "
-                "pos " + std::to_string(entry.pos) + " into a file of only "
-                + std::to_string(block_count) + " blocks");
+          {
+            if (block_count == 0 && !file_exists(map_file_name))
+              throw File_Error(
+                  0, index_file_name,
+                  "Random_File: Index file " + index_file_name
+                  + " points to non-existing map file " + map_file_name);
+            else
+              throw File_Error(
+                  0, index_file_name,
+                  "Random_File: bad pos in index file; "
+                  "pos " + std::to_string(entry.pos) + " into a file of only "
+                  + std::to_string(block_count) + " blocks");
+          }
           pos += 4;
         }
       }
