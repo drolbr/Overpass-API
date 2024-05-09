@@ -1036,7 +1036,7 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways(
     for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
       req.insert(*it);
   }
-    
+
   if (!invert_ids)
     collect_items_discrete(context, req,
         And_Predicate< Way_Skeleton,
@@ -1055,7 +1055,7 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways(
               (Id_Predicate< Way_Skeleton >(ids)),
             Get_Parent_Ways_Predicate(children_ids, pos)),
         result.current, result.attic);
-  
+
   return result;
 }
 

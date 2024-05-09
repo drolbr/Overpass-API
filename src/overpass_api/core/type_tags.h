@@ -117,7 +117,7 @@ struct String_Index
     throw Unsupported_Error("static uint32 String_Index::max_size_of()");
     return 0;
   }
-  
+
   static String_Index min() { return String_Index{ "" }; }
   static String_Index max() { return String_Index{ "\xff" }; }
 };
@@ -233,7 +233,7 @@ struct Tag_Index_Local
     throw Unsupported_Error("static uint32 Tag_Index_Local::max_size_of()");
     return 0;
   }
-  
+
   static Tag_Index_Local min() { return Tag_Index_Local{ 0u, "", "" }; }
   static Tag_Index_Local max() { return Tag_Index_Local{ 0x7fffffff, "\xff", "\xff" }; }
 };
@@ -406,7 +406,7 @@ struct Tag_Index_Global_Until756
     throw Unsupported_Error("static uint32 Tag_Index_Global_Until756::max_size_of()");
     return 0;
   }
-  
+
   static Tag_Index_Global_Until756 min() { return Tag_Index_Global_Until756{ "", "" }; }
   static Tag_Index_Global_Until756 max() { return Tag_Index_Global_Until756{ "\xff", "\xff" }; }
 };
@@ -503,7 +503,7 @@ struct Tag_Index_Global_KVI
     throw Unsupported_Error("static uint32 Tag_Index_Global_KVI::max_size_of()");
     return 0;
   }
-  
+
   static Tag_Index_Global_KVI min() { return Tag_Index_Global_KVI{ "", "" }; }
   static Tag_Index_Global_KVI max() { return Tag_Index_Global_KVI{ "\xff", "\xff" }; }
 };

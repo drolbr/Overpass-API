@@ -29,7 +29,7 @@ class Ranges
 public:
   Ranges() {}
   Ranges(Index begin, Index end) : data({{ begin, end }}) {}
-  
+
   class Iterator
   {
   public:
@@ -46,14 +46,14 @@ public:
     bool operator==(const Iterator& rhs) const { return it == rhs.it; }
     bool operator!=(const Iterator& rhs) const { return it != rhs.it; }
   private:
-    typename std::vector< std::pair< Index, Index > >::const_iterator it; 
+    typename std::vector< std::pair< Index, Index > >::const_iterator it;
   };
-  
+
   Iterator begin() const { return Iterator(data.begin()); }
   Iterator end() const { return Iterator(data.end()); }
   bool empty() const { return data.empty(); }
   void swap(Ranges& rhs) { data.swap(rhs.data); }
-  
+
   Ranges intersect(const Ranges& rhs) const;
   Ranges union_(const Ranges& rhs) const;
   Ranges skip_start(Index lower_bound) const;
@@ -63,7 +63,7 @@ public:
 
   bool is_global() const
   { return data.size() == 1 && data.begin()->first == Index::min() && data.begin()->second == Index::max(); }
-  static Ranges global() { return Ranges(Index::min(), Index::max()); } 
+  static Ranges global() { return Ranges(Index::min(), Index::max()); }
 
 private:
   std::vector< std::pair< Index, Index > > data;

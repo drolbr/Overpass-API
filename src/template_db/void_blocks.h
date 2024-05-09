@@ -19,7 +19,7 @@ public:
   std::vector< bool > get_index_footprint() const;
   uint32_t num_distinct_blocks() const;
   void dump_distinct_blocks(uint8_t* target) const;
-  
+
   void read_dump(uint8_t* source, uint32_t num_entries);
 
 private:

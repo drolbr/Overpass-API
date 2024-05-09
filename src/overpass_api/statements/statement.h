@@ -43,7 +43,7 @@ struct Id_Constraint
   Id_Constraint() : invert(true) {}
   bool empty() const { return !invert && ids.empty(); }
   void restrict_to(const std::vector< Id >& ids);
-  
+
   std::vector< Id > ids;
   bool invert;
 };
@@ -67,14 +67,14 @@ class Query_Constraint
     { return false; }
 
     virtual Ranges< Uint32_Index > get_node_ranges(Resource_Manager& rman)
-    { 
+    {
       Ranges< Uint32_Index > result;
       if (get_ranges(rman, result))
         return result;
       return Ranges< Uint32_Index >::global();
     }
     virtual Ranges< Uint31_Index > get_way_ranges(Resource_Manager& rman)
-    { 
+    {
       Ranges< Uint31_Index > result;
       if (get_ranges(rman, result))
         return result;

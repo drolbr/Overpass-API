@@ -385,7 +385,7 @@ struct Running_Requests_Hashtable
       sum += i.capacity();
     return sum;
   }
-  
+
   bool probe(const Hash_of_Running_Request& arg);
 
 private:
@@ -409,7 +409,7 @@ bool Running_Requests_Hashtable::probe(const Hash_of_Running_Request& arg)
         return true;
     }
   }
-  
+
   if (bucket.size() + 4 < 2*num_expired)
   {
     for (decltype(bucket.size()) i = 0; i < bucket.size(); )
@@ -419,7 +419,7 @@ bool Running_Requests_Hashtable::probe(const Hash_of_Running_Request& arg)
         bucket[i] = bucket.back();
         bucket.pop_back();
       }
-      else 
+      else
         ++i;
     }
   }
@@ -437,7 +437,7 @@ bool Running_Requests_Hashtable::probe(const Hash_of_Running_Request& arg)
   }
   else
     bucket.push_back(arg);
-  
+
   return true;
 }
 
@@ -747,7 +747,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
   uint32 counter = 0;
   uint32 idle_counter = 0;
   Running_Requests_Hashtable hashtable_full_request;
-  
+
   while ((milliseconds == 0) || (counter < milliseconds/100))
   {
     if (sigterm_status() == Signal_Status::received)
@@ -776,7 +776,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 	logger->idle_counter(idle_counter);
       idle_counter = 0;
     }
-    
+
     try
     {
       if (command == TERMINATE)
@@ -858,7 +858,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
         uint64 max_allowed_space = (((uint64)arguments[2])<<32 | arguments[1]);
         uint32 client_token = arguments[3];
         uint64 request_full_hash = (((uint64)arguments[5])<<32 | arguments[4]);
-        
+
         if (global_resource_planner.get_allow_duplicate_queries() ||
             hashtable_full_request.probe({ request_full_hash, time(0) + max_allowed_time, client_pid }))
         {
@@ -1019,7 +1019,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
     uint32 command = 0;
     uint32 client_pid = 0;
     connection_per_pid.poll_command_round_robin(command, client_pid);
-    
+
     try
     {
       if (command == WRITE_ROLLBACK)
@@ -1047,7 +1047,7 @@ void Dispatcher::standby_loop(uint64 milliseconds)
 
     --terminate_countdown;
   }
-  
+
   if (logger && (milliseconds == 0 || counter < milliseconds/100))
     logger->terminate_triggered(terminate_countdown, writing_process);
 }

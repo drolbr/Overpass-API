@@ -155,11 +155,11 @@ while [[ true ]]; do
   fetch_file "$SOURCE_DIR/state.txt" "$TEMP_SOURCE_DIR/state.txt"
   MAX_SEQ_NR=$(cat "$TEMP_SOURCE_DIR/state.txt" | grep -aE '^sequenceNumber')
   MAX_AVAILABLE_REPLICATE_ID=$((${MAX_SEQ_NR:15} + 0))
- 
+
   collect_minute_diffs $MAX_AVAILABLE_REPLICATE_ID $TEMP_SOURCE_DIR $TEMP_TARGET_DIR
 
   if [[ $TARGET -gt $START ]]; then
-  {  
+  {
     echo "$(date -u '+%F %T'): updating to $TARGET" >>$DB_DIR/fetch_osc_and_apply.log
 
     update_state

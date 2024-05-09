@@ -150,11 +150,11 @@ void Map_To_Area_Statement::execute(Resource_Manager& rman)
 
     sort(idx.begin(), idx.end());
     idx.erase(unique(idx.begin(), idx.end()), idx.end());
-    
+
     into.ways = input_set->ways;
     filter_elems_for_closed_ways(into.ways);
     into.attic_ways = input_set->attic_ways;
-    filter_elems_for_closed_ways(into.attic_ways);    
+    filter_elems_for_closed_ways(into.attic_ways);
   }
 
   collect_elems_flat(rman, idx, into.areas);

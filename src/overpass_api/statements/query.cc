@@ -738,7 +738,7 @@ bool matches_some_conditions(const Conditions& conds, const Tags& tags, const Si
 void Query_Statement::filter_by_tags(std::map< Uint31_Index, std::vector< Derived_Structure > >& items)
 {
   typedef std::pair< std::string, std::string > Tag_Pair;
-  
+
   for (std::map< Uint31_Index, std::vector< Derived_Structure > >::iterator it_idx = items.begin();
       it_idx != items.end(); ++it_idx)
   {

@@ -52,7 +52,7 @@ Ranges< TIndex > ranges(const std::map< TIndex, std::vector< TObject > >& elems)
   }
   result.push_back(range.first, range.second);
   result.sort();
-  
+
   return result;
 }
 

@@ -64,11 +64,11 @@ class Health_Guard
 {
 public:
   Health_Guard(const Statement* stmt_, Resource_Manager& rman_) : stmt(stmt_), rman(rman_) {}
-  
+
   void log_and_display_error(const std::string& message) const { rman.log_and_display_error(message); }
   bool check(uint32 extra_time = 0, uint64 extra_space = 0)
   { return (stmt) && rman.health_check(*stmt, extra_time, extra_space); }
-  
+
 private:
   const Statement* stmt;
   Resource_Manager& rman;
@@ -79,14 +79,14 @@ class Request_Context
 {
 public:
   Request_Context(const Statement* stmt_, Resource_Manager& rman_) : stmt(stmt_), rman(rman_) {}
-  
+
   Health_Guard get_health_guard() { return Health_Guard(stmt, rman); }
   uint64 get_desired_timestamp() const { return rman.get_desired_timestamp(); }
   File_Blocks_Index_Base* data_index(const File_Properties* file_properties)
   { return rman.get_transaction()->data_index(file_properties); }
   Random_File_Index* random_index(const File_Properties* file_properties)
   { return rman.get_transaction()->random_index(file_properties); }
-  
+
 private:
   const Statement* stmt;
   Resource_Manager& rman;
@@ -349,21 +349,21 @@ struct Timeless
     attic.swap(rhs_attic);
     return *this;
   }
-  
+
   Timeless& sort()
   {
     sort_second(current);
     sort_second(attic);
     return *this;
   }
-  
+
   Timeless& set_union(const Timeless< Index, Object >& rhs)
   {
     indexed_set_union(current, rhs.current);
     indexed_set_union(attic, rhs.attic);
     return *this;
   }
-  
+
   template< typename Predicate >
   Timeless& filter_items(const Predicate& predicate)
   {
@@ -371,7 +371,7 @@ struct Timeless
     ::filter_items(predicate, attic);
     return *this;
   }
-  
+
   Timeless& filter_by_id(const std::vector< typename Object::Id_Type >& ids);
 
   std::map< Index, std::vector< Object > > current;
@@ -519,7 +519,7 @@ bool collect_items_range(Request_Context& context,
   Ranges< Index > shortened = ranges.skip_start(cur_idx);
   Block_Backend< Index, Object > current_db(
       context.data_index(current_skeleton_file_properties< Object >()));
-      
+
   if (context.get_desired_timestamp() == NOW)
   {
     uint32 count = 0;

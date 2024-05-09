@@ -173,11 +173,11 @@ int main(int argc, char* args[])
 //   std::cout<<"gc "<<gc.lat_of(-180.)<<'\n';
 //   std::cout<<"gc "<<gc.lat_of(-179.5)<<'\n';
 //   std::cout<<"gc "<<gc.lat_of(-179.)<<'\n';
-//   
+//
 //   Uint32_Index idx = ll_upper_(51.25, 7.15);
 //   std::cout<<std::fixed<<std::setprecision(7)<<lat(idx.val(), 0u)<<' '<<lon(idx.val(), 0u)<<'\n';
 //   return 0;
-  
+
 /*  std::vector< Aligned_Segment > segs;
 
   Error_Output* error_output(new Console_Output(false));

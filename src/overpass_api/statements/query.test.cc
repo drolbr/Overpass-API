@@ -1016,14 +1016,14 @@ void perform_recurse_cnt_link(
     {
       SProxy< Query_Statement > stmt1;
       stmt1("type", "node");
-      
+
       SProxy< Item_Statement > stmt2;
       if (bypass_get_data)
         stmt1.stmt().add_statement(&stmt2("from", "nn").stmt(), "");
-      
+
       SProxy< Recurse_Statement > stmt3;
       stmt1.stmt().add_statement(&stmt3("type", recurse_type)("lower", "2")("upper", "2").stmt(), "");
-      
+
       SProxy< Bbox_Query_Statement > stmt4;
       if (!bypass_get_data)
         stmt1.stmt().add_statement(&stmt4("s", "50")("w", "6")("n", "52")("e", "9").stmt(), "");

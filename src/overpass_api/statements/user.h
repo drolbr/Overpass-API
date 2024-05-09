@@ -33,7 +33,7 @@ class User_Statement : public Output_Statement
 {
 public:
   enum Criterion { last, touched };
-  
+
   User_Statement(int line_number_, const std::map< std::string, std::string >& input_attributes,
                   Parsed_Query& global_settings);
   virtual std::string get_name() const { return "user"; }
@@ -69,7 +69,7 @@ public:
 
   // Works only if get_id(Transaction&) has been called before.
   std::set< Uint32_Index > get_ids() const { return user_ids; }
-  
+
   Criterion get_criterion() const { return criterion; }
 
   virtual std::string dump_xml(const std::string& indent) const
@@ -93,7 +93,7 @@ public:
       for (std::set< std::string >::const_iterator it = user_names.begin(); it != user_names.end(); ++it)
         result += " name_" + to_string(++counter) + "=\"" + escape_xml(*it) + "\"";
     }
-    
+
     if (criterion == touched)
       result += " criterion=\"touched\"";
 

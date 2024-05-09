@@ -151,16 +151,16 @@ void Transaction_Insulator::move_migrated_files_in_place()
   for (std::vector< File_Properties* >::const_iterator it(controlled_files.begin());
       it != controlled_files.end(); ++it)
   {
-    std::string src_base = db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_data_suffix(); 
-    std::string dest_base = db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix(); 
+    std::string src_base = db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_data_suffix();
+    std::string dest_base = db_dir() + (*it)->get_file_name_trunk() + (*it)->get_data_suffix();
     if (file_exists(src_base + (*it)->get_index_suffix()))
     {
       force_link_file(src_base, dest_base);
       force_link_file(src_base + (*it)->get_index_suffix(), dest_base + (*it)->get_index_suffix());
     }
 
-    src_base = db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_id_suffix(); 
-    dest_base = db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix(); 
+    src_base = db_dir() + (*it)->get_file_name_trunk() + ".next" + (*it)->get_id_suffix();
+    dest_base = db_dir() + (*it)->get_file_name_trunk() + (*it)->get_id_suffix();
     if (file_exists(src_base + (*it)->get_index_suffix()))
     {
       force_link_file(src_base, dest_base);

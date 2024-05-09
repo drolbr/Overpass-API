@@ -196,7 +196,7 @@ class Void64_Pointer
 
 public:
   explicit Void64_Pointer(int block_size)
-  { 
+  {
     ptr = block_size > 0 ? (T*)aligned_alloc(8, block_size) : 0;
   }
   ~Void64_Pointer() { clear(); }

@@ -38,7 +38,7 @@ void compare_current_map_files(Transaction& transaction, typename Skeleton::Id_T
   {
     Index from_idx = from_random.get(i);
     Index into_idx = into_random.get(i);
-    
+
     ++total;
     if (from_idx == into_idx)
     {
@@ -75,7 +75,7 @@ void compare_attic_map_files(Transaction& transaction, typename Skeleton::Id_Typ
   {
     Index from_idx = from_random.get(i);
     Index into_idx = into_random.get(i);
-    
+
     ++total;
     if (from_idx == into_idx)
     {
@@ -108,11 +108,11 @@ void compare_idx_lists(Transaction& transaction)
   uint64_t missing_from = 0;
   uint64_t missing_into = 0;
   uint64_t matching = 0;
-  auto into_it = into_db.flat_begin(); 
+  auto into_it = into_db.flat_begin();
   for (auto from_it = from_db.flat_begin(); !(from_it == from_db.flat_end()); ++from_it)
   {
     //std::cout<<"DEBUG "<<std::dec<<from_it.index().val()<<' '<<std::hex<<from_it.object().val()<<'\n';
-    
+
     while (!(into_it == into_db.flat_end()) && into_it.index() < from_it.index())
     {
       std::cout<<"Element "<<std::dec<<into_it.index().val()<<" with value "
@@ -171,7 +171,7 @@ void compare_idx_lists(Transaction& transaction)
     ++missing_from;
     ++into_it;
   }
-  
+
   if (missing_from > 0 || missing_into > 0)
     std::cout<<"FAILED: Idx lists have "<<std::dec<<missing_into<<" extra objects in existing idx_list and "
         <<missing_from<<" extra objects in next idx_list.\n";
@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
 
     //Uint64 current_max = replicate_current_map_file< Node::Index, Node_Skeleton >(nullptr, transaction, flush_limit);
     //Uint64 attic_max = replicate_attic_map_file< Node::Index, Node_Skeleton >(nullptr, transaction, flush_limit);
-    
+
     compare_current_map_files< Node::Index, Node_Skeleton >(transaction, 1000000/*current_max*/);
     compare_attic_map_files< Node::Index, Node_Skeleton >(transaction, 1000000/*attic_max*/);
     compare_idx_lists< Node::Index, Node_Skeleton >(transaction);

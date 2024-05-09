@@ -155,7 +155,7 @@ void get_existing_tags
   for (auto it = rels_db.range_begin(ranges); !(it == rels_db.range_end()); ++it)
   {
     //std::cout<<"DEBUG get_existing_tags "<<std::hex<<it.index().index<<' '<<it.index().key<<' '<<it.index().value<<' '<<std::dec<<it.object().val()<<'\n';
-    
+
     if (!(current_index == it.index()))
     {
       if ((current_index.index != 0xffffffff) && (!tag_entry.ids.empty()))
@@ -347,7 +347,7 @@ std::map< Tag_Index_Global, std::vector< Attic< Tag_Object_Global< Id_Type > > >
       }
     }
   }
-  
+
   for (const auto& i : void_result)
     result[i.first].assign(i.second.begin(), i.second.end());
 

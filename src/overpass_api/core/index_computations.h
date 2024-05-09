@@ -547,14 +547,14 @@ struct Idx_Bbox
       lon_u = lon;
     }
   }
-  
+
   int compare(const Idx_Bbox& rhs)
   {
     bool lhs_bigger = (lat < rhs.lat || lon < rhs.lon || lat_u > rhs.lat_u || lon_u > rhs.lon_u);
     bool rhs_bigger = (lat > rhs.lat || lon > rhs.lon || lat_u < rhs.lat_u || lon_u < rhs.lon_u);
     return (lhs_bigger<<1) | rhs_bigger;
   }
-  
+
   int32 lat;
   int32 lon;
   int32 lat_u;
@@ -629,7 +629,7 @@ inline std::vector< Uint31_Index > calc_children(const std::vector< uint32 >& wa
 inline Ranges< Uint31_Index > calc_children(std::vector< Uint31_Index >&& parents)
 {
   Ranges< Uint31_Index > result;
-  
+
   if (parents.empty())
     return result;
   std::sort(parents.begin(), parents.end());
@@ -1127,7 +1127,7 @@ inline Ranges< Uint32_Index > calc_ranges(double south, double north, double wes
 	   int32(-180.0*10000000 - 0.5) & 0xffff0000, ieast & 0xffff0000, 1, ranges);
   }
   ranges.sort();
-  
+
   return ranges;
 }
 

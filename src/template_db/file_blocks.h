@@ -281,7 +281,7 @@ public:
 
 private:
   Readonly_File_Blocks_Index< TIndex >* rd_idx;
-  Writeable_File_Blocks_Index< TIndex >* wr_idx;  
+  Writeable_File_Blocks_Index< TIndex >* wr_idx;
   uint32 block_size;
   uint32 compression_factor;
   int compression_method;
@@ -800,13 +800,13 @@ public:
     posix_madvise(addr, length, POSIX_MADV_WILLNEED);
   }
   ~Mmap()
-  { 
+  {
     if (addr)
       munmap(addr, length);
   }
-  
+
   uint64* ptr() { return (uint64*)addr; }
-  
+
 private:
   void* addr;
   size_t length;
@@ -820,7 +820,7 @@ uint64* File_Blocks< TIndex, TIterator >::read_block_
 {
   if (sigterm_status())
     throw File_Error(0, "-", "SIGTERM received");
-  
+
   if (compression_method == File_Blocks_Index_Base::NO_COMPRESSION)
   {
     data_file.seek((int64)(block.pos()) * block_size, "File_Blocks::read_block::1");
@@ -904,7 +904,7 @@ struct Write_Iterator_Adapter
   Index index() const { return it.block().index; }
   uint32 pos() const { return it.block().pos; }
   uint32 size() const { return it.block().size; }
-  
+
 private:
   Iterator it;
 };
@@ -933,7 +933,7 @@ uint64* File_Blocks< TIndex, TIterator >::read_block
 inline std::pair< uint64_t*, uint32_t > prepare_block_for_write(
     uint64_t* input, uint64_t* buffer, uint32_t payload_size,
     uint32_t block_size, uint32_t compression_factor, int compression_method)
-{  
+{
   if (sigterm_status())
     throw File_Error(0, "-", "SIGTERM received");
 
@@ -951,7 +951,7 @@ inline std::pair< uint64_t*, uint32_t > prepare_block_for_write(
     payload = buffer;
     payload_size = LZ4_Deflate().compress(input, payload_size, payload, block_size * compression_factor * 2);
   }
-  
+
   // compute block_count
   return { payload, payload_size == 0 ? 0 : (payload_size - 1) / block_size + 1 };
 }
@@ -1015,7 +1015,7 @@ typename File_Blocks< TIndex, TIterator >::Write_Iterator
   auto buf_size = prepare_block_for_write(
       (uint64_t*)buf, (uint64_t*)buffer.ptr, payload_size, block_size, compression_factor, compression_method);
 
-  uint32_t pos = wr_idx->get_void_blocks().allocate_block(buf_size.second);  
+  uint32_t pos = wr_idx->get_void_blocks().allocate_block(buf_size.second);
   write_prepared_block(data_file, buf_size, pos, block_size);
 
   it.set_block(*wr_idx, File_Block_Index_Entry< TIndex >(block_idx, pos, buf_size.second));

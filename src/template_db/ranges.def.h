@@ -31,7 +31,7 @@ Ranges< Index > Ranges< Index >::intersect(const Ranges< Index >& rhs) const
     return *this;
   else if (this->is_global())
     return rhs;
-  
+
   Ranges< Index > result;
   auto it_a = data.begin();
   auto it_b = rhs.data.begin();
@@ -62,10 +62,10 @@ template< typename Index >
 Ranges< Index > Ranges< Index >::union_(const Ranges< Index >& rhs) const
 {
   Ranges< Index > result;
-  
+
   auto it_a = data.begin();
   auto it_b = rhs.data.begin();
-  
+
   while (it_a != data.end() && it_b != rhs.data.end())
   {
     if (it_a->first < it_b->first)
@@ -89,7 +89,7 @@ Ranges< Index > Ranges< Index >::union_(const Ranges< Index >& rhs) const
     result.data.push_back(*it_b);
     ++it_b;
   }
-  
+
   //result.sort();
   return result;
 }
@@ -136,7 +136,7 @@ void Ranges< Index >::sort()
 //   }
 
   std::sort(data.begin(), data.end());
-  
+
   if (!data.empty())
   {
     decltype(data) result;

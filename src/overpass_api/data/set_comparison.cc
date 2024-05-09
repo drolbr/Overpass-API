@@ -342,7 +342,7 @@ std::vector< typename Skeleton::Id_Type > find_still_existing_skeletons
   std::vector< typename Skeleton::Id_Type > found_ids;
   std::map< Index, std::vector< Skeleton > > current_result;
   std::map< Index, std::vector< Attic< Skeleton > > > attic_result;
-  
+
   Request_Context context(0, rman);
   collect_items_discrete(context, req,
       Id_Predicate< Skeleton >(searched_ids), timestamp, current_result, attic_result);
@@ -1270,9 +1270,9 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
       clear_elems(relation_values, changed_relations);
     }
   }
-  
+
   rman.set_desired_timestamp(lhs_timestamp_);
-  
+
   filter_by_id(lhs_set_.nodes, changed_nodes);
   filter_by_id(lhs_set_.attic_nodes, changed_nodes);
   filter_by_id(lhs_set_.ways, changed_ways);

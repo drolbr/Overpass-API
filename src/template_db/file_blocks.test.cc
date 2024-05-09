@@ -41,7 +41,7 @@ struct IntIndex
   bool less(void* rhs) const { return value < *(uint32*)rhs; }
   bool leq(void* rhs) const { return value <= *(uint32*)rhs; }
   bool equal(void* rhs) const { return value == *(uint32*)rhs; }
-  
+
   uint32 size_of() const { return (value < 24 ? 12 : value-12); }
   static constexpr uint32 const_size() { return 0; }
   static uint32 size_of(void* data) { return ((*(uint32*)data) < 24 ? 12 : (*(uint32*)data)-12); }
@@ -1856,7 +1856,7 @@ int main(int argc, char* args[])
       + Variable_Block_Test_File().get_shadow_suffix()).c_str());
   remove((BASE_DIRECTORY
       + Variable_Block_Test_File().get_file_name_trunk() + Variable_Block_Test_File().get_data_suffix()).c_str());
-  
+
   data_fd = open64
       ((BASE_DIRECTORY
         + Compressed_Test_File().get_file_name_trunk()

@@ -63,13 +63,13 @@ struct Limit_Abort_Condition
 {
 public:
   Limit_Abort_Condition(uint64_t limit_) : limit(limit_) {}
-  
+
   bool positive_cnt(uint64_t cnt)
   {
     has_triggered |= cnt > limit;
     return cnt > limit;
   }
-  
+
   uint64_t limit = 0;
   bool has_triggered = false;
 };
@@ -90,7 +90,7 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kv(
     if (!relevant_ids || std::binary_search(
         relevant_ids->begin(), relevant_ids->end(), std::make_pair(it2.object().id, Uint31_Index(0u))))
       timestamp_per_id[it2.object().id] = std::make_pair(NOW, it2.object().idx);
-    
+
     if (abort && abort->positive_cnt(timestamp_per_id.size()))
       return {};
   }
@@ -105,7 +105,7 @@ std::map< Id_Type, std::pair< uint64, Uint31_Index > > collect_attic_kv(
       if (ref.first == 0 || it2.object().timestamp < ref.first)
         ref = std::make_pair(it2.object().timestamp, it2.object().idx);
     }
-    
+
     if (abort && abort->positive_cnt(timestamp_per_id.size()))
       return {};
   }
@@ -365,7 +365,7 @@ void filter_id_list(
 {
   std::vector< std::pair< Id_Type, Uint31_Index > > old_ids;
   old_ids.swap(new_ids);
-  
+
   if (!filtered && limit_size && container.size() >= 1024*1024)
     return;
 
@@ -810,7 +810,7 @@ void progress_1(
 {
   File_Properties* file_prop = current_global_tags_file_properties< Skeleton >();
   File_Properties* attic_file_prop = attic_global_tags_file_properties< Skeleton >();
-  
+
   ids.ids.clear();
   range_vec.clear();
   if (!key_values.empty()

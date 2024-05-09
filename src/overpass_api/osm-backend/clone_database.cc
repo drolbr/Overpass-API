@@ -73,7 +73,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
       Nonsynced_Transaction into_transaction(Access_Mode::writeable, false, dest_db_dir, "");
       std::map< TIndex, std::set< TObject > > db_to_insert;
 
-      Block_Backend< TIndex, TObject > from_db(transaction.data_index(&src_file_prop));      
+      Block_Backend< TIndex, TObject > from_db(transaction.data_index(&src_file_prop));
       typename Block_Backend< TIndex, TObject >::Flat_Iterator it = from_db.flat_begin();
       typename std::map< TIndex, std::set< TObject > >::iterator dit = db_to_insert.begin();
 
@@ -91,7 +91,7 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
         }
         dit->second.insert(it.object());
         count += it.object().size_of();
-        
+
         if (count >= 64*1024*1024)
         {
           into_db.update(std::map< TIndex, std::set< TObject > >(), db_to_insert);
@@ -99,11 +99,11 @@ void clone_bin_file(const File_Properties& src_file_prop, const File_Properties&
           dit = db_to_insert.begin();
           count = 0;
         }
-        
+
         ++it;
       }
       into_db.update(std::map< TIndex, std::set< TObject > >(), db_to_insert);
-    }    
+    }
   }
   catch (File_Error e)
   {

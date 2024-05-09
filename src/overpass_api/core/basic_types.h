@@ -90,7 +90,7 @@ struct Uint32_Index
   {
     return value;
   }
-  
+
   static Uint32_Index min() { return Uint32_Index(0u); }
   static Uint32_Index max() { return Uint32_Index(0xffffffffu); }
 
@@ -142,7 +142,7 @@ struct Uint31_Index : Uint32_Index
       return (this->value & 0x7fffffff) < (index.value & 0x7fffffff);
     return (this->value < index.value);
   }
-  
+
   static Uint31_Index min() { return Uint31_Index(0u); }
   static Uint31_Index max() { return Uint31_Index(0xffffffffu); }
 };
@@ -215,7 +215,7 @@ struct Uint64
   }
 
   uint64 val() const { return value; }
-  
+
   static Uint64 min() { return Uint64(0ull); }
   static Uint64 max() { return Uint64(0xffffffffffffffffull); }
 

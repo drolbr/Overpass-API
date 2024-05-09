@@ -1010,7 +1010,7 @@ void Way_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_stop
     update_elements(std::map< Tag_Index_Local, std::set< Attic < Way_Skeleton::Id_Type > > >(),
                     new_attic_local_tags, *transaction, *attic_settings().WAY_TAGS_LOCAL);
     callback->tags_local_finished();
-    
+
     {
       std::map< Tag_Index_Global, std::vector< Attic< Tag_Object_Global< Way_Skeleton::Id_Type > > > >
           new_attic_global_tags = compute_attic_global_tags(new_attic_local_tags);

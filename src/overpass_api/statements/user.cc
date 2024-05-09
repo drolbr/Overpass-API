@@ -119,7 +119,7 @@ std::vector< typename Object::Id_Type > touched_ids_by_users(
     Resource_Manager& rman, const Ranges< Index >& ranges, const std::set< Uint32_Index >& user_ids)
 {
   std::vector< typename Object::Id_Type > result;
-  
+
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > cur_meta_db(
       rman.get_transaction()->data_index(current_meta_file_properties< Object >()));
@@ -140,10 +140,10 @@ std::vector< typename Object::Id_Type > touched_ids_by_users(
         result.push_back(it.object().ref);
     }
   }
-  
+
   std::sort(result.begin(), result.end());
   result.erase(std::unique(result.begin(), result.end()), result.end());
-  
+
   return result;
 }
 

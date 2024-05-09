@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     if (error_output)
       error_output->runtime_remark(
           "Timeout is " + to_string(max_allowed_time) + " and maxsize is " + to_string(max_allowed_space) + ".");
-    
+
     // open read transaction and log this.
     area_level = determine_area_level(error_output, area_level);
     Dispatcher_Stub dispatcher(

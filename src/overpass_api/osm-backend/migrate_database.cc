@@ -39,7 +39,7 @@ struct File_Format_Version_Checker
   File_Format_Version_Checker() {}
   void check_bin_up_to_date(Transaction& transaction, int min_acceptable, File_Properties& file_properties);
   void check_map_present(Transaction& transaction, File_Properties& file_properties);
-  
+
   bool empty() const { return bin_files_to_update.empty() && map_files_to_replicate.empty(); }
 
   std::vector< File_Properties* > bin_files_to_update;
@@ -51,7 +51,7 @@ void File_Format_Version_Checker::check_bin_up_to_date(
     Transaction& transaction, int min_acceptable, File_Properties& file_properties)
 {
   constexpr auto current_version = File_Blocks_Index_Structure_Params::FILE_FORMAT_VERSION;
-  
+
   auto idx = transaction.data_index(&file_properties);
   if (idx && !idx->empty() && idx->get_file_format_version() < min_acceptable)
   {
@@ -79,11 +79,11 @@ void check_all_files(File_Format_Version_Checker& ver_checker, Transaction&& tra
   ver_checker.check_map_present(transaction, *osm_base_settings().NODES);
   ver_checker.check_map_present(transaction, *osm_base_settings().WAYS);
   ver_checker.check_map_present(transaction, *osm_base_settings().RELATIONS);
-  
+
   ver_checker.check_map_present(transaction, *attic_settings().NODES);
   ver_checker.check_map_present(transaction, *attic_settings().WAYS);
   ver_checker.check_map_present(transaction, *attic_settings().RELATIONS);
-  
+
   ver_checker.check_bin_up_to_date(transaction, 7561, *osm_base_settings().NODE_TAGS_GLOBAL);
   ver_checker.check_bin_up_to_date(transaction, 7561, *osm_base_settings().WAY_TAGS_GLOBAL);
   ver_checker.check_bin_up_to_date(transaction, 7561, *osm_base_settings().RELATION_TAGS_GLOBAL);
@@ -109,13 +109,13 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
   Nonsynced_Transaction into_transaction(Access_Mode::writeable, false, transaction.get_db_dir(), ".next");
   Block_Backend< Timestamp, typename Skeleton::Id_Type >
       into_db(into_transaction.data_index(changelog_file_properties< Skeleton >()));
-  
+
   std::map< Timestamp, std::vector< typename Skeleton::Id_Type > > db_to_insert;
   uint64_t elem_cnt = 0;
   for (auto from_it = from_db.flat_begin(); !(from_it == from_db.flat_end()); ++from_it)
   {
     db_to_insert[from_it.index()].push_back(from_it.object().elem_id);
-    
+
     if (++elem_cnt >= 256*1024*1024)
     {
       callback->migration_flush();
@@ -131,7 +131,7 @@ void migrate_changelog(Osm_Backend_Callback* callback, Transaction& transaction)
   for (auto& i : db_to_insert)
     std::sort(i.second.begin(), i.second.end());
   into_db.update({}, db_to_insert);
-  
+
   callback->migration_completed();
 }
 
@@ -186,7 +186,7 @@ public:
   Dispatcher_Write_Guard(Dispatcher_Client* dispatcher_client, Logger& logger);
   ~Dispatcher_Write_Guard();
   void commit();
-  
+
 private:
   Dispatcher_Client* dispatcher_client;
   Logger* logger;
@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
 
         Osm_Backend_Callback* callback = get_verbatim_callback();
         callback->set_db_dir(dispatcher_client.get_db_dir());
-        
+
         if (migrate && !ver_checker.empty())
         {
           Dispatcher_Write_Guard guard(&dispatcher_client, logger);

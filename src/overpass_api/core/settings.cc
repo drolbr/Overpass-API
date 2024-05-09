@@ -401,7 +401,7 @@ Database_Meta_State::Mode Database_Meta_State::from_db_files(const std::string& 
     if (file_exists(db_dir + i->get_file_name_trunk() + i->get_data_suffix()))
       return Database_Meta_State::keep_meta;
   }
-  
+
   return Database_Meta_State::only_data;
 }
 
@@ -409,7 +409,7 @@ Database_Meta_State::Mode Database_Meta_State::from_db_files(const std::string& 
 std::string get_server_name(const std::string& db_dir)
 {
   std::string server_name("/api");
-  
+
   try
   {
     std::ifstream server_name_f((db_dir + "server_name").c_str());

@@ -452,7 +452,7 @@ int main(int argc, char* args[])
   std::string test_to_execute;
   if (argc > 1)
     test_to_execute = args[1];
-  
+
   if ((test_to_execute == "") || (test_to_execute == "1"))
   {
     shm_unlink("osm3s_share_test");

@@ -491,7 +491,7 @@ void Node_Updater::update(Osm_Backend_Callback* callback, Cpu_Stopwatch* cpu_sto
 
   // Collect all data of existing meta elements
   std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > > existing_meta
-      = (meta != Database_Meta_State::only_data 
+      = (meta != Database_Meta_State::only_data
           ? get_existing_meta< Node::Index, OSM_Element_Metadata_Skeleton< Node::Id_Type > >
               (existing_map_positions, *transaction, *meta_settings().NODES_META)
           : std::map< Node::Index, std::set< OSM_Element_Metadata_Skeleton< Node::Id_Type > > >());

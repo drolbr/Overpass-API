@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
     std::cout<<"Content-Type: text/plain; charset=utf-8\n"
         "Access-Control-Allow-Origin: *\n\n";
-    
+
     std::cout<<out.str();
   }
   catch (File_Error e)

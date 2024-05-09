@@ -161,7 +161,7 @@ void Area_Updater::prepare_delete_tags
   for (auto it = to_delete_coarse.begin(); it != to_delete_coarse.end(); ++it)
     ranges.push_back({ it->first, "", "" }, { it->first + 1, "", "" });
   ranges.sort();
-  
+
   // iterate over the result
   Block_Backend< Tag_Index_Local, Uint32_Index > areas_db
       (transaction->data_index(area_settings().AREA_TAGS_LOCAL));
@@ -180,7 +180,7 @@ void Area_Updater::prepare_delete_tags
       tag_entry.key = it.index().key;
       tag_entry.value = it.index().value;
       tag_entry.ids.clear();
-    
+
       handle = &to_delete_coarse[it.index().index];
     }
 

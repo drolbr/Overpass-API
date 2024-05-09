@@ -99,7 +99,7 @@ struct Block_Backend_Basic_Iterator
     return obj_cache.object();
   }
   const Handle< Object >& handle()
-  { 
+  {
     return obj_cache;
   }
 
@@ -483,14 +483,14 @@ struct Block_Backend_Range_Iterator
 struct Delta_Count
 {
   Delta_Count() : before(0), after(0) {}
-  
+
   Delta_Count& operator+=(Delta_Count rhs)
   {
     before += rhs.before;
     after += rhs.after;
     return *this;
   }
-  
+
   uint64 before;
   uint64 after;
 };

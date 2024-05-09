@@ -379,7 +379,7 @@ class Osm_Backend_Callback
 {
 public:
   virtual ~Osm_Backend_Callback() {}
-  
+
   virtual void update_started() = 0;
   virtual void attic_update_started() = 0;
   virtual void compute_started() = 0;

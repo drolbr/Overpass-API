@@ -177,7 +177,7 @@ public:
       const Statement& query_, Resource_Manager& rman_)
       : ids(&ids_), invert_ids(invert_ids_), ranges(ranges_), query(&query_), rman(&rman_),
       min_idx(ranges_.empty() ? Index() : ranges_.begin().lower_bound()) {}
-  
+
   bool get_chunk(
       std::map< Index, std::vector< Object > >& elements,
       std::map< Index, std::vector< Attic< Object > > >& attic_elements);
@@ -219,7 +219,7 @@ bool Collect_Items< Index, Object >::get_chunk(
     if (ids->empty())
       return get_elements_by_id_from_db_generic(
           elements, attic_elements, Trivial_Predicate< Object >(), ranges, min_idx, *query, *rman);
-    else 
+    else
       return get_elements_by_id_from_db_generic(
           elements, attic_elements, Not_Predicate< Object, Id_Predicate< Object > >(Id_Predicate< Object >(*ids)),
           ranges, min_idx, *query, *rman);
@@ -517,7 +517,7 @@ void keep_matching_skeletons
     attic.clear();
     return;
   }
-  
+
   std::map< typename Skeleton::Id_Type, uint64 > timestamp_by_id;
 
   for (auto it = current.begin(); it != current.end(); ++it)
@@ -901,7 +901,7 @@ Timeless< Index, Object >& Timeless< Index, Object >::filter_by_id(
     }
     into.swap(i.second);
   }
-  
+
   return *this;
 }
 

@@ -2395,10 +2395,10 @@ private:
 };
 
 struct Accept_Query_177 : public Accept_All_Tags
-{ 
+{
   Accept_Query_177(uint pattern_size_) : pattern_size(pattern_size_) {}
 
-  virtual bool admit_node(uint id) const { return (id != (pattern_size+1)*pattern_size/2 + 1 && 
+  virtual bool admit_node(uint id) const { return (id != (pattern_size+1)*pattern_size/2 + 1 &&
       ((pattern_size*pattern_size/2 + 2 <= id && id <= pattern_size*(pattern_size/2 + 1) - 1)
           || (id % pattern_size == pattern_size/2 + 1 && pattern_size < id && id < pattern_size*(pattern_size-1))));
       }
@@ -5731,6 +5731,6 @@ int main(int argc, char* args[])
 
     std::cout<<"</osm>\n";
   }
-  
+
   delete modifier;
 }

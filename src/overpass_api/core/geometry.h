@@ -608,17 +608,17 @@ public:
 //     std::cout<<"gc "<<lhs.lat<<' '<<lhs.lon<<' '<<rhs.lat<<' '<<rhs.lon
 //         <<' '<<(lhs.lon < rhs.lon)<<(rhs.lon - lhs.lon > 180.)<<
 //         (rhs.lon < lhs.lon)<<(lhs.lon - rhs.lon < 180.)<<'\n';
-    
+
     double lhs_s = sin(lhs.lat/180.*M_PI);
     double lhs_cos = cos(lhs.lat/180.*M_PI);
     double lhs_cs = lhs_cos * sin(lhs.lon/180.*M_PI);
     double lhs_cc = lhs_cos * cos(lhs.lon/180.*M_PI);
-    
+
     double rhs_s = sin(rhs.lat/180.*M_PI);
     double rhs_cos = cos(rhs.lat/180.*M_PI);
     double rhs_cs = rhs_cos * sin(rhs.lon/180.*M_PI);
     double rhs_cc = rhs_cos * cos(rhs.lon/180.*M_PI);
-    
+
     ortho_s = lhs_cs * rhs_cc - lhs_cc * rhs_cs;
     ortho_cs = lhs_cc * rhs_s - lhs_s * rhs_cc;
     ortho_cc = lhs_s * rhs_cs - lhs_cs * rhs_s;

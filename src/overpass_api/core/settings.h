@@ -197,7 +197,7 @@ class Logger
 struct Database_Meta_State
 {
   enum Mode { only_data, keep_meta, keep_attic };
-  
+
   Database_Meta_State() : mode_valid(false) {}
   Mode value_or_autodetect(const std::string& db_dir)
   {
@@ -211,11 +211,11 @@ struct Database_Meta_State
     mode = mode_;
     mode_valid = true;
   }
-  
+
 private:
   Mode mode;
   bool mode_valid;
-  
+
   static Mode from_db_files(const std::string& db_dir);
 };
 

@@ -314,7 +314,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
   areas_inside.clear();
 
   Set into;
-  
+
   if (!areas_found.empty())
   {
     std::vector< uint32 > req_v;
@@ -335,13 +335,13 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
         into.areas[it.index()].push_back(it.object());
     }
   }
-  
+
   std::set< Uint31_Index > way_idxs = calc_parents(node_idxs);
   std::map< Uint31_Index, std::vector< Way_Skeleton > > current_candidates;
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_candidates;
   Request_Context context(this, rman);
   collect_items_discrete(context, way_idxs, Closedness_Predicate(), current_candidates, attic_candidates);
-  
+
   if (lat != 100.0)
   {
     Tilewise_Area_Iterator tai(current_candidates, attic_candidates, *this, rman);
@@ -374,7 +374,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
     std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator cur_it = input_set->nodes.begin();
     std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::const_iterator attic_it =
         input_set->attic_nodes.begin();
-    
+
     while (cur_it != input_set->nodes.end() || attic_it != input_set->attic_nodes.end())
     {
       Uint32_Index idx =
@@ -384,7 +384,7 @@ void Coord_Query_Statement::execute(Resource_Manager& rman)
         tai.next();
       if (tai.is_end())
         break;
-      
+
       if (cur_it->first == tai.get_idx())
       {
         for (std::vector< Node_Skeleton >::const_iterator it2 = cur_it->second.begin(); it2 != cur_it->second.end();

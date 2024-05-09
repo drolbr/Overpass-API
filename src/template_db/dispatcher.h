@@ -183,7 +183,7 @@ public:
   static const int OFFSET_BACK = 20;
   static const int OFFSET_DB_1 = OFFSET_BACK+12;
   static const int OFFSET_DB_2 = OFFSET_DB_1+(256+4);
-  
+
   static const int32 TERMINATE_COUNTDOWN_START = 500;
 
   static const uint32 TERMINATE = 0x100;

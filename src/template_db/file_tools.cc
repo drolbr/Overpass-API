@@ -96,7 +96,7 @@ uint32 Blocking_Client_Socket::get_command()
 
   bytes_expected = (buffer[0] & 0xff)*4 + 4;
   counter = 100;
-  
+
   bytes_in_buffer += bytes_read;
   state = processing_command;
   if (bytes_expected <= bytes_in_buffer || --counter <= 0)

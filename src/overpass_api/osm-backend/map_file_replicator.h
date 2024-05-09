@@ -34,7 +34,7 @@ uint64_t replicate_current_map_file(
       from_db(transaction.data_index(current_skeleton_file_properties< Skeleton >()));
 
   Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
-  
+
   uint64_t id_lower_limit = 0;
   uint64_t id_max_seen = 1;
   while (id_lower_limit < id_max_seen)
@@ -59,10 +59,10 @@ uint64_t replicate_current_map_file(
           into_random.put(id_lower_limit + i, idx_buf[i]);
       }
     }
-    
+
     id_lower_limit += flush_count;
   }
-  
+
   return id_max_seen;
 }
 
@@ -75,7 +75,7 @@ uint64_t replicate_attic_map_file(
       from_db(transaction.data_index(attic_skeleton_file_properties< Skeleton >()));
 
   Nonsynced_Transaction into_transaction(Access_Mode::truncate, false, transaction.get_db_dir(), ".next");
-  
+
   uint64_t id_lower_limit = 0;
   uint64_t id_max_seen = 1;
   while (id_lower_limit < id_max_seen)
@@ -89,13 +89,13 @@ uint64_t replicate_attic_map_file(
 
       if (id_lower_limit <= it.object().id.val() && it.object().id < id_lower_limit + flush_count)
       {
-        Index existing = idx_buf[it.object().id.val() - id_lower_limit];        
+        Index existing = idx_buf[it.object().id.val() - id_lower_limit];
         if (existing.val() == 0)
           idx_buf[it.object().id.val() - id_lower_limit] = it.index();
         else if (!(existing == it.index()))
         {
           auto& list = idx_lists[it.object().id];
-          
+
           if (existing.val() != 0xff)
           {
             idx_buf[it.object().id.val() - id_lower_limit] = Index(0xffu);
@@ -121,10 +121,10 @@ uint64_t replicate_attic_map_file(
           into_transaction.data_index(attic_idx_list_properties< Skeleton >()));
       into_db.update({}, idx_lists);
     }
-    
+
     id_lower_limit += flush_count;
   }
-  
+
   return id_max_seen;
 }
 

@@ -551,7 +551,7 @@ Osm_Updater::Osm_Updater
     std::ofstream version((db_dir + "osm_base_version").c_str());
     version<<data_version_<<'\n';
   }
-  
+
   meta = meta_.value_or_autodetect(db_dir);
 
   node_updater_ = new Node_Updater(db_dir, meta);
