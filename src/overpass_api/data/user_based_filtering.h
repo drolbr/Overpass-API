@@ -91,13 +91,13 @@ std::vector< Touch_State< typename Object::Id_Type > > detect_impacted_versions(
       {
         if (!result.empty() && result.back().ref == it.object().ref)
         {
-          result.back().first_touched = std::min(result.back().first_touched, it.object().timestamp);
-          result.back().last_touched = std::max(result.back().last_touched, it.object().timestamp);
-          result.back().version = std::max(result.back().last_touched, it.object().version);
+          result.back().first_touched = std::min(result.back().first_touched, (uint64_t)it.object().timestamp);
+          result.back().last_touched = std::max(result.back().last_touched, (uint64_t)it.object().timestamp);
+          result.back().version = std::max(result.back().version, it.object().version);
         }
         else
           result.push_back(
-              { it.object().ref, false, it.object().timestamp, it.object().timestamp, it.object().version });
+              { it.object().ref, it.object().timestamp, it.object().timestamp, it.object().version });
       }
     }
   }
@@ -115,17 +115,19 @@ std::vector< Touch_State< typename Object::Id_Type > > detect_impacted_versions(
     {
       to_it->first_touched = std::min(to_it->first_touched, from_it->first_touched);
       to_it->last_touched = std::max(to_it->last_touched, from_it->last_touched);
-      to_it->version = std::max(to_it->last_touched, from_it->version);
+      to_it->version = std::max(to_it->version, from_it->version);
     }
   }
-  result.erase(++to_it, result.end());
+  if (to_it != result.end())
+    result.erase(++to_it, result.end());
 
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > cur_meta_db(
       rman.get_transaction()->data_index(current_meta_file_properties< Object >()));
     for (auto it = cur_meta_db.range_begin(ranges); !(it == cur_meta_db.range_end()); ++it)
     {
-      auto result_it = std::lower_bound(result.begin(), result.end(), { it.object().ref, 0 });
+      auto result_it = std::lower_bound(
+          result.begin(), result.end(), Touch_State< typename Object::Id_Type >{ it.object().ref, 0 });
       if (result_it != result.end() && result_it->ref == it.object().ref)
       {
         if (user_ids.find(it.object().user_id) != user_ids.end())
@@ -133,8 +135,7 @@ std::vector< Touch_State< typename Object::Id_Type > > detect_impacted_versions(
         result_it->version = it.object().version;
       }
       else if (user_ids.find(it.object().user_id) != user_ids.end())
-        result.push_back(
-            { it.object().ref, false, it.object().timestamp, NOW, it.object().version });
+        result.push_back({ it.object().ref, it.object().timestamp, NOW, it.object().version });
     }
   }
   
