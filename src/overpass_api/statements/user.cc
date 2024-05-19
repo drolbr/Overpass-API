@@ -22,6 +22,7 @@
 #include "../data/bbox_filter.h"
 #include "../data/collect_members.h"
 #include "../data/meta_collector.h"
+#include "../data/user_based_filtering.h"
 #include "user.h"
 
 #include <algorithm>
@@ -114,40 +115,6 @@ void user_filter_map_attic
 }
 
 
-template< typename Index, typename Object >
-std::vector< typename Object::Id_Type > touched_ids_by_users(
-    Resource_Manager& rman, const Ranges< Index >& ranges, const std::set< Uint32_Index >& user_ids)
-{
-  std::vector< typename Object::Id_Type > result;
-
-  {
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > cur_meta_db(
-      rman.get_transaction()->data_index(current_meta_file_properties< Object >()));
-    for (auto it = cur_meta_db.range_begin(ranges); !(it == cur_meta_db.range_end()); ++it)
-    {
-      if (user_ids.find(it.object().user_id) != user_ids.end()
-          && (result.empty() || !(result.back() == it.object().ref)))
-        result.push_back(it.object().ref);
-    }
-  }
-  {
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > cur_meta_db(
-      rman.get_transaction()->data_index(attic_meta_file_properties< Object >()));
-    for (auto it = cur_meta_db.range_begin(ranges); !(it == cur_meta_db.range_end()); ++it)
-    {
-      if (user_ids.find(it.object().user_id) != user_ids.end()
-          && (result.empty() || !(result.back() == it.object().ref)))
-        result.push_back(it.object().ref);
-    }
-  }
-
-  std::sort(result.begin(), result.end());
-  result.erase(std::unique(result.begin(), result.end()), result.end());
-
-  return result;
-}
-
-
 void calc_ranges_32
   (Ranges< Uint32_Index >& node_req,
    const std::set< Uint32_Index >& user_ids, Transaction& transaction)
@@ -237,22 +204,19 @@ void User_Constraint::filter(const Statement& query, Resource_Manager& rman, Set
   {
     Ranges< Uint32_Index > node_ranges;
     Ranges< Uint31_Index > other_ranges;
-    calc_ranges_both(node_ranges, other_ranges, user->get_ids(*rman.get_transaction()), *rman.get_transaction());
+    calc_ranges_both(node_ranges, other_ranges, user_ids, *rman.get_transaction());
 
     if (!into.nodes.empty() || !into.attic_nodes.empty())
       Timeless< Uint32_Index, Node_Skeleton >{ into.nodes, into.attic_nodes }.filter_by_id(
-          touched_ids_by_users< Uint32_Index, Node_Skeleton >(
-              rman, node_ranges, user->get_ids(*rman.get_transaction())))
+          touched_ids_by_users< Uint32_Index, Node_Skeleton >(rman, node_ranges, user_ids))
           .swap(into.nodes, into.attic_nodes);
     if (!into.ways.empty() || !into.attic_ways.empty())
       Timeless< Uint31_Index, Way_Skeleton >{ into.ways, into.attic_ways }.filter_by_id(
-          touched_ids_by_users< Uint31_Index, Way_Skeleton >(
-              rman, other_ranges, user->get_ids(*rman.get_transaction())))
+          touched_ids_by_users< Uint31_Index, Way_Skeleton >(rman, other_ranges, user_ids))
           .swap(into.ways, into.attic_ways);
     if (!into.nodes.empty() || !into.attic_nodes.empty())
       Timeless< Uint31_Index, Relation_Skeleton >{ into.relations, into.attic_relations }.filter_by_id(
-          touched_ids_by_users< Uint31_Index, Relation_Skeleton >(
-              rman, other_ranges, user->get_ids(*rman.get_transaction())))
+          touched_ids_by_users< Uint31_Index, Relation_Skeleton >(rman, other_ranges, user_ids))
           .swap(into.relations, into.attic_relations);
   }
 
