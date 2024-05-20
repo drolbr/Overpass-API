@@ -80,7 +80,7 @@ template< typename Index, typename Object >
 std::vector< Touch_State< typename Object::Id_Type > > detect_impacted_versions(
     Resource_Manager& rman, const Ranges< Index >& ranges, const std::set< Uint32_Index >& user_ids)
 {
-  std::vector< Touch_State< typename Object::Id_Type > > result;
+  std::vector< Touch_State< typename Object::Id_Type > > found;
 
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > attic_meta_db(
@@ -89,22 +89,22 @@ std::vector< Touch_State< typename Object::Id_Type > > detect_impacted_versions(
     {
       if (user_ids.find(it.object().user_id) != user_ids.end())
       {
-        if (!result.empty() && result.back().ref == it.object().ref)
+        if (!found.empty() && found.back().ref == it.object().ref)
         {
-          result.back().first_touched = std::min(result.back().first_touched, (uint64_t)it.object().timestamp);
-          result.back().last_touched = std::max(result.back().last_touched, (uint64_t)it.object().timestamp);
-          result.back().version = std::max(result.back().version, it.object().version);
+          found.back().first_touched = std::min(found.back().first_touched, (uint64_t)it.object().timestamp);
+          found.back().last_touched = std::max(found.back().last_touched, (uint64_t)it.object().timestamp);
+          found.back().version = std::max(found.back().version, it.object().version);
         }
         else
-          result.push_back(
+          found.push_back(
               { it.object().ref, it.object().timestamp, it.object().timestamp, it.object().version });
       }
     }
   }
 
-  std::sort(result.begin(), result.end());
-  auto to_it = result.begin();
-  for (auto from_it = result.begin(); from_it != result.end(); ++from_it)
+  std::sort(found.begin(), found.end());
+  auto to_it = found.begin();
+  for (auto from_it = found.begin(); from_it != found.end(); ++from_it)
   {
     if (to_it->ref < from_it->ref)
     {
@@ -118,27 +118,33 @@ std::vector< Touch_State< typename Object::Id_Type > > detect_impacted_versions(
       to_it->version = std::max(to_it->version, from_it->version);
     }
   }
-  if (to_it != result.end())
-    result.erase(++to_it, result.end());
+  if (to_it != found.end())
+    found.erase(++to_it, found.end());
 
+  decltype(found) extra_now;
   {
     Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Object::Id_Type > > cur_meta_db(
       rman.get_transaction()->data_index(current_meta_file_properties< Object >()));
     for (auto it = cur_meta_db.range_begin(ranges); !(it == cur_meta_db.range_end()); ++it)
     {
-      auto result_it = std::lower_bound(
-          result.begin(), result.end(), Touch_State< typename Object::Id_Type >{ it.object().ref, 0 });
-      if (result_it != result.end() && result_it->ref == it.object().ref)
+      auto found_it = std::lower_bound(
+          found.begin(), found.end(), Touch_State< typename Object::Id_Type >{ it.object().ref, 0 });
+      if (found_it != found.end() && found_it->ref == it.object().ref)
       {
         if (user_ids.find(it.object().user_id) != user_ids.end())
-          result_it->last_touched = NOW;
-        result_it->version = it.object().version;
+          found_it->last_touched = NOW;
+        found_it->version = it.object().version;
       }
       else if (user_ids.find(it.object().user_id) != user_ids.end())
-        result.push_back({ it.object().ref, it.object().timestamp, NOW, it.object().version });
+        extra_now.push_back({ it.object().ref, it.object().timestamp, NOW, it.object().version });
     }
   }
   
+  std::sort(extra_now.begin(), extra_now.end());
+  decltype(found) result;
+  result.reserve(found.size() + extra_now.size());
+  std::merge(found.begin(), found.end(), extra_now.begin(), extra_now.end(), std::back_inserter(result));
+
   return result;
 }
 
