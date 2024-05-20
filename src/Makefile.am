@@ -122,6 +122,7 @@ statements_cc = \
   overpass_api/statements/per_member.cc \
   overpass_api/statements/pivot.cc \
   overpass_api/statements/polygon_query.cc \
+  overpass_api/statements/prepare_edit.cc \
   overpass_api/statements/print.cc \
   overpass_api/statements/query.cc \
   overpass_api/statements/recurse.cc \
@@ -312,6 +313,7 @@ nobase_dist_HEADERS = \
   overpass_api/statements/per_member.h\
   overpass_api/statements/pivot.h\
   overpass_api/statements/polygon_query.h\
+  overpass_api/statements/prepare_edit.h\
   overpass_api/statements/print.h\
   overpass_api/statements/query.h\
   overpass_api/statements/recurse.h\
