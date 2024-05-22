@@ -19,7 +19,7 @@
 #include "prepare_edit.h"
 
 
-Generic_Statement_Maker< Prepare_Edit > Prepare_Edit::statement_maker("prepare_edit");
+Generic_Statement_Maker< Prepare_Edit > Prepare_Edit::statement_maker("prepare-edit");
 
 
 Prepare_Edit::Prepare_Edit

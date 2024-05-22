@@ -269,6 +269,17 @@ TStatement* create_timeline_statement(typename TStatement::Factory& stmt_factory
 
 
 template< class TStatement >
+TStatement* create_prepare_edit(typename TStatement::Factory& stmt_factory,
+    std::string into, std::string type, uint line_nr)
+{
+  std::map< std::string, std::string > attr;
+  attr["into"] = into;
+  attr["type"] = type;
+  return stmt_factory.create_statement("prepare-edit", line_nr, attr);
+}
+
+
+template< class TStatement >
 TStatement* create_compare_statement(typename TStatement::Factory& stmt_factory, uint line_nr,
     const std::string& from, const std::string& into)
 {
@@ -873,6 +884,25 @@ TStatement* parse_make(typename TStatement::Factory& stmt_factory, const std::st
 
 
 template< class TStatement >
+TStatement* parse_prepare_edit(
+    typename TStatement::Factory& stmt_factory, Tokenizer_Wrapper& token, Error_Output* error_output)
+{
+  TStatement* statement = 0;
+  if (*token == "prepare_edit")
+  {
+    ++token;
+    std::string into = probe_into(token, error_output);
+
+    statement = create_prepare_edit< TStatement >(
+      stmt_factory, into, "cut", token.line_col().first);
+  }
+  clear_until_after(token, error_output, ";");
+
+  return statement;
+}
+
+
+template< class TStatement >
 TStatement* parse_localize(typename TStatement::Factory& stmt_factory,
     Tokenizer_Wrapper& token, const std::string& from, Error_Output* error_output)
 {
@@ -1328,6 +1358,8 @@ TStatement* parse_statement(typename TStatement::Factory& stmt_factory, Parsed_Q
     return parse_localize< TStatement >(stmt_factory, token, from, error_output);
   else if (token.good() && *token == "compare")
     return parse_compare< TStatement >(stmt_factory, parsed_query, token, from, error_output, depth);
+  else if (token.good() && *token == "prepare_edit")
+    return parse_prepare_edit< TStatement >(stmt_factory, token, error_output);
 
   std::string type = "";
   if (*token != "out" && from == "")
