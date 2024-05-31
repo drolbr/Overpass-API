@@ -508,60 +508,6 @@ inline std::vector< Way::Id_Type > relation_way_member_ids
 
 template< typename Index, typename Skeleton >
 void keep_matching_skeletons
-    (std::map< Index, std::vector< Skeleton > >& current,
-     std::map< Index, std::vector< Attic< Skeleton > > >& attic,
-     uint64 timestamp)
-{
-  if (timestamp == NOW)
-  {
-    attic.clear();
-    return;
-  }
-
-  std::map< typename Skeleton::Id_Type, uint64 > timestamp_by_id;
-
-  for (auto it = current.begin(); it != current.end(); ++it)
-  {
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      timestamp_by_id[it2->id] = NOW;
-  }
-
-  for (auto it = attic.begin(); it != attic.end(); ++it)
-  {
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      uint64& stored_timestamp = timestamp_by_id[it2->id];
-      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
-        stored_timestamp = it2->timestamp;
-    }
-  }
-
-  for (auto it = current.begin(); it != current.end(); ++it)
-  {
-    std::vector< Skeleton > local_into;
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      if (timestamp_by_id[it2->id] == NOW)
-        local_into.push_back(*it2);
-    }
-    local_into.swap(it->second);
-  }
-
-  for (auto it = attic.begin(); it != attic.end(); ++it)
-  {
-    std::vector< Attic< Skeleton > > local_into;
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      if (timestamp_by_id[it2->id] == it2->timestamp)
-        local_into.push_back(*it2);
-    }
-    local_into.swap(it->second);
-  }
-}
-
-
-template< typename Index, typename Skeleton >
-void keep_matching_skeletons
     (std::map< Index, std::vector< Attic< Skeleton > > >& result,
      const std::map< Index, std::vector< Skeleton > >& current,
      const std::map< Index, std::vector< Attic< Skeleton > > >& attic,
@@ -664,7 +610,7 @@ std::vector< std::pair< Index, const Skeleton* > > order_by_id
         iit != it->second.end(); ++iit)
       skels_by_id.push_back(std::make_pair(it->first, &*iit));
   }
-  sort(skels_by_id.begin(), skels_by_id.end(), order_by_id);
+  std::sort(skels_by_id.begin(), skels_by_id.end(), order_by_id);
 
   return skels_by_id;
 }
@@ -683,7 +629,7 @@ std::vector< std::pair< Index, const Skeleton* > > order_attic_by_id
         iit != it->second.end(); ++iit)
       skels_by_id.push_back(std::make_pair(it->first, &*iit));
   }
-  sort(skels_by_id.begin(), skels_by_id.end(), order_by_id);
+  std::sort(skels_by_id.begin(), skels_by_id.end(), order_by_id);
 
   return skels_by_id;
 }

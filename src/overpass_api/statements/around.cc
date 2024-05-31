@@ -334,7 +334,7 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     Timeless< Uint32_Index, Node_Skeleton > node_members
         = relation_node_members(context, into.relations, {}, node_ranges, {}, true);
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
-        = order_by_id(node_members.current, Order_By_Node_Id());
+        = order_by_id(node_members.get_current(), Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     Ranges< Uint31_Index > way_ranges;
@@ -343,11 +343,11 @@ void Around_Constraint::filter(const Statement& query, Resource_Manager& rman, S
     Timeless< Uint31_Index, Way_Skeleton > way_members_
         = relation_way_members(context, into.relations, {}, way_ranges, {}, true);
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
-        = order_by_id(way_members_.current, Order_By_Way_Id());
+        = order_by_id(way_members_.get_current(), Order_By_Way_Id());
 
     // Retrieve all nodes referred by the ways.
     filter_relations_expensive(*around, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_.current, query, rman), into.relations);
+        Way_Geometry_Store(way_members_.get_current(), query, rman), into.relations);
   }
 
   if (!into.attic_nodes.empty())
@@ -846,12 +846,13 @@ void Around_Statement::calc_lat_lons(const Set& input, Statement& query, Resourc
   add_ways(input.ways, Way_Geometry_Store(input.ways, query, rman));
 
   // Retrieve all node and way members referred by the relations.
-  add_nodes(relation_node_members(context, input.relations, {}, Ranges< Uint32_Index >::global(), {}, true).current);
+  add_nodes(relation_node_members(context, input.relations, {}, Ranges< Uint32_Index >::global(), {}, true)
+    .get_current());
 
   // Retrieve all ways referred by the relations.
   Timeless< Uint31_Index, Way_Skeleton > way_members
       = relation_way_members(context, input.relations, {}, Ranges< Uint31_Index >::global(), {}, true);
-  add_ways(way_members.current, Way_Geometry_Store(way_members.current, query, rman));
+  add_ways(way_members.get_current(), Way_Geometry_Store(way_members.get_current(), query, rman));
 
   if (rman.get_desired_timestamp() != NOW)
   {

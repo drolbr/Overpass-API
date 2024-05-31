@@ -48,12 +48,10 @@ Relation_Geometry_Store::Relation_Geometry_Store
       = relation_node_members(context, relations, {}, node_ranges, {}, true);
 
   // Order node ids by id.
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = node_members.current.begin();
-      it != node_members.current.end(); ++it)
+  for (const auto& i : node_members.get_current())
   {
-    for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+    for (const auto& j : i.second)
+      nodes.push_back(Node(j.id, i.first.val(), j.ll_lower));
   }
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
 
@@ -64,15 +62,13 @@ Relation_Geometry_Store::Relation_Geometry_Store
   Timeless< Uint31_Index, Way_Skeleton > way_members
       = relation_way_members(context, relations, {}, way_ranges, {}, true);
 
-  way_geometry_store = new Way_Geometry_Store(way_members.current, query, rman);
+  way_geometry_store = new Way_Geometry_Store(way_members.get_current(), query, rman);
 
   // Order way ids by id.
-  for (std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = way_members.current.begin();
-      it != way_members.current.end(); ++it)
+  for (const auto& i : way_members.get_current())
   {
-    for (std::vector< Way_Skeleton >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-      ways.push_back(*iit);
+    for (const auto& j : i.second)
+      ways.push_back(j);
   }
   sort(ways.begin(), ways.end());
 }
@@ -99,19 +95,15 @@ Relation_Geometry_Store::Relation_Geometry_Store
   auto nodes_by_idx = relation_node_members(context, {}, relations, node_ranges, {}, true);
 
   // Order node ids by id.
-  for (std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator it = nodes_by_idx.current.begin();
-      it != nodes_by_idx.current.end(); ++it)
+  for (const auto& i : nodes_by_idx.get_current())
   {
-    for (std::vector< Node_Skeleton >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+    for (const auto& j : i.second)
+      nodes.push_back(Node(j.id, i.first.val(), j.ll_lower));
   }
-  for (std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > >::iterator it = nodes_by_idx.attic.begin();
-      it != nodes_by_idx.attic.end(); ++it)
+  for (const auto& i : nodes_by_idx.get_attic())
   {
-    for (std::vector< Attic< Node_Skeleton > >::const_iterator iit = it->second.begin();
-        iit != it->second.end(); ++iit)
-      nodes.push_back(Node(iit->id, it->first.val(), iit->ll_lower));
+    for (const auto& j : i.second)
+      nodes.push_back(Node(j.id, i.first.val(), j.ll_lower));
   }
   sort(nodes.begin(), nodes.end(), Node_Comparator_By_Id());
 
@@ -124,7 +116,7 @@ Relation_Geometry_Store::Relation_Geometry_Store
           std::map< Uint31_Index, std::vector< Relation_Skeleton > >(), relations,
           way_ranges, {}, true);
   std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > ways_by_idx;
-  keep_matching_skeletons(ways_by_idx, ways_by_idx_pair.current, ways_by_idx_pair.attic,
+  keep_matching_skeletons(ways_by_idx, ways_by_idx_pair.get_current(), ways_by_idx_pair.get_attic(),
       rman.get_desired_timestamp());
 
   way_geometry_store = new Way_Geometry_Store(ways_by_idx, query, rman);

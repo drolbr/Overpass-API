@@ -107,23 +107,33 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
   // Retrieve all nodes referred by the relations.
   Ranges< Uint32_Index > node_ranges;
   get_ranges(rman, node_ranges);
-  Timeless< Uint32_Index, Node_Skeleton > node_members
-      = relation_node_members(context, into.relations, {}, node_ranges, {}, true);
+  std::map< Uint32_Index, std::vector< Node_Skeleton > > current_node_members;
+  std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > attic_node_members;
+  relation_node_members(context, into.relations, into.attic_relations, node_ranges, {}, true)
+      .swap(current_node_members, attic_node_members);
 
   // filter for those nodes that are in one of the areas
-  polygon->collect_nodes(node_members.current, false);
+  polygon->collect_nodes(current_node_members, false);
+  polygon->collect_nodes(attic_node_members, false);
 
   // Retrieve all ways referred by the relations.
   Ranges< Uint31_Index > way_ranges;
   get_ranges(rman, way_ranges);
-  Timeless< Uint31_Index, Way_Skeleton > way_members_
-      = relation_way_members(context, into.relations, {}, way_ranges, {}, true);
 
-  polygon->collect_ways(way_members_.current, Way_Geometry_Store(way_members_.current, query, rman), false, query, rman);
+  std::map< Uint31_Index, std::vector< Way_Skeleton > > current_way_members;
+  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic_way_members;
+  relation_way_members(context, into.relations, into.attic_relations, way_ranges, {}, true)
+      .swap(current_way_members, attic_way_members);
 
-  filter_relations_expensive(order_by_id(node_members.current, Order_By_Node_Id()),
-			     order_by_id(way_members_.current, Order_By_Way_Id()),
-			     into.relations);
+  polygon->collect_ways(
+      current_way_members, Way_Geometry_Store(current_way_members, query, rman), false, query, rman);
+  polygon->collect_ways(
+      attic_way_members, Way_Geometry_Store(attic_way_members, query, rman), false, query, rman);
+
+  filter_relations_expensive(
+      order_by_id(current_node_members, Order_By_Node_Id()),
+      order_by_id(current_way_members, Order_By_Way_Id()),
+      into.relations);
 
   //Process ways
   if (!into.attic_ways.empty())
@@ -132,25 +142,9 @@ void Polygon_Constraint::filter(const Statement& query, Resource_Manager& rman, 
 
   //Process relations
   if (!into.attic_relations.empty())
-  {
-    // Retrieve all nodes referred by the relations.
-    std::map< Uint32_Index, std::vector< Attic< Node_Skeleton > > > node_members
-        = relation_node_members(context, into.attic_relations, node_ranges);
-
-    // filter for those nodes that are in one of the areas
-    polygon->collect_nodes(node_members, false);
-
-    // Retrieve all ways referred by the relations.
-    std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > way_members_
-        = relation_way_members(context, into.attic_relations, way_ranges);
-
-    polygon->collect_ways(way_members_, Way_Geometry_Store(way_members_, query, rman),
-			  false, query, rman);
-
-    filter_relations_expensive(order_attic_by_id(node_members, Order_By_Node_Id()),
-			       order_attic_by_id(way_members_, Order_By_Way_Id()),
+    filter_relations_expensive(order_attic_by_id(attic_node_members, Order_By_Node_Id()),
+			       order_attic_by_id(attic_way_members, Order_By_Way_Id()),
 			       into.attic_relations);
-  }
 
   //TODO: filter areas
 }
@@ -345,6 +339,8 @@ void Polygon_Query_Statement::collect_nodes(std::map< Uint32_Index, std::vector<
 {
   std::vector< Aligned_Segment >::const_iterator area_it = segments.begin();
   typename std::map< Uint32_Index, std::vector< Node_Skeleton > >::iterator nodes_it = nodes.begin();
+  if (nodes_it == nodes.end())
+    return;
 
   uint32 current_idx(0);
 
@@ -413,6 +409,9 @@ void Polygon_Query_Statement::collect_ways
        const Way_Geometry_Store& way_geometries,
        bool add_border, const Statement& query, Resource_Manager& rman)
 {
+  if (ways.empty())
+    return;
+
   std::map< uint32, std::vector< std::pair< uint32, Way::Id_Type > > > way_coords_to_id;
   for (typename std::map< Uint31_Index, std::vector< Way_Skeleton > >::iterator it = ways.begin(); it != ways.end(); ++it)
   {

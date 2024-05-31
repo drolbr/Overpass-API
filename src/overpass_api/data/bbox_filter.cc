@@ -214,16 +214,16 @@ void Bbox_Filter::filter(const Statement& query, Resource_Manager& rman, Set& in
     Timeless< Uint32_Index, Node_Skeleton > node_members
         = relation_node_members(context, into.relations, {}, get_ranges_32(), {}, true);
     std::vector< std::pair< Uint32_Index, const Node_Skeleton* > > node_members_by_id
-        = order_by_id(node_members.current, Order_By_Node_Id());
+        = order_by_id(node_members.get_current(), Order_By_Node_Id());
 
     // Retrieve all ways referred by the relations.
     Timeless< Uint31_Index, Way_Skeleton > way_members_
         = relation_way_members(context, into.relations, {}, get_ranges_31(), {}, true);
     std::vector< std::pair< Uint31_Index, const Way_Skeleton* > > way_members_by_id
-        = order_by_id(way_members_.current, Order_By_Way_Id());
+        = order_by_id(way_members_.get_current(), Order_By_Way_Id());
 
     filter_relations_expensive(*this, node_members_by_id, way_members_by_id,
-        Way_Geometry_Store(way_members_.current, query, rman), into.relations);
+        Way_Geometry_Store(way_members_.get_current(), query, rman), into.relations);
   }
 
   if (rman.get_desired_timestamp() != NOW)

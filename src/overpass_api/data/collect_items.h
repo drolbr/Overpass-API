@@ -341,6 +341,12 @@ bool collect_items_by_timestamp(Health_Guard&& health_guard,
 template< typename Index, typename Object >
 struct Timeless
 {
+  Timeless() {}
+  Timeless(
+      const std::map< Index, std::vector< Object > >& current_,
+      const std::map< Index, std::vector< Attic< Object > > >& attic_)
+      : current(current_), attic(attic_) {}
+  
   Timeless& swap(
       std::map< Index, std::vector< Object > >& rhs_current,
       std::map< Index, std::vector< Attic< Object > > >& rhs_attic)
@@ -374,9 +380,66 @@ struct Timeless
 
   Timeless& filter_by_id(const std::vector< typename Object::Id_Type >& ids);
 
+  void keep_matching_skeletons(uint64 timestamp);
+  
+  const std::map< Index, std::vector< Object > >& get_current() const { return current; }
+  const std::map< Index, std::vector< Attic< Object > > >& get_attic() const { return attic; }
+
+private:
   std::map< Index, std::vector< Object > > current;
   std::map< Index, std::vector< Attic< Object > > > attic;
 };
+
+
+template< typename Index, typename Object >
+void Timeless< Index, Object >::keep_matching_skeletons(uint64 timestamp)
+{
+  if (timestamp == NOW)
+  {
+    attic.clear();
+    return;
+  }
+
+  std::map< typename Object::Id_Type, uint64 > timestamp_by_id;
+
+  for (auto it = current.begin(); it != current.end(); ++it)
+  {
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+      timestamp_by_id[it2->id] = NOW;
+  }
+
+  for (auto it = attic.begin(); it != attic.end(); ++it)
+  {
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      uint64& stored_timestamp = timestamp_by_id[it2->id];
+      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
+        stored_timestamp = it2->timestamp;
+    }
+  }
+
+  for (auto it = current.begin(); it != current.end(); ++it)
+  {
+    std::vector< Object > local_into;
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == NOW)
+        local_into.push_back(*it2);
+    }
+    local_into.swap(it->second);
+  }
+
+  for (auto it = attic.begin(); it != attic.end(); ++it)
+  {
+    std::vector< Attic< Object > > local_into;
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+    {
+      if (timestamp_by_id[it2->id] == it2->timestamp)
+        local_into.push_back(*it2);
+    }
+    local_into.swap(it->second);
+  }
+}
 
 
 template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
@@ -420,22 +483,6 @@ bool collect_items_by_timestamp(Health_Guard&& health_guard,
     //check_for_duplicated_objects< Way_Skeleton >(timestamp_by_id, rman);
   }
   return false;
-}
-
-
-template < class Index, class Object, class Container, class Predicate >
-void collect_items_discrete(Transaction& transaction,
-                   File_Properties& file_properties,
-                   const Container& req, const Predicate& predicate,
-                   std::map< Index, std::vector< Object > >& result)
-{
-  Block_Backend< Index, Object, typename Container::const_iterator > db
-      (transaction.data_index(&file_properties));
-  for (auto it = db.discrete_begin(req.begin(), req.end()); !(it == db.discrete_end()); ++it)
-  {
-    if (predicate.match(it.handle()))
-      result[it.index()].push_back(it.object());
-  }
 }
 
 
@@ -487,6 +534,9 @@ Timeless< Index, Object > collect_items_range(Request_Context& context,
   if (ranges.empty() || !predicate.possible())
     return result;
 
+  std::map< Index, std::vector< Object > > current;
+  std::map< Index, std::vector< Attic< Object > > > attic;
+  
   Block_Backend< Index, Object > current_db
       (context.data_index(current_skeleton_file_properties< Object >()));
   if (context.get_desired_timestamp() == NOW)
@@ -494,7 +544,7 @@ Timeless< Index, Object > collect_items_range(Request_Context& context,
     for (auto it = current_db.range_begin(ranges); !(it == current_db.range_end()); ++it)
     {
       if (predicate.match(it.handle()))
-        result.current[it.index()].push_back(it.object());
+        current[it.index()].push_back(it.object());
     }
   }
   else
@@ -504,8 +554,9 @@ Timeless< Index, Object > collect_items_range(Request_Context& context,
     collect_items_by_timestamp(context.get_health_guard(),
         current_db.range_begin(ranges), current_db.range_end(),
         attic_db.range_begin(ranges), attic_db.range_end(),
-        predicate, (Index*)0, context.get_desired_timestamp(), result.current, result.attic);
+        predicate, (Index*)0, context.get_desired_timestamp(), current, attic);
   }
+  result.swap(current, attic);
   return result;
 }
 

@@ -334,27 +334,28 @@ NWR_Context::NWR_Context(Resource_Manager& rman, const Statement& stmt, const Se
   else
     add_nw_member_objects(context, input_set, relevant_nwrs);
 
-  Set extra_ways;
   if (rman.get_desired_timestamp() == NOW)
   {
+    Set extra_ways;
     collect_ways(context, relevant_nwrs.nodes, {}, 0, {}, true).swap(extra_ways.ways, extra_ways.attic_ways);
     sort_second(extra_ways.ways);
     indexed_set_union(relevant_nwrs.ways, extra_ways.ways);
   }
   else
   {
-    collect_ways(context, relevant_nwrs.nodes, relevant_nwrs.attic_nodes, 0,
-                 {}, true).swap(extra_ways.ways, extra_ways.attic_ways);
-    indexed_set_union(relevant_nwrs.attic_ways, extra_ways.attic_ways);
-    indexed_set_union(relevant_nwrs.ways, extra_ways.ways);
-    keep_matching_skeletons(relevant_nwrs.ways, relevant_nwrs.attic_ways, rman.get_desired_timestamp());
+    auto extra_ways = collect_ways(context, relevant_nwrs.nodes, relevant_nwrs.attic_nodes, 0, {}, true);
+    extra_ways.sort();
+    extra_ways.set_union(Timeless< Uint31_Index, Way_Skeleton >{ relevant_nwrs.ways, relevant_nwrs.attic_ways }.sort());
+    extra_ways.keep_matching_skeletons(rman.get_desired_timestamp());
+    extra_ways.swap(relevant_nwrs.ways, relevant_nwrs.attic_ways);
   }
 
   // Build local ids for node segments
-
-  indexed_set_union(relevant_nwrs.nodes, input_set.nodes);
-  indexed_set_union(relevant_nwrs.attic_nodes, input_set.attic_nodes);
-  keep_matching_skeletons(relevant_nwrs.nodes, relevant_nwrs.attic_nodes, rman.get_desired_timestamp());
+  Timeless< Uint32_Index, Node_Skeleton > relevant_nodes;
+  relevant_nodes.swap(relevant_nwrs.nodes, relevant_nwrs.attic_nodes);
+  relevant_nodes.set_union(Timeless< Uint32_Index, Node_Skeleton >{ input_set.nodes, input_set.attic_nodes }.sort());
+  relevant_nodes.keep_matching_skeletons(rman.get_desired_timestamp());
+  relevant_nodes.swap(relevant_nwrs.nodes, relevant_nwrs.attic_nodes);
 
   std::map< Uint32_Index, std::vector< Node_Skeleton > >::const_iterator it_now_idx
       = relevant_nwrs.nodes.begin();

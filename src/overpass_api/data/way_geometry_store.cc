@@ -78,7 +78,7 @@ std::map< Uint32_Index, std::vector< Node_Skeleton > > small_way_members
   Request_Context context(stmt, rman);
   return collect_items_range< Uint32_Index, Node_Skeleton >(context,
       small_way_nd_indices< Way_Skeleton >(stmt, rman, ways.begin(), ways.end()),
-      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways))).current;
+      Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways))).get_current();
 }
 
 
@@ -110,7 +110,7 @@ Way_Geometry_Store::Way_Geometry_Store
       small_way_nd_indices< Attic< Way_Skeleton > >(&query, rman, ways.begin(), ways.end()),
       Id_Predicate< Node_Skeleton >(small_way_nd_ids(ways)));
 
-  keep_matching_skeletons(nodes, timeless.current, timeless.attic, rman.get_desired_timestamp());
+  keep_matching_skeletons(nodes, timeless.get_current(), timeless.get_attic(), rman.get_desired_timestamp());
 }
 
 
