@@ -517,12 +517,15 @@ void collect_items_discrete(Request_Context& context,
 
 
 template < class Index, class Object, class Container, class Predicate >
-void collect_items_discrete(Request_Context& context,
-                   const Container& req, const Predicate& predicate,
-                   std::map< Index, std::vector< Object > >& result,
-                   std::map< Index, std::vector< Attic< Object > > >& attic_result)
+Timeless< Index, Object > collect_items_discrete(
+    Request_Context& context, const Container& req, const Predicate& predicate)
 {
-  collect_items_discrete(context, req, predicate, context.get_desired_timestamp(), result, attic_result);
+  std::map< Index, std::vector< Object > > current;
+  std::map< Index, std::vector< Attic< Object > > > attic;
+  collect_items_discrete(context, req, predicate, context.get_desired_timestamp(), current, attic);
+  Timeless< Index, Object > result;
+  result.swap(current, attic);
+  return result;
 }
 
 

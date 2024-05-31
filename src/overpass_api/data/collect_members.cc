@@ -1036,31 +1036,22 @@ Timeless< Uint31_Index, Way_Skeleton > collect_ways(
       req.insert(*it);
   }
 
-  std::map< Uint31_Index, std::vector< Way_Skeleton > > current;
-  std::map< Uint31_Index, std::vector< Attic< Way_Skeleton > > > attic;
-  
   if (!invert_ids)
-    collect_items_discrete(context, req,
+    return collect_items_discrete< Uint31_Index, Way_Skeleton >(context, req,
         And_Predicate< Way_Skeleton,
             Id_Predicate< Way_Skeleton >, Get_Parent_Ways_Predicate >
-            (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)),
-        current, attic);
+            (Id_Predicate< Way_Skeleton >(ids), Get_Parent_Ways_Predicate(children_ids, pos)));
   else if (ids.empty())
-    collect_items_discrete(context, req,
-        Get_Parent_Ways_Predicate(children_ids, pos), current, attic);
-  else
-    collect_items_discrete(context, req,
-        And_Predicate< Way_Skeleton,
-            Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >,
-            Get_Parent_Ways_Predicate >
-            (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
-              (Id_Predicate< Way_Skeleton >(ids)),
-            Get_Parent_Ways_Predicate(children_ids, pos)),
-        current, attic);
+    return collect_items_discrete< Uint31_Index, Way_Skeleton >(context, req,
+        Get_Parent_Ways_Predicate(children_ids, pos));
 
-  Timeless< Uint31_Index, Way_Skeleton > result;
-  result.swap(current, attic);
-  return result;
+  return collect_items_discrete< Uint31_Index, Way_Skeleton >(context, req,
+      And_Predicate< Way_Skeleton,
+          Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >,
+          Get_Parent_Ways_Predicate >
+          (Not_Predicate< Way_Skeleton, Id_Predicate< Way_Skeleton > >
+            (Id_Predicate< Way_Skeleton >(ids)),
+          Get_Parent_Ways_Predicate(children_ids, pos)));
 }
 
 

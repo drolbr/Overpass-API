@@ -256,8 +256,6 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
      uint32 source_type,
      const std::vector< Relation::Id_Type >& ids, bool invert_ids)
 {
-  Timeless< Uint31_Index, Relation_Skeleton > result;
-
   std::vector< Relation_Entry::Ref_Type > current_ids = extract_ids(sources);
   std::set< Uint31_Index > req = extract_parent_indices(sources);
   rman.health_check(stmt);
@@ -276,30 +274,24 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
     current_ids.swap(children_ids);
   }
   
-  std::map< Uint31_Index, std::vector< Relation_Skeleton > > current;
-  std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic;
-
   Request_Context context(&stmt, rman);
   if (!invert_ids)
-    collect_items_discrete(context, req,
+    return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
         And_Predicate< Relation_Skeleton,
             Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
             (Id_Predicate< Relation_Skeleton >(ids),
-            Get_Parent_Rels_Predicate(current_ids, source_type)), current, attic);
+            Get_Parent_Rels_Predicate(current_ids, source_type)));
   else if (ids.empty())
-    collect_items_discrete(context, req,
-        Get_Parent_Rels_Predicate(current_ids, source_type), current, attic);
-  else
-    collect_items_discrete(context, req,
-        And_Predicate< Relation_Skeleton,
-            Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >,
-            Get_Parent_Rels_Predicate >
-            (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
-              (Id_Predicate< Relation_Skeleton >(ids)),
-            Get_Parent_Rels_Predicate(current_ids, source_type)), current, attic);
+    return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
+        Get_Parent_Rels_Predicate(current_ids, source_type));
 
-  result.swap(current, attic);
-  return result;
+  return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
+      And_Predicate< Relation_Skeleton,
+          Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >,
+          Get_Parent_Rels_Predicate >
+          (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
+            (Id_Predicate< Relation_Skeleton >(ids)),
+          Get_Parent_Rels_Predicate(current_ids, source_type)));
 }
 
 
@@ -311,17 +303,13 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
      uint32 source_type,
      const std::vector< Relation::Id_Type >& ids, bool invert_ids, uint32 role_id)
 {
-  Timeless< Uint31_Index, Relation_Skeleton > result;
-
   std::vector< Relation_Entry::Ref_Type > current_ids = extract_ids(sources);
-  rman.health_check(stmt);
   std::set< Uint31_Index > req = extract_parent_indices(sources);
   rman.health_check(stmt);
 
   if (rman.get_desired_timestamp() != NOW)
   {
     std::vector< Relation_Entry::Ref_Type > attic_ids = extract_ids(attic_sources);
-    rman.health_check(stmt);
     std::set< Uint31_Index > attic_req = extract_parent_indices(attic_sources);
     rman.health_check(stmt);
 
@@ -333,30 +321,24 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
     current_ids.swap(children_ids);
   }
 
-  std::map< Uint31_Index, std::vector< Relation_Skeleton > > current;
-  std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic;
-
   Request_Context context(&stmt, rman);
   if (!invert_ids)
-    collect_items_discrete(context, req,
+    return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
         And_Predicate< Relation_Skeleton,
             Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Role_Predicate >
             (Id_Predicate< Relation_Skeleton >(ids),
-            Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id)), current, attic);
+            Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id)));
   else if (ids.empty())
-    collect_items_discrete(context, req,
-        Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id), current, attic);
-  else
-    collect_items_discrete(context, req,
-        And_Predicate< Relation_Skeleton,
-            Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >,
-            Get_Parent_Rels_Role_Predicate >
-            (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
-              (Id_Predicate< Relation_Skeleton >(ids)),
-            Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id)), current, attic);
+    return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
+        Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id));
 
-  result.swap(current, attic);
-  return result;
+  return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
+      And_Predicate< Relation_Skeleton,
+          Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >,
+          Get_Parent_Rels_Role_Predicate >
+          (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
+            (Id_Predicate< Relation_Skeleton >(ids)),
+          Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id)));
 }
 
 

@@ -403,7 +403,8 @@ void get_elements(Changed_Statement& stmt, Resource_Manager& rman,
   std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
 
   Request_Context context(&stmt, rman);
-  collect_items_discrete(context, req, Id_Predicate< Skeleton >(ids), current_result, attic_result);
+  collect_items_discrete< Index, Skeleton >(context, req, Id_Predicate< Skeleton >(ids))
+      .swap(current_result, attic_result);
 
   if (rman.get_desired_timestamp() != NOW)
     filter_attic_elements(rman, rman.get_desired_timestamp(), current_result, attic_result);
