@@ -248,6 +248,46 @@ Statement* Recurse_Statement::Criterion_Maker_2::create_criterion(const Token_No
 //-----------------------------------------------------------------------------
 
 
+template< typename Index, typename Object >
+std::set< Uint31_Index > extract_parent_indices_set(
+    const std::map< Index, std::vector< Object > >& cur_elems,
+    const std::map< Index, std::vector< Attic< Object > > >& attic_elems)
+{
+  std::set< Uint31_Index > req = extract_parent_indices(cur_elems);
+  if (!attic_elems.empty())
+  {
+    std::set< Uint31_Index > attic_req = extract_parent_indices(attic_elems);
+    for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
+      req.insert(*it);
+  }
+  
+  return req;
+}
+
+
+template< typename Index, typename Object >
+Ranges< Uint31_Index > extract_parent_indices(
+    const std::map< Index, std::vector< Object > >& cur_elems,
+    const std::map< Index, std::vector< Attic< Object > > >& attic_elems)
+{
+  Ranges< Uint31_Index > result;
+
+  std::set< Uint31_Index > req = extract_parent_indices(cur_elems);
+  for (auto i : req)
+    result.push_back(i, inc(i));
+
+  if (!attic_elems.empty())
+  {
+    std::set< Uint31_Index > attic_req = extract_parent_indices(attic_elems);
+    for (auto i : attic_req)
+      result.push_back(i, inc(i));
+  }
+
+  result.sort();
+  return result;
+}
+
+
 template< class TSourceIndex, class TSourceObject >
 Timeless< Uint31_Index, Relation_Skeleton > collect_relations
     (const Statement& stmt, Resource_Manager& rman,
@@ -256,34 +296,22 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
      uint32 source_type,
      const std::vector< Relation::Id_Type >& ids, bool invert_ids)
 {
-  std::vector< Relation_Entry::Ref_Type > current_ids = extract_ids(sources);
-  std::set< Uint31_Index > req = extract_parent_indices(sources);
+  std::vector< Relation_Entry::Ref_Type > parent_ids = extract_ids(sources, attic_sources);
   rman.health_check(stmt);
 
-  if (rman.get_desired_timestamp() != NOW)
-  {
-    std::vector< Relation_Entry::Ref_Type > attic_ids = extract_ids(attic_sources);
-    std::set< Uint31_Index > attic_req = extract_parent_indices(attic_sources);
-    rman.health_check(stmt);
+  std::set< Uint31_Index > req = extract_parent_indices_set(sources, attic_sources);
+  rman.health_check(stmt);
 
-    std::vector< Uint64 > children_ids;
-    std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
-                  std::back_inserter(children_ids));
-    for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
-      req.insert(*it);
-    current_ids.swap(children_ids);
-  }
-  
   Request_Context context(&stmt, rman);
   if (!invert_ids)
     return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
         And_Predicate< Relation_Skeleton,
             Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
             (Id_Predicate< Relation_Skeleton >(ids),
-            Get_Parent_Rels_Predicate(current_ids, source_type)));
+            Get_Parent_Rels_Predicate(parent_ids, source_type)));
   else if (ids.empty())
     return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
-        Get_Parent_Rels_Predicate(current_ids, source_type));
+        Get_Parent_Rels_Predicate(parent_ids, source_type));
 
   return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
       And_Predicate< Relation_Skeleton,
@@ -291,7 +319,7 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
           Get_Parent_Rels_Predicate >
           (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
             (Id_Predicate< Relation_Skeleton >(ids)),
-          Get_Parent_Rels_Predicate(current_ids, source_type)));
+          Get_Parent_Rels_Predicate(parent_ids, source_type)));
 }
 
 
@@ -303,23 +331,11 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
      uint32 source_type,
      const std::vector< Relation::Id_Type >& ids, bool invert_ids, uint32 role_id)
 {
-  std::vector< Relation_Entry::Ref_Type > current_ids = extract_ids(sources);
-  std::set< Uint31_Index > req = extract_parent_indices(sources);
+  std::vector< Relation_Entry::Ref_Type > parent_ids = extract_ids(sources, attic_sources);
   rman.health_check(stmt);
 
-  if (rman.get_desired_timestamp() != NOW)
-  {
-    std::vector< Relation_Entry::Ref_Type > attic_ids = extract_ids(attic_sources);
-    std::set< Uint31_Index > attic_req = extract_parent_indices(attic_sources);
-    rman.health_check(stmt);
-
-    std::vector< Uint64 > children_ids;
-    std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
-                  std::back_inserter(children_ids));
-    for (std::set< Uint31_Index >::const_iterator it = attic_req.begin(); it != attic_req.end(); ++it)
-      req.insert(*it);
-    current_ids.swap(children_ids);
-  }
+  std::set< Uint31_Index > req = extract_parent_indices_set(sources, attic_sources);
+  rman.health_check(stmt);
 
   Request_Context context(&stmt, rman);
   if (!invert_ids)
@@ -327,10 +343,10 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
         And_Predicate< Relation_Skeleton,
             Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Role_Predicate >
             (Id_Predicate< Relation_Skeleton >(ids),
-            Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id)));
+            Get_Parent_Rels_Role_Predicate(parent_ids, source_type, role_id)));
   else if (ids.empty())
     return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
-        Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id));
+        Get_Parent_Rels_Role_Predicate(parent_ids, source_type, role_id));
 
   return collect_items_discrete< Uint31_Index, Relation_Skeleton >(context, req,
       And_Predicate< Relation_Skeleton,
@@ -338,7 +354,7 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
           Get_Parent_Rels_Role_Predicate >
           (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
             (Id_Predicate< Relation_Skeleton >(ids)),
-          Get_Parent_Rels_Role_Predicate(current_ids, source_type, role_id)));
+          Get_Parent_Rels_Role_Predicate(parent_ids, source_type, role_id)));
 }
 
 
@@ -350,19 +366,8 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
 {
   Timeless< Uint31_Index, Relation_Skeleton > result;
 
-  std::vector< Relation_Entry::Ref_Type > current_ids = extract_ids(sources);
+  std::vector< Relation_Entry::Ref_Type > parent_ids = extract_ids(sources, attic_sources);
   rman.health_check(stmt);
-
-  if (rman.get_desired_timestamp() != NOW)
-  {
-    std::vector< Relation_Entry::Ref_Type > attic_ids = extract_ids(attic_sources);
-    rman.health_check(stmt);
-
-    std::vector< Uint64 > children_ids;
-    std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
-                  std::back_inserter(children_ids));
-    current_ids.swap(children_ids);
-  }
 
   std::map< Uint31_Index, std::vector< Relation_Skeleton > > current;
   std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic;
@@ -373,11 +378,11 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
         And_Predicate< Relation_Skeleton,
             Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Predicate >
             (Id_Predicate< Relation_Skeleton >(ids),
-            Get_Parent_Rels_Predicate(current_ids, Relation_Entry::RELATION)),
+            Get_Parent_Rels_Predicate(parent_ids, Relation_Entry::RELATION)),
         current, attic);
   else if (ids.empty())
     collect_items_flat(context,
-        Get_Parent_Rels_Predicate(current_ids, Relation_Entry::RELATION), current, attic);
+        Get_Parent_Rels_Predicate(parent_ids, Relation_Entry::RELATION), current, attic);
   else
     collect_items_flat(context,
         And_Predicate< Relation_Skeleton,
@@ -385,7 +390,7 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
             Get_Parent_Rels_Predicate >
             (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
               (Id_Predicate< Relation_Skeleton >(ids)),
-            Get_Parent_Rels_Predicate(current_ids, Relation_Entry::RELATION)),
+            Get_Parent_Rels_Predicate(parent_ids, Relation_Entry::RELATION)),
         current, attic);
 
   result.swap(current, attic);
@@ -401,20 +406,8 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
 {
   Timeless< Uint31_Index, Relation_Skeleton > result;
 
-  std::vector< Relation_Entry::Ref_Type > current_ids = extract_ids(sources);
+  std::vector< Relation_Entry::Ref_Type > parent_ids = extract_ids(sources, attic_sources);
   rman.health_check(stmt);
-
-  Request_Context context(&stmt, rman);
-  if (rman.get_desired_timestamp() != NOW)
-  {
-    std::vector< Relation_Entry::Ref_Type > attic_ids = extract_ids(attic_sources);
-    rman.health_check(stmt);
-
-    std::vector< Uint64 > children_ids;
-    std::set_union(current_ids.begin(), current_ids.end(), attic_ids.begin(), attic_ids.end(),
-                  std::back_inserter(children_ids));
-    current_ids.swap(children_ids);
-  }
 
   std::map< Uint31_Index, std::vector< Relation_Skeleton > > current;
   std::map< Uint31_Index, std::vector< Attic< Relation_Skeleton > > > attic;
@@ -424,11 +417,11 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
         And_Predicate< Relation_Skeleton,
             Id_Predicate< Relation_Skeleton >, Get_Parent_Rels_Role_Predicate >
             (Id_Predicate< Relation_Skeleton >(ids),
-            Get_Parent_Rels_Role_Predicate(current_ids, Relation_Entry::RELATION, role_id)),
+            Get_Parent_Rels_Role_Predicate(parent_ids, Relation_Entry::RELATION, role_id)),
         current, attic);
   else if (ids.empty())
     collect_items_flat(context,
-        Get_Parent_Rels_Role_Predicate(current_ids, Relation_Entry::RELATION, role_id),
+        Get_Parent_Rels_Role_Predicate(parent_ids, Relation_Entry::RELATION, role_id),
         current, attic);
   else
     collect_items_flat(context,
@@ -437,7 +430,7 @@ Timeless< Uint31_Index, Relation_Skeleton > collect_relations
             Get_Parent_Rels_Role_Predicate >
             (Not_Predicate< Relation_Skeleton, Id_Predicate< Relation_Skeleton > >
               (Id_Predicate< Relation_Skeleton >(ids)),
-            Get_Parent_Rels_Role_Predicate(current_ids, Relation_Entry::RELATION, role_id)),
+            Get_Parent_Rels_Role_Predicate(parent_ids, Relation_Entry::RELATION, role_id)),
         current, attic);
 
   result.swap(current, attic);
@@ -484,29 +477,6 @@ Timeless< Uint31_Index, Relation_Skeleton > relations_up_loop(
     new_rel_count = count(working_set.get_current()) + count(working_set.get_attic());
   }
   return std::move(working_set);
-}
-
-
-template< typename Index, typename Object >
-Ranges< Uint31_Index > extract_parent_indices(
-    const std::map< Index, std::vector< Object > >& cur_elems,
-    const std::map< Index, std::vector< Attic< Object > > >& attic_elems)
-{
-  Ranges< Uint31_Index > result;
-
-  std::set< Uint31_Index > req = extract_parent_indices(cur_elems);
-  for (auto i : req)
-    result.push_back(i, inc(i));
-
-  if (!attic_elems.empty())
-  {
-    std::set< Uint31_Index > attic_req = extract_parent_indices(attic_elems);
-    for (auto i : attic_req)
-      result.push_back(i, inc(i));
-  }
-
-  result.sort();
-  return result;
 }
 
 

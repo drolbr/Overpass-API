@@ -761,6 +761,7 @@ std::vector< Id_Type > extract_ids(
   }
 
   std::sort(ids.begin(), ids.end());
+  ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
 
   return ids;
 }
