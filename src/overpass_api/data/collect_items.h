@@ -634,11 +634,12 @@ void collect_items_flat(Request_Context& context,
 
 
 template < class Index, class Object, class Predicate >
-void collect_items_flat(
-    Request_Context& context, const Predicate& predicate,
-    std::map< Index, std::vector< Object > >& result,
-    std::map< Index, std::vector< Attic< Object > > >& attic_result)
+Timeless< Index, Object > collect_items_flat(
+    Request_Context& context, const Predicate& predicate)
 {
+  std::map< Index, std::vector< Object > > current;
+  std::map< Index, std::vector< Attic< Object > > > attic;
+
   Block_Backend< Index, Object > current_db
       (context.data_index(current_skeleton_file_properties< Object >()));
 
@@ -650,10 +651,10 @@ void collect_items_flat(
       if (++count >= 256*1024)
       {
         count = 0;
-        context.get_health_guard().check(0, eval_map(result));
+        context.get_health_guard().check(0, eval_map(current));
       }
       if (predicate.match(it.handle()))
-        result[it.index()].push_back(it.object());
+        current[it.index()].push_back(it.object());
     }
   }
   else
@@ -664,8 +665,12 @@ void collect_items_flat(
     collect_items_by_timestamp(context.get_health_guard(),
         current_db.flat_begin(), current_db.flat_end(),
         attic_db.flat_begin(), attic_db.flat_end(),
-        predicate, (Index*)0, context.get_desired_timestamp(), result, attic_result);
+        predicate, (Index*)0, context.get_desired_timestamp(), current, attic);
   }
+
+  Timeless< Index, Object > result;
+  result.swap(current, attic);
+  return result;
 }
 
 
