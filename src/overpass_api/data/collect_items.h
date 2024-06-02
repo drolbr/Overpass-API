@@ -22,6 +22,7 @@
 #include "../dispatch/resource_manager.h"
 #include "abstract_processing.h"
 #include "filenames.h"
+#include "timeless.h"
 
 #include <exception>
 
@@ -35,7 +36,7 @@ inline uint64 timestamp_of(const Way_Skeleton& skel) { return NOW; }
 inline uint64 timestamp_of(const Relation_Skeleton& skel) { return NOW; }
 
 
-template < class Index, class Object, class Iterator, class Predicate >
+template < typename Index, typename Object, typename Iterator, typename Predicate >
 void reconstruct_items(
     Iterator& it, Iterator end, Index index,
     const Predicate& predicate,
@@ -93,7 +94,7 @@ private:
 };
 
 
-template < class Index, class Object, class Attic_Iterator, class Current_Iterator, class Predicate >
+template < typename Index, typename Object, typename Attic_Iterator, typename Current_Iterator, typename Predicate >
 void reconstruct_items(Health_Guard& health_guard,
     Current_Iterator& current_it, Current_Iterator current_end,
     Attic_Iterator& attic_it, Attic_Iterator attic_end, Index& idx,
@@ -194,7 +195,7 @@ void reconstruct_items(Health_Guard& health_guard,
 }
 
 
-template < class Object >
+template < typename Object >
 void filter_items_by_timestamp(
     const std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id,
     std::vector< Object >& result)
@@ -216,7 +217,7 @@ void filter_items_by_timestamp(
 }
 
 
-template < class Index, class Object >
+template < typename Index, typename Object >
 void filter_items_by_timestamp(
     const std::vector< std::pair< typename Object::Id_Type, uint64 > >& timestamp_by_id,
     std::map< Index, std::vector< Object > >& result)
@@ -248,7 +249,7 @@ void check_for_duplicated_objects(
 }
 
 
-template < class Index, class Object, class Current_Iterator, class Attic_Iterator, class Predicate >
+template < typename Index, typename Object, typename Current_Iterator, typename Attic_Iterator, typename Predicate >
 bool collect_items_by_timestamp(Health_Guard&& health_guard,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
@@ -294,7 +295,7 @@ bool collect_items_by_timestamp(Health_Guard&& health_guard,
 }
 
 
-template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
+template < typename Index, typename Current_Iterator, typename Attic_Iterator, typename Predicate >
 bool collect_items_by_timestamp(Health_Guard&& health_guard,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
@@ -338,111 +339,7 @@ bool collect_items_by_timestamp(Health_Guard&& health_guard,
 }
 
 
-template< typename Index, typename Object >
-struct Timeless
-{
-  Timeless() {}
-  Timeless(
-      const std::map< Index, std::vector< Object > >& current_,
-      const std::map< Index, std::vector< Attic< Object > > >& attic_)
-      : current(current_), attic(attic_) {}
-  
-  Timeless& swap(
-      std::map< Index, std::vector< Object > >& rhs_current,
-      std::map< Index, std::vector< Attic< Object > > >& rhs_attic)
-  {
-    current.swap(rhs_current);
-    attic.swap(rhs_attic);
-    return *this;
-  }
-
-  Timeless& sort()
-  {
-    sort_second(current);
-    sort_second(attic);
-    return *this;
-  }
-
-  Timeless& set_union(const Timeless< Index, Object >& rhs)
-  {
-    indexed_set_union(current, rhs.current);
-    indexed_set_union(attic, rhs.attic);
-    return *this;
-  }
-
-  template< typename Predicate >
-  Timeless& filter_items(const Predicate& predicate)
-  {
-    ::filter_items(predicate, current);
-    ::filter_items(predicate, attic);
-    return *this;
-  }
-
-  Timeless& filter_by_id(const std::vector< typename Object::Id_Type >& ids);
-
-  void keep_matching_skeletons(uint64 timestamp);
-  
-  const std::map< Index, std::vector< Object > >& get_current() const { return current; }
-  const std::map< Index, std::vector< Attic< Object > > >& get_attic() const { return attic; }
-
-private:
-  std::map< Index, std::vector< Object > > current;
-  std::map< Index, std::vector< Attic< Object > > > attic;
-};
-
-
-template< typename Index, typename Object >
-void Timeless< Index, Object >::keep_matching_skeletons(uint64 timestamp)
-{
-  if (timestamp == NOW)
-  {
-    attic.clear();
-    return;
-  }
-
-  std::map< typename Object::Id_Type, uint64 > timestamp_by_id;
-
-  for (auto it = current.begin(); it != current.end(); ++it)
-  {
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-      timestamp_by_id[it2->id] = NOW;
-  }
-
-  for (auto it = attic.begin(); it != attic.end(); ++it)
-  {
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      uint64& stored_timestamp = timestamp_by_id[it2->id];
-      if (it2->timestamp > timestamp && (stored_timestamp == 0 || stored_timestamp > it2->timestamp))
-        stored_timestamp = it2->timestamp;
-    }
-  }
-
-  for (auto it = current.begin(); it != current.end(); ++it)
-  {
-    std::vector< Object > local_into;
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      if (timestamp_by_id[it2->id] == NOW)
-        local_into.push_back(*it2);
-    }
-    local_into.swap(it->second);
-  }
-
-  for (auto it = attic.begin(); it != attic.end(); ++it)
-  {
-    std::vector< Attic< Object > > local_into;
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-    {
-      if (timestamp_by_id[it2->id] == it2->timestamp)
-        local_into.push_back(*it2);
-    }
-    local_into.swap(it->second);
-  }
-}
-
-
-template < class Index, class Current_Iterator, class Attic_Iterator, class Predicate >
+template < typename Index, typename Current_Iterator, typename Attic_Iterator, typename Predicate >
 bool collect_items_by_timestamp(Health_Guard&& health_guard,
                    Current_Iterator current_begin, Current_Iterator current_end,
                    Attic_Iterator attic_begin, Attic_Iterator attic_end,
@@ -487,7 +384,7 @@ bool collect_items_by_timestamp(Health_Guard&& health_guard,
 
 
 // Used by Set_Comparison
-template < class Index, class Object, class Container, class Predicate >
+template < typename Index, typename Object, typename Container, typename Predicate >
 void collect_items_discrete(Request_Context& context,
                    const Container& req, const Predicate& predicate, uint64 timestamp,
                    std::map< Index, std::vector< Object > >& result,
@@ -516,7 +413,7 @@ void collect_items_discrete(Request_Context& context,
 }
 
 
-template < class Index, class Object, class Container, class Predicate >
+template < typename Index, typename Object, typename Container, typename Predicate >
 Timeless< Index, Object > collect_items_discrete(
     Request_Context& context, const Container& req, const Predicate& predicate)
 {
@@ -564,7 +461,7 @@ Timeless< Index, Object > collect_items_range(Request_Context& context,
 }
 
 
-template < class Index, class Object, class Predicate >
+template < typename Index, typename Object, typename Predicate >
 bool collect_items_range(Request_Context& context,
     const Ranges< Index >& ranges, const Predicate& predicate, Index& cur_idx,
     std::map< Index, std::vector< Object > >& result,
@@ -612,7 +509,7 @@ bool collect_items_range(Request_Context& context,
 
 
 // Current called olny for areas and only from Query_Statement.
-template < class Index, class Object, class Predicate >
+template < typename Index, typename Object, typename Predicate >
 void collect_items_flat(Request_Context& context,
 		   File_Properties& file_properties, const Predicate& predicate,
 		   std::map< Index, std::vector< Object > >& result)
@@ -633,7 +530,7 @@ void collect_items_flat(Request_Context& context,
 }
 
 
-template < class Index, class Object, class Predicate >
+template < typename Index, typename Object, typename Predicate >
 Timeless< Index, Object > collect_items_flat(
     Request_Context& context, const Predicate& predicate)
 {

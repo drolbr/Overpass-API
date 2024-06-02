@@ -19,8 +19,8 @@
 #ifndef DE__OSM3S___OVERPASS_API__DATA__ABSTRACT_PROCESSING_H
 #define DE__OSM3S___OVERPASS_API__DATA__ABSTRACT_PROCESSING_H
 
+#include "../../template_db/block_backend.h"
 #include "../core/datatypes.h"
-#include "../statements/statement.h"
 #include "filenames.h"
 
 
@@ -300,23 +300,6 @@ void keep_only_least_younger_than
 
 //-----------------------------------------------------------------------------
 
-template < class TIndex, class TObject, class TPredicate >
-void filter_items(const TPredicate& predicate, std::map< TIndex, std::vector< TObject > >& data)
-{
-  for (typename std::map< TIndex, std::vector< TObject > >::iterator it = data.begin();
-  it != data.end(); ++it)
-  {
-    std::vector< TObject > local_into;
-    for (typename std::vector< TObject >::const_iterator iit = it->second.begin();
-    iit != it->second.end(); ++iit)
-    {
-      if (predicate.match(*iit))
-	local_into.push_back(*iit);
-    }
-    it->second.swap(local_into);
-  }
-}
-
 template< class TIndex, class TObject >
 std::vector< typename TObject::Id_Type > filter_for_ids(const std::map< TIndex, std::vector< TObject > >& elems)
 {
@@ -331,65 +314,6 @@ std::vector< typename TObject::Id_Type > filter_for_ids(const std::map< TIndex, 
   std::sort(ids.begin(), ids.end());
 
   return ids;
-}
-
-//-----------------------------------------------------------------------------
-
-
-template< typename TObject >
-struct Compare_By_Id
-{
-  bool operator()(const TObject& lhs, const TObject& rhs) { return lhs.id < rhs.id; }
-};
-
-
-template< class TIndex, class TObject >
-bool indexed_set_union(std::map< TIndex, std::vector< TObject > >& result,
-		       const std::map< TIndex, std::vector< TObject > >& summand)
-{
-  bool result_has_grown = false;
-
-  for (typename std::map< TIndex, std::vector< TObject > >::const_iterator
-      it = summand.begin(); it != summand.end(); ++it)
-  {
-    if (it->second.empty())
-      continue;
-
-    std::vector< TObject >& target = result[it->first];
-    if (target.empty())
-    {
-      target = it->second;
-      result_has_grown = true;
-      continue;
-    }
-
-    if (it->second.size() == 1 && target.size() > 64)
-    {
-      typename std::vector< TObject >::iterator it_target
-          = std::lower_bound(target.begin(), target.end(), it->second.front());
-      if (it_target == target.end())
-      {
-        target.push_back(it->second.front());
-        result_has_grown = true;
-      }
-      else if (!(*it_target == it->second.front()))
-      {
-        target.insert(it_target, it->second.front());
-        result_has_grown = true;
-      }
-    }
-    else
-    {
-      std::vector< TObject > other;
-      other.swap(target);
-      std::set_union(it->second.begin(), it->second.end(), other.begin(), other.end(),
-                back_inserter(target), Compare_By_Id< TObject >());
-
-      result_has_grown |= (target.size() > other.size());
-    }
-  }
-
-  return result_has_grown;
 }
 
 //-----------------------------------------------------------------------------

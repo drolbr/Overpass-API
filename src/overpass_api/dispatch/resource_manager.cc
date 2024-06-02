@@ -18,6 +18,7 @@
 
 #include "resource_manager.h"
 #include "../data/abstract_processing.h"
+#include "../data/collect_items.h"
 #include "../data/utils.h"
 #include "../statements/statement.h"
 

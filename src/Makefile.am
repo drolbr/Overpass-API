@@ -248,6 +248,7 @@ nobase_dist_HEADERS = \
   overpass_api/data/tag_store.h\
   overpass_api/data/tags_global_reader.h\
   overpass_api/data/tilewise_geometry.h\
+  overpass_api/data/timeless.h\
   overpass_api/data/user_based_filtering.h\
   overpass_api/data/user_data_cache.h\
   overpass_api/data/utils.h\
