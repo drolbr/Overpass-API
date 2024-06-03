@@ -387,6 +387,14 @@ void Output_Statement::transfer_output(Resource_Manager& rman, Set& into) const
 }
 
 
+void Output_Statement::transfer_output(Resource_Manager& rman, Timeless_Set& into) const
+{
+  Set temp;
+  into.swap(temp);
+  rman.swap_set(output, temp);
+}
+
+
 void Output_Statement::transfer_output(Resource_Manager& rman, Diff_Set& into) const
 {
   rman.swap_diff_set(output, into);

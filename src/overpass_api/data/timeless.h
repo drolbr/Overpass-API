@@ -232,4 +232,25 @@ Timeless< Index, Object >& Timeless< Index, Object >::filter_by_id(
 }
 
 
+struct Timeless_Set
+{
+  Timeless< Uint32_Index, Node_Skeleton > nodes;
+  Timeless< Uint31_Index, Way_Skeleton > ways;
+  Timeless< Uint31_Index, Relation_Skeleton > relations;
+
+  std::map< Uint31_Index, std::vector< Area_Skeleton > > areas;
+  std::map< Uint31_Index, std::vector< Derived_Structure > > deriveds;
+  
+  void swap(Set& rhs)
+  {
+    nodes.swap(rhs.nodes, rhs.attic_nodes);
+    ways.swap(rhs.ways, rhs.attic_ways);
+    relations.swap(rhs.relations, rhs.attic_relations);
+    
+    areas.swap(rhs.areas);
+    deriveds.swap(rhs.deriveds);
+  }
+};
+
+
 #endif

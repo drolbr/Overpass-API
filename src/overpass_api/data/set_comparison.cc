@@ -346,7 +346,7 @@ std::vector< typename Skeleton::Id_Type > find_still_existing_skeletons
   Request_Context context(0, rman);
   collect_items_discrete(context, req,
       Id_Predicate< Skeleton >(searched_ids), timestamp, current_result, attic_result);
-  filter_attic_elements(rman, timestamp, current_result, attic_result);
+  filter_attic_elements(context, timestamp, current_result, attic_result);
 
   for (typename std::map< Index, std::vector< Skeleton > >::const_iterator it = current_result.begin();
        it != current_result.end(); ++it)

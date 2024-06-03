@@ -977,7 +977,9 @@ void Around_Statement::execute(Resource_Manager& rman)
   get_elements_from_db< Uint32_Index, Node_Skeleton >(ranges, *this, rman)
       .swap(into.nodes, into.attic_nodes);
   constraint.filter(*this, rman, into);
-  filter_attic_elements(rman, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
+
+  Request_Context context(this, rman);
+  filter_attic_elements(context, rman.get_desired_timestamp(), into.nodes, into.attic_nodes);
 
   transfer_output(rman, into);
   rman.health_check(*this);

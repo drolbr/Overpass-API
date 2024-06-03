@@ -393,7 +393,7 @@ void get_elements(const std::vector< uint64 >& refs, Statement* stmt, Resource_M
       .swap(current_result, attic_result);
 
   if (rman.get_desired_timestamp() != NOW)
-    filter_attic_elements(rman, rman.get_desired_timestamp(), current_result, attic_result);
+    filter_attic_elements(context, rman.get_desired_timestamp(), current_result, attic_result);
 }
 
 

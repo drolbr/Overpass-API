@@ -878,9 +878,10 @@ void Query_Statement::apply_all_filters(
   set_progress(6);
   rman.health_check(*this);
 
-  filter_attic_elements(rman, timestamp, into.nodes, into.attic_nodes);
-  filter_attic_elements(rman, timestamp, into.ways, into.attic_ways);
-  filter_attic_elements(rman, timestamp, into.relations, into.attic_relations);
+  Request_Context context(this, rman);
+  filter_attic_elements(context, timestamp, into.nodes, into.attic_nodes);
+  filter_attic_elements(context, timestamp, into.ways, into.attic_ways);
+  filter_attic_elements(context, timestamp, into.relations, into.attic_relations);
 
   set_progress(7);
   rman.health_check(*this);

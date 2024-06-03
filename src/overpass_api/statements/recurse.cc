@@ -1389,9 +1389,9 @@ void Recurse_Statement::execute(Resource_Manager& rman)
 
   if (context.get_desired_timestamp() != NOW)
   {
-    filter_attic_elements(rman, context.get_desired_timestamp(), into.nodes, into.attic_nodes);
-    filter_attic_elements(rman, context.get_desired_timestamp(), into.ways, into.attic_ways);
-    filter_attic_elements(rman, context.get_desired_timestamp(), into.relations, into.attic_relations);
+    filter_attic_elements(context, context.get_desired_timestamp(), into.nodes, into.attic_nodes);
+    filter_attic_elements(context, context.get_desired_timestamp(), into.ways, into.attic_ways);
+    filter_attic_elements(context, context.get_desired_timestamp(), into.relations, into.attic_relations);
   }
 
   transfer_output(rman, into);

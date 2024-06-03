@@ -27,6 +27,7 @@
 #include "../core/parsed_query.h"
 #include "../core/settings.h"
 #include "../data/diff_set.h"
+#include "../data/timeless.h"
 #include "../dispatch/resource_manager.h"
 #include "../frontend/tokenizer_utils.h"
 #include "../osm-backend/area_updater.h"
@@ -298,6 +299,7 @@ class Output_Statement : public Statement
     void set_output(std::string output_) { output = output_; }
 
     void transfer_output(Resource_Manager& rman, Set& into) const;
+    void transfer_output(Resource_Manager& rman, Timeless_Set& into) const;
     void transfer_output(Resource_Manager& rman, Diff_Set& into) const;
 
   private:
