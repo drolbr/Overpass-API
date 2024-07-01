@@ -259,6 +259,9 @@ void validate_against_undelete(
     std::map< Index, std::vector< Attic< Skeleton > > >& attic,
     const std::vector< Index >& idx_set, Request_Context& context, uint64 timestamp)
 {
+  auto cit = current.begin();
+  auto ait = attic.begin();
+  
   Block_Backend< Index, Attic< typename Skeleton::Id_Type >, typename std::vector< Index >::const_iterator >
       undeleted_db(context.data_index(attic_undeleted_file_properties< Skeleton >()));
   for (auto it = undeleted_db.discrete_begin(idx_set.begin(), idx_set.end());
@@ -267,10 +270,11 @@ void validate_against_undelete(
     if (it.object().timestamp <= timestamp)
       continue;
 
-    typename std::map< Index, std::vector< Skeleton > >::iterator cit = current.find(it.index());
-    if (cit != current.end())
+    while (cit != current.end() && cit->first < it.index())
+      ++cit;
+    if (cit != current.end() && cit->first == it.index())
     {
-      for (typename std::vector< Skeleton >::iterator it2 = cit->second.begin(); it2 != cit->second.end(); )
+      for (auto it2 = cit->second.begin(); it2 != cit->second.end(); )
       {
         if (it2->id == it.object())
         {
@@ -282,8 +286,9 @@ void validate_against_undelete(
       }
     }
 
-    typename std::map< Index, std::vector< Attic< Skeleton > > >::iterator ait = attic.find(it.index());
-    if (ait != attic.end())
+    while (ait != attic.end() && ait->first < it.index())
+      ++ait;
+    if (ait != attic.end() && ait->first == it.index())
     {
       for (typename std::vector< Attic< Skeleton > >::iterator it2 = ait->second.begin();
             it2 != ait->second.end(); )
@@ -388,8 +393,11 @@ void filter_attic_elements
     std::sort(idx_set.begin(), idx_set.end());
     idx_set.erase(std::unique(idx_set.begin(), idx_set.end()), idx_set.end());
 
-    validate_against_undelete(current, attic, idx_set, context, timestamp);
-    validate_against_meta(current, attic, idx_set, context, timestamp);
+    if (!idx_set.empty())
+    {
+      validate_against_undelete(current, attic, idx_set, context, timestamp);
+      validate_against_meta(current, attic, idx_set, context, timestamp);
+    }
   }
 }
 
