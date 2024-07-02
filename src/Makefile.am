@@ -228,6 +228,7 @@ nobase_dist_HEADERS = \
   overpass_api/core/parsed_query.h\
   overpass_api/core/settings.h\
   overpass_api/core/type_area.h\
+  overpass_api/core/type_meta.h\
   overpass_api/core/type_node.h\
   overpass_api/core/type_relation.h\
   overpass_api/core/type_tags.h\
@@ -237,12 +238,16 @@ nobase_dist_HEADERS = \
   overpass_api/data/collect_items.h\
   overpass_api/data/collect_members.h\
   overpass_api/data/diff_set.h\
+  overpass_api/data/flat_meta_collector.h\
   overpass_api/data/filenames.h\
   overpass_api/data/filter_by_tags.h\
   overpass_api/data/filter_ids_by_tags.h\
   overpass_api/data/geometry_from_quad_coords.h\
+  overpass_api/data/idx_from_id.h\
   overpass_api/data/meta_collector.h\
+  overpass_api/data/meta_by_ref.h\
   overpass_api/data/regular_expression.h\
+  overpass_api/data/request_context.h\
   overpass_api/data/relation_geometry_store.h\
   overpass_api/data/set_comparison.h\
   overpass_api/data/tag_store.h\

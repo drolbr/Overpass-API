@@ -24,6 +24,7 @@
 #include "../data/filenames.h"
 #include "../data/filter_by_tags.h"
 #include "../data/filter_ids_by_tags.h"
+#include "../data/idx_from_id.h"
 #include "../data/meta_collector.h"
 #include "../data/regular_expression.h"
 #include "../data/tags_global_reader.h"
@@ -1143,6 +1144,7 @@ void Query_Statement::execute(Resource_Manager& rman)
 
     set_progress(4);
     rman.health_check(*this);
+    Request_Context context(this, rman);
 
     if (type & QUERY_NODE)
     {
@@ -1158,7 +1160,7 @@ void Query_Statement::execute(Resource_Manager& rman)
           else
           {
             node_ranges = Ranges< Uint32_Index >();
-            std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids.ids, rman);
+            std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(node_ids.ids, context);
             for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
               node_ranges.push_back(*it, ++Uint32_Index(*it));
             node_ranges.sort();
@@ -1192,7 +1194,7 @@ void Query_Statement::execute(Resource_Manager& rman)
           else
           {
             way_ranges = Ranges< Uint31_Index >();
-            std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids.ids, rman);
+            std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(way_ids.ids, context);
             for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
               way_ranges.push_back(*it, inc(*it));
             way_ranges.sort();
@@ -1226,7 +1228,7 @@ void Query_Statement::execute(Resource_Manager& rman)
           if (!relation_ids.invert)
           {
             rel_ranges = Ranges< Uint31_Index >();
-            std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids.ids, rman);
+            std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(relation_ids.ids, context);
             for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
               rel_ranges.push_back(*it, inc(*it));
             rel_ranges.sort();

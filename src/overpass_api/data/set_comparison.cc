@@ -16,6 +16,7 @@
  * along with Overpass_API.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../data/idx_from_id.h"
 #include "../statements/evaluator.h"
 #include "set_comparison.h"
 
@@ -336,14 +337,13 @@ void Set_Comparison::tags_quadtile_attic
 
 template< typename Index, typename Skeleton >
 std::vector< typename Skeleton::Id_Type > find_still_existing_skeletons
-    (Resource_Manager& rman, uint64 timestamp, const std::vector< Index >& req,
+    (Request_Context& context, uint64 timestamp, const std::vector< Index >& req,
      const std::vector< typename Skeleton::Id_Type >& searched_ids)
 {
   std::vector< typename Skeleton::Id_Type > found_ids;
   std::map< Index, std::vector< Skeleton > > current_result;
   std::map< Index, std::vector< Attic< Skeleton > > > attic_result;
 
-  Request_Context context(0, rman);
   collect_items_discrete(context, req,
       Id_Predicate< Skeleton >(searched_ids), timestamp, current_result, attic_result);
   filter_attic_elements(context, timestamp, current_result, attic_result);
@@ -371,14 +371,14 @@ std::vector< typename Skeleton::Id_Type > find_still_existing_skeletons
 template< typename Index, typename Skeleton >
 std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > >
     find_meta_elements
-    (Resource_Manager& rman, uint64 timestamp, const std::vector< Index >& idx_set,
+    (Request_Context& context, uint64 timestamp, const std::vector< Index >& idx_set,
      const std::vector< typename Skeleton::Id_Type >& searched_ids)
 {
   std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > result;
 
   Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
         typename std::vector< Index >::const_iterator >
-      attic_meta_db(rman.get_transaction()->data_index(attic_meta_file_properties< Skeleton >()));
+      attic_meta_db(context.data_index(attic_meta_file_properties< Skeleton >()));
   for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
           typename std::vector< Index >::const_iterator >::Discrete_Iterator
       it = attic_meta_db.discrete_begin(idx_set.begin(), idx_set.end());
@@ -399,7 +399,7 @@ std::map< typename Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< typename Sk
   // Same thing with current meta data
   Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
           typename std::vector< Index >::const_iterator >
-      meta_db(rman.get_transaction()->data_index(current_meta_file_properties< Skeleton >()));
+      meta_db(context.data_index(current_meta_file_properties< Skeleton >()));
 
   for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
           typename std::vector< Index >::const_iterator >::Discrete_Iterator
@@ -464,7 +464,7 @@ void Set_Comparison::compare_item(uint32 ll_upper, const Node_Skeleton& skel,
 }
 
 
-void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_information)
+void Set_Comparison::clear_nodes(Request_Context& context, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -475,12 +475,13 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
 	searched_ids.push_back(it->elem.id);
     }
 
-    std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, rman, true);
+    std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, context, true);
     std::vector< Node_Skeleton::Id_Type > found_ids
         = find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(
-            rman, rman.get_desired_timestamp(), req, searched_ids);
+            context, context.get_desired_timestamp(), req, searched_ids);
     std::map< Node_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Node::Id_Type > > found_meta
-        = find_meta_elements< Node::Index, Node_Skeleton >(rman, rman.get_diff_to_timestamp(), req, searched_ids);
+        = find_meta_elements< Node::Index, Node_Skeleton >(
+            context, context.get_diff_to_timestamp(), req, searched_ids);
 
     for (std::vector< Node_With_Context >::const_iterator it = nodes.begin(); it != nodes.end(); ++it)
     {
@@ -505,11 +506,11 @@ void Set_Comparison::clear_nodes(Resource_Manager& rman, bool add_deletion_infor
         searched_ids.push_back(it->second.elem.id);
     }
 
-    get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, rman, true).swap(req);
+    get_indexes_< Uint32_Index, Node_Skeleton >(searched_ids, context, true).swap(req);
     find_still_existing_skeletons< Uint32_Index, Node_Skeleton >(
-        rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
+        context, context.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
     find_meta_elements< Node::Index, Node_Skeleton >(
-        rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
+        context, context.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
     for (std::vector< std::pair< Node_With_Context, Node_With_Context > >::iterator
         it = result.different_nodes.begin(); it != result.different_nodes.end(); ++it)
@@ -594,7 +595,7 @@ void Set_Comparison::compare_item(uint32 ll_upper, const Way_Skeleton& skel,
 }
 
 
-void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_information)
+void Set_Comparison::clear_ways(Request_Context& context, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -605,12 +606,12 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
 	searched_ids.push_back(it->elem.id);
     }
 
-    std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(searched_ids, rman, true);
+    std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Way_Skeleton >(searched_ids, context, true);
     std::vector< Way_Skeleton::Id_Type > found_ids
         = find_still_existing_skeletons< Uint31_Index, Way_Skeleton >(
-            rman, rman.get_desired_timestamp(), req, searched_ids);
+            context, context.get_desired_timestamp(), req, searched_ids);
     std::map< Way_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Way::Id_Type > > found_meta
-        = find_meta_elements< Way::Index, Way_Skeleton >(rman, rman.get_diff_to_timestamp(), req, searched_ids);
+        = find_meta_elements< Way::Index, Way_Skeleton >(context, context.get_diff_to_timestamp(), req, searched_ids);
 
     for (std::vector< Way_With_Context >::const_iterator it = ways.begin(); it != ways.end(); ++it)
     {
@@ -636,11 +637,11 @@ void Set_Comparison::clear_ways(Resource_Manager& rman, bool add_deletion_inform
         searched_ids.push_back(it->second.elem.id);
     }
 
-    get_indexes_< Uint31_Index, Way_Skeleton >(searched_ids, rman, true).swap(req);
+    get_indexes_< Uint31_Index, Way_Skeleton >(searched_ids, context, true).swap(req);
     find_still_existing_skeletons< Uint31_Index, Way_Skeleton >(
-        rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
+        context, context.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
     find_meta_elements< Way::Index, Way_Skeleton >(
-        rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
+        context, context.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
     for (std::vector< std::pair< Way_With_Context, Way_With_Context > >::iterator
         it = result.different_ways.begin(); it != result.different_ways.end(); ++it)
@@ -726,7 +727,7 @@ void Set_Comparison::compare_item(uint32 ll_upper, const Relation_Skeleton& skel
 }
 
 
-void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_information)
+void Set_Comparison::clear_relations(Request_Context& context, bool add_deletion_information)
 {
   if (add_deletion_information)
   {
@@ -737,13 +738,13 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
 	searched_ids.push_back(it->elem.id);
     }
 
-    std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, rman, true);
+    std::vector< Uint31_Index > req = get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, context, true);
     std::vector< Relation_Skeleton::Id_Type > found_ids
         = find_still_existing_skeletons< Uint31_Index, Relation_Skeleton >(
-            rman, rman.get_diff_to_timestamp(), req, searched_ids);
+            context, context.get_diff_to_timestamp(), req, searched_ids);
     std::map< Relation_Skeleton::Id_Type, OSM_Element_Metadata_Skeleton< Relation::Id_Type > > found_meta
         = find_meta_elements< Relation::Index, Relation_Skeleton >(
-            rman, rman.get_diff_to_timestamp(), req, searched_ids);
+            context, context.get_diff_to_timestamp(), req, searched_ids);
 
     for (std::vector< Relation_With_Context >::const_iterator it = relations.begin(); it != relations.end(); ++it)
     {
@@ -760,7 +761,7 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
 		std::vector< std::pair< std::string, std::string > >())));
       }
 
-      req = get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, rman, true);
+      req = get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, context, true);
     }
 
     searched_ids.clear();
@@ -771,11 +772,11 @@ void Set_Comparison::clear_relations(Resource_Manager& rman, bool add_deletion_i
         searched_ids.push_back(it->second.elem.id);
     }
 
-    get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, rman, true).swap(req);
+    get_indexes_< Uint31_Index, Relation_Skeleton >(searched_ids, context, true).swap(req);
     find_still_existing_skeletons< Uint31_Index, Relation_Skeleton >(
-        rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
+        context, context.get_diff_from_timestamp(), req, searched_ids).swap(found_ids);
     find_meta_elements< Relation::Index, Relation_Skeleton >(
-        rman, rman.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
+        context, context.get_diff_from_timestamp(), req, searched_ids).swap(found_meta);
 
     for (std::vector< std::pair< Relation_With_Context, Relation_With_Context > >::iterator
         it = result.different_relations.begin(); it != result.different_relations.end(); ++it)
@@ -1087,21 +1088,23 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
       | Output_Mode::COORDS | Output_Mode::NDS | Output_Mode::MEMBERS
       | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
       | Output_Mode::GEOMETRY, south, north, west, east);
+  
+  Request_Context context(&stmt, rman);
 
   tags_quadtile(extra_data_rhs, input_set.nodes, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_nodes, rman);
-  clear_nodes(rman, add_deletion_information);
+  clear_nodes(context, add_deletion_information);
 
   tags_quadtile(extra_data_rhs, input_set.ways, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_ways, rman);
-  clear_ways(rman, add_deletion_information);
+  clear_ways(context, add_deletion_information);
 
   tags_quadtile(extra_data_rhs, input_set.relations, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, rman);
-  clear_relations(rman, add_deletion_information);
+  clear_relations(context, add_deletion_information);
 
   compute_deriveds(input_set.deriveds);
 
@@ -1306,20 +1309,22 @@ Diff_Set Set_Comparison::compare_to_lhs(Resource_Manager& rman, const Statement&
       | Output_Mode::TAGS | Output_Mode::VERSION | Output_Mode::META
       | Output_Mode::GEOMETRY, 1., 0., 0., 0.);
 
+  Request_Context context(&stmt, rman);
+
   tags_quadtile(extra_data_rhs, input_set.nodes, changed_nodes, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_nodes, changed_nodes, rman);
-  clear_nodes(rman, add_deletion_information);
+  clear_nodes(context, add_deletion_information);
 
   tags_quadtile(extra_data_rhs, input_set.ways, changed_ways, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_ways, changed_ways, rman);
-  clear_ways(rman, add_deletion_information);
+  clear_ways(context, add_deletion_information);
 
   tags_quadtile(extra_data_rhs, input_set.relations, changed_relations, rman);
   if (rman.get_desired_timestamp() != NOW)
     tags_quadtile_attic(extra_data_rhs, input_set.attic_relations, changed_relations, rman);
-  clear_relations(rman, add_deletion_information);
+  clear_relations(context, add_deletion_information);
 
   Diff_Set local_result;
   local_result.swap(result);

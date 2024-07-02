@@ -231,8 +231,8 @@ bool Collect_Items< Index, Object >::get_chunk(
 
 template< typename Index, typename Skeleton >
 void eval_timespan_from_meta(
-    std::map< Index, std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > > >& timestamp_by_id_by_idx,
-    File_Blocks_Index_Base* file_index, const std::vector< Index >& idx_set, uint64 timestamp)
+    std::map< Index, std::map< typename Skeleton::Id_Type, std::pair< uint64_t, uint64_t > > >& timestamp_by_id_by_idx,
+    File_Blocks_Index_Base* file_index, const std::vector< Index >& idx_set, uint64_t timestamp)
 {
   Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
           typename std::vector< Index >::const_iterator >
@@ -315,7 +315,7 @@ void validate_against_meta(
   // Confirm elements that are backed by meta data
   // Update element's expiration timestamp if a meta exists that is older than the current
   // expiration date and younger than timestamp
-  std::map< Index, std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > > >
+  std::map< Index, std::map< typename Skeleton::Id_Type, std::pair< uint64_t, uint64_t > > >
       timestamp_by_id_by_idx;
   for (const auto& i : current)
   {
@@ -341,7 +341,7 @@ void validate_against_meta(
   for (auto& i : current)
   {
     std::vector< Skeleton > result;
-    std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >& entry = timestamp_by_id_by_idx[i.first];
+    auto& entry = timestamp_by_id_by_idx[i.first];
 
     for (const auto& j : i.second)
     {
@@ -361,7 +361,7 @@ void validate_against_meta(
   for (auto& i : attic)
   {
     std::vector< Attic< Skeleton > > result;
-    std::map< typename Skeleton::Id_Type, std::pair< uint64, uint64 > >& entry = timestamp_by_id_by_idx[i.first];
+    auto& entry = timestamp_by_id_by_idx[i.first];
 
     for (const auto& j : i.second)
     {

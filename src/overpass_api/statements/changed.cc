@@ -24,6 +24,7 @@
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/idx_from_id.h"
 #include "changed.h"
 
 
@@ -397,12 +398,12 @@ void get_elements(Changed_Statement& stmt, Resource_Manager& rman,
     std::map< Index, std::vector< Skeleton > >& current_result,
     std::map< Index, std::vector< Attic< Skeleton > > >& attic_result)
 {
+  Request_Context context(&stmt, rman);
   std::vector< typename Skeleton::Id_Type > ids =
       collect_changed_elements< Index, Skeleton >(stmt.get_since(rman), stmt.get_until(rman),
           Trivial_Id_Predicate< typename Skeleton::Id_Type >(), rman);
-  std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
+  std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, context);
 
-  Request_Context context(&stmt, rman);
   collect_items_discrete< Index, Skeleton >(context, req, Id_Predicate< Skeleton >(ids))
       .swap(current_result, attic_result);
 

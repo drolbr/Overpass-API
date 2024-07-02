@@ -22,6 +22,7 @@
 #include "../dispatch/resource_manager.h"
 #include "abstract_processing.h"
 #include "filenames.h"
+#include "request_context.h"
 #include "timeless.h"
 
 #include <exception>
@@ -56,42 +57,6 @@ void reconstruct_items(
     ++it;
   }
 }
-
-
-class Statement;
-
-
-class Health_Guard
-{
-public:
-  Health_Guard(const Statement* stmt_, Resource_Manager& rman_) : stmt(stmt_), rman(rman_) {}
-
-  void log_and_display_error(const std::string& message) const { rman.log_and_display_error(message); }
-  bool check(uint32 extra_time = 0, uint64 extra_space = 0)
-  { return (stmt) && rman.health_check(*stmt, extra_time, extra_space); }
-
-private:
-  const Statement* stmt;
-  Resource_Manager& rman;
-};
-
-
-class Request_Context
-{
-public:
-  Request_Context(const Statement* stmt_, Resource_Manager& rman_) : stmt(stmt_), rman(rman_) {}
-
-  Health_Guard get_health_guard() { return Health_Guard(stmt, rman); }
-  uint64 get_desired_timestamp() const { return rman.get_desired_timestamp(); }
-  File_Blocks_Index_Base* data_index(const File_Properties* file_properties)
-  { return rman.get_transaction()->data_index(file_properties); }
-  Random_File_Index* random_index(const File_Properties* file_properties)
-  { return rman.get_transaction()->random_index(file_properties); }
-
-private:
-  const Statement* stmt;
-  Resource_Manager& rman;
-};
 
 
 template < typename Index, typename Object, typename Attic_Iterator, typename Current_Iterator, typename Predicate >
@@ -567,55 +532,6 @@ Timeless< Index, Object > collect_items_flat(
 
   Timeless< Index, Object > result;
   result.swap(current, attic);
-  return result;
-}
-
-
-/* Returns for the given std::set of ids the std::set of corresponding indexes.
- * The function requires that the ids are sorted ascending by id.
- */
-template< typename Index, typename Skeleton >
-std::vector< Index > get_indexes_
-    (const std::vector< typename Skeleton::Id_Type >& ids, Resource_Manager& rman, bool get_attic_idxs = false)
-{
-  std::vector< Index > result;
-
-  Random_File< typename Skeleton::Id_Type, Index > current(rman.get_transaction()->random_index
-      (current_skeleton_file_properties< Skeleton >()));
-  for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
-      it = ids.begin(); it != ids.end(); ++it)
-    result.push_back(current.get(it->val()));
-
-  std::sort(result.begin(), result.end());
-  result.erase(std::unique(result.begin(), result.end()), result.end());
-
-  if (rman.get_desired_timestamp() != NOW || get_attic_idxs)
-  {
-    Random_File< typename Skeleton::Id_Type, Index > attic_random(rman.get_transaction()->random_index
-        (attic_skeleton_file_properties< Skeleton >()));
-    std::vector< typename Skeleton::Id_Type > idx_list_ids;
-    for (typename std::vector< typename Skeleton::Id_Type >::const_iterator
-        it = ids.begin(); it != ids.end(); ++it)
-    {
-      if (attic_random.get(it->val()).val() == 0)
-        ;
-      else if (attic_random.get(it->val()) == 0xff)
-        idx_list_ids.push_back(it->val());
-      else
-        result.push_back(attic_random.get(it->val()));
-    }
-
-    Block_Backend< typename Skeleton::Id_Type, Index > idx_list_db
-        (rman.get_transaction()->data_index(attic_idx_list_properties< Skeleton >()));
-    for (typename Block_Backend< typename Skeleton::Id_Type, Index >::Discrete_Iterator
-        it(idx_list_db.discrete_begin(idx_list_ids.begin(), idx_list_ids.end()));
-        !(it == idx_list_db.discrete_end()); ++it)
-      result.push_back(it.object());
-
-    std::sort(result.begin(), result.end());
-    result.erase(std::unique(result.begin(), result.end()), result.end());
-  }
-
   return result;
 }
 

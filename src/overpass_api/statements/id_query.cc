@@ -22,6 +22,7 @@
 #include "../data/abstract_processing.h"
 #include "../data/collect_members.h"
 #include "../data/filenames.h"
+#include "../data/idx_from_id.h"
 #include "id_query.h"
 
 #include <sstream>
@@ -183,7 +184,8 @@ bool Id_Query_Constraint::get_area_ids(Resource_Manager& rman, std::vector< Area
 bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Index >& ranges)
 {
   std::vector< Node_Skeleton::Id_Type > ids = filtered_assign< Node_Skeleton::Id_Type >(stmt->get_refs());
-  std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, rman);
+  Request_Context context(stmt, rman);
+  std::vector< Uint32_Index > req = get_indexes_< Uint32_Index, Node_Skeleton >(ids, context);
 
   ranges = Ranges< Uint32_Index >();
   for (std::vector< Uint32_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
@@ -196,19 +198,20 @@ bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint32_Inde
 
 bool Id_Query_Constraint::get_ranges(Resource_Manager& rman, Ranges< Uint31_Index >& ranges)
 {
+  Request_Context context(stmt, rman);
   std::vector< Uint31_Index > req;
   ranges = Ranges< Uint31_Index >();
 
   {
     std::vector< Way_Skeleton::Id_Type > ids = filtered_assign< Way_Skeleton::Id_Type >(stmt->get_refs());
-    get_indexes_< Uint31_Index, Way_Skeleton >(ids, rman).swap(req);
+    get_indexes_< Uint31_Index, Way_Skeleton >(ids, context).swap(req);
     for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
       ranges.push_back(*it, inc(*it));
   }
 
   {
     std::vector< Relation_Skeleton::Id_Type > ids = filtered_assign< Relation_Skeleton::Id_Type >(stmt->get_refs());
-    get_indexes_< Uint31_Index, Relation_Skeleton >(ids, rman).swap(req);
+    get_indexes_< Uint31_Index, Relation_Skeleton >(ids, context).swap(req);
     for (std::vector< Uint31_Index >::const_iterator it = req.begin(); it != req.end(); ++it)
       ranges.push_back(*it, inc(*it));
   }
@@ -381,35 +384,35 @@ struct Attic_Skeleton_By_Id
 
 
 template< typename Index, typename Skeleton >
-void get_elements(const std::vector< uint64 >& refs, Statement* stmt, Resource_Manager& rman,
+void get_elements(const std::vector< uint64 >& refs, Statement* stmt, Request_Context& context,
     std::map< Index, std::vector< Skeleton > >& current_result,
     std::map< Index, std::vector< Attic< Skeleton > > >& attic_result)
 {
   std::vector< typename Skeleton::Id_Type > ids = filtered_assign< typename Skeleton::Id_Type >(refs);
-  std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman);
+  std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, context);
 
-  Request_Context context(stmt, rman);
   collect_items_discrete< Index, Skeleton >(context, req, Id_Predicate< Skeleton >(ids))
       .swap(current_result, attic_result);
 
-  if (rman.get_desired_timestamp() != NOW)
-    filter_attic_elements(context, rman.get_desired_timestamp(), current_result, attic_result);
+  if (context.get_desired_timestamp() != NOW)
+    filter_attic_elements(context, context.get_desired_timestamp(), current_result, attic_result);
 }
 
 
 void Id_Query_Statement::execute(Resource_Manager& rman)
 {
   Set into;
+  Request_Context context(this, rman);
 
   if (type == NODE)
-    get_elements(refs, this, rman, into.nodes, into.attic_nodes);
+    get_elements(refs, this, context, into.nodes, into.attic_nodes);
   else if (type == WAY)
-    get_elements(refs, this, rman, into.ways, into.attic_ways);
+    get_elements(refs, this, context, into.ways, into.attic_ways);
   else if (type == RELATION)
-    get_elements(refs, this, rman, into.relations, into.attic_relations);
+    get_elements(refs, this, context, into.relations, into.attic_relations);
   else if (type == AREA)
   {
-    get_elements(refs, this, rman, into.ways, into.attic_ways);
+    get_elements(refs, this, context, into.ways, into.attic_ways);
     collect_elems_flat(rman, refs, into.areas);
   }
 

@@ -141,9 +141,9 @@ private:
 
   void set_target(bool target);
 
-  void clear_nodes(Resource_Manager& rman, bool add_deletion_information = false);
-  void clear_ways(Resource_Manager& rman, bool add_deletion_information = false);
-  void clear_relations(Resource_Manager& rman, bool add_deletion_information = false);
+  void clear_nodes(Request_Context& context, bool add_deletion_information = false);
+  void clear_ways(Request_Context& context, bool add_deletion_information = false);
+  void clear_relations(Request_Context& context, bool add_deletion_information = false);
 
   void compute_deriveds(std::map< Uint31_Index, std::vector< Derived_Structure > > rhs_deriveds);
 

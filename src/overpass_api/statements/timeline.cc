@@ -18,6 +18,7 @@
 
 #include "evaluator.h"
 #include "timeline.h"
+#include "../data/meta_by_ref.h"
 
 
 Generic_Statement_Maker< Timeline_Statement > Timeline_Statement::statement_maker("timeline");
@@ -65,55 +66,13 @@ Timeline_Statement::Timeline_Statement
 }
 
 
-template< typename Skeleton >
-struct Ref_Ver_Equal
-{
-  bool operator()(const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& lhs,
-                  const OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >& rhs)
-  {
-    return (lhs.ref == rhs.ref && lhs.version == rhs.version);
-  }
-};
-
-
 template< typename Index, typename Skeleton >
 void create_timeline_entries(uint64 ref, uint32 version, Statement* stmt, Resource_Manager& rman,
     const std::string& reftype, std::map< Uint31_Index, std::vector< Derived_Structure > >& deriveds)
 {
-  std::vector< typename Skeleton::Id_Type > ids;
-  ids.push_back(ref);
-  std::vector< Index > req = get_indexes_< Index, Skeleton >(ids, rman, true);
-
-  std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > metas;
-  {
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-        typename std::vector< Index >::const_iterator > current_meta_db
-        (rman.get_transaction()->data_index(current_meta_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-        typename std::vector< Index >::const_iterator >::Discrete_Iterator
-        it = current_meta_db.discrete_begin(req.begin(), req.end());
-        !(it == current_meta_db.discrete_end()); ++it)
-    {
-      if (it.object().ref == ref)
-        metas.push_back(it.object());
-    }
-  }
-  {
-    Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-        typename std::vector< Index >::const_iterator > attic_meta_db
-        (rman.get_transaction()->data_index(attic_meta_file_properties< Skeleton >()));
-    for (typename Block_Backend< Index, OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type >,
-        typename std::vector< Index >::const_iterator >::Discrete_Iterator
-        it = attic_meta_db.discrete_begin(req.begin(), req.end());
-        !(it == attic_meta_db.discrete_end()); ++it)
-    {
-      if (it.object().ref == ref)
-        metas.push_back(it.object());
-    }
-  }
-
-  std::sort(metas.begin(), metas.end());
-  metas.erase(std::unique(metas.begin(), metas.end(), Ref_Ver_Equal< Skeleton >()), metas.end());
+  Request_Context context(stmt, rman);
+  std::vector< OSM_Element_Metadata_Skeleton< typename Skeleton::Id_Type > > metas
+    = meta_by_ref< Index, Skeleton >(ref, context);
 
   for (uint i = 0; i < metas.size(); ++i)
   {

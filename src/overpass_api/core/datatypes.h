@@ -30,6 +30,7 @@
 
 #include "basic_types.h"
 #include "geometry.h"
+#include "type_meta.h"
 #include "type_node.h"
 #include "type_way.h"
 #include "type_relation.h"
@@ -417,133 +418,6 @@ public:
   virtual void migration_completed() = 0;
 
   virtual void set_db_dir(const std::string& db_dir) = 0;
-};
-
-
-struct User_Data
-{
-  typedef uint32 Id_Type;
-
-  Id_Type id;
-  std::string name;
-
-  User_Data() : id(0) {}
-
-  User_Data(void* data)
-  {
-    id = *(uint32*)data;
-    name = std::string(((int8*)data + 6), *(uint16*)((int8*)data + 4));
-  }
-
-  uint32 size_of() const
-  {
-    return 6 + name.length();
-  }
-
-  static uint32 size_of(void* data)
-  {
-    return 6 + *(uint16*)((int8*)data + 4);
-  }
-
-  void to_data(void* data) const
-  {
-    *(uint32*)data = id;
-    *(uint16*)((int8*)data + 4) = name.length();
-    memcpy(((int8*)data + 6), name.data(), name.length());
-  }
-
-  bool operator<(const User_Data& a) const
-  {
-    return (id < a.id);
-  }
-
-  bool operator==(const User_Data& a) const
-  {
-    return (id == a.id);
-  }
-};
-
-
-struct OSM_Element_Metadata
-{
-  OSM_Element_Metadata() : version(0), timestamp(0), changeset(0), user_id(0) {}
-
-  uint32 version;
-  uint64 timestamp;
-  uint32 changeset;
-  uint32 user_id;
-  std::string user_name;
-
-  bool operator<(const OSM_Element_Metadata&) const { return false; }
-};
-
-
-template< typename Id_Type_ >
-struct OSM_Element_Metadata_Skeleton
-{
-  typedef Id_Type_ Id_Type;
-
-  Id_Type ref;
-  uint32 version;
-  uint64 timestamp;
-  uint32 changeset;
-  uint32 user_id;
-
-  OSM_Element_Metadata_Skeleton() : version(0), timestamp(0), changeset(0), user_id(0) {}
-
-  OSM_Element_Metadata_Skeleton(Id_Type ref_)
-    : ref(ref_), version(0), timestamp(0), changeset(0), user_id(0) {}
-
-  OSM_Element_Metadata_Skeleton(Id_Type ref_, const OSM_Element_Metadata& meta)
-    : ref(ref_),
-      version(meta.version), timestamp(meta.timestamp),
-      changeset(meta.changeset), user_id(meta.user_id) {}
-
-  OSM_Element_Metadata_Skeleton(Id_Type ref_, uint64 timestamp_)
-    : ref(ref_), version(0), timestamp(timestamp_),
-      changeset(0), user_id(0) {}
-
-  OSM_Element_Metadata_Skeleton(void* data)
-    : ref(*(Id_Type*)data)
-  {
-    version = *(uint32*)((int8*)data + sizeof(Id_Type));
-    timestamp = (*(uint64*)((int8*)data + sizeof(Id_Type) + 4) & 0xffffffffffull);
-    changeset = *(uint32*)((int8*)data + sizeof(Id_Type) + 9);
-    user_id = *(uint32*)((int8*)data + sizeof(Id_Type) + 13);
-  }
-
-  uint32 size_of() const
-  {
-    return 17 + sizeof(Id_Type);
-  }
-
-  static uint32 size_of(void* data)
-  {
-    return 17 + sizeof(Id_Type);
-  }
-
-  void to_data(void* data) const
-  {
-    *(Id_Type*)data = ref;
-    *(uint32*)((int8*)data + sizeof(Id_Type)) = version;
-    *(uint64*)((int8*)data + sizeof(Id_Type) + 4) = timestamp;
-    *(uint32*)((int8*)data + sizeof(Id_Type) + 9) = changeset;
-    *(uint32*)((int8*)data + sizeof(Id_Type) + 13) = user_id;
-  }
-
-  bool operator<(const OSM_Element_Metadata_Skeleton& a) const
-  {
-    if (ref < a.ref)
-      return true;
-    else if (a.ref < ref)
-      return false;
-    return (timestamp < a.timestamp);
-  }
-
-  bool operator==(const OSM_Element_Metadata_Skeleton& a) const
-  {
-    return (ref == a.ref);
-  }
 };
 
 
