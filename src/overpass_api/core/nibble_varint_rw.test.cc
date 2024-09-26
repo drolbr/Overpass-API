@@ -87,13 +87,13 @@ int main(int argc, char* args[])
     show_good(reader);
     std::cout<<'\n';
   }
-  
+
   // Test multibyte input available, flex reading
   {
     std::cout<<"Multiple bytes, only flex reading:\n";
 
     std::vector< uint8_t > src = { 0x54, 0xe9, 0x36, 0x49, 0xf8, 0xb2, 0xa9, 0xd1, 0xc6, 0x62, 0x00, 0x00, 0x00, 0x27, 0xcd, 0xfa };
-    Nibble_Varint_Reader reader(&src[0], src.size());
+    Nibble_Varint_Reader reader(&src[1], src.size() - 1);
     show_good(reader);
     std::cout<<"read_flex(7+1): "<<reader.read_flex< uint64_t >(0x14100c08)<<'\n';
     show_good(reader);
