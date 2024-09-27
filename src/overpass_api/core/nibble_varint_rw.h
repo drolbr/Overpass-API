@@ -197,3 +197,84 @@ private:
 
 
 #endif
+
+
+/* Variant that enforces little endian.
+ * No other variant because no huge performance difference expected. */
+struct Nibble_Varint_Writer
+{
+  Nibble_Varint_Writer(uint8_t* data) : ptr(data), bitpos(0) {}
+
+  void write_flex(const uint32_t LIMITS, uint64_t value)
+  {
+    uint_fast8_t to_skip = 4;
+    uint_fast8_t num_bits = 68;
+    uint_fast8_t size_marker = 0xf;
+    
+    if (value <= (uint64_t)~(-1ull<<((LIMITS & 0xff) - 1)))
+    {
+      to_skip = 1;
+      size_marker = 0;
+      num_bits = (LIMITS & 0xff);
+    }
+    else if (value <= (uint64_t)~(-1ull<<(((LIMITS>>8) & 0xff) - 2)))
+    {
+      to_skip = 2;
+      size_marker = 0x1;
+      num_bits = ((LIMITS>>8) & 0xff);
+    }
+    else if (value <= (uint64_t)~(-1ull<<(((LIMITS>>16) & 0xff) - 3)))
+    {
+      to_skip = 3;
+      size_marker = 0x3;
+      num_bits = ((LIMITS>>16) & 0xff);
+    }
+    else if (value <= (uint64_t)~(-1ull<<(((LIMITS>>24) & 0xff) - 4)))
+    {
+      to_skip = 4;
+      size_marker = 0x7;
+      num_bits = ((LIMITS>>24) & 0xff);
+    }
+    
+    if (num_bits <= 64)
+      write_fixed(num_bits, (value<<to_skip) | size_marker);
+    else
+    {
+      write_fixed(to_skip, size_marker);
+      write_fixed(64, value);
+    }
+  }
+
+  void write_fixed(uint_fast8_t num_bits, uint64_t value)
+  {
+    if (num_bits < 64)
+      value &= ~(-1ull<<num_bits);
+    
+    *ptr = (*ptr & ~(-1ull<<bitpos)) | (uint8_t)((value<<bitpos) & 0xff);
+
+    if (bitpos + num_bits < 8)
+    {
+      bitpos += num_bits;
+      return;
+    }
+    uint_fast8_t valpos = 8 - bitpos;
+    while (valpos < num_bits)
+    {
+      ++ptr;
+      *ptr = (uint8_t)((value>>valpos) & 0xff);
+      valpos += 8;
+    }
+    if (valpos == num_bits)
+    {
+      ++ptr;
+      bitpos = 0;
+    }
+    else
+      bitpos = 8 + num_bits - valpos;
+  }
+
+private:
+  uint8_t* ptr;
+  uint8_t cur;
+  uint_fast8_t bitpos;
+};

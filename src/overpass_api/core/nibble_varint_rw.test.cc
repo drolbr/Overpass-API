@@ -11,6 +11,16 @@ void show_good(const Nibble_Varint_Reader& reader)
 }
 
 
+void show_hex(const std::vector< uint8_t >& data)
+{
+  std::string hexdigit("0123456789abcdef");
+  std::cout<<"Raw data: ";
+  for (auto i : data)
+    std::cout<<hexdigit[i & 0xf]<<hexdigit[i>>4];
+  std::cout<<'\n';
+}
+
+
 int main(int argc, char* args[])
 {
   // Test that an empty reader does not crash
@@ -106,6 +116,167 @@ int main(int argc, char* args[])
     std::cout<<"read_flex(16+4): "<<reader.read_flex< uint64_t >(0x14100c08)<<'\n';
     show_good(reader);
     std::cout<<"read_flex(8): "<<reader.read_flex< uint64_t >(0x14100c08)<<'\n';
+    show_good(reader);
+    std::cout<<'\n';
+  }
+  
+  // Test Nibble_Varint_Writer
+  
+  // Test that an empty writer does not crash
+  {
+    std::cout<<"Empty writer:\n";
+
+    Nibble_Varint_Writer writer((uint8_t*)nullptr);
+    std::cout<<'\n';
+  }
+  
+  // Write four bits, read four bits
+  {
+    std::cout<<"Write four bits, read four bits:\n";
+
+    std::vector< uint8_t > data(8, 0);
+    {
+      Nibble_Varint_Writer writer(&data[0]);
+      writer.write_fixed(4, 5);
+    }
+    show_hex(data);
+
+    Nibble_Varint_Reader reader(&data[0], data.size());
+    std::cout<<"read_fixed(4): "<<reader.read_fixed< int64_t >(4)<<'\n';
+    show_good(reader);
+    std::cout<<'\n';
+  }
+  
+  // Write twelfe bits, read twelfe bits
+  {
+    std::cout<<"Write twelve bits, read twelve bits:\n";
+
+    std::vector< uint8_t > data(8, 0);
+    {
+      Nibble_Varint_Writer writer(&data[0]);
+      writer.write_fixed(12, 442);
+    }
+    show_hex(data);
+
+    Nibble_Varint_Reader reader(&data[0], data.size());
+    std::cout<<"read_fixed(12): "<<reader.read_fixed< int64_t >(12)<<'\n';
+    show_good(reader);
+    std::cout<<'\n';
+  }
+  
+  // Write multiple full bytes
+  {
+    std::cout<<"Write multiple full bytes:\n";
+
+    std::vector< uint8_t > data(32, 0);
+    {
+      Nibble_Varint_Writer writer(&data[0]);
+      writer.write_fixed(8, 42);
+      writer.write_fixed(64, 424242424242);
+      writer.write_fixed(32, 42424242);
+      writer.write_fixed(16, 44242);
+      writer.write_fixed(8, 44);
+      writer.write_fixed(64, 444244424442);
+      writer.write_fixed(8, 24);
+    }
+    show_hex(data);
+
+    Nibble_Varint_Reader reader(&data[0], data.size());
+    std::cout<<"read_fixed(8): "<<reader.read_fixed< uint64_t >(8)<<'\n';
+    std::cout<<"read_fixed(64): "<<reader.read_fixed< uint64_t >(64)<<'\n';
+    std::cout<<"read_fixed(32): "<<reader.read_fixed< uint64_t >(32)<<'\n';
+    std::cout<<"read_fixed(16): "<<reader.read_fixed< uint64_t >(16)<<'\n';
+    std::cout<<"read_fixed(8): "<<reader.read_fixed< uint64_t >(8)<<'\n';
+    std::cout<<"read_fixed(64): "<<reader.read_fixed< uint64_t >(64)<<'\n';
+    std::cout<<"read_fixed(8): "<<reader.read_fixed< uint64_t >(8)<<'\n';
+    show_good(reader);
+    std::cout<<'\n';
+  }
+  
+  // Write over byte boundaries
+  {
+    std::cout<<"Write over byte boundaries:\n";
+
+    std::vector< uint8_t > data(16, 0);
+    {
+      Nibble_Varint_Writer writer(&data[0]);
+      writer.write_fixed(4, 5);
+      writer.write_fixed(8, 42);
+      writer.write_fixed(64, 424242424242);
+      writer.write_fixed(4, 11);
+    }
+    show_hex(data);
+
+    Nibble_Varint_Reader reader(&data[0], data.size());
+    std::cout<<"read_fixed(4): "<<reader.read_fixed< uint64_t >(4)<<'\n';
+    std::cout<<"read_fixed(8): "<<reader.read_fixed< uint64_t >(8)<<'\n';
+    std::cout<<"read_fixed(64): "<<reader.read_fixed< uint64_t >(64)<<'\n';
+    std::cout<<"read_fixed(4): "<<reader.read_fixed< uint64_t >(4)<<'\n';
+    show_good(reader);
+    std::cout<<'\n';
+  }
+  
+  // Write unaligned
+  {
+    std::cout<<"Write unaligned:\n";
+
+    std::vector< uint8_t > data(16, 0x99);
+    {
+      Nibble_Varint_Writer writer(&data[1]);
+      writer.write_fixed(4, 5);
+      writer.write_fixed(8, 42);
+      writer.write_fixed(64, 424242424242);
+      writer.write_fixed(4, 11);
+    }
+    show_hex(data);
+
+    Nibble_Varint_Reader reader(&data[1], data.size() - 1);
+    std::cout<<"read_fixed(4): "<<reader.read_fixed< uint64_t >(4)<<'\n';
+    std::cout<<"read_fixed(8): "<<reader.read_fixed< uint64_t >(8)<<'\n';
+    std::cout<<"read_fixed(64): "<<reader.read_fixed< uint64_t >(64)<<'\n';
+    std::cout<<"read_fixed(4): "<<reader.read_fixed< uint64_t >(4)<<'\n';
+    show_good(reader);
+    std::cout<<'\n';
+  }
+  
+  // Write one flex entry
+  {
+    std::cout<<"Write one flex entry:\n";
+
+    std::vector< uint8_t > data(16, 0);
+    {
+      Nibble_Varint_Writer writer(&data[0]);
+      writer.write_flex(0x20100804, 5);
+    }
+    show_hex(data);
+
+    Nibble_Varint_Reader reader(&data[0], data.size());
+    std::cout<<"read_flex(3+1): "<<reader.read_flex< uint64_t >(0x20100804)<<'\n';
+    show_good(reader);
+    std::cout<<'\n';
+  }
+  
+  // Write many flex entries
+  {
+    std::cout<<"Write many flex entries:\n";
+
+    std::vector< uint8_t > data(16, 0);
+    {
+      Nibble_Varint_Writer writer(&data[0]);
+      writer.write_flex(0x100c0804, 6);
+      writer.write_flex(0x100c0804, 42);
+      writer.write_flex(0x100c0804, 4042);
+      writer.write_flex(0x100c0804, 4242);
+      writer.write_flex(0x100c0804, 442);
+    }
+    show_hex(data);
+
+    Nibble_Varint_Reader reader(&data[0], data.size());
+    std::cout<<"read_flex(3+1): "<<reader.read_flex< uint64_t >(0x100c0804)<<'\n';
+    std::cout<<"read_flex(6+2): "<<reader.read_flex< uint64_t >(0x100c0804)<<'\n';
+    std::cout<<"read_flex(12+4): "<<reader.read_flex< uint64_t >(0x100c0804)<<'\n';
+    std::cout<<"read_flex(64+4): "<<reader.read_flex< uint64_t >(0x100c0804)<<'\n';
+    std::cout<<"read_flex(9+3): "<<reader.read_flex< uint64_t >(0x100c0804)<<'\n';
     show_good(reader);
     std::cout<<'\n';
   }
