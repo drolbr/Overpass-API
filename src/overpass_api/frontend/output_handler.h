@@ -22,6 +22,7 @@
 
 #include "../core/datatypes.h"
 #include "../core/geometry.h"
+#include "../core/type_meta.h"
 
 
 struct Output_Mode

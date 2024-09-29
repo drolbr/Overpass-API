@@ -19,6 +19,11 @@
 #ifndef DE__OSM3S___OVERPASS_API__OSM_BACKEND__META_UPDATER_H
 #define DE__OSM3S___OVERPASS_API__OSM_BACKEND__META_UPDATER_H
 
+#include "../../template_db/transaction.h"
+#include "../core/datatypes.h"
+#include "../core/settings.h"
+#include "../core/type_meta.h"
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -26,11 +31,6 @@
 
 #include <cstdio>
 #include <sys/stat.h>
-
-#include "../core/datatypes.h"
-#include "../core/settings.h"
-#include "../../template_db/transaction.h"
-
 
 
 template< typename Id_Type >

@@ -19,6 +19,7 @@
 #include "clone_database.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "../core/type_meta.h"
 #include "../data/filenames.h"
 #include "../../template_db/block_backend.h"
 #include "../../template_db/block_backend_write.h"

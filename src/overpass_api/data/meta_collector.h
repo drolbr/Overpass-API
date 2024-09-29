@@ -28,6 +28,7 @@
 #include "../../template_db/transaction.h"
 #include "../core/datatypes.h"
 #include "../core/settings.h"
+#include "../core/type_meta.h"
 #include "filenames.h"
 
 

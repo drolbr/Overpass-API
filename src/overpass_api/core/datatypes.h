@@ -30,7 +30,6 @@
 
 #include "basic_types.h"
 #include "geometry.h"
-#include "type_meta.h"
 #include "type_node.h"
 #include "type_way.h"
 #include "type_relation.h"

@@ -21,6 +21,7 @@
 
 
 #include "../core/datatypes.h"
+#include "../core/type_meta.h"
 
 #include <map>
 #include <string>

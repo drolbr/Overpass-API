@@ -20,7 +20,6 @@
 #define DE__OSM3S___OVERPASS_API__DATA__COLLECT_MEMBERS_H
 
 #include "../core/datatypes.h"
-#include "../statements/statement.h"
 #include "abstract_processing.h"
 #include "collect_items.h"
 #include "filenames.h"

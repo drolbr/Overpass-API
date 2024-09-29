@@ -26,7 +26,6 @@
 #include "../core/datatypes.h"
 #include "../core/parsed_query.h"
 #include "../core/settings.h"
-#include "../data/diff_set.h"
 #include "../data/timeless.h"
 #include "../dispatch/resource_manager.h"
 #include "../frontend/tokenizer_utils.h"
@@ -283,6 +282,9 @@ class Generic_Statement_Maker : public Statement::Statement_Maker
     Generic_Statement_Maker(const std::string& name) { Statement::maker_by_name()[name] = this; }
     virtual ~Generic_Statement_Maker() {}
 };
+
+
+struct Diff_Set;
 
 
 class Output_Statement : public Statement
