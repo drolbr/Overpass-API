@@ -204,6 +204,20 @@ private:
 struct Nibble_Varint_Writer
 {
   Nibble_Varint_Writer(uint8_t* data) : ptr(data), bitpos(0) {}
+  
+  static uint64_t size_in_bits(const uint32_t LIMITS, uint64_t value)
+  {
+    if (value <= (uint64_t)~(-1ull<<((LIMITS & 0xff) - 1)))
+      return (LIMITS & 0xff);
+    else if (value <= (uint64_t)~(-1ull<<(((LIMITS>>8) & 0xff) - 2)))
+      return ((LIMITS>>8) & 0xff);
+    else if (value <= (uint64_t)~(-1ull<<(((LIMITS>>16) & 0xff) - 3)))
+      return ((LIMITS>>16) & 0xff);
+    else if (value <= (uint64_t)~(-1ull<<(((LIMITS>>24) & 0xff) - 4)))
+      return ((LIMITS>>24) & 0xff);
+    
+    return 68;
+  }
 
   void write_flex(const uint32_t LIMITS, uint64_t value)
   {
