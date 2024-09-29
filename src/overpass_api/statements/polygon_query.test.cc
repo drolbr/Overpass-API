@@ -21,6 +21,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../frontend/output_handler_parser.h"
 #include "../output_formats/output_xml.h"
 #include "polygon_query.h"
 #include "print.h"
@@ -35,7 +36,8 @@ void perform_polygon_print(std::string bounds, Transaction& transaction)
     // Select a polygon from the testset that contains one quarter
     // of only one polygon.
     Parsed_Query global_settings;
-    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    global_settings.set_output_handler(
+        Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
     Resource_Manager rman(transaction, &global_settings);
     Polygon_Query_Statement(0, { { "bounds", bounds } }, global_settings).execute(rman);
     Print_Statement(0, { { "mode", "body" } , { "order", "id" } }, global_settings).execute(rman);
@@ -55,7 +57,8 @@ void perform_query_polygon_print(std::string bounds, std::string type, Transacti
     // Select a polygon from the testset that contains one quarter
     // of only one polygon.
     Parsed_Query global_settings;
-    global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+    global_settings.set_output_handler(
+        Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
     Resource_Manager rman(transaction, &global_settings);
     Statement_Container cont(global_settings);
     {

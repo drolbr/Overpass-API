@@ -21,6 +21,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../frontend/output_handler_parser.h"
 #include "../output_formats/output_xml.h"
 #include "bbox_query.h"
 #include "print.h"
@@ -30,7 +31,8 @@ void perform_bbox_print(std::string south, std::string north, std::string west, 
 			Transaction& transaction)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   try
   {
     // Select a bbox from the testset that contains one quarter

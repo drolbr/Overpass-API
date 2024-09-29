@@ -20,6 +20,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../frontend/output_handler_parser.h"
 #include "../output_formats/output_xml.h"
 #include "foreach.h"
 #include "id_query.h"
@@ -30,7 +31,8 @@
 Resource_Manager& perform_id_query(Resource_Manager& rman, std::string type, uint64 id)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   std::ostringstream buf("");
   buf<<id;
 
@@ -46,7 +48,8 @@ Resource_Manager& fill_loop_set
   uint way_id_offset = (2*(pattern_size/2+1)*(pattern_size/2-1) + pattern_size/2);
 
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   Resource_Manager partial_rman(transaction, &global_settings);
   perform_id_query(partial_rman, "node", 1 + global_node_offset);
   Set target;
@@ -96,7 +99,8 @@ int main(int argc, char* args[])
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   Statement_Container stmt_cont(global_settings);
 
   std::cout<<

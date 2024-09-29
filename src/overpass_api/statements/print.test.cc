@@ -20,6 +20,7 @@
 #include <sstream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../frontend/output_handler_parser.h"
 #include "../output_formats/output_xml.h"
 #include "id_query.h"
 #include "print.h"
@@ -57,7 +58,8 @@ int main(int argc, char* args[])
   pattern_size = atoi(args[2]);
   uint64 global_node_offset = atoll(args[4]);
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
 
   uint32 node_id_upper_limit = 5*pattern_size*pattern_size;
   uint32 way_id_upper_limit = 5*pattern_size*pattern_size;

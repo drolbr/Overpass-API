@@ -20,6 +20,7 @@
 #include <iostream>
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
+#include "../frontend/output_handler_parser.h"
 #include "../output_formats/output_xml.h"
 #include "around.h"
 #include "binary_operators.h"
@@ -32,12 +33,12 @@
 #include "union.h"
 
 
-
 void perform_around_print(uint pattern_size, std::string radius, uint64 global_node_offset,
 			  Transaction& transaction)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   try
   {
     Resource_Manager rman(transaction, &global_settings);
@@ -57,7 +58,8 @@ void perform_coord_print(uint pattern_size, std::string radius, uint64 global_no
                           Transaction& transaction)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   try
   {
     Resource_Manager rman(transaction, &global_settings);
@@ -84,7 +86,8 @@ void perform_polyline_print(uint pattern_size, std::string polyline,
     uint64 global_node_offset, Transaction& transaction)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   try
   {
     std::string radius = to_string(200000./pattern_size);
@@ -106,7 +109,8 @@ void perform_polyline_in_query_print(uint pattern_size,
     uint64 global_node_offset, Transaction& transaction)
 {
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   Statement_Container stmt_cont(global_settings);
   try
   {
@@ -144,7 +148,8 @@ int main(int argc, char* args[])
 
   Nonsynced_Transaction transaction(Access_Mode::readonly, false, args[3], "");
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
 
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

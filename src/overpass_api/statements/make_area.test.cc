@@ -21,6 +21,7 @@
 #include "../../template_db/block_backend.h"
 #include "../core/settings.h"
 #include "../frontend/console_output.h"
+#include "../frontend/output_handler_parser.h"
 #include "../output_formats/output_xml.h"
 #include "area_query.h"
 #include "bbox_query.h"
@@ -106,7 +107,8 @@ int main(int argc, char* args[])
   Nonsynced_Transaction transaction(Access_Mode::readonly, false, db_dir, "");
   Nonsynced_Transaction area_transaction(Access_Mode::writeable, false, db_dir, "");
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
   Resource_Manager rman(transaction, global_settings, 0, area_transaction, 0, new Area_Updater(area_transaction));
 
   if (test_to_execute == "create")

@@ -19,6 +19,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "../frontend/output_handler_parser.h"
 #include "aggregators.h"
 #include "binary_operators.h"
 #include "id_query.h"
@@ -70,7 +71,8 @@ int main(int argc, char* args[])
   }
   std::string test_to_execute = args[1];
   Parsed_Query global_settings;
-  global_settings.set_output_handler(Output_Handler_Parser::get_format_parser("xml"), 0, 0);
+  global_settings.set_output_handler(
+      Output_Handler_Parser::get_format_parser("xml")->new_output_handler({}, 0, 0));
 
   std::cout<<
   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"

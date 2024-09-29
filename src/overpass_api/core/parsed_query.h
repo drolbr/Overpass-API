@@ -21,7 +21,6 @@
 
 
 #include "../frontend/output_handler.h"
-#include "../frontend/output_handler_parser.h"
 #include "geometry.h"
 
 
@@ -34,8 +33,7 @@ public:
   ~Parsed_Query() { delete output_handler; }
 
   Output_Handler* get_output_handler() const { return output_handler; }
-  void set_output_handler(Output_Handler_Parser* parser,
-			  Tokenizer_Wrapper* token, Error_Output* error_output);
+  void set_output_handler(Output_Handler* output_handler);
   void set_global_bbox(const Bbox_Double& bbox) { global_bbox_limitation = bbox; }
 
   const std::map< std::string, std::string >& get_input_params() const { return input_params; }
@@ -58,11 +56,10 @@ private:
 };
 
 
-inline void Parsed_Query::set_output_handler(Output_Handler_Parser* parser,
-					     Tokenizer_Wrapper* token, Error_Output* error_output)
+inline void Parsed_Query::set_output_handler(Output_Handler* output_handler_)
 {
   delete output_handler;
-  output_handler = parser->new_output_handler(input_params, token, error_output);
+  output_handler = output_handler_;
 }
 
 

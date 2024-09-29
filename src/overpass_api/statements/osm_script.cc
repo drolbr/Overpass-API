@@ -103,12 +103,14 @@ Osm_Script_Statement::Osm_Script_Statement
     else
     {
       if (attributes["output-config"] == "")
-        global_settings.set_output_handler(format_parser, 0, 0);
+        global_settings.set_output_handler(
+            format_parser->new_output_handler(global_settings.get_input_params(), 0, 0));
       else
       {
         std::istringstream in(attributes["output-config"]);
         Tokenizer_Wrapper token(in);
-        global_settings.set_output_handler(format_parser, &token, 0);
+        global_settings.set_output_handler(
+            format_parser->new_output_handler(global_settings.get_input_params(), &token, 0));
       }
     }
   }
